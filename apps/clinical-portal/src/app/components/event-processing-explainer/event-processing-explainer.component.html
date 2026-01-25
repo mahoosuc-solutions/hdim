@@ -1,0 +1,331 @@
+<div class="event-explainer-container">
+  <!-- Header Section -->
+  <div class="explainer-header">
+    <div class="header-content">
+      <mat-icon class="header-icon">timeline</mat-icon>
+      <div class="header-text">
+        <h2>How HDIM Processes Your Clinical Data</h2>
+        <p class="subtitle">
+          Understanding event-driven architecture through real healthcare workflows
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medical Chart Analogy (Non-Technical Intro) -->
+  <mat-card class="analogy-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>school</mat-icon>
+      <mat-card-title>{{ analogy.title }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="analogy-comparison">
+        <div class="analogy-side">
+          <div class="analogy-icon-container traditional">
+            <mat-icon>description</mat-icon>
+          </div>
+          <h4>{{ analogy.traditional.description }}</h4>
+          <p>{{ analogy.traditional.example }}</p>
+          <mat-chip class="limitation-chip" color="warn">
+            <mat-icon>close</mat-icon>
+            Limited History
+          </mat-chip>
+        </div>
+
+        <mat-divider [vertical]="true"></mat-divider>
+
+        <div class="analogy-side">
+          <div class="analogy-icon-container event-driven">
+            <mat-icon>folder_open</mat-icon>
+          </div>
+          <h4>{{ analogy.eventDriven.description }}</h4>
+          <p>{{ analogy.eventDriven.example }}</p>
+          <mat-chip class="advantage-chip" color="primary">
+            <mat-icon>check</mat-icon>
+            Complete Audit Trail
+          </mat-chip>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Clinical Workflows (Interactive Examples) -->
+  <mat-card class="workflows-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>hub</mat-icon>
+      <mat-card-title>Clinical Workflows in Action</mat-card-title>
+      <mat-card-subtitle>See how events flow through real healthcare scenarios</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Workflow Selector Tabs -->
+      <mat-tab-group
+        [selectedIndex]="activeWorkflowIndex"
+        (selectedIndexChange)="selectWorkflow($event)"
+        animationDuration="300ms"
+        class="workflow-tabs">
+        <mat-tab *ngFor="let workflow of clinicalWorkflows; let i = index">
+          <ng-template mat-tab-label>
+            <mat-icon class="tab-icon">{{ workflow.icon }}</mat-icon>
+            {{ workflow.title }}
+          </ng-template>
+
+          <!-- Workflow Description -->
+          <div class="workflow-description">
+            <p>{{ workflow.description }}</p>
+          </div>
+
+          <!-- Event Flow Steps -->
+          <div class="event-flow-container">
+            <div
+              *ngFor="let step of workflow.steps; let j = index"
+              class="event-step"
+              [@eventFlow]="getStepState(i, j)">
+              <!-- Step Number Badge -->
+              <div class="step-badge" [style.background-color]="step.color">
+                {{ step.step }}
+              </div>
+
+              <!-- Step Content -->
+              <div class="step-content">
+                <!-- Clinical View (What User Sees) -->
+                <div class="step-clinical">
+                  <div class="step-header">
+                    <mat-icon class="step-icon" [style.color]="step.color">
+                      {{ step.icon }}
+                    </mat-icon>
+                    <h4>What Happens Clinically</h4>
+                  </div>
+                  <p class="step-description">{{ step.clinical }}</p>
+                </div>
+
+                <!-- Technical View (What System Does) -->
+                <div class="step-technical">
+                  <div class="step-header">
+                    <mat-icon class="step-icon tech-icon">code</mat-icon>
+                    <h4>What System Records</h4>
+                  </div>
+                  <p class="step-description">
+                    <code>{{ step.technical }}</code>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Arrow to Next Step -->
+              <div class="step-arrow" *ngIf="j < workflow.steps.length - 1">
+                <mat-icon>arrow_downward</mat-icon>
+              </div>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Architecture Benefits -->
+  <mat-card class="benefits-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>verified</mat-icon>
+      <mat-card-title>Why This Architecture Matters for Healthcare</mat-card-title>
+      <mat-card-subtitle>
+        Clinical and compliance benefits of event-driven data processing
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="benefits-grid">
+        <mat-expansion-panel *ngFor="let benefit of benefits" class="benefit-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon class="benefit-icon">{{ benefit.icon }}</mat-icon>
+              {{ benefit.title }}
+            </mat-panel-title>
+            <mat-panel-description>
+              {{ benefit.description }}
+            </mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <!-- Expanded Content -->
+          <div class="benefit-details">
+            <h4>Real-World Examples:</h4>
+            <ul class="examples-list">
+              <li *ngFor="let example of benefit.examples">
+                <mat-icon class="example-icon">check_circle</mat-icon>
+                {{ example }}
+              </li>
+            </ul>
+
+            <!-- HIPAA Compliance Badge -->
+            <div class="compliance-badge" *ngIf="benefit.compliance">
+              <mat-icon>shield</mat-icon>
+              <span>{{ benefit.compliance }}</span>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Traditional vs. Event-Driven Comparison -->
+  <mat-card class="comparison-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>compare_arrows</mat-icon>
+      <mat-card-title>Traditional vs. Event-Driven Architecture</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="comparison-grid">
+        <!-- Traditional Database -->
+        <div class="comparison-column traditional">
+          <div class="comparison-header">
+            <mat-icon class="comparison-icon">{{ comparisonData.traditional.icon }}</mat-icon>
+            <h3>{{ comparisonData.traditional.title }}</h3>
+          </div>
+          <p class="comparison-description">{{ comparisonData.traditional.description }}</p>
+          <div class="comparison-items">
+            <div *ngFor="let limitation of comparisonData.traditional.limitations" class="comparison-item">
+              <mat-icon class="item-icon limitation">close</mat-icon>
+              <span>{{ limitation }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Event-Driven Architecture -->
+        <div class="comparison-column event-driven">
+          <div class="comparison-header">
+            <mat-icon class="comparison-icon">{{ comparisonData.eventDriven.icon }}</mat-icon>
+            <h3>{{ comparisonData.eventDriven.title }}</h3>
+          </div>
+          <p class="comparison-description">{{ comparisonData.eventDriven.description }}</p>
+          <div class="comparison-items">
+            <div *ngFor="let advantage of comparisonData.eventDriven.advantages" class="comparison-item">
+              <mat-icon class="item-icon advantage">check_circle</mat-icon>
+              <span>{{ advantage }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Quality Measures Deep Dive -->
+  <mat-card class="quality-measures-deepdive-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>psychology</mat-icon>
+      <mat-card-title>{{ qualityMeasuresDeepDive.title }}</mat-card-title>
+      <mat-card-subtitle>{{ qualityMeasuresDeepDive.description }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Processing Stages -->
+      <div class="processing-stages">
+        <div *ngFor="let stage of qualityMeasuresDeepDive.stages; let i = index" class="stage-card">
+          <!-- Stage Header -->
+          <div class="stage-header" [style.background-color]="stage.color">
+            <div class="stage-number">{{ i + 1 }}</div>
+            <mat-icon class="stage-icon">{{ stage.icon }}</mat-icon>
+            <h3>{{ stage.name }}</h3>
+          </div>
+
+          <!-- Stage Content -->
+          <div class="stage-content">
+            <p class="stage-description">{{ stage.description }}</p>
+
+            <!-- Technical Details -->
+            <mat-expansion-panel class="technical-details-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title>
+                  <mat-icon>settings</mat-icon>
+                  Technical Implementation
+                </mat-panel-title>
+              </mat-expansion-panel-header>
+              <ul class="technical-list">
+                <li *ngFor="let detail of stage.technicalDetails">
+                  <mat-icon class="tech-icon">check_circle_outline</mat-icon>
+                  {{ detail }}
+                </li>
+              </ul>
+            </mat-expansion-panel>
+
+            <!-- Events Generated -->
+            <div class="events-section">
+              <h4>
+                <mat-icon>flash_on</mat-icon>
+                Events Generated
+              </h4>
+              <div class="events-list">
+                <mat-chip *ngFor="let event of stage.events" class="event-chip">
+                  <mat-icon>event_note</mat-icon>
+                  {{ event }}
+                </mat-chip>
+              </div>
+            </div>
+
+            <!-- Clinical Example -->
+            <div class="example-section">
+              <h4>
+                <mat-icon>lightbulb</mat-icon>
+                Clinical Example
+              </h4>
+              <p class="example-text">{{ stage.example }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Metrics -->
+      <mat-divider></mat-divider>
+      <div class="performance-section">
+        <h3>
+          <mat-icon>speed</mat-icon>
+          {{ qualityMeasuresDeepDive.performance.title }}
+        </h3>
+        <div class="metrics-grid">
+          <div *ngFor="let metric of qualityMeasuresDeepDive.performance.metrics" class="metric-card">
+            <mat-icon class="metric-icon">{{ metric.icon }}</mat-icon>
+            <div class="metric-content">
+              <div class="metric-label">{{ metric.label }}</div>
+              <div class="metric-value">{{ metric.value }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Optimizations -->
+        <div class="optimizations-section">
+          <h4>
+            <mat-icon>rocket_launch</mat-icon>
+            Performance Optimizations
+          </h4>
+          <div class="optimizations-list">
+            <div *ngFor="let optimization of qualityMeasuresDeepDive.performance.optimizations" class="optimization-item">
+              <mat-icon class="optimization-icon">bolt</mat-icon>
+              {{ optimization }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Call to Action -->
+  <mat-card class="cta-card">
+    <mat-card-content>
+      <div class="cta-content">
+        <mat-icon class="cta-icon">explore</mat-icon>
+        <div class="cta-text">
+          <h3>Want to see this in action?</h3>
+          <p>
+            Explore live visualizations of event processing in the Data Flow Monitor,
+            or dive into audit logs to see the complete history of clinical actions.
+          </p>
+        </div>
+        <div class="cta-buttons">
+          <button mat-raised-button color="primary" aria-label="View live data flow visualization">
+            <mat-icon>visibility</mat-icon>
+            View Live Data Flow
+          </button>
+          <button mat-stroked-button color="primary" aria-label="Explore audit logs">
+            <mat-icon>history</mat-icon>
+            Explore Audit Logs
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

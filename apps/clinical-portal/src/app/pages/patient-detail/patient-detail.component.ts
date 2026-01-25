@@ -65,6 +65,9 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
   loading = true;
   error: string | null = null;
 
+  // Document upload (Issue #249 - OCR Phase 1)
+  currentDocumentId: string | null = null;
+
   // Button loading states
   backButtonLoading = false;
   viewResultsLoading = false;
@@ -378,5 +381,50 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
 
   hasCareGaps(): boolean {
     return this.getCareGaps().length > 0;
+  }
+
+  /**
+   * Handle document upload success (Issue #249 - OCR Phase 1)
+   */
+  onDocumentUploadSuccess(response: any): void {
+    this.logger.info('Document uploaded successfully', { attachmentId: response.attachmentId });
+    // Optionally refresh document list or show success message
+  }
+
+  /**
+   * Handle document upload error (Issue #249 - OCR Phase 1)
+   */
+  onDocumentUploadError(error: string): void {
+    this.logger.error('Document upload failed', new Error(error));
+    this.error = `Document upload failed: ${error}`;
+    // Error will be displayed to user by DocumentUploadComponent
+  }
+
+  /**
+   * Handle OCR completion (Issue #249 - OCR Phase 1)
+   */
+  onOcrComplete(event: { attachmentId: string; ocrStatus: string }): void {
+    this.logger.info('OCR processing complete', event);
+    // Optionally refresh document list or show notification
+    if (event.ocrStatus === 'COMPLETED') {
+      // OCR successful - document is searchable
+    } else if (event.ocrStatus === 'FAILED') {
+      // OCR failed - user can retry via DocumentUploadComponent
+    }
+  }
+
+  /**
+   * Get or create clinical document ID for uploads (Issue #249 - OCR Phase 1)
+   *
+   * For Phase 1, we'll use a default document ID format.
+   * In a real implementation, this would create a clinical document via backend API.
+   */
+  getCurrentDocumentId(): string {
+    if (!this.currentDocumentId && this.patientId) {
+      // Create a default document ID for this patient
+      // Format: patient-{patientId}-documents
+      this.currentDocumentId = `patient-${this.patientId}-documents`;
+    }
+    return this.currentDocumentId || '';
   }
 }

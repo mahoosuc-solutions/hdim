@@ -8,6 +8,7 @@ import com.healthdata.documentation.repository.ClinicalDocumentRepository;
 import com.healthdata.documentation.repository.DocumentAttachmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,6 +37,9 @@ public class ClinicalDocumentService {
     private final ClinicalDocumentRepository documentRepository;
     private final DocumentAttachmentRepository attachmentRepository;
     private final OcrService ocrService;
+
+    @Value("${healthdata.document.storage.base-path:/var/lib/healthdata/documents}")
+    private String storageBasePath;
 
     @Transactional(readOnly = true)
     public List<ClinicalDocumentDto> getDocuments(String tenantId) {
@@ -223,8 +227,8 @@ public class ClinicalDocumentService {
             String fileExtension = getFileExtension(originalFilename);
             String storedFilename = attachmentId + fileExtension;
 
-            // Define storage path: /var/lib/healthdata/documents/{tenantId}/{documentId}/{filename}
-            Path storageDirectory = Paths.get("/var/lib/healthdata/documents", tenantId, documentId.toString());
+            // Define storage path: {storageBasePath}/{tenantId}/{documentId}/{filename}
+            Path storageDirectory = Paths.get(storageBasePath, tenantId, documentId.toString());
             Files.createDirectories(storageDirectory);
 
             Path storagePath = storageDirectory.resolve(storedFilename);

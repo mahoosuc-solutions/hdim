@@ -1,0 +1,352 @@
+<div class="alert-config-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>Alert Configuration</h1>
+      <p class="subtitle">Manage alerting rules for service monitoring</p>
+    </div>
+
+    <button class="create-btn" (click)="openCreateModal()" aria-label="Create new alert">
+      <span class="icon">➕</span>
+      Create Alert
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading alert configurations...</p>
+  </div>
+
+  <!-- Alert Configurations List -->
+  <div *ngIf="!loading && alertConfigs.length > 0" class="alerts-list">
+    <div *ngFor="let config of alertConfigs" class="alert-card" [class.disabled]="!config.enabled">
+      <!-- Alert Header -->
+      <div class="alert-header">
+        <div class="alert-title">
+          <h3>{{ config.displayName }}</h3>
+          <span class="service-tag">{{ getServiceDisplayName(config.serviceName) }}</span>
+        </div>
+        <div class="alert-actions">
+          <button
+            class="toggle-btn"
+            (click)="toggleAlert(config)"
+            [class.enabled]="config.enabled"
+            [attr.aria-label]="config.enabled ? 'Disable alert' : 'Enable alert'">
+            {{ config.enabled ? 'Enabled' : 'Disabled' }}
+          </button>
+          <button class="edit-btn" (click)="openEditModal(config)" aria-label="Edit alert configuration">
+            ✏️ Edit
+          </button>
+          <button class="delete-btn" (click)="openDeleteConfirmModal(config)" aria-label="Delete alert configuration">
+            🗑️ Delete
+          </button>
+        </div>
+      </div>
+
+      <!-- Alert Details -->
+      <div class="alert-details">
+        <div class="detail-row">
+          <div class="detail-item">
+            <span class="label">Type:</span>
+            <span class="value">{{ alertTypeLabels[config.alertType] }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Threshold:</span>
+            <span class="value">{{ config.threshold }} {{ getThresholdUnit(config.alertType) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Duration:</span>
+            <span class="value">{{ config.durationMinutes }} min</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Severity:</span>
+            <span class="value severity" [class]="'severity-' + config.severity.toLowerCase()">
+              {{ severityLabels[config.severity] }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-row">
+          <div class="detail-item channels">
+            <span class="label">Notification Channels:</span>
+            <div class="channel-badges">
+              <span *ngFor="let channel of config.notificationChannels" class="channel-badge">
+                {{ channelLabels[channel] }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-row timestamps">
+          <div class="detail-item">
+            <span class="label">Created:</span>
+            <span class="value">{{ config.createdAt | date: 'short' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="config.lastTriggered">
+            <span class="label">Last Triggered:</span>
+            <span class="value">{{ config.lastTriggered | date: 'short' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && alertConfigs.length === 0" class="empty-state">
+    <div class="empty-icon">🔔</div>
+    <h2>No Alert Configurations</h2>
+    <p>Create your first alert to start monitoring service health</p>
+    <button class="create-btn-large" (click)="openCreateModal()">Create Alert</button>
+  </div>
+
+  <!-- Create Alert Modal -->
+  <div *ngIf="showCreateModal" class="modal-overlay" (click)="closeCreateModal()">
+    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="create-modal-title">
+      <div class="modal-header">
+        <h2 id="create-modal-title">Create Alert Configuration</h2>
+        <button class="close-btn" (click)="closeCreateModal()" aria-label="Close modal">×</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <!-- Service Selection -->
+          <div class="form-group">
+            <label for="create-service">Service *</label>
+            <select id="create-service" [(ngModel)]="formData.serviceName" name="serviceName" required>
+              <option value="">Select a service</option>
+              <option *ngFor="let service of availableServices" [value]="service.id">
+                {{ service.displayName }}
+              </option>
+            </select>
+            <span *ngIf="formErrors['serviceName']" class="error-text">{{ formErrors['serviceName'] }}</span>
+          </div>
+
+          <!-- Display Name -->
+          <div class="form-group">
+            <label for="create-display-name">Display Name *</label>
+            <input
+              type="text"
+              id="create-display-name"
+              [(ngModel)]="formData.displayName"
+              name="displayName"
+              placeholder="e.g., Patient Service - High CPU"
+              required />
+            <span *ngIf="formErrors['displayName']" class="error-text">{{ formErrors['displayName'] }}</span>
+          </div>
+
+          <!-- Alert Type -->
+          <div class="form-group">
+            <label for="create-alert-type">Alert Type *</label>
+            <select
+              id="create-alert-type"
+              [(ngModel)]="formData.alertType"
+              (change)="onAlertTypeChange()"
+              name="alertType"
+              required>
+              <option value="">Select alert type</option>
+              <option *ngFor="let type of alertTypes" [value]="type">
+                {{ alertTypeLabels[type] }}
+              </option>
+            </select>
+            <span *ngIf="formData.alertType" class="help-text">
+              {{ thresholdPresets[formData.alertType].description }}
+            </span>
+            <span *ngIf="formErrors['alertType']" class="error-text">{{ formErrors['alertType'] }}</span>
+          </div>
+
+          <!-- Threshold -->
+          <div class="form-group">
+            <label for="create-threshold">
+              Threshold * <span *ngIf="formData.alertType">({{ getThresholdUnit(formData.alertType) }})</span>
+            </label>
+            <input
+              type="number"
+              id="create-threshold"
+              [(ngModel)]="formData.threshold"
+              name="threshold"
+              min="0"
+              step="0.1"
+              required />
+            <span *ngIf="formData.alertType" class="help-text">
+              Recommended: {{ thresholdPresets[formData.alertType].recommended }} {{ getThresholdUnit(formData.alertType) }}
+            </span>
+            <span *ngIf="formErrors['threshold']" class="error-text">{{ formErrors['threshold'] }}</span>
+          </div>
+
+          <!-- Duration -->
+          <div class="form-group">
+            <label for="create-duration">Duration (minutes) *</label>
+            <input
+              type="number"
+              id="create-duration"
+              [(ngModel)]="formData.durationMinutes"
+              name="durationMinutes"
+              min="1"
+              required />
+            <span class="help-text">Alert triggers if threshold exceeded for this duration</span>
+            <span *ngIf="formErrors['durationMinutes']" class="error-text">{{ formErrors['durationMinutes'] }}</span>
+          </div>
+
+          <!-- Severity -->
+          <div class="form-group">
+            <label for="create-severity">Severity *</label>
+            <select id="create-severity" [(ngModel)]="formData.severity" name="severity" required>
+              <option value="">Select severity</option>
+              <option *ngFor="let severity of severityLevels" [value]="severity">
+                {{ severityLabels[severity] }}
+              </option>
+            </select>
+            <span *ngIf="formErrors['severity']" class="error-text">{{ formErrors['severity'] }}</span>
+          </div>
+
+          <!-- Notification Channels -->
+          <div class="form-group">
+            <label>Notification Channels *</label>
+            <div class="checkbox-group">
+              <label *ngFor="let channel of notificationChannels" class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="isChannelSelected(channel, true)"
+                  (change)="toggleChannel(channel, true)" />
+                {{ channelLabels[channel] }}
+              </label>
+            </div>
+            <span *ngIf="formErrors['notificationChannels']" class="error-text">
+              {{ formErrors['notificationChannels'] }}
+            </span>
+          </div>
+
+          <!-- Submit Error -->
+          <div *ngIf="formErrors['submit']" class="error-message">
+            {{ formErrors['submit'] }}
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="closeCreateModal()">Cancel</button>
+        <button class="submit-btn" (click)="createAlert()">Create Alert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Alert Modal -->
+  <div *ngIf="showEditModal && selectedAlertConfig" class="modal-overlay" (click)="closeEditModal()">
+    <div class="modal" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="edit-modal-title">
+      <div class="modal-header">
+        <h2 id="edit-modal-title">Edit Alert Configuration</h2>
+        <button class="close-btn" (click)="closeEditModal()" aria-label="Close modal">×</button>
+      </div>
+
+      <div class="modal-body">
+        <form>
+          <!-- Service (read-only) -->
+          <div class="form-group">
+            <label>Service</label>
+            <input type="text" [value]="getServiceDisplayName(selectedAlertConfig.serviceName)" disabled />
+          </div>
+
+          <!-- Alert Type (read-only) -->
+          <div class="form-group">
+            <label>Alert Type</label>
+            <input type="text" [value]="alertTypeLabels[selectedAlertConfig.alertType]" disabled />
+          </div>
+
+          <!-- Threshold -->
+          <div class="form-group">
+            <label for="edit-threshold">
+              Threshold * ({{ getThresholdUnit(selectedAlertConfig.alertType) }})
+            </label>
+            <input
+              type="number"
+              id="edit-threshold"
+              [(ngModel)]="editFormData.threshold"
+              name="threshold"
+              min="0"
+              step="0.1"
+              required />
+          </div>
+
+          <!-- Duration -->
+          <div class="form-group">
+            <label for="edit-duration">Duration (minutes) *</label>
+            <input
+              type="number"
+              id="edit-duration"
+              [(ngModel)]="editFormData.durationMinutes"
+              name="durationMinutes"
+              min="1"
+              required />
+          </div>
+
+          <!-- Severity -->
+          <div class="form-group">
+            <label for="edit-severity">Severity *</label>
+            <select id="edit-severity" [(ngModel)]="editFormData.severity" name="severity" required>
+              <option *ngFor="let severity of severityLevels" [value]="severity">
+                {{ severityLabels[severity] }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Notification Channels -->
+          <div class="form-group">
+            <label>Notification Channels *</label>
+            <div class="checkbox-group">
+              <label *ngFor="let channel of notificationChannels" class="checkbox-label">
+                <input
+                  type="checkbox"
+                  [checked]="isChannelSelected(channel, false)"
+                  (change)="toggleChannel(channel, false)" />
+                {{ channelLabels[channel] }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Enabled -->
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="editFormData.enabled" name="enabled" />
+              Enable this alert
+            </label>
+          </div>
+
+          <!-- Submit Error -->
+          <div *ngIf="formErrors['submit']" class="error-message">
+            {{ formErrors['submit'] }}
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="closeEditModal()">Cancel</button>
+        <button class="submit-btn" (click)="updateAlert()">Update Alert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showDeleteConfirmModal && selectedAlertConfig" class="modal-overlay" (click)="closeDeleteConfirmModal()">
+    <div class="modal small" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="delete-modal-title">
+      <div class="modal-header">
+        <h2 id="delete-modal-title">Delete Alert Configuration</h2>
+        <button class="close-btn" (click)="closeDeleteConfirmModal()" aria-label="Close modal">×</button>
+      </div>
+
+      <div class="modal-body">
+        <p>Are you sure you want to delete this alert configuration?</p>
+        <div class="confirm-details">
+          <strong>{{ selectedAlertConfig.displayName }}</strong>
+          <p>{{ getServiceDisplayName(selectedAlertConfig.serviceName) }}</p>
+        </div>
+        <p class="warning-text">This action cannot be undone.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="cancel-btn" (click)="closeDeleteConfirmModal()">Cancel</button>
+        <button class="delete-btn-confirm" (click)="deleteAlert()">Delete Alert</button>
+      </div>
+    </div>
+  </div>
+</div>

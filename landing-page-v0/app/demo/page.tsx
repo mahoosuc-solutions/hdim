@@ -188,6 +188,8 @@ export default function DemoPage() {
                 thumbnailSrc="/videos/care-gap-closure-30s-thumb.png"
                 title="Care Gap Closure Demo - 30 Second Preview"
                 description="Watch HDIM identify Eleanor Anderson's overdue mammogram screening and close the care gap with automated workflow"
+                youtubeId="pUVxBhRGRLg"
+                preferYouTube={false}
               />
               <p className="text-center text-gray-500 mt-4 text-sm">
                 Click to watch the 30-second demo • No registration required

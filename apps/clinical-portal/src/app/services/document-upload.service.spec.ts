@@ -1,15 +1,26 @@
-import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { TestBed, fakeAsync, tick, flush } from '@angular/core/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
 import { DocumentUploadService, AttachmentUploadResponse } from './document-upload.service';
+import { AuthService } from './auth.service';
 
 describe('DocumentUploadService', () => {
   let service: DocumentUploadService;
   let httpMock: HttpTestingController;
+  let mockAuthService: jest.Mocked<AuthService>;
 
   beforeEach(() => {
+    mockAuthService = {
+      getTenantId: jest.fn().mockReturnValue('test-tenant-123')
+    } as any;
+
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [DocumentUploadService]
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        DocumentUploadService,
+        { provide: AuthService, useValue: mockAuthService }
+      ]
     });
     service = TestBed.inject(DocumentUploadService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -43,7 +54,7 @@ describe('DocumentUploadService', () => {
       req.flush(mockResponse);
     });
 
-    it('should include X-Tenant-ID header', (done) => {
+    it('should include X-Tenant-ID header from AuthService', (done) => {
       const documentId = 'doc-123';
       const file = new File(['test'], 'test.pdf', { type: 'application/pdf' });
 
@@ -51,43 +62,115 @@ describe('DocumentUploadService', () => {
 
       const req = httpMock.expectOne(`/api/documents/clinical/${documentId}/upload`);
       expect(req.request.headers.has('X-Tenant-ID')).toBe(true);
+      expect(req.request.headers.get('X-Tenant-ID')).toBe('test-tenant-123');
       req.flush({});
     });
   });
 
   describe('pollOcrStatus', () => {
-    it('should poll status every 2 seconds until COMPLETED', (done) => {
+    it('should poll status immediately then every 2 seconds until COMPLETED', fakeAsync(() => {
       const attachmentId = 'attach-456';
       const responses = [
-        { attachmentId, ocrStatus: 'PENDING' },
-        { attachmentId, ocrStatus: 'PROCESSING' },
-        { attachmentId, ocrStatus: 'COMPLETED', ocrText: 'extracted text' }
+        { attachmentId, ocrStatus: 'PENDING' as const },
+        { attachmentId, ocrStatus: 'PROCESSING' as const },
+        { attachmentId, ocrStatus: 'COMPLETED' as const, ocrText: 'extracted text' }
       ];
-      let callCount = 0;
+      const emittedStatuses: string[] = [];
 
       service.pollOcrStatus(attachmentId).subscribe(status => {
-        if (status === 'COMPLETED') {
-          expect(callCount).toBe(3);
-          done();
+        emittedStatuses.push(status);
+      });
+
+      // timer(0, 2000) emits immediately, then every 2 seconds
+      // First emission (immediate at t=0)
+      tick(0);
+      const req1 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      req1.flush(responses[0]);
+
+      // Second emission (at t=2000ms)
+      tick(2000);
+      const req2 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      req2.flush(responses[1]);
+
+      // Third emission (at t=4000ms)
+      tick(2000);
+      const req3 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      req3.flush(responses[2]);
+
+      flush();
+      expect(emittedStatuses).toEqual(['PENDING', 'PROCESSING', 'COMPLETED']);
+    }));
+
+    it('should stop polling when status is FAILED', fakeAsync(() => {
+      const attachmentId = 'attach-789';
+      const responses = [
+        { attachmentId, ocrStatus: 'PENDING' as const },
+        { attachmentId, ocrStatus: 'PROCESSING' as const },
+        { attachmentId, ocrStatus: 'FAILED' as const, errorMessage: 'OCR processing failed' }
+      ];
+      const emittedStatuses: string[] = [];
+
+      service.pollOcrStatus(attachmentId).subscribe({
+        next: (status) => {
+          emittedStatuses.push(status);
         }
       });
 
-      // interval(2000) waits 2 seconds before first emission
-      setTimeout(() => {
-        const req1 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
-        req1.flush(responses[callCount++]);
+      // First emission (immediate at t=0)
+      tick(0);
+      const req1 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      req1.flush(responses[0]);
 
-        setTimeout(() => {
-          const req2 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
-          req2.flush(responses[callCount++]);
+      // Second emission (at t=2000ms)
+      tick(2000);
+      const req2 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      req2.flush(responses[1]);
 
-          setTimeout(() => {
-            const req3 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
-            req3.flush(responses[callCount++]);
-          }, 2000);
-        }, 2000);
-      }, 2000);
-    }, 10000); // 10 second timeout for this test
+      // Third emission (at t=4000ms) - should stop after FAILED
+      tick(2000);
+      const req3 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      req3.flush(responses[2]);
+
+      flush();
+      expect(emittedStatuses).toEqual(['PENDING', 'PROCESSING', 'FAILED']);
+
+      // Verify no more requests after FAILED status
+      httpMock.expectNone(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+    }));
+
+    it('should retry failed HTTP requests during polling', fakeAsync(() => {
+      const attachmentId = 'attach-999';
+      let attemptCount = 0;
+      const emittedStatuses: string[] = [];
+
+      service.pollOcrStatus(attachmentId).subscribe({
+        next: (status) => {
+          emittedStatuses.push(status);
+        }
+      });
+
+      // First polling interval (t=0) - initial request fails
+      tick(0);
+      const req1 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      attemptCount++;
+      req1.flush('Network error', { status: 500, statusText: 'Internal Server Error' });
+
+      // First retry (after 1 second delay from retry config)
+      tick(1000);
+      const req2 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      attemptCount++;
+      req2.flush('Network error', { status: 500, statusText: 'Internal Server Error' });
+
+      // Second retry (after another 1 second)
+      tick(1000);
+      const req3 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
+      attemptCount++;
+      req3.flush({ attachmentId, ocrStatus: 'COMPLETED' });
+
+      flush();
+      expect(attemptCount).toBe(3); // 1 initial + 2 retries
+      expect(emittedStatuses).toEqual(['COMPLETED']);
+    }));
   });
 
   describe('retryOcr', () => {

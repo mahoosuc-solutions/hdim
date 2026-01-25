@@ -29,7 +29,8 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 })
 @EntityScan(basePackages = {
     "com.healthdata.caregap.persistence",  // Service entities
-    "com.healthdata.caregap.entity"  // Legacy service entities
+    "com.healthdata.caregap.entity",  // Legacy service entities
+    "com.healthdata.authentication.domain"  // Enable User/Tenant persistence for UserAutoRegistrationFilter
 })
 public class CareGapServiceApplication {
 

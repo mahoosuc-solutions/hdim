@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Tenants table required by shared authentication module dependency -->
+    <!-- Services that use multi-tenancy pull in Tenant entity, so Hibernate -->
+    <!-- validation requires this table to exist -->
+
+    <changeSet id="0000-create-tenants-table" author="cql-engine-service">
+        <comment>Create tenants table for multi-tenant organization support</comment>
+        <createTable tableName="tenants">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_tenants_status" tableName="tenants">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tenants_name" tableName="tenants">
+            <column name="name"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="tenants"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0000-insert-default-tenant" author="cql-engine-service">
+        <comment>Insert default tenant for development and testing</comment>
+        <insert tableName="tenants">
+            <column name="id" value="tenant-1"/>
+            <column name="name" value="Default Tenant"/>
+            <column name="status" value="ACTIVE"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="tenants">
+                <where>id = 'tenant-1'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

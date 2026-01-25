@@ -4396,7 +4396,7 @@ export class PatientHealthService {
    */
   subscribeToVitalSigns(
     patientId: string,
-    intervalMs: number = 30000
+    intervalMs = 30000
   ): Observable<PhysicalHealthSummary['vitals']> {
     return timer(0, intervalMs).pipe(
       switchMap(() => this.getVitalSignsFromFhir(patientId)),
@@ -5289,7 +5289,7 @@ export class PatientHealthService {
    * @param patientId Patient ID
    * @param months Number of months of history to retrieve (default: 12)
    */
-  getHealthScoreHistoryDetailed(patientId: string, months: number = 12): Observable<HealthScoreHistoryPoint[]> {
+  getHealthScoreHistoryDetailed(patientId: string, months = 12): Observable<HealthScoreHistoryPoint[]> {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.PATIENT_HEALTH_SCORE_HISTORY(patientId));
 
     const params = new HttpParams().set('months', months.toString());

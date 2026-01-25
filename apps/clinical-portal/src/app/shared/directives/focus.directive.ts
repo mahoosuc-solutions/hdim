@@ -14,7 +14,7 @@ import { Directive, ElementRef, OnInit, Input } from '@angular/core';
 })
 export class FocusDirective implements OnInit {
   /** Delay before focusing (ms) */
-  @Input() focusDelay: number = 0;
+  @Input() focusDelay = 0;
 
   constructor(private el: ElementRef) {}
 

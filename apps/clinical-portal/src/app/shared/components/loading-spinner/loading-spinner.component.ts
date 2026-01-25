@@ -98,7 +98,7 @@ export class LoadingSpinnerComponent implements OnInit {
    * Diameter of the spinner in pixels
    * @default 40
    */
-  @Input() diameter: number = 40;
+  @Input() diameter = 40;
 
   /**
    * Color theme for the spinner

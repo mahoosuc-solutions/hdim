@@ -44,7 +44,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
             [placeholder]="useRecoveryCode ? 'XXXXXXXX' : '000000'"
             [maxlength]="useRecoveryCode ? 10 : 6"
             autocomplete="one-time-code"
-            autofocus
+           
           />
           <mat-icon matPrefix>{{ useRecoveryCode ? 'vpn_key' : 'pin' }}</mat-icon>
           @if (mfaForm.get('code')?.hasError('required') && mfaForm.get('code')?.touched) {

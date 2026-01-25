@@ -89,7 +89,7 @@ class MeasureBuilderIntegrationTestComponent {
   rangeSliders: any[] = [];
   distributionSliders: any[] = [];
   currentMeasure: any = null;
-  generatedCQL: string = '';
+  generatedCQL = '';
 
   get cqlLineCount(): number {
     return this.generatedCQL.split('\n').length;

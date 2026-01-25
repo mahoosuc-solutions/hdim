@@ -254,7 +254,7 @@ export class TestingService {
   /**
    * Test an API endpoint
    */
-  testApiEndpoint(service: string, endpoint: string, method: string = 'GET'): Observable<ApiTestResult> {
+  testApiEndpoint(service: string, endpoint: string, method = 'GET'): Observable<ApiTestResult> {
     const url = this.getServiceBaseUrl(service) + endpoint;
     const startTime = Date.now();
 

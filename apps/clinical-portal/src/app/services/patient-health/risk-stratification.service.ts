@@ -406,7 +406,7 @@ export class RiskStratificationService extends CacheableService {
     return this.mentalHealth.getMentalHealthSummary(patientId).pipe(
       map((mental) => {
         const factors: string[] = [];
-        let score = this.mentalHealth.calculateMentalHealthRiskScore(mental);
+        const score = this.mentalHealth.calculateMentalHealthRiskScore(mental);
         const recommendations: string[] = [];
 
         // Add factors based on assessments

@@ -289,7 +289,7 @@ export class DocumentService {
    * - Full-text search on OCR extracted text
    * - Returns paginated list of attachments
    */
-  searchOcrText(query: string, page: number = 0, size: number = 20): Observable<PatientDocument[]> {
+  searchOcrText(query: string, page = 0, size = 20): Observable<PatientDocument[]> {
     this.logger.info('Searching OCR text', { query, page, size });
 
     return this.http.get<any>(`${this.baseUrl}/search-ocr`, {

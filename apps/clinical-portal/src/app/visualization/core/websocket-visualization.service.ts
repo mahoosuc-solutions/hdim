@@ -422,7 +422,7 @@ export class WebSocketVisualizationService {
   /**
    * Simulate batch progress for testing (when WebSocket is not available)
    */
-  simulateBatchProgress(durationSeconds: number = 30): Observable<BatchProgressEvent> {
+  simulateBatchProgress(durationSeconds = 30): Observable<BatchProgressEvent> {
     const interval = 1000; // Update every second
     const totalUpdates = durationSeconds;
     const patientsTotal = 100;

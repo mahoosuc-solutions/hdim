@@ -9,6 +9,13 @@ spring:
   main:
     lazy-initialization: true  # Enable lazy initialization to avoid circular dependencies
 
+  # Jackson Configuration - JSON-only (no XML support)
+  # Prevents ClassCastException from Jackson XML factory detection
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_fhir}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

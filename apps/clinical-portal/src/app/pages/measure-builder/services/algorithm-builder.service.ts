@@ -99,7 +99,7 @@ export class AlgorithmBuilderService {
   /**
    * Add exclusion block to algorithm
    */
-  addExclusionBlock(label: string = 'Denominator Exclusion'): PopulationBlock {
+  addExclusionBlock(label = 'Denominator Exclusion'): PopulationBlock {
     const algorithm = this.algorithmSubject.value;
     if (!algorithm) return null as any;
 
@@ -124,7 +124,7 @@ export class AlgorithmBuilderService {
   /**
    * Add exception block to algorithm
    */
-  addExceptionBlock(label: string = 'Denominator Exception'): PopulationBlock {
+  addExceptionBlock(label = 'Denominator Exception'): PopulationBlock {
     const algorithm = this.algorithmSubject.value;
     if (!algorithm) return null as any;
 
@@ -329,7 +329,7 @@ export class AlgorithmBuilderService {
   /**
    * Duplicate a block (useful for creating similar criteria)
    */
-  duplicateBlock(blockId: string, offsetX: number = 50, offsetY: number = 50): PopulationBlock | null {
+  duplicateBlock(blockId: string, offsetX = 50, offsetY = 50): PopulationBlock | null {
     const algorithm = this.algorithmSubject.value;
     if (!algorithm) return null;
 

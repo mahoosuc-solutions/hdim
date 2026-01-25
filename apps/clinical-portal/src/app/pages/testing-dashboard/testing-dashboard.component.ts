@@ -274,7 +274,7 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
   /**
    * Test an API endpoint
    */
-  async testApiEndpoint(service: string, endpoint: string, method: string = 'GET'): Promise<void> {
+  async testApiEndpoint(service: string, endpoint: string, method = 'GET'): Promise<void> {
     const testId = `api-${service}-${endpoint.replace(/[^a-zA-Z0-9]/g, '-')}`;
     try {
       const result = await firstValueFrom(this.testingService.testApiEndpoint(service, endpoint, method));

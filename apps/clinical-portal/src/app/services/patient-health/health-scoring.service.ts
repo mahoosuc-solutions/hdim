@@ -202,7 +202,7 @@ export class HealthScoringService extends CacheableService {
    */
   getHealthScoreHistoryDetailed(
     patientId: string,
-    months: number = 12
+    months = 12
   ): Observable<HealthScoreHistoryPoint[]> {
     const url = buildQualityMeasureUrl(
       QUALITY_MEASURE_ENDPOINTS.PATIENT_HEALTH_SCORE_HISTORY(patientId)

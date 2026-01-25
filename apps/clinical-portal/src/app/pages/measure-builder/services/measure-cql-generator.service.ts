@@ -122,7 +122,7 @@ export class MeasureCqlGeneratorService {
   /**
    * Generate CQL for threshold slider (clinical parameter)
    */
-  generateThresholdCql(label: string, value: number, unit: string = ''): string {
+  generateThresholdCql(label: string, value: number, unit = ''): string {
     // Map common threshold parameters to CQL functions
     const thresholdMap: Record<string, (val: number) => string> = {
       'HbA1c Target': (v) => `define "HbA1c Control":\n  MostRecentObservation("2345-7") < ${v}`,
@@ -188,8 +188,8 @@ export class MeasureCqlGeneratorService {
    */
   generateEncounterCql(
     encounterType: string,
-    minCount: number = 1,
-    periodDays: number = 365
+    minCount = 1,
+    periodDays = 365
   ): string {
     return `define "${encounterType} Encounter":\n  Count([Encounter] E where E.type.coding ~ '${encounterType}'\n    and E.period overlaps "Measurement Period") >= ${minCount}`;
   }
@@ -271,7 +271,7 @@ export class MeasureCqlGeneratorService {
    * Format CQL with proper indentation and syntax highlighting hints
    */
   formatCql(cql: string): string {
-    let formatted = cql;
+    const formatted = cql;
     let indentLevel = 0;
 
     const lines = formatted.split('\n');

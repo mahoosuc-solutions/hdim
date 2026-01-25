@@ -114,7 +114,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     // Handle final error after all retries exhausted
     catchError((error: HttpErrorResponse) => {
       let errorMessage = 'An unknown error occurred';
-      let isRetryExhausted = retryAttempt >= RETRY_CONFIG.maxRetries;
+      const isRetryExhausted = retryAttempt >= RETRY_CONFIG.maxRetries;
 
       if (error.error instanceof ErrorEvent) {
         // Client-side or network error

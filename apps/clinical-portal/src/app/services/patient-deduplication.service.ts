@@ -51,7 +51,7 @@ export class PatientDeduplicationService {
     }
 
     // Count duplicates if this is a master
-    let duplicateIds: string[] = [];
+    const duplicateIds: string[] = [];
     if (isMaster) {
       // Find all patients that link to this one as master
       this.patientLinks.forEach((patientLinks, patientId) => {
@@ -92,7 +92,7 @@ export class PatientDeduplicationService {
   /**
    * Link a duplicate patient to a master patient
    */
-  linkPatient(duplicateId: string, masterId: string, verified: boolean = false): Observable<boolean> {
+  linkPatient(duplicateId: string, masterId: string, verified = false): Observable<boolean> {
     // Add link from duplicate to master
     const duplicateLinks = this.patientLinks.get(duplicateId) || [];
     duplicateLinks.push({

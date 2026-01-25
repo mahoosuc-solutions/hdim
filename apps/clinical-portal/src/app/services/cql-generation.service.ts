@@ -213,9 +213,9 @@ export class CqlGenerationService {
     const { prompt, context, options } = request;
     const lowerPrompt = prompt.toLowerCase();
 
-    let cql = this.buildCqlFromPrompt(lowerPrompt, context, options);
-    let explanation = this.buildExplanation(lowerPrompt, context);
-    let suggestedValueSets = this.suggestValueSets(lowerPrompt);
+    const cql = this.buildCqlFromPrompt(lowerPrompt, context, options);
+    const explanation = this.buildExplanation(lowerPrompt, context);
+    const suggestedValueSets = this.suggestValueSets(lowerPrompt);
 
     return of({
       cql,

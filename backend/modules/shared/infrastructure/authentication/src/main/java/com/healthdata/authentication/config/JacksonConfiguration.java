@@ -16,6 +16,11 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
  * - java.time.LocalDateTime
  * - java.time.ZonedDateTime
  *
+ * JSON-Only Configuration:
+ * - All HDIM services use JSON exclusively (application/json, application/fhir+json)
+ * - XML support is not required and can cause dependency conflicts
+ * - builder.build() creates a JSON ObjectMapper without XML factory detection
+ *
  * Why this is needed:
  * - Spring Boot auto-configuration normally handles this
  * - However, in shared modules loaded via component scanning, explicit
@@ -45,7 +50,9 @@ public class JacksonConfiguration {
      */
     @Bean
     public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
-        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+        // Build JSON ObjectMapper directly (no XML detection)
+        // All HDIM services use JSON exclusively (application/json, application/fhir+json)
+        ObjectMapper objectMapper = builder.build();
 
         // Register Java 8 date/time module (JSR310)
         objectMapper.registerModule(new JavaTimeModule());

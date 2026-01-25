@@ -38,8 +38,15 @@ dependencies {
     // TOTP MFA (Time-based One-Time Password)
     api(libs.totp)
 
-    // Twilio SDK for SMS MFA
-    implementation(libs.twilio)
+    // Twilio SDK for SMS MFA (explicit version control to prevent Jackson conflicts)
+    // Version 10.1.5 is compatible with Jackson 2.17.x and prevents transitive
+    // dependency conflicts that cause ClassCastException in Jackson XML factory
+    implementation("com.twilio.sdk:twilio") {
+        version {
+            strictly("[10.0,11.0[")
+            prefer("10.1.5")
+        }
+    }
 
     // Spring Cloud OpenFeign for auth header forwarding interceptor
     compileOnly(libs.spring.cloud.starter.openfeign)

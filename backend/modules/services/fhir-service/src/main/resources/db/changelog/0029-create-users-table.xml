@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Users table required by shared authentication module dependency -->
+    <!-- FHIR service pulls in User entity, so Hibernate validation requires this table to exist -->
+
+    <changeSet id="0029-create-users-table" author="fhir-service">
+        <comment>Create users table with all MFA columns for authentication support</comment>
+        <createTable tableName="users">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="varchar(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="email" type="varchar(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password_hash" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_verified" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_login_at" type="timestamp with time zone"/>
+            <column name="failed_login_attempts" type="integer"/>
+            <column name="account_locked_until" type="timestamp with time zone"/>
+            <column name="notes" type="varchar(500)"/>
+            <column name="oauth_provider" type="varchar(50)"/>
+            <column name="oauth_provider_id" type="varchar(255)"/>
+            <column name="mfa_enabled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mfa_secret" type="varchar(255)"/>
+            <column name="mfa_recovery_codes" type="varchar(1000)"/>
+            <column name="mfa_enabled_at" type="timestamp with time zone"/>
+            <!-- MFA method columns -->
+            <column name="mfa_method" type="varchar(10)" defaultValue="TOTP"/>
+            <column name="mfa_phone_number" type="varchar(20)"/>
+            <column name="sms_code" type="varchar(255)"/>
+            <column name="sms_code_expiry" type="timestamp with time zone"/>
+            <column name="sms_code_sent_count" type="integer" defaultValueNumeric="0"/>
+            <column name="sms_code_last_reset" type="timestamp with time zone"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deleted_at" type="timestamp with time zone"/>
+        </createTable>
+
+        <createIndex indexName="idx_users_username" tableName="users" unique="true">
+            <column name="username"/>
+        </createIndex>
+
+        <createIndex indexName="idx_users_email" tableName="users" unique="true">
+            <column name="email"/>
+        </createIndex>
+
+        <createIndex indexName="idx_users_active" tableName="users">
+            <column name="active"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="users"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0029-create-user-tenants-table" author="fhir-service">
+        <comment>Create user_tenants collection table for multi-tenant support</comment>
+        <createTable tableName="user_tenants">
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_tenants" columnNames="user_id,tenant_id" constraintName="pk_user_tenants"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_user_tenants_user"
+            baseTableName="user_tenants"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex indexName="idx_user_tenants_tenant_id" tableName="user_tenants">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="user_tenants"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0029-create-user-roles-table" author="fhir-service">
+        <comment>Create user_roles collection table for RBAC support</comment>
+        <createTable tableName="user_roles">
+            <column name="user_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="user_roles" columnNames="user_id,role" constraintName="pk_user_roles"/>
+
+        <addForeignKeyConstraint
+            constraintName="fk_user_roles_user"
+            baseTableName="user_roles"
+            baseColumnNames="user_id"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="user_roles"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -99,4 +99,7 @@
     <!-- Fix missing column: Add created_by to patient_profile_assignments -->
     <include file="db/changelog/0046-add-created-by-to-patient-profile-assignments.xml"/>
 
+    <!-- Fix missing MFA columns in users table -->
+    <include file="db/changelog/0047-add-missing-user-mfa-columns.xml"/>
+
 </databaseChangeLog>

@@ -8,6 +8,9 @@
     <!-- PostgreSQL extensions must come FIRST -->
     <include file="db/changelog/0000-enable-extensions.xml"/>
 
+    <!-- Tenants table (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-tenants-table.xml"/>
+
     <include file="db/changelog/0001-create-cql-libraries-table.xml"/>
     <include file="db/changelog/0002-create-cql-evaluations-table.xml"/>
     <include file="db/changelog/0003-create-value-sets-table.xml"/>
@@ -25,5 +28,9 @@
     <include file="db/changelog/0013-add-mfa-columns-to-users.xml"/>
     <!-- Essential value sets for HEDIS measure evaluation -->
     <include file="db/changelog/0014-seed-essential-value-sets.xml"/>
+    <!-- Add missing tenant_ids and roles columns for user management alignment -->
+    <include file="db/changelog/0015-add-missing-user-columns.xml"/>
+    <!-- Align users table with User entity (remove incorrect columns, add missing MFA/SMS columns) -->
+    <include file="db/changelog/0016-align-users-table-with-entity.xml"/>
 
 </databaseChangeLog>

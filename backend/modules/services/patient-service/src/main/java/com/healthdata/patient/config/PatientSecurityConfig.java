@@ -1,7 +1,9 @@
 package com.healthdata.patient.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.patient.persistence.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
@@ -111,6 +113,19 @@ public class PatientSecurityConfig {
     }
 
     /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -160,6 +175,7 @@ public class PatientSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            UserAutoRegistrationFilter userAutoRegistrationFilter,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -187,10 +203,14 @@ public class PatientSecurityConfig {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
+        // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+        // This ensures users are automatically registered in service database on first access
+        http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated requests
         // Uses request attributes (no database lookup)
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
 
         return http.build();
     }

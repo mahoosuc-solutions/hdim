@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0014-add-missing-user-columns" author="patient-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="tenant_ids"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Add missing columns to users table to align with shared authentication module.
+            These columns are required by:
+            - UserAutoRegistrationFilter (extracts tenant_ids and roles from gateway headers)
+            - User entity in authentication module (expects these fields)
+            - Multi-tenant and RBAC functionality
+        </comment>
+
+        <!-- Tenant IDs (comma-separated list) -->
+        <addColumn tableName="users">
+            <column name="tenant_ids" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Roles (comma-separated list) -->
+        <addColumn tableName="users">
+            <column name="roles" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add index for tenant_ids (used for tenant-scoped queries) -->
+        <createIndex indexName="idx_users_tenant_ids" tableName="users">
+            <column name="tenant_ids"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="users" indexName="idx_users_tenant_ids"/>
+            <dropColumn tableName="users" columnName="roles"/>
+            <dropColumn tableName="users" columnName="tenant_ids"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

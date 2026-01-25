@@ -10,6 +10,7 @@
 
     <!-- Tenants table (required by shared authentication module dependency) -->
     <include file="db/changelog/0000-create-tenants-table.xml"/>
+    <!-- NOTE: users table already exists from previous migrations, skip 0000-create-authentication-tables.xml -->
 
     <include file="db/changelog/0001-create-patient-table.xml"/>
     <include file="db/changelog/0002-create-observations-table.xml"/>
@@ -38,5 +39,7 @@
     <include file="db/changelog/0025-create-tasks-table.xml"/>
     <include file="db/changelog/0026-alter-medication-requests-dosage-instruction.xml"/>
     <include file="db/changelog/0030-add-missing-user-mfa-columns.xml"/>
+    <!-- Add missing tenant_ids and roles columns for user management alignment -->
+    <include file="db/changelog/0031-add-missing-user-columns.xml"/>
 
 </databaseChangeLog>

@@ -1,7 +1,9 @@
 package com.healthdata.cql.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.cql.repository.UserRepository;
 import com.healthdata.gateway.security.HdimPermissionEvaluator;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
@@ -128,6 +130,20 @@ public class CqlSecurityCustomizer {
     }
 
     /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Critical for tracking who triggers CQL measure evaluations (HIPAA §164.312(b) audit compliance).
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -163,6 +179,7 @@ public class CqlSecurityCustomizer {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            UserAutoRegistrationFilter userAutoRegistrationFilter,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -190,9 +207,13 @@ public class CqlSecurityCustomizer {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
+        // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+        // CRITICAL for audit compliance - tracks which users trigger CQL evaluations
+        http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated CQL operations
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
 
         return http.build();
     }

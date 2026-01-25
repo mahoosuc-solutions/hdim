@@ -2,6 +2,8 @@ package com.healthdata.fhir.config;
 
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
+import com.healthdata.fhir.persistence.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -129,6 +131,19 @@ public class FhirSecurityConfig {
     }
 
     /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -164,6 +179,7 @@ public class FhirSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            UserAutoRegistrationFilter userAutoRegistrationFilter,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -201,9 +217,13 @@ public class FhirSecurityConfig {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
+        // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+        // This ensures users are automatically registered in service database on first access
+        http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated FHIR operations
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
 
         return http.build();
     }

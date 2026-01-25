@@ -33,10 +33,12 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 @EnableFeignClients
 @EnableCaching
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.patient.repository"
+    "com.healthdata.patient.repository",
+    "com.healthdata.patient.persistence"  // Includes UserRepository and TenantRepository
 })
 @EntityScan(basePackages = {
-    "com.healthdata.patient.entity"
+    "com.healthdata.patient.entity",
+    "com.healthdata.authentication.domain"  // Enable User/Tenant persistence for UserAutoRegistrationFilter
 })
 public class PatientServiceApplication {
 

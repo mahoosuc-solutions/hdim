@@ -63,12 +63,14 @@ export class DocumentUploadComponent {
   ocrStatus: OcrStatus | null = null;
   uploadedFiles: AttachmentUploadResponse[] = [];
 
-  private logger = this.loggerService.withContext('DocumentUploadComponent');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private uploadService: DocumentUploadService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('DocumentUploadComponent');
+  }
 
   get acceptedFileTypes(): string {
     return this.allowedFileTypes.map(t => '.' + t).join(',');

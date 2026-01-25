@@ -41,5 +41,7 @@
     <include file="db/changelog/0030-add-missing-user-mfa-columns.xml"/>
     <!-- Add missing tenant_ids and roles columns for user management alignment -->
     <include file="db/changelog/0031-add-missing-user-columns.xml"/>
+    <!-- Align users table with User entity (remove VARCHAR columns, use junction tables) -->
+    <include file="db/changelog/0032-align-users-table-with-entity.xml"/>
 
 </databaseChangeLog>

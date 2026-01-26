@@ -296,7 +296,7 @@ describe('EvaluationService', () => {
           })
         );
         expect(req.request.body).toEqual(params);
-        req.flush({}, 30000);
+        req.flush({});
       }, 30000);
     }, 30000);
 

@@ -14,9 +14,11 @@ describe('TenantInterceptor', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([tenantInterceptor,
-        { provide: HttpClient, useValue: createMockHttpClient() }])),
+      providers: [
+        provideHttpClient(withInterceptors([tenantInterceptor])),
         provideHttpClientTesting(),
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        HttpTestingController,
       ],
     });
 

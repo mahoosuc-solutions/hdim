@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { TestPreviewDialogComponent } from './test-preview-dialog.component';
 import { CustomMeasureService } from '../../../services/custom-measure.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('TestPreviewDialogComponent', () => {
   let fixture: ComponentFixture<TestPreviewDialogComponent>;
@@ -18,11 +19,10 @@ describe('TestPreviewDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [TestPreviewDialogComponent],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRef },
+      providers: [{ provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: { measureId: 'm1', measureName: 'Measure A' } },
         { provide: CustomMeasureService, useValue: customMeasureService },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestPreviewDialogComponent);

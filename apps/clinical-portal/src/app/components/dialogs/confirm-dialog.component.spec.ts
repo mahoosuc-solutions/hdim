@@ -3,6 +3,7 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from './confirm-dialog.component';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 /**
  * TDD Test Suite for ConfirmDialog Component
@@ -28,10 +29,9 @@ describe('ConfirmDialogComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [ConfirmDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: mockDialogRef },
+      providers: [{ provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ConfirmDialogComponent);

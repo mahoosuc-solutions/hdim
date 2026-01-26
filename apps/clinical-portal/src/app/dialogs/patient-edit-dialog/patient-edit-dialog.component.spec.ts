@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PatientEditDialogComponent, PatientEditDialogData } from './patient-edit-dialog.component';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('PatientEditDialogComponent', () => {
   let component: PatientEditDialogComponent;
@@ -16,13 +17,12 @@ describe('PatientEditDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [PatientEditDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRefSpy },
+      providers: [{ provide: MatDialogRef, useValue: dialogRefSpy },
         {
           provide: MAT_DIALOG_DATA,
           useValue: dialogData,
         },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     dialogRef = TestBed.inject(MatDialogRef) as jest.Mocked<

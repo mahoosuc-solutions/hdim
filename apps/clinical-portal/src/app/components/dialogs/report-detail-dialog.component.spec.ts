@@ -5,6 +5,7 @@ import { ReportDetailDialogComponent } from './report-detail-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
 import { LoggerService } from '../services/logger.service';
 import { createMockLoggerService } from '../testing/mocks';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('ReportDetailDialogComponent', () => {
   let fixture: ComponentFixture<ReportDetailDialogComponent>;
@@ -41,7 +42,7 @@ describe('ReportDetailDialogComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: report },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: EvaluationService, useValue: evaluationService },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ReportDetailDialogComponent);

@@ -9,10 +9,14 @@ import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { DialogService } from '../../services/dialog.service';
 import { ToastService } from '../../services/toast.service';
+import { LoggerService } from '../../services/logger.service';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
+import { createMockLoggerService } from '../../../testing/mocks';
+
+const mockLoggerService = createMockLoggerService();
 
 describe('EvaluationsComponent', () => {
   let component: EvaluationsComponent;
@@ -68,6 +72,7 @@ describe('EvaluationsComponent', () => {
         { provide: PatientService, useValue: mockPatientService },
         { provide: DialogService, useValue: mockDialogService },
         { provide: ToastService, useValue: mockToastService },
+        { provide: LoggerService, useValue: mockLoggerService },
       ],
     }).compileComponents();
 

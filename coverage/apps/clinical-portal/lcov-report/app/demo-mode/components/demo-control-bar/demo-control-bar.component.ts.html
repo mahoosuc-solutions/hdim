@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">19.17% </span>
+                <span class="strong">25% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>14/73</span>
+                <span class='fraction'>19/76</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/22</span>
+                <span class='fraction'>0/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">5.88% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/16</span>
+                <span class='fraction'>1/17</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">19.11% </span>
+                <span class="strong">25.35% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>13/68</span>
+                <span class='fraction'>18/71</span>
             </div>
         
             
@@ -593,7 +593,15 @@
 <a name='L528'></a><a href='#L528'>528</a>
 <a name='L529'></a><a href='#L529'>529</a>
 <a name='L530'></a><a href='#L530'>530</a>
-<a name='L531'></a><a href='#L531'>531</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L531'></a><a href='#L531'>531</a>
+<a name='L532'></a><a href='#L532'>532</a>
+<a name='L533'></a><a href='#L533'>533</a>
+<a name='L534'></a><a href='#L534'>534</a>
+<a name='L535'></a><a href='#L535'>535</a>
+<a name='L536'></a><a href='#L536'>536</a>
+<a name='L537'></a><a href='#L537'>537</a>
+<a name='L538'></a><a href='#L538'>538</a>
+<a name='L539'></a><a href='#L539'>539</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -605,6 +613,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -988,10 +997,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-yes">35x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1134,6 +1150,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
+import { LoggerService } from '../../../services/logger.service';
 import { DemoModeService } from '../../services/demo-mode.service';
 import { DemoSeedingDataFlowComponent } from '../demo-seeding-data-flow/demo-seeding-data-flow.component';
 &nbsp;
@@ -1518,10 +1535,17 @@ import { DemoSeedingDataFlowComponent } from '../demo-seeding-data-flow/demo-see
   ],
 })
 export class DemoControlBarComponent implements OnInit {
-<span class="cstat-no" title="statement not covered" >  scenarioOptions: Array&lt;{ name: string; label: string; icon: string }&gt; = [];</span>
-<span class="cstat-no" title="statement not covered" >  showDataFlow = false;</span>
+  scenarioOptions: Array&lt;{ name: string; label: string; icon: string }&gt; = [];
+  showDataFlow = false;
 &nbsp;
-<span class="fstat-no" title="function not covered" >  constructor(public <span class="cstat-no" title="statement not covered" >d</span>emoService: DemoModeService)</span> {}
+<span class="fstat-no" title="function not covered" >  private get l</span>ogger() {
+<span class="cstat-no" title="statement not covered" >    return this.loggerService.withContext('DemoControlBarComponent');</span>
+  }
+&nbsp;
+  constructor(
+    public demoService: DemoModeService,
+    private loggerService: LoggerService
+  ) {}
 &nbsp;
   async <span class="fstat-no" title="function not covered" >ngOnInit(</span>): Promise&lt;void&gt; {
     const scenarios = <span class="cstat-no" title="statement not covered" >await this.demoService.loadScenarios();</span>
@@ -1545,68 +1569,68 @@ export class DemoControlBarComponent implements OnInit {
 <span class="cstat-no" title="statement not covered" >      this.showDataFlow = true;</span>
 <span class="cstat-no" title="statement not covered" >      await this.demoService.loadScenario(scenarioId);</span>
     } catch (err) {
-<span class="cstat-no" title="statement not covered" >      console.error('Failed to load scenario:', err);</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.error('Failed to load scenario:', err);</span>
     }
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >resetDemo(</span>): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (confirm('Are you sure you want to reset all demo data?')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (confirm('Are you sure you want to reset all demo data?')) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        await this.demoService.resetDemo();</span>
       } catch (err) {
-<span class="cstat-no" title="statement not covered" >        console.error('Failed to reset demo:', err);</span>
+<span class="cstat-no" title="statement not covered" >        this.logger.error('Failed to reset demo:', err);</span>
       }
     }
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  canCancelLoad(</span>): boolean {
     const progress = <span class="cstat-no" title="statement not covered" >this.demoService.progress();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!progress) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!progress) {</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
 <span class="cstat-no" title="statement not covered" >    return !['COMPLETE', 'FAILED', 'CANCELLED'].includes(progress.stage) &amp;&amp; !progress.cancelRequested;</span>
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >cancelLoad(</span>): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!confirm('Cancel the current scenario load?')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!confirm('Cancel the current scenario load?')) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await this.demoService.cancelCurrentLoad();</span>
     } catch (err) {
-<span class="cstat-no" title="statement not covered" >      console.error('Failed to cancel scenario load:', err);</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.error('Failed to cancel scenario load:', err);</span>
     }
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >stopSession(</span>): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!confirm('Stop the current demo session?')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!confirm('Stop the current demo session?')) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      await this.demoService.stopCurrentSession();</span>
     } catch (err) {
-<span class="cstat-no" title="statement not covered" >      console.error('Failed to stop demo session:', err);</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.error('Failed to stop demo session:', err);</span>
     }
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >resetCurrentTenant(</span>): Promise&lt;void&gt; {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (confirm('Reset current scenario data for its tenant?')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (confirm('Reset current scenario data for its tenant?')) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        await this.demoService.resetCurrentTenant();</span>
       } catch (err) {
-<span class="cstat-no" title="statement not covered" >        console.error('Failed to reset current tenant:', err);</span>
+<span class="cstat-no" title="statement not covered" >        this.logger.error('Failed to reset current tenant:', err);</span>
       }
     }
   }
 &nbsp;
   async <span class="fstat-no" title="function not covered" >createSnapshot(</span>): Promise&lt;void&gt; {
     const name = <span class="cstat-no" title="statement not covered" >prompt('Enter snapshot name:', `demo-snapshot-${Date.now()}`);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (name) {</span>
+<span class="cstat-no" title="statement not covered" >    if (name) {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        await this.demoService.createSnapshot(name);</span>
 <span class="cstat-no" title="statement not covered" >        alert('Snapshot created successfully!');</span>
       } catch (err) {
-<span class="cstat-no" title="statement not covered" >        console.error('Failed to create snapshot:', err);</span>
+<span class="cstat-no" title="statement not covered" >        this.logger.error('Failed to create snapshot:', err);</span>
       }
     }
   }
@@ -1616,8 +1640,8 @@ export class DemoControlBarComponent implements OnInit {
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  exitDemoMode(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.demoService.isRecording()) {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!confirm('Recording in progress. Are you sure you want to exit demo mode?')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.demoService.isRecording()) {</span>
+<span class="cstat-no" title="statement not covered" >      if (!confirm('Recording in progress. Are you sure you want to exit demo mode?')) {</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
       }
     }
@@ -1631,24 +1655,24 @@ export class DemoControlBarComponent implements OnInit {
 &nbsp;
 <span class="fstat-no" title="function not covered" >  formatTimestamp(</span>value: string): string {
     const parsed = <span class="cstat-no" title="statement not covered" >Date.parse(value);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (Number.isNaN(parsed)) {</span>
+<span class="cstat-no" title="statement not covered" >    if (Number.isNaN(parsed)) {</span>
 <span class="cstat-no" title="statement not covered" >      return value;</span>
     }
 <span class="cstat-no" title="statement not covered" >    return new Date(parsed).toLocaleTimeString();</span>
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >getScenarioIcon(</span>name: string): string {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (name.includes('hedis')) <span class="cstat-no" title="statement not covered" >return 'assessment';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (name.includes('risk')) <span class="cstat-no" title="statement not covered" >return 'speed';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (name.includes('journey')) <span class="cstat-no" title="statement not covered" >return 'person';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (name.includes('tenant')) <span class="cstat-no" title="statement not covered" >return 'business';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (name.includes('hedis')) <span class="cstat-no" title="statement not covered" >return 'assessment';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (name.includes('risk')) <span class="cstat-no" title="statement not covered" >return 'speed';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (name.includes('journey')) <span class="cstat-no" title="statement not covered" >return 'person';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (name.includes('tenant')) <span class="cstat-no" title="statement not covered" >return 'business';</span></span>
 <span class="cstat-no" title="statement not covered" >    return 'movie';</span>
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  toggleDataFlow(</span>): void {
 <span class="cstat-no" title="statement not covered" >    this.showDataFlow = !this.showDataFlow;</span>
     // Auto-show data flow when loading starts
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.showDataFlow &amp;&amp; this.demoService.isLoading()) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.showDataFlow &amp;&amp; this.demoService.isLoading()) {</span>
       // Data flow will be shown
     }
   }
@@ -1660,7 +1684,7 @@ export class DemoControlBarComponent implements OnInit {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

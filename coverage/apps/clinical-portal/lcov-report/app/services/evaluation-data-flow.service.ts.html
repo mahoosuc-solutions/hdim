@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">16.66% </span>
+                <span class="strong">11.62% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/42</span>
+                <span class='fraction'>5/43</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/26</span>
+                <span class='fraction'>0/30</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">11.11% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/9</span>
+                <span class='fraction'>0/9</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">12.5% </span>
+                <span class="strong">7.31% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/40</span>
+                <span class='fraction'>3/41</span>
             </div>
         
             
@@ -170,8 +170,13 @@
 <a name='L105'></a><a href='#L105'>105</a>
 <a name='L106'></a><a href='#L106'>106</a>
 <a name='L107'></a><a href='#L107'>107</a>
-<a name='L108'></a><a href='#L108'>108</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -180,10 +185,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -278,8 +286,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { Observable, Subject } from 'rxjs';
+import { LoggerService } from './logger.service';
 import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data-flow.component';
+import { LoggerService } from './logger.service';
 &nbsp;
 /**
  * Service for receiving real-time data flow steps via WebSocket
@@ -287,16 +298,17 @@ import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data
 @Injectable({
   providedIn: 'root',
 })
-export class EvaluationDataFlowService {
+export <span class="fstat-no" title="function not covered" >class E</span>valuationDataFlowService {
+  private readonly <span class="cstat-no" title="statement not covered" >logger = this.loggerService.withContext('EvaluationDataFlowService');</span>
   private ws?: WebSocket;
-  private dataFlowSubject = new Subject&lt;DataFlowStep&gt;();
-  private connected = false;
+  private <span class="cstat-no" title="statement not covered" >dataFlowSubject = new Subject&lt;DataFlowStep&gt;();</span>
+  private <span class="cstat-no" title="statement not covered" >connected = false;</span>
 &nbsp;
   /**
    * Connect to WebSocket for evaluation data flow
    */
 <span class="fstat-no" title="function not covered" >  connect(</span>evaluationId: string, tenantId?: string): Observable&lt;DataFlowStep&gt; {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.ws &amp;&amp; this.connected) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.ws &amp;&amp; this.connected) {</span>
 <span class="cstat-no" title="statement not covered" >      return this.dataFlowSubject.asObservable();</span>
     }
 &nbsp;
@@ -305,7 +317,7 @@ export class EvaluationDataFlowService {
 <span class="cstat-no" title="statement not covered" >      this.ws = new WebSocket(wsUrl);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      this.ws.onopen = <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        console.log('[DataFlow] WebSocket connected');</span>
+<span class="cstat-no" title="statement not covered" >        this.logger.info('[DataFlow] WebSocket connected');</span>
 <span class="cstat-no" title="statement not covered" >        this.connected = true;</span>
       };
 &nbsp;
@@ -314,7 +326,7 @@ export class EvaluationDataFlowService {
           const message = <span class="cstat-no" title="statement not covered" >JSON.parse(event.data);</span>
           
           // Handle data flow step messages
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (message.type === 'DATA_FLOW_STEP' &amp;&amp; message.data) {</span>
+<span class="cstat-no" title="statement not covered" >          if (message.type === 'DATA_FLOW_STEP' &amp;&amp; message.data) {</span>
             const step: DataFlowStep = <span class="cstat-no" title="statement not covered" >{</span>
               stepNumber: message.data.stepNumber || 0,
               stepName: message.data.stepName || '',
@@ -330,21 +342,21 @@ export class EvaluationDataFlowService {
 <span class="cstat-no" title="statement not covered" >            this.dataFlowSubject.next(step);</span>
           }
         } catch (error) {
-<span class="cstat-no" title="statement not covered" >          console.error('[DataFlow] Error parsing WebSocket message:', error);</span>
+<span class="cstat-no" title="statement not covered" >          this.logger.error('[DataFlow] Error parsing WebSocket message:', { error });</span>
         }
       };
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      this.ws.onerror = <span class="fstat-no" title="function not covered" >(e</span>rror) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        console.error('[DataFlow] WebSocket error:', error);</span>
+<span class="cstat-no" title="statement not covered" >        this.logger.error('[DataFlow] WebSocket error:', { error });</span>
 <span class="cstat-no" title="statement not covered" >        this.connected = false;</span>
       };
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      this.ws.onclose = <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        console.log('[DataFlow] WebSocket closed');</span>
+<span class="cstat-no" title="statement not covered" >        this.logger.info('[DataFlow] WebSocket closed');</span>
 <span class="cstat-no" title="statement not covered" >        this.connected = false;</span>
       };
     } catch (error) {
-<span class="cstat-no" title="statement not covered" >      console.error('[DataFlow] Failed to connect WebSocket:', error);</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.error('[DataFlow] Failed to connect WebSocket:', { error });</span>
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return this.dataFlowSubject.asObservable();</span>
@@ -354,7 +366,7 @@ export class EvaluationDataFlowService {
    * Disconnect WebSocket
    */
 <span class="fstat-no" title="function not covered" >  disconnect(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.ws) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.ws) {</span>
 <span class="cstat-no" title="statement not covered" >      this.ws.close();</span>
 <span class="cstat-no" title="statement not covered" >      this.ws = undefined;</span>
 <span class="cstat-no" title="statement not covered" >      this.connected = false;</span>
@@ -377,7 +389,7 @@ export class EvaluationDataFlowService {
     const baseUrl = <span class="cstat-no" title="statement not covered" >`${protocol}//${host}`;</span>
     
     let url = <span class="cstat-no" title="statement not covered" >`${baseUrl}/ws/evaluation-progress?evaluationId=${evaluationId}`;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (tenantId) {</span>
+<span class="cstat-no" title="statement not covered" >    if (tenantId) {</span>
 <span class="cstat-no" title="statement not covered" >      url += `&amp;tenantId=${tenantId}`;</span>
     }
     
@@ -391,7 +403,7 @@ export class EvaluationDataFlowService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

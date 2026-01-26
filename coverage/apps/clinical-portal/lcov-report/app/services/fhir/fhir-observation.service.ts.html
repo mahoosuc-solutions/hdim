@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/314</span>
+                <span class='fraction'>0/336</span>
             </div>
         
             
@@ -1234,7 +1234,7 @@ export class FhirObservationService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getVitalSigns(</span>patientId: string): Observable&lt;PhysicalHealthSummary['vitals']&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`vitals:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;PhysicalHealthSummary['vitals']&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -1270,7 +1270,7 @@ export class FhirObservationService extends CacheableService {
   ): Observable&lt;LabResult[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`labs:${patientId}:${options?.followPagination || false}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;LabResult[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -1279,7 +1279,7 @@ export class FhirObservationService extends CacheableService {
       .set('_sort', '-date')
       .set('_count', String(options?.count || 20));
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (options?.followPagination) {</span>
+<span class="cstat-no" title="statement not covered" >    if (options?.followPagination) {</span>
 <span class="cstat-no" title="statement not covered" >      return this.fetchAllPages&lt;FhirObservation&gt;(url, params).pipe(</span>
         map(<span class="fstat-no" title="function not covered" >(o</span>bservations) =&gt; {
           const labs = <span class="cstat-no" title="statement not covered" >observations.map(<span class="fstat-no" title="function not covered" >(o</span>bs) =&gt; <span class="cstat-no" title="statement not covered" >this.mapFhirObservationToLabResult(obs))</span>;</span>
@@ -1320,7 +1320,7 @@ export class FhirObservationService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getDiagnosticReports(</span>patientId: string): Observable&lt;any[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`diagnostic:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;any[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.DIAGNOSTIC_REPORT);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -1363,11 +1363,11 @@ export class FhirObservationService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getVitalSignHistory(</span>
     patientId: string,
     loincCode?: string,
-    limit: number = <span class="branch-0 cbranch-no" title="branch not covered" >30</span>
+    limit = <span class="branch-0 cbranch-no" title="branch not covered" >30</span>
   ): Observable&lt;VitalSign&lt;number | string&gt;[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`vital-history:${patientId}:${loincCode || 'all'}:${limit}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;VitalSign&lt;number | string&gt;[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION);</span>
     let params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -1376,7 +1376,7 @@ export class FhirObservationService extends CacheableService {
       .set('_sort', '-date')
       .set('_count', String(limit));
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (loincCode) {</span>
+<span class="cstat-no" title="statement not covered" >    if (loincCode) {</span>
 <span class="cstat-no" title="statement not covered" >      params = params.set('code', `http://loinc.org|${loincCode}`);</span>
     }
 &nbsp;
@@ -1407,11 +1407,11 @@ export class FhirObservationService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getLabHistory(</span>
     patientId: string,
     loincCode: string,
-    limit: number = <span class="branch-0 cbranch-no" title="branch not covered" >10</span>
+    limit = <span class="branch-0 cbranch-no" title="branch not covered" >10</span>
   ): Observable&lt;LabResult[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`lab-history:${patientId}:${loincCode}:${limit}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;LabResult[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -1462,7 +1462,7 @@ export class FhirObservationService extends CacheableService {
       .pipe(
         expand(<span class="fstat-no" title="function not covered" >(b</span>undle) =&gt; {
           const nextLink = <span class="cstat-no" title="statement not covered" >bundle.link?.find(<span class="fstat-no" title="function not covered" >(l</span>ink) =&gt; <span class="cstat-no" title="statement not covered" >link.relation === 'next')</span>;</span>
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (nextLink?.url) {</span>
+<span class="cstat-no" title="statement not covered" >          if (nextLink?.url) {</span>
 <span class="cstat-no" title="statement not covered" >            return this.http.get&lt;FhirBundle&lt;T&gt;&gt;(nextLink.url, {</span>
               headers: this.getHeaders(),
             });
@@ -1486,7 +1486,7 @@ export class FhirObservationService extends CacheableService {
   ): PhysicalHealthSummary['vitals'] {
     const vitals: PhysicalHealthSummary['vitals'] = <span class="cstat-no" title="statement not covered" >{};</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!bundle.entry || bundle.entry.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!bundle.entry || bundle.entry.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return vitals;</span>
     }
 &nbsp;
@@ -1499,17 +1499,17 @@ export class FhirObservationService extends CacheableService {
 <span class="fstat-no" title="function not covered" >        (c</span>) =&gt; <span class="cstat-no" title="statement not covered" >c.system === 'http://loinc.org'</span>
       )?.code;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!loincCode) <span class="cstat-no" title="statement not covered" >continue;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (!loincCode) <span class="cstat-no" title="statement not covered" >continue;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      switch (loincCode) {</span>
         case LOINC_VITAL_SIGNS.HEART_RATE:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity?.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity?.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.heartRate = this.mapObservationToNumericVitalSign(obs, obs.valueQuantity.value);</span>
           }
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.BLOOD_PRESSURE_PANEL:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.component &amp;&amp; obs.component.length &gt;= 2) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.component &amp;&amp; obs.component.length &gt;= 2) {</span>
             const systolic = <span class="cstat-no" title="statement not covered" >obs.component.find(<span class="fstat-no" title="function not covered" >(c</span>) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >              c.code.coding?.some(<span class="fstat-no" title="function not covered" >(c</span>oding) =&gt; <span class="cstat-no" title="statement not covered" >coding.code === LOINC_VITAL_SIGNS.SYSTOLIC_BP)</span></span>
             );
@@ -1517,7 +1517,7 @@ export class FhirObservationService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >              c.code.coding?.some(<span class="fstat-no" title="function not covered" >(c</span>oding) =&gt; <span class="cstat-no" title="statement not covered" >coding.code === LOINC_VITAL_SIGNS.DIASTOLIC_BP)</span></span>
             );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >            <span class="missing-if-branch" title="if path not taken" >I</span>if (systolic?.valueQuantity &amp;&amp; diastolic?.valueQuantity) {</span>
+<span class="cstat-no" title="statement not covered" >            if (systolic?.valueQuantity &amp;&amp; diastolic?.valueQuantity) {</span>
               const bpValue = <span class="cstat-no" title="statement not covered" >`${systolic.valueQuantity.value}/${diastolic.valueQuantity.value}`;</span>
 <span class="cstat-no" title="statement not covered" >              vitals.bloodPressure = this.mapObservationToStringVitalSign(obs, bpValue, 'mmHg');</span>
             }
@@ -1525,19 +1525,19 @@ export class FhirObservationService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.BODY_WEIGHT:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity?.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity?.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.weight = this.mapObservationToNumericVitalSign(obs, obs.valueQuantity.value);</span>
           }
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.BMI:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity?.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity?.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.bmi = this.mapObservationToNumericVitalSign(obs, obs.valueQuantity.value);</span>
           }
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.RESPIRATORY_RATE:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity?.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity?.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.respiratoryRate = this.mapObservationToNumericVitalSign(</span>
               obs,
               obs.valueQuantity.value
@@ -1546,7 +1546,7 @@ export class FhirObservationService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.OXYGEN_SATURATION:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity?.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity?.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.oxygenSaturation = this.mapObservationToNumericVitalSign(</span>
               obs,
               obs.valueQuantity.value
@@ -1555,7 +1555,7 @@ export class FhirObservationService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.BODY_TEMPERATURE:
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity?.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity?.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.temperature = this.mapObservationToNumericVitalSign(</span>
               obs,
               obs.valueQuantity.value
@@ -1637,7 +1637,7 @@ export class FhirObservationService extends CacheableService {
    */
   private <span class="fstat-no" title="function not covered" >determineLabStatus(</span>obs: FhirObservation): 'normal' | 'abnormal' | 'critical' {
     const code = <span class="cstat-no" title="statement not covered" >obs.interpretation?.[0]?.coding?.[0]?.code;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!code) <span class="cstat-no" title="statement not covered" >return 'normal';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!code) <span class="cstat-no" title="statement not covered" >return 'normal';</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    switch (code) {</span>
       case 'N':
@@ -1659,7 +1659,7 @@ export class FhirObservationService extends CacheableService {
    * Format reference range from FHIR
    */
   private <span class="fstat-no" title="function not covered" >formatReferenceRange(</span>range?: FhirObservation['referenceRange']): { low?: number; high?: number; text?: string } | undefined {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!range || range.length === 0) <span class="cstat-no" title="statement not covered" >return undefined;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!range || range.length === 0) <span class="cstat-no" title="statement not covered" >return undefined;</span></span>
 &nbsp;
     const first = <span class="cstat-no" title="statement not covered" >range[0];</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
@@ -1675,7 +1675,7 @@ export class FhirObservationService extends CacheableService {
   private <span class="fstat-no" title="function not covered" >determineVitalStatus(</span>obs: FhirObservation): 'normal' | 'abnormal' | 'critical' {
     const interpretation = <span class="cstat-no" title="statement not covered" >obs.interpretation?.[0]?.coding?.[0]?.code;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!interpretation) <span class="cstat-no" title="statement not covered" >return 'normal';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!interpretation) <span class="cstat-no" title="statement not covered" >return 'normal';</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    switch (interpretation) {</span>
       case 'N':
@@ -1706,7 +1706,7 @@ export class FhirObservationService extends CacheableService {
       'A': { code: 'A', display: 'Abnormal', severity: 'abnormal' },
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (code &amp;&amp; interpretations[code]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (code &amp;&amp; interpretations[code]) {</span>
 <span class="cstat-no" title="statement not covered" >      return interpretations[code];</span>
     }
 &nbsp;
@@ -1720,7 +1720,7 @@ export class FhirObservationService extends CacheableService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

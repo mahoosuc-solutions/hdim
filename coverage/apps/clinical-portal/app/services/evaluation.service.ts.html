@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.08% </span>
+                <span class="strong">70.37% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>32/47</span>
+                <span class='fraction'>38/54</span>
             </div>
         
             
@@ -671,10 +671,10 @@
 <a name='L606'></a><a href='#L606'>606</a>
 <a name='L607'></a><a href='#L607'>607</a>
 <a name='L608'></a><a href='#L608'>608</a>
-<a name='L609'></a><a href='#L609'>609</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
+<a name='L609'></a><a href='#L609'>609</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -696,14 +696,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -714,18 +714,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">50x</span>
-<span class="cline-any cline-yes">50x</span>
-<span class="cline-any cline-yes">50x</span>
-<span class="cline-any cline-yes">50x</span>
-<span class="cline-any cline-yes">50x</span>
-<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">94x</span>
+<span class="cline-any cline-yes">94x</span>
+<span class="cline-any cline-yes">94x</span>
+<span class="cline-any cline-yes">94x</span>
+<span class="cline-any cline-yes">94x</span>
+<span class="cline-any cline-yes">94x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">50x</span>
-<span class="cline-any cline-yes">50x</span>
+<span class="cline-any cline-yes">94x</span>
+<span class="cline-any cline-yes">94x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1445,7 +1445,7 @@ export class EvaluationService {
    * Get all evaluations (paginated)
    * Endpoint: GET /api/v1/cql/evaluations
    */
-  getAllEvaluations(page: number = 0, size: number = 1000): Observable&lt;CqlEvaluation[]&gt; {
+  getAllEvaluations(page = 0, size = 1000): Observable&lt;CqlEvaluation[]&gt; {
     const url = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
       page: page.toString(),
       size: size.toString(),
@@ -1469,7 +1469,7 @@ export class EvaluationService {
    * Get all evaluations with caching (3-minute TTL)
    * Use this for dashboard and lists that don't need real-time data
    */
-  getAllEvaluationsCached(page: number = 0, size: number = 1000): Observable&lt;CqlEvaluation[]&gt; {
+  getAllEvaluationsCached(page = 0, size = 1000): Observable&lt;CqlEvaluation[]&gt; {
     const now = Date.now();
     if (this.evaluationsCache$ &amp;&amp; (now - this.evalCacheTimestamp) &lt; this.EVAL_CACHE_TTL) {
       return this.evaluationsCache$;
@@ -1482,7 +1482,7 @@ export class EvaluationService {
   /**
    * Get recent evaluations (last N days) - lightweight method for dashboard
    */
-  getRecentEvaluations(days: number = <span class="branch-0 cbranch-no" title="branch not covered" >30,</span> limit: number = <span class="branch-0 cbranch-no" title="branch not covered" >10)</span>: Observable&lt;CqlEvaluation[]&gt; {
+  getRecentEvaluations(days = <span class="branch-0 cbranch-no" title="branch not covered" >30,</span> limit = <span class="branch-0 cbranch-no" title="branch not covered" >10)</span>: Observable&lt;CqlEvaluation[]&gt; {
     return this.getAllEvaluationsCached(0, 100).pipe(
       map((evaluations) =&gt; {
         const cutoffDate = new Date();
@@ -1569,7 +1569,7 @@ export class EvaluationService {
     const url = <span class="cstat-no" title="statement not covered" >buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.EVALUATION_PRESET_DEFAULT);</span>
 <span class="cstat-no" title="statement not covered" >    return this.http.get&lt;EvaluationDefaultPreset&gt;(url).pipe(</span>
       catchError(<span class="fstat-no" title="function not covered" >(e</span>rror) =&gt; {
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (error?.status === 404) {</span>
+<span class="cstat-no" title="statement not covered" >        if (error?.status === 404) {</span>
 <span class="cstat-no" title="statement not covered" >          return of(null);</span>
         }
 <span class="cstat-no" title="statement not covered" >        throw error;</span>
@@ -1608,7 +1608,7 @@ export class EvaluationService {
   calculateQualityMeasure(
     patientId: string,
     measureId: string,
-    createdBy: string = 'system'
+    createdBy = 'system'
   ): Observable&lt;QualityMeasureResult&gt; {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.CALCULATE, {
       patient: patientId,
@@ -1710,7 +1710,7 @@ export class EvaluationService {
    * Get all quality measure results (all patients)
    * Endpoint: GET /quality-measure/results
    */
-<span class="fstat-no" title="function not covered" >  getAllResults(</span>page: number = <span class="branch-0 cbranch-no" title="branch not covered" >0,</span> size: number = <span class="branch-0 cbranch-no" title="branch not covered" >20)</span>: Observable&lt;QualityMeasureResult[]&gt; {
+<span class="fstat-no" title="function not covered" >  getAllResults(</span>page = <span class="branch-0 cbranch-no" title="branch not covered" >0,</span> size = <span class="branch-0 cbranch-no" title="branch not covered" >20)</span>: Observable&lt;QualityMeasureResult[]&gt; {
 <span class="cstat-no" title="statement not covered" >    return this.getPatientResults(null, page, size);</span>
   }
 &nbsp;
@@ -1765,7 +1765,7 @@ export class EvaluationService {
   savePatientReport(
     patientId: string,
     reportName: string,
-    createdBy: string = 'system'
+    createdBy = 'system'
   ): Observable&lt;SavedReport&gt; {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVE_PATIENT_REPORT, {
       patient: patientId,
@@ -1782,7 +1782,7 @@ export class EvaluationService {
   savePopulationReport(
     year: number,
     reportName: string,
-    createdBy: string = 'system'
+    createdBy = 'system'
   ): Observable&lt;SavedReport&gt; {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVE_POPULATION_REPORT, {
       year: year.toString(),
@@ -1894,7 +1894,7 @@ export class EvaluationService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

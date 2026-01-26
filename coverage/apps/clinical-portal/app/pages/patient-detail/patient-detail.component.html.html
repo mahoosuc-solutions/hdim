@@ -341,21 +341,7 @@
 <a name='L276'></a><a href='#L276'>276</a>
 <a name='L277'></a><a href='#L277'>277</a>
 <a name='L278'></a><a href='#L278'>278</a>
-<a name='L279'></a><a href='#L279'>279</a>
-<a name='L280'></a><a href='#L280'>280</a>
-<a name='L281'></a><a href='#L281'>281</a>
-<a name='L282'></a><a href='#L282'>282</a>
-<a name='L283'></a><a href='#L283'>283</a>
-<a name='L284'></a><a href='#L284'>284</a>
-<a name='L285'></a><a href='#L285'>285</a>
-<a name='L286'></a><a href='#L286'>286</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L279'></a><a href='#L279'>279</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -672,58 +658,12 @@
 &nbsp;
   &lt;!-- Main Content --&gt;
   &lt;div *ngIf="!loading &amp;&amp; !error &amp;&amp; patient" class="content"&gt;
-    &lt;!-- Patient Demographics Card --&gt;
-    &lt;mat-card class="demographics-card"&gt;
-      &lt;mat-card-header&gt;
-        &lt;mat-icon mat-card-avatar&gt;person&lt;/mat-icon&gt;
-        &lt;mat-card-title&gt;{{ getPatientName() }}&lt;/mat-card-title&gt;
-        &lt;mat-card-subtitle&gt;Patient ID: {{ patient.id }}&lt;/mat-card-subtitle&gt;
-      &lt;/mat-card-header&gt;
-&nbsp;
-      &lt;mat-card-content&gt;
-        &lt;div class="demographics-grid"&gt;
-          &lt;div class="demo-item"&gt;
-            &lt;span class="label"&gt;MRN:&lt;/span&gt;
-            &lt;span class="value"&gt;
-              {{ getPatientMRN() || 'N/A' }}
-              &lt;span *ngIf="getPatientMRN() &amp;&amp; getPatientMRNAuthority()" class="mrn-authority"&gt;
-                ({{ formatMRNAuthority(getPatientMRNAuthority()) }})
-              &lt;/span&gt;
-            &lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="demo-item"&gt;
-            &lt;span class="label"&gt;Date of Birth:&lt;/span&gt;
-            &lt;span class="value"&gt;{{ formatDate(patient.birthDate) }}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="demo-item"&gt;
-            &lt;span class="label"&gt;Age:&lt;/span&gt;
-            &lt;span class="value"&gt;{{ getPatientAge() || 'N/A' }} years&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="demo-item"&gt;
-            &lt;span class="label"&gt;Gender:&lt;/span&gt;
-            &lt;span class="value"&gt;{{ patient.gender || 'N/A' }}&lt;/span&gt;
-          &lt;/div&gt;
-          &lt;div class="demo-item"&gt;
-            &lt;span class="label"&gt;Status:&lt;/span&gt;
-            &lt;mat-chip [color]="patient.active !== false ? 'primary' : 'warn'" selected&gt;
-              {{ patient.active !== false ? 'Active' : 'Inactive' }}
-            &lt;/mat-chip&gt;
-          &lt;/div&gt;
-        &lt;/div&gt;
-      &lt;/mat-card-content&gt;
-&nbsp;
-      &lt;mat-card-actions&gt;
-        &lt;app-loading-button
-          text="View Quality Results"
-          icon="assessment"
-          color="primary"
-          variant="raised"
-          [loading]="viewResultsLoading"
-          ariaLabel="View quality measure results for this patient"
-          (buttonClick)="navigateToResults()"&gt;
-        &lt;/app-loading-button&gt;
-      &lt;/mat-card-actions&gt;
-    &lt;/mat-card&gt;
+    &lt;!-- Patient Demographics Card - Issue #237: Comprehensive 360° View --&gt;
+    &lt;app-patient-demographics-card
+      [patient]="patient"
+      [showEmergencyContacts]="true"
+      [showInsurance]="true"&gt;
+    &lt;/app-patient-demographics-card&gt;
 &nbsp;
     &lt;!-- Care Gaps Alert (if any) --&gt;
     &lt;mat-card *ngIf="hasCareGaps()" class="care-gaps-alert"&gt;
@@ -914,6 +854,45 @@
             &lt;/table&gt;
           &lt;/div&gt;
         &lt;/mat-tab&gt;
+&nbsp;
+        &lt;!-- Timeline Tab - Issue #238: Patient Timeline View --&gt;
+        &lt;mat-tab&gt;
+          &lt;ng-template mat-tab-label&gt;
+            &lt;mat-icon class="tab-icon"&gt;timeline&lt;/mat-icon&gt;
+            Timeline
+          &lt;/ng-template&gt;
+          &lt;div class="tab-content"&gt;
+            &lt;app-patient-timeline [patientId]="patientId!"&gt;&lt;/app-patient-timeline&gt;
+          &lt;/div&gt;
+        &lt;/mat-tab&gt;
+&nbsp;
+        &lt;!-- AI Assistant Tab - Issue #243: AI Clinical Assistant Chat --&gt;
+        &lt;mat-tab&gt;
+          &lt;ng-template mat-tab-label&gt;
+            &lt;mat-icon class="tab-icon"&gt;smart_toy&lt;/mat-icon&gt;
+            AI Assistant
+          &lt;/ng-template&gt;
+          &lt;div class="tab-content"&gt;
+            &lt;app-ai-clinical-assistant [patientId]="patientId!"&gt;&lt;/app-ai-clinical-assistant&gt;
+          &lt;/div&gt;
+        &lt;/mat-tab&gt;
+&nbsp;
+        &lt;!-- Documents Tab - Issue #244: Document Upload Drag-Drop, Issue #249: OCR Phase 1 --&gt;
+        &lt;mat-tab&gt;
+          &lt;ng-template mat-tab-label&gt;
+            &lt;mat-icon class="tab-icon"&gt;folder&lt;/mat-icon&gt;
+            Documents
+          &lt;/ng-template&gt;
+          &lt;div class="tab-content"&gt;
+            &lt;app-document-upload
+              [documentId]="getCurrentDocumentId()"
+              [patientId]="patientId!"
+              (uploadSuccess)="onDocumentUploadSuccess($event)"
+              (uploadError)="onDocumentUploadError($event)"
+              (ocrComplete)="onOcrComplete($event)"&gt;
+            &lt;/app-document-upload&gt;
+          &lt;/div&gt;
+        &lt;/mat-tab&gt;
       &lt;/mat-tab-group&gt;
     &lt;/mat-card&gt;
   &lt;/div&gt;
@@ -925,7 +904,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

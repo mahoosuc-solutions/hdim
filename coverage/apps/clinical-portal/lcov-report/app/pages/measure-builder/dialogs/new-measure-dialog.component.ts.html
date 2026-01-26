@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">8.33% </span>
+                <span class="strong">7.14% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/24</span>
+                <span class='fraction'>2/28</span>
             </div>
         
             
@@ -726,22 +726,22 @@
 <a name='L661'></a><a href='#L661'>661</a>
 <a name='L662'></a><a href='#L662'>662</a>
 <a name='L663'></a><a href='#L663'>663</a>
-<a name='L664'></a><a href='#L664'>664</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L664'></a><a href='#L664'>664</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1262,7 +1262,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1961,12 +1961,12 @@ export class NewMeasureDialogComponent implements OnInit {
     let templates = <span class="cstat-no" title="statement not covered" >[...PRIMARY_CARE_TEMPLATES];</span>
 &nbsp;
     // Filter by category
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.selectedCategory) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.selectedCategory) {</span>
 <span class="cstat-no" title="statement not covered" >      templates = getTemplatesByCategory(this.selectedCategory as MeasureTemplateCategory);</span>
     }
 &nbsp;
     // Filter by search
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.templateSearch.trim()) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.templateSearch.trim()) {</span>
 <span class="cstat-no" title="statement not covered" >      templates = searchTemplates(this.templateSearch).filter(<span class="fstat-no" title="function not covered" >t </span>=&gt;</span>
 <span class="cstat-no" title="statement not covered" >        !this.selectedCategory || t.category === this.selectedCategory</span>
       );
@@ -2007,7 +2007,7 @@ export class NewMeasureDialogComponent implements OnInit {
   }
 &nbsp;
   save(): void {
-    if (!this.canSave()) return;
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (!this.canSave()) return;
 &nbsp;
     let draft: CreateCustomMeasureRequest &amp; { cqlTemplate?: string };
 &nbsp;
@@ -2023,7 +2023,7 @@ export class NewMeasureDialogComponent implements OnInit {
     } else {
       // From scratch
       const trimmed = <span class="cstat-no" title="statement not covered" >this.name.trim();</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!trimmed) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (!trimmed) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      draft = {</span>
         name: trimmed,
@@ -2059,7 +2059,7 @@ export class NewMeasureDialogComponent implements OnInit {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

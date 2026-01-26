@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">32.94% </span>
+                <span class="strong">31.75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>56/170</span>
+                <span class='fraction'>67/211</span>
             </div>
         
             
@@ -1803,7 +1803,7 @@ export class MentalHealthService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getMentalHealthFromFhir(</span>patientId: string): Observable&lt;MentalHealthSummary&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`mental:fhir:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;MentalHealthSummary&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return forkJoin({</span>
       phq9: this.fhirQuestionnaire.getLatestMentalHealthAssessment(patientId, 'PHQ-9'),
@@ -1952,7 +1952,7 @@ export class MentalHealthService extends CacheableService {
     );
 &nbsp;
     let params = <span class="cstat-no" title="statement not covered" >new HttpParams();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (type) {</span>
+<span class="cstat-no" title="statement not covered" >    if (type) {</span>
 <span class="cstat-no" title="statement not covered" >      params = params.set('type', type);</span>
     }
 &nbsp;
@@ -2093,21 +2093,21 @@ export class MentalHealthService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >      if (assessment.severity === 'severe') <span class="cstat-no" title="statement not covered" >score += 30;</span></span>
       else <span class="cstat-no" title="statement not covered" >if (assessment.severity === 'moderately-severe') <span class="cstat-no" title="statement not covered" >score += 25;</span></span>
       else <span class="cstat-no" title="statement not covered" >if (assessment.severity === 'moderate') <span class="cstat-no" title="statement not covered" >score += 15;</span></span>
-      else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (assessment.severity === 'mild') <span class="cstat-no" title="statement not covered" >score += 8;</span></span>
+      else <span class="cstat-no" title="statement not covered" >if (assessment.severity === 'mild') <span class="cstat-no" title="statement not covered" >score += 8;</span></span>
     }
 &nbsp;
     // Suicide risk
 <span class="cstat-no" title="statement not covered" >    if (summary.suicideRisk.level === 'critical') <span class="cstat-no" title="statement not covered" >score += 30;</span></span>
     else <span class="cstat-no" title="statement not covered" >if (summary.suicideRisk.level === 'high') <span class="cstat-no" title="statement not covered" >score += 20;</span></span>
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (summary.suicideRisk.level === 'moderate') <span class="cstat-no" title="statement not covered" >score += 10;</span></span>
+    else <span class="cstat-no" title="statement not covered" >if (summary.suicideRisk.level === 'moderate') <span class="cstat-no" title="statement not covered" >score += 10;</span></span>
 &nbsp;
     // Substance use
 <span class="cstat-no" title="statement not covered" >    if (summary.substanceUse.overallRisk === 'high') <span class="cstat-no" title="statement not covered" >score += 15;</span></span>
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (summary.substanceUse.overallRisk === 'moderate') <span class="cstat-no" title="statement not covered" >score += 8;</span></span>
+    else <span class="cstat-no" title="statement not covered" >if (summary.substanceUse.overallRisk === 'moderate') <span class="cstat-no" title="statement not covered" >score += 8;</span></span>
 &nbsp;
     // Treatment engagement reduces risk
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (summary.treatmentEngagement.inTherapy) <span class="cstat-no" title="statement not covered" >score -= 10;</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (summary.socialSupport.level === 'strong') <span class="cstat-no" title="statement not covered" >score -= 5;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (summary.treatmentEngagement.inTherapy) <span class="cstat-no" title="statement not covered" >score -= 10;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (summary.socialSupport.level === 'strong') <span class="cstat-no" title="statement not covered" >score -= 5;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return Math.max(0, Math.min(100, score));</span>
   }
@@ -2301,7 +2301,7 @@ export class MentalHealthService extends CacheableService {
   ): MentalHealthAssessment[] {
     const assessments: MentalHealthAssessment[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (phq9) {</span>
+<span class="cstat-no" title="statement not covered" >    if (phq9) {</span>
       const score = <span class="cstat-no" title="statement not covered" >phq9.totalScore || 0;</span>
 <span class="cstat-no" title="statement not covered" >      assessments.push({</span>
         type: 'PHQ-9',
@@ -2317,7 +2317,7 @@ export class MentalHealthService extends CacheableService {
       });
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (gad7) {</span>
+<span class="cstat-no" title="statement not covered" >    if (gad7) {</span>
       const score = <span class="cstat-no" title="statement not covered" >gad7.totalScore || 0;</span>
 <span class="cstat-no" title="statement not covered" >      assessments.push({</span>
         type: 'GAD-7',
@@ -2344,15 +2344,15 @@ export class MentalHealthService extends CacheableService {
     score: number
   ): MentalHealthAssessment['severity'] {
 <span class="cstat-no" title="statement not covered" >    if (type === 'PHQ-9') {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'moderately-severe';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'moderately-severe';</span></span>
 <span class="cstat-no" title="statement not covered" >      return 'severe';</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (type === 'GAD-7') {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
+    } else <span class="cstat-no" title="statement not covered" >if (type === 'GAD-7') {</span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
 <span class="cstat-no" title="statement not covered" >      return 'severe';</span>
     }
 <span class="cstat-no" title="statement not covered" >    return 'moderate';</span>
@@ -2363,15 +2363,15 @@ export class MentalHealthService extends CacheableService {
    */
   private <span class="fstat-no" title="function not covered" >getInterpretation(</span>type: MentalHealthAssessmentType, score: number): string {
 <span class="cstat-no" title="statement not covered" >    if (type === 'PHQ-9') {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'Minimal or no depression';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'Mild depression';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'Moderate depression';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'Moderately severe depression';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'Minimal or no depression';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'Mild depression';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'Moderate depression';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'Moderately severe depression';</span></span>
 <span class="cstat-no" title="statement not covered" >      return 'Severe depression';</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (type === 'GAD-7') {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'Minimal anxiety';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'Mild anxiety';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'Moderate anxiety';</span></span>
+    } else <span class="cstat-no" title="statement not covered" >if (type === 'GAD-7') {</span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'Minimal anxiety';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'Mild anxiety';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'Moderate anxiety';</span></span>
 <span class="cstat-no" title="statement not covered" >      return 'Severe anxiety';</span>
     }
 <span class="cstat-no" title="statement not covered" >    return 'Unknown';</span>
@@ -2401,19 +2401,19 @@ export class MentalHealthService extends CacheableService {
    * Infer mental health category from ICD-10 code
    */
   private <span class="fstat-no" title="function not covered" >inferMentalHealthCategory(</span>code: string): 'mood' | 'anxiety' | 'psychotic' | 'substance' | 'trauma' | 'other' {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (code.startsWith('F30') || code.startsWith('F31') || code.startsWith('F32') || code.startsWith('F33')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (code.startsWith('F30') || code.startsWith('F31') || code.startsWith('F32') || code.startsWith('F33')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'mood';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (code.startsWith('F40') || code.startsWith('F41')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (code.startsWith('F40') || code.startsWith('F41')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'anxiety';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (code.startsWith('F20') || code.startsWith('F21') || code.startsWith('F22')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (code.startsWith('F20') || code.startsWith('F21') || code.startsWith('F22')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'psychotic';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (code.startsWith('F10') || code.startsWith('F11') || code.startsWith('F12') || code.startsWith('F13')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (code.startsWith('F10') || code.startsWith('F11') || code.startsWith('F12') || code.startsWith('F13')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'substance';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (code.startsWith('F43')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (code.startsWith('F43')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'trauma';</span>
     }
 <span class="cstat-no" title="statement not covered" >    return 'other';</span>
@@ -2518,7 +2518,7 @@ export class MentalHealthService extends CacheableService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

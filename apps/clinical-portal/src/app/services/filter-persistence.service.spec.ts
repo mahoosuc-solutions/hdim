@@ -1,11 +1,22 @@
+import { TestBed } from '@angular/core/testing';
 import { FilterPersistenceService } from './filter-persistence.service';
+import { LoggerService } from './logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
+
+const mockLoggerService = createMockLoggerService();
 
 describe('FilterPersistenceService', () => {
   let service: FilterPersistenceService;
 
   beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        FilterPersistenceService,
+        { provide: LoggerService, useValue: mockLoggerService },
+      ],
+    });
     localStorage.clear();
-    service = new FilterPersistenceService();
+    service = TestBed.inject(FilterPersistenceService);
   });
 
   it('saves and loads filters', () => {

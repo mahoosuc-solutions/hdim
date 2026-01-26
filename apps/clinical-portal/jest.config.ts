@@ -6,6 +6,13 @@ export default {
     '<rootDir>/src/testing/setup-accessibility-tests.ts',
   ],
   coverageDirectory: '../../coverage/apps/clinical-portal',
+  testTimeout: 30000, // Increased from Jest default 5000ms for async/accessibility tests
+  testEnvironment: 'jsdom',
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
+  },
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',

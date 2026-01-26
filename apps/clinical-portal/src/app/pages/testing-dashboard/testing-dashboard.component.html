@@ -349,7 +349,7 @@
         </div>
         @if (errorSummary && errorSummary.errorsByService.size > 0) {
           <div class="error-breakdown">
-            <h4>Errors by Service:</h4>
+            <h2>Errors by Service:</h2>
             <div class="service-errors">
               @for (entry of errorSummary.errorsByService | keyvalue; track entry.key) {
                 <div class="service-error-item">

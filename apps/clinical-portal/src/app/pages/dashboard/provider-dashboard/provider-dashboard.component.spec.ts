@@ -5,6 +5,7 @@ import { ProviderDashboardComponent, PendingResult, HighPriorityCareGap, Quality
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { createMockStore } from '../../testing/mocks';
 
 /**
  * TDD Test Suite for Provider Dashboard Component
@@ -41,8 +42,8 @@ describe('ProviderDashboardComponent', () => {
       providers: [
         { provide: Router, useValue: mockRouter },
         { provide: DialogService, useValue: mockDialogService },
-        { provide: NotificationService, useValue: mockNotificationService }
-      ]
+        { provide: NotificationService, useValue: mockNotificationService },
+        { provide: Store, useValue: createMockStore() }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProviderDashboardComponent);

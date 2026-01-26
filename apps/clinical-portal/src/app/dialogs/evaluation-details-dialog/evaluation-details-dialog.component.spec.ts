@@ -5,6 +5,7 @@ import { EvaluationDetailsDialogComponent } from './evaluation-details-dialog.co
 import { EvaluationService } from '../../services/evaluation.service';
 import { LoggerService } from '../services/logger.service';
 import { createMockLoggerService } from '../testing/mocks';
+import { createMockStore } from '../../testing/mocks';
 
 describe('EvaluationDetailsDialogComponent', () => {
   let component: EvaluationDetailsDialogComponent;
@@ -32,7 +33,7 @@ describe('EvaluationDetailsDialogComponent', () => {
             measureName: 'CMS125',
           },
         },
-      ],
+        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     dialogRef = TestBed.inject(MatDialogRef) as jest.Mocked<

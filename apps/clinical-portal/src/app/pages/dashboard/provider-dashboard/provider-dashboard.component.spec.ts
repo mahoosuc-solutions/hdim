@@ -6,6 +6,7 @@ import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 /**
  * TDD Test Suite for Provider Dashboard Component

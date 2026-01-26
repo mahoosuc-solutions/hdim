@@ -9,6 +9,7 @@ import { PatientHealthOverviewComponent } from './patient-health-overview.compon
 import { PatientHealthService } from '../../services/patient-health.service';
 import { PatientHealthOverview, HealthStatus, RiskLevel } from '../../models/patient-health.model';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 describe('PatientHealthOverviewComponent', () => {
   let component: PatientHealthOverviewComponent;

@@ -8,6 +8,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { CareGapService, InterventionType } from '../../../services/care-gap.service';
 import { ToastService } from '../../../services/toast.service';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 /**
  * TDD Test Suite for RN Dashboard Component

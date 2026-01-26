@@ -10,6 +10,7 @@ import { AuthService, User, LoginResponse, TokenResponse } from './auth.service'
 import { ApiService } from './api.service';
 import { LoggerService } from './logger.service';
 import { of, throwError } from 'rxjs';
+import { Store } from '@ngrx/store';
 import { createMockHttpClient } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';

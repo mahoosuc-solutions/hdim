@@ -17,6 +17,7 @@ import { CSVHelper } from '../../utils/csv-helper';
 import { createMockLoggerService } from '../../../testing/mocks';
 import { createMockHttpClient } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 const mockLoggerService = createMockLoggerService();
 

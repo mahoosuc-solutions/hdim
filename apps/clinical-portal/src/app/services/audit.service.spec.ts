@@ -7,6 +7,7 @@ import { LoggerService } from 'services/logger.service';
 import { createMockLoggerService } from 'testing/mocks';
 import { createMockHttpClient } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 /**
  * AuditService Unit Tests

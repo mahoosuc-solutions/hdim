@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AuditService, AuditAction, AuditOutcome, AuditEvent } from './audit.service';
 import { AuthService, User } from './auth.service';
+import { LoggerService } from 'services/logger.service';
+import { createMockLoggerService } from 'testing/mocks';
 
 /**
  * AuditService Unit Tests
@@ -42,7 +44,8 @@ describe('AuditService', () => {
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         AuditService,
         { provide: AuthService, useValue: authServiceMock },
       ],

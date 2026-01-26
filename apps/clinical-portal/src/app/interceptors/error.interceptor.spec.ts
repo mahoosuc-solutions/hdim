@@ -7,6 +7,8 @@ import {
 import { Router } from '@angular/router';
 import { errorInterceptor } from './error.interceptor';
 import { AuthService } from '../services/auth.service';
+import { LoggerService } from 'services/logger.service';
+import { createMockLoggerService } from 'testing/mocks';
 
 describe('ErrorInterceptor', () => {
   let httpMock: HttpTestingController;
@@ -28,7 +30,8 @@ describe('ErrorInterceptor', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },

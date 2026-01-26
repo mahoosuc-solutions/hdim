@@ -9,6 +9,8 @@ import { DialogService } from '../../services/dialog.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
+import { LoggerService } from '../services/logger.service';
+import { createMockLoggerService } from '../testing/mocks';
 
 describe('MeasureBuilderComponent (TDD)', () => {
   let component: MeasureBuilderComponent;
@@ -78,7 +80,8 @@ describe('MeasureBuilderComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [MeasureBuilderComponent, NoopAnimationsModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         provideHttpClient(),
         { provide: CustomMeasureService, useValue: mockCustomMeasureService },
         { provide: ToastService, useValue: mockToast },

@@ -8,8 +8,10 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Store } from '@ngrx/store';
 import { MeasureBuilderComponent } from './measure-builder.component';
 import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from '../../../testing/accessibility.helper';
+import { createMockStore } from '../../../testing/mocks';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 
@@ -20,6 +22,9 @@ describe('MeasureBuilderComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MeasureBuilderComponent, NoopAnimationsModule, HttpClientTestingModule],
+      providers: [
+        { provide: Store, useValue: createMockStore() },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MeasureBuilderComponent);

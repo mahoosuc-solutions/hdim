@@ -14,6 +14,7 @@ import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from
 import { createMockStore } from '../../../testing/mocks';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { createMockHttpClient } from '../../testing/mocks';
 
 describe('MeasureBuilderComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   let component: MeasureBuilderComponent;
@@ -24,7 +25,7 @@ describe('MeasureBuilderComponent - Accessibility (WCAG 2.1 Level AA)', () => {
       imports: [MeasureBuilderComponent, NoopAnimationsModule, HttpClientTestingModule],
       providers: [
         { provide: Store, useValue: createMockStore() },
-      ],
+        { provide: HttpClient, useValue: createMockHttpClient() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MeasureBuilderComponent);

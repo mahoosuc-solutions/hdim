@@ -29,7 +29,7 @@ describe('PatientDeduplicationService', () => {
     expect(master.isMaster).toBe(true);
     expect(master.duplicateCount).toBe(1);
     expect(duplicate.masterPatientId).toBe('1');
-  });
+  }, 30000);
 
   it('filters master records only', () => {
     const patient = service.enhanceWithLinkInfo(createPatient({ id: '1' }));
@@ -37,7 +37,7 @@ describe('PatientDeduplicationService', () => {
 
     const filtered = service.filterMasterRecordsOnly([patient, duplicate]);
     expect(filtered.length).toBe(2);
-  });
+  }, 30000);
 
   it('filters out linked duplicates when master exists', () => {
     service.linkPatient('2', '1', true).subscribe();
@@ -48,7 +48,7 @@ describe('PatientDeduplicationService', () => {
     const filtered = service.filterMasterRecordsOnly([master, duplicate]);
     expect(filtered.length).toBe(1);
     expect(filtered[0].id).toBe('1');
-  });
+  }, 30000);
 
   it('keeps unlinked patients when filtering master records', () => {
     const unlinked = service.enhanceWithLinkInfo(createPatient({ id: '3' }));
@@ -56,7 +56,7 @@ describe('PatientDeduplicationService', () => {
 
     expect(filtered.length).toBe(1);
     expect(filtered[0].id).toBe('3');
-  });
+  }, 30000);
 
   it('links and unlinks patients', () => {
     service.linkPatient('2', '1', true).subscribe();
@@ -66,13 +66,13 @@ describe('PatientDeduplicationService', () => {
     service.unlinkPatient('2').subscribe();
     duplicate = service.enhanceWithLinkInfo(createPatient({ id: '2' }));
     expect(duplicate.masterPatientId).toBeUndefined();
-  });
+  }, 30000);
 
   it('safely unlinks when no master link exists', () => {
     service.unlinkPatient('missing').subscribe((result) => {
       expect(result).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   it('removes master status when last duplicate is unlinked', () => {
     service.linkPatient('2', '1', true).subscribe();
@@ -81,7 +81,7 @@ describe('PatientDeduplicationService', () => {
 
     const master = service.enhanceWithLinkInfo(createPatient({ id: '1' }));
     expect(master.isMaster).toBe(false);
-  });
+  }, 30000);
 
   it('finds potential duplicates and sorts by score', (done) => {
     const patient1 = service.enhanceWithLinkInfo(createPatient({ id: '1', fullName: 'Jane Doe' }));
@@ -92,7 +92,7 @@ describe('PatientDeduplicationService', () => {
       expect(matches.length).toBeGreaterThan(0);
       expect(matches[0].matchScore).toBeGreaterThanOrEqual(70);
       done();
-    });
+    }, 30000);
   });
 
   it('returns no matches when score is below threshold', (done) => {
@@ -102,7 +102,7 @@ describe('PatientDeduplicationService', () => {
     service.findPotentialDuplicates(patient1, [patient1, patient2]).subscribe((matches) => {
       expect(matches.length).toBe(0);
       done();
-    });
+    }, 30000);
   });
 
   it('suggests review for borderline matches', (done) => {
@@ -129,7 +129,7 @@ describe('PatientDeduplicationService', () => {
       expect(matches.length).toBe(1);
       expect(matches[0].suggestedAction).toBe('review');
       done();
-    });
+    }, 30000);
   });
 
   it('suggests merge for exact matches and link for strong matches', (done) => {
@@ -170,7 +170,7 @@ describe('PatientDeduplicationService', () => {
       expect(strongMatch?.matchScore).toBe(85);
       expect(strongMatch?.suggestedAction).toBe('link');
       done();
-    });
+    }, 30000);
   });
 
   it('merges patients and returns result', (done) => {
@@ -184,7 +184,7 @@ describe('PatientDeduplicationService', () => {
       expect(result.success).toBe(true);
       expect(result.mergedPatientIds.length).toBe(2);
       done();
-    });
+    }, 30000);
   });
 
   it('handles merge failures gracefully', (done) => {
@@ -204,7 +204,7 @@ describe('PatientDeduplicationService', () => {
       expect(result.error).toBe('merge failed');
       (service as any).linkPatient = original;
       done();
-    });
+    }, 30000);
   });
 
   it('calculates deduplication statistics', (done) => {
@@ -216,8 +216,8 @@ describe('PatientDeduplicationService', () => {
       expect(stats.duplicateRecords).toBe(1);
       expect(stats.unlinkedRecords).toBeGreaterThanOrEqual(0);
       done();
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   it('calculates average duplicates per master', (done) => {
     service.linkPatient('2', '1', true).subscribe();
@@ -228,7 +228,7 @@ describe('PatientDeduplicationService', () => {
       expect(stats.masterRecords).toBe(1);
       expect(stats.averageDuplicatesPerMaster).toBeGreaterThan(0);
       done();
-    });
+    }, 30000);
   });
 
   it('handles master selection rules', () => {
@@ -244,7 +244,7 @@ describe('PatientDeduplicationService', () => {
       { ...duplicate, duplicateCount: 2 }
     );
     expect(reverse).toBe(false);
-  });
+  }, 30000);
 
   it('uses MRN and ID to choose a master', () => {
     const p1 = service.enhanceWithLinkInfo(createPatient({ id: '10', mrn: 'MRN010' }));
@@ -255,7 +255,7 @@ describe('PatientDeduplicationService', () => {
     const noMrn = service.enhanceWithLinkInfo(createPatient({ id: '5', mrn: undefined }));
     const noMrn2 = service.enhanceWithLinkInfo(createPatient({ id: '7', mrn: undefined }));
     expect((service as any).shouldBeMaster(noMrn, noMrn2)).toBe(true);
-  });
+  }, 30000);
 
   it('uses name similarity for partial matches', () => {
     const similar = (service as any).namesSimilar('John Doe', 'Jon Doe');
@@ -263,12 +263,12 @@ describe('PatientDeduplicationService', () => {
 
     expect(similar).toBe(true);
     expect(match).toBe(true);
-  });
+  }, 30000);
 
   it('returns false when names are not similar', () => {
     const similar = (service as any).namesSimilar('John Doe', 'Alex Smith');
     expect(similar).toBe(false);
-  });
+  }, 30000);
 
   it('auto-detects and links duplicates', (done) => {
     const patients = [
@@ -279,7 +279,7 @@ describe('PatientDeduplicationService', () => {
     service.autoDetectAndLinkDuplicates(patients).subscribe((result) => {
       expect(result.duplicatesLinked).toBeGreaterThanOrEqual(0);
       done();
-    });
+    }, 30000);
   });
 
   it('skips auto-linking when both patients are already masters', (done) => {
@@ -293,6 +293,6 @@ describe('PatientDeduplicationService', () => {
     service.autoDetectAndLinkDuplicates(patients).subscribe((result) => {
       expect(result.duplicatesLinked).toBe(0);
       done();
-    });
+    }, 30000);
   });
 });

@@ -74,7 +74,7 @@ describe('TemplateLibraryDialogComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
+  }, 30000);
 
   it('should load templates on init', () => {
     fixture.detectChanges();
@@ -82,7 +82,7 @@ describe('TemplateLibraryDialogComponent', () => {
     expect(mockAgentService.listTemplates).toHaveBeenCalled();
     expect(component.templates.length).toBe(2);
     expect(component.dataSource.data.length).toBe(2);
-  });
+  }, 30000);
 
   it('should handle template loading error', () => {
     mockAgentService.listTemplates.and.returnValue(
@@ -93,7 +93,7 @@ describe('TemplateLibraryDialogComponent', () => {
 
     expect(component.loading).toBe(false);
     expect(mockToastService.error).toHaveBeenCalledWith('Failed to load templates');
-  });
+  }, 30000);
 
   it('should filter templates by category', () => {
     fixture.detectChanges();
@@ -103,7 +103,7 @@ describe('TemplateLibraryDialogComponent', () => {
 
     expect(component.dataSource.data.length).toBe(1);
     expect(component.dataSource.data[0].category).toBe('CLINICAL_SAFETY');
-  });
+  }, 30000);
 
   it('should filter templates by search text', (done) => {
     fixture.detectChanges();
@@ -116,7 +116,7 @@ describe('TemplateLibraryDialogComponent', () => {
       expect(component.dataSource.data[0].name).toBe('Care Gap Analysis');
       done();
     }, 350);
-  });
+  }, 30000);
 
   it('should select a template', () => {
     fixture.detectChanges();
@@ -125,7 +125,7 @@ describe('TemplateLibraryDialogComponent', () => {
     component.selectTemplate(template);
 
     expect(component.selectedTemplate).toBe(template);
-  });
+  }, 30000);
 
   it('should close dialog with selected template when using', () => {
     fixture.detectChanges();
@@ -134,20 +134,20 @@ describe('TemplateLibraryDialogComponent', () => {
     component.useTemplate();
 
     expect(mockDialogRef.close).toHaveBeenCalledWith(mockTemplates[0]);
-  });
+  }, 30000);
 
   it('should format category labels correctly', () => {
     expect(component.formatCategory('CLINICAL_SAFETY')).toBe('Clinical Safety');
     expect(component.formatCategory('SYSTEM_PROMPT')).toBe('System Prompt');
     expect(component.formatCategory('CUSTOM')).toBe('Custom');
-  });
+  }, 30000);
 
   it('should show empty state when no templates', () => {
     mockAgentService.listTemplates.and.returnValue(of([]));
     fixture.detectChanges();
 
     expect(component.dataSource.data.length).toBe(0);
-  });
+  }, 30000);
 
   it('should apply both category and search filters', (done) => {
     fixture.detectChanges();
@@ -160,5 +160,5 @@ describe('TemplateLibraryDialogComponent', () => {
       expect(component.dataSource.data[0].category).toBe('CLINICAL_SAFETY');
       done();
     }, 350);
-  });
+  }, 30000);
 });

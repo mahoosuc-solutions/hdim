@@ -357,49 +357,49 @@ describe('CareRecommendationsComponent', () => {
       component.recommendations$.subscribe((recommendations) => {
         expect(recommendations).toEqual(mockRecommendations);
         done();
-      });
+      }, 30000);
     });
 
     it('should select stats from store', (done) => {
       component.stats$.subscribe((stats) => {
         expect(stats).toEqual(mockStats);
         done();
-      });
+      }, 30000);
     });
 
     it('should select loading state from store', (done) => {
       component.loading$.subscribe((loading) => {
         expect(loading).toBe(false);
         done();
-      });
+      }, 30000);
     });
 
     it('should select selectedIds from store', (done) => {
       component.selectedIds$.subscribe((ids) => {
         expect(ids).toEqual([]);
         done();
-      });
+      }, 30000);
     });
 
     it('should select isAllSelected from store', (done) => {
       component.isAllSelected$.subscribe((isAllSelected) => {
         expect(isAllSelected).toBe(false);
         done();
-      });
+      }, 30000);
     });
 
     it('should select viewMode from store', (done) => {
       component.viewMode$.subscribe((viewMode) => {
         expect(viewMode).toBe('list');
         done();
-      });
+      }, 30000);
     });
 
     it('should select error from store', (done) => {
       component.error$.subscribe((error) => {
         expect(error).toBeNull();
         done();
-      });
+      }, 30000);
     });
   });
 

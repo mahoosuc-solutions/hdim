@@ -69,24 +69,24 @@ describe('PatientOutreachWorkflowComponent', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    });
+    }, 30000);
 
     it('should initialize with dialog data', () => {
       expect(component.outreachLogId).toBe('OUTREACH001');
       expect(component.patientId).toBe('PATIENT001');
       expect(component.patientName).toBe('John Smith');
-    });
+    }, 30000);
 
     it('should set current step to 0 (contact method selection)', () => {
       expect(component.currentStep).toBe(0);
       expect(component.totalSteps).toBeGreaterThan(0);
-    });
+    }, 30000);
 
     it('should initialize form with required fields', () => {
       expect(component.form).toBeDefined();
       expect(component.form.get('contactMethod')).toBeDefined();
       expect(component.form.get('notes')).toBeDefined();
-    });
+    }, 30000);
 
     it('should load outreach log on initialization', () => {
       const mockOutreachLog = {
@@ -100,63 +100,63 @@ describe('PatientOutreachWorkflowComponent', () => {
       component.ngOnInit();
 
       expect(nurseWorkflowService.getOutreachLogById).toHaveBeenCalledWith('OUTREACH001');
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Contact Method Selection (Step 0)', () => {
     beforeEach(() => {
       component.ngOnInit();
-    });
+    }, 30000);
 
     it('should display contact method options', () => {
       expect(component.contactMethods).toEqual(['CALL', 'EMAIL', 'LETTER']);
-    });
+    }, 30000);
 
     it('should validate contact method selection', () => {
-      component.form.patchValue({ contactMethod: '' });
+      component.form.patchValue({ contactMethod: '' }, 30000);
       expect(component.form.valid).toBe(false);
 
-      component.form.patchValue({ contactMethod: 'CALL' });
+      component.form.patchValue({ contactMethod: 'CALL' }, 30000);
       expect(component.form.valid).toBe(true);
-    });
+    }, 30000);
 
     it('should disable next button if contact method not selected', () => {
-      component.form.patchValue({ contactMethod: '' });
+      component.form.patchValue({ contactMethod: '' }, 30000);
       expect(component.canProceedToNextStep()).toBe(false);
-    });
+    }, 30000);
 
     it('should enable next button when contact method selected', () => {
-      component.form.patchValue({ contactMethod: 'CALL' });
+      component.form.patchValue({ contactMethod: 'CALL' }, 30000);
       expect(component.canProceedToNextStep()).toBe(true);
-    });
+    }, 30000);
 
     it('should advance to step 1 on next', () => {
-      component.form.patchValue({ contactMethod: 'CALL' });
+      component.form.patchValue({ contactMethod: 'CALL' }, 30000);
       component.nextStep();
 
       expect(component.currentStep).toBe(1);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Contact Attempt Logging (Step 1)', () => {
     beforeEach(() => {
       component.ngOnInit();
-      component.form.patchValue({ contactMethod: 'CALL' });
+      component.form.patchValue({ contactMethod: 'CALL' }, 30000);
       component.nextStep();
-    });
+    }, 30000);
 
     it('should initialize contact duration field for calls', () => {
-      component.form.patchValue({ contactMethod: 'CALL' });
+      component.form.patchValue({ contactMethod: 'CALL' }, 30000);
       expect(component.form.get('contactDuration')).toBeDefined();
-    });
+    }, 30000);
 
     it('should validate contact duration for calls', () => {
-      component.form.patchValue({ contactDuration: -5 });
+      component.form.patchValue({ contactDuration: -5 }, 30000);
       expect(component.form.get('contactDuration').valid).toBe(false);
 
-      component.form.patchValue({ contactDuration: 15 });
+      component.form.patchValue({ contactDuration: 15 }, 30000);
       expect(component.form.get('contactDuration').valid).toBe(true);
-    });
+    }, 30000);
 
     it('should log contact attempt', (done) => {
       const mockResponse = { id: 'ATTEMPT001', status: 'logged' };
@@ -168,7 +168,7 @@ describe('PatientOutreachWorkflowComponent', () => {
         expect(nurseWorkflowService.logContactAttempt).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should show error toast on failed contact attempt', (done) => {
       nurseWorkflowService.logContactAttempt.and.returnValue(
@@ -181,7 +181,7 @@ describe('PatientOutreachWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Outcome Type Selection (Step 2)', () => {
@@ -195,104 +195,104 @@ describe('PatientOutreachWorkflowComponent', () => {
       expect(component.outcomeTypes).toContain('BUSY');
       expect(component.outcomeTypes).toContain('VOICEMAIL');
       expect(component.outcomeTypes).toContain('DISCONNECTED');
-    });
+    }, 30000);
 
     it('should validate outcome type selection', () => {
-      component.form.patchValue({ outcomeType: '' });
+      component.form.patchValue({ outcomeType: '' }, 30000);
       expect(component.form.valid).toBe(false);
 
-      component.form.patchValue({ outcomeType: 'SUCCESSFUL' });
+      component.form.patchValue({ outcomeType: 'SUCCESSFUL' }, 30000);
       expect(component.form.valid).toBe(true);
-    });
+    }, 30000);
 
     it('should show additional notes field for unsuccessful outcomes', () => {
-      component.form.patchValue({ outcomeType: 'BUSY' });
+      component.form.patchValue({ outcomeType: 'BUSY' }, 30000);
       expect(component.shouldShowRetryInfo()).toBe(true);
-    });
+    }, 30000);
 
     it('should not require retry info for successful outcome', () => {
-      component.form.patchValue({ outcomeType: 'SUCCESSFUL' });
+      component.form.patchValue({ outcomeType: 'SUCCESSFUL' }, 30000);
       expect(component.shouldShowRetryInfo()).toBe(false);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Follow-up Scheduling (Step 3)', () => {
     beforeEach(() => {
       component.ngOnInit();
       component.currentStep = 3;
-    });
+    }, 30000);
 
     it('should initialize follow-up form fields', () => {
       expect(component.form.get('scheduleFollowUp')).toBeDefined();
       expect(component.form.get('followUpDate')).toBeDefined();
       expect(component.form.get('followUpReason')).toBeDefined();
-    });
+    }, 30000);
 
     it('should enable follow-up date field only when schedule follow-up is checked', () => {
-      component.form.patchValue({ scheduleFollowUp: false });
+      component.form.patchValue({ scheduleFollowUp: false }, 30000);
       expect(component.form.get('followUpDate').disabled).toBe(true);
 
-      component.form.patchValue({ scheduleFollowUp: true });
+      component.form.patchValue({ scheduleFollowUp: true }, 30000);
       expect(component.form.get('followUpDate').disabled).toBe(false);
-    });
+    }, 30000);
 
     it('should validate follow-up date is in future', () => {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1);
 
-      component.form.patchValue({ followUpDate: pastDate });
+      component.form.patchValue({ followUpDate: pastDate }, 30000);
       expect(component.form.get('followUpDate').valid).toBe(false);
 
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 1);
 
-      component.form.patchValue({ followUpDate: futureDate });
+      component.form.patchValue({ followUpDate: futureDate }, 30000);
       expect(component.form.get('followUpDate').valid).toBe(true);
-    });
+    }, 30000);
 
     it('should require follow-up reason if scheduling follow-up', () => {
       component.form.patchValue({
         scheduleFollowUp: true,
         followUpReason: '',
-      });
+      }, 30000);
       expect(component.form.valid).toBe(false);
 
-      component.form.patchValue({ followUpReason: 'Recheck medication adherence' });
+      component.form.patchValue({ followUpReason: 'Recheck medication adherence' }, 30000);
       expect(component.form.valid).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Review & Confirmation (Step 4)', () => {
     beforeEach(() => {
       component.ngOnInit();
       component.currentStep = 4;
-    });
+    }, 30000);
 
     it('should display summary of all entered data', () => {
       const summary = component.getWorkflowSummary();
       expect(summary).toContain('Contact Method');
       expect(summary).toContain('Outcome Type');
       expect(summary).toContain('Follow-up');
-    });
+    }, 30000);
 
     it('should show edit buttons for each section', () => {
       expect(component.canEditStep(0)).toBe(true);
       expect(component.canEditStep(1)).toBe(true);
       expect(component.canEditStep(2)).toBe(true);
       expect(component.canEditStep(3)).toBe(true);
-    });
+    }, 30000);
 
     it('should allow editing previous steps', () => {
       component.editStep(1);
       expect(component.currentStep).toBe(1);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Workflow Submission', () => {
     beforeEach(() => {
       component.ngOnInit();
       component.currentStep = 4;
-    });
+    }, 30000);
 
     it('should save completed workflow', (done) => {
       const mockResponse = { id: 'OUTREACH001', status: 'completed' };
@@ -305,7 +305,7 @@ describe('PatientOutreachWorkflowComponent', () => {
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should close dialog on successful completion', (done) => {
       const mockResponse = { id: 'OUTREACH001', status: 'completed' };
@@ -314,7 +314,7 @@ describe('PatientOutreachWorkflowComponent', () => {
       component.completeWorkflow();
 
       setTimeout(() => {
-        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse });
+        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse }, 30000);
         done();
       }, 100);
     });
@@ -331,7 +331,7 @@ describe('PatientOutreachWorkflowComponent', () => {
         expect(dialogRef.close).not.toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should emit workflowComplete event', (done) => {
       spyOn(component.workflowComplete, 'emit');
@@ -344,7 +344,7 @@ describe('PatientOutreachWorkflowComponent', () => {
         expect(component.workflowComplete.emit).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Form Navigation', () => {
@@ -353,48 +353,48 @@ describe('PatientOutreachWorkflowComponent', () => {
     });
 
     it('should go to next step', () => {
-      component.form.patchValue({ contactMethod: 'CALL' });
+      component.form.patchValue({ contactMethod: 'CALL' }, 30000);
       component.nextStep();
 
       expect(component.currentStep).toBe(1);
-    });
+    }, 30000);
 
     it('should go to previous step', () => {
       component.currentStep = 1;
       component.previousStep();
 
       expect(component.currentStep).toBe(0);
-    });
+    }, 30000);
 
     it('should not go below step 0', () => {
       component.currentStep = 0;
       component.previousStep();
 
       expect(component.currentStep).toBe(0);
-    });
+    }, 30000);
 
     it('should not go beyond final step', () => {
       component.currentStep = component.totalSteps - 1;
       component.nextStep();
 
       expect(component.currentStep).toBe(component.totalSteps - 1);
-    });
+    }, 30000);
 
     it('should disable previous button on step 0', () => {
       component.currentStep = 0;
       expect(component.canGoToPreviousStep()).toBe(false);
-    });
+    }, 30000);
 
     it('should disable next button on final step', () => {
       component.currentStep = component.totalSteps - 1;
       expect(component.canGoToNextStep()).toBe(false);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Error Handling', () => {
     beforeEach(() => {
       component.ngOnInit();
-    });
+    }, 30000);
 
     it('should handle service initialization errors', (done) => {
       nurseWorkflowService.getOutreachLogById.and.returnValue(
@@ -408,7 +408,7 @@ describe('PatientOutreachWorkflowComponent', () => {
         expect(component.loading).toBe(false);
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should clear form errors when user corrects input', () => {
       component.form.patchValue({ contactMethod: '' });

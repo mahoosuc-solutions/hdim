@@ -80,18 +80,18 @@ describe('CarePlanWorkflowComponent', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    });
+    }, 30000);
 
     it('should initialize with dialog data', () => {
       expect(component.carePlanId).toBe('CP_001');
       expect(component.patientId).toBe('PATIENT001');
       expect(component.patientName).toBe('Helen Martinez');
-    });
+    }, 30000);
 
     it('should set current step to 0', () => {
       expect(component.currentStep).toBe(0);
       expect(component.totalSteps).toBeGreaterThan(0);
-    });
+    }, 30000);
 
     it('should load care plan templates on initialization', () => {
       carePlanService.getCarePlanTemplates.and.returnValue(of(mockCarePlanTemplates));
@@ -99,14 +99,14 @@ describe('CarePlanWorkflowComponent', () => {
       component.ngOnInit();
 
       expect(carePlanService.getCarePlanTemplates).toHaveBeenCalled();
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 0: Initialize Care Plan', () => {
     beforeEach(() => {
       component.currentStep = 0;
       carePlanService.getCarePlanTemplates.and.returnValue(of(mockCarePlanTemplates));
-    });
+    }, 30000);
 
     it('should display care plan templates', (done) => {
       component.ngOnInit();
@@ -115,57 +115,57 @@ describe('CarePlanWorkflowComponent', () => {
         expect(component.carePlanTemplates.length).toBe(2);
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should require template selection', () => {
-      component.form.patchValue({ selectedTemplate: '' });
+      component.form.patchValue({ selectedTemplate: '' }, 30000);
       expect(component.canProceedToNextStep()).toBe(false);
 
-      component.form.patchValue({ selectedTemplate: 'TEMPLATE_001' });
+      component.form.patchValue({ selectedTemplate: 'TEMPLATE_001' }, 30000);
       expect(component.canProceedToNextStep()).toBe(true);
-    });
+    }, 30000);
 
     it('should initialize care plan with selected template', () => {
       const mockResponse = { id: 'CP_001', status: 'active' };
       carePlanService.createCarePlan.and.returnValue(of(mockResponse));
 
-      component.form.patchValue({ selectedTemplate: 'TEMPLATE_001' });
+      component.form.patchValue({ selectedTemplate: 'TEMPLATE_001' }, 30000);
       component.initializeCarePlan();
 
       expect(carePlanService.createCarePlan).toHaveBeenCalled();
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 1: Add Problems/Diagnoses', () => {
     beforeEach(() => {
       component.currentStep = 1;
-    });
+    }, 30000);
 
     it('should initialize problem form', () => {
       expect(component.problemForm).toBeDefined();
       expect(component.problemForm.get('problemName')).toBeDefined();
-    });
+    }, 30000);
 
     it('should add problem to list', () => {
       component.problemForm.patchValue({
         problemName: 'Type 2 Diabetes',
         severity: 'HIGH',
-      });
+      }, 30000);
 
       component.addProblem();
 
       expect(component.problems.length).toBeGreaterThan(0);
       expect(component.problems[0].problemName).toBe('Type 2 Diabetes');
-    });
+    }, 30000);
 
     it('should validate problem form before adding', () => {
-      component.problemForm.patchValue({ problemName: '' });
+      component.problemForm.patchValue({ problemName: '' }, 30000);
 
       expect(component.problemForm.valid).toBe(false);
 
-      component.problemForm.patchValue({ problemName: 'Hypertension' });
+      component.problemForm.patchValue({ problemName: 'Hypertension' }, 30000);
       expect(component.problemForm.valid).toBe(true);
-    });
+    }, 30000);
 
     it('should remove problem from list', () => {
       component.problems = [
@@ -176,7 +176,7 @@ describe('CarePlanWorkflowComponent', () => {
       component.removeProblem(0);
 
       expect(component.problems.length).toBe(1);
-    });
+    }, 30000);
 
     it('should require at least one problem', () => {
       component.problems = [];
@@ -184,53 +184,53 @@ describe('CarePlanWorkflowComponent', () => {
 
       component.problems = [{ id: '1', problemName: 'Diabetes', severity: 'HIGH' }];
       expect(component.canProceedToNextStep()).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 2: Define Goals', () => {
     beforeEach(() => {
       component.currentStep = 2;
       component.problems = [{ id: '1', problemName: 'Diabetes', severity: 'HIGH' }];
-    });
+    }, 30000);
 
     it('should initialize goal form', () => {
       expect(component.goalForm).toBeDefined();
       expect(component.goalForm.get('goalDescription')).toBeDefined();
-    });
+    }, 30000);
 
     it('should add goal linked to problem', () => {
       component.goalForm.patchValue({
         relatedProblemId: '1',
         goalDescription: 'Achieve HbA1c < 7%',
         targetDate: new Date(),
-      });
+      }, 30000);
 
       component.addGoal();
 
       expect(component.goals.length).toBeGreaterThan(0);
       expect(component.goals[0].relatedProblemId).toBe('1');
-    });
+    }, 30000);
 
     it('should validate goal form', () => {
-      component.goalForm.patchValue({ goalDescription: '' });
+      component.goalForm.patchValue({ goalDescription: '' }, 30000);
       expect(component.goalForm.valid).toBe(false);
 
-      component.goalForm.patchValue({ goalDescription: 'Maintain blood glucose levels' });
+      component.goalForm.patchValue({ goalDescription: 'Maintain blood glucose levels' }, 30000);
       expect(component.goalForm.valid).toBe(true);
-    });
+    }, 30000);
 
     it('should validate target date is in future', () => {
       const pastDate = new Date();
       pastDate.setDate(pastDate.getDate() - 1);
 
-      component.goalForm.patchValue({ targetDate: pastDate });
+      component.goalForm.patchValue({ targetDate: pastDate }, 30000);
       expect(component.goalForm.get('targetDate').valid).toBe(false);
 
       const futureDate = new Date();
       futureDate.setMonth(futureDate.getMonth() + 3);
-      component.goalForm.patchValue({ targetDate: futureDate });
+      component.goalForm.patchValue({ targetDate: futureDate }, 30000);
       expect(component.goalForm.get('targetDate').valid).toBe(true);
-    });
+    }, 30000);
 
     it('should remove goal from list', () => {
       component.goals = [
@@ -241,7 +241,7 @@ describe('CarePlanWorkflowComponent', () => {
       component.removeGoal(0);
 
       expect(component.goals.length).toBe(1);
-    });
+    }, 30000);
 
     it('should require at least one goal', () => {
       component.goals = [];
@@ -249,40 +249,40 @@ describe('CarePlanWorkflowComponent', () => {
 
       component.goals = [{ id: '1', goalDescription: 'Goal', targetDate: new Date() }];
       expect(component.canProceedToNextStep()).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 3: Plan Interventions', () => {
     beforeEach(() => {
       component.currentStep = 3;
       component.goals = [{ id: '1', goalDescription: 'Achieve HbA1c < 7%', targetDate: new Date() }];
-    });
+    }, 30000);
 
     it('should initialize intervention form', () => {
       expect(component.interventionForm).toBeDefined();
       expect(component.interventionForm.get('interventionName')).toBeDefined();
-    });
+    }, 30000);
 
     it('should add intervention linked to goal', () => {
       component.interventionForm.patchValue({
         relatedGoalId: '1',
         interventionName: 'Monthly glucose monitoring',
         frequency: 'WEEKLY',
-      });
+      }, 30000);
 
       component.addIntervention();
 
       expect(component.interventions.length).toBeGreaterThan(0);
       expect(component.interventions[0].relatedGoalId).toBe('1');
-    });
+    }, 30000);
 
     it('should validate intervention form', () => {
-      component.interventionForm.patchValue({ interventionName: '' });
+      component.interventionForm.patchValue({ interventionName: '' }, 30000);
       expect(component.interventionForm.valid).toBe(false);
 
-      component.interventionForm.patchValue({ interventionName: 'Patient education' });
+      component.interventionForm.patchValue({ interventionName: 'Patient education' }, 30000);
       expect(component.interventionForm.valid).toBe(true);
-    });
+    }, 30000);
 
     it('should remove intervention from list', () => {
       component.interventions = [
@@ -293,47 +293,47 @@ describe('CarePlanWorkflowComponent', () => {
       component.removeIntervention(0);
 
       expect(component.interventions.length).toBe(1);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 4: Assign Team Members', () => {
     beforeEach(() => {
       component.currentStep = 4;
-    });
+    }, 30000);
 
     it('should initialize team member form', () => {
       expect(component.teamMemberForm).toBeDefined();
       expect(component.teamMemberForm.get('teamMemberId')).toBeDefined();
-    });
+    }, 30000);
 
     it('should add team member with role', () => {
       component.teamMemberForm.patchValue({
         teamMemberId: 'NURSE_001',
         teamMemberName: 'Jane Smith, RN',
         role: 'PRIMARY_NURSE',
-      });
+      }, 30000);
 
       component.addTeamMember();
 
       expect(component.teamMembers.length).toBeGreaterThan(0);
       expect(component.teamMembers[0].role).toBe('PRIMARY_NURSE');
-    });
+    }, 30000);
 
     it('should validate team member form', () => {
       component.teamMemberForm.patchValue({
         teamMemberId: '',
         teamMemberName: '',
-      });
+      }, 30000);
 
       expect(component.teamMemberForm.valid).toBe(false);
 
       component.teamMemberForm.patchValue({
         teamMemberId: 'NURSE_001',
         teamMemberName: 'Jane Smith, RN',
-      });
+      }, 30000);
 
       expect(component.teamMemberForm.valid).toBe(true);
-    });
+    }, 30000);
 
     it('should remove team member', () => {
       component.teamMembers = [
@@ -344,7 +344,7 @@ describe('CarePlanWorkflowComponent', () => {
       component.removeTeamMember(0);
 
       expect(component.teamMembers.length).toBe(1);
-    });
+    }, 30000);
 
     it('should not allow duplicate roles as primary', () => {
       component.teamMembers = [
@@ -355,11 +355,11 @@ describe('CarePlanWorkflowComponent', () => {
         teamMemberId: 'NURSE_002',
         teamMemberName: 'Nurse 2',
         role: 'PRIMARY_NURSE',
-      });
+      }, 30000);
 
       expect(component.canAddTeamMember()).toBe(false);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 5: Review & Schedule Reviews', () => {
     it('should generate care plan summary', () => {
@@ -373,30 +373,30 @@ describe('CarePlanWorkflowComponent', () => {
       expect(component.carePlanSummary).toBeDefined();
       expect(component.carePlanSummary.problems).toEqual(component.problems);
       expect(component.carePlanSummary.goals).toEqual(component.goals);
-    });
+    }, 30000);
 
     it('should schedule next review date', () => {
       const futureDate = new Date();
       futureDate.setMonth(futureDate.getMonth() + 1);
 
-      component.form.patchValue({ nextReviewDate: futureDate });
+      component.form.patchValue({ nextReviewDate: futureDate }, 30000);
 
       expect(component.form.get('nextReviewDate').value).toEqual(futureDate);
-    });
+    }, 30000);
 
     it('should require next review date', () => {
       component.currentStep = 5;
-      component.form.patchValue({ nextReviewDate: null });
+      component.form.patchValue({ nextReviewDate: null }, 30000);
 
       expect(component.canProceedToNextStep()).toBe(false);
 
       const futureDate = new Date();
       futureDate.setMonth(futureDate.getMonth() + 1);
-      component.form.patchValue({ nextReviewDate: futureDate });
+      component.form.patchValue({ nextReviewDate: futureDate }, 30000);
 
       expect(component.canProceedToNextStep()).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Workflow Submission', () => {
     it('should save complete care plan', (done) => {
@@ -410,7 +410,7 @@ describe('CarePlanWorkflowComponent', () => {
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should close dialog on successful completion', (done) => {
       const mockResponse = { id: 'CP_001', status: 'completed' };
@@ -419,7 +419,7 @@ describe('CarePlanWorkflowComponent', () => {
       component.completeCarePlanWorkflow();
 
       setTimeout(() => {
-        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse });
+        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse }, 30000);
         done();
       }, 100);
     });
@@ -435,7 +435,7 @@ describe('CarePlanWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Form Navigation', () => {

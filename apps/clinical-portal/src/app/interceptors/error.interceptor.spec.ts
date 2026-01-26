@@ -9,6 +9,8 @@ import { errorInterceptor } from './error.interceptor';
 import { AuthService } from '../services/auth.service';
 import { LoggerService } from 'services/logger.service';
 import { createMockLoggerService } from 'testing/mocks';
+import { createMockHttpClient } from '../../testing/mocks';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('ErrorInterceptor', () => {
   let httpMock: HttpTestingController;
@@ -32,7 +34,9 @@ describe('ErrorInterceptor', () => {
     TestBed.configureTestingModule({
       providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
         
-        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClient(withInterceptors([errorInterceptor,
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        { provide: Router, useValue: createMockRouter() }])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock },

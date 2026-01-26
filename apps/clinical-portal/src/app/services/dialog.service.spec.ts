@@ -3,6 +3,8 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { DialogService } from './dialog.service';
 import { Patient } from '../models/patient.model';
+import { createMockMatDialog } from '../../testing/mocks';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('DialogService', () => {
   let service: DialogService;
@@ -15,7 +17,9 @@ describe('DialogService', () => {
     } as unknown as jest.Mocked<MatDialog>;
 
     TestBed.configureTestingModule({
-      providers: [DialogService, { provide: MatDialog, useValue: dialogSpy }],
+      providers: [DialogService, { provide: MatDialog, useValue: dialogSpy },
+        { provide: MatDialog, useValue: createMockMatDialog() },
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     });
 
     service = TestBed.inject(DialogService);

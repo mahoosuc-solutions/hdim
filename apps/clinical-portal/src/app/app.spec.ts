@@ -10,6 +10,7 @@ import { DemoModeService } from './demo-mode/services/demo-mode.service';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { BreadcrumbService } from './shared/services/breadcrumb.service';
 import { BehaviorSubject, of } from 'rxjs';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('App', () => {
   let component: App;
@@ -74,8 +75,8 @@ describe('App', () => {
 
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [
-        provideRouter([]),
+      providers: [provideRouter([,
+        { provide: Router, useValue: createMockRouter() }]),
         { provide: AuthService, useValue: authServiceMock },
         { provide: AuditService, useValue: auditServiceMock },
         { provide: Router, useValue: routerMock },

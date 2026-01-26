@@ -1,6 +1,8 @@
 import { Subject } from 'rxjs';
 import { GlobalSearchService } from './global-search.service';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { createMockMatDialog } from '../../testing/mocks';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 const createDialogRef = () => ({
   afterClosedSubject: new Subject<void>(),

@@ -5,6 +5,8 @@ import { AuditService, AuditAction, AuditOutcome, AuditEvent } from './audit.ser
 import { AuthService, User } from './auth.service';
 import { LoggerService } from 'services/logger.service';
 import { createMockLoggerService } from 'testing/mocks';
+import { createMockHttpClient } from '../../testing/mocks';
+import { createMockStore } from '../../testing/mocks';
 
 /**
  * AuditService Unit Tests
@@ -48,7 +50,8 @@ describe('AuditService', () => {
         
         AuditService,
         { provide: AuthService, useValue: authServiceMock },
-      ],
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        { provide: Store, useValue: createMockStore() }],
     });
 
     service = TestBed.inject(AuditService);

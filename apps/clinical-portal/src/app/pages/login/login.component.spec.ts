@@ -4,6 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('LoginComponent', () => {
   let component: LoginComponent;
@@ -38,11 +39,10 @@ describe('LoginComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [LoginComponent, NoopAnimationsModule],
-      providers: [
-        provideRouter([
+      providers: [provideRouter([
           { path: 'login', component: LoginComponent },
           { path: 'dashboard', component: LoginComponent },
-        ]),
+        { provide: Router, useValue: createMockRouter() }]),
         { provide: AuthService, useValue: authServiceMock },
         {
           provide: ActivatedRoute,

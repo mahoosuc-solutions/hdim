@@ -13,6 +13,7 @@ import { CarePlanWorkflowComponent } from './care-plan-workflow.component';
 import { CarePlanService } from '../../../../services/care-plan/care-plan.service';
 import { ToastService } from '../../../../services/toast.service';
 import { LoggerService } from '../../../../services/logger.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('CarePlanWorkflowComponent', () => {
   let component: CarePlanWorkflowComponent;
@@ -59,14 +60,13 @@ describe('CarePlanWorkflowComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [],
       imports: [ReactiveFormsModule],
-      providers: [
-        FormBuilder,
+      providers: [FormBuilder,
         { provide: CarePlanService, useValue: carePlanSpy },
         { provide: ToastService, useValue: toastSpy },
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
         { provide: LoggerService, useValue: loggerSpy },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     carePlanService = TestBed.inject(CarePlanService) as jasmine.SpyObj<CarePlanService>;

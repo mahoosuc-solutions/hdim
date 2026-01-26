@@ -44,6 +44,9 @@ import {
   CATEGORY_DISPLAY_NAMES,
 } from '../../models/care-recommendation.model';
 import { RiskLevel } from '../../models/patient-health.model';
+import { createMockMatDialog } from '../../testing/mocks';
+import { createMockRouter } from '../../testing/mocks';
+import { createMockStore } from '../../testing/mocks';
 
 describe('CareRecommendationsComponent', () => {
   let component: CareRecommendationsComponent;
@@ -190,8 +193,7 @@ describe('CareRecommendationsComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [CareRecommendationsComponent, NoopAnimationsModule],
-      providers: [
-        provideMockStore({ initialState }),
+      providers: [provideMockStore({ initialState }),
         { provide: Router, useValue: mockRouter },
         { provide: MatDialog, useValue: mockDialog },
         { provide: CareRecommendationService, useValue: mockRecommendationService },
@@ -204,7 +206,9 @@ describe('CareRecommendationsComponent', () => {
             queryParams: of({}),
           },
         },
-      ],
+        { provide: MatDialog, useValue: createMockMatDialog() },
+        { provide: Router, useValue: createMockRouter() },
+        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     store = TestBed.inject(MockStore);

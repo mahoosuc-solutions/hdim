@@ -41,6 +41,8 @@ export interface MeasureStats {
 })
 export class ReportExportService {
   private readonly logger = this.loggerService.withContext('ReportExportService');
+
+  constructor(private readonly loggerService: LoggerService) {}
   /**
    * Generate a PDF report from quality measure results.
    * Uses native browser print-to-PDF functionality for maximum compatibility.

@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LoggerService } from './logger.service';
 import { Observable, Subject } from 'rxjs';
-import { LoggerService } from './logger.service';
 import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data-flow.component';
-import { LoggerService } from './logger.service';
 
 /**
  * Service for receiving real-time data flow steps via WebSocket
@@ -16,6 +14,8 @@ export class EvaluationDataFlowService {
   private ws?: WebSocket;
   private dataFlowSubject = new Subject<DataFlowStep>();
   private connected = false;
+
+  constructor(private readonly loggerService: LoggerService) {}
 
   /**
    * Connect to WebSocket for evaluation data flow

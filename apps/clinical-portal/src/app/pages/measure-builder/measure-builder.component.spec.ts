@@ -11,6 +11,9 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
 import { LoggerService } from '../services/logger.service';
 import { createMockLoggerService } from '../testing/mocks';
+import { createMockHttpClient } from '../../testing/mocks';
+import { createMockMatDialog } from '../../testing/mocks';
+import { createMockStore } from '../../testing/mocks';
 
 describe('MeasureBuilderComponent (TDD)', () => {
   let component: MeasureBuilderComponent;
@@ -87,7 +90,9 @@ describe('MeasureBuilderComponent (TDD)', () => {
         { provide: ToastService, useValue: mockToast },
         { provide: DialogService, useValue: mockDialogService },
         { provide: AIAssistantService, useValue: mockAIAssistantService },
-      ],
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        { provide: MatDialog, useValue: createMockMatDialog() },
+        { provide: Store, useValue: createMockStore() }],
     })
       .overrideProvider(MatDialog, { useValue: mockDialog })
       .compileComponents();

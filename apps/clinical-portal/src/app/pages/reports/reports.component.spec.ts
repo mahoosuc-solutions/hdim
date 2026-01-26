@@ -10,6 +10,8 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
 import { LoggerService } from '../services/logger.service';
 import { createMockLoggerService } from '../testing/mocks';
+import { createMockHttpClient } from '../../testing/mocks';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('ReportsComponent (TDD)', () => {
   let component: ReportsComponent;
@@ -87,7 +89,8 @@ describe('ReportsComponent (TDD)', () => {
         { provide: MatDialog, useValue: mockDialog },
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: ToastService, useValue: mockToast },
-      ],
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     // Default mock to return empty array

@@ -8,6 +8,7 @@ import { of, throwError } from 'rxjs';
 import { PatientHealthOverviewComponent } from './patient-health-overview.component';
 import { PatientHealthService } from '../../services/patient-health.service';
 import { PatientHealthOverview, HealthStatus, RiskLevel } from '../../models/patient-health.model';
+import { createMockStore } from '../../testing/mocks';
 
 describe('PatientHealthOverviewComponent', () => {
   let component: PatientHealthOverviewComponent;
@@ -195,7 +196,7 @@ describe('PatientHealthOverviewComponent', () => {
       imports: [PatientHealthOverviewComponent, NoopAnimationsModule],
       providers: [
         { provide: PatientHealthService, useValue: mockHealthService },
-      ],
+        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientHealthOverviewComponent);

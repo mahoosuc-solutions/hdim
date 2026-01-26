@@ -10,6 +10,8 @@ import { EvaluationFactory } from '../../../testing/factories/evaluation.factory
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { CSVHelper } from '../../utils/csv-helper';
 import { createMockLoggerService } from '../../../testing/mocks';
+import { createMockHttpClient } from '../../testing/mocks';
+import { createMockStore } from '../../testing/mocks';
 
 /**
  * TDD Test Suite for Results Management Component
@@ -57,7 +59,8 @@ describe('ResultsComponent (TDD)', () => {
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
         { provide: LoggerService, useValue: mockLoggerService },
-      ],
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ResultsComponent);

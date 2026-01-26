@@ -181,7 +181,7 @@ describe('DocumentUploadService', () => {
 
       const req = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/reprocess-ocr`);
       expect(req.request.method).toBe('POST');
-      req.flush({}, 30000);
+      req.flush({});
     });
   });
 });

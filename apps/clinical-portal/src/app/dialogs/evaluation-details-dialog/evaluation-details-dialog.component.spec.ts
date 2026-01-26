@@ -3,6 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { EvaluationDetailsDialogComponent } from './evaluation-details-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
+import { LoggerService } from '../services/logger.service';
+import { createMockLoggerService } from '../testing/mocks';
 
 describe('EvaluationDetailsDialogComponent', () => {
   let component: EvaluationDetailsDialogComponent;
@@ -18,7 +20,8 @@ describe('EvaluationDetailsDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [EvaluationDetailsDialogComponent, NoopAnimationsModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: EvaluationService, useValue: evaluationServiceSpy },
         {

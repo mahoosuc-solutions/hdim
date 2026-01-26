@@ -8,6 +8,8 @@ import { CareGapManagerComponent } from './care-gap-manager.component';
 import { PatientService } from '../../services/patient.service';
 import { MeasureService } from '../../services/measure.service';
 import { DialogService } from '../../services/dialog.service';
+import { LoggerService } from '../services/logger.service';
+import { createMockLoggerService } from '../testing/mocks';
 
 describe('CareGapManagerComponent', () => {
   let component: CareGapManagerComponent;
@@ -44,7 +46,8 @@ describe('CareGapManagerComponent', () => {
         FormsModule,
         BrowserAnimationsModule,
       ],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         { provide: PatientService, useValue: mockPatientService },
         { provide: MeasureService, useValue: mockMeasureService },
         { provide: DialogService, useValue: mockDialogService },

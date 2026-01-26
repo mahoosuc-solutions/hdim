@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { NavigationComponent, NavigationItem } from './navigation.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 
 describe('NavigationComponent (TDD)', () => {
   let component: NavigationComponent;
@@ -23,6 +25,7 @@ describe('NavigationComponent (TDD)', () => {
       imports: [NavigationComponent, NoopAnimationsModule],
       providers: [
         { provide: Router, useValue: mockRouter },
+        { provide: LoggerService, useValue: createMockLoggerService() },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();

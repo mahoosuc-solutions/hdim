@@ -8,6 +8,8 @@ import { ToastService } from '../../services/toast.service';
 import { SavedReport } from '../../models/quality-result.model';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
+import { LoggerService } from '../services/logger.service';
+import { createMockLoggerService } from '../testing/mocks';
 
 describe('ReportsComponent (TDD)', () => {
   let component: ReportsComponent;
@@ -79,7 +81,8 @@ describe('ReportsComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [ReportsComponent, NoopAnimationsModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         provideHttpClient(),
         { provide: MatDialog, useValue: mockDialog },
         { provide: EvaluationService, useValue: mockEvaluationService },

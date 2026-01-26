@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { TenantRegistrationComponent } from './tenant-registration.component';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('TenantRegistrationComponent', () => {
   let component: TenantRegistrationComponent;

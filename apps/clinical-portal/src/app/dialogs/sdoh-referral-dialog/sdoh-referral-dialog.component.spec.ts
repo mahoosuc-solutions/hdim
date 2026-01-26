@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { SDOHReferralDialogComponent } from './sdoh-referral-dialog.component';
 import { SDOHReferralService } from '../../services/sdoh-referral.service';
 import { ToastService } from '../../services/toast.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 import {
   SDOHReferralDialogData,
   StaffMember,
@@ -132,12 +133,11 @@ describe('SDOHReferralDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [SDOHReferralDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRefSpy },
+      providers: [{ provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
         { provide: SDOHReferralService, useValue: referralServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     dialogRef = TestBed.inject(MatDialogRef) as jest.Mocked<

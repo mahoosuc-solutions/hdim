@@ -13,6 +13,7 @@ import { MedicationReconciliationWorkflowComponent } from './medication-reconcil
 import { MedicationService, MedicationOrder } from '../../../../services/medication/medication.service';
 import { ToastService } from '../../../../services/toast.service';
 import { LoggerService } from '../../../../services/logger.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('MedicationReconciliationWorkflowComponent', () => {
   let component: MedicationReconciliationWorkflowComponent;
@@ -79,14 +80,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [],
       imports: [ReactiveFormsModule],
-      providers: [
-        FormBuilder,
+      providers: [FormBuilder,
         { provide: MedicationService, useValue: medicationSpy },
         { provide: ToastService, useValue: toastSpy },
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
         { provide: LoggerService, useValue: loggerSpy },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     medicationService = TestBed.inject(MedicationService) as jasmine.SpyObj<MedicationService>;

@@ -7,6 +7,7 @@ import {
 import { authInterceptor } from './auth.interceptor';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
 import { AuthService } from '../services/auth.service';
+import { createMockHttpClient } from '../../testing/mocks';
 
 /**
  * Auth Interceptor Tests
@@ -29,8 +30,8 @@ describe('AuthInterceptor', () => {
     authServiceMock.getTenantId.mockReturnValue('tenant-123');
 
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(withInterceptors([authInterceptor])),
+      providers: [provideHttpClient(withInterceptors([authInterceptor,
+        { provide: HttpClient, useValue: createMockHttpClient() }])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },
       ],

@@ -10,6 +10,9 @@ import { AuthService, User, LoginResponse, TokenResponse } from './auth.service'
 import { ApiService } from './api.service';
 import { LoggerService } from './logger.service';
 import { of, throwError } from 'rxjs';
+import { createMockHttpClient } from '../../testing/mocks';
+import { createMockRouter } from '../../testing/mocks';
+import { createMockStore } from '../../testing/mocks';
 
 const mockLoggerService = {
   withContext: jest.fn().mockReturnValue({
@@ -85,14 +88,15 @@ describe('AuthService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        AuthService,
+      providers: [AuthService,
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: Router, useValue: routerMock },
         { provide: ApiService, useValue: apiServiceMock },
         { provide: LoggerService, useValue: mockLoggerService },
-      ],
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        { provide: Router, useValue: createMockRouter() },
+        { provide: Store, useValue: createMockStore() }],
     });
 
     service = TestBed.inject(AuthService);

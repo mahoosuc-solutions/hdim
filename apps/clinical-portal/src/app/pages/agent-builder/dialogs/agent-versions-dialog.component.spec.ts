@@ -8,6 +8,8 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { AgentConfiguration, AgentVersion, Page } from '../models/agent.model';
+import { createMockMatDialog } from '../../testing/mocks';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('AgentVersionsDialogComponent', () => {
   let component: AgentVersionsDialogComponent;
@@ -78,14 +80,14 @@ describe('AgentVersionsDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AgentVersionsDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: AgentBuilderService, useValue: mockAgentService },
+      providers: [{ provide: AgentBuilderService, useValue: mockAgentService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MatDialog, useValue: mockDialog },
         { provide: MAT_DIALOG_DATA, useValue: { agent: mockAgent } },
-      ],
+        { provide: MatDialog, useValue: createMockMatDialog() },
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AgentVersionsDialogComponent);

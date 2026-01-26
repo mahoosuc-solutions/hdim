@@ -8,6 +8,7 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { AgentVersion } from '../models/agent.model';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('VersionCompareDialogComponent', () => {
   let component: VersionCompareDialogComponent;
@@ -97,13 +98,12 @@ describe('VersionCompareDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [VersionCompareDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: AgentBuilderService, useValue: mockAgentService },
+      providers: [{ provide: AgentBuilderService, useValue: mockAgentService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(VersionCompareDialogComponent);

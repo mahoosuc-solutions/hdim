@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { PublishConfirmDialogComponent } from './publish-confirm-dialog.component';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('PublishConfirmDialogComponent', () => {
   let fixture: ComponentFixture<PublishConfirmDialogComponent>;
@@ -12,13 +13,12 @@ describe('PublishConfirmDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [PublishConfirmDialogComponent],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRef },
+      providers: [{ provide: MatDialogRef, useValue: dialogRef },
         {
           provide: MAT_DIALOG_DATA,
           useValue: { measureId: 'm1', measureName: 'Measure A', currentVersion: '2.4.7' },
         },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PublishConfirmDialogComponent);

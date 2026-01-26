@@ -8,6 +8,7 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { PromptTemplate } from '../models/agent.model';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('TemplateLibraryDialogComponent', () => {
   let component: TemplateLibraryDialogComponent;
@@ -57,13 +58,12 @@ describe('TemplateLibraryDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [TemplateLibraryDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: AgentBuilderService, useValue: mockAgentService },
+      providers: [{ provide: AgentBuilderService, useValue: mockAgentService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: MAT_DIALOG_DATA, useValue: { mode: 'select' } },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     mockAgentService.listTemplates.and.returnValue(of(mockTemplates));

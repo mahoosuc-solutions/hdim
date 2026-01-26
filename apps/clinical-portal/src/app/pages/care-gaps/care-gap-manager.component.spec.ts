@@ -10,6 +10,7 @@ import { MeasureService } from '../../services/measure.service';
 import { DialogService } from '../../services/dialog.service';
 import { LoggerService } from '../services/logger.service';
 import { createMockLoggerService } from '../testing/mocks';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('CareGapManagerComponent', () => {
   let component: CareGapManagerComponent;
@@ -52,7 +53,8 @@ describe('CareGapManagerComponent', () => {
         { provide: MeasureService, useValue: mockMeasureService },
         { provide: DialogService, useValue: mockDialogService },
         { provide: Router, useValue: mockRouter },
-      ],
+      
+        { provide: Router, useValue: createMockRouter() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CareGapManagerComponent);

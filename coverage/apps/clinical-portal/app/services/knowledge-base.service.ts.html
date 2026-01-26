@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.04% </span>
+                <span class="strong">72.41% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>32/41</span>
+                <span class='fraction'>42/58</span>
             </div>
         
             
@@ -533,9 +533,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -590,17 +590,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">137x</span>
-<span class="cline-any cline-yes">137x</span>
+<span class="cline-any cline-yes">15x</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">137x</span>
-<span class="cline-any cline-yes">137x</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">137x</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">137x</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -923,9 +923,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">137x</span>
-<span class="cline-any cline-yes">137x</span>
-<span class="cline-any cline-yes">137x</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1180,7 +1180,7 @@ export class KnowledgeBaseService {
             // Content match (low weight)
             <span class="missing-if-branch" title="if path not taken" >I</span>if (article.content.toLowerCase().includes(term)) {
 <span class="cstat-no" title="statement not covered" >              relevanceScore += 2;</span>
-<span class="cstat-no" title="statement not covered" >              <span class="missing-if-branch" title="if path not taken" >I</span>if (!matchedTerms.includes(term)) <span class="cstat-no" title="statement not covered" >matchedTerms.push(term);</span></span>
+<span class="cstat-no" title="statement not covered" >              if (!matchedTerms.includes(term)) <span class="cstat-no" title="statement not covered" >matchedTerms.push(term);</span></span>
             }
           }
 &nbsp;
@@ -1261,7 +1261,7 @@ export class KnowledgeBaseService {
         // Count articles per category
         for (const article of articles) {
           const category = categories.find((c) =&gt; c.id === article.category);
-          if (category) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (category) {
             category.articleCount++;
           }
         }
@@ -1306,7 +1306,7 @@ export class KnowledgeBaseService {
   trackView(articleId: string): void {
     const currentArticles = this.articles.value;
     const updatedArticles = currentArticles.map((a) =&gt; {
-      if (a.id === articleId) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (a.id === articleId) {
         return { ...a, views: (a.views || 0) + 1 };
       }
 <span class="cstat-no" title="statement not covered" >      return a;</span>
@@ -1330,7 +1330,7 @@ export class KnowledgeBaseService {
   markHelpful(articleId: string, helpful: boolean): void {
     const currentArticles = this.articles.value;
     const updatedArticles = currentArticles.map((a) =&gt; {
-      if (a.id === articleId) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (a.id === articleId) {
         if (helpful) {
           return { ...a, helpful: (a.helpful || 0) + 1 };
         } else {
@@ -1423,7 +1423,7 @@ export class KnowledgeBaseService {
         const suggestions = new Set&lt;KBArticle&gt;();
 &nbsp;
         // Add articles for current page
-        if (context.currentPage) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (context.currentPage) {
           const pageArticles = articles.filter((a) =&gt;
             a.tags.includes(context.currentPage!.toLowerCase())
           );
@@ -1431,7 +1431,7 @@ export class KnowledgeBaseService {
         }
 &nbsp;
         // Add role-specific articles
-        if (context.userRole) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (context.userRole) {
           const roleArticles = articles.filter(
             (a) =&gt;
               a.roles.length &gt; 0 &amp;&amp; a.roles.includes(context.userRole!)
@@ -1440,7 +1440,7 @@ export class KnowledgeBaseService {
         }
 &nbsp;
         // Add troubleshooting articles if errors present
-        if (context.errorMessages &amp;&amp; context.errorMessages.length &gt; 0) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (context.errorMessages &amp;&amp; context.errorMessages.length &gt; 0) {
           const troubleshootingArticles = articles.filter(
             (a) =&gt; a.category === 'troubleshooting'
           );
@@ -1459,7 +1459,7 @@ export class KnowledgeBaseService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

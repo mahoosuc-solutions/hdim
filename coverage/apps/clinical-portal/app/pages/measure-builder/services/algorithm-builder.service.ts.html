@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/101</span>
+                <span class='fraction'>0/140</span>
             </div>
         
             
@@ -563,7 +563,8 @@
 <a name='L498'></a><a href='#L498'>498</a>
 <a name='L499'></a><a href='#L499'>499</a>
 <a name='L500'></a><a href='#L500'>500</a>
-<a name='L501'></a><a href='#L501'>501</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<a name='L501'></a><a href='#L501'>501</a>
+<a name='L502'></a><a href='#L502'>502</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -961,6 +962,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1164,9 +1166,9 @@ export class AlgorithmBuilderService {
   /**
    * Add exclusion block to algorithm
    */
-<span class="fstat-no" title="function not covered" >  addExclusionBlock(</span>label: string = <span class="branch-0 cbranch-no" title="branch not covered" >'Denominator Exclusion')</span>: PopulationBlock {
+<span class="fstat-no" title="function not covered" >  addExclusionBlock(</span>label = <span class="branch-0 cbranch-no" title="branch not covered" >'Denominator Exclusion')</span>: PopulationBlock {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return null as any;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return null as any;</span></span>
 &nbsp;
     const exclusionBlock = <span class="cstat-no" title="statement not covered" >this.createPopulationBlock(</span>
       'exclusion',
@@ -1176,7 +1178,7 @@ export class AlgorithmBuilderService {
       { x: 150, y: 200 + (algorithm.exclusions?.length || 0) * 100 }
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.exclusions) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm.exclusions) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.exclusions = [];</span>
     }
 <span class="cstat-no" title="statement not covered" >    algorithm.exclusions.push(exclusionBlock);</span>
@@ -1189,9 +1191,9 @@ export class AlgorithmBuilderService {
   /**
    * Add exception block to algorithm
    */
-<span class="fstat-no" title="function not covered" >  addExceptionBlock(</span>label: string = <span class="branch-0 cbranch-no" title="branch not covered" >'Denominator Exception')</span>: PopulationBlock {
+<span class="fstat-no" title="function not covered" >  addExceptionBlock(</span>label = <span class="branch-0 cbranch-no" title="branch not covered" >'Denominator Exception')</span>: PopulationBlock {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return null as any;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return null as any;</span></span>
 &nbsp;
     const exceptionBlock = <span class="cstat-no" title="statement not covered" >this.createPopulationBlock(</span>
       'exception',
@@ -1201,7 +1203,7 @@ export class AlgorithmBuilderService {
       { x: 650, y: 200 + (algorithm.exceptions?.length || 0) * 100 }
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.exceptions) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm.exceptions) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.exceptions = [];</span>
     }
 <span class="cstat-no" title="statement not covered" >    algorithm.exceptions.push(exceptionBlock);</span>
@@ -1216,20 +1218,20 @@ export class AlgorithmBuilderService {
    */
 <span class="fstat-no" title="function not covered" >  removeBlock(</span>blockId: string): void {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
     // Remove from exclusions
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm.exclusions) {</span>
+<span class="cstat-no" title="statement not covered" >    if (algorithm.exclusions) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.exclusions = algorithm.exclusions.filter(<span class="fstat-no" title="function not covered" >(b</span>) =&gt; <span class="cstat-no" title="statement not covered" >b.id !== blockId)</span>;</span>
     }
 &nbsp;
     // Remove from exceptions
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm.exceptions) {</span>
+<span class="cstat-no" title="statement not covered" >    if (algorithm.exceptions) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.exceptions = algorithm.exceptions.filter(<span class="fstat-no" title="function not covered" >(b</span>) =&gt; <span class="cstat-no" title="statement not covered" >b.id !== blockId)</span>;</span>
     }
 &nbsp;
     // Remove related connections
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm.connections) {</span>
+<span class="cstat-no" title="statement not covered" >    if (algorithm.connections) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.connections = algorithm.connections.filter(</span>
 <span class="fstat-no" title="function not covered" >        (c</span>) =&gt; <span class="cstat-no" title="statement not covered" >c.sourceBlockId !== blockId &amp;&amp; c.targetBlockId !== blockId</span>
       );
@@ -1244,12 +1246,12 @@ export class AlgorithmBuilderService {
    */
 <span class="fstat-no" title="function not covered" >  updateBlockPosition(</span>blockId: string, x: number, y: number): void {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
     const findAndUpdate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(b</span>locks: PopulationBlock[] | undefined) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (blocks) {</span>
+<span class="cstat-no" title="statement not covered" >      if (blocks) {</span>
         const block = <span class="cstat-no" title="statement not covered" >blocks.find(<span class="fstat-no" title="function not covered" >(b</span>) =&gt; <span class="cstat-no" title="statement not covered" >b.id === blockId)</span>;</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (block) {</span>
+<span class="cstat-no" title="statement not covered" >        if (block) {</span>
 <span class="cstat-no" title="statement not covered" >          block.position = { x, y };</span>
 <span class="cstat-no" title="statement not covered" >          return true;</span>
         }
@@ -1263,7 +1265,7 @@ export class AlgorithmBuilderService {
 <span class="cstat-no" title="statement not covered" >      algorithm.denominator.position = { x, y };</span>
     } else <span class="cstat-no" title="statement not covered" >if (algorithm.numerator.id === blockId) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.numerator.position = { x, y };</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (</span>
+    } else <span class="cstat-no" title="statement not covered" >if (</span>
       !findAndUpdate(algorithm.exclusions) &amp;&amp;
       !findAndUpdate(algorithm.exceptions)
     ) {
@@ -1278,10 +1280,10 @@ export class AlgorithmBuilderService {
    */
 <span class="fstat-no" title="function not covered" >  updateBlockCondition(</span>blockId: string, condition: string): void {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
     const findAndUpdate = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(b</span>lock: PopulationBlock | undefined) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (block &amp;&amp; block.id === blockId) {</span>
+<span class="cstat-no" title="statement not covered" >      if (block &amp;&amp; block.id === blockId) {</span>
 <span class="cstat-no" title="statement not covered" >        block.condition = condition;</span>
 <span class="cstat-no" title="statement not covered" >        return true;</span>
       }
@@ -1289,9 +1291,9 @@ export class AlgorithmBuilderService {
     };
 &nbsp;
     const checkArray = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(b</span>locks: PopulationBlock[] | undefined) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (blocks) {</span>
+<span class="cstat-no" title="statement not covered" >      if (blocks) {</span>
         const block = <span class="cstat-no" title="statement not covered" >blocks.find(<span class="fstat-no" title="function not covered" >(b</span>) =&gt; <span class="cstat-no" title="statement not covered" >b.id === blockId)</span>;</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (block) {</span>
+<span class="cstat-no" title="statement not covered" >        if (block) {</span>
 <span class="cstat-no" title="statement not covered" >          block.condition = condition;</span>
 <span class="cstat-no" title="statement not covered" >          return true;</span>
         }
@@ -1299,7 +1301,7 @@ export class AlgorithmBuilderService {
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (</span>
+<span class="cstat-no" title="statement not covered" >    if (</span>
       !findAndUpdate(algorithm.initialPopulation) &amp;&amp;
       !findAndUpdate(algorithm.denominator) &amp;&amp;
       !findAndUpdate(algorithm.numerator) &amp;&amp;
@@ -1322,7 +1324,7 @@ export class AlgorithmBuilderService {
     connectionType: 'inclusion' | 'exclusion' | 'exception' = <span class="branch-0 cbranch-no" title="branch not covered" >'inclusion'</span>
   ): BlockConnection {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return null as any;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return null as any;</span></span>
 &nbsp;
     const connection: BlockConnection = <span class="cstat-no" title="statement not covered" >{</span>
       id: `conn_${Date.now()}`,
@@ -1331,7 +1333,7 @@ export class AlgorithmBuilderService {
       connectionType,
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.connections) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm.connections) {</span>
 <span class="cstat-no" title="statement not covered" >      algorithm.connections = [];</span>
     }
 <span class="cstat-no" title="statement not covered" >    algorithm.connections.push(connection);</span>
@@ -1347,7 +1349,7 @@ export class AlgorithmBuilderService {
    */
 <span class="fstat-no" title="function not covered" >  removeConnection(</span>connectionId: string): void {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm || !algorithm.connections) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm || !algorithm.connections) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    algorithm.connections = algorithm.connections.filter(<span class="fstat-no" title="function not covered" >(c</span>) =&gt; <span class="cstat-no" title="statement not covered" >c.id !== connectionId)</span>;</span>
 <span class="cstat-no" title="statement not covered" >    this.algorithmSubject.next(algorithm);</span>
@@ -1361,15 +1363,15 @@ export class AlgorithmBuilderService {
     const errors: string[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
     // Check required population blocks
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.initialPopulation || !algorithm.initialPopulation.condition) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm.initialPopulation || !algorithm.initialPopulation.condition) {</span>
 <span class="cstat-no" title="statement not covered" >      errors.push('Initial Population condition is required');</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.denominator || !algorithm.denominator.condition) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm.denominator || !algorithm.denominator.condition) {</span>
 <span class="cstat-no" title="statement not covered" >      errors.push('Denominator condition is required');</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.numerator || !algorithm.numerator.condition) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm.numerator || !algorithm.numerator.condition) {</span>
 <span class="cstat-no" title="statement not covered" >      errors.push('Numerator condition is required');</span>
     }
 &nbsp;
@@ -1377,11 +1379,11 @@ export class AlgorithmBuilderService {
     // (This would require more sophisticated logic analysis)
 &nbsp;
     // Check for orphaned exclusions/exceptions
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm.exclusions?.some(<span class="fstat-no" title="function not covered" >(e</span>x) =&gt; <span class="cstat-no" title="statement not covered" >!ex.condition)</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (algorithm.exclusions?.some(<span class="fstat-no" title="function not covered" >(e</span>x) =&gt; <span class="cstat-no" title="statement not covered" >!ex.condition)</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      errors.push('All exclusion blocks must have conditions');</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (algorithm.exceptions?.some(<span class="fstat-no" title="function not covered" >(e</span>x) =&gt; <span class="cstat-no" title="statement not covered" >!ex.condition)</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (algorithm.exceptions?.some(<span class="fstat-no" title="function not covered" >(e</span>x) =&gt; <span class="cstat-no" title="statement not covered" >!ex.condition)</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      errors.push('All exception blocks must have conditions');</span>
     }
 &nbsp;
@@ -1394,14 +1396,14 @@ export class AlgorithmBuilderService {
   /**
    * Duplicate a block (useful for creating similar criteria)
    */
-<span class="fstat-no" title="function not covered" >  duplicateBlock(</span>blockId: string, offsetX: number = <span class="branch-0 cbranch-no" title="branch not covered" >50,</span> offsetY: number = <span class="branch-0 cbranch-no" title="branch not covered" >50)</span>: PopulationBlock | null {
+<span class="fstat-no" title="function not covered" >  duplicateBlock(</span>blockId: string, offsetX = <span class="branch-0 cbranch-no" title="branch not covered" >50,</span> offsetY = <span class="branch-0 cbranch-no" title="branch not covered" >50)</span>: PopulationBlock | null {
     const algorithm = <span class="cstat-no" title="statement not covered" >this.algorithmSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!algorithm) <span class="cstat-no" title="statement not covered" >return null;</span></span>
 &nbsp;
     const findBlock = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >(b</span>locks: PopulationBlock[] | undefined): PopulationBlock | null =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (blocks) {</span>
+<span class="cstat-no" title="statement not covered" >      if (blocks) {</span>
         const block = <span class="cstat-no" title="statement not covered" >blocks.find(<span class="fstat-no" title="function not covered" >(b</span>) =&gt; <span class="cstat-no" title="statement not covered" >b.id === blockId)</span>;</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (block) <span class="cstat-no" title="statement not covered" >return block;</span></span>
+<span class="cstat-no" title="statement not covered" >        if (block) <span class="cstat-no" title="statement not covered" >return block;</span></span>
       }
 <span class="cstat-no" title="statement not covered" >      return null;</span>
     };
@@ -1419,12 +1421,12 @@ export class AlgorithmBuilderService {
         findBlock(algorithm.exclusions) || findBlock(algorithm.exceptions);
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!sourceBlock) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!sourceBlock) <span class="cstat-no" title="statement not covered" >return null;</span></span>
 &nbsp;
     const newBlock = <span class="cstat-no" title="statement not covered" >this.createPopulationBlock(</span>
       sourceBlock.type,
       sourceBlock.label + ' (Copy)',
-      sourceBlock.description,
+      sourceBlock.description || '',
       sourceBlock.color,
       {
         x: sourceBlock.position.x + offsetX,
@@ -1435,10 +1437,10 @@ export class AlgorithmBuilderService {
 <span class="cstat-no" title="statement not covered" >    newBlock.condition = sourceBlock.condition;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (sourceBlock.type === 'exclusion') {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.exclusions) <span class="cstat-no" title="statement not covered" >algorithm.exclusions = [];</span></span>
+<span class="cstat-no" title="statement not covered" >      if (!algorithm.exclusions) <span class="cstat-no" title="statement not covered" >algorithm.exclusions = [];</span></span>
 <span class="cstat-no" title="statement not covered" >      algorithm.exclusions.push(newBlock);</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (sourceBlock.type === 'exception') {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!algorithm.exceptions) <span class="cstat-no" title="statement not covered" >algorithm.exceptions = [];</span></span>
+    } else <span class="cstat-no" title="statement not covered" >if (sourceBlock.type === 'exception') {</span>
+<span class="cstat-no" title="statement not covered" >      if (!algorithm.exceptions) <span class="cstat-no" title="statement not covered" >algorithm.exceptions = [];</span></span>
 <span class="cstat-no" title="statement not covered" >      algorithm.exceptions.push(newBlock);</span>
     }
 &nbsp;
@@ -1453,7 +1455,7 @@ export class AlgorithmBuilderService {
    */
   private <span class="fstat-no" title="function not covered" >recordHistory(</span>description: string, algorithm: MeasureAlgorithm): void {
     // Remove any future history if user made a change after undo
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.undoRedoStack.currentIndex &lt; this.undoRedoStack.history.length - 1) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.undoRedoStack.currentIndex &lt; this.undoRedoStack.history.length - 1) {</span>
 <span class="cstat-no" title="statement not covered" >      this.undoRedoStack.history = this.undoRedoStack.history.slice(</span>
         0,
         this.undoRedoStack.currentIndex + 1
@@ -1465,6 +1467,7 @@ export class AlgorithmBuilderService {
       timestamp: new Date(),
       state: {
         name: '',
+        category: '',
         algorithm: JSON.parse(JSON.stringify(algorithm)),
         sliderConfigurations: [],
         currentCql: '',
@@ -1477,7 +1480,7 @@ export class AlgorithmBuilderService {
 <span class="cstat-no" title="statement not covered" >    this.undoRedoStack.currentIndex++;</span>
 &nbsp;
     // Keep history size under control
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.undoRedoStack.history.length &gt; this.undoRedoStack.maxSize) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.undoRedoStack.history.length &gt; this.undoRedoStack.maxSize) {</span>
 <span class="cstat-no" title="statement not covered" >      this.undoRedoStack.history.shift();</span>
 <span class="cstat-no" title="statement not covered" >      this.undoRedoStack.currentIndex--;</span>
     }
@@ -1487,7 +1490,7 @@ export class AlgorithmBuilderService {
    * Undo last change
    */
 <span class="fstat-no" title="function not covered" >  undo(</span>): boolean {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.undoRedoStack.currentIndex &lt;= 0) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (this.undoRedoStack.currentIndex &lt;= 0) <span class="cstat-no" title="statement not covered" >return false;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.undoRedoStack.currentIndex--;</span>
     const entry = <span class="cstat-no" title="statement not covered" >this.undoRedoStack.history[this.undoRedoStack.currentIndex];</span>
@@ -1500,7 +1503,7 @@ export class AlgorithmBuilderService {
    * Redo last undone change
    */
 <span class="fstat-no" title="function not covered" >  redo(</span>): boolean {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.undoRedoStack.currentIndex &gt;= this.undoRedoStack.history.length - 1) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.undoRedoStack.currentIndex &gt;= this.undoRedoStack.history.length - 1) {</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
 &nbsp;
@@ -1544,7 +1547,7 @@ export class AlgorithmBuilderService {
    */
 <span class="fstat-no" title="function not covered" >  updateState(</span>state: Partial&lt;MeasureBuilderState&gt;): void {
     const current = <span class="cstat-no" title="statement not covered" >this.stateSubject.value;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (current) {</span>
+<span class="cstat-no" title="statement not covered" >    if (current) {</span>
       const updated<span class="cstat-no" title="statement not covered" > = { ...current, ...state };</span>
 <span class="cstat-no" title="statement not covered" >      this.stateSubject.next(updated);</span>
     }
@@ -1570,7 +1573,7 @@ export class AlgorithmBuilderService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

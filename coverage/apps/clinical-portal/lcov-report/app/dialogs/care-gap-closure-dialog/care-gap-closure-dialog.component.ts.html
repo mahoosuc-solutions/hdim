@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/54</span>
+                <span class='fraction'>0/68</span>
             </div>
         
             
@@ -633,28 +633,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -662,7 +662,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -751,7 +751,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1383,7 +1383,7 @@ export class CareGapClosureDialogComponent implements OnInit {
     // Gap-type specific actions
     const typeSpecificActions: QuickAction[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isLabRelatedGap(gapType)) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isLabRelatedGap(gapType)) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificActions.push({</span>
         type: 'order-lab',
         label: 'Order Lab',
@@ -1395,7 +1395,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       });
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isScreeningGap(gapType)) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isScreeningGap(gapType)) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificActions.push({</span>
         type: 'schedule-visit',
         label: 'Schedule Screening',
@@ -1407,7 +1407,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       });
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isMedicationGap(gapType)) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isMedicationGap(gapType)) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificActions.push({</span>
         type: 'e-prescribe',
         label: 'E-Prescribe',
@@ -1419,7 +1419,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       });
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isFollowUpGap(gapType)) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isFollowUpGap(gapType)) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificActions.push({</span>
         type: 'schedule-visit',
         label: 'Schedule Follow-up',
@@ -1453,7 +1453,7 @@ export class CareGapClosureDialogComponent implements OnInit {
     // Type-specific reasons
     const typeSpecificReasons: ClosureReasonSuggestion[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isLabRelatedGap(gapType) || measureName.includes('hba1c') || measureName.includes('diabetes')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isLabRelatedGap(gapType) || measureName.includes('hba1c') || measureName.includes('diabetes')) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificReasons.push(</span>
         { reason: 'Lab ordered and pending results', category: 'Lab' },
         { reason: 'Lab completed - results in system', category: 'Lab' },
@@ -1461,7 +1461,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       );
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isScreeningGap(gapType) || measureName.includes('screening')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isScreeningGap(gapType) || measureName.includes('screening')) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificReasons.push(</span>
         { reason: 'Screening scheduled for future date', category: 'Screening' },
         { reason: 'Screening completed - documentation added', category: 'Screening' },
@@ -1469,7 +1469,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       );
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isMedicationGap(gapType) || measureName.includes('statin') || measureName.includes('medication')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isMedicationGap(gapType) || measureName.includes('statin') || measureName.includes('medication')) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificReasons.push(</span>
         { reason: 'Medication prescribed', category: 'Medication' },
         { reason: 'Patient on alternative therapy', category: 'Medication' },
@@ -1477,7 +1477,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       );
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (measureName.includes('blood pressure') || measureName.includes('bp') || measureName.includes('hypertension')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (measureName.includes('blood pressure') || measureName.includes('bp') || measureName.includes('hypertension')) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificReasons.push(</span>
         { reason: 'BP at goal on current therapy', category: 'Clinical' },
         { reason: 'Home BP monitoring initiated', category: 'Clinical' },
@@ -1485,7 +1485,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       );
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (measureName.includes('depression') || measureName.includes('phq')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (measureName.includes('depression') || measureName.includes('phq')) {</span>
 <span class="cstat-no" title="statement not covered" >      typeSpecificReasons.push(</span>
         { reason: 'PHQ-9 screening completed', category: 'Screening' },
         { reason: 'Referred to behavioral health', category: 'Referral' },
@@ -1512,7 +1512,7 @@ export class CareGapClosureDialogComponent implements OnInit {
    * Handle quick action click
    */
 <span class="fstat-no" title="function not covered" >  onQuickAction(</span>action: QuickAction): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (action.type === 'manual-close') {</span>
+<span class="cstat-no" title="statement not covered" >    if (action.type === 'manual-close') {</span>
 <span class="cstat-no" title="statement not covered" >      this.showManualForm.set(true);</span>
 <span class="cstat-no" title="statement not covered" >      this.selectedAction.set(action.type);</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
@@ -1538,7 +1538,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       closureDate: new Date().toISOString(),
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (action.interventionType) {</span>
+<span class="cstat-no" title="statement not covered" >    if (action.interventionType) {</span>
 <span class="cstat-no" title="statement not covered" >      closureRequest.intervention = {</span>
         type: action.interventionType,
         description: action.description,
@@ -1567,7 +1567,7 @@ export class CareGapClosureDialogComponent implements OnInit {
    * Submit manual closure
    */
 <span class="fstat-no" title="function not covered" >  onManualClose(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.manualClosureForm.invalid) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.manualClosureForm.invalid) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
 &nbsp;
@@ -1584,7 +1584,7 @@ export class CareGapClosureDialogComponent implements OnInit {
       closureDate: new Date().toISOString(),
     };
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (formValue.scheduleFollowUp &amp;&amp; formValue.followUpDate) {</span>
+<span class="cstat-no" title="statement not covered" >    if (formValue.scheduleFollowUp &amp;&amp; formValue.followUpDate) {</span>
 <span class="cstat-no" title="statement not covered" >      closureRequest.intervention = {</span>
         type: InterventionType.APPOINTMENT_SCHEDULED,
         description: 'Follow-up scheduled',
@@ -1632,7 +1632,7 @@ export class CareGapClosureDialogComponent implements OnInit {
    * Select all related gaps
    */
 <span class="fstat-no" title="function not covered" >  selectAllRelatedGaps(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.data.relatedGaps) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.data.relatedGaps) {</span>
 <span class="cstat-no" title="statement not covered" >      this.selectedRelatedGaps.set(this.data.relatedGaps.map(<span class="fstat-no" title="function not covered" >g </span>=&gt; <span class="cstat-no" title="statement not covered" >g.id)</span>);</span>
     }
   }
@@ -1726,7 +1726,7 @@ export class CareGapClosureDialogComponent implements OnInit {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

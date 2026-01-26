@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">99.39% </span>
+                <span class="strong">99.4% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>164/165</span>
+                <span class='fraction'>167/168</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">84.81% </span>
+                <span class="strong">85.05% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>67/79</span>
+                <span class='fraction'>74/87</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>49/49</span>
+                <span class='fraction'>50/50</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>161/161</span>
+                <span class='fraction'>164/164</span>
             </div>
         
             
@@ -582,7 +582,12 @@
 <a name='L517'></a><a href='#L517'>517</a>
 <a name='L518'></a><a href='#L518'>518</a>
 <a name='L519'></a><a href='#L519'>519</a>
-<a name='L520'></a><a href='#L520'>520</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L520'></a><a href='#L520'>520</a>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -619,6 +624,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -709,6 +715,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-yes">73x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">73x</span>
@@ -744,6 +753,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-yes">73x</span>
@@ -1141,6 +1151,7 @@ import { takeUntil, debounceTime, switchMap, startWith } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { SDOHReferralService } from '../../services/sdoh-referral.service';
 import { ToastService } from '../../services/toast.service';
+import { LoggerService } from '../../services/logger.service';
 &nbsp;
 import {
   SDOHReferralDialogData,
@@ -1228,6 +1239,9 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
   // Destroy subject
   private destroy$ = new Subject&lt;void&gt;();
   private searchSubject = new Subject&lt;string&gt;();
+  private get logger() {
+    return this.loggerService.withContext('SDOHReferralDialogComponent');
+  }
 &nbsp;
   // Constants for template
   readonly INTERNAL_DESTINATION_NAMES = INTERNAL_DESTINATION_NAMES;
@@ -1266,7 +1280,8 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: SDOHReferralDialogData,
     private fb: FormBuilder,
     private referralService: SDOHReferralService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private loggerService: LoggerService
   ) {
     this.initializeForm();
   }
@@ -1346,7 +1361,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
   }
 &nbsp;
   selectAllNeeds(): void {
-    if (this.data.screeningResult<span class="branch-0 cbranch-no" title="branch not covered" >?.n</span>eeds) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (this.data.screeningResult<span class="branch-0 cbranch-no" title="branch not covered" >?.n</span>eeds) {
       this.selectedNeeds = [...this.data.screeningResult.needs];
     }
   }
@@ -1515,7 +1530,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
         error: (error) =&gt; {
           this.submitting = false;
           this.toastService.error('Failed to submit referral. Please try again.');
-          console.error('Referral submission error:', error);
+          this.logger.error('Referral submission error', error);
         },
       });
   }
@@ -1536,7 +1551,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
         },
         error: (error) =&gt; {
           this.toastService.error('Failed to save draft');
-          console.error('Draft save error:', error);
+          this.logger.error('Draft save error', error);
         },
       });
   }
@@ -1627,7 +1642,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96.36% </span>
+                <span class="strong">96.55% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>53/55</span>
+                <span class='fraction'>56/58</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80% </span>
+                <span class="strong">83.33% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>8/10</span>
+                <span class='fraction'>10/12</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>17/17</span>
+                <span class='fraction'>18/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">96% </span>
+                <span class="strong">96.22% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>48/50</span>
+                <span class='fraction'>51/53</span>
             </div>
         
             
@@ -718,21 +718,27 @@
 <a name='L653'></a><a href='#L653'>653</a>
 <a name='L654'></a><a href='#L654'>654</a>
 <a name='L655'></a><a href='#L655'>655</a>
-<a name='L656'></a><a href='#L656'>656</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L656'></a><a href='#L656'>656</a>
+<a name='L657'></a><a href='#L657'>657</a>
+<a name='L658'></a><a href='#L658'>658</a>
+<a name='L659'></a><a href='#L659'>659</a>
+<a name='L660'></a><a href='#L660'>660</a>
+<a name='L661'></a><a href='#L661'>661</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1183,14 +1189,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
@@ -1385,6 +1395,7 @@ import { Subscription } from 'rxjs';
 import { timeout, catchError } from 'rxjs/operators';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import { CustomMeasureService, TestPatientResult } from '../../../services/custom-measure.service';
+import { LoggerService } from '../../../services/logger.service';
 &nbsp;
 // Evaluation timeout in milliseconds (2 minutes)
 const EVALUATION_TIMEOUT_MS = 120000;
@@ -1844,11 +1855,15 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
   errorMessage: string | null = null;
   totalExecutionTimeMs = 0;
   private testSubscription?: Subscription;
+  private get logger() {
+    return this.loggerService.withContext('TestPreviewDialogComponent');
+  }
 &nbsp;
   constructor(
     private dialogRef: MatDialogRef&lt;TestPreviewDialogComponent&gt;,
     @Inject(MAT_DIALOG_DATA) public data: TestPreviewDialogData,
-    private customMeasureService: CustomMeasureService
+    private customMeasureService: CustomMeasureService,
+    private loggerService: LoggerService
   ) {}
 &nbsp;
   ngOnDestroy(): void {
@@ -1881,10 +1896,10 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
       catchError((err) =&gt; {
         // Handle timeout specifically
         <span class="missing-if-branch" title="if path not taken" >I</span>if (err.name === 'TimeoutError') {
-<span class="cstat-no" title="statement not covered" >          console.warn('Test evaluation timed out after', EVALUATION_TIMEOUT_MS / 1000, 'seconds');</span>
+<span class="cstat-no" title="statement not covered" >          this.logger.warn('Test evaluation timed out after seconds', EVALUATION_TIMEOUT_MS / 1000);</span>
 <span class="cstat-no" title="statement not covered" >          this.errorMessage = `Evaluation timed out after ${EVALUATION_TIMEOUT_MS / 1000} seconds. Using sample data.`;</span>
         } else {
-          console.warn('Test API unavailable, using sample data:', err);
+          this.logger.warn('Test API unavailable, using sample data', err);
           this.errorMessage = 'Using sample data (backend test endpoint not available)';
         }
         this.testResults = this.generateSampleResults();
@@ -2035,7 +2050,7 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

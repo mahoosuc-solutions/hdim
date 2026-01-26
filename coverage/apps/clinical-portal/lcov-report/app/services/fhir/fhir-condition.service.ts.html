@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/142</span>
+                <span class='fraction'>0/151</span>
             </div>
         
             
@@ -789,7 +789,7 @@ export class FhirConditionService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getActiveConditions(</span>patientId: string): Observable&lt;ChronicCondition[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`conditions:active:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;ChronicCondition[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.CONDITION);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -833,7 +833,7 @@ export class FhirConditionService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getMentalHealthConditions(</span>patientId: string): Observable&lt;ChronicCondition[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`conditions:mental:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;ChronicCondition[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return this.getActiveConditions(patientId).pipe(</span>
       map(<span class="fstat-no" title="function not covered" >(c</span>onditions) =&gt; {
@@ -852,7 +852,7 @@ export class FhirConditionService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getConditionHistory(</span>patientId: string): Observable&lt;ChronicCondition[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`conditions:history:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;ChronicCondition[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.CONDITION);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -905,7 +905,7 @@ export class FhirConditionService extends CacheableService {
    * Map FHIR Conditions to ChronicCondition objects
    */
   private <span class="fstat-no" title="function not covered" >mapFhirConditions(</span>bundle: FhirBundle&lt;FhirCondition&gt;): ChronicCondition[] {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!bundle.entry || bundle.entry.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!bundle.entry || bundle.entry.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return [];</span>
     }
 &nbsp;
@@ -989,15 +989,15 @@ export class FhirConditionService extends CacheableService {
     const severity = <span class="cstat-no" title="statement not covered" >condition.severity?.coding?.[0]?.code?.toLowerCase();</span>
     const status = <span class="cstat-no" title="statement not covered" >condition.clinicalStatus?.coding?.[0]?.code;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (severity === 'severe' || severity === '24484000') {</span>
+<span class="cstat-no" title="statement not covered" >    if (severity === 'severe' || severity === '24484000') {</span>
 <span class="cstat-no" title="statement not covered" >      return 'high';</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (status === 'active' &amp;&amp; severity === 'moderate') {</span>
+<span class="cstat-no" title="statement not covered" >    if (status === 'active' &amp;&amp; severity === 'moderate') {</span>
 <span class="cstat-no" title="statement not covered" >      return 'moderate';</span>
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (status === 'remission' || status === 'resolved') {</span>
+<span class="cstat-no" title="statement not covered" >    if (status === 'remission' || status === 'resolved') {</span>
 <span class="cstat-no" title="statement not covered" >      return 'low';</span>
     }
 &nbsp;
@@ -1016,7 +1016,7 @@ export class FhirConditionService extends CacheableService {
    * Check if condition is a chronic disease
    */
   private <span class="fstat-no" title="function not covered" >isChronicCondition(</span>code: string): boolean {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!code) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!code) <span class="cstat-no" title="statement not covered" >return false;</span></span>
 <span class="cstat-no" title="statement not covered" >    return this.CHRONIC_DISEASE_SNOMED_CODES.some(<span class="fstat-no" title="function not covered" >chronicCode </span>=&gt;</span>
 <span class="cstat-no" title="statement not covered" >      code === chronicCode || code.includes(chronicCode)</span>
     );
@@ -1026,7 +1026,7 @@ export class FhirConditionService extends CacheableService {
    * Check if condition is mental health related
    */
   private <span class="fstat-no" title="function not covered" >isMentalHealthCondition(</span>code: string): boolean {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!code) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!code) <span class="cstat-no" title="statement not covered" >return false;</span></span>
 <span class="cstat-no" title="statement not covered" >    return this.MENTAL_HEALTH_SNOMED_CODES.some(<span class="fstat-no" title="function not covered" >mhCode </span>=&gt;</span>
 <span class="cstat-no" title="statement not covered" >      code === mhCode || code.includes(mhCode)</span>
     );
@@ -1039,7 +1039,7 @@ export class FhirConditionService extends CacheableService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

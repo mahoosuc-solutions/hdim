@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.24% </span>
+                <span class="strong">90.9% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>37/41</span>
+                <span class='fraction'>40/44</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78.57% </span>
+                <span class="strong">81.81% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>11/14</span>
+                <span class='fraction'>18/22</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">89.74% </span>
+                <span class="strong">90.47% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>35/39</span>
+                <span class='fraction'>38/42</span>
             </div>
         
             
@@ -263,7 +263,14 @@
 <a name='L198'></a><a href='#L198'>198</a>
 <a name='L199'></a><a href='#L199'>199</a>
 <a name='L200'></a><a href='#L200'>200</a>
-<a name='L201'></a><a href='#L201'>201</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a>
+<a name='L205'></a><a href='#L205'>205</a>
+<a name='L206'></a><a href='#L206'>206</a>
+<a name='L207'></a><a href='#L207'>207</a>
+<a name='L208'></a><a href='#L208'>208</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -278,6 +285,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -417,6 +425,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">34x</span>
@@ -486,6 +500,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { LoggerService } from '../../../services/logger.service';
 &nbsp;
 /**
  * Validation error definition
@@ -578,13 +593,13 @@ export class FormFieldComponent implements OnInit {
   @Input() control!: FormControl;
 &nbsp;
   /** Field label */
-  @Input() label: string = '';
+  @Input() label = '';
 &nbsp;
   /** Input type */
   @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' = 'text';
 &nbsp;
   /** Placeholder text */
-  @Input() placeholder: string = '';
+  @Input() placeholder = '';
 &nbsp;
   /** Hint text */
   @Input() hint?: string;
@@ -593,13 +608,13 @@ export class FormFieldComponent implements OnInit {
   @Input() icon?: string;
 &nbsp;
   /** Is field required */
-  @Input() required: boolean = false;
+  @Input() required = false;
 &nbsp;
   /** Is field readonly */
-  @Input() readonly: boolean = false;
+  @Input() readonly = false;
 &nbsp;
   /** Autocomplete attribute */
-  @Input() autocomplete: string = 'off';
+  @Input() autocomplete = 'off';
 &nbsp;
   /** Material appearance */
   @Input() appearance: 'fill' | 'outline' = 'outline';
@@ -618,9 +633,15 @@ export class FormFieldComponent implements OnInit {
     pattern: 'Invalid format'
   };
 &nbsp;
+  private get logger() {
+    return this.loggerService.withContext('FormFieldComponent');
+  }
+&nbsp;
+  constructor(private loggerService: LoggerService) {}
+&nbsp;
   ngOnInit(): void {
     if (!this.control) {
-      console.error('FormFieldComponent: control input is required');
+      this.logger.error('FormFieldComponent: control input is required');
     }
   }
 &nbsp;
@@ -643,7 +664,7 @@ export class FormFieldComponent implements OnInit {
     }
 &nbsp;
     // Use default error message
-    if (this.defaultErrors[errorKey]) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (this.defaultErrors[errorKey]) {
       // Handle errors with parameters
       if (errorKey === 'minlength') {
         return `Minimum length is ${errors[errorKey].requiredLength} characters`;
@@ -670,7 +691,7 @@ export class FormFieldComponent implements OnInit {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

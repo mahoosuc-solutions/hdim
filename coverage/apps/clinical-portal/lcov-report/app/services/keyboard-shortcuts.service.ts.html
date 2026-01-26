@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/55</span>
+                <span class='fraction'>0/79</span>
             </div>
         
             
@@ -687,11 +687,11 @@
 <a name='L622'></a><a href='#L622'>622</a>
 <a name='L623'></a><a href='#L623'>623</a>
 <a name='L624'></a><a href='#L624'>624</a>
-<a name='L625'></a><a href='#L625'>625</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L625'></a><a href='#L625'>625</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -751,7 +751,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1405,7 +1405,7 @@ export class KeyboardShortcutsService implements OnDestroy {
 <span class="cstat-no" title="statement not covered" >    this.isBrowser = isPlatformBrowser(platformId);</span>
 <span class="cstat-no" title="statement not covered" >    this.initializeDefaultShortcuts();</span>
 <span class="cstat-no" title="statement not covered" >    this.loadPreferences();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isBrowser) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.isBrowser) {</span>
 <span class="cstat-no" title="statement not covered" >      this.setupGlobalListener();</span>
     }
   }
@@ -1641,7 +1641,7 @@ export class KeyboardShortcutsService implements OnDestroy {
    */
 <span class="fstat-no" title="function not covered" >  setShortcutEnabled(</span>id: string, enabled: boolean): void {
     const shortcut = <span class="cstat-no" title="statement not covered" >this.shortcuts.get(id);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut) {</span>
+<span class="cstat-no" title="statement not covered" >    if (shortcut) {</span>
 <span class="cstat-no" title="statement not covered" >      shortcut.enabled = enabled;</span>
 <span class="cstat-no" title="statement not covered" >      this.emitShortcuts();</span>
 <span class="cstat-no" title="statement not covered" >      this.savePreferences();</span>
@@ -1653,13 +1653,13 @@ export class KeyboardShortcutsService implements OnDestroy {
    */
 <span class="fstat-no" title="function not covered" >  updateBinding(</span>id: string, key: string, modifiers: ('ctrl' | 'shift' | 'alt' | 'meta')[]): boolean {
     const shortcut = <span class="cstat-no" title="statement not covered" >this.shortcuts.get(id);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!shortcut || !shortcut.customizable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!shortcut || !shortcut.customizable) {</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
 &nbsp;
     // Check for conflicts
     const conflict = <span class="cstat-no" title="statement not covered" >this.findConflict(key, modifiers, id);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (conflict) {</span>
+<span class="cstat-no" title="statement not covered" >    if (conflict) {</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
 &nbsp;
@@ -1694,16 +1694,16 @@ export class KeyboardShortcutsService implements OnDestroy {
 <span class="fstat-no" title="function not covered" >  formatShortcut(</span>shortcut: KeyboardShortcut): string {
     const parts: string[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut.modifiers.includes('ctrl')) <span class="cstat-no" title="statement not covered" >parts.push('Ctrl');</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut.modifiers.includes('alt')) <span class="cstat-no" title="statement not covered" >parts.push('Alt');</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut.modifiers.includes('shift')) <span class="cstat-no" title="statement not covered" >parts.push('Shift');</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut.modifiers.includes('meta')) <span class="cstat-no" title="statement not covered" >parts.push('Cmd');</span></span>
+<span class="cstat-no" title="statement not covered" >    if (shortcut.modifiers.includes('ctrl')) <span class="cstat-no" title="statement not covered" >parts.push('Ctrl');</span></span>
+<span class="cstat-no" title="statement not covered" >    if (shortcut.modifiers.includes('alt')) <span class="cstat-no" title="statement not covered" >parts.push('Alt');</span></span>
+<span class="cstat-no" title="statement not covered" >    if (shortcut.modifiers.includes('shift')) <span class="cstat-no" title="statement not covered" >parts.push('Shift');</span></span>
+<span class="cstat-no" title="statement not covered" >    if (shortcut.modifiers.includes('meta')) <span class="cstat-no" title="statement not covered" >parts.push('Cmd');</span></span>
 &nbsp;
     // Format key
     let keyDisplay = <span class="cstat-no" title="statement not covered" >shortcut.key;</span>
 <span class="cstat-no" title="statement not covered" >    if (keyDisplay === ' ') <span class="cstat-no" title="statement not covered" >keyDisplay = 'Space';</span></span>
     else <span class="cstat-no" title="statement not covered" >if (keyDisplay === 'Escape') <span class="cstat-no" title="statement not covered" >keyDisplay = 'Esc';</span></span>
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (keyDisplay.length === 1) <span class="cstat-no" title="statement not covered" >keyDisplay = keyDisplay.toUpperCase();</span></span>
+    else <span class="cstat-no" title="statement not covered" >if (keyDisplay.length === 1) <span class="cstat-no" title="statement not covered" >keyDisplay = keyDisplay.toUpperCase();</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    parts.push(keyDisplay);</span>
 &nbsp;
@@ -1727,7 +1727,7 @@ export class KeyboardShortcutsService implements OnDestroy {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >openHelpDialog(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.helpDialogCallback) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.helpDialogCallback) {</span>
 <span class="cstat-no" title="statement not covered" >      this.helpDialogCallback();</span>
     }
   }
@@ -1756,7 +1756,7 @@ export class KeyboardShortcutsService implements OnDestroy {
 &nbsp;
   private <span class="fstat-no" title="function not covered" >focusSearch(</span>): void {
     const searchInput = <span class="cstat-no" title="statement not covered" >document.querySelector('input[type="search"], input[placeholder*="Search"]') as HTMLInputElement;</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (searchInput) {</span>
+<span class="cstat-no" title="statement not covered" >    if (searchInput) {</span>
 <span class="cstat-no" title="statement not covered" >      searchInput.focus();</span>
     }
   }
@@ -1786,13 +1786,13 @@ export class KeyboardShortcutsService implements OnDestroy {
     const tagName = <span class="cstat-no" title="statement not covered" >target.tagName.toLowerCase();</span>
 &nbsp;
     // Allow shortcuts in inputs if modifier key is pressed (except for text editing shortcuts)
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (tagName === 'input' || tagName === 'textarea' || target.isContentEditable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (tagName === 'input' || tagName === 'textarea' || target.isContentEditable) {</span>
       // Allow help shortcut even in inputs
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (event.key === '?' &amp;&amp; !event.ctrlKey &amp;&amp; !event.altKey) {</span>
+<span class="cstat-no" title="statement not covered" >      if (event.key === '?' &amp;&amp; !event.ctrlKey &amp;&amp; !event.altKey) {</span>
 <span class="cstat-no" title="statement not covered" >        return false;</span>
       }
       // Allow Escape even in inputs
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (event.key === 'Escape') {</span>
+<span class="cstat-no" title="statement not covered" >      if (event.key === 'Escape') {</span>
 <span class="cstat-no" title="statement not covered" >        return false;</span>
       }
       // Block other shortcuts in inputs
@@ -1808,7 +1808,7 @@ export class KeyboardShortcutsService implements OnDestroy {
   private <span class="fstat-no" title="function not covered" >handleKeyDown(</span>event: KeyboardEvent): void {
     const matchingShortcut = <span class="cstat-no" title="statement not covered" >this.findMatchingShortcut(event);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (matchingShortcut &amp;&amp; matchingShortcut.enabled) {</span>
+<span class="cstat-no" title="statement not covered" >    if (matchingShortcut &amp;&amp; matchingShortcut.enabled) {</span>
 <span class="cstat-no" title="statement not covered" >      event.preventDefault();</span>
 <span class="cstat-no" title="statement not covered" >      event.stopPropagation();</span>
 <span class="cstat-no" title="statement not covered" >      matchingShortcut.action();</span>
@@ -1820,7 +1820,7 @@ export class KeyboardShortcutsService implements OnDestroy {
    */
   private <span class="fstat-no" title="function not covered" >findMatchingShortcut(</span>event: KeyboardEvent): KeyboardShortcut | undefined {
 <span class="cstat-no" title="statement not covered" >    for (const shortcut of this.shortcuts.values()) {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (this.eventMatchesShortcut(event, shortcut)) {</span>
+<span class="cstat-no" title="statement not covered" >      if (this.eventMatchesShortcut(event, shortcut)) {</span>
 <span class="cstat-no" title="statement not covered" >        return shortcut;</span>
       }
     }
@@ -1836,7 +1836,7 @@ export class KeyboardShortcutsService implements OnDestroy {
 <span class="cstat-no" title="statement not covered" >      event.key.toLowerCase() === shortcut.key.toLowerCase() ||</span>
       event.key === shortcut.key;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!keyMatches) <span class="cstat-no" title="statement not covered" >return false;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!keyMatches) <span class="cstat-no" title="statement not covered" >return false;</span></span>
 &nbsp;
     // Check modifiers
     const ctrlRequired = <span class="cstat-no" title="statement not covered" >shortcut.modifiers.includes('ctrl');</span>
@@ -1861,14 +1861,14 @@ export class KeyboardShortcutsService implements OnDestroy {
    */
   private <span class="fstat-no" title="function not covered" >findConflict(</span>key: string, modifiers: string[], excludeId?: string): KeyboardShortcut | undefined {
 <span class="cstat-no" title="statement not covered" >    for (const shortcut of this.shortcuts.values()) {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (excludeId &amp;&amp; shortcut.id === excludeId) <span class="cstat-no" title="statement not covered" >continue;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (excludeId &amp;&amp; shortcut.id === excludeId) <span class="cstat-no" title="statement not covered" >continue;</span></span>
 &nbsp;
       const keyMatches = <span class="cstat-no" title="statement not covered" >shortcut.key.toLowerCase() === key.toLowerCase();</span>
       const modifiersMatch =
 <span class="cstat-no" title="statement not covered" >        shortcut.modifiers.length === modifiers.length &amp;&amp;</span>
         shortcut.modifiers.every(<span class="fstat-no" title="function not covered" >m </span>=&gt; <span class="cstat-no" title="statement not covered" >modifiers.includes(m))</span>;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (keyMatches &amp;&amp; modifiersMatch) {</span>
+<span class="cstat-no" title="statement not covered" >      if (keyMatches &amp;&amp; modifiersMatch) {</span>
 <span class="cstat-no" title="statement not covered" >        return shortcut;</span>
       }
     }
@@ -1886,11 +1886,11 @@ export class KeyboardShortcutsService implements OnDestroy {
    * Load preferences from localStorage
    */
   private <span class="fstat-no" title="function not covered" >loadPreferences(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isBrowser) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!this.isBrowser) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
       const stored = <span class="cstat-no" title="statement not covered" >localStorage.getItem(this.STORAGE_KEY);</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!stored) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (!stored) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
       const prefs: ShortcutPreferences = <span class="cstat-no" title="statement not covered" >JSON.parse(stored);</span>
 <span class="cstat-no" title="statement not covered" >      this.enabledSubject.next(prefs.enabled);</span>
@@ -1898,7 +1898,7 @@ export class KeyboardShortcutsService implements OnDestroy {
       // Apply custom bindings
 <span class="cstat-no" title="statement not covered" >      for (const [id, binding] of Object.entries(prefs.customBindings)) {</span>
         const shortcut = <span class="cstat-no" title="statement not covered" >this.shortcuts.get(id);</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut &amp;&amp; shortcut.customizable) {</span>
+<span class="cstat-no" title="statement not covered" >        if (shortcut &amp;&amp; shortcut.customizable) {</span>
 <span class="cstat-no" title="statement not covered" >          shortcut.key = binding.key;</span>
 <span class="cstat-no" title="statement not covered" >          shortcut.modifiers = binding.modifiers as ('ctrl' | 'shift' | 'alt' | 'meta')[];</span>
         }
@@ -1914,12 +1914,12 @@ export class KeyboardShortcutsService implements OnDestroy {
    * Save preferences to localStorage
    */
   private <span class="fstat-no" title="function not covered" >savePreferences(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isBrowser) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!this.isBrowser) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
     const customBindings: Record&lt;string, { key: string; modifiers: string[] }&gt; = <span class="cstat-no" title="statement not covered" >{};</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    for (const [id, shortcut] of this.shortcuts.entries()) {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (shortcut.customizable) {</span>
+<span class="cstat-no" title="statement not covered" >      if (shortcut.customizable) {</span>
 <span class="cstat-no" title="statement not covered" >        customBindings[id] = {</span>
           key: shortcut.key,
           modifiers: shortcut.modifiers,
@@ -1942,7 +1942,7 @@ export class KeyboardShortcutsService implements OnDestroy {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

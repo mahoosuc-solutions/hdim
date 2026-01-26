@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.63% </span>
+                <span class="strong">70.87% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1715/2428</span>
+                <span class='fraction'>1920/2709</span>
             </div>
         
             
@@ -6639,9 +6639,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -6697,8 +6697,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -6712,18 +6712,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">368x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -13521,7 +13521,7 @@ export class PatientHealthService {
     const assessmentsByType = new Map&lt;string, any[]&gt;();
     assessments.forEach((a) =&gt; {
       const type = a.type?.replace('_', '-') || a.assessmentType;
-      if (!assessmentsByType.has(type)) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (!assessmentsByType.has(type)) {
         assessmentsByType.set(type, []);
       }
       assessmentsByType.get(type)!.push(a);
@@ -13603,7 +13603,7 @@ export class PatientHealthService {
    * For mental health scales (PHQ-9, GAD-7), lower scores are better (improvement = down)
    */
   private calculateAssessmentTrend(currentAssessment: any, allAssessments: any[]): 'improving' | 'declining' | 'stable' {
-    if (!allAssessments || allAssessments.length &lt; 2) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (!allAssessments || allAssessments.length &lt; 2) {
       return 'stable';
     }
 &nbsp;
@@ -13621,7 +13621,7 @@ export class PatientHealthService {
     );
 &nbsp;
     // If current is the oldest or not found, return stable
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (currentIndex === -1 || currentIndex &gt;= sorted.length - 1) {</span>
+<span class="cstat-no" title="statement not covered" >    if (currentIndex === -1 || currentIndex &gt;= sorted.length - 1) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'stable';</span>
     }
 &nbsp;
@@ -13638,7 +13638,7 @@ export class PatientHealthService {
     // For mental health scales, lower score = better (improvement)
 <span class="cstat-no" title="statement not covered" >    if (scoreDifference &lt;= -significantChange) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'improving'; </span>// Score decreased significantly
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (scoreDifference &gt;= significantChange) {</span>
+    } else <span class="cstat-no" title="statement not covered" >if (scoreDifference &gt;= significantChange) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'declining'; </span>// Score increased significantly (declining mental health)
     }
 <span class="cstat-no" title="statement not covered" >    return 'stable';</span>
@@ -14009,23 +14009,23 @@ export class PatientHealthService {
       referralDate: Date;
     }&gt; = [];
 &nbsp;
-    if (!bundle<span class="branch-0 cbranch-no" title="branch not covered" >?.e</span>ntry || bundle.entry.length === 0) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (!bundle<span class="branch-0 cbranch-no" title="branch not covered" >?.e</span>ntry || bundle.entry.length === 0) {
       return referrals;
     }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    for (const entry of bundle.entry) {</span>
       const serviceRequest = <span class="cstat-no" title="statement not covered" >entry.resource;</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!serviceRequest) <span class="cstat-no" title="statement not covered" >continue;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (!serviceRequest) <span class="cstat-no" title="statement not covered" >continue;</span></span>
 &nbsp;
       // Only include active/on-hold requests
       const status = <span class="cstat-no" title="statement not covered" >serviceRequest.status;</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (status !== 'active' &amp;&amp; status !== 'on-hold' &amp;&amp; status !== 'draft') <span class="cstat-no" title="statement not covered" >continue;</span></span>
+<span class="cstat-no" title="statement not covered" >      if (status !== 'active' &amp;&amp; status !== 'on-hold' &amp;&amp; status !== 'draft') <span class="cstat-no" title="statement not covered" >continue;</span></span>
 &nbsp;
       // Extract organization name from performer or requester
       let organization = <span class="cstat-no" title="statement not covered" >'Unknown Organization';</span>
 <span class="cstat-no" title="statement not covered" >      if (serviceRequest.performer?.[0]?.display) {</span>
 <span class="cstat-no" title="statement not covered" >        organization = serviceRequest.performer[0].display;</span>
-      } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (serviceRequest.requester?.display) {</span>
+      } else <span class="cstat-no" title="statement not covered" >if (serviceRequest.requester?.display) {</span>
 <span class="cstat-no" title="statement not covered" >        organization = `Referral from ${serviceRequest.requester.display}`;</span>
       }
 &nbsp;
@@ -14056,32 +14056,32 @@ export class PatientHealthService {
     const categoryCode = <span class="cstat-no" title="statement not covered" >serviceRequest.category?.[0]?.coding?.[0]?.code || '';</span>
 &nbsp;
     // Check for food-related
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (codeText.includes('food') || codeText.includes('nutrition') || codeText.includes('meal')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (codeText.includes('food') || codeText.includes('nutrition') || codeText.includes('meal')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'food-insecurity';</span>
     }
 &nbsp;
     // Check for housing-related
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (codeText.includes('housing') || codeText.includes('shelter') || codeText.includes('homeless')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (codeText.includes('housing') || codeText.includes('shelter') || codeText.includes('homeless')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'housing-instability';</span>
     }
 &nbsp;
     // Check for transportation
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (codeText.includes('transport') || codeText.includes('ride') || codeText.includes('travel')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (codeText.includes('transport') || codeText.includes('ride') || codeText.includes('travel')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'transportation';</span>
     }
 &nbsp;
     // Check for financial
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (codeText.includes('financial') || codeText.includes('utility') || codeText.includes('bill')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (codeText.includes('financial') || codeText.includes('utility') || codeText.includes('bill')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'financial-strain';</span>
     }
 &nbsp;
     // Check for safety
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (codeText.includes('safety') || codeText.includes('violence') || codeText.includes('abuse')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (codeText.includes('safety') || codeText.includes('violence') || codeText.includes('abuse')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'interpersonal-safety';</span>
     }
 &nbsp;
     // Check for social/isolation
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (codeText.includes('social') || codeText.includes('isolation') || codeText.includes('loneliness')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (codeText.includes('social') || codeText.includes('isolation') || codeText.includes('loneliness')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'social-isolation';</span>
     }
 &nbsp;
@@ -14551,7 +14551,7 @@ export class PatientHealthService {
 &nbsp;
     if (fhirResponse.item &amp;&amp; fhirResponse.item.length &gt; 0) {
       const linkId = fhirResponse.item[0].linkId;
-      if (linkId) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (linkId) {
         category = linkId;
       }
 &nbsp;
@@ -14623,7 +14623,7 @@ export class PatientHealthService {
         let questionnaireType: SDOHQuestionnaireType = 'custom';
         if (mostRecent.questionnaire.includes('PRAPARE')) {
           questionnaireType = 'PRAPARE';
-        } else if (mostRecent.questionnaire.includes('AHC-HRSN')) {
+        } else <span class="missing-if-branch" title="else path not taken" >E</span>if (mostRecent.questionnaire.includes('AHC-HRSN')) {
           questionnaireType = 'AHC-HRSN';
         }
 &nbsp;
@@ -14744,7 +14744,7 @@ export class PatientHealthService {
         responseText = answer.valueCoding.display || answer.valueCoding.code || <span class="branch-2 cbranch-no" title="branch not covered" >'';</span>
       } else if (answer.valueString) {
         responseText = answer.valueString;
-      } else if (answer.valueBoolean !== undefined) {
+      } else <span class="missing-if-branch" title="else path not taken" >E</span>if (answer.valueBoolean !== undefined) {
         responseText = answer.valueBoolean ? 'Yes' : <span class="branch-1 cbranch-no" title="branch not covered" >'No';</span>
       }
 &nbsp;
@@ -14752,7 +14752,7 @@ export class PatientHealthService {
       const severity = this.determineSeverityFromResponse(responseText);
 &nbsp;
       // Only add if there's a positive finding
-      if (severity !== 'none') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (severity !== 'none') {
         const zCode = this.mapSDOHCategoryToZCode(category);
 &nbsp;
         needs.push({
@@ -14829,11 +14829,11 @@ export class PatientHealthService {
           if (!need.addressed) {
             if (need.severity === 'severe') score += 30;
             else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (need.severity === 'moderate') <span class="cstat-no" title="statement not covered" >score += 15;</span></span>
-            else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (need.severity === 'mild') <span class="cstat-no" title="statement not covered" >score += 5;</span></span>
+            else <span class="cstat-no" title="statement not covered" >if (need.severity === 'mild') <span class="cstat-no" title="statement not covered" >score += 5;</span></span>
           } else {
             <span class="missing-if-branch" title="if path not taken" >I</span>if (need.severity === 'severe') <span class="cstat-no" title="statement not covered" >score += 10;</span>
             else <span class="missing-if-branch" title="if path not taken" >I</span>if (need.severity === 'moderate') <span class="cstat-no" title="statement not covered" >score += 5;</span>
-            else if (need.severity === 'mild') score += 2;
+            else <span class="missing-if-branch" title="else path not taken" >E</span>if (need.severity === 'mild') score += 2;
           }
         });
 &nbsp;
@@ -14853,11 +14853,11 @@ export class PatientHealthService {
       if (!need.addressed) {
         if (need.severity === 'severe') score += 30;
         else if (need.severity === 'moderate') score += 15;
-        else if (need.severity === 'mild') score += 5;
+        else <span class="missing-if-branch" title="else path not taken" >E</span>if (need.severity === 'mild') score += 5;
       } else {
         <span class="missing-if-branch" title="if path not taken" >I</span>if (need.severity === 'severe') <span class="cstat-no" title="statement not covered" >score += 10;</span>
         else if (need.severity === 'moderate') score += 5;
-        else if (need.severity === 'mild') score += 2;
+        else <span class="missing-if-branch" title="else path not taken" >E</span>if (need.severity === 'mild') score += 2;
       }
     });
 &nbsp;
@@ -15068,7 +15068,7 @@ export class PatientHealthService {
    * Score range: 0-100 (higher = more at-risk)
    */
   private calculateMentalHealthRiskFromAssessments(assessments: AssessmentHistoryEntry[]): number {
-    if (!assessments || assessments.length === 0) return 25; // Default moderate-low if no data
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (!assessments || assessments.length === 0) return 25; // Default moderate-low if no data
 &nbsp;
     // Get most recent assessment
     const sortedAssessments = <span class="cstat-no" title="statement not covered" >[...assessments].sort(<span class="fstat-no" title="function not covered" >(a</span>, b) =&gt; <span class="cstat-no" title="statement not covered" >b.date.getTime() - a.date.getTime())</span>;</span>
@@ -15086,11 +15086,11 @@ export class PatientHealthService {
     let score = <span class="cstat-no" title="statement not covered" >interpretationScores[recent.interpretation?.toLowerCase()] || 40;</span>
 &nbsp;
     // Adjust based on trend
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (assessments.length &gt;= 2) {</span>
+<span class="cstat-no" title="statement not covered" >    if (assessments.length &gt;= 2) {</span>
       const trend = <span class="cstat-no" title="statement not covered" >this.calculateDetailedMentalHealthTrend(assessments);</span>
 <span class="cstat-no" title="statement not covered" >      if (trend.direction === 'declining') {</span>
 <span class="cstat-no" title="statement not covered" >        score = Math.min(score + 15, 100);</span>
-      } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (trend.direction === 'improving') {</span>
+      } else <span class="cstat-no" title="statement not covered" >if (trend.direction === 'improving') {</span>
 <span class="cstat-no" title="statement not covered" >        score = Math.max(score - 10, 0);</span>
       }
     }
@@ -15456,7 +15456,7 @@ export class PatientHealthService {
     let risk: RiskLevel = 'low';
     <span class="missing-if-branch" title="if path not taken" >I</span>if (uncontrolledSevere &gt;= 2) <span class="cstat-no" title="statement not covered" >risk = 'critical';</span>
     else if (uncontrolledSevere &gt;= 1 || <span class="branch-1 cbranch-no" title="branch not covered" >uncontrolledModerate &gt;= 3)</span> risk = 'high';
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (uncontrolledModerate &gt;= 1) <span class="cstat-no" title="statement not covered" >risk = 'moderate';</span></span>
+    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (uncontrolledModerate &gt;= 1) <span class="cstat-no" title="statement not covered" >risk = 'moderate';</span></span>
 &nbsp;
     return of(risk);
   }
@@ -15496,7 +15496,7 @@ export class PatientHealthService {
     let risk: RiskLevel = 'low';
     <span class="missing-if-branch" title="if path not taken" >I</span>if (count &gt;= 3) <span class="cstat-no" title="statement not covered" >risk = 'critical';</span>
     else if (count &gt;= 2) risk = 'high';
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (count &gt;= 1) <span class="cstat-no" title="statement not covered" >risk = 'moderate';</span></span>
+    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (count &gt;= 1) <span class="cstat-no" title="statement not covered" >risk = 'moderate';</span></span>
 &nbsp;
     return of(risk);
   }
@@ -15594,7 +15594,7 @@ export class PatientHealthService {
       <span class="missing-if-branch" title="if path not taken" >I</span>if (assessment.severity === 'severe') <span class="cstat-no" title="statement not covered" >score += 40;</span>
       else <span class="missing-if-branch" title="if path not taken" >I</span>if (assessment.severity === 'moderately-severe') <span class="cstat-no" title="statement not covered" >score += 30;</span>
       else if (assessment.severity === 'moderate') score += 20;
-      else if (assessment.severity === 'mild') score += 10;
+      else <span class="missing-if-branch" title="else path not taken" >E</span>if (assessment.severity === 'mild') score += 10;
     });
 &nbsp;
     <span class="missing-if-branch" title="if path not taken" >I</span>if (mental.suicideRisk.level === 'high') <span class="cstat-no" title="statement not covered" >score += 50;</span>
@@ -16007,7 +16007,7 @@ export class PatientHealthService {
 &nbsp;
     return this.http.get&lt;any[]&gt;(url, { headers: this.getHeaders(), params }).pipe(
       map(<span class="fstat-no" title="function not covered" >(r</span>esults) =&gt; {
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (!results || results.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >        if (!results || results.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >          return this.getMockQualityPerformance(patientId);</span>
         }
 &nbsp;
@@ -16027,12 +16027,12 @@ export class PatientHealthService {
 &nbsp;
           // Update category counts
 <span class="cstat-no" title="statement not covered" >          categories[category].total++;</span>
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (isCompliant) {</span>
+<span class="cstat-no" title="statement not covered" >          if (isCompliant) {</span>
 <span class="cstat-no" title="statement not covered" >            categories[category].met++;</span>
           }
 &nbsp;
           // Add to recent results (last 10)
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (recentResults.length &lt; 10) {</span>
+<span class="cstat-no" title="statement not covered" >          if (recentResults.length &lt; 10) {</span>
 <span class="cstat-no" title="statement not covered" >            recentResults.push({</span>
               measureId: result.measureId || result.id,
               measureName: result.measureName || result.measureTitle,
@@ -16100,19 +16100,19 @@ export class PatientHealthService {
     const measureUpper = <span class="cstat-no" title="statement not covered" >(measureId || '').toUpperCase();</span>
 &nbsp;
     // Mental health measures
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (measureUpper.includes('PHQ') || measureUpper.includes('GAD') || measureUpper.includes('DEPRESSION') ||</span>
+<span class="cstat-no" title="statement not covered" >    if (measureUpper.includes('PHQ') || measureUpper.includes('GAD') || measureUpper.includes('DEPRESSION') ||</span>
         measureUpper.includes('AMM') || measureUpper.includes('FUH') || measureUpper.includes('ADD')) {
 <span class="cstat-no" title="statement not covered" >      return 'mentalHealth';</span>
     }
 &nbsp;
     // Medication measures
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (measureUpper.includes('PDC') || measureUpper.includes('ADHERENCE') || measureUpper.includes('STATIN') ||</span>
+<span class="cstat-no" title="statement not covered" >    if (measureUpper.includes('PDC') || measureUpper.includes('ADHERENCE') || measureUpper.includes('STATIN') ||</span>
         measureUpper.includes('MRP') || measureUpper.includes('SPC')) {
 <span class="cstat-no" title="statement not covered" >      return 'medication';</span>
     }
 &nbsp;
     // Chronic disease measures
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (measureUpper.includes('CDC') || measureUpper.includes('HBA1C') || measureUpper.includes('CBP') ||</span>
+<span class="cstat-no" title="statement not covered" >    if (measureUpper.includes('CDC') || measureUpper.includes('HBA1C') || measureUpper.includes('CBP') ||</span>
         measureUpper.includes('DIABETES') || measureUpper.includes('ACE') || measureUpper.includes('ARB') ||
         measureUpper.includes('COPD') || measureUpper.includes('ASTHMA')) {
 <span class="cstat-no" title="statement not covered" >      return 'chronicDisease';</span>
@@ -16212,7 +16212,7 @@ export class PatientHealthService {
    * Calculate trend direction from metric data points
    */
   private calculateMetricValueTrend(dataPoints: { date: Date; value: number }[]): 'improving' | 'declining' | 'stable' {
-    if (dataPoints.length &lt; 2) return 'stable';
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (dataPoints.length &lt; 2) return 'stable';
 &nbsp;
     // Compare first half average with second half average
     const midpoint = <span class="cstat-no" title="statement not covered" >Math.floor(dataPoints.length / 2);</span>
@@ -16225,7 +16225,7 @@ export class PatientHealthService {
     const changePercent = <span class="cstat-no" title="statement not covered" >((secondAvg - firstAvg) / firstAvg) * 100;</span>
     const threshold = <span class="cstat-no" title="statement not covered" >5;</span> // 5% change threshold
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (Math.abs(changePercent) &lt; threshold) <span class="cstat-no" title="statement not covered" >return 'stable';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (Math.abs(changePercent) &lt; threshold) <span class="cstat-no" title="statement not covered" >return 'stable';</span></span>
     // For most metrics, lower is better (weight, BP, glucose, etc.)
 <span class="cstat-no" title="statement not covered" >    return changePercent &lt; 0 ? 'improving' : 'declining';</span>
   }
@@ -16628,7 +16628,7 @@ export class PatientHealthService {
     else if (coding.code.startsWith('F4')) category = 'anxiety';
     else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (coding.code.startsWith('F2')) <span class="cstat-no" title="statement not covered" >category = 'psychotic';</span></span>
     else <span class="cstat-no" title="statement not covered" >if (coding.code.startsWith('F1')) <span class="cstat-no" title="statement not covered" >category = 'substance';</span></span>
-    else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (coding.code.startsWith('F43')) <span class="cstat-no" title="statement not covered" >category = 'trauma';</span></span>
+    else <span class="cstat-no" title="statement not covered" >if (coding.code.startsWith('F43')) <span class="cstat-no" title="statement not covered" >category = 'trauma';</span></span>
 &nbsp;
     return {
       code: coding.code,
@@ -16696,8 +16696,8 @@ export class PatientHealthService {
   private determinePHQ9Severity(score: number): string {
     if (score &lt;= 4) return 'minimal';
     <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span>
-    if (score &lt;= 14) return 'moderate';
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'moderately-severe';</span></span>
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (score &lt;= 14) return 'moderate';
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'moderately-severe';</span></span>
 <span class="cstat-no" title="statement not covered" >    return 'severe';</span>
   }
 &nbsp;
@@ -16750,7 +16750,7 @@ export class PatientHealthService {
                         anxietyScore<span class="branch-0 cbranch-no" title="branch not covered" >?.s</span>everity === 'moderate';
     
     if (hasSevere) return 'poor';
-    if (hasModerate) return 'fair';
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (hasModerate) return 'fair';
 <span class="cstat-no" title="statement not covered" >    return 'good';</span>
   }
 &nbsp;
@@ -16769,7 +16769,7 @@ export class PatientHealthService {
     
     if (hasSevere) return 'critical';
     <span class="missing-if-branch" title="if path not taken" >I</span>if (hasModeratelySevere) <span class="cstat-no" title="statement not covered" >return 'high';</span>
-    if (hasModerate) return 'moderate';
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (hasModerate) return 'moderate';
 <span class="cstat-no" title="statement not covered" >    return 'low';</span>
   }
 &nbsp;
@@ -16887,8 +16887,8 @@ export class PatientHealthService {
       const difference = <span class="cstat-no" title="statement not covered" >currentScore - previousScore;</span>
       const threshold = <span class="cstat-no" title="statement not covered" >5;</span> // 5 point change is significant
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (difference &gt;= threshold) <span class="cstat-no" title="statement not covered" >return 'improving';</span></span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (difference &lt;= -threshold) <span class="cstat-no" title="statement not covered" >return 'declining';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (difference &gt;= threshold) <span class="cstat-no" title="statement not covered" >return 'improving';</span></span>
+<span class="cstat-no" title="statement not covered" >      if (difference &lt;= -threshold) <span class="cstat-no" title="statement not covered" >return 'declining';</span></span>
 <span class="cstat-no" title="statement not covered" >      return 'stable';</span>
     }
     return 'stable'; // No historical data, assume stable
@@ -16937,7 +16937,7 @@ export class PatientHealthService {
       <span class="missing-if-branch" title="if path not taken" >I</span>if (assessment.severity === 'severe') <span class="cstat-no" title="statement not covered" >score -= 30;</span>
       else <span class="missing-if-branch" title="if path not taken" >I</span>if (assessment.severity === 'moderately-severe') <span class="cstat-no" title="statement not covered" >score -= 25;</span>
       else if (assessment.severity === 'moderate') score -= 15;
-      else if (assessment.severity === 'mild') score -= 10;
+      else <span class="missing-if-branch" title="else path not taken" >E</span>if (assessment.severity === 'mild') score -= 10;
     }
 &nbsp;
     // Deduct points for substance use
@@ -16949,8 +16949,8 @@ export class PatientHealthService {
     else <span class="missing-if-branch" title="if path not taken" >I</span>if (mental.suicideRisk.level === 'moderate') <span class="cstat-no" title="statement not covered" >score -= 15;</span>
 &nbsp;
     // Add points for treatment engagement
-    if (mental.treatmentEngagement.inTherapy) score += 10;
-    if (mental.treatmentEngagement.therapyAdherence &amp;&amp; mental.treatmentEngagement.therapyAdherence &gt; 80) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (mental.treatmentEngagement.inTherapy) score += 10;
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (mental.treatmentEngagement.therapyAdherence &amp;&amp; mental.treatmentEngagement.therapyAdherence &gt; 80) {
       score += 5;
     }
 &nbsp;
@@ -17417,13 +17417,13 @@ export class PatientHealthService {
 &nbsp;
       switch (loincCode) {
         case LOINC_VITAL_SIGNS.HEART_RATE:
-          if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
             vitals.heartRate = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
           }
           break;
 &nbsp;
         case LOINC_VITAL_SIGNS.BLOOD_PRESSURE_PANEL:
-          if (obs.component &amp;&amp; obs.component.length &gt;= 2) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (obs.component &amp;&amp; obs.component.length &gt;= 2) {
             const systolic = obs.component.find((c) =&gt;
               c.code.coding<span class="branch-0 cbranch-no" title="branch not covered" >?.s</span>ome((coding) =&gt; coding.code === LOINC_VITAL_SIGNS.SYSTOLIC_BP)
             );
@@ -17431,7 +17431,7 @@ export class PatientHealthService {
               c.code.coding<span class="branch-0 cbranch-no" title="branch not covered" >?.s</span>ome((coding) =&gt; coding.code === LOINC_VITAL_SIGNS.DIASTOLIC_BP)
             );
 &nbsp;
-            if (systolic<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alueQuantity &amp;&amp; diastolic<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alueQuantity) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (systolic<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alueQuantity &amp;&amp; diastolic<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alueQuantity) {
               const bpValue = `${systolic.valueQuantity.value}/${diastolic.valueQuantity.value}`;
               const vitalSign = this.mapObservationToVitalSign(obs, bpValue);
               // Override unit to be mmHg for BP
@@ -17442,31 +17442,31 @@ export class PatientHealthService {
           break;
 &nbsp;
         case LOINC_VITAL_SIGNS.BODY_TEMPERATURE:
-          if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
             vitals.temperature = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
           }
           break;
 &nbsp;
         case LOINC_VITAL_SIGNS.BODY_WEIGHT:
-          if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
             vitals.weight = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
           }
           break;
 &nbsp;
 <span class="branch-4 cbranch-no" title="branch not covered" >        case LOINC_VITAL_SIGNS.BODY_HEIGHT:</span>
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.height = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);</span>
           }
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
 <span class="branch-5 cbranch-no" title="branch not covered" >        case LOINC_VITAL_SIGNS.BMI:</span>
-<span class="cstat-no" title="statement not covered" >          <span class="missing-if-branch" title="if path not taken" >I</span>if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {</span>
+<span class="cstat-no" title="statement not covered" >          if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {</span>
 <span class="cstat-no" title="statement not covered" >            vitals.bmi = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);</span>
           }
 <span class="cstat-no" title="statement not covered" >          break;</span>
 &nbsp;
         case LOINC_VITAL_SIGNS.OXYGEN_SATURATION:
-          if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (obs.valueQuantity &amp;&amp; obs.valueQuantity.value !== undefined) {
             vitals.oxygenSaturation = this.mapObservationToVitalSign(obs, obs.valueQuantity.value);
           }
           break;
@@ -17493,7 +17493,7 @@ export class PatientHealthService {
     // Add reference range if available
     if (obs.referenceRange &amp;&amp; obs.referenceRange.length &gt; 0) {
       const range = obs.referenceRange[0];
-      if (range.low<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alue !== undefined || <span class="branch-1 cbranch-no" title="branch not covered" >range.high?.value !== undefined)</span> {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (range.low<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alue !== undefined || <span class="branch-1 cbranch-no" title="branch not covered" >range.high?.value !== undefined)</span> {
         vitalSign.referenceRange = {
           low: range.low<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alue || <span class="branch-1 cbranch-no" title="branch not covered" >0,</span>
           high: range.high<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alue || <span class="branch-1 cbranch-no" title="branch not covered" >0,</span>
@@ -17531,7 +17531,7 @@ export class PatientHealthService {
       const value = obs.valueQuantity.value;
       const range = obs.referenceRange[0];
 &nbsp;
-      if (value !== undefined) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (value !== undefined) {
         <span class="missing-if-branch" title="if path not taken" >I</span>if (range.low<span class="branch-0 cbranch-no" title="branch not covered" >?.v</span>alue !== undefined &amp;&amp; value &lt; range.low.value) {
 <span class="cstat-no" title="statement not covered" >          return 'abnormal';</span>
         }
@@ -17599,7 +17599,7 @@ export class PatientHealthService {
    */
 <span class="fstat-no" title="function not covered" >  subscribeToVitalSigns(</span>
     patientId: string,
-    intervalMs: number = <span class="branch-0 cbranch-no" title="branch not covered" >30000</span>
+    intervalMs = <span class="branch-0 cbranch-no" title="branch not covered" >30000</span>
   ): Observable&lt;PhysicalHealthSummary['vitals']&gt; {
 <span class="cstat-no" title="statement not covered" >    return timer(0, intervalMs).pipe(</span>
       switchMap(<span class="fstat-no" title="function not covered" >() =</span>&gt; <span class="cstat-no" title="statement not covered" >this.getVitalSignsFromFhir(patientId))</span>,
@@ -18216,7 +18216,7 @@ export class PatientHealthService {
           const standaloneByDate = new Map&lt;string, LabResult[]&gt;();
           standaloneResults.forEach((result) =&gt; {
             const dateKey = result.date.toISOString().split('T')[0];
-            if (!standaloneByDate.has(dateKey)) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (!standaloneByDate.has(dateKey)) {
               standaloneByDate.set(dateKey, []);
             }
             standaloneByDate.get(dateKey)<span class="branch-0 cbranch-no" title="branch not covered" >?.p</span>ush(result);
@@ -18492,7 +18492,7 @@ export class PatientHealthService {
    * @param patientId Patient ID
    * @param months Number of months of history to retrieve (default: 12)
    */
-<span class="fstat-no" title="function not covered" >  getHealthScoreHistoryDetailed(</span>patientId: string, months: number = <span class="branch-0 cbranch-no" title="branch not covered" >12)</span>: Observable&lt;HealthScoreHistoryPoint[]&gt; {
+<span class="fstat-no" title="function not covered" >  getHealthScoreHistoryDetailed(</span>patientId: string, months = <span class="branch-0 cbranch-no" title="branch not covered" >12)</span>: Observable&lt;HealthScoreHistoryPoint[]&gt; {
     const url = <span class="cstat-no" title="statement not covered" >buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.PATIENT_HEALTH_SCORE_HISTORY(patientId));</span>
 &nbsp;
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams().set('months', months.toString());</span>
@@ -18700,7 +18700,7 @@ export class PatientHealthService {
     <span class="missing-if-branch" title="if path not taken" >I</span>if (code<span class="branch-0 cbranch-no" title="branch not covered" >?.i</span>ncludes('6736007') || display<span class="branch-0 cbranch-no" title="branch not covered" >?.i</span>ncludes('moderate')) {
 <span class="cstat-no" title="statement not covered" >      return 'moderate';</span>
     }
-    if (code<span class="branch-0 cbranch-no" title="branch not covered" >?.i</span>ncludes('255604002') || <span class="branch-1 cbranch-no" title="branch not covered" >display?.includes('mild'))</span> {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (code<span class="branch-0 cbranch-no" title="branch not covered" >?.i</span>ncludes('255604002') || <span class="branch-1 cbranch-no" title="branch not covered" >display?.includes('mild'))</span> {
       return 'mild';
     }
 &nbsp;
@@ -18745,7 +18745,7 @@ export class PatientHealthService {
 &nbsp;
     // Check for controlled keywords
     for (const keyword of controlledKeywords) {
-      if (notesText.includes(keyword)) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (notesText.includes(keyword)) {
         return true;
       }
     }
@@ -18872,7 +18872,7 @@ export class PatientHealthService {
       const answer = item.answer[0];
       const code = answer.valueCoding<span class="branch-0 cbranch-no" title="branch not covered" >?.c</span>ode<span class="branch-0 cbranch-no" title="branch not covered" >?.t</span>oLowerCase();
 &nbsp;
-      if (code === 'independent') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (code === 'independent') {
         score++;
       }
     }
@@ -18942,7 +18942,7 @@ export class PatientHealthService {
     // Check blood pressure for critical values
     if (vitals.bloodPressure) {
       const bpValue = vitals.bloodPressure.value;
-      if (typeof bpValue === 'string') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof bpValue === 'string') {
         const [systolic, diastolic] = bpValue.split('/').map(v =&gt; parseInt(v, 10));
         if (systolic &gt; 180 || diastolic &gt; 120) {
           vitals.bloodPressure.status = 'critical';
@@ -18955,7 +18955,7 @@ export class PatientHealthService {
     // Check heart rate for critical values
     if (vitals.heartRate) {
       const hr = vitals.heartRate.value;
-      if (typeof hr === 'number') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof hr === 'number') {
         if (hr &lt; 40 || hr &gt; 150) {
           vitals.heartRate.status = 'critical';
         } else <span class="missing-if-branch" title="if path not taken" >I</span>if (hr &lt; 60 || hr &gt; 100) {
@@ -18967,10 +18967,10 @@ export class PatientHealthService {
     // Check temperature for critical values
     if (vitals.temperature) {
       const temp = vitals.temperature.value;
-      if (typeof temp === 'number') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof temp === 'number') {
         if (temp &gt; 103 || <span class="branch-1 cbranch-no" title="branch not covered" >temp &lt; 95)</span> {
           vitals.temperature.status = 'critical';
-        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (temp &gt; 100.4 || temp &lt; 96) {</span>
+        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (temp &gt; 100.4 || temp &lt; 96) {</span>
 <span class="cstat-no" title="statement not covered" >          vitals.temperature.status = 'abnormal';</span>
         }
       }
@@ -18979,10 +18979,10 @@ export class PatientHealthService {
     // Check oxygen saturation for critical values
     if (vitals.oxygenSaturation) {
       const o2 = vitals.oxygenSaturation.value;
-      if (typeof o2 === 'number') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof o2 === 'number') {
         if (o2 &lt; 90) {
           vitals.oxygenSaturation.status = 'critical';
-        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (o2 &lt; 95) {</span>
+        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (o2 &lt; 95) {</span>
 <span class="cstat-no" title="statement not covered" >          vitals.oxygenSaturation.status = 'abnormal';</span>
         }
       }
@@ -18990,12 +18990,12 @@ export class PatientHealthService {
 &nbsp;
     // Check labs for critical values (e.g., glucose)
     labs.forEach(lab =&gt; {
-      if (lab.loincCode === '2339-0' || <span class="branch-1 cbranch-no" title="branch not covered" >lab.loincCode === '2345-7')</span> { // Glucose
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (lab.loincCode === '2339-0' || <span class="branch-1 cbranch-no" title="branch not covered" >lab.loincCode === '2345-7')</span> { // Glucose
         const value = typeof lab.value === 'number' ? lab.value : <span class="branch-1 cbranch-no" title="branch not covered" >parseFloat(lab.value as string);</span>
-        if (!isNaN(value)) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (!isNaN(value)) {
           if (value &lt; 50 || value &gt; 400) {
             lab.status = 'critical';
-          } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (value &lt; 70 || value &gt; 200) {</span>
+          } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (value &lt; 70 || value &gt; 200) {</span>
 <span class="cstat-no" title="statement not covered" >            lab.status = 'abnormal';</span>
           }
         }
@@ -19094,7 +19094,7 @@ export class PatientHealthService {
             recommendations.push('Review and intensify diabetes management');
             recommendations.push('Increase monitoring frequency');
             recommendations.push('Diabetes education and nutrition counseling');
-          } else if (hba1cValue !== undefined) {
+          } else <span class="missing-if-branch" title="else path not taken" >E</span>if (hba1cValue !== undefined) {
             // High risk
             score = Math.min(Math.round(70 + (hba1cValue - 7) * 10), 100); // 90-100
             riskLevel = 'high';
@@ -19171,7 +19171,7 @@ export class PatientHealthService {
           if (systolic &gt;= 140 || diastolic &gt;= 90) {
             score += 25;
             factors.push(`Elevated blood pressure (${systolic}/${diastolic} mmHg)`);
-          } else if (systolic &gt;= 130 || <span class="branch-1 cbranch-no" title="branch not covered" >diastolic &gt;= 80)</span> {
+          } else <span class="missing-if-branch" title="else path not taken" >E</span>if (systolic &gt;= 130 || <span class="branch-1 cbranch-no" title="branch not covered" >diastolic &gt;= 80)</span> {
             score += 15;
             factors.push(`Blood pressure slightly elevated (${systolic}/${diastolic} mmHg)`);
           }
@@ -19184,7 +19184,7 @@ export class PatientHealthService {
           if (cholValue !== undefined &amp;&amp; cholValue &gt;= 240) {
             score += 20;
             factors.push(`High cholesterol (${cholValue} mg/dL)`);
-          } else if (cholValue !== undefined &amp;&amp; cholValue &gt;= 200) {
+          } else <span class="missing-if-branch" title="else path not taken" >E</span>if (cholValue !== undefined &amp;&amp; cholValue &gt;= 200) {
             score += 10;
             factors.push(`Borderline high cholesterol (${cholValue} mg/dL)`);
           }
@@ -19268,7 +19268,7 @@ export class PatientHealthService {
           const totalItem = qr.item<span class="branch-0 cbranch-no" title="branch not covered" >?.f</span>ind(i =&gt; i.linkId<span class="branch-0 cbranch-no" title="branch not covered" >?.i</span>ncludes('Total'));
           const q9Item = qr.item<span class="branch-0 cbranch-no" title="branch not covered" >?.f</span>ind(i =&gt; i.linkId === 'PHQ-9-Q9');
 &nbsp;
-          if (totalItem &amp;&amp; totalItem.answer &amp;&amp; totalItem.answer[0].valueInteger !== undefined) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (totalItem &amp;&amp; totalItem.answer &amp;&amp; totalItem.answer[0].valueInteger !== undefined) {
             phq9Score = totalItem.answer[0].valueInteger;
           }
 &nbsp;
@@ -19283,7 +19283,7 @@ export class PatientHealthService {
           const qr = gad7.entry[0].resource as FhirQuestionnaireResponse;
           const totalItem = qr.item<span class="branch-0 cbranch-no" title="branch not covered" >?.f</span>ind(i =&gt; i.linkId<span class="branch-0 cbranch-no" title="branch not covered" >?.i</span>ncludes('Total'));
 &nbsp;
-          if (totalItem &amp;&amp; totalItem.answer &amp;&amp; totalItem.answer[0].valueInteger !== undefined) {
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (totalItem &amp;&amp; totalItem.answer &amp;&amp; totalItem.answer[0].valueInteger !== undefined) {
             gad7Score = totalItem.answer[0].valueInteger;
           }
         }
@@ -19302,7 +19302,7 @@ export class PatientHealthService {
           score = 70 + Math.min(phq9Score, 30);
           riskLevel = 'high';
           factors.push(`Severe depression symptoms (PHQ-9: ${phq9Score})`);
-          if (gad7Score &gt;= 15) factors.push(`Severe anxiety symptoms (GAD-7: ${gad7Score})`);
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (gad7Score &gt;= 15) factors.push(`Severe anxiety symptoms (GAD-7: ${gad7Score})`);
           recommendations.push('Immediate psychiatric evaluation recommended');
           recommendations.push('Medication review and adjustment');
           recommendations.push('Intensive therapy recommended');
@@ -19383,7 +19383,7 @@ export class PatientHealthService {
 &nbsp;
         if (hasAsthma) {
           score += 30;
-          if (riskLevel === 'low') riskLevel = 'moderate';
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (riskLevel === 'low') riskLevel = 'moderate';
           factors.push('Active asthma diagnosis');
           recommendations.push('Ensure asthma action plan is current');
           recommendations.push('Regular peak flow monitoring');
@@ -19777,7 +19777,7 @@ export class PatientHealthService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

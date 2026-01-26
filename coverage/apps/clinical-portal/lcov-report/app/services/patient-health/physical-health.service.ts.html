@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.76% </span>
+                <span class="strong">44% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>68/159</span>
+                <span class='fraction'>88/200</span>
             </div>
         
             
@@ -1623,7 +1623,7 @@ export class PhysicalHealthService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getLabResultsGroupedByPanel(</span>patientId: string): Observable&lt;LabPanel[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`physical:labs:panels:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;LabPanel[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return this.fhirObservation.getLabResults(patientId).pipe(</span>
       map(<span class="fstat-no" title="function not covered" >(l</span>abResults) =&gt; {
@@ -1644,7 +1644,7 @@ export class PhysicalHealthService extends CacheableService {
   getLabHistory(
     patientId: string,
     loincCode: string,
-    limit: number = <span class="branch-0 cbranch-no" title="branch not covered" >10</span>
+    limit = <span class="branch-0 cbranch-no" title="branch not covered" >10</span>
   ): Observable&lt;LabResult[]&gt; {
     return this.fhirObservation.getLabHistory(patientId, loincCode, limit);
   }
@@ -1757,7 +1757,7 @@ export class PhysicalHealthService extends CacheableService {
    */
 <span class="fstat-no" title="function not covered" >  subscribeToVitalSigns(</span>
     patientId: string,
-    intervalMs: number = <span class="branch-0 cbranch-no" title="branch not covered" >30000</span>
+    intervalMs = <span class="branch-0 cbranch-no" title="branch not covered" >30000</span>
   ): Observable&lt;PhysicalHealthSummary['vitals']&gt; {
     // Delegate to FhirObservationService's polling mechanism
 <span class="cstat-no" title="statement not covered" >    return this.fhirObservation.getVitalSigns(patientId);</span>
@@ -1769,7 +1769,7 @@ export class PhysicalHealthService extends CacheableService {
   getVitalSignHistory(
     patientId: string,
     loincCode?: string,
-    limit: number = 30
+    limit = 30
   ): Observable&lt;VitalSign&lt;number | string&gt;[]&gt; {
     return this.fhirObservation.getVitalSignHistory(patientId, loincCode, limit);
   }
@@ -1875,7 +1875,7 @@ export class PhysicalHealthService extends CacheableService {
     const resultsByDate = <span class="cstat-no" title="statement not covered" >new Map&lt;string, LabResult[]&gt;();</span>
 <span class="cstat-no" title="statement not covered" >    labResults.forEach(<span class="fstat-no" title="function not covered" >(r</span>esult) =&gt; {</span>
       const dateKey = <span class="cstat-no" title="statement not covered" >result.date.toISOString().split('T')[0];</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (!resultsByDate.has(dateKey)) {</span>
+<span class="cstat-no" title="statement not covered" >      if (!resultsByDate.has(dateKey)) {</span>
 <span class="cstat-no" title="statement not covered" >        resultsByDate.set(dateKey, []);</span>
       }
 <span class="cstat-no" title="statement not covered" >      resultsByDate.get(dateKey)?.push(result);</span>
@@ -1911,14 +1911,14 @@ export class PhysicalHealthService extends CacheableService {
           }
         );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (panelResults.length &gt;= 2) {</span>
+<span class="cstat-no" title="statement not covered" >        if (panelResults.length &gt;= 2) {</span>
 <span class="cstat-no" title="statement not covered" >          panelResults.forEach(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >usedResults.add(`${getCodeFromConcept(r.code)}-${dateKey}`))</span>;</span>
 &nbsp;
           // Determine panel status
           let panelStatus: 'normal' | 'abnormal' | 'critical' = <span class="cstat-no" title="statement not covered" >'normal';</span>
 <span class="cstat-no" title="statement not covered" >          if (panelResults.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.status === 'critical')</span>) {</span>
 <span class="cstat-no" title="statement not covered" >            panelStatus = 'critical';</span>
-          } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (panelResults.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.status === 'abnormal')</span>) {</span>
+          } else <span class="cstat-no" title="statement not covered" >if (panelResults.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.status === 'abnormal')</span>) {</span>
 <span class="cstat-no" title="statement not covered" >            panelStatus = 'abnormal';</span>
           }
 &nbsp;
@@ -1939,11 +1939,11 @@ export class PhysicalHealthService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >      return !usedResults.has(`${r.code}-${dateKey}`);</span>
     });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (standaloneResults.length &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (standaloneResults.length &gt; 0) {</span>
       const standaloneByDate = <span class="cstat-no" title="statement not covered" >new Map&lt;string, LabResult[]&gt;();</span>
 <span class="cstat-no" title="statement not covered" >      standaloneResults.forEach(<span class="fstat-no" title="function not covered" >(r</span>esult) =&gt; {</span>
         const dateKey = <span class="cstat-no" title="statement not covered" >result.date.toISOString().split('T')[0];</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (!standaloneByDate.has(dateKey)) {</span>
+<span class="cstat-no" title="statement not covered" >        if (!standaloneByDate.has(dateKey)) {</span>
 <span class="cstat-no" title="statement not covered" >          standaloneByDate.set(dateKey, []);</span>
         }
 <span class="cstat-no" title="statement not covered" >        standaloneByDate.get(dateKey)?.push(result);</span>
@@ -1953,7 +1953,7 @@ export class PhysicalHealthService extends CacheableService {
         let status: 'normal' | 'abnormal' | 'critical' = <span class="cstat-no" title="statement not covered" >'normal';</span>
 <span class="cstat-no" title="statement not covered" >        if (results.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.status === 'critical')</span>) {</span>
 <span class="cstat-no" title="statement not covered" >          status = 'critical';</span>
-        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (results.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.status === 'abnormal')</span>) {</span>
+        } else <span class="cstat-no" title="statement not covered" >if (results.some(<span class="fstat-no" title="function not covered" >(r</span>) =&gt; <span class="cstat-no" title="statement not covered" >r.status === 'abnormal')</span>) {</span>
 <span class="cstat-no" title="statement not covered" >          status = 'abnormal';</span>
         }
 &nbsp;
@@ -1982,7 +1982,7 @@ export class PhysicalHealthService extends CacheableService {
     for (const assessment of assessments) {
       const type = <span class="cstat-no" title="statement not covered" >assessment.questionnaireType?.toLowerCase() || '';</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (type.includes('adl') &amp;&amp; !type.includes('iadl')) {</span>
+<span class="cstat-no" title="statement not covered" >      if (type.includes('adl') &amp;&amp; !type.includes('iadl')) {</span>
         // Calculate ADL score - count independent activities
 <span class="cstat-no" title="statement not covered" >        functional.adlScore = assessment.items</span>
           .filter(<span class="fstat-no" title="function not covered" >(i</span>tem: any) =&gt; <span class="cstat-no" title="statement not covered" >item.answer === 'independent')</span>
@@ -1990,7 +1990,7 @@ export class PhysicalHealthService extends CacheableService {
 <span class="cstat-no" title="statement not covered" >        functional.adlScore = Math.min(functional.adlScore, 6);</span>
       }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (type.includes('iadl')) {</span>
+<span class="cstat-no" title="statement not covered" >      if (type.includes('iadl')) {</span>
         // Calculate IADL score - count independent activities
 <span class="cstat-no" title="statement not covered" >        functional.iadlScore = assessment.items</span>
           .filter(<span class="fstat-no" title="function not covered" >(i</span>tem: any) =&gt; <span class="cstat-no" title="statement not covered" >item.answer === 'independent')</span>
@@ -2023,7 +2023,7 @@ export class PhysicalHealthService extends CacheableService {
   ): 'excellent' | 'good' | 'poor' | 'unknown' {
     <span class="missing-if-branch" title="if path not taken" >I</span>if (pdc &gt;= 80) <span class="cstat-no" title="statement not covered" >return 'excellent';</span>
     <span class="missing-if-branch" title="if path not taken" >I</span>if (pdc &gt;= 60) <span class="cstat-no" title="statement not covered" >return 'good';</span>
-    if (pdc &gt; 0) return 'poor';
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (pdc &gt; 0) return 'poor';
 <span class="cstat-no" title="statement not covered" >    return 'unknown';</span>
   }
 &nbsp;
@@ -2037,7 +2037,7 @@ export class PhysicalHealthService extends CacheableService {
     // Check blood pressure for critical values
     if (vitals.bloodPressure) {
       const bpValue = vitals.bloodPressure.value;
-      if (typeof bpValue === 'string') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof bpValue === 'string') {
         const [systolic, diastolic] = bpValue.split('/').map((v) =&gt; parseInt(v, 10));
         <span class="missing-if-branch" title="if path not taken" >I</span>if (systolic &gt; 180 || diastolic &gt; 120) {
 <span class="cstat-no" title="statement not covered" >          vitals.bloodPressure.status = 'critical';</span>
@@ -2050,7 +2050,7 @@ export class PhysicalHealthService extends CacheableService {
     // Check heart rate for critical values
     if (vitals.heartRate) {
       const hr = vitals.heartRate.value;
-      if (typeof hr === 'number') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof hr === 'number') {
         <span class="missing-if-branch" title="if path not taken" >I</span>if (hr &lt; 40 || hr &gt; 150) {
 <span class="cstat-no" title="statement not covered" >          vitals.heartRate.status = 'critical';</span>
         } else <span class="missing-if-branch" title="if path not taken" >I</span>if (hr &lt; 60 || hr &gt; 100) {
@@ -2062,7 +2062,7 @@ export class PhysicalHealthService extends CacheableService {
     // Check temperature for critical values
     if (vitals.temperature) {
       const temp = vitals.temperature.value;
-      if (typeof temp === 'number') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof temp === 'number') {
         <span class="missing-if-branch" title="if path not taken" >I</span>if (temp &gt; 103 || temp &lt; 95) {
 <span class="cstat-no" title="statement not covered" >          vitals.temperature.status = 'critical';</span>
         } else <span class="missing-if-branch" title="if path not taken" >I</span>if (temp &gt; 100.4 || temp &lt; 96) {
@@ -2074,7 +2074,7 @@ export class PhysicalHealthService extends CacheableService {
     // Check oxygen saturation for critical values
     if (vitals.oxygenSaturation) {
       const o2 = vitals.oxygenSaturation.value;
-      if (typeof o2 === 'number') {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof o2 === 'number') {
         <span class="missing-if-branch" title="if path not taken" >I</span>if (o2 &lt; 90) {
 <span class="cstat-no" title="statement not covered" >          vitals.oxygenSaturation.status = 'critical';</span>
         } else <span class="missing-if-branch" title="if path not taken" >I</span>if (o2 &lt; 95) {
@@ -2085,16 +2085,16 @@ export class PhysicalHealthService extends CacheableService {
 &nbsp;
     // Check labs for critical glucose values
     labs.forEach(<span class="fstat-no" title="function not covered" >(l</span>ab) =&gt; {
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (lab.code === '2339-0' || lab.code === '2345-7') {</span>
+<span class="cstat-no" title="statement not covered" >      if (lab.code === '2339-0' || lab.code === '2345-7') {</span>
         // Glucose LOINC codes
         const value =
 <span class="cstat-no" title="statement not covered" >          typeof lab.value === 'number'</span>
             ? lab.value
             : parseFloat(lab.value as string);
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (!isNaN(value)) {</span>
+<span class="cstat-no" title="statement not covered" >        if (!isNaN(value)) {</span>
 <span class="cstat-no" title="statement not covered" >          if (value &lt; 50 || value &gt; 400) {</span>
 <span class="cstat-no" title="statement not covered" >            lab.status = 'critical';</span>
-          } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (value &lt; 70 || value &gt; 200) {</span>
+          } else <span class="cstat-no" title="statement not covered" >if (value &lt; 70 || value &gt; 200) {</span>
 <span class="cstat-no" title="statement not covered" >            lab.status = 'abnormal';</span>
           }
         }
@@ -2145,16 +2145,16 @@ export class PhysicalHealthService extends CacheableService {
     score -= moderateUncontrolled * 10;
 &nbsp;
     // Check medication adherence
-    if (data.medications.status === 'poor') score -= 15;
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (data.medications.status === 'poor') score -= 15;
 &nbsp;
     // Check functional status
     <span class="missing-if-branch" title="if path not taken" >I</span>if (data.functional.adlScore &lt; 4) <span class="cstat-no" title="statement not covered" >score -= 10;</span>
     <span class="missing-if-branch" title="if path not taken" >I</span>if (data.functional.painLevel &gt; 7) <span class="cstat-no" title="statement not covered" >score -= 10;</span>
 &nbsp;
     // Determine status
-    if (score &gt;= 85) return 'excellent';
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &gt;= 70) <span class="cstat-no" title="statement not covered" >return 'good';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &gt;= 50) <span class="cstat-no" title="statement not covered" >return 'fair';</span></span>
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (score &gt;= 85) return 'excellent';
+<span class="cstat-no" title="statement not covered" >    if (score &gt;= 70) <span class="cstat-no" title="statement not covered" >return 'good';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &gt;= 50) <span class="cstat-no" title="statement not covered" >return 'fair';</span></span>
 <span class="cstat-no" title="statement not covered" >    return 'poor';</span>
   }
 &nbsp;
@@ -2215,7 +2215,7 @@ export class PhysicalHealthService extends CacheableService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">3.33% </span>
+                <span class="strong">5% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/30</span>
+                <span class='fraction'>2/40</span>
             </div>
         
             
@@ -223,8 +223,8 @@
  */
 export function getCodeFromConcept(concept: CodeableConcept | string | undefined | null): string {
   <span class="missing-if-branch" title="if path not taken" >I</span>if (!concept) <span class="cstat-no" title="statement not covered" >return '';</span>
-  if (typeof concept === 'string') return concept;
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (!concept.coding?.length) <span class="cstat-no" title="statement not covered" >return '';</span></span>
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof concept === 'string') return concept;
+<span class="cstat-no" title="statement not covered" >  if (!concept.coding?.length) <span class="cstat-no" title="statement not covered" >return '';</span></span>
 <span class="cstat-no" title="statement not covered" >  return concept.coding[0]?.code || '';</span>
 }
 &nbsp;
@@ -232,9 +232,9 @@ export function getCodeFromConcept(concept: CodeableConcept | string | undefined
  * Extract all code strings from a CodeableConcept or string
  */
 export function <span class="fstat-no" title="function not covered" >getAllCodesFromConcept(</span>concept: CodeableConcept | string | undefined | null): string[] {
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (!concept) <span class="cstat-no" title="statement not covered" >return [];</span></span>
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof concept === 'string') <span class="cstat-no" title="statement not covered" >return [concept];</span></span>
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (!concept.coding) <span class="cstat-no" title="statement not covered" >return [];</span></span>
+<span class="cstat-no" title="statement not covered" >  if (!concept) <span class="cstat-no" title="statement not covered" >return [];</span></span>
+<span class="cstat-no" title="statement not covered" >  if (typeof concept === 'string') <span class="cstat-no" title="statement not covered" >return [concept];</span></span>
+<span class="cstat-no" title="statement not covered" >  if (!concept.coding) <span class="cstat-no" title="statement not covered" >return [];</span></span>
 <span class="cstat-no" title="statement not covered" >  return concept.coding</span>
     .map(<span class="fstat-no" title="function not covered" >coding </span>=&gt; <span class="cstat-no" title="statement not covered" >coding.code)</span>
     .filter(<span class="fstat-no" title="function not covered" >(c</span>ode): code is string =&gt; <span class="cstat-no" title="statement not covered" >!!code)</span>;
@@ -274,10 +274,10 @@ export function <span class="fstat-no" title="function not covered" >conceptCode
  * Prefers text, then first coding display, or returns string directly
  */
 export function <span class="fstat-no" title="function not covered" >getDisplayFromConcept(</span>concept: CodeableConcept | string | undefined | null): string {
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (!concept) <span class="cstat-no" title="statement not covered" >return '';</span></span>
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (typeof concept === 'string') <span class="cstat-no" title="statement not covered" >return concept;</span></span>
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (concept.text) <span class="cstat-no" title="statement not covered" >return concept.text;</span></span>
-<span class="cstat-no" title="statement not covered" >  <span class="missing-if-branch" title="if path not taken" >I</span>if (concept.coding?.length &amp;&amp; concept.coding[0]?.display) {</span>
+<span class="cstat-no" title="statement not covered" >  if (!concept) <span class="cstat-no" title="statement not covered" >return '';</span></span>
+<span class="cstat-no" title="statement not covered" >  if (typeof concept === 'string') <span class="cstat-no" title="statement not covered" >return concept;</span></span>
+<span class="cstat-no" title="statement not covered" >  if (concept.text) <span class="cstat-no" title="statement not covered" >return concept.text;</span></span>
+<span class="cstat-no" title="statement not covered" >  if (concept.coding?.length &amp;&amp; concept.coding[0]?.display) {</span>
 <span class="cstat-no" title="statement not covered" >    return concept.coding[0].display;</span>
   }
 <span class="cstat-no" title="statement not covered" >  return '';</span>
@@ -289,7 +289,7 @@ export function <span class="fstat-no" title="function not covered" >getDisplayF
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

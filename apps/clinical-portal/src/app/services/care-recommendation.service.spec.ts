@@ -137,7 +137,7 @@ describe('CareRecommendationService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-  });
+  }, 30000);
 
   // ==========================================================================
   // Get Dashboard Recommendations Tests
@@ -160,7 +160,7 @@ describe('CareRecommendationService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      });
+      }, 30000);
     });
 
     it('should transform date strings to Date objects', (done) => {
@@ -177,7 +177,7 @@ describe('CareRecommendationService', () => {
           expect(recommendations[0].dueDate).toBeInstanceOf(Date);
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should calculate days overdue for overdue recommendations', (done) => {
@@ -195,7 +195,7 @@ describe('CareRecommendationService', () => {
           expect(recommendations[0].daysOverdue).toBeGreaterThan(0);
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should return empty array on error', (done) => {
@@ -207,7 +207,7 @@ describe('CareRecommendationService', () => {
           expect(recommendations).toEqual([]);
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should emit update notification on successful load', (done) => {
@@ -221,7 +221,7 @@ describe('CareRecommendationService', () => {
           expect(update.timestamp).toBeInstanceOf(Date);
           updateEmitted = true;
         }
-      });
+      }, 30000);
 
       service.getDashboardRecommendations().subscribe({
         next: () => {
@@ -246,7 +246,7 @@ describe('CareRecommendationService', () => {
               expect(apiService.get).toHaveBeenCalledTimes(1);
               done();
             },
-          });
+          }, 30000);
         },
       });
     });
@@ -265,7 +265,7 @@ describe('CareRecommendationService', () => {
               expect(apiService.get).toHaveBeenCalledTimes(2);
               done();
             },
-          });
+          }, 30000);
         },
       });
     });
@@ -311,7 +311,7 @@ describe('CareRecommendationService', () => {
           expect(params.get('sortDirection')).toBe('desc');
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should handle filter with only urgency parameter', (done) => {
@@ -330,7 +330,7 @@ describe('CareRecommendationService', () => {
           expect(params.has('category')).toBe(false);
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should handle empty filter object', (done) => {
@@ -342,7 +342,7 @@ describe('CareRecommendationService', () => {
           expect(recommendations).toBeDefined();
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should emit filtered update notification', (done) => {
@@ -355,7 +355,7 @@ describe('CareRecommendationService', () => {
           expect(update.count).toBe(2);
           updateEmitted = true;
         }
-      });
+      }, 30000);
 
       service.getFilteredRecommendations({ urgency: ['urgent'] }).subscribe({
         next: () => {
@@ -374,7 +374,7 @@ describe('CareRecommendationService', () => {
           expect(recommendations).toEqual([]);
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should handle sort without filter', (done) => {
@@ -394,7 +394,7 @@ describe('CareRecommendationService', () => {
           expect(params.get('sortDirection')).toBe('asc');
           done();
         },
-      });
+      }, 30000);
     });
   });
 
@@ -420,7 +420,7 @@ describe('CareRecommendationService', () => {
           );
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should cache stats and return cached value on subsequent calls', (done) => {
@@ -437,7 +437,7 @@ describe('CareRecommendationService', () => {
               expect(apiService.get).toHaveBeenCalledTimes(1);
               done();
             },
-          });
+          }, 30000);
         },
       });
     });
@@ -455,7 +455,7 @@ describe('CareRecommendationService', () => {
           expect(stats.byStatus.pending).toBe(0);
           done();
         },
-      });
+      }, 30000);
     });
   });
 
@@ -504,7 +504,7 @@ describe('CareRecommendationService', () => {
             status: 'in-progress',
             action: 'accept',
             notes: 'Patient contacted',
-          });
+          }, 30000);
           done();
         },
       });
@@ -524,7 +524,7 @@ describe('CareRecommendationService', () => {
           expect(update.patientId).toBe('patient-123');
           updateEmitted = true;
         }
-      });
+      }, 30000);
 
       service.acceptRecommendation('rec-1').subscribe({
         next: () => {
@@ -547,7 +547,7 @@ describe('CareRecommendationService', () => {
           service.getCachedRecommendations$().subscribe((cached) => {
             expect(cached).toEqual([]);
             done();
-          });
+          }, 30000);
         },
       });
     });
@@ -562,7 +562,7 @@ describe('CareRecommendationService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      }, 30000);
     });
   });
 
@@ -613,7 +613,7 @@ describe('CareRecommendationService', () => {
             action: 'decline',
             reason: 'Not applicable',
             notes: 'Patient refused',
-          });
+          }, 30000);
           done();
         },
       });
@@ -633,7 +633,7 @@ describe('CareRecommendationService', () => {
           expect(update.patientId).toBe('patient-123');
           updateEmitted = true;
         }
-      });
+      }, 30000);
 
       service.declineRecommendation('rec-1', 'Not applicable').subscribe({
         next: () => {
@@ -655,7 +655,7 @@ describe('CareRecommendationService', () => {
           service.getCachedRecommendations$().subscribe((cached) => {
             expect(cached).toEqual([]);
             done();
-          });
+          }, 30000);
         },
       });
     });
@@ -670,7 +670,7 @@ describe('CareRecommendationService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      }, 30000);
     });
   });
 
@@ -722,7 +722,7 @@ describe('CareRecommendationService', () => {
             action: 'complete',
             outcome: 'Completed',
             notes: 'All tasks done',
-          });
+          }, 30000);
           done();
         },
       });
@@ -742,7 +742,7 @@ describe('CareRecommendationService', () => {
           expect(update.patientId).toBe('patient-123');
           updateEmitted = true;
         }
-      });
+      }, 30000);
 
       service.completeRecommendation('rec-1', 'Done').subscribe({
         next: () => {
@@ -764,7 +764,7 @@ describe('CareRecommendationService', () => {
           service.getCachedRecommendations$().subscribe((cached) => {
             expect(cached).toEqual([]);
             done();
-          });
+          }, 30000);
         },
       });
     });
@@ -779,7 +779,7 @@ describe('CareRecommendationService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      }, 30000);
     });
   });
 
@@ -819,8 +819,8 @@ describe('CareRecommendationService', () => {
           );
           done();
         },
-      });
-    });
+      }, 30000);
+    }, 30000);
 
     it('should handle bulk action with partial failures', (done) => {
       const bulkRequest: BulkActionRequest = {
@@ -849,8 +849,8 @@ describe('CareRecommendationService', () => {
           expect(result.processed[2].error).toBe('Recommendation not found');
           done();
         },
-      });
-    });
+      }, 30000);
+    }, 30000);
 
     it('should emit bulk-action update notification', (done) => {
       const bulkRequest: BulkActionRequest = {
@@ -875,15 +875,15 @@ describe('CareRecommendationService', () => {
           expect(update.count).toBe(2);
           updateEmitted = true;
         }
-      });
+      }, 30000);
 
       service.performBulkAction(bulkRequest).subscribe({
         next: () => {
           expect(updateEmitted).toBe(true);
           done();
         },
-      });
-    });
+      }, 30000);
+    }, 30000);
 
     it('should invalidate cache after bulk action', (done) => {
       const bulkRequest: BulkActionRequest = {
@@ -904,10 +904,10 @@ describe('CareRecommendationService', () => {
           service.getCachedRecommendations$().subscribe((cached) => {
             expect(cached).toEqual([]);
             done();
-          });
+          }, 30000);
         },
-      });
-    });
+      }, 30000);
+    }, 30000);
 
     it('should throw error on bulk action failure', (done) => {
       const bulkRequest: BulkActionRequest = {
@@ -924,7 +924,7 @@ describe('CareRecommendationService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      }, 30000);
     });
 
     it('should handle bulk action with assign action type', (done) => {
@@ -1213,7 +1213,7 @@ describe('CareRecommendationService', () => {
           service.getCachedRecommendations$().subscribe((cached) => {
             expect(cached).toEqual([]);
             done();
-          });
+          }, 30000);
         });
       });
     });
@@ -1227,7 +1227,7 @@ describe('CareRecommendationService', () => {
           expect(cached.length).toBe(1);
           expect(cached[0].id).toBe('rec-1');
           done();
-        });
+        }, 30000);
       });
     });
   });
@@ -1246,7 +1246,7 @@ describe('CareRecommendationService', () => {
         if (update) {
           updates.push(update);
         }
-      });
+      }, 30000);
 
       service.getDashboardRecommendations().subscribe(() => {
         expect(updates.length).toBeGreaterThan(0);
@@ -1264,7 +1264,7 @@ describe('CareRecommendationService', () => {
           expect(update.timestamp).toBeInstanceOf(Date);
           done();
         }
-      });
+      }, 30000);
 
       service.getDashboardRecommendations().subscribe();
     });

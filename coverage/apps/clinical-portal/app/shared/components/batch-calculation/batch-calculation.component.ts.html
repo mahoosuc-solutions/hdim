@@ -25,28 +25,28 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>71/71</span>
+                <span class='fraction'>74/74</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">68.96% </span>
+                <span class="strong">69.44% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>20/29</span>
+                <span class='fraction'>25/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>25/25</span>
+                <span class='fraction'>26/26</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>68/68</span>
+                <span class='fraction'>71/71</span>
             </div>
         
             
@@ -297,10 +297,22 @@
 <a name='L232'></a><a href='#L232'>232</a>
 <a name='L233'></a><a href='#L233'>233</a>
 <a name='L234'></a><a href='#L234'>234</a>
-<a name='L235'></a><a href='#L235'>235</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L235'></a><a href='#L235'>235</a>
+<a name='L236'></a><a href='#L236'>236</a>
+<a name='L237'></a><a href='#L237'>237</a>
+<a name='L238'></a><a href='#L238'>238</a>
+<a name='L239'></a><a href='#L239'>239</a>
+<a name='L240'></a><a href='#L240'>240</a>
+<a name='L241'></a><a href='#L241'>241</a>
+<a name='L242'></a><a href='#L242'>242</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -321,22 +333,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
@@ -345,7 +356,10 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">18x</span>
@@ -539,6 +553,7 @@ import {
   BatchCalculationJob,
   BatchJobStatus
 } from '../../../services/batch-calculation.service';
+import { LoggerService } from '../../../services/logger.service';
 &nbsp;
 /**
  * Batch Calculation Component
@@ -561,6 +576,9 @@ import {
 })
 export class BatchCalculationComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject&lt;void&gt;();
+  private get logger() {
+    return this.loggerService.withContext('BatchCalculationComponent');
+  }
 &nbsp;
   // Current active job
   activeJob: BatchCalculationJob | null = null;
@@ -579,7 +597,10 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
   // Expose enum to template
   BatchJobStatus = BatchJobStatus;
 &nbsp;
-  constructor(private batchCalculationService: BatchCalculationService) {}
+  constructor(
+    private batchCalculationService: BatchCalculationService,
+    private loggerService: LoggerService
+  ) {}
 &nbsp;
   ngOnInit(): void {
     this.loadJobHistory();
@@ -613,7 +634,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.pollJobStatus(response.jobId);
         },
         error: (err) =&gt; {
-          console.error('Failed to start batch calculation:', err);
+          this.logger.error('Failed to start batch calculation', err);
           this.error = err.error<span class="branch-0 cbranch-no" title="branch not covered" >?.m</span>essage || <span class="branch-1 cbranch-no" title="branch not covered" >'Failed to start batch calculation';</span>
           this.isLoading = false;
         }
@@ -632,7 +653,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.activeJob = job;
 &nbsp;
           // Check if job is complete
-          if (job.status === BatchJobStatus.COMPLETED ||
+          <span class="missing-if-branch" title="else path not taken" >E</span>if (job.status === BatchJobStatus.COMPLETED ||
 <span class="branch-1 cbranch-no" title="branch not covered" >              job.status === BatchJobStatus.FAILED </span>||
 <span class="branch-2 cbranch-no" title="branch not covered" >              job.status === BatchJobStatus.CANCELLED)</span> {
             this.isCalculating = false;
@@ -640,7 +661,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) =&gt; {
-          console.error('Error polling job status:', err);
+          this.logger.error('Error polling job status', err);
           this.error = 'Failed to get job status';
           this.isCalculating = false;
         },
@@ -667,7 +688,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.loadJobHistory();
         },
         error: (err) =&gt; {
-          console.error('Failed to cancel job:', err);
+          this.logger.error('Failed to cancel job', err);
           this.error = err.error<span class="branch-0 cbranch-no" title="branch not covered" >?.m</span>essage || <span class="branch-1 cbranch-no" title="branch not covered" >'Failed to cancel job';</span>
         }
       });
@@ -692,7 +713,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
 <span class="branch-2 cbranch-no" title="branch not covered" >              j.status === BatchJobStatus.PENDING</span>
             );
 &nbsp;
-            if (runningJob) {
+            <span class="missing-if-branch" title="else path not taken" >E</span>if (runningJob) {
               this.activeJob = runningJob;
               this.isCalculating = true;
               this.pollJobStatus(runningJob.jobId);
@@ -700,7 +721,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) =&gt; {
-          console.error('Failed to load job history:', err);
+          this.logger.error('Failed to load job history', err);
         }
       });
   }
@@ -772,7 +793,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

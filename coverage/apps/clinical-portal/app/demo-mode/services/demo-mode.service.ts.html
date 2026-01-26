@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">2.22% </span>
+                <span class="strong">2.52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/314</span>
+                <span class='fraction'>8/317</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/127</span>
+                <span class='fraction'>0/159</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/44</span>
+                <span class='fraction'>0/45</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">1.94% </span>
+                <span class="strong">2.25% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/308</span>
+                <span class='fraction'>7/311</span>
             </div>
         
             
@@ -802,11 +802,18 @@
 <a name='L737'></a><a href='#L737'>737</a>
 <a name='L738'></a><a href='#L738'>738</a>
 <a name='L739'></a><a href='#L739'>739</a>
-<a name='L740'></a><a href='#L740'>740</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L740'></a><a href='#L740'>740</a>
+<a name='L741'></a><a href='#L741'>741</a>
+<a name='L742'></a><a href='#L742'>742</a>
+<a name='L743'></a><a href='#L743'>743</a>
+<a name='L744'></a><a href='#L744'>744</a>
+<a name='L745'></a><a href='#L745'>745</a>
+<a name='L746'></a><a href='#L746'>746</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -936,6 +943,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1544,6 +1556,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
+import { LoggerService } from '../../services/logger.service';
 import { API_CONFIG } from '../../config/api.config';
 import { environment } from '../../../environments/environment';
 &nbsp;
@@ -1674,10 +1687,15 @@ export class DemoModeService {
 <span class="cstat-no" title="statement not covered" >    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;</span>
   });
 &nbsp;
+<span class="fstat-no" title="function not covered" >  private get l</span>ogger() {
+<span class="cstat-no" title="statement not covered" >    return this.loggerService.withContext('DemoModeService');</span>
+  }
+&nbsp;
 <span class="fstat-no" title="function not covered" >  constructor(</span>
     private <span class="cstat-no" title="statement not covered" >http: HttpClient,</span>
     private <span class="cstat-no" title="statement not covered" >router: Router,</span>
-    private <span class="cstat-no" title="statement not covered" >route: ActivatedRoute</span>
+    private <span class="cstat-no" title="statement not covered" >route: ActivatedRoute,</span>
+    private <span class="cstat-no" title="statement not covered" >loggerService: LoggerService</span>
   ) {
     // Check URL for demo parameter on init
 <span class="cstat-no" title="statement not covered" >    this.checkUrlForDemoMode();</span>
@@ -1685,11 +1703,11 @@ export class DemoModeService {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >resolveApiBaseUrl(</span>): string {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (API_CONFIG.USE_API_GATEWAY &amp;&amp; API_CONFIG.API_GATEWAY_URL) {</span>
+<span class="cstat-no" title="statement not covered" >    if (API_CONFIG.USE_API_GATEWAY &amp;&amp; API_CONFIG.API_GATEWAY_URL) {</span>
 <span class="cstat-no" title="statement not covered" >      return API_CONFIG.API_GATEWAY_URL;</span>
     }
     const browserOrigin = <span class="cstat-no" title="statement not covered" >typeof window !== 'undefined' ? window.location.origin : '';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (environment.apiConfig.useApiGateway) {</span>
+<span class="cstat-no" title="statement not covered" >    if (environment.apiConfig.useApiGateway) {</span>
 <span class="cstat-no" title="statement not covered" >      return environment.apiConfig.apiGatewayUrl || browserOrigin;</span>
     }
 <span class="cstat-no" title="statement not covered" >    return browserOrigin;</span>
@@ -1707,7 +1725,7 @@ export class DemoModeService {
     } else {
       // Check localStorage for persisted demo mode
       const saved = <span class="cstat-no" title="statement not covered" >localStorage.getItem(this.DEMO_MODE_KEY);</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (saved === 'true') {</span>
+<span class="cstat-no" title="statement not covered" >      if (saved === 'true') {</span>
 <span class="cstat-no" title="statement not covered" >        this.enableDemoMode();</span>
       }
     }
@@ -1716,11 +1734,11 @@ export class DemoModeService {
   private <span class="fstat-no" title="function not covered" >checkUrlForStoryboard(</span>): void {
     const urlParams = <span class="cstat-no" title="statement not covered" >new URLSearchParams(window.location.search);</span>
     const storyboardParam = <span class="cstat-no" title="statement not covered" >urlParams.get('storyboard');</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (storyboardParam === 'true' || storyboardParam === '1') {</span>
+<span class="cstat-no" title="statement not covered" >    if (storyboardParam === 'true' || storyboardParam === '1') {</span>
 <span class="cstat-no" title="statement not covered" >      this.storyboardEnabled.set(true);</span>
 <span class="cstat-no" title="statement not covered" >      this.loadStoryboard();</span>
       const wsUrl = <span class="cstat-no" title="statement not covered" >urlParams.get('storyboardWs');</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (wsUrl) {</span>
+<span class="cstat-no" title="statement not covered" >      if (wsUrl) {</span>
 <span class="cstat-no" title="statement not covered" >        this.connectStoryboardSocket(wsUrl);</span>
       }
     }
@@ -1734,10 +1752,10 @@ export class DemoModeService {
 <span class="cstat-no" title="statement not covered" >    localStorage.setItem(this.DEMO_MODE_KEY, 'true');</span>
 <span class="cstat-no" title="statement not covered" >    this.loadStatus();</span>
 <span class="cstat-no" title="statement not covered" >    this.loadTooltips();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.storyboardEnabled()) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.storyboardEnabled()) {</span>
 <span class="cstat-no" title="statement not covered" >      this.loadStoryboard();</span>
     }
-<span class="cstat-no" title="statement not covered" >    console.log('[Demo Mode] Enabled');</span>
+<span class="cstat-no" title="statement not covered" >    this.logger.info('[Demo Mode] Enabled');</span>
   }
 &nbsp;
   /**
@@ -1752,7 +1770,7 @@ export class DemoModeService {
 <span class="cstat-no" title="statement not covered" >    this.storyboardConnected.set(false);</span>
 <span class="cstat-no" title="statement not covered" >    this.storyboardError.set(null);</span>
 <span class="cstat-no" title="statement not covered" >    this.disconnectStoryboardSocket();</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[Demo Mode] Disabled');</span>
+<span class="cstat-no" title="statement not covered" >    this.logger.info('[Demo Mode] Disabled');</span>
 &nbsp;
     // Remove demo parameter from URL
     const url = <span class="cstat-no" title="statement not covered" >new URL(window.location.href);</span>
@@ -1776,7 +1794,7 @@ export class DemoModeService {
       const storyboard = <span class="cstat-no" title="statement not covered" >await this.http.get&lt;DemoStoryboard&gt;(this.STORYBOARD_URL).toPromise();</span>
       const steps = <span class="cstat-no" title="statement not covered" >storyboard?.steps ?? [];</span>
 <span class="cstat-no" title="statement not covered" >      this.storyboardSteps.set(steps);</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (steps.length &amp;&amp; !this.activeStoryboardStep()) {</span>
+<span class="cstat-no" title="statement not covered" >      if (steps.length &amp;&amp; !this.activeStoryboardStep()) {</span>
 <span class="cstat-no" title="statement not covered" >        this.applyStoryboardStep(steps[0]);</span>
       }
 <span class="cstat-no" title="statement not covered" >      this.storyboardError.set(null);</span>
@@ -1793,7 +1811,7 @@ export class DemoModeService {
 &nbsp;
   public <span class="fstat-no" title="function not covered" >setStoryboardStepIndex(</span>stepIndex: number): void {
     const steps = <span class="cstat-no" title="statement not covered" >this.storyboardSteps();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!steps.length) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!steps.length) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
     const step = <span class="cstat-no" title="statement not covered" >steps[Math.max(0, Math.min(stepIndex, steps.length - 1))] ?? null;</span>
@@ -1811,7 +1829,7 @@ export class DemoModeService {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >connectStoryboardSocket(</span>wsUrl: string): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.storyboardSocket) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.storyboardSocket) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
 <span class="cstat-no" title="statement not covered" >    try {</span>
@@ -1830,11 +1848,11 @@ export class DemoModeService {
           const message = <span class="cstat-no" title="statement not covered" >JSON.parse(event.data);</span>
 <span class="cstat-no" title="statement not covered" >          if (message.type === 'storyboard.step' &amp;&amp; message.stepId) {</span>
 <span class="cstat-no" title="statement not covered" >            this.setStoryboardStep(message.stepId);</span>
-          } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (message.type === 'storyboard.step' &amp;&amp; typeof message.stepIndex === 'number') {</span>
+          } else <span class="cstat-no" title="statement not covered" >if (message.type === 'storyboard.step' &amp;&amp; typeof message.stepIndex === 'number') {</span>
 <span class="cstat-no" title="statement not covered" >            this.setStoryboardStepIndex(message.stepIndex);</span>
           }
         } catch (err) {
-<span class="cstat-no" title="statement not covered" >          console.warn('[Demo Mode] Failed to parse storyboard message', err);</span>
+<span class="cstat-no" title="statement not covered" >          this.logger.warn('[Demo Mode] Failed to parse storyboard message', err);</span>
         }
       };
 <span class="cstat-no" title="statement not covered" >      this.storyboardSocket.onerror = <span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
@@ -1850,7 +1868,7 @@ export class DemoModeService {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >disconnectStoryboardSocket(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.storyboardSocket) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.storyboardSocket) {</span>
 <span class="cstat-no" title="statement not covered" >      this.storyboardSocket.close();</span>
 <span class="cstat-no" title="statement not covered" >      this.storyboardSocket = null;</span>
     }
@@ -1862,12 +1880,12 @@ export class DemoModeService {
    */
   private async <span class="fstat-no" title="function not covered" >checkBackendAvailability(</span>): Promise&lt;boolean&gt; {
     // Return cached result if already checked
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.demoBackendAvailable !== null) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.demoBackendAvailable !== null) {</span>
 <span class="cstat-no" title="statement not covered" >      return this.demoBackendAvailable;</span>
     }
 &nbsp;
     // Prevent concurrent checks
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.backendCheckInProgress) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.backendCheckInProgress) {</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
     }
 &nbsp;
@@ -1884,7 +1902,7 @@ export class DemoModeService {
     } catch {
       // Backend not available - this is expected when demo service isn't running
 <span class="cstat-no" title="statement not covered" >      this.demoBackendAvailable = false;</span>
-<span class="cstat-no" title="statement not covered" >      console.log('[Demo Mode] Demo backend not available - using local-only mode');</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.info('[Demo Mode] Demo backend not available - using local-only mode');</span>
     } finally {
 <span class="cstat-no" title="statement not covered" >      this.backendCheckInProgress = false;</span>
     }
@@ -1898,7 +1916,7 @@ export class DemoModeService {
   public async <span class="fstat-no" title="function not covered" >loadStatus(</span>): Promise&lt;void&gt; {
     // Skip if backend not available
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available - recording/tooltips still work');</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
     }
@@ -1911,7 +1929,7 @@ export class DemoModeService {
         .get&lt;DemoStatus&gt;(`${this.DEMO_API_URL}/api/v1/demo/status`)
         .toPromise();
 <span class="cstat-no" title="statement not covered" >      this.status.set(status || null);</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (status?.currentScenario) {</span>
+<span class="cstat-no" title="statement not covered" >      if (status?.currentScenario) {</span>
         const scenarioMatch = <span class="cstat-no" title="statement not covered" >this.scenarios().find(</span>
 <span class="fstat-no" title="function not covered" >          (s</span>cenario) =&gt; <span class="cstat-no" title="statement not covered" >scenario.name === status.currentScenario</span>
         );
@@ -1928,7 +1946,7 @@ export class DemoModeService {
         );
       }
     } catch (err: unknown) {
-<span class="cstat-no" title="statement not covered" >      console.warn('[Demo Mode] Could not load status:', err);</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.warn('[Demo Mode] Could not load status:', err);</span>
       // Demo mode can still work without backend connection
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
     } finally {
@@ -1942,7 +1960,7 @@ export class DemoModeService {
   public async <span class="fstat-no" title="function not covered" >loadScenarios(</span>): Promise&lt;DemoScenario[]&gt; {
     // Skip if backend not available
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.scenarios.set([]);</span>
 <span class="cstat-no" title="statement not covered" >      return [];</span>
     }
@@ -1955,7 +1973,7 @@ export class DemoModeService {
 <span class="cstat-no" title="statement not covered" >      this.scenarios.set(resolved);</span>
 <span class="cstat-no" title="statement not covered" >      return resolved;</span>
     } catch (err) {
-<span class="cstat-no" title="statement not covered" >      console.error('[Demo Mode] Could not load scenarios:', err);</span>
+<span class="cstat-no" title="statement not covered" >      this.logger.error('[Demo Mode] Could not load scenarios:', err);</span>
 <span class="cstat-no" title="statement not covered" >      this.scenarios.set([]);</span>
 <span class="cstat-no" title="statement not covered" >      return [];</span>
     }
@@ -1967,7 +1985,7 @@ export class DemoModeService {
   public async <span class="fstat-no" title="function not covered" >loadScenario(</span>scenarioId: string): Promise&lt;void&gt; {
     // Requires backend
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -1985,7 +2003,7 @@ export class DemoModeService {
       const result = <span class="cstat-no" title="statement not covered" >await this.http</span>
         .post&lt;LoadScenarioResponse&gt;(`${this.DEMO_API_URL}/api/v1/demo/scenarios/${encodeURIComponent(scenarioId)}`, {})
         .toPromise();
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (result) {</span>
+<span class="cstat-no" title="statement not covered" >      if (result) {</span>
 <span class="cstat-no" title="statement not covered" >        this.lastLoadResult.set(result);</span>
         const scenarioMatch = <span class="cstat-no" title="statement not covered" >this.scenarios().find(<span class="fstat-no" title="function not covered" >(s</span>cenario) =&gt; <span class="cstat-no" title="statement not covered" >scenario.name === result.scenarioName)</span>;</span>
 <span class="cstat-no" title="statement not covered" >        this.activeScenario.set(</span>
@@ -2019,7 +2037,7 @@ export class DemoModeService {
   public async <span class="fstat-no" title="function not covered" >resetDemo(</span>): Promise&lt;void&gt; {
     // Requires backend
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -2045,7 +2063,7 @@ export class DemoModeService {
 &nbsp;
   public async <span class="fstat-no" title="function not covered" >resetCurrentTenant(</span>): Promise&lt;void&gt; {
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -2070,7 +2088,7 @@ export class DemoModeService {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >startProgressPolling(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.progressInterval) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.progressInterval) {</span>
 <span class="cstat-no" title="statement not covered" >      clearInterval(this.progressInterval);</span>
     }
 <span class="cstat-no" title="statement not covered" >    this.progressInterval = setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
@@ -2079,7 +2097,7 @@ export class DemoModeService {
   }
 &nbsp;
   private <span class="fstat-no" title="function not covered" >stopProgressPolling(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.progressInterval) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.progressInterval) {</span>
 <span class="cstat-no" title="statement not covered" >      clearInterval(this.progressInterval);</span>
 <span class="cstat-no" title="statement not covered" >      this.progressInterval = null;</span>
     }
@@ -2090,9 +2108,9 @@ export class DemoModeService {
       const progress = <span class="cstat-no" title="statement not covered" >await this.http</span>
         .get&lt;DemoProgress&gt;(`${this.DEMO_API_URL}/api/v1/demo/sessions/current/progress`)
         .toPromise();
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (progress) {</span>
+<span class="cstat-no" title="statement not covered" >      if (progress) {</span>
 <span class="cstat-no" title="statement not covered" >        this.progress.set(progress);</span>
-<span class="cstat-no" title="statement not covered" >        <span class="missing-if-branch" title="if path not taken" >I</span>if (progress.stage === 'COMPLETE' || progress.stage === 'FAILED' || progress.stage === 'CANCELLED') {</span>
+<span class="cstat-no" title="statement not covered" >        if (progress.stage === 'COMPLETE' || progress.stage === 'FAILED' || progress.stage === 'CANCELLED') {</span>
 <span class="cstat-no" title="statement not covered" >          this.stopProgressPolling();</span>
         }
       }
@@ -2103,7 +2121,7 @@ export class DemoModeService {
 &nbsp;
   public async <span class="fstat-no" title="function not covered" >cancelCurrentLoad(</span>): Promise&lt;void&gt; {
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -2122,7 +2140,7 @@ export class DemoModeService {
 &nbsp;
   public async <span class="fstat-no" title="function not covered" >stopCurrentSession(</span>): Promise&lt;void&gt; {
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -2144,7 +2162,7 @@ export class DemoModeService {
    * Start recording timer
    */
   public <span class="fstat-no" title="function not covered" >startRecording(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.isRecording()) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (this.isRecording()) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.isRecording.set(true);</span>
 <span class="cstat-no" title="statement not covered" >    this.recordingStartTime.set(Date.now());</span>
@@ -2152,28 +2170,28 @@ export class DemoModeService {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.recordingInterval = setInterval(<span class="fstat-no" title="function not covered" >() =</span>&gt; {</span>
       const start = <span class="cstat-no" title="statement not covered" >this.recordingStartTime();</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (start) {</span>
+<span class="cstat-no" title="statement not covered" >      if (start) {</span>
 <span class="cstat-no" title="statement not covered" >        this.recordingDuration.set(Math.floor((Date.now() - start) / 1000));</span>
       }
     }, 1000);
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    console.log('[Demo Mode] Recording started');</span>
+<span class="cstat-no" title="statement not covered" >    this.logger.info('[Demo Mode] Recording started');</span>
   }
 &nbsp;
   /**
    * Stop recording timer
    */
   public <span class="fstat-no" title="function not covered" >stopRecording(</span>): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!this.isRecording()) <span class="cstat-no" title="statement not covered" >return;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!this.isRecording()) <span class="cstat-no" title="statement not covered" >return;</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.isRecording.set(false);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.recordingInterval) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.recordingInterval) {</span>
 <span class="cstat-no" title="statement not covered" >      clearInterval(this.recordingInterval);</span>
 <span class="cstat-no" title="statement not covered" >      this.recordingInterval = null;</span>
     }
 &nbsp;
     const duration = <span class="cstat-no" title="statement not covered" >this.recordingDuration();</span>
-<span class="cstat-no" title="statement not covered" >    console.log(`[Demo Mode] Recording stopped. Duration: ${this.formattedRecordingTime()}`);</span>
+<span class="cstat-no" title="statement not covered" >    this.logger.info(`[Demo Mode] Recording stopped. Duration: ${this.formattedRecordingTime()}`);</span>
   }
 &nbsp;
   /**
@@ -2232,7 +2250,7 @@ export class DemoModeService {
   public async <span class="fstat-no" title="function not covered" >createSnapshot(</span>name: string): Promise&lt;void&gt; {
     // Requires backend
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -2260,7 +2278,7 @@ export class DemoModeService {
   public async <span class="fstat-no" title="function not covered" >restoreSnapshot(</span>snapshotId: string): Promise&lt;void&gt; {
     // Requires backend
     const isAvailable = <span class="cstat-no" title="statement not covered" >await this.checkBackendAvailability();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!isAvailable) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!isAvailable) {</span>
 <span class="cstat-no" title="statement not covered" >      this.error.set('Demo backend not available');</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error('Demo backend not available');</span>
     }
@@ -2287,7 +2305,7 @@ export class DemoModeService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

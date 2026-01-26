@@ -806,67 +806,7 @@
 <a name='L741'></a><a href='#L741'>741</a>
 <a name='L742'></a><a href='#L742'>742</a>
 <a name='L743'></a><a href='#L743'>743</a>
-<a name='L744'></a><a href='#L744'>744</a>
-<a name='L745'></a><a href='#L745'>745</a>
-<a name='L746'></a><a href='#L746'>746</a>
-<a name='L747'></a><a href='#L747'>747</a>
-<a name='L748'></a><a href='#L748'>748</a>
-<a name='L749'></a><a href='#L749'>749</a>
-<a name='L750'></a><a href='#L750'>750</a>
-<a name='L751'></a><a href='#L751'>751</a>
-<a name='L752'></a><a href='#L752'>752</a>
-<a name='L753'></a><a href='#L753'>753</a>
-<a name='L754'></a><a href='#L754'>754</a>
-<a name='L755'></a><a href='#L755'>755</a>
-<a name='L756'></a><a href='#L756'>756</a>
-<a name='L757'></a><a href='#L757'>757</a>
-<a name='L758'></a><a href='#L758'>758</a>
-<a name='L759'></a><a href='#L759'>759</a>
-<a name='L760'></a><a href='#L760'>760</a>
-<a name='L761'></a><a href='#L761'>761</a>
-<a name='L762'></a><a href='#L762'>762</a>
-<a name='L763'></a><a href='#L763'>763</a>
-<a name='L764'></a><a href='#L764'>764</a>
-<a name='L765'></a><a href='#L765'>765</a>
-<a name='L766'></a><a href='#L766'>766</a>
-<a name='L767'></a><a href='#L767'>767</a>
-<a name='L768'></a><a href='#L768'>768</a>
-<a name='L769'></a><a href='#L769'>769</a>
-<a name='L770'></a><a href='#L770'>770</a>
-<a name='L771'></a><a href='#L771'>771</a>
-<a name='L772'></a><a href='#L772'>772</a>
-<a name='L773'></a><a href='#L773'>773</a>
-<a name='L774'></a><a href='#L774'>774</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L744'></a><a href='#L744'>744</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1631,45 +1571,8 @@
     &lt;/div&gt;
   &lt;/div&gt;
 &nbsp;
-  &lt;!-- Summary Cards --&gt;
-  &lt;div class="summary-row"&gt;
-    &lt;mat-card class="summary-card total-card"&gt;
-      &lt;mat-card-content&gt;
-        &lt;div class="summary-value"&gt;{{ summary.totalGaps || 0 }}&lt;/div&gt;
-        &lt;div class="summary-label"&gt;Total Care Gaps&lt;/div&gt;
-      &lt;/mat-card-content&gt;
-    &lt;/mat-card&gt;
-&nbsp;
-    &lt;mat-card class="summary-card high-urgency-card"&gt;
-      &lt;mat-card-content&gt;
-        &lt;div class="summary-value"&gt;{{ summary.highUrgencyCount || 0 }}&lt;/div&gt;
-        &lt;div class="summary-label"&gt;
-          &lt;mat-icon class="urgency-icon-high"&gt;error&lt;/mat-icon&gt;
-          High Urgency
-        &lt;/div&gt;
-      &lt;/mat-card-content&gt;
-    &lt;/mat-card&gt;
-&nbsp;
-    &lt;mat-card class="summary-card medium-urgency-card"&gt;
-      &lt;mat-card-content&gt;
-        &lt;div class="summary-value"&gt;{{ summary.mediumUrgencyCount || 0 }}&lt;/div&gt;
-        &lt;div class="summary-label"&gt;
-          &lt;mat-icon class="urgency-icon-medium"&gt;warning&lt;/mat-icon&gt;
-          Medium Urgency
-        &lt;/div&gt;
-      &lt;/mat-card-content&gt;
-    &lt;/mat-card&gt;
-&nbsp;
-    &lt;mat-card class="summary-card low-urgency-card"&gt;
-      &lt;mat-card-content&gt;
-        &lt;div class="summary-value"&gt;{{ summary.lowUrgencyCount || 0 }}&lt;/div&gt;
-        &lt;div class="summary-label"&gt;
-          &lt;mat-icon class="urgency-icon-low"&gt;info&lt;/mat-icon&gt;
-          Low Urgency
-        &lt;/div&gt;
-      &lt;/mat-card-content&gt;
-    &lt;/mat-card&gt;
-  &lt;/div&gt;
+  &lt;!-- Care Gap Statistics Dashboard --&gt;
+  &lt;app-care-gap-stats-dashboard&gt;&lt;/app-care-gap-stats-dashboard&gt;
 &nbsp;
   &lt;!-- Intervention Recommendations Section --&gt;
   &lt;mat-card class="interventions-card"&gt;
@@ -1946,8 +1849,9 @@
                     color="primary"
                     class="quick-action-btn primary-action"
                     [matTooltip]="getPrimaryAction(gap).description"
+                    [attr.aria-label]="getPrimaryAction(gap).label + ' for ' + gap.patientName + ' - ' + gap.measureName"
                     (click)="executePrimaryAction(gap); $event.stopPropagation()"&gt;
-                    &lt;mat-icon&gt;{{ getPrimaryAction(gap).icon }}&lt;/mat-icon&gt;
+                    &lt;mat-icon aria-hidden="true"&gt;{{ getPrimaryAction(gap).icon }}&lt;/mat-icon&gt;
                     {{ getPrimaryAction(gap).label }}
                   &lt;/button&gt;
 &nbsp;
@@ -1957,8 +1861,9 @@
                     color="accent"
                     class="close-gap-btn"
                     matTooltip="Close gap"
+                    [attr.aria-label]="'Close care gap for ' + gap.patientName + ' - ' + gap.measureName"
                     (click)="quickCloseGap(gap); $event.stopPropagation()"&gt;
-                    &lt;mat-icon&gt;check_circle&lt;/mat-icon&gt;
+                    &lt;mat-icon aria-hidden="true"&gt;check_circle&lt;/mat-icon&gt;
                   &lt;/button&gt;
 &nbsp;
                   &lt;!-- More Actions Menu --&gt;
@@ -1979,10 +1884,15 @@
             &lt;tr
               mat-row
               *matRowDef="let row; columns: displayedColumns"
-              class="care-gap-row"
+              class="care-gap-row clickable-row"
               [class.high-urgency-row]="row.urgency === 'high'"
               [class.medium-urgency-row]="row.urgency === 'medium'"
               [class.low-urgency-row]="row.urgency === 'low'"
+              (click)="onRowClick(row, $event)"
+              [attr.aria-label]="'View patient ' + row.patientName + ' details'"
+              tabindex="0"
+              (keydown.enter)="onRowClick(row, $event)"
+              (keydown.space)="onRowClick(row, $event); $event.preventDefault()"
             &gt;&lt;/tr&gt;
           &lt;/table&gt;
         &lt;/div&gt;
@@ -2389,7 +2299,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

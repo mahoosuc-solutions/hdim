@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">90.09% </span>
+                <span class="strong">90.22% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>200/222</span>
+                <span class='fraction'>203/225</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.66% </span>
+                <span class="strong">70.12% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>43/60</span>
+                <span class='fraction'>54/77</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">94.28% </span>
+                <span class="strong">94.44% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>33/35</span>
+                <span class='fraction'>34/36</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.46% </span>
+                <span class="strong">91.58% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>193/211</span>
+                <span class='fraction'>196/214</span>
             </div>
         
             
@@ -937,7 +937,12 @@
 <a name='L872'></a><a href='#L872'>872</a>
 <a name='L873'></a><a href='#L873'>873</a>
 <a name='L874'></a><a href='#L874'>874</a>
-<a name='L875'></a><a href='#L875'>875</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L875'></a><a href='#L875'>875</a>
+<a name='L876'></a><a href='#L876'>876</a>
+<a name='L877'></a><a href='#L877'>877</a>
+<a name='L878'></a><a href='#L878'>878</a>
+<a name='L879'></a><a href='#L879'>879</a>
+<a name='L880'></a><a href='#L880'>880</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -968,6 +973,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1388,7 +1394,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1842,6 +1852,7 @@ import { PatientHealthService } from '../../../services/patient-health.service';
 import { RiskAssessmentService } from '../../../services/risk-assessment.service';
 import { HealthScoreHistory, RiskLevel } from '../../../models/patient-health.model';
 import { RiskAssessment } from '../../../models/risk-assessment.model';
+import { LoggerService } from '../../../services/logger.service';
 &nbsp;
 /**
  * Time range options for the chart
@@ -2261,10 +2272,14 @@ export class RiskTrendChartComponent
   };
 &nbsp;
   private destroy$ = new Subject&lt;void&gt;();
+  private get logger() {
+    return this.loggerService.withContext('RiskTrendChartComponent');
+  }
 &nbsp;
   constructor(
     private patientHealthService: PatientHealthService,
-    private riskAssessmentService: RiskAssessmentService
+    private riskAssessmentService: RiskAssessmentService,
+    private loggerService: LoggerService
   ) {}
 &nbsp;
   ngOnInit(): void {
@@ -2272,7 +2287,7 @@ export class RiskTrendChartComponent
   }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  ngOnChanges(</span>changes: SimpleChanges): void {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (changes['patientId'] &amp;&amp; !changes['patientId'].firstChange) {</span>
+<span class="cstat-no" title="statement not covered" >    if (changes['patientId'] &amp;&amp; !changes['patientId'].firstChange) {</span>
 <span class="cstat-no" title="statement not covered" >      this.loadData();</span>
     }
   }
@@ -2290,20 +2305,20 @@ export class RiskTrendChartComponent
   }
 &nbsp;
   onRangeChange(): void {
-    if (this.selectedRange !== 'custom') {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (this.selectedRange !== 'custom') {
       this.loadData();
     }
   }
 &nbsp;
   onCustomDateChange(): void {
-    if (this.customStartDate &amp;&amp; this.customEndDate) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (this.customStartDate &amp;&amp; this.customEndDate) {
       this.loadData();
     }
   }
 &nbsp;
   toggleSeries(seriesId: string): void {
     const series = this.dataSeries.find((s) =&gt; s.id === seriesId);
-    if (series) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (series) {
       series.visible = !series.visible;
       this.updateChart();
     }
@@ -2345,7 +2360,7 @@ export class RiskTrendChartComponent
           }
         },
         error: (error) =&gt; {
-          console.error('Error loading risk assessment data:', error);
+          this.logger.error('Error loading risk assessment data', error);
           // Fallback to PatientHealthService on error
           this.loadHealthScoreData();
         },
@@ -2366,7 +2381,7 @@ export class RiskTrendChartComponent
           this.initializeChart();
         },
         error: <span class="fstat-no" title="function not covered" >(e</span>rror) =&gt; {
-<span class="cstat-no" title="statement not covered" >          console.error('Error loading health score data:', error);</span>
+<span class="cstat-no" title="statement not covered" >          this.logger.error('Error loading health score data', error);</span>
 <span class="cstat-no" title="statement not covered" >          this.loading = false;</span>
 <span class="cstat-no" title="statement not covered" >          this.dataSeries = [];</span>
         },
@@ -2544,7 +2559,7 @@ export class RiskTrendChartComponent
 &nbsp;
     // Build threshold annotations
     const annotations: any = {};
-    if (this.showThresholds) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (this.showThresholds) {
       this.thresholds.forEach((threshold, index) =&gt; {
         annotations[`threshold${index}`] = {
           type: 'line',
@@ -2606,7 +2621,7 @@ export class RiskTrendChartComponent
     }
 &nbsp;
     // Draw threshold lines
-    if (this.showThresholds) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (this.showThresholds) {
       this.thresholds.forEach((threshold) =&gt; {
         const y = padding.top + chartHeight * (1 - threshold.value / 100);
         ctx.strokeStyle = threshold.color;
@@ -2692,7 +2707,7 @@ export class RiskTrendChartComponent
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:46.550Z
+                at 2026-01-26T13:33:49.204Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

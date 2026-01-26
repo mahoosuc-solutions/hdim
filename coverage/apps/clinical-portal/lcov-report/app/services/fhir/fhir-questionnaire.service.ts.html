@@ -32,7 +32,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/84</span>
+                <span class='fraction'>0/111</span>
             </div>
         
             
@@ -1023,11 +1023,11 @@ export class FhirQuestionnaireService extends CacheableService {
    */
 <span class="fstat-no" title="function not covered" >  getQuestionnaireResponses(</span>
     patientId: string,
-    limit: number = <span class="branch-0 cbranch-no" title="branch not covered" >50</span>
+    limit = <span class="branch-0 cbranch-no" title="branch not covered" >50</span>
   ): Observable&lt;FhirQuestionnaireResponse[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`questionnaire:all:${patientId}:${limit}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;FhirQuestionnaireResponse[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
     const url = <span class="cstat-no" title="statement not covered" >buildFhirUrl(FHIR_ENDPOINTS.QUESTIONNAIRE_RESPONSE);</span>
     const params = <span class="cstat-no" title="statement not covered" >new HttpParams()</span>
@@ -1067,7 +1067,7 @@ export class FhirQuestionnaireService extends CacheableService {
   ): Observable&lt;ParsedQuestionnaireResponse[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`questionnaire:mental:${patientId}:${type || 'all'}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;ParsedQuestionnaireResponse[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return this.getQuestionnaireResponses(patientId).pipe(</span>
       map(<span class="fstat-no" title="function not covered" >(r</span>esponses) =&gt; {
@@ -1109,7 +1109,7 @@ export class FhirQuestionnaireService extends CacheableService {
   ): Observable&lt;ParsedQuestionnaireResponse[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`questionnaire:sdoh:${patientId}:${type || 'all'}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;ParsedQuestionnaireResponse[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return this.getQuestionnaireResponses(patientId).pipe(</span>
       map(<span class="fstat-no" title="function not covered" >(r</span>esponses) =&gt; {
@@ -1147,7 +1147,7 @@ export class FhirQuestionnaireService extends CacheableService {
   ): Observable&lt;ParsedQuestionnaireResponse[]&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`questionnaire:functional:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;ParsedQuestionnaireResponse[]&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return this.getQuestionnaireResponses(patientId).pipe(</span>
       map(<span class="fstat-no" title="function not covered" >(r</span>esponses) =&gt; {
@@ -1187,10 +1187,10 @@ export class FhirQuestionnaireService extends CacheableService {
    * Get PHQ-9 severity level
    */
 <span class="fstat-no" title="function not covered" >  getPHQ9Severity(</span>score: number): 'minimal' | 'mild' | 'moderate' | 'moderately-severe' | 'severe' {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'moderately-severe';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 19) <span class="cstat-no" title="statement not covered" >return 'moderately-severe';</span></span>
 <span class="cstat-no" title="statement not covered" >    return 'severe';</span>
   }
 &nbsp;
@@ -1198,9 +1198,9 @@ export class FhirQuestionnaireService extends CacheableService {
    * Get GAD-7 severity level
    */
 <span class="fstat-no" title="function not covered" >  getGAD7Severity(</span>score: number): 'minimal' | 'mild' | 'moderate' | 'severe' {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 4) <span class="cstat-no" title="statement not covered" >return 'minimal';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 9) <span class="cstat-no" title="statement not covered" >return 'mild';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (score &lt;= 14) <span class="cstat-no" title="statement not covered" >return 'moderate';</span></span>
 <span class="cstat-no" title="statement not covered" >    return 'severe';</span>
   }
 &nbsp;
@@ -1273,7 +1273,7 @@ export class FhirQuestionnaireService extends CacheableService {
     // Calculate score for known questionnaire types
 <span class="cstat-no" title="statement not covered" >    if (this.matchesQuestionnaireType(response, this.QUESTIONNAIRE_TYPES.PHQ9)) {</span>
 <span class="cstat-no" title="statement not covered" >      parsed.totalScore = this.calculatePHQ9Score(parsed);</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (</span>
+    } else <span class="cstat-no" title="statement not covered" >if (</span>
       this.matchesQuestionnaireType(response, this.QUESTIONNAIRE_TYPES.GAD7)
     ) {
 <span class="cstat-no" title="statement not covered" >      parsed.totalScore = this.calculateGAD7Score(parsed);</span>
@@ -1291,7 +1291,7 @@ export class FhirQuestionnaireService extends CacheableService {
     const parsed: ParsedQuestionnaireItem[] = <span class="cstat-no" title="statement not covered" >[];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    for (const item of items) {</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (item.answer &amp;&amp; item.answer.length &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >      if (item.answer &amp;&amp; item.answer.length &gt; 0) {</span>
         const answer = <span class="cstat-no" title="statement not covered" >item.answer[0];</span>
 <span class="cstat-no" title="statement not covered" >        parsed.push({</span>
           linkId: item.linkId,
@@ -1302,7 +1302,7 @@ export class FhirQuestionnaireService extends CacheableService {
       }
 &nbsp;
       // Recursively parse nested items
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (item.item) {</span>
+<span class="cstat-no" title="statement not covered" >      if (item.item) {</span>
 <span class="cstat-no" title="statement not covered" >        parsed.push(...this.parseQuestionnaireItems(item.item));</span>
       }
     }
@@ -1314,12 +1314,12 @@ export class FhirQuestionnaireService extends CacheableService {
    * Extract answer value from FHIR answer
    */
   private <span class="fstat-no" title="function not covered" >extractAnswer(</span>answer: any): string | number | boolean {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueInteger !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueInteger;</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueDecimal !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueDecimal;</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueBoolean !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueBoolean;</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueString !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueString;</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueCoding) <span class="cstat-no" title="statement not covered" >return answer.valueCoding.code || '';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueQuantity) <span class="cstat-no" title="statement not covered" >return answer.valueQuantity.value || 0;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueInteger !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueInteger;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueDecimal !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueDecimal;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueBoolean !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueBoolean;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueString !== undefined) <span class="cstat-no" title="statement not covered" >return answer.valueString;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueCoding) <span class="cstat-no" title="statement not covered" >return answer.valueCoding.code || '';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueQuantity) <span class="cstat-no" title="statement not covered" >return answer.valueQuantity.value || 0;</span></span>
 <span class="cstat-no" title="statement not covered" >    return '';</span>
   }
 &nbsp;
@@ -1327,7 +1327,7 @@ export class FhirQuestionnaireService extends CacheableService {
    * Extract display text from FHIR answer
    */
   private <span class="fstat-no" title="function not covered" >extractAnswerDisplay(</span>answer: any): string | undefined {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (answer.valueCoding?.display) <span class="cstat-no" title="statement not covered" >return answer.valueCoding.display;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (answer.valueCoding?.display) <span class="cstat-no" title="statement not covered" >return answer.valueCoding.display;</span></span>
 <span class="cstat-no" title="statement not covered" >    return undefined;</span>
   }
 &nbsp;
@@ -1337,22 +1337,22 @@ export class FhirQuestionnaireService extends CacheableService {
   private <span class="fstat-no" title="function not covered" >detectQuestionnaireType(</span>response: FhirQuestionnaireResponse): string {
     const questionnaire = <span class="cstat-no" title="statement not covered" >response.questionnaire?.toLowerCase() || '';</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.QUESTIONNAIRE_TYPES.PHQ9.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.QUESTIONNAIRE_TYPES.PHQ9.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'PHQ-9';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.QUESTIONNAIRE_TYPES.PHQ2.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.QUESTIONNAIRE_TYPES.PHQ2.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'PHQ-2';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.QUESTIONNAIRE_TYPES.GAD7.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.QUESTIONNAIRE_TYPES.GAD7.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'GAD-7';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.QUESTIONNAIRE_TYPES.PRAPARE.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.QUESTIONNAIRE_TYPES.PRAPARE.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'PRAPARE';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.QUESTIONNAIRE_TYPES.AHC_HRSN.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.QUESTIONNAIRE_TYPES.AHC_HRSN.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'AHC-HRSN';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (this.QUESTIONNAIRE_TYPES.FUNCTIONAL.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
+<span class="cstat-no" title="statement not covered" >    if (this.QUESTIONNAIRE_TYPES.FUNCTIONAL.some(<span class="fstat-no" title="function not covered" >(t</span>) =&gt; <span class="cstat-no" title="statement not covered" >questionnaire.includes(t))</span>) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'Functional Status';</span>
     }
 &nbsp;
@@ -1366,7 +1366,7 @@ export class FhirQuestionnaireService extends CacheableService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.85% </span>
+                <span class="strong">78.12% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>93/121</span>
+                <span class='fraction'>100/128</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">71.42% </span>
+                <span class="strong">75.25% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>45/63</span>
+                <span class='fraction'>73/97</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">78% </span>
+                <span class="strong">79.43% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>78/100</span>
+                <span class='fraction'>85/107</span>
             </div>
         
             
@@ -327,7 +327,18 @@
 <a name='L262'></a><a href='#L262'>262</a>
 <a name='L263'></a><a href='#L263'>263</a>
 <a name='L264'></a><a href='#L264'>264</a>
-<a name='L265'></a><a href='#L265'>265</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L265'></a><a href='#L265'>265</a>
+<a name='L266'></a><a href='#L266'>266</a>
+<a name='L267'></a><a href='#L267'>267</a>
+<a name='L268'></a><a href='#L268'>268</a>
+<a name='L269'></a><a href='#L269'>269</a>
+<a name='L270'></a><a href='#L270'>270</a>
+<a name='L271'></a><a href='#L271'>271</a>
+<a name='L272'></a><a href='#L272'>272</a>
+<a name='L273'></a><a href='#L273'>273</a>
+<a name='L274'></a><a href='#L274'>274</a>
+<a name='L275'></a><a href='#L275'>275</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -399,6 +410,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-yes">32x</span>
@@ -504,6 +517,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-yes">24x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -596,6 +616,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError, timer, retry, delayWhen } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { LoggerService } from '../services/logger.service';
 import { API_CONFIG } from '../config/api.config';
 import { ErrorValidationService } from '../services/error-validation.service';
 import { ErrorCode, ErrorSeverity } from '../models/error.model';
@@ -666,6 +687,8 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) =&gt; {
   const authService = inject(AuthService);
   const router = inject(Router);
   const errorValidationService = inject(ErrorValidationService);
+  const loggerService = inject(LoggerService);
+  const logger = loggerService.withContext('ErrorInterceptor');
 &nbsp;
   // Get tenant ID from current user or use default
   const tenantId = authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID;
@@ -688,12 +711,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) =&gt; {
         retryAttempt = count;
 &nbsp;
         // Only retry if the error is retryable
-        if (!isRetryable(error, req.method)) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (!isRetryable(error, req.method)) {
           return throwError(() =&gt; error);
         }
 &nbsp;
         const delay = <span class="cstat-no" title="statement not covered" >calculateBackoffDelay(count - 1);</span>
-<span class="cstat-no" title="statement not covered" >        console.warn(</span>
+<span class="cstat-no" title="statement not covered" >        logger.warn(</span>
           `[Retry ${count}/${RETRY_CONFIG.maxRetries}] Request to ${req.url} failed with status ${error.status}. ` +
           `Retrying in ${Math.round(delay)}ms...`
         );
@@ -704,7 +727,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) =&gt; {
     // Handle final error after all retries exhausted
     catchError((error: HttpErrorResponse) =&gt; {
       let errorMessage = 'An unknown error occurred';
-      let isRetryExhausted = retryAttempt &gt;= RETRY_CONFIG.maxRetries;
+      const isRetryExhausted = retryAttempt &gt;= RETRY_CONFIG.maxRetries;
 &nbsp;
       if (error.error instanceof ErrorEvent) {
         // Client-side or network error
@@ -766,24 +789,31 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) =&gt; {
         }
       }
 &nbsp;
-      // Log error to console for debugging
-      console.error('HTTP Error:', {
-        url: req.url,
-        method: req.method,
-        status: error.status,
-        statusText: error.statusText,
-        message: errorMessage,
-        retryAttempts: retryAttempt,
-        error: error.error,
-      });
+      // Skip error logging/tracking for expected failures in development
+      const isDemoEndpoint = req.url.includes('/demo/api/v1/demo');
+      const isAuditEndpoint = req.url.includes('/audit/events');
+      const isComplianceEndpoint = req.url.includes('/api/v1/compliance/errors');
+&nbsp;
+      // Log error for debugging (PHI-filtered by LoggerService)
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (!isDemoEndpoint &amp;&amp; !isAuditEndpoint &amp;&amp; !isComplianceEndpoint) {
+        logger.error('HTTP Error', {
+          url: req.url,
+          method: req.method,
+          status: error.status,
+          statusText: error.statusText,
+          message: errorMessage,
+          retryAttempts: retryAttempt,
+          error: error.error,
+        });
+      }
 &nbsp;
       // Track error for compliance validation if enabled
-      if (COMPLIANCE_CONFIG.enableErrorTracking) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (COMPLIANCE_CONFIG.enableErrorTracking &amp;&amp; !isDemoEndpoint &amp;&amp; !isAuditEndpoint &amp;&amp; !isComplianceEndpoint) {
         const errorCode = mapHttpStatusToErrorCode(error.status);
         const severity = mapHttpStatusToSeverity(error.status);
         const currentUser = authService.currentUserValue;
         const tenantId = authService.getTenantId();
-        
+&nbsp;
         errorValidationService.trackError(error, {
           service: extractServiceName(req.url),
           endpoint: req.url,
@@ -819,7 +849,7 @@ function mapHttpStatusToErrorCode(status: number): ErrorCode {
   if (status === 403) return ErrorCode.FORBIDDEN;
   if (status === 404) return ErrorCode.RESOURCE_NOT_FOUND;
   if (status &gt;= 400 &amp;&amp; status &lt; 500) return ErrorCode.VALIDATION_ERROR;
-  if (status &gt;= 500) return ErrorCode.INTERNAL_ERROR;
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (status &gt;= 500) return ErrorCode.INTERNAL_ERROR;
 <span class="cstat-no" title="statement not covered" >  return ErrorCode.UNKNOWN_ERROR;</span>
 }
 &nbsp;
@@ -831,7 +861,7 @@ function mapHttpStatusToSeverity(status: number): ErrorSeverity {
   if (status &gt;= 500) return ErrorSeverity.CRITICAL; // Server errors are critical
   if (status === 401 || status === 403) return ErrorSeverity.ERROR; // Auth errors are high
   if (status === 404) return ErrorSeverity.WARNING; // Not found is medium
-  if (status &gt;= 400) return ErrorSeverity.WARNING; // Client errors are medium
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (status &gt;= 400) return ErrorSeverity.WARNING; // Client errors are medium
 <span class="cstat-no" title="statement not covered" >  return ErrorSeverity.INFO;</span>
 }
 &nbsp;
@@ -849,7 +879,7 @@ function extractServiceName(url: string): string {
   
   // Try to extract from path segments
   const segments = url.split('/').filter(s =&gt; s);
-  if (segments.length &gt; 0) {
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (segments.length &gt; 0) {
     return segments[0].charAt(0).toUpperCase() + segments[0].slice(1) + ' Service';
   }
   
@@ -862,7 +892,7 @@ function extractServiceName(url: string): string {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

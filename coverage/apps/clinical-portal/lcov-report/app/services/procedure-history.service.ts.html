@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">80.41% </span>
+                <span class="strong">79.83% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>78/97</span>
+                <span class='fraction'>95/119</span>
             </div>
         
             
@@ -388,25 +388,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-yes">390x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -936,7 +936,7 @@ export class ProcedureHistoryService {
       }
 &nbsp;
       for (const [start, end] of PROCEDURE_CATEGORY_MAPPING.preventive.cptRanges) {
-        if (codeNum &gt;= start &amp;&amp; codeNum &lt;= end) {
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (codeNum &gt;= start &amp;&amp; codeNum &lt;= end) {
           return 'preventive';
         }
       }
@@ -959,13 +959,13 @@ export class ProcedureHistoryService {
     let codeSystem: 'SNOMED' | 'CPT' = 'SNOMED';
     let displayName = '';
 &nbsp;
-    if (fhirProcedure.code<span class="branch-0 cbranch-no" title="branch not covered" >?.c</span>oding &amp;&amp; fhirProcedure.code.coding.length &gt; 0) {
+    <span class="missing-if-branch" title="else path not taken" >E</span>if (fhirProcedure.code<span class="branch-0 cbranch-no" title="branch not covered" >?.c</span>oding &amp;&amp; fhirProcedure.code.coding.length &gt; 0) {
       const coding = fhirProcedure.code.coding[0];
       code = coding.code || <span class="branch-1 cbranch-no" title="branch not covered" >'';</span>
 &nbsp;
       if (coding.system === 'http://snomed.info/sct') {
         codeSystem = 'SNOMED';
-      } else if (coding.system === 'http://www.ama-assn.org/go/cpt') {
+      } else <span class="missing-if-branch" title="else path not taken" >E</span>if (coding.system === 'http://www.ama-assn.org/go/cpt') {
         codeSystem = 'CPT';
       }
 &nbsp;
@@ -977,7 +977,7 @@ export class ProcedureHistoryService {
     let performedDate = new Date();
     if (fhirProcedure.performedDateTime) {
       performedDate = new Date(fhirProcedure.performedDateTime);
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (fhirProcedure.performedPeriod?.start) {</span>
+    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (fhirProcedure.performedPeriod?.start) {</span>
 <span class="cstat-no" title="statement not covered" >      performedDate = new Date(fhirProcedure.performedPeriod.start);</span>
     }
 &nbsp;
@@ -989,7 +989,7 @@ export class ProcedureHistoryService {
       const performer = fhirProcedure.performer[0];
       performerName = performer.actor<span class="branch-0 cbranch-no" title="branch not covered" >?.d</span>isplay;
 &nbsp;
-      if (performer.function<span class="branch-0 cbranch-no" title="branch not covered" >?.c</span>oding &amp;&amp; performer.function.coding.length &gt; 0) {
+      <span class="missing-if-branch" title="else path not taken" >E</span>if (performer.function<span class="branch-0 cbranch-no" title="branch not covered" >?.c</span>oding &amp;&amp; performer.function.coding.length &gt; 0) {
         performerRole = performer.function.coding[0].display;
       }
     }
@@ -1024,7 +1024,7 @@ export class ProcedureHistoryService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

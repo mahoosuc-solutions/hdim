@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">7.64% </span>
+                <span class="strong">8% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>34/445</span>
+                <span class='fraction'>40/500</span>
             </div>
         
             
@@ -2021,7 +2021,7 @@ export class SDOHService extends CacheableService {
 <span class="fstat-no" title="function not covered" >  getSocialDeterminants(</span>patientId: string): Observable&lt;SocialDeterminants&gt; {
     const cacheKey = <span class="cstat-no" title="statement not covered" >`sdoh:determinants:${patientId}`;</span>
     const cached = <span class="cstat-no" title="statement not covered" >this.getCached&lt;SocialDeterminants&gt;(cacheKey);</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
+<span class="cstat-no" title="statement not covered" >    if (cached) <span class="cstat-no" title="statement not covered" >return of(cached);</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return forkJoin({</span>
       questionnaireResponses: this.getSDOHQuestionnaireResponses(patientId),
@@ -2084,7 +2084,7 @@ export class SDOHService extends CacheableService {
         let questionnaireType: SDOHQuestionnaireType = 'custom';
         if (mostRecent.questionnaireType === 'PRAPARE') {
           questionnaireType = 'PRAPARE';
-        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span><span class="missing-if-branch" title="else path not taken" >E</span>if (mostRecent.questionnaireType === 'AHC-HRSN') {</span>
+        } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="else path not taken" >E</span>if (mostRecent.questionnaireType === 'AHC-HRSN') {</span>
 <span class="cstat-no" title="statement not covered" >          questionnaireType = 'AHC-HRSN';</span>
         }
 &nbsp;
@@ -2274,7 +2274,7 @@ export class SDOHService extends CacheableService {
     bundle: FhirBundle&lt;FhirQuestionnaireResponse&gt;,
     patientId: string
   ): any {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!bundle.entry || bundle.entry.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!bundle.entry || bundle.entry.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return this.getDefaultQuestionnaireData();</span>
     }
 &nbsp;
@@ -2289,7 +2289,7 @@ export class SDOHService extends CacheableService {
           r.questionnaire?.includes('sdoh')
       );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (sdohResponses.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (sdohResponses.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return this.getDefaultQuestionnaireData();</span>
     }
 &nbsp;
@@ -2302,7 +2302,7 @@ export class SDOHService extends CacheableService {
     let questionnaireType: SDOHQuestionnaireType = <span class="cstat-no" title="statement not covered" >'custom';</span>
 <span class="cstat-no" title="statement not covered" >    if (mostRecent.questionnaire?.includes('PRAPARE')) {</span>
 <span class="cstat-no" title="statement not covered" >      questionnaireType = 'PRAPARE';</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (mostRecent.questionnaire?.includes('AHC-HRSN')) {</span>
+    } else <span class="cstat-no" title="statement not covered" >if (mostRecent.questionnaire?.includes('AHC-HRSN')) {</span>
 <span class="cstat-no" title="statement not covered" >      questionnaireType = 'AHC-HRSN';</span>
     }
 &nbsp;
@@ -2332,7 +2332,7 @@ export class SDOHService extends CacheableService {
         item.text?.toLowerCase().includes('housing')
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!housingItem?.answer?.[0]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!housingItem?.answer?.[0]) {</span>
 <span class="cstat-no" title="statement not covered" >      return { stable: true, details: 'No housing data' };</span>
     }
 &nbsp;
@@ -2340,7 +2340,7 @@ export class SDOHService extends CacheableService {
     const questionText = <span class="cstat-no" title="statement not covered" >housingItem.text?.toLowerCase() || '';</span>
 &nbsp;
     // Check if asking about worries
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (questionText.includes('worried') || questionText.includes('losing')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (questionText.includes('worried') || questionText.includes('losing')) {</span>
       const stable = <span class="cstat-no" title="statement not covered" >!answer.toLowerCase().includes('yes');</span>
 <span class="cstat-no" title="statement not covered" >      return { stable, details: answer || 'Not specified' };</span>
     }
@@ -2365,7 +2365,7 @@ export class SDOHService extends CacheableService {
         item.text?.toLowerCase().includes('food')
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!foodItem?.answer?.[0]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!foodItem?.answer?.[0]) {</span>
 <span class="cstat-no" title="statement not covered" >      return { secure: true, details: 'No food security data' };</span>
     }
 &nbsp;
@@ -2390,7 +2390,7 @@ export class SDOHService extends CacheableService {
         item.text?.toLowerCase().includes('transport')
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!transportItem?.answer?.[0]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!transportItem?.answer?.[0]) {</span>
 <span class="cstat-no" title="statement not covered" >      return { adequate: true, details: 'No transportation data' };</span>
     }
 &nbsp;
@@ -2415,7 +2415,7 @@ export class SDOHService extends CacheableService {
         item.text?.toLowerCase().includes('employment')
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!employmentItem?.answer?.[0]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!employmentItem?.answer?.[0]) {</span>
 <span class="cstat-no" title="statement not covered" >      return { status: 'Unknown', details: 'No employment data' };</span>
     }
 &nbsp;
@@ -2436,7 +2436,7 @@ export class SDOHService extends CacheableService {
         item.text?.toLowerCase().includes('see or talk')
     );
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!socialItem?.answer?.[0]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!socialItem?.answer?.[0]) {</span>
 <span class="cstat-no" title="statement not covered" >      return { level: 'Unknown', details: 'No social support data' };</span>
     }
 &nbsp;
@@ -2445,7 +2445,7 @@ export class SDOHService extends CacheableService {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (answer.toLowerCase().includes('less than once')) {</span>
 <span class="cstat-no" title="statement not covered" >      level = 'weak';</span>
-    } else <span class="cstat-no" title="statement not covered" ><span class="missing-if-branch" title="if path not taken" >I</span>if (</span>
+    } else <span class="cstat-no" title="statement not covered" >if (</span>
       answer.toLowerCase().includes('daily') ||
       answer.toLowerCase().includes('every day')
     ) {
@@ -2461,7 +2461,7 @@ export class SDOHService extends CacheableService {
   private <span class="fstat-no" title="function not covered" >parseSDOHRiskFactors(</span>
     bundle: FhirBundle&lt;FhirObservation&gt;
   ): SDOHRiskFactor[] {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!bundle.entry || bundle.entry.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!bundle.entry || bundle.entry.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return [];</span>
     }
 &nbsp;
@@ -2498,7 +2498,7 @@ export class SDOHService extends CacheableService {
    * Parse service referrals from ServiceRequest resources
    */
   private <span class="fstat-no" title="function not covered" >parseServiceReferrals(</span>bundle: FhirBundle&lt;any&gt;): ServiceReferral[] {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!bundle.entry || bundle.entry.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!bundle.entry || bundle.entry.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return [];</span>
     }
 &nbsp;
@@ -2540,7 +2540,7 @@ export class SDOHService extends CacheableService {
 &nbsp;
     for (const item of items) {
       const category = <span class="cstat-no" title="statement not covered" >this.determineSdohCategoryFromLinkId(item.linkId);</span>
-<span class="cstat-no" title="statement not covered" >      <span class="missing-if-branch" title="if path not taken" >I</span>if (category) {</span>
+<span class="cstat-no" title="statement not covered" >      if (category) {</span>
         const severity = <span class="cstat-no" title="statement not covered" >this.determineSeverityFromAnswer(item.answer);</span>
 <span class="cstat-no" title="statement not covered" >        needs.push({</span>
           category,
@@ -2559,22 +2559,22 @@ export class SDOHService extends CacheableService {
    * Determine SDOH category from link ID
    */
   private <span class="fstat-no" title="function not covered" >determineSdohCategoryFromLinkId(</span>linkId: string): SDOHCategory | null {
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (!linkId) <span class="cstat-no" title="statement not covered" >return null;</span></span>
+<span class="cstat-no" title="statement not covered" >    if (!linkId) <span class="cstat-no" title="statement not covered" >return null;</span></span>
 &nbsp;
     const text = <span class="cstat-no" title="statement not covered" >linkId.toLowerCase();</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('food')) <span class="cstat-no" title="statement not covered" >return 'food-insecurity';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('housing') || text.includes('homeless'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('food')) <span class="cstat-no" title="statement not covered" >return 'food-insecurity';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('housing') || text.includes('homeless'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'housing-instability';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('transport')) <span class="cstat-no" title="statement not covered" >return 'transportation';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('employ')) <span class="cstat-no" title="statement not covered" >return 'employment';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('financial') || text.includes('income'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('transport')) <span class="cstat-no" title="statement not covered" >return 'transportation';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('employ')) <span class="cstat-no" title="statement not covered" >return 'employment';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('financial') || text.includes('income'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'financial-strain';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('social') || text.includes('isolation'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('social') || text.includes('isolation'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'social-isolation';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('safety') || text.includes('violence'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('safety') || text.includes('violence'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'interpersonal-safety';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('education')) <span class="cstat-no" title="statement not covered" >return 'education';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('utility')) <span class="cstat-no" title="statement not covered" >return 'utility-assistance';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('education')) <span class="cstat-no" title="statement not covered" >return 'education';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('utility')) <span class="cstat-no" title="statement not covered" >return 'utility-assistance';</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return null;</span>
   }
@@ -2585,17 +2585,17 @@ export class SDOHService extends CacheableService {
   private <span class="fstat-no" title="function not covered" >determineSeverityFromAnswer(</span>answer: any): SDOHSeverity {
     const text = <span class="cstat-no" title="statement not covered" >String(answer).toLowerCase();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (</span>
+<span class="cstat-no" title="statement not covered" >    if (</span>
       text.includes('often') ||
       text.includes('always') ||
       text.includes('homeless')
     ) {
 <span class="cstat-no" title="statement not covered" >      return 'severe';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('sometimes') || text.includes('occasionally')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('sometimes') || text.includes('occasionally')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'moderate';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('rarely') || text.includes('never')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('rarely') || text.includes('never')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'mild';</span>
     }
 &nbsp;
@@ -2608,19 +2608,19 @@ export class SDOHService extends CacheableService {
   private <span class="fstat-no" title="function not covered" >determineSdohCategory(</span>code: string, display: string): SDOHCategory {
     const text = <span class="cstat-no" title="statement not covered" >(code + ' ' + display).toLowerCase();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('food')) <span class="cstat-no" title="statement not covered" >return 'food-insecurity';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('housing') || text.includes('homeless'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('food')) <span class="cstat-no" title="statement not covered" >return 'food-insecurity';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('housing') || text.includes('homeless'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'housing-instability';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('transport')) <span class="cstat-no" title="statement not covered" >return 'transportation';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('employ')) <span class="cstat-no" title="statement not covered" >return 'employment';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('financial') || text.includes('income'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('transport')) <span class="cstat-no" title="statement not covered" >return 'transportation';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('employ')) <span class="cstat-no" title="statement not covered" >return 'employment';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('financial') || text.includes('income'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'financial-strain';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('social') || text.includes('isolation'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('social') || text.includes('isolation'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'social-isolation';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('safety') || text.includes('violence'))</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('safety') || text.includes('violence'))</span>
 <span class="cstat-no" title="statement not covered" >      return 'interpersonal-safety';</span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('education')) <span class="cstat-no" title="statement not covered" >return 'education';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('utility')) <span class="cstat-no" title="statement not covered" >return 'utility-assistance';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('education')) <span class="cstat-no" title="statement not covered" >return 'education';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('utility')) <span class="cstat-no" title="statement not covered" >return 'utility-assistance';</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return 'social';</span>
   }
@@ -2631,17 +2631,17 @@ export class SDOHService extends CacheableService {
   private <span class="fstat-no" title="function not covered" >determineSdohSeverity(</span>value: string, display: string): SDOHSeverity {
     const text = <span class="cstat-no" title="statement not covered" >(value + ' ' + display).toLowerCase();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (</span>
+<span class="cstat-no" title="statement not covered" >    if (</span>
       text.includes('severe') ||
       text.includes('critical') ||
       text.includes('homeless')
     ) {
 <span class="cstat-no" title="statement not covered" >      return 'severe';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('moderate') || text.includes('at risk')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('moderate') || text.includes('at risk')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'moderate';</span>
     }
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('mild') || text.includes('some concern')) {</span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('mild') || text.includes('some concern')) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'mild';</span>
     }
 &nbsp;
@@ -2664,15 +2664,15 @@ export class SDOHService extends CacheableService {
       serviceText
     ).toLowerCase();
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('food')) <span class="cstat-no" title="statement not covered" >return 'food-insecurity';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('housing')) <span class="cstat-no" title="statement not covered" >return 'housing-instability';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('transport')) <span class="cstat-no" title="statement not covered" >return 'transportation';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('employ')) <span class="cstat-no" title="statement not covered" >return 'employment';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('financial')) <span class="cstat-no" title="statement not covered" >return 'financial-strain';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('social')) <span class="cstat-no" title="statement not covered" >return 'social-isolation';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('safety')) <span class="cstat-no" title="statement not covered" >return 'interpersonal-safety';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('education')) <span class="cstat-no" title="statement not covered" >return 'education';</span></span>
-<span class="cstat-no" title="statement not covered" >    <span class="missing-if-branch" title="if path not taken" >I</span>if (text.includes('utility')) <span class="cstat-no" title="statement not covered" >return 'utility-assistance';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('food')) <span class="cstat-no" title="statement not covered" >return 'food-insecurity';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('housing')) <span class="cstat-no" title="statement not covered" >return 'housing-instability';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('transport')) <span class="cstat-no" title="statement not covered" >return 'transportation';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('employ')) <span class="cstat-no" title="statement not covered" >return 'employment';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('financial')) <span class="cstat-no" title="statement not covered" >return 'financial-strain';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('social')) <span class="cstat-no" title="statement not covered" >return 'social-isolation';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('safety')) <span class="cstat-no" title="statement not covered" >return 'interpersonal-safety';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('education')) <span class="cstat-no" title="statement not covered" >return 'education';</span></span>
+<span class="cstat-no" title="statement not covered" >    if (text.includes('utility')) <span class="cstat-no" title="statement not covered" >return 'utility-assistance';</span></span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return 'social';</span>
   }
@@ -2794,7 +2794,7 @@ export class SDOHService extends CacheableService {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-22T11:30:43.845Z
+                at 2026-01-26T13:33:48.673Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

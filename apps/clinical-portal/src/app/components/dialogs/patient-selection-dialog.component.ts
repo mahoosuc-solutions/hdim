@@ -8,10 +8,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { PatientService } from '../../services/patient.service';
 import { Patient, PatientSummary } from '../../models/patient.model';
-import { LoggerService } from './logger.service';
 
 /**
  * Patient Selection Dialog Component

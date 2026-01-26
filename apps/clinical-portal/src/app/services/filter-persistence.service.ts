@@ -14,6 +14,8 @@ export class FilterPersistenceService {
   private readonly logger = this.loggerService.withContext('FilterPersistenceService');
   private readonly STORAGE_PREFIX = 'clinical-portal-filters';
 
+  constructor(private readonly loggerService: LoggerService) {}
+
   /**
    * Save filters for a specific page
    */

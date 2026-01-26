@@ -13,6 +13,8 @@ import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
 import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
 import { MeasureFavoritesService } from '../../services/measure-favorites.service';
+import { LoggerService } from '../services/logger.service';
+import { createMockLoggerService } from '../testing/mocks';
 
 /**
  * TDD Test Suite for Dashboard Component
@@ -88,7 +90,8 @@ describe('DashboardComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [DashboardComponent, NoopAnimationsModule, HttpClientTestingModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
         { provide: MeasureService, useValue: mockMeasureService },

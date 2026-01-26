@@ -12,6 +12,8 @@ import { EvaluationsComponent } from './evaluations.component';
 import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from '../../../testing/accessibility.helper';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { LoggerService } from '../services/logger.service';
+import { createMockLoggerService } from '../testing/mocks';
 
 describe('EvaluationsComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   let component: EvaluationsComponent;
@@ -20,7 +22,10 @@ describe('EvaluationsComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [EvaluationsComponent, NoopAnimationsModule, HttpClientTestingModule],
-    }).compileComponents();
+    
+      providers: [
+        { provide: LoggerService, useValue: createMockLoggerService() },
+      ],}).compileComponents();
 
     fixture = TestBed.createComponent(EvaluationsComponent);
     component = fixture.componentInstance;

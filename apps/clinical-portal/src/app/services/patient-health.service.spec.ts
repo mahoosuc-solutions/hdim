@@ -20,7 +20,11 @@ describe('PatientHealthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [PatientHealthService],
+      providers: [
+        PatientHealthService,
+        MedicationAdherenceService,
+        ProcedureHistoryService,
+      ],
     });
     service = TestBed.inject(PatientHealthService);
     httpMock = TestBed.inject(HttpTestingController);

@@ -30,10 +30,12 @@ describe('AuthInterceptor', () => {
     authServiceMock.getTenantId.mockReturnValue('tenant-123');
 
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([authInterceptor,
-        { provide: HttpClient, useValue: createMockHttpClient() }])),
+      providers: [
+        provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        HttpTestingController,
       ],
     });
 
@@ -55,8 +57,8 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
-      req.flush({}, 30000);
-    });
+      req.flush({});
+    }, 30000);
 
     it('should add X-Tenant-ID header to Quality Measure Service requests', (done) => {
       const url = `${API_CONFIG.QUALITY_MEASURE_URL}/quality-measure/calculate`;
@@ -67,8 +69,8 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
-      req.flush({}, 30000);
-    });
+      req.flush({});
+    }, 30000);
 
     it('should add X-Tenant-ID header to FHIR Server requests', (done) => {
       const url = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
@@ -78,7 +80,7 @@ describe('AuthInterceptor', () => {
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
-      req.flush({}, 30000);
+      req.flush({});
     });
 
     it('should NOT add X-Tenant-ID header to external URLs', (done) => {
@@ -88,7 +90,7 @@ describe('AuthInterceptor', () => {
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
-      req.flush({}, 30000);
+      req.flush({});
     });
   });
 
@@ -103,7 +105,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
-      req.flush({}, 30000);
+      req.flush({});
     });
 
     it('should add tenant header to PUT requests', (done) => {
@@ -116,7 +118,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.method).toBe('PUT');
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
-      req.flush({}, 30000);
+      req.flush({});
     });
 
     it('should add tenant header to DELETE requests', (done) => {
@@ -168,7 +170,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       expect(req.request.headers.get('X-Custom-Header')).toBe('CustomValue');
-      req.flush({}, 30000);
+      req.flush({});
     }, 30000);
 
     it('should handle concurrent requests independently', (done) => {
@@ -192,7 +194,7 @@ describe('AuthInterceptor', () => {
       expect(fhirReq.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(fhirReq.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
-      cqlReq.flush({}, 30000);
+      cqlReq.flush({});
       fhirReq.flush({});
     });
   });
@@ -206,7 +208,7 @@ describe('AuthInterceptor', () => {
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
-      req.flush({}, 30000);
+      req.flush({});
     });
   });
 
@@ -221,7 +223,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(false);
       // But tenant header should be set
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
-      req.flush({}, 30000);
+      req.flush({});
     });
   });
 });

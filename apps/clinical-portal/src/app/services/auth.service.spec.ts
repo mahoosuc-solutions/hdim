@@ -89,15 +89,17 @@ describe('AuthService', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [AuthService,
+      providers: [
+        AuthService,
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: Router, useValue: routerMock },
         { provide: ApiService, useValue: apiServiceMock },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Router, useValue: createMockRouter() },
-        { provide: Store, useValue: createMockStore() }],
+        { provide: Store, useValue: createMockStore() },
+        HttpTestingController,
+      ],
     });
 
     service = TestBed.inject(AuthService);

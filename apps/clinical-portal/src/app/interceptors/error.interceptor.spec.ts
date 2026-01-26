@@ -32,14 +32,14 @@ describe('ErrorInterceptor', () => {
     };
 
     TestBed.configureTestingModule({
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
-        provideHttpClient(withInterceptors([errorInterceptor,
-        { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Router, useValue: createMockRouter() }])),
-        provideHttpClientTesting(),
+      providers: [
+        { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock },
+        { provide: HttpClient, useValue: createMockHttpClient() },
+        provideHttpClient(withInterceptors([errorInterceptor])),
+        provideHttpClientTesting(),
+        HttpTestingController,
       ],
     });
 

@@ -109,6 +109,7 @@ describe('HealthScoringService', () => {
         { provide: MentalHealthService, useValue: mentalHealthMock },
         { provide: SDOHService, useValue: sdohMock },
         { provide: LoggerService, useValue: loggerMock },
+        HttpTestingController,
       ],
     });
 

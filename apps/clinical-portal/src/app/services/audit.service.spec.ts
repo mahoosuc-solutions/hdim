@@ -47,12 +47,14 @@ describe('AuditService', () => {
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
+      providers: [
         AuditService,
+        { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
         { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Store, useValue: createMockStore() }],
+        { provide: Store, useValue: createMockStore() },
+        HttpTestingController,
+      ],
     });
 
     service = TestBed.inject(AuditService);

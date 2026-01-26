@@ -21,7 +21,8 @@ const defaultAxeConfig = {
   rules: {
     // Enable all WCAG 2.1 Level A and AA rules
     'color-contrast': { enabled: true },
-    'valid-aria-attr': { enabled: true },
+    'aria-required-attr': { enabled: true },
+    'aria-valid-attr': { enabled: true },
     'aria-roles': { enabled: true },
     'button-name': { enabled: true },
     'image-alt': { enabled: true },

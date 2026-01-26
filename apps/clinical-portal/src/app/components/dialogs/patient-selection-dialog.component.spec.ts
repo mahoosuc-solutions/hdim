@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { Patient } from '../../models/patient.model';
 import { createMockHttpClient } from '../../testing/mocks';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * TDD Test Suite for PatientSelectionDialog Component

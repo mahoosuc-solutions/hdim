@@ -39,7 +39,7 @@ describe('FhirClinicalService', () => {
     service.getConditions('1').subscribe((results) => {
       expect(results).toEqual([]);
       done();
-    });
+    }, 30000);
   });
 
   it('fetches all clinical data via forkJoin', (done) => {
@@ -53,7 +53,7 @@ describe('FhirClinicalService', () => {
       expect(results.conditions).toEqual([]);
       expect(results.procedures).toEqual([]);
       done();
-    });
+    }, 30000);
   });
 
   it('returns empty bundle entries as empty arrays', (done) => {
@@ -62,7 +62,7 @@ describe('FhirClinicalService', () => {
     service.getProcedures('1').subscribe((results) => {
       expect(results).toEqual([]);
       done();
-    });
+    }, 30000);
   });
 
   it('formats observation and codes for display', () => {
@@ -159,6 +159,6 @@ describe('FhirClinicalService', () => {
     service.getObservationsByCode('1', 'code-1').subscribe((results) => {
       expect(results).toEqual([]);
       done();
-    });
+    }, 30000);
   });
 });

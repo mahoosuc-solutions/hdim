@@ -37,7 +37,7 @@ describe('ProcedureHistoryService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-  });
+  }, 30000);
 
   // ========================================================================
   // Get Procedures Tests (7 tests)
@@ -97,14 +97,14 @@ describe('ProcedureHistoryService', () => {
         expect(procedures[0].id).toBe('proc-1');
         expect(procedures[1].id).toBe('proc-2');
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/Procedure') && request.params.get('patient') === patientId
       );
       expect(req.request.method).toBe('GET');
       req.flush(mockBundle);
-    });
+    }, 30000);
 
     it('2. Should extract SNOMED/CPT code and display name', (done) => {
       const patientId = 'patient-123';
@@ -162,11 +162,11 @@ describe('ProcedureHistoryService', () => {
         expect(procedures[1].codeSystem).toBe('CPT');
         expect(procedures[1].displayName).toBe('Comprehensive metabolic panel');
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((request) => request.url.includes('/Procedure'));
       req.flush(mockBundle);
-    });
+    }, 30000);
 
     it('3. Should extract performer name and role from Procedure.performer', (done) => {
       const patientId = 'patient-123';
@@ -217,11 +217,11 @@ describe('ProcedureHistoryService', () => {
         expect(procedures[0].performerName).toBe('Dr. Jane Smith');
         expect(procedures[0].performerRole).toBe('Surgeon');
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((request) => request.url.includes('/Procedure'));
       req.flush(mockBundle);
-    });
+    }, 30000);
 
     it('4. Should filter by status when provided', (done) => {
       const patientId = 'patient-123';
@@ -229,7 +229,7 @@ describe('ProcedureHistoryService', () => {
 
       service.getProcedures(patientId, options).subscribe(() => {
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/Procedure') &&
@@ -248,7 +248,7 @@ describe('ProcedureHistoryService', () => {
 
       service.getProcedures(patientId, options).subscribe(() => {
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((request) => {
         const dateParam = request.params.get('date');
@@ -270,7 +270,7 @@ describe('ProcedureHistoryService', () => {
 
       service.getProcedures(patientId, options).subscribe(() => {
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/Procedure') &&

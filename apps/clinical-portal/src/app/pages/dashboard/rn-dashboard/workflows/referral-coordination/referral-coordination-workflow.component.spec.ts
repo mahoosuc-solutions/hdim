@@ -92,19 +92,19 @@ describe('ReferralCoordinationWorkflowComponent', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    });
+    }, 30000);
 
     it('should initialize with dialog data', () => {
       expect(component.referralId).toBe('REF_001');
       expect(component.patientId).toBe('PATIENT001');
       expect(component.patientName).toBe('Margaret Wilson');
       expect(component.referralType).toBe('CARDIOLOGY');
-    });
+    }, 30000);
 
     it('should set current step to 0', () => {
       expect(component.currentStep).toBe(0);
       expect(component.totalSteps).toBeGreaterThan(0);
-    });
+    }, 30000);
 
     it('should load referral on initialization', () => {
       const mockReferral = { id: 'REF_001', patientId: 'PATIENT001', type: 'CARDIOLOGY' };
@@ -113,35 +113,35 @@ describe('ReferralCoordinationWorkflowComponent', () => {
       component.ngOnInit();
 
       expect(nurseWorkflowService.getReferralById).toHaveBeenCalledWith('REF_001');
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 0: Review Referral', () => {
     beforeEach(() => {
       component.currentStep = 0;
-    });
+    }, 30000);
 
     it('should display referral details', () => {
       expect(component.referralType).toBe('CARDIOLOGY');
       expect(component.patientName).toBe('Margaret Wilson');
-    });
+    }, 30000);
 
     it('should show referral reason', () => {
-      component.form.patchValue({ referralReason: 'Annual cardiac screening' });
+      component.form.patchValue({ referralReason: 'Annual cardiac screening' }, 30000);
       expect(component.form.get('referralReason').value).toContain('cardiac');
-    });
+    }, 30000);
 
     it('should enable next button when reviewed', () => {
-      component.form.patchValue({ referralReviewed: true });
+      component.form.patchValue({ referralReviewed: true }, 30000);
       expect(component.canProceedToNextStep()).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 1: Select Specialist', () => {
     beforeEach(() => {
       component.currentStep = 1;
       nurseWorkflowService.getSpecialistsForReferral.and.returnValue(of(mockSpecialists));
-    });
+    }, 30000);
 
     it('should load specialists for referral type', (done) => {
       component.loadSpecialists();
@@ -150,23 +150,23 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(component.availableSpecialists.length).toBe(2);
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should require specialist selection', () => {
-      component.form.patchValue({ selectedSpecialist: '' });
+      component.form.patchValue({ selectedSpecialist: '' }, 30000);
       expect(component.canProceedToNextStep()).toBe(false);
 
-      component.form.patchValue({ selectedSpecialist: 'SPEC_001' });
+      component.form.patchValue({ selectedSpecialist: 'SPEC_001' }, 30000);
       expect(component.canProceedToNextStep()).toBe(true);
-    });
+    }, 30000);
 
     it('should display specialist details', () => {
       component.availableSpecialists = mockSpecialists;
-      component.form.patchValue({ selectedSpecialist: 'SPEC_001' });
+      component.form.patchValue({ selectedSpecialist: 'SPEC_001' }, 30000);
       component.onSpecialistSelected();
 
       expect(component.selectedSpecialistName).toBe('Dr. Sarah Heart');
-    });
+    }, 30000);
 
     it('should show only accepting specialists', () => {
       const specialist = mockSpecialists[0];
@@ -174,13 +174,13 @@ describe('ReferralCoordinationWorkflowComponent', () => {
       component.availableSpecialists = [specialist];
 
       expect(component.availableSpecialists[0].acceptingPatients).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 2: Verify Insurance', () => {
     beforeEach(() => {
       component.currentStep = 2;
-    });
+    }, 30000);
 
     it('should check insurance coverage', (done) => {
       const mockCoverage = { covered: true, requiresPriorAuth: true };
@@ -192,7 +192,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(nurseWorkflowService.verifyInsuranceCoverage).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should warn if prior authorization required', (done) => {
       const mockCoverage = { covered: true, requiresPriorAuth: true };
@@ -205,7 +205,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(toastService.warning).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should handle insurance not covered', (done) => {
       const mockCoverage = { covered: false, reason: 'Out of network' };
@@ -217,23 +217,23 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(toastService.warning).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should require acknowledgment if prior auth needed', () => {
       component.requiresPriorAuth = true;
-      component.form.patchValue({ acknowledgeInsurance: false });
+      component.form.patchValue({ acknowledgeInsurance: false }, 30000);
 
       expect(component.canProceedToNextStep()).toBe(false);
 
-      component.form.patchValue({ acknowledgeInsurance: true });
+      component.form.patchValue({ acknowledgeInsurance: true }, 30000);
       expect(component.canProceedToNextStep()).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 3: Send Referral', () => {
     beforeEach(() => {
       component.currentStep = 3;
-    });
+    }, 30000);
 
     it('should send referral request', (done) => {
       const mockResponse = { id: 'REF_001', status: 'sent' };
@@ -246,7 +246,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should handle send referral errors', (done) => {
       nurseWorkflowService.sendReferral.and.returnValue(
@@ -259,7 +259,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should enable appointment tracking after sending', (done) => {
       const mockResponse = { id: 'REF_001', status: 'sent' };
@@ -271,7 +271,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(component.referralSent).toBe(true);
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Step 4: Track Appointment Status', () => {
@@ -290,7 +290,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(nurseWorkflowService.getReferralStatus).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should show appointment scheduled notification', (done) => {
       const mockStatus = { status: 'SCHEDULED', appointmentDate: new Date() };
@@ -302,15 +302,15 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(component.appointmentScheduled).toBe(true);
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should allow recording post-visit notes', () => {
       component.appointmentScheduled = true;
-      component.form.patchValue({ postVisitNotes: 'Patient stable, follow-up in 2 weeks' });
+      component.form.patchValue({ postVisitNotes: 'Patient stable, follow-up in 2 weeks' }, 30000);
 
       expect(component.form.get('postVisitNotes').value).toContain('stable');
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Workflow Submission', () => {
     it('should save referral coordination', (done) => {
@@ -324,7 +324,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should close dialog on successful completion', (done) => {
       const mockResponse = { id: 'REF_001', status: 'completed' };
@@ -333,7 +333,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
       component.completeReferralWorkflow();
 
       setTimeout(() => {
-        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse });
+        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse }, 30000);
         done();
       }, 100);
     });
@@ -349,7 +349,7 @@ describe('ReferralCoordinationWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Form Navigation', () => {

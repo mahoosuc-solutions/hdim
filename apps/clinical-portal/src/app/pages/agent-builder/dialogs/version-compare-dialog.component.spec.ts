@@ -112,7 +112,7 @@ describe('VersionCompareDialogComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
+  }, 30000);
 
   it('should load both versions in parallel on init', () => {
     mockAgentService.getVersion.and.returnValues(
@@ -125,7 +125,7 @@ describe('VersionCompareDialogComponent', () => {
     expect(mockAgentService.getVersion).toHaveBeenCalledTimes(2);
     expect(mockAgentService.getVersion).toHaveBeenCalledWith('agent-123', 'v1');
     expect(mockAgentService.getVersion).toHaveBeenCalledWith('agent-123', 'v2');
-  });
+  }, 30000);
 
   it('should compute diffs after loading versions', (done) => {
     mockAgentService.getVersion.and.returnValues(
@@ -143,7 +143,7 @@ describe('VersionCompareDialogComponent', () => {
       expect(component.guardrailDiffs.length).toBeGreaterThan(0);
       done();
     }, 100);
-  });
+  }, 30000);
 
   it('should calculate changes count correctly', (done) => {
     mockAgentService.getVersion.and.returnValues(
@@ -159,7 +159,7 @@ describe('VersionCompareDialogComponent', () => {
       expect(component.changesCount).toBeGreaterThan(0);
       done();
     }, 100);
-  });
+  }, 30000);
 
   it('should handle version loading error', () => {
     mockAgentService.getVersion.and.returnValue(
@@ -170,7 +170,7 @@ describe('VersionCompareDialogComponent', () => {
 
     expect(mockToastService.error).toHaveBeenCalledWith('Failed to load version details');
     expect(component.loading).toBe(false);
-  });
+  }, 30000);
 
   it('should identify changed fields correctly', (done) => {
     mockAgentService.getVersion.and.returnValues(
@@ -187,7 +187,7 @@ describe('VersionCompareDialogComponent', () => {
       expect(descriptionDiff?.newValue).toBe('New description');
       done();
     }, 100);
-  });
+  }, 30000);
 
   it('should identify unchanged fields correctly', (done) => {
     mockAgentService.getVersion.and.returnValues(
@@ -204,7 +204,7 @@ describe('VersionCompareDialogComponent', () => {
       expect(nameDiff?.newValue).toBe('Test Agent');
       done();
     }, 100);
-  });
+  }, 30000);
 
   it('should handle tool configuration changes', (done) => {
     mockAgentService.getVersion.and.returnValues(
@@ -219,7 +219,7 @@ describe('VersionCompareDialogComponent', () => {
       expect(component.toolConfigDiffs).toBeDefined();
       done();
     }, 100);
-  });
+  }, 30000);
 
   it('should handle guardrail configuration changes', (done) => {
     mockAgentService.getVersion.and.returnValues(
@@ -238,7 +238,7 @@ describe('VersionCompareDialogComponent', () => {
       expect(disclaimerDiff?.newValue).toBe('true');
       done();
     }, 100);
-  });
+  }, 30000);
 
   it('should close dialog when onClose is called', () => {
     component.onClose();

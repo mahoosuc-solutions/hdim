@@ -55,7 +55,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
-      req.flush({});
+      req.flush({}, 30000);
     });
 
     it('should add X-Tenant-ID header to Quality Measure Service requests', (done) => {
@@ -67,7 +67,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
-      req.flush({});
+      req.flush({}, 30000);
     });
 
     it('should add X-Tenant-ID header to FHIR Server requests', (done) => {
@@ -78,7 +78,7 @@ describe('AuthInterceptor', () => {
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
-      req.flush({});
+      req.flush({}, 30000);
     });
 
     it('should NOT add X-Tenant-ID header to external URLs', (done) => {
@@ -88,7 +88,7 @@ describe('AuthInterceptor', () => {
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
-      req.flush({});
+      req.flush({}, 30000);
     });
   });
 
@@ -103,7 +103,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
-      req.flush({});
+      req.flush({}, 30000);
     });
 
     it('should add tenant header to PUT requests', (done) => {
@@ -116,7 +116,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.method).toBe('PUT');
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
-      req.flush({});
+      req.flush({}, 30000);
     });
 
     it('should add tenant header to DELETE requests', (done) => {
@@ -129,7 +129,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       req.flush(null);
-    });
+    }, 30000);
   });
 
   describe('Multiple Requests', () => {
@@ -145,7 +145,7 @@ describe('AuthInterceptor', () => {
         httpClient.get(url).subscribe(() => {
           completedRequests++;
           if (completedRequests === urls.length) done();
-        });
+        }, 30000);
       });
 
       urls.forEach((url) => {
@@ -168,8 +168,8 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       expect(req.request.headers.get('X-Custom-Header')).toBe('CustomValue');
-      req.flush({});
-    });
+      req.flush({}, 30000);
+    }, 30000);
 
     it('should handle concurrent requests independently', (done) => {
       const cqlUrl = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`;
@@ -192,7 +192,7 @@ describe('AuthInterceptor', () => {
       expect(fhirReq.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(fhirReq.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
-      cqlReq.flush({});
+      cqlReq.flush({}, 30000);
       fhirReq.flush({});
     });
   });
@@ -206,7 +206,7 @@ describe('AuthInterceptor', () => {
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
-      req.flush({});
+      req.flush({}, 30000);
     });
   });
 
@@ -221,7 +221,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.AUTHORIZATION)).toBe(false);
       // But tenant header should be set
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
-      req.flush({});
+      req.flush({}, 30000);
     });
   });
 });

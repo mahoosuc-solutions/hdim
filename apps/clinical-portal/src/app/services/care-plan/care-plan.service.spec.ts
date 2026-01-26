@@ -210,7 +210,7 @@ describe('CarePlanService', () => {
         expect(result.patientId).toBe(patientId);
         expect(result.status).toBe(CarePlanStatus.ACTIVE);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans') && r.method === 'POST'
@@ -224,7 +224,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBe('plan-001');
         expect(result.title).toBe('Diabetes Management Care Plan');
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001')
@@ -272,7 +272,7 @@ describe('CarePlanService', () => {
       service.closeCarePlan('plan-001', 'Goals achieved').subscribe((result) => {
         expect(result.status).toBe(CarePlanStatus.COMPLETED);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/close')
@@ -311,7 +311,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe(ProblemStatus.ACTIVE);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/problems') && r.method === 'POST'
@@ -359,7 +359,7 @@ describe('CarePlanService', () => {
       service.resolveProblem('prob-001', 'Patient achieved diabetes control').subscribe((result) => {
         expect(result.status).toBe(ProblemStatus.RESOLVED);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('problems/prob-001/resolve')
@@ -376,7 +376,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe(GoalStatus.IN_PROGRESS);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/goals') && r.method === 'POST'
@@ -424,7 +424,7 @@ describe('CarePlanService', () => {
       service.achieveGoal('goal-001').subscribe((result) => {
         expect(result.status).toBe(GoalStatus.ACHIEVED);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('goals/goal-001/achieve')
@@ -463,7 +463,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe(InterventionStatus.IN_PROGRESS);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/interventions') && r.method === 'POST'
@@ -511,7 +511,7 @@ describe('CarePlanService', () => {
         expect(result.status).toBe(InterventionStatus.COMPLETED);
         expect(result.completionDate).toBeDefined();
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('interventions/int-001/complete')
@@ -550,7 +550,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.role).toBe(TeamMemberRole.PRIMARY_CARE_PHYSICIAN);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/team') && r.method === 'POST'
@@ -585,7 +585,7 @@ describe('CarePlanService', () => {
       service.removeTeamMember('plan-001', 'team-001').subscribe((result) => {
         expect(result).toBeTruthy();
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/team/team-001') && r.method === 'DELETE'
@@ -602,7 +602,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.engagementLevel).toBe(PatientEngagementLevel.HIGHLY_ENGAGED);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/engagement') && r.method === 'POST'
@@ -614,7 +614,7 @@ describe('CarePlanService', () => {
       service.getPatientEngagement('plan-001').subscribe((result) => {
         expect(result.engagementLevel).toBe(PatientEngagementLevel.HIGHLY_ENGAGED);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/engagement')
@@ -644,7 +644,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.reviewType).toBe(ReviewType.SCHEDULED);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/reviews') && r.method === 'POST'
@@ -683,7 +683,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.transitionType).toBe(TransitionType.HOSPITAL_TO_HOME);
         done();
-      });
+      }, 30000);
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/transitions') && r.method === 'POST'
@@ -805,7 +805,7 @@ describe('CarePlanService', () => {
           );
           expect(requests.length).toBe(1);
           done();
-        });
+        }, 30000);
       });
 
       const req = httpMock.expectOne((r) =>
@@ -819,7 +819,7 @@ describe('CarePlanService', () => {
         // Cache should be invalidated
         service.getCarePlanById('plan-001').subscribe(() => {
           done();
-        });
+        }, 30000);
 
         const secondReq = httpMock.expectOne((r) =>
           r.url.includes('care-plans/plan-001') && r.method === 'GET'

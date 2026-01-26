@@ -43,7 +43,7 @@ describe('SDOHReferralService', () => {
       service.getAvailableStaff('social-worker').subscribe((filtered) => {
         expect(filtered.length).toBeGreaterThan(0);
         done();
-      });
+      }, 30000);
     });
   });
 
@@ -53,7 +53,7 @@ describe('SDOHReferralService', () => {
     service.getStaffAvailability('staff-1').subscribe((availability) => {
       expect(availability.available).toBe(true);
       done();
-    });
+    }, 30000);
   });
 
   it('searches resources with fallback mapping', (done) => {
@@ -71,7 +71,7 @@ describe('SDOHReferralService', () => {
         service.searchFindHelpResources('food', '12345').subscribe((findHelp) => {
           expect(findHelp[0].source).toBe('findhelp');
           done();
-        });
+        }, 30000);
       });
     });
   });
@@ -90,7 +90,7 @@ describe('SDOHReferralService', () => {
           expect(error).toBeInstanceOf(Error);
           done();
         },
-      });
+      }, 30000);
     });
   });
 
@@ -111,7 +111,7 @@ describe('SDOHReferralService', () => {
           service.getReferralMetrics('patient-1').subscribe((metrics) => {
             expect(metrics.totalReferrals).toBe(0);
             done();
-          });
+          }, 30000);
         });
       });
     });

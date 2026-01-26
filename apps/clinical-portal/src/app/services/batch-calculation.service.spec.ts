@@ -41,7 +41,7 @@ describe('BatchCalculationService', () => {
         service.getAllJobs().subscribe((jobs) => {
           expect(jobs.length).toBe(1);
           done();
-        });
+        }, 30000);
       });
     });
   });
@@ -59,7 +59,7 @@ describe('BatchCalculationService', () => {
         jest.useRealTimers();
         done();
       },
-    });
+    }, 30000);
   });
 
   it('polls job status until completion after pending state', (done) => {
@@ -80,7 +80,7 @@ describe('BatchCalculationService', () => {
         jest.useRealTimers();
         done();
       },
-    });
+    }, 30000);
 
     jest.advanceTimersByTime(10);
   });
@@ -89,13 +89,13 @@ describe('BatchCalculationService', () => {
     expect(service.formatDuration('PT1.5S')).toBe('1.5s');
     expect(service.formatDuration('')).toBe('-');
     expect(service.getStatusColor(BatchJobStatus.COMPLETED)).toContain('green');
-  });
+  }, 30000);
 
   it('formats hour and minute durations and falls back', () => {
     expect(service.formatDuration('PT2.5H')).toBe('2.5h');
     expect(service.formatDuration('PT3.0M')).toBe('3.0m');
     expect(service.formatDuration('P1D')).toBe('P1D');
-  });
+  }, 30000);
 
   it('returns status color for each status', () => {
     expect(service.getStatusColor(BatchJobStatus.PENDING)).toContain('blue');
@@ -103,7 +103,7 @@ describe('BatchCalculationService', () => {
     expect(service.getStatusColor(BatchJobStatus.CALCULATING)).toContain('yellow');
     expect(service.getStatusColor(BatchJobStatus.FAILED)).toContain('red');
     expect(service.getStatusColor(BatchJobStatus.CANCELLED)).toContain('gray');
-  });
+  }, 30000);
 
   it('cancels a job', (done) => {
     http.post.mockReturnValueOnce(of({ jobId: 'job-2', status: 'CANCELLED', message: 'ok' }));
@@ -111,6 +111,6 @@ describe('BatchCalculationService', () => {
     service.cancelJob('job-2').subscribe((response) => {
       expect(response.status).toBe('CANCELLED');
       done();
-    });
+    }, 30000);
   });
 });

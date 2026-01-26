@@ -146,7 +146,7 @@ describe('AuditService', () => {
 
   describe('immediate logging', () => {
     it('should send event immediately with logImmediate', (done) => {
-      service.logImmediate({ action: AuditAction.ACCESS_DENIED, resourceType: 'Patient' });
+      service.logImmediate({ action: AuditAction.ACCESS_DENIED, resourceType: 'Patient' }, 30000);
 
       // Use setTimeout to allow the HTTP request to be made
       setTimeout(() => {

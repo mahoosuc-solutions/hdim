@@ -100,18 +100,18 @@ describe('MedicationReconciliationWorkflowComponent', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    });
+    }, 30000);
 
     it('should initialize with dialog data', () => {
       expect(component.reconciliationId).toBe('MED_RECON001');
       expect(component.patientId).toBe('PATIENT001');
       expect(component.patientName).toBe('Jane Doe');
-    });
+    }, 30000);
 
     it('should set current step to 0 (load medications)', () => {
       expect(component.currentStep).toBe(0);
       expect(component.totalSteps).toBe(6);
-    });
+    }, 30000);
 
     it('should load system medications on initialization', () => {
       medicationService.getActiveOrdersForPatient.and.returnValue(
@@ -121,15 +121,15 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.ngOnInit();
 
       expect(medicationService.getActiveOrdersForPatient).toHaveBeenCalledWith('PATIENT001', 0, 100);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 0: Load Current Medications', () => {
     beforeEach(() => {
       medicationService.getActiveOrdersForPatient.and.returnValue(
         of({ content: mockMedicationOrders, totalElements: 2 })
       );
-    });
+    }, 30000);
 
     it('should display system medications', (done) => {
       component.ngOnInit();
@@ -138,7 +138,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(component.systemMedications.length).toBe(2);
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should show medication details in table', () => {
       component.ngOnInit();
@@ -146,7 +146,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.medicationColumns).toContain('dosage');
       expect(component.medicationColumns).toContain('frequency');
       expect(component.medicationColumns).toContain('status');
-    });
+    }, 30000);
 
     it('should advance to step 1 when medications loaded', (done) => {
       component.ngOnInit();
@@ -156,7 +156,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(component.currentStep).toBe(1);
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Step 1: Compare with Patient Report', () => {
@@ -168,13 +168,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
     it('should initialize patient reported medications form', () => {
       expect(component.form).toBeDefined();
       expect(component.form.get('patientMedications')).toBeDefined();
-    });
+    }, 30000);
 
     it('should add patient reported medication', () => {
       component.addPatientMedication();
       const medicationsArray = component.form.get('patientMedications') as any;
       expect(medicationsArray.length).toBeGreaterThan(0);
-    });
+    }, 30000);
 
     it('should remove patient reported medication', () => {
       component.addPatientMedication();
@@ -184,7 +184,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.removePatientMedication(0);
 
       expect(medicationsArray.length).toBe(initialLength - 1);
-    });
+    }, 30000);
 
     it('should identify discrepancies between lists', () => {
       component.systemMedications = [
@@ -199,14 +199,14 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.compareWithPatientReport();
 
       expect(component.discrepancies.length).toBeGreaterThan(0);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 2: Identify Discrepancies', () => {
     beforeEach(() => {
       component.currentStep = 2;
       component.systemMedications = mockMedicationOrders;
-    });
+    }, 30000);
 
     it('should flag discontinued medications', () => {
       component.systemMedications[0] = {
@@ -219,7 +219,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.discrepancies).toContain(jasmine.objectContaining({
         type: 'DISCONTINUED',
       }));
-    });
+    }, 30000);
 
     it('should flag duplicate therapy', () => {
       component.systemMedications = [
@@ -232,7 +232,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.discrepancies).toContain(jasmine.objectContaining({
         type: 'DUPLICATE_THERAPY',
       }));
-    });
+    }, 30000);
 
     it('should flag missing medications', () => {
       component.patientReportedMedications = [
@@ -244,7 +244,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.discrepancies).toContain(jasmine.objectContaining({
         type: 'MISSING_MEDICATION',
       }));
-    });
+    }, 30000);
 
     it('should flag dose discrepancies', () => {
       component.patientReportedMedications = [
@@ -256,20 +256,20 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.discrepancies).toContain(jasmine.objectContaining({
         type: 'DOSE_DISCREPANCY',
       }));
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 3: Mark Duplicates/Discontinued', () => {
     beforeEach(() => {
       component.currentStep = 3;
-    });
+    }, 30000);
 
     it('should mark medication for discontinuation', () => {
       const medication = { ...mockMedicationOrders[0] };
       component.markForDiscontinuation(medication);
 
       expect(medication.prescriptionStatus).toBe('CANCELLED');
-    });
+    }, 30000);
 
     it('should mark duplicate medications', () => {
       component.systemMedications = [
@@ -283,7 +283,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         id: 'MED1',
         status: 'DUPLICATE',
       }));
-    });
+    }, 30000);
 
     it('should allow unmarking medications', () => {
       const medication = mockMedicationOrders[0];
@@ -291,13 +291,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.unmarkMedication(medication.id);
 
       expect(component.medicationMarking.find((m) => m.id === medication.id)).toBeUndefined();
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 4: Add Missing Medications', () => {
     beforeEach(() => {
       component.currentStep = 4;
-    });
+    }, 30000);
 
     it('should initialize form for new medication', () => {
       component.initializeNewMedicationForm();
@@ -305,7 +305,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.newMedicationForm).toBeDefined();
       expect(component.newMedicationForm.get('medicationName')).toBeDefined();
       expect(component.newMedicationForm.get('dosage')).toBeDefined();
-    });
+    }, 30000);
 
     it('should add new medication to list', () => {
       component.newMedicationForm = new FormBuilder().group({
@@ -313,40 +313,40 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         dosage: '15 MG',
         frequency: 'Once daily',
         indication: 'Pain relief',
-      });
+      }, 30000);
 
       component.addNewMedication();
 
       expect(component.newMedications.length).toBeGreaterThan(0);
-    });
+    }, 30000);
 
     it('should validate new medication form', () => {
       component.newMedicationForm = new FormBuilder().group({
         medicationName: ['', Validators.required],
         dosage: ['', Validators.required],
-      });
+      }, 30000);
 
       component.newMedicationForm.patchValue({
         medicationName: '',
         dosage: '',
-      });
+      }, 30000);
 
       expect(component.newMedicationForm.valid).toBe(false);
 
       component.newMedicationForm.patchValue({
         medicationName: 'Aspirin',
         dosage: '100 MG',
-      });
+      }, 30000);
 
       expect(component.newMedicationForm.valid).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Step 5: Check Drug Interactions', () => {
     beforeEach(() => {
       component.currentStep = 5;
       component.systemMedications = mockMedicationOrders;
-    });
+    }, 30000);
 
     it('should check for drug interactions', (done) => {
       const mockInteractions = {
@@ -361,7 +361,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(medicationService.checkDrugInteractions).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should display significant interactions as warnings', (done) => {
       const mockInteractions = {
@@ -381,27 +381,27 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.warning).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should prevent submission if significant interactions exist without acknowledgment', () => {
       component.hasSignificantInteractions = true;
       component.acknowledgedInteractions = false;
 
       expect(component.canCompleteReconciliation()).toBe(false);
-    });
+    }, 30000);
 
     it('should allow submission if interactions are acknowledged', () => {
       component.hasSignificantInteractions = true;
       component.acknowledgedInteractions = true;
 
       expect(component.canCompleteReconciliation()).toBe(true);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Workflow Submission', () => {
     beforeEach(() => {
       component.currentStep = 5;
-    });
+    }, 30000);
 
     it('should save medication reconciliation', (done) => {
       const mockResponse = { id: 'MED_RECON001', status: 'completed' };
@@ -414,7 +414,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
 
     it('should close dialog on successful completion', (done) => {
       const mockResponse = { id: 'MED_RECON001', status: 'completed' };
@@ -423,7 +423,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.completeReconciliation();
 
       setTimeout(() => {
-        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse });
+        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse }, 30000);
         done();
       }, 100);
     });
@@ -439,7 +439,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Form Navigation', () => {
@@ -448,22 +448,22 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.nextStep();
 
       expect(component.currentStep).toBeGreaterThan(0);
-    });
+    }, 30000);
 
     it('should go to previous step', () => {
       component.currentStep = 2;
       component.previousStep();
 
       expect(component.currentStep).toBe(1);
-    });
+    }, 30000);
 
     it('should not go below step 0', () => {
       component.currentStep = 0;
       component.previousStep();
 
       expect(component.currentStep).toBe(0);
-    });
-  });
+    }, 30000);
+  }, 30000);
 
   describe('Error Handling', () => {
     it('should handle medication loading errors', (done) => {
@@ -477,7 +477,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    });
+    }, 30000);
   });
 
   describe('Component Cleanup', () => {

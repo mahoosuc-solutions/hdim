@@ -26,8 +26,9 @@ beforeAll(() => {
  * Global test timeout for accessibility tests
  *
  * Accessibility tests may take longer due to DOM analysis.
+ * Set to 30000ms to allow axe-core to complete full page analysis.
  */
-jest.setTimeout(10000);
+jest.setTimeout(30000);
 
 /**
  * Mock window.matchMedia for responsive design tests

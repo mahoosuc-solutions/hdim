@@ -18,6 +18,23 @@ Object.defineProperty(document, 'URL', {
   value: 'http://localhost'
 });
 
+// Jasmine compatibility shim for Jest
+// Some tests were written for Jasmine and use jasmine.createSpyObj
+// This provides a Jest-based implementation
+if (!global.jasmine) {
+  global.jasmine = {
+    createSpyObj: (baseName: string, methods: string[] | Record<string, any>) => {
+      const methodArray = Array.isArray(methods) ? methods : Object.keys(methods);
+      const spyObj: any = {};
+      methodArray.forEach((method: string) => {
+        spyObj[method] = jest.fn();
+      });
+      return spyObj;
+    },
+    SpyObj: {} as any,
+  } as any;
+}
+
 setupZoneTestEnv({
   errorOnUnknownElements: true,
   errorOnUnknownProperties: true,

@@ -122,7 +122,7 @@
                 <td mat-cell>
                   @for (problem of problems; track problem.id; let i = $index) {
                     @if (i === problems.indexOf(problems[0])) {
-                      <button mat-icon-button color="warn" (click)="removeProblem(i)" matTooltip="Remove">
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeProblem(i)" matTooltip="Remove">
                         <mat-icon>delete</mat-icon>
                       </button>
                     }
@@ -140,7 +140,7 @@
                     </mat-chip>
                   </td>
                   <td>
-                    <button
+                    <button aria-label="Delete"
                       mat-icon-button
                       color="warn"
                       (click)="removeProblem(problems.indexOf(problem))"
@@ -253,7 +253,7 @@
                 <td mat-cell>
                   @for (goal of goals; track goal.id; let i = $index) {
                     @if (i === goals.indexOf(goals[0])) {
-                      <button mat-icon-button color="warn" (click)="removeGoal(i)" matTooltip="Remove">
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeGoal(i)" matTooltip="Remove">
                         <mat-icon>delete</mat-icon>
                       </button>
                     }
@@ -267,7 +267,7 @@
                   <td>{{ goal.goalDescription }}</td>
                   <td>{{ goal.targetDate | date : 'MMM d, yyyy' }}</td>
                   <td>
-                    <button mat-icon-button color="warn" (click)="removeGoal(i)" matTooltip="Remove">
+                    <button aria-label="Delete" mat-icon-button color="warn" (click)="removeGoal(i)" matTooltip="Remove">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </td>
@@ -362,7 +362,7 @@
                 <td mat-cell>
                   @for (intervention of interventions; track intervention.id; let i = $index) {
                     @if (i === interventions.indexOf(interventions[0])) {
-                      <button mat-icon-button color="warn" (click)="removeIntervention(i)" matTooltip="Remove">
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeIntervention(i)" matTooltip="Remove">
                         <mat-icon>delete</mat-icon>
                       </button>
                     }
@@ -376,7 +376,7 @@
                   <td>{{ intervention.interventionName }}</td>
                   <td>{{ intervention.frequency | titlecase }}</td>
                   <td>
-                    <button mat-icon-button color="warn" (click)="removeIntervention(i)" matTooltip="Remove">
+                    <button aria-label="Delete" mat-icon-button color="warn" (click)="removeIntervention(i)" matTooltip="Remove">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </td>
@@ -468,7 +468,7 @@
                 <td mat-cell>
                   @for (member of teamMembers; track member.id; let i = $index) {
                     @if (i === teamMembers.indexOf(teamMembers[0])) {
-                      <button mat-icon-button color="warn" (click)="removeTeamMember(i)" matTooltip="Remove">
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeTeamMember(i)" matTooltip="Remove">
                         <mat-icon>delete</mat-icon>
                       </button>
                     }
@@ -484,7 +484,7 @@
                     <mat-chip color="accent">{{ member.role | titlecase }}</mat-chip>
                   </td>
                   <td>
-                    <button mat-icon-button color="warn" (click)="removeTeamMember(i)" matTooltip="Remove">
+                    <button aria-label="Delete" mat-icon-button color="warn" (click)="removeTeamMember(i)" matTooltip="Remove">
                       <mat-icon>delete</mat-icon>
                     </button>
                   </td>

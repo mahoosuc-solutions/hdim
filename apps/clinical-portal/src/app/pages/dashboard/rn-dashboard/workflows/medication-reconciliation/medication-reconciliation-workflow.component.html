@@ -83,7 +83,7 @@
                 <input matInput formControlName="reason" />
               </mat-form-field>
             </div>
-            <button mat-icon-button (click)="removePatientMedication(i)" matTooltip="Remove">
+            <button aria-label="Delete" mat-icon-button (click)="removePatientMedication(i)" matTooltip="Remove">
               <mat-icon>delete</mat-icon>
             </button>
           </div>
@@ -201,7 +201,7 @@
             @for (med of newMedications; let i = $index; track i) {
               <div class="new-med-item">
                 <div>{{ med.medicationName }} - {{ med.dosage }} {{ med.frequency }}</div>
-                <button mat-icon-button (click)="removeNewMedication(i)">
+                <button aria-label="Delete" mat-icon-button (click)="removeNewMedication(i)">
                   <mat-icon>delete</mat-icon>
                 </button>
               </div>

@@ -71,7 +71,7 @@
   <div class="tab-content" *ngIf="activeTab === 'events'">
     <!-- Filters -->
     <div class="filters">
-      <select [(ngModel)]="filterEventType" (change)="applyFilters()">
+      <select aria-label="Filter Event Type" [(ngModel)]="filterEventType" (change)="applyFilters()">
         <option value="all">All Event Types</option>
         <option value="PATIENT_MERGE">Patient Merge</option>
         <option value="PATIENT_UNMERGE">Patient Unmerge</option>
@@ -81,14 +81,14 @@
         <option value="DATA_QUALITY_FLAG">Data Quality Flag</option>
       </select>
       
-      <select [(ngModel)]="filterDateRange" (change)="applyFilters()">
+      <select aria-label="Filter Date Range" [(ngModel)]="filterDateRange" (change)="applyFilters()">
         <option value="today">Today</option>
         <option value="yesterday">Yesterday</option>
         <option value="last-7-days">Last 7 Days</option>
         <option value="last-30-days">Last 30 Days</option>
       </select>
       
-      <input type="text" [(ngModel)]="filterUserId" (change)="applyFilters()" 
+      <input type="text" aria-label="filterUserId" [(ngModel)]="filterUserId" (change)="applyFilters()" 
              placeholder="Filter by User ID">
     </div>
 
@@ -156,7 +156,7 @@
     <div class="merge-list">
       <div class="merge-card" *ngFor="let merge of mergeEvents">
         <div class="merge-header">
-          <h3>Merge Operation</h3>
+          <h2>Merge Operation</h2>
           <span class="timestamp">{{ merge.timestamp | date:'short' }}</span>
         </div>
         

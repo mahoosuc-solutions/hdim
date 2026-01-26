@@ -71,7 +71,7 @@
                 <mat-chip [class]="measure.status.toLowerCase()">{{ measure.status }}</mat-chip>
               </div>
 
-              <h3 class="measure-name">{{ measure.name }}</h3>
+              <h2 class="measure-name">{{ measure.name }}</h2>
 
               <p class="measure-description">{{ measure.description }}</p>
 
@@ -174,7 +174,7 @@
 
             <!-- Population Criteria -->
             <div class="criteria-section">
-              <h4>Population Criteria</h4>
+              <h3>Population Criteria</h3>
               <p class="description">{{ selectedMeasure()!.description }}</p>
 
               @if (selectedMeasure()!.code === 'BCS') {

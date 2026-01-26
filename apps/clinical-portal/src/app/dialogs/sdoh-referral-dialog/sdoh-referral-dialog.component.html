@@ -338,7 +338,7 @@
             <mat-card-header>
               <mat-icon mat-card-avatar>checklist</mat-icon>
               <mat-card-title>Selected Needs ({{ selectedNeeds.length }})</mat-card-title>
-              <button mat-icon-button (click)="goToStep(0)" matTooltip="Edit">
+              <button aria-label="Edit" mat-icon-button (click)="goToStep(0)" matTooltip="Edit">
                 <mat-icon>edit</mat-icon>
               </button>
             </mat-card-header>
@@ -359,7 +359,7 @@
             <mat-card-header>
               <mat-icon mat-card-avatar>{{ referralType === 'internal' ? 'supervisor_account' : 'business' }}</mat-icon>
               <mat-card-title>{{ referralType === 'internal' ? 'Internal Referral' : 'External Referral' }}</mat-card-title>
-              <button mat-icon-button (click)="goToStep(1)" matTooltip="Edit">
+              <button aria-label="Edit" mat-icon-button (click)="goToStep(1)" matTooltip="Edit">
                 <mat-icon>edit</mat-icon>
               </button>
             </mat-card-header>
@@ -379,7 +379,7 @@
             <mat-card-header>
               <mat-icon mat-card-avatar>description</mat-icon>
               <mat-card-title>Details</mat-card-title>
-              <button mat-icon-button (click)="goToStep(2)" matTooltip="Edit">
+              <button aria-label="Edit" mat-icon-button (click)="goToStep(2)" matTooltip="Edit">
                 <mat-icon>edit</mat-icon>
               </button>
             </mat-card-header>

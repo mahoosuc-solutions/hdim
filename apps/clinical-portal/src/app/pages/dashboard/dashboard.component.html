@@ -73,7 +73,7 @@
   <!-- Error State -->
   <div class="error-state" *ngIf="error && !loading">
     <mat-icon color="warn">error</mat-icon>
-    <h3>{{ error }}</h3>
+    <h2>{{ error }}</h2>
     <app-loading-button
       text="Try Again"
       loadingText="Loading..."
@@ -615,7 +615,7 @@
                 </mat-icon>
               </div>
               <div class="activity-details">
-                <h4>{{ activity.patientName }}</h4>
+                <h3>{{ activity.patientName }}</h3>
                 <p class="patient-mrn" *ngIf="activity.patientMrn">
                   MRN: {{ activity.patientMrn }}
                   <span *ngIf="activity.patientMrnAuthority" class="mrn-authority">

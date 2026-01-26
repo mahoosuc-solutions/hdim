@@ -93,7 +93,7 @@
   <!-- Empty State -->
   <mat-card class="empty-card" *ngIf="patients().length === 0 && !loading() && !error()">
     <mat-icon>event_busy</mat-icon>
-    <h3>No Patients Scheduled</h3>
+    <h2>No Patients Scheduled</h2>
     <p>There are no patients scheduled for {{ selectedDate.value | date:'fullDate' }}</p>
   </mat-card>
 

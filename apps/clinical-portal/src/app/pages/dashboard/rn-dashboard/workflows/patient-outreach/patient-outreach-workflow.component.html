@@ -178,7 +178,7 @@
               <span class="label">Contact Method:</span>
               <span class="value">{{ form.get('contactMethod')?.value }}</span>
               @if (canEditStep(0)) {
-                <button mat-icon-button (click)="editStep(0)" matTooltip="Edit">
+                <button aria-label="Edit" mat-icon-button (click)="editStep(0)" matTooltip="Edit">
                   <mat-icon>edit</mat-icon>
                 </button>
               }
@@ -188,7 +188,7 @@
               <span class="label">Outcome:</span>
               <span class="value">{{ form.get('outcomeType')?.value }}</span>
               @if (canEditStep(2)) {
-                <button mat-icon-button (click)="editStep(2)" matTooltip="Edit">
+                <button aria-label="Edit" mat-icon-button (click)="editStep(2)" matTooltip="Edit">
                   <mat-icon>edit</mat-icon>
                 </button>
               }

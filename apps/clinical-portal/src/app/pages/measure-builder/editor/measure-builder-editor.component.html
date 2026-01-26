@@ -32,7 +32,7 @@
       <button mat-icon-button (click)="exportMeasure()" matTooltip="Export measure">
         <mat-icon>download</mat-icon>
       </button>
-      <button mat-icon-button (click)="toggleCqlPreview()" matTooltip="Toggle CQL preview">
+      <button aria-label="View" mat-icon-button (click)="toggleCqlPreview()" matTooltip="Toggle CQL preview">
         <mat-icon>{{ showCqlPreview ? 'visibility_off' : 'visibility' }}</mat-icon>
       </button>
     </div>

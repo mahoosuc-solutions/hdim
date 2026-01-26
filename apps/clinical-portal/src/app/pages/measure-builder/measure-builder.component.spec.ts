@@ -14,6 +14,7 @@ import { createMockLoggerService } from '../testing/mocks';
 import { createMockHttpClient } from '../../testing/mocks';
 import { createMockMatDialog } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 describe('MeasureBuilderComponent (TDD)', () => {
   let component: MeasureBuilderComponent;

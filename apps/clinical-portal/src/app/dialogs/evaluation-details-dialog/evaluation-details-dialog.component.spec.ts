@@ -6,6 +6,7 @@ import { EvaluationService } from '../../services/evaluation.service';
 import { LoggerService } from '../services/logger.service';
 import { createMockLoggerService } from '../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 describe('EvaluationDetailsDialogComponent', () => {
   let component: EvaluationDetailsDialogComponent;

@@ -17,7 +17,7 @@ import {
   RiskAssessment,
   PopulationStats,
 } from '../models/risk-assessment.model';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 @Injectable({
   providedIn: 'root',

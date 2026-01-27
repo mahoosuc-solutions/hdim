@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { HttpClient } from '@angular/common/http';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { Observable, of, Subject } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { catchError, debounceTime, bufferTime, filter, tap } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { AuthService } from './auth.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { API_CONFIG } from '../config/api.config';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 /**
  * HIPAA-compliant Audit Logging Service
@@ -28,7 +28,7 @@ import { LoggerService } from './logger.service';
   providedIn: 'root',
 })
 export class AuditService {
-  private readonly logger = this.loggerService.withContext('AuditService');
+  private readonly logger: any;
   private readonly AUDIT_ENDPOINT = '/audit/events';
   private readonly BATCH_INTERVAL_MS = 5000; // Batch events every 5 seconds
   private readonly MAX_BUFFER_SIZE = 50; // Maximum events to buffer before force flush
@@ -42,6 +42,7 @@ export class AuditService {
     private http: HttpClient,
     private authService: AuthService
   ) {
+    this.logger = this.loggerService.withContext(\'AuditService');
     this.initializeEventBatching();
     this.flushPendingEventsFromStorage();
   }

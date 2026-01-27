@@ -1,23 +1,23 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { Observable, Subject, merge, of, throwError, combineLatest } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { map, switchMap, catchError, tap, shareReplay, take } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 import { PatientService } from './patient.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { EvaluationService } from './evaluation.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import {
   WebSocketVisualizationService,
   BatchProgressEvent,
   WebSocketStatus,
 } from '../visualization/core/websocket-visualization.service';
 import { CqlEvaluation, BatchEvaluationResponse } from '../models/evaluation.model';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { Patient } from '../models/patient.model';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 /**
  * Batch Monitor Configuration
@@ -64,7 +64,7 @@ export interface BatchMonitorState {
   providedIn: 'root'
 })
 export class BatchMonitorService {
-  private readonly logger = this.loggerService.withContext('BatchMonitorService');
+  private readonly logger: any;
   private stateSubject = new Subject<BatchMonitorState>();
   // ⚠️ CRITICAL HIPAA COMPLIANCE - DO NOT REMOVE refCount: true ⚠️
   // refCount: true ensures cache is destroyed when all subscribers unsubscribe
@@ -82,6 +82,7 @@ export class BatchMonitorService {
     private evaluationService: EvaluationService,
     private websocketService: WebSocketVisualizationService
   ) {
+    this.logger = this.loggerService.withContext(\'BatchMonitorService');
     // Initialize state
     this.stateSubject.next({ status: 'IDLE' });
   }

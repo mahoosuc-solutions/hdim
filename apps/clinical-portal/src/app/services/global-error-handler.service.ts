@@ -1,6 +1,6 @@
 import { ErrorHandler, Injectable, Injector } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { AuditService, AuditAction, AuditOutcome } from './audit.service';
 import { environment } from '../../environments/environment';
 

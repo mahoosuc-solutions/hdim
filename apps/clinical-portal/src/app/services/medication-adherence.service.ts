@@ -9,7 +9,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import {
   PDCResult,
   MedicationAdherenceScore,
@@ -48,12 +48,13 @@ interface CoveredPeriod {
   providedIn: 'root',
 })
 export class MedicationAdherenceService {
-  private readonly logger = this.loggerService.withContext('MedicationAdherenceService');
+  private readonly logger: any;
 
   constructor(
     private http: HttpClient,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext(\'MedicationAdherenceService');}
 
   /**
    * Get HTTP headers with tenant ID

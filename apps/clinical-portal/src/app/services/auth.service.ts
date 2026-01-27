@@ -4,7 +4,7 @@ import { Observable, BehaviorSubject, throwError, of, timer } from 'rxjs';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { ApiService } from './api.service';
-import { LoggerService, ContextualLogger } from './logger.service';
+import { LoggerService, ContextualLogger } from '../logger.service';
 
 /**
  * Authentication Service - Handles user authentication and authorization

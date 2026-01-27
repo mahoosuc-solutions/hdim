@@ -6,11 +6,11 @@
  * for components to respond to online/offline transitions.
  */
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../logger.service';
 import { BehaviorSubject, Observable, fromEvent, merge, Subject, timer } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../logger.service';
 import { debounceTime, distinctUntilChanged, map, takeUntil, tap } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../logger.service';
 
 export interface NetworkState {
   isOnline: boolean;
@@ -34,7 +34,7 @@ interface NetworkInformation {
   providedIn: 'root',
 })
 export class NetworkStatusService implements OnDestroy {
-  private readonly logger = this.loggerService.withContext('NetworkStatusService');
+  private readonly logger: any;
   private readonly destroy$ = new Subject<void>();
   private readonly networkState = new BehaviorSubject<NetworkState>(this.getCurrentState());
   private readonly connectionChangeListener: EventListener;
@@ -53,6 +53,7 @@ export class NetworkStatusService implements OnDestroy {
 
   constructor(
     private loggerService: LoggerService,private ngZone: NgZone) {
+    this.logger = this.loggerService.withContext(\'NetworkStatusService');
     this.connectionChangeListener = () => this.updateNetworkState();
     this.initializeListeners();
     this.startPeriodicCheck();

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import {
   PatientSummaryWithLinks,
   PatientLink,
@@ -29,9 +29,10 @@ export class PatientDeduplicationService {
   // In-memory storage for patient links (would be backend API in production)
   private patientLinks: Map<string, PatientLink[]> = new Map();
   private masterPatientIds: Set<string> = new Set();
-  private readonly logger = this.loggerService.withContext('PatientDeduplicationService');
+  private readonly logger: any;
 
   constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('PatientDeduplicationService');
     // Initialize with some sample duplicate relationships for demonstration
     this.initializeSampleDuplicates();
   }

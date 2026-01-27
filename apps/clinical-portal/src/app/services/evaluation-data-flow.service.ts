@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { Observable, Subject } from 'rxjs';
 import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data-flow.component';
 
@@ -10,12 +10,14 @@ import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data
   providedIn: 'root',
 })
 export class EvaluationDataFlowService {
-  private readonly logger = this.loggerService.withContext('EvaluationDataFlowService');
+  private readonly logger: any;
   private ws?: WebSocket;
   private dataFlowSubject = new Subject<DataFlowStep>();
   private connected = false;
 
-  constructor(private readonly loggerService: LoggerService) {}
+  constructor(private readonly loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('EvaluationDataFlowService');
+  }
 
   /**
    * Connect to WebSocket for evaluation data flow

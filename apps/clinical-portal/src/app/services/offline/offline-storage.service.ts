@@ -9,11 +9,11 @@
  * - User preferences
  */
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../logger.service';
 import { BehaviorSubject, Observable, from, of } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../logger.service';
 import { catchError, map, tap } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../logger.service';
 
 // Database configuration
 const DB_NAME = 'hdim-clinical-portal';
@@ -51,7 +51,7 @@ export interface OfflineMetadata {
   providedIn: 'root',
 })
 export class OfflineStorageService {
-  private readonly logger = this.loggerService.withContext('OfflineStorageService');
+  private readonly logger: any;
   private db: IDBDatabase | null = null;
   private dbReady = new BehaviorSubject<boolean>(false);
 
@@ -59,6 +59,7 @@ export class OfflineStorageService {
 
   constructor(
     private loggerService: LoggerService,) {
+    this.logger = this.loggerService.withContext(\'OfflineStorageService');
     this.initDatabase();
   }
 

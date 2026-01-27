@@ -1,40 +1,40 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { CommonModule } from '@angular/common';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { FormsModule } from '@angular/forms';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatCardModule } from '@angular/material/card';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatButtonModule } from '@angular/material/button';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatIconModule } from '@angular/material/icon';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatChipsModule } from '@angular/material/chips';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatInputModule } from '@angular/material/input';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { MatSelectModule } from '@angular/material/select';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import * as THREE from 'three';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { Subject, takeUntil } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 
 import { ThreeSceneService } from '../core/three-scene.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { WebSocketVisualizationService, WebSocketStatus, BatchProgressEvent } from '../core/websocket-visualization.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { DataTransformService, EvaluationProgressEvent } from '../data/data-transform.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { BatchMonitorService, BatchMonitorState } from '../../services/batch-monitor.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Particle Data for instanced mesh

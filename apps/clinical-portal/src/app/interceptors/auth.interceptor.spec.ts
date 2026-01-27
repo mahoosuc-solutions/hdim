@@ -7,7 +7,6 @@ import {
 import { authInterceptor } from './auth.interceptor';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
 import { AuthService } from '../services/auth.service';
-import { createMockHttpClient } from '../../testing/mocks';
 
 /**
  * Auth Interceptor Tests
@@ -34,7 +33,6 @@ describe('AuthInterceptor', () => {
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },
-        { provide: HttpClient, useValue: createMockHttpClient() },
         HttpTestingController,
       ],
     });

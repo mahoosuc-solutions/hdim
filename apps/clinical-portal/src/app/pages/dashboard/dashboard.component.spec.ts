@@ -1,4 +1,6 @@
+import { HttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
+import { HttpClient } from '@angular/common/http';
 import { HttpClient, HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
@@ -15,7 +17,6 @@ import { UserRoleService, UserRole } from '../../shared/services/user-role.servi
 import { MeasureFavoritesService } from '../../services/measure-favorites.service';
 import { LoggerService } from '../../services/logger.service';
 import { createMockLoggerService } from '../../../testing/mocks';
-import { createMockHttpClient } from '../../../testing/mocks';
 
 /**
  * TDD Test Suite for Dashboard Component
@@ -100,7 +101,6 @@ describe('DashboardComponent (TDD)', () => {
         { provide: AIAssistantService, useValue: {} },
         { provide: UserRoleService, useValue: mockUserRoleService },
         { provide: MeasureFavoritesService, useValue: mockMeasureFavoritesService },
-        { provide: HttpClient, useValue: createMockHttpClient() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);

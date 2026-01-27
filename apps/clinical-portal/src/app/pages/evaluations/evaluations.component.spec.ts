@@ -15,7 +15,6 @@ import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
 import { createMockLoggerService } from '../../../testing/mocks';
-import { createMockHttpClient } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 
@@ -76,7 +75,6 @@ describe('EvaluationsComponent', () => {
         { provide: DialogService, useValue: mockDialogService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
-        { provide: HttpClient, useValue: createMockHttpClient() },
     }).compileComponents();
 
     fixture = TestBed.createComponent(EvaluationsComponent);

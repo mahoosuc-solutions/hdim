@@ -6,7 +6,6 @@ import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { Patient } from '../../models/patient.model';
-import { createMockHttpClient } from '../../testing/mocks';
 import { HttpClient } from '@angular/common/http';
 
 /**
@@ -60,7 +59,6 @@ describe('PatientSelectionDialogComponent (TDD)', () => {
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: PatientService, useValue: mockPatientService },
-        { provide: HttpClient, useValue: createMockHttpClient() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientSelectionDialogComponent);

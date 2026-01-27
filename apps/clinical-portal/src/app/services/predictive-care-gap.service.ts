@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, catchError, tap, shareReplay } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { LoggerService, ContextualLogger } from '../logger.service';
+import { LoggerService, ContextualLogger } from './logger.service';
 import { API_CONFIG } from '../config/api.config';
 
 /**

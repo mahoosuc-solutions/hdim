@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { HttpClient } from '@angular/common/http';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { Observable, of, Subject } from 'rxjs';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { catchError, debounceTime, bufferTime, filter, tap } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { AuthService } from './auth.service';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { API_CONFIG } from '../config/api.config';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * HIPAA-compliant Audit Logging Service

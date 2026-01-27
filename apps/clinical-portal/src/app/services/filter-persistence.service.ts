@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * FilterPersistenceService - Manages filter state persistence

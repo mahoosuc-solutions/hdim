@@ -6,7 +6,7 @@
  * Automatically serves cached data when offline and queues updates for sync.
  */
 import { Injectable, inject } from '@angular/core';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError, from } from 'rxjs';
 import { catchError, map, switchMap, tap, take } from 'rxjs/operators';

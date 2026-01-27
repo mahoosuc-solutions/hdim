@@ -2,7 +2,7 @@ import { Injectable, OnDestroy } from '@angular/core';
 import { HttpErrorResponse, HttpClient } from '@angular/common/http';
 import { ErrorCode, ErrorSeverity } from '../models/error.model';
 import { COMPLIANCE_CONFIG, isFallbackAllowed } from '../config/compliance.config';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { Subject, interval, Subscription, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { LoggerService, ContextualLogger } from '../logger.service';
+import { LoggerService, ContextualLogger } from './logger.service';
 import {
   API_CONFIG,
   QUALITY_MEASURE_ENDPOINTS,

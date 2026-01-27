@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { QualityMeasureResult } from '../models/quality-result.model';
 
 export interface ReportOptions {

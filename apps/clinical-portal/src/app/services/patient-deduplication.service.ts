@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import {
   PatientSummaryWithLinks,
   PatientLink,

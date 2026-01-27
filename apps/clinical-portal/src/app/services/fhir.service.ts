@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, throwError } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { ApiService } from './api.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import {
   API_CONFIG,
   FHIR_ENDPOINTS,
@@ -25,13 +25,14 @@ import {
 })
 export class FhirService {
   private readonly baseUrl = API_CONFIG.FHIR_SERVER_URL;
-  private readonly logger = this.loggerService.withContext('FhirService');
+  private readonly logger: any;
 
   constructor(
     private http: HttpClient,
     private apiService: ApiService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext(\'FhirService');}
 
   // ==================== Observation Operations ====================
 

@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { QualityMeasureResult } from '../models/quality-result.model';
-import { LoggerService } from './logger.service';
 
 export interface ReportOptions {
   title?: string;
@@ -40,9 +39,11 @@ export interface MeasureStats {
   providedIn: 'root',
 })
 export class ReportExportService {
-  private readonly logger = this.loggerService.withContext('ReportExportService');
+  private readonly logger: any;
 
-  constructor(private readonly loggerService: LoggerService) {}
+  constructor(private readonly loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('ReportExportService');
+  }
   /**
    * Generate a PDF report from quality measure results.
    * Uses native browser print-to-PDF functionality for maximum compatibility.

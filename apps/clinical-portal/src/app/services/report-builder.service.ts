@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { delay, map } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 /**
  * Report Section Types - Available sections for custom reports
@@ -282,7 +282,7 @@ const SECTION_TEMPLATES: Omit<ReportSection, 'id' | 'order'>[] = [
   providedIn: 'root',
 })
 export class ReportBuilderService {
-  private readonly logger = this.loggerService.withContext('ReportBuilderService');
+  private readonly logger: any;
   private readonly REPORTS_STORAGE_KEY = 'hdim_custom_reports';
   private readonly HISTORY_STORAGE_KEY = 'hdim_report_history';
 
@@ -294,6 +294,7 @@ export class ReportBuilderService {
 
   constructor(
     private loggerService: LoggerService,) {
+    this.logger = this.loggerService.withContext(\'ReportBuilderService');
     this.loadFromStorage();
   }
 

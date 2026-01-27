@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 /**
  * Recent patient entry with access metadata
@@ -30,7 +30,7 @@ export interface RecentPatientEntry {
   providedIn: 'root',
 })
 export class RecentPatientsService {
-  private readonly logger = this.loggerService.withContext('RecentPatientsService');
+  private readonly logger: any;
   private readonly STORAGE_KEY = 'hdim_recent_patients';
   private readonly MAX_RECENT_PATIENTS = 20;
 
@@ -39,6 +39,7 @@ export class RecentPatientsService {
 
   constructor(
     private loggerService: LoggerService,) {
+    this.logger = this.loggerService.withContext(\'RecentPatientsService');
     this.loadFromStorage();
   }
 

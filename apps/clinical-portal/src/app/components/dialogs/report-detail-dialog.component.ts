@@ -1,23 +1,23 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { MatButtonModule } from '@angular/material/button';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { MatIconModule } from '@angular/material/icon';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { MatTabsModule } from '@angular/material/tabs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { MatCardModule } from '@angular/material/card';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { MatDividerModule } from '@angular/material/divider';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { SavedReport } from '../../models/quality-result.model';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { EvaluationService } from '../../services/evaluation.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Report Detail Dialog Component

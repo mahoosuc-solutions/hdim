@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 /**
  * FilterPersistenceService - Manages filter state persistence
@@ -11,10 +11,12 @@ import { LoggerService } from './logger.service';
   providedIn: 'root'
 })
 export class FilterPersistenceService {
-  private readonly logger = this.loggerService.withContext('FilterPersistenceService');
+  private readonly logger: any;
   private readonly STORAGE_PREFIX = 'clinical-portal-filters';
 
-  constructor(private readonly loggerService: LoggerService) {}
+  constructor(private readonly loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('FilterPersistenceService');
+  }
 
   /**
    * Save filters for a specific page

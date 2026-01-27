@@ -80,7 +80,7 @@ import {
 } from '../models/fhir.model';
 import { MedicationAdherenceService } from './medication-adherence.service';
 import { ProcedureHistoryService } from './procedure-history.service';
-import { LoggerService, ContextualLogger } from './logger.service';
+import { LoggerService, ContextualLogger } from '../logger.service';
 
 import { ErrorValidationService } from './error-validation.service';
 import { COMPLIANCE_CONFIG } from '../config/compliance.config';

@@ -21,6 +21,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router, ActivatedRoute } from '@angular/router';
 import { provideMockStore, MockStore } from '@ngrx/store/testing';
+import { Store } from '@ngrx/store';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort, Sort } from '@angular/material/sort';
@@ -194,8 +195,8 @@ describe('CareRecommendationsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CareRecommendationsComponent, NoopAnimationsModule],
       providers: [provideMockStore({ initialState }),
-        { provide: Router, useValue: mockRouter },
-        { provide: MatDialog, useValue: mockDialog },
+        { provide: Router, useValue: createMockRouter() },
+        { provide: MatDialog, useValue: createMockMatDialog() },
         { provide: CareRecommendationService, useValue: mockRecommendationService },
         { provide: ToastService, useValue: mockToastService },
         {
@@ -205,10 +206,7 @@ describe('CareRecommendationsComponent', () => {
             params: of({}),
             queryParams: of({}),
           },
-        },
-        { provide: MatDialog, useValue: createMockMatDialog() },
-        { provide: Router, useValue: createMockRouter() },
-        { provide: Store, useValue: createMockStore() }],
+        }],
     }).compileComponents();
 
     store = TestBed.inject(MockStore);

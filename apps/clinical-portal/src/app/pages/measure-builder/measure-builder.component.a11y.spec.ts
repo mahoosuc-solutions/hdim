@@ -24,7 +24,6 @@ describe('MeasureBuilderComponent - Accessibility (WCAG 2.1 Level AA)', () => {
     await TestBed.configureTestingModule({
       imports: [MeasureBuilderComponent, NoopAnimationsModule, HttpClientTestingModule],
       providers: [
-        { provide: Store, useValue: createMockStore() },
         { provide: HttpClient, useValue: createMockHttpClient() }],
     }).compileComponents();
 

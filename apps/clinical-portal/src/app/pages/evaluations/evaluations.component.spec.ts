@@ -77,7 +77,6 @@ describe('EvaluationsComponent', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EvaluationsComponent);

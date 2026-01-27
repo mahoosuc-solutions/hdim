@@ -8,8 +8,8 @@ import { ToastService } from '../../services/toast.service';
 import { SavedReport } from '../../models/quality-result.model';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
-import { LoggerService } from '../services/logger.service';
-import { createMockLoggerService } from '../testing/mocks';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 import { createMockHttpClient } from '../../testing/mocks';
 import { createMockMatDialogRef } from '../../testing/mocks';
 

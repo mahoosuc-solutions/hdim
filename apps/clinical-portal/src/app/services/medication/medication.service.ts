@@ -18,11 +18,8 @@
  */
 
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { LoggerService } from '../logger.service';
 import { Observable, BehaviorSubject, throwError, of } from 'rxjs';
-import { LoggerService } from '../logger.service';
 import { tap, map, switchMap, catchError } from 'rxjs/operators';
 import { LoggerService } from '../logger.service';
 import {

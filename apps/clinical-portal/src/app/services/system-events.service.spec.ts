@@ -220,7 +220,7 @@ describe('SystemEventsService', () => {
     const early = createSystemEvent('FHIR_RESOURCE_CREATED', 'FHIR', 'Early', {
       timestamp: '2025-01-01T00:00:00Z',
       severity: 'info',
-    }, 30000);
+    };
     const later = createSystemEvent('CARE_GAP_DETECTED', 'Gap', 'Later', {
       timestamp: '2025-01-02T00:00:00Z',
       severity: 'warning',
@@ -244,7 +244,7 @@ describe('SystemEventsService', () => {
       severity: 'success',
       timestamp: '2025-01-02T00:00:00Z',
       patient: { id: 'patient-1' },
-    }, 30000);
+    };
     const other = createSystemEvent('EVALUATION_FAILED', 'Eval', 'Fail', {
       severity: 'error',
       timestamp: '2025-01-03T00:00:00Z',

@@ -28,7 +28,7 @@ describe('DialogService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-  }, 30000);
+  };
 
   describe('openPatientEdit', () => {
     it('should open patient edit dialog in create mode', () => {
@@ -43,7 +43,7 @@ describe('DialogService', () => {
       expect(dialog.open).toHaveBeenCalled();
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.mode).toBe('create');
-    }, 30000);
+    };
 
     it('should open patient edit dialog in edit mode with patient', () => {
       const mockPatient: Patient = {
@@ -60,14 +60,14 @@ describe('DialogService', () => {
 
       service.openPatientEdit(mockPatient).subscribe((result) => {
         expect(result).toEqual(mockPatient);
-      }, 30000);
+      };
 
       expect(dialog.open).toHaveBeenCalled();
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.mode).toBe('edit');
       expect(callArgs[1]?.data?.patient).toEqual(mockPatient);
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('openEvaluationDetails', () => {
     it('should open evaluation details dialog', () => {
@@ -84,8 +84,8 @@ describe('DialogService', () => {
       expect(callArgs[1]?.data?.evaluationId).toBe('eval-123');
       expect(callArgs[1]?.data?.patientName).toBe('John Doe');
       expect(callArgs[1]?.data?.measureName).toBe('CMS125');
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('openAdvancedFilter', () => {
     it('should open advanced filter dialog', () => {
@@ -104,17 +104,17 @@ describe('DialogService', () => {
       expect(dialog.open).toHaveBeenCalled();
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.availableFields).toEqual(fields);
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('openBatchEvaluation', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-    }, 30000);
+    };
 
     afterEach(() => {
       jest.useRealTimers();
-    }, 30000);
+    };
 
     it('should emit mock batch result after delay', () => {
       const results: any[] = [];
@@ -128,18 +128,18 @@ describe('DialogService', () => {
         successCount: 10,
         errorCount: 0,
         results: [],
-      }, 30000);
-    }, 30000);
-  }, 30000);
+      };
+    };
+  };
 
   describe('openExportConfig', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-    }, 30000);
+    };
 
     afterEach(() => {
       jest.useRealTimers();
-    }, 30000);
+    };
 
     it('should emit export config after delay', () => {
       const results: any[] = [];
@@ -153,9 +153,9 @@ describe('DialogService', () => {
         format: 'csv',
         columns: ['name', 'dob'],
         fileName: 'export.csv',
-      }, 30000);
-    }, 30000);
-  }, 30000);
+      };
+    };
+  };
 
   describe('openErrorDetails', () => {
     it('should log error details from Error', () => {
@@ -169,7 +169,7 @@ describe('DialogService', () => {
       expect(errorInfo.message).toBe('Boom');
       expect(errorInfo.severity).toBe('error');
       errorSpy.mockRestore();
-    }, 30000);
+    };
 
     it('should log provided error info', () => {
       const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -183,8 +183,8 @@ describe('DialogService', () => {
 
       expect(errorSpy).toHaveBeenCalledWith('Error Details:', errorInfo);
       errorSpy.mockRestore();
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('openHelp', () => {
     it('should log help topic', () => {
@@ -194,8 +194,8 @@ describe('DialogService', () => {
 
       expect(logSpy).toHaveBeenCalledWith('Opening help for topic:', 'patients');
       logSpy.mockRestore();
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('confirm', () => {
     it('should open confirmation dialog and return true on confirm', (done) => {
@@ -208,7 +208,7 @@ describe('DialogService', () => {
       service.confirm('Test Title', 'Test message').subscribe((result) => {
         expect(result).toBe(true);
         done();
-      }, 30000);
+      };
 
       expect(dialog.open).toHaveBeenCalled();
     });
@@ -223,7 +223,7 @@ describe('DialogService', () => {
       service.confirm('Test Title', 'Test message').subscribe((result) => {
         expect(result).toBe(false);
         done();
-      }, 30000);
+      };
     });
   });
 

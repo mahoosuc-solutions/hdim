@@ -91,7 +91,7 @@ describe('EvaluationService - Reports API', () => {
       service.savePatientReport(patientId, reportName).subscribe({
         next: () => done(),
         error: () => fail('Expected successful response'),
-      }, 30000);
+      };
 
       const expectedUrl = buildQualityMeasureUrl(
         QUALITY_MEASURE_ENDPOINTS.SAVE_PATIENT_REPORT,
@@ -161,7 +161,7 @@ describe('EvaluationService - Reports API', () => {
       service.savePopulationReport(year, reportName).subscribe({
         next: () => done(),
         error: () => fail('Expected successful response'),
-      }, 30000);
+      };
 
       const expectedUrl = buildQualityMeasureUrl(
         QUALITY_MEASURE_ENDPOINTS.SAVE_POPULATION_REPORT,
@@ -319,7 +319,7 @@ describe('EvaluationService - Reports API', () => {
       const reportId = '123e4567-e89b-12d3-a456-426614174000';
       const mockCsvBlob = new Blob(['header1,header2\nvalue1,value2'], {
         type: 'text/csv',
-      }, 30000);
+      };
 
       service.exportReportToCsv(reportId).subscribe({
         next: (blob) => {
@@ -365,7 +365,7 @@ describe('EvaluationService - Reports API', () => {
       const reportId = '123e4567-e89b-12d3-a456-426614174000';
       const mockExcelBlob = new Blob(['excel data'], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      }, 30000);
+      };
 
       service.exportReportToExcel(reportId).subscribe({
         next: (blob) => {
@@ -424,7 +424,7 @@ describe('EvaluationService - Reports API', () => {
     it('should export and download CSV report', (done) => {
       const reportId = '123e4567-e89b-12d3-a456-426614174000';
       const reportName = 'Test Report';
-      const mockBlob = new Blob(['csv data'], { type: 'text/csv' }, 30000);
+      const mockBlob = new Blob(['csv data'], { type: 'text/csv' };
 
       // Spy on downloadReport method
       const downloadSpy = jest.spyOn(service, 'downloadReport').mockImplementation(() => undefined);
@@ -451,7 +451,7 @@ describe('EvaluationService - Reports API', () => {
       const reportName = 'Test Report';
       const mockBlob = new Blob(['excel data'], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      }, 30000);
+      };
 
       // Spy on downloadReport method
       const downloadSpy = jest.spyOn(service, 'downloadReport').mockImplementation(() => undefined);

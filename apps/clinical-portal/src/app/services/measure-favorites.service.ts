@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { MeasureInfo } from '../models/cql-library.model';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 const STORAGE_KEYS = {
   FAVORITES: 'hdim_measure_favorites',
@@ -35,7 +35,7 @@ export interface RecentMeasure {
   providedIn: 'root',
 })
 export class MeasureFavoritesService {
-  private readonly logger = this.loggerService.withContext('MeasureFavoritesService');
+  private readonly logger: any;
   // Reactive signals for favorites and recents
   private _favorites = signal<FavoriteMeasure[]>([]);
   private _recentMeasures = signal<RecentMeasure[]>([]);
@@ -48,6 +48,7 @@ export class MeasureFavoritesService {
 
   constructor(
     private loggerService: LoggerService,) {
+    this.logger = this.loggerService.withContext(\'MeasureFavoritesService');
     this.loadFromStorage();
   }
 

@@ -1,9 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../../../services/logger.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { LoggerService } from './logger.service';
 import { Observable, catchError, throwError } from 'rxjs';
-import { LoggerService } from './logger.service';
 import {
   AgentConfiguration,
   AgentVersion,
@@ -28,9 +26,14 @@ import {
   providedIn: 'root',
 })
 export class AgentBuilderService {
-  private readonly logger = this.loggerService.withContext('AgentBuilderService');
+  private readonly logger: any;
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/agent-builder';
+  private readonly loggerService = inject(LoggerService);
+
+  constructor() {
+    this.logger = this.loggerService.withContext('AgentBuilderService');
+  }
 
   // ============================================================================
   // AGENT CRUD OPERATIONS

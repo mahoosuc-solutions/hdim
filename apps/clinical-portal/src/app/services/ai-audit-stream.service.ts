@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 
 /**
  * Service for managing Server-Sent Events (SSE) connection to AI Audit stream.
@@ -27,7 +27,7 @@ import { LoggerService } from './logger.service';
   providedIn: 'root'
 })
 export class AiAuditStreamService implements OnDestroy {
-  private readonly logger = this.loggerService.withContext('AiAuditStreamService');
+  private readonly logger: any;
   private eventSource: EventSource | null = null;
   private eventsSubject = new Subject<any>();
   private connectionStatusSubject = new BehaviorSubject<'connected' | 'disconnected' | 'connecting'>('disconnected');
@@ -49,6 +49,7 @@ export class AiAuditStreamService implements OnDestroy {
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
 
   constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext(\'AiAuditStreamService');
     this.logger = this.loggerService.withContext('AiAuditStreamService');
   }
 

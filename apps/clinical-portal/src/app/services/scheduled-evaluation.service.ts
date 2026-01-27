@@ -1,19 +1,19 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { HttpClient } from '@angular/common/http';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable, of, timer, Subscription } from 'rxjs';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { AuthService } from './auth.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { EvaluationService } from './evaluation.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { AuditService, AuditAction } from './audit.service';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import { API_CONFIG } from '../config/api.config';
-import { LoggerService } from './logger.service';
+import { LoggerService } from '../logger.service';
 import {
   ScheduledEvaluation,
   ScheduleExecution,
@@ -40,7 +40,7 @@ import {
   providedIn: 'root',
 })
 export class ScheduledEvaluationService implements OnDestroy {
-  private readonly logger = this.loggerService.withContext('ScheduledEvaluationService');
+  private readonly logger: any;
   private readonly STORAGE_KEY = 'healthdata_scheduled_evaluations';
   private readonly HISTORY_KEY = 'healthdata_schedule_history';
   private readonly CHECK_INTERVAL_MS = 60000; // Check every minute
@@ -60,6 +60,7 @@ export class ScheduledEvaluationService implements OnDestroy {
     private evaluationService: EvaluationService,
     private auditService: AuditService
   ) {
+    this.logger = this.loggerService.withContext(\'ScheduledEvaluationService');
     this.loadSchedules();
     this.loadExecutionHistory();
     this.startScheduleChecker();

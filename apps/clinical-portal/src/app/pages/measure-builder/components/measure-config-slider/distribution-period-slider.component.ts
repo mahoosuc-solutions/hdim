@@ -1,15 +1,19 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   Input,
   Output,
   EventEmitter,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   NO_ERRORS_SCHEMA
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SliderConfig, DistributionSliderConfig, PeriodSelectorConfig } from '../../models/measure-builder.model';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 /**
  * DistributionPeriodSliderComponent handles both distribution and period selection
@@ -34,7 +38,7 @@ import { SliderConfig, DistributionSliderConfig, PeriodSelectorConfig } from '..
   styleUrl: './distribution-period-slider.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class DistributionPeriodSliderComponent implements OnInit {
+export class DistributionPeriodSliderComponent implements OnInit, OnDestroy {
   @Input() config: SliderConfig | null = null;
   @Output() valueChanged = new EventEmitter<any>();
 
@@ -42,10 +46,36 @@ export class DistributionPeriodSliderComponent implements OnInit {
   isDistributionValid = true;
   validationMessage = '';
 
+  // Performance optimization: debounce rapid weight changes
+  private readonly weightChangeSubject = new Subject<{ index: number; event: Event }>();
+  private readonly destroy$ = new Subject<void>();
+
+  constructor(private changeDetectorRef: ChangeDetectorRef) {}
+
   ngOnInit(): void {
+    // Set up debounced weight change handler for performance
+    this.weightChangeSubject
+      .pipe(
+        debounceTime(50),
+        distinctUntilChanged((prev, curr) =>
+          prev.index === curr.index &&
+          (curr.event.target as HTMLInputElement).value ===
+          (prev.event.target as HTMLInputElement).value
+        )
+      )
+      .subscribe(({ index, event }) => {
+        this.handleDebouncedWeightChange(index, event);
+      });
+
     if (this.isDistributionSlider()) {
       this.validateDistribution();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.weightChangeSubject.complete();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   /**
@@ -77,9 +107,17 @@ export class DistributionPeriodSliderComponent implements OnInit {
   }
 
   /**
-   * Handle component weight change
+   * Handle component weight change (debounced)
    */
   onComponentWeightChange(index: number, event: Event): void {
+    // Emit to debounced subject for performance optimization
+    this.weightChangeSubject.next({ index, event });
+  }
+
+  /**
+   * Handle debounced weight change
+   */
+  private handleDebouncedWeightChange(index: number, event: Event): void {
     const target = event.target as HTMLInputElement;
     const newWeight = parseInt(target.value, 10);
 
@@ -95,6 +133,7 @@ export class DistributionPeriodSliderComponent implements OnInit {
 
       this.validateDistribution();
       this.emitChange();
+      this.changeDetectorRef.markForCheck();
     }
   }
 
@@ -169,7 +208,8 @@ export class DistributionPeriodSliderComponent implements OnInit {
     const config = this.getDistributionConfig();
     const totalWeight = config.components.reduce((sum, comp) => sum + comp.weight, 0);
 
-    this.isDistributionValid = totalWeight === 100;
+    // Allow small floating-point errors (tolerance: 0.01%)
+    this.isDistributionValid = Math.abs(totalWeight - 100) < 0.01;
     this.validationMessage = `Total: ${totalWeight}% (must be 100%)`;
   }
 
@@ -181,7 +221,8 @@ export class DistributionPeriodSliderComponent implements OnInit {
 
     const config = this.getDistributionConfig();
     const totalWeight = config.components.reduce((sum, comp) => sum + comp.weight, 0);
-    return totalWeight === 100;
+    // Allow small floating-point errors
+    return Math.abs(totalWeight - 100) < 0.01;
   }
 
   /**

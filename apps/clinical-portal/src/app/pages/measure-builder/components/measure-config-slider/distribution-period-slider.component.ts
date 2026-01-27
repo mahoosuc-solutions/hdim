@@ -87,9 +87,28 @@ export class DistributionPeriodSliderComponent implements OnInit {
       const config = this.getDistributionConfig();
       config.components[index].weight = Math.max(0, Math.min(100, newWeight));
 
+      // Rebalance other weights if total doesn't equal 100
+      const total = config.components.reduce((sum, comp) => sum + comp.weight, 0);
+      if (Math.abs(total - 100) > 0.01) {
+        this.rebalanceDistribution(config);
+      }
+
       this.validateDistribution();
       this.emitChange();
     }
+  }
+
+  /**
+   * Rebalance distribution weights to sum to 100
+   */
+  private rebalanceDistribution(config: DistributionSliderConfig): void {
+    const total = config.components.reduce((sum, comp) => sum + comp.weight, 0);
+    if (total === 0) return;
+
+    // Scale all weights proportionally to sum to 100
+    config.components.forEach(comp => {
+      comp.weight = Math.round((comp.weight / total) * 100 * 100) / 100;
+    });
   }
 
   /**

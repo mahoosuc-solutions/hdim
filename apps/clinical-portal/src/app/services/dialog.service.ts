@@ -6,7 +6,7 @@ import { PatientEditDialogComponent, PatientEditDialogData } from '../dialogs/pa
 import { EvaluationDetailsDialogComponent, EvaluationDetailsDialogData } from '../dialogs/evaluation-details-dialog/evaluation-details-dialog.component';
 import { AdvancedFilterDialogComponent, AdvancedFilterDialogData, FilterConfig, FilterField } from '../dialogs/advanced-filter-dialog/advanced-filter-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../components/dialogs/confirm-dialog.component';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Batch evaluation result

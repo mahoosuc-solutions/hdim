@@ -13,13 +13,13 @@
  */
 
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { catchError, tap, map, switchMap, shareReplay } from 'rxjs/operators';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 
 import {
   OutreachLog,

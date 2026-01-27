@@ -6,11 +6,11 @@
  * Handles conflict resolution and retry logic.
  */
 import { Injectable, OnDestroy } from '@angular/core';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable, Subject, from, of, forkJoin, timer } from 'rxjs';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import {
   catchError,
   concatMap,
@@ -37,7 +37,7 @@ import {
   SyncQueueItem,
 } from './offline-storage.service';
 import { NetworkStatusService } from './network-status.service';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 
 export interface SyncResult {
   success: boolean;

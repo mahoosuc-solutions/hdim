@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType, HttpProgressEvent } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { map, catchError, delay } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Document metadata interface

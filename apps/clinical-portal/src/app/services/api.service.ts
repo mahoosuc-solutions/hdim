@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular
 import { Observable, throwError, timer, of } from 'rxjs';
 import { catchError, retry, retryWhen, mergeMap, finalize, tap } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Base API Service - Central configuration for all HTTP operations

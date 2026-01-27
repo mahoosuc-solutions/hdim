@@ -1,19 +1,19 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { HttpClient } from '@angular/common/http';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable, of, timer, Subscription } from 'rxjs';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { AuthService } from './auth.service';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { EvaluationService } from './evaluation.service';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { AuditService, AuditAction } from './audit.service';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { API_CONFIG } from '../config/api.config';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import {
   ScheduledEvaluation,
   ScheduleExecution,

@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { MeasureInfo } from '../models/cql-library.model';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 const STORAGE_KEYS = {
   FAVORITES: 'hdim_measure_favorites',

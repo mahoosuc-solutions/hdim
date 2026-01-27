@@ -1,6 +1,6 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Service for managing Server-Sent Events (SSE) connection to AI Audit stream.

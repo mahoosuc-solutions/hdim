@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Recent patient entry with access metadata

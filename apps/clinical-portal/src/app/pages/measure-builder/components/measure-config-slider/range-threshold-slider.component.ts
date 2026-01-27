@@ -52,7 +52,7 @@ export class RangeThresholdSliderComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.isThresholdSlider()) {
-      this.determinActivePreset();
+      this.determineActivePreset();
     }
   }
 
@@ -89,12 +89,17 @@ export class RangeThresholdSliderComponent implements OnInit {
    */
   onRangeMinChange(event: Event): void {
     const target = event.target as HTMLInputElement;
-    const newMin = parseInt(target.value, 10);
+    const newMin = Math.max(parseInt(target.value, 10), 0);
     const config = this.getRangeConfig();
 
-    // Prevent min from exceeding max
-    if (newMin <= config.currentMax) {
-      config.currentMin = newMin;
+    // Validate constraints: min must be >= minValue, <= currentMax
+    const constrainedMin = Math.max(
+      Math.min(newMin, config.currentMax),
+      config.minValue
+    );
+
+    if (constrainedMin !== config.currentMin) {
+      config.currentMin = constrainedMin;
       this.emitChange();
     }
   }
@@ -107,9 +112,14 @@ export class RangeThresholdSliderComponent implements OnInit {
     const newMax = parseInt(target.value, 10);
     const config = this.getRangeConfig();
 
-    // Prevent max from going below min
-    if (newMax >= config.currentMin) {
-      config.currentMax = newMax;
+    // Validate constraints: max must be <= maxValue, >= currentMin
+    const constrainedMax = Math.min(
+      Math.max(newMax, config.currentMin),
+      config.maxValue
+    );
+
+    if (constrainedMax !== config.currentMax) {
+      config.currentMax = constrainedMax;
       this.emitChange();
     }
   }
@@ -122,9 +132,17 @@ export class RangeThresholdSliderComponent implements OnInit {
     const newValue = parseFloat(target.value);
     const config = this.getThresholdConfig();
 
-    config.currentValue = newValue;
-    this.determinActivePreset();
-    this.emitChange();
+    // Validate threshold is within bounds [minValue, maxValue]
+    const constrainedValue = Math.max(
+      Math.min(newValue, config.maxValue),
+      config.minValue
+    );
+
+    if (constrainedValue !== config.currentValue) {
+      config.currentValue = constrainedValue;
+      this.determineActivePreset();
+      this.emitChange();
+    }
   }
 
   /**
@@ -145,7 +163,7 @@ export class RangeThresholdSliderComponent implements OnInit {
   /**
    * Determine which preset matches current value
    */
-  private determinActivePreset(): void {
+  private determineActivePreset(): void {
     if (!this.isThresholdSlider()) return;
 
     const config = this.getThresholdConfig();

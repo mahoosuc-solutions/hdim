@@ -9,7 +9,6 @@ import { errorInterceptor } from './error.interceptor';
 import { AuthService } from '../services/auth.service';
 import { LoggerService } from 'services/logger.service';
 import { createMockLoggerService } from 'testing/mocks';
-import { createMockHttpClient } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 describe('ErrorInterceptor', () => {
@@ -36,7 +35,6 @@ describe('ErrorInterceptor', () => {
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
         { provide: Router, useValue: routerMock },
-        { provide: HttpClient, useValue: createMockHttpClient() },
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
         HttpTestingController,

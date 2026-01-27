@@ -197,7 +197,6 @@ describe('PatientHealthOverviewComponent', () => {
       imports: [PatientHealthOverviewComponent, NoopAnimationsModule],
       providers: [
         { provide: PatientHealthService, useValue: mockHealthService },
-        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientHealthOverviewComponent);

@@ -61,7 +61,6 @@ describe('ResultsComponent (TDD)', () => {
         { provide: PatientService, useValue: mockPatientService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ResultsComponent);

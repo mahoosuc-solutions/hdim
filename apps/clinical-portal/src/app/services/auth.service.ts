@@ -413,7 +413,8 @@ export class AuthService {
       firstName: response.username.split('@')[0], // Extract from username as fallback
       lastName: '',
       fullName: response.username,
-      roles: (response.roles || []).map(roleName => ({ id: '', name: roleName } as Role)),
+      // Use roleDetails if provided by backend, otherwise build from role names
+      roles: response.roleDetails || (response.roles || []).map(roleName => ({ id: '', name: roleName } as Role)),
       tenantId: response.tenantIds?.[0] || '', // Use first tenant ID
       tenantIds: response.tenantIds || [],
       active: true,
@@ -513,6 +514,7 @@ export interface LoginResponse {
   email: string;
   roles: string[];
   tenantIds: string[];
+  roleDetails?: Role[];
   mfaEnabled?: boolean;
   message?: string;
 }

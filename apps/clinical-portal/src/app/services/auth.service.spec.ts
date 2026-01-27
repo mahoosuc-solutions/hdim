@@ -35,12 +35,12 @@ describe('AuthService', () => {
   let apiService: jest.Mocked<ApiService>;
 
   const mockUser: User = {
-    id: '123',
+    id: '',
     username: 'testuser',
     email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
-    fullName: 'Test User',
+    firstName: 'testuser',
+    lastName: '',
+    fullName: 'testuser',
     roles: [
       {
         id: 'role1',
@@ -56,6 +56,7 @@ describe('AuthService', () => {
       },
     ],
     tenantId: 'tenant-123',
+    tenantIds: ['tenant-123'],
     active: true,
   };
 
@@ -68,6 +69,21 @@ describe('AuthService', () => {
     email: 'test@example.com',
     roles: ['USER'],
     tenantIds: ['tenant-123'],
+    // Full role data with permissions for authorization checks
+    roleDetails: [
+      {
+        id: 'role1',
+        name: 'USER',
+        permissions: [
+          {
+            id: 'perm1',
+            name: 'READ_PATIENTS',
+            resource: 'patients',
+            action: 'read',
+          },
+        ],
+      },
+    ],
   };
 
   const mockTokenResponse: TokenResponse = {
@@ -409,10 +425,9 @@ describe('AuthService', () => {
     };
 
     it('should return null when user has no tenant ID', (done) => {
-      const userWithoutTenant = { ...mockUser, tenantId: undefined };
       const loginResponse = {
         ...mockLoginResponse,
-        user: userWithoutTenant,
+        tenantIds: [],
       };
       apiService.post.mockReturnValue(of(loginResponse));
 
@@ -501,13 +516,10 @@ describe('AuthService', () => {
     };
 
     it('should grant ADMIN role all other roles', (done) => {
-      const adminUser = {
-        ...mockUser,
-        roles: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
-      };
       const loginResponse = {
         ...mockLoginResponse,
-        user: adminUser,
+        roles: ['ADMIN'],
+        roleDetails: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
       };
 
       // Create a new service instance to clear previous state
@@ -521,7 +533,7 @@ describe('AuthService', () => {
           done();
         },
       };
-    };
+    });
   };
 
   describe('Permission-Based Authorization', () => {
@@ -549,13 +561,10 @@ describe('AuthService', () => {
     };
 
     it('should grant ADMIN role all permissions', (done) => {
-      const adminUser = {
-        ...mockUser,
-        roles: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
-      };
       const loginResponse = {
         ...mockLoginResponse,
-        user: adminUser,
+        roles: ['ADMIN'],
+        roleDetails: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
       };
 
       service.logout();
@@ -567,7 +576,7 @@ describe('AuthService', () => {
           done();
         },
       };
-    };
+    });
   };
 
   describe('Observable Streams', () => {

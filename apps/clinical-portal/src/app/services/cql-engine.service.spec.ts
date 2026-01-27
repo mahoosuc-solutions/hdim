@@ -30,14 +30,14 @@ describe('CqlEngineService', () => {
     service.listValueSets().subscribe((valueSets) => {
       expect(valueSets[0].category).toBe('Laboratory');
       done();
-    }, 30000);
+    };
   });
 
   it('maps unknown code system and invalid codes safely', (done) => {
     const valueSet = createValueSet({
       codeSystem: 'http://unknown-system',
       codes: 'not-json',
-    }, 30000);
+    };
     http.get.mockReturnValueOnce(of([valueSet]));
 
     service.listValueSets().subscribe((valueSets) => {
@@ -53,7 +53,7 @@ describe('CqlEngineService', () => {
     service.listValueSets().subscribe((valueSets) => {
       expect(valueSets.length).toBeGreaterThan(0);
       done();
-    }, 30000);
+    };
   });
 
   it('searches value sets with fallback filtering', (done) => {
@@ -62,7 +62,7 @@ describe('CqlEngineService', () => {
     service.searchValueSets('diabetes').subscribe((valueSets) => {
       expect(valueSets.some((vs) => vs.name.toLowerCase().includes('diabetes'))).toBe(true);
       done();
-    }, 30000);
+    };
   });
 
   it('searches value sets with category parameter', (done) => {
@@ -71,7 +71,7 @@ describe('CqlEngineService', () => {
     service.searchValueSets('test', 'Diagnoses').subscribe((valueSets) => {
       expect(valueSets.length).toBe(1);
       done();
-    }, 30000);
+    };
 
     expect(http.get).toHaveBeenCalled();
   });
@@ -82,7 +82,7 @@ describe('CqlEngineService', () => {
     service.getValueSetByOid('1.2.3').subscribe((valueSet) => {
       expect(valueSet?.oid).toBe('1.2.3');
       done();
-    }, 30000);
+    };
   });
 
   it('returns null when value set lookup fails', (done) => {
@@ -91,7 +91,7 @@ describe('CqlEngineService', () => {
     service.getValueSetByOid('1.2.3').subscribe((valueSet) => {
       expect(valueSet).toBeNull();
       done();
-    }, 30000);
+    };
   });
 
   it('validates CQL and returns fallback on error', (done) => {

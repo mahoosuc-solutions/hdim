@@ -128,7 +128,7 @@ describe('NurseWorkflowService', () => {
         expect(result.patientId).toBe(patientId);
         expect(result.outcomeType).toBe(OutcomeType.SUCCESSFUL_CONTACT);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('outreach-logs'));
       expect(req.request.method).toBe('POST');
@@ -166,7 +166,7 @@ describe('NurseWorkflowService', () => {
         expect(result.content.length).toBe(1);
         expect(result.content[0].outcomeType).toBe(OutcomeType.SUCCESSFUL_CONTACT);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('outreach-logs/outcome'));
       req.flush({ content: mockLogs, totalElements: 1 });
@@ -191,7 +191,7 @@ describe('NurseWorkflowService', () => {
         expect(result.status).toBe(MedicationReconciliationStatus.IN_PROGRESS);
         expect(result.medicationCount).toBe(5);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('medication-reconciliations'));
       expect(req.request.method).toBe('POST');
@@ -222,7 +222,7 @@ describe('NurseWorkflowService', () => {
         expect(result.content.length).toBe(1);
         expect(result.content[0].status).toBe(MedicationReconciliationStatus.IN_PROGRESS);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('medication-reconciliations/pending'));
       req.flush({
@@ -260,7 +260,7 @@ describe('NurseWorkflowService', () => {
         expect(result.materialType).toBe(EducationMaterialType.DIABETES_MANAGEMENT);
         expect(result.deliveryMethod).toBe(EducationDeliveryMethod.IN_PERSON);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('patient-education'));
       expect(req.request.method).toBe('POST');
@@ -273,7 +273,7 @@ describe('NurseWorkflowService', () => {
         expect(result.content.length).toBe(1);
         expect(result.content[0].patientId).toBe(patientId);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('patient-education/patient'));
       req.flush({ content: mockLogs, totalElements: 1 });
@@ -319,7 +319,7 @@ describe('NurseWorkflowService', () => {
         expect(result.specialtyType).toBe('Cardiology');
         expect(result.status).toBe(ReferralStatus.PENDING_AUTHORIZATION);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('referral-coordinations'));
       expect(req.request.method).toBe('POST');
@@ -332,7 +332,7 @@ describe('NurseWorkflowService', () => {
         expect(result.content.length).toBe(1);
         expect(result.content[0].status).toBe(ReferralStatus.PENDING_AUTHORIZATION);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((r) => r.url.includes('referral-coordinations/pending'));
       req.flush({ content: mockReferrals, totalElements: 1 });
@@ -456,7 +456,7 @@ describe('NurseWorkflowService', () => {
         // Cache should be invalidated, next fetch should hit backend
         service.getPatientOutreachLogs(patientId, 0, 10).subscribe(() => {
           done();
-        }, 30000);
+        };
 
         const secondReq = httpMock.expectOne((r) => r.url.includes('outreach-logs/patient'));
         secondReq.flush({ content: [mockOutreachLog], totalElements: 1 });

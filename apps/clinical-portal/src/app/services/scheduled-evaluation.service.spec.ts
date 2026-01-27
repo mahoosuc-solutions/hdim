@@ -66,7 +66,7 @@ describe('ScheduledEvaluationService', () => {
       service.getSchedules().subscribe((schedules) => {
         expect(schedules).toEqual([]);
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -84,7 +84,7 @@ describe('ScheduledEvaluationService', () => {
           expect(schedule.createdBy).toBe('testuser');
           expect(schedule.nextRun).toBeDefined();
           done();
-        }, 30000);
+        };
     });
 
     it('should create a weekly schedule with custom options', (done) => {
@@ -102,7 +102,7 @@ describe('ScheduledEvaluationService', () => {
           expect(schedule.dayOfWeek).toBe('monday');
           expect(schedule.measureIds).toEqual(['COL', 'BCS']);
           done();
-        }, 30000);
+        };
     });
 
     it('should persist schedule to localStorage', fakeAsync(() => {

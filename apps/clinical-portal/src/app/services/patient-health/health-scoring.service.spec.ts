@@ -347,7 +347,7 @@ describe('HealthScoringService', () => {
         expect(result).toBeDefined();
         expect(result.patientId).toBe('patient-3');
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/health-score/patient-3') || request.url.includes('/patient-3/health-score')
@@ -368,7 +368,7 @@ describe('HealthScoringService', () => {
         expect(result[0].score).toBe(80);
         expect(result[0].trigger).toBe('manual');
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/health-score/patient-1/history') || request.url.includes('/patient-1/health-score/history')
@@ -381,7 +381,7 @@ describe('HealthScoringService', () => {
       service.getHealthScoreHistory('patient-1').subscribe((result) => {
         expect(result).toEqual([]);
         done();
-      }, 30000);
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/health-score/patient-1/history') || request.url.includes('/patient-1/health-score/history')

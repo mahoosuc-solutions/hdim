@@ -139,7 +139,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(0);
         expect(result.level).toBe('low');
         done();
-      }, 30000);
+      };
     });
 
     it('should calculate score for severe needs (25 points each)', (done) => {
@@ -154,7 +154,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(50);
         expect(result.level).toBe('high');
         done();
-      }, 30000);
+      };
     });
 
     it('should calculate score for moderate needs (15 points each)', (done) => {
@@ -169,7 +169,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(30);
         expect(result.level).toBe('moderate');
         done();
-      }, 30000);
+      };
     });
 
     it('should calculate score for mild needs (5 points each)', (done) => {
@@ -184,7 +184,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(10);
         expect(result.level).toBe('low');
         done();
-      }, 30000);
+      };
     });
 
     it('should not count addressed needs', (done) => {
@@ -199,7 +199,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(25); // Only one unaddressed severe need
         expect(result.level).toBe('moderate');
         done();
-      }, 30000);
+      };
     });
 
     it('should return critical level for scores >= 75', (done) => {
@@ -215,7 +215,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(75);
         expect(result.level).toBe('critical');
         done();
-      }, 30000);
+      };
     });
 
     it('should cap score at 100', (done) => {
@@ -233,7 +233,7 @@ describe('SDOHService', () => {
         expect(result.score).toBe(100); // Capped at 100
         expect(result.level).toBe('critical');
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -246,7 +246,7 @@ describe('SDOHService', () => {
       service.identifySDOHInterventionNeeds('patient-1').subscribe((interventions) => {
         expect(interventions.length).toBe(0);
         done();
-      }, 30000);
+      };
     });
 
     it('should identify interventions for unaddressed needs', (done) => {
@@ -264,7 +264,7 @@ describe('SDOHService', () => {
         expect(interventions[1].category).toBe('transportation');
         expect(interventions[1].priority).toBe('medium');
         done();
-      }, 30000);
+      };
     });
 
     it('should not include addressed needs', (done) => {
@@ -279,7 +279,7 @@ describe('SDOHService', () => {
         expect(interventions.length).toBe(1);
         expect(interventions[0].category).toBe('transportation');
         done();
-      }, 30000);
+      };
     });
 
     it('should set correct priority based on severity', (done) => {
@@ -296,7 +296,7 @@ describe('SDOHService', () => {
         expect(interventions.find(i => i.category === 'transportation')?.priority).toBe('medium');
         expect(interventions.find(i => i.category === 'education')?.priority).toBe('low');
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -313,7 +313,7 @@ describe('SDOHService', () => {
         expect(result).toBeDefined();
         expect(result.overallRisk).toBeDefined();
         done();
-      }, 30000);
+      };
     });
 
     it('should return default summary when no screenings exist', (done) => {
@@ -323,7 +323,7 @@ describe('SDOHService', () => {
         expect(result).toBeDefined();
         expect(result.overallRisk).toBe('low');
         done();
-      }, 30000);
+      };
     });
 
     it('should return cached result on second call', (done) => {
@@ -340,7 +340,7 @@ describe('SDOHService', () => {
           // Should not have made new API call
           expect(mockFhirQuestionnaireService.getSDOHScreenings).not.toHaveBeenCalled();
           done();
-        }, 30000);
+        };
       });
     });
   });
@@ -364,7 +364,7 @@ describe('SDOHService', () => {
         service.getSDOHSummary('patient-invalidate').subscribe(() => {
           expect(mockFhirQuestionnaireService.getSDOHScreenings).toHaveBeenCalled();
           done();
-        }, 30000);
+        };
       });
     });
   });

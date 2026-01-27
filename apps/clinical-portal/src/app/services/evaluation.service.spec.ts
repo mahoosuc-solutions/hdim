@@ -35,8 +35,8 @@ describe('EvaluationService', () => {
   describe('initialization', () => {
     it('should be created', () => {
       expect(service).toBeTruthy();
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('CQL Engine Evaluation Endpoints', () => {
     describe('submitEvaluation', () => {
@@ -47,18 +47,18 @@ describe('EvaluationService', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
           libraryId,
           patientId,
-        }, 30000);
+        };
 
         service.submitEvaluation(libraryId, patientId).subscribe((evaluation) => {
           expect(evaluation).toEqual(mockEvaluation);
           expect(evaluation.status).toBe('SUCCESS');
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('POST');
-        expect(req.request.body).toEqual({}, 30000);
+        expect(req.request.body).toEqual({};
         req.flush(mockEvaluation);
-      }, 30000);
+      };
 
       it('should submit evaluation with context data', () => {
         const mockEvaluation = EvaluationFactory.createSuccessfulEvaluation();
@@ -70,7 +70,7 @@ describe('EvaluationService', () => {
           .submitEvaluation(libraryId, patientId, contextData)
           .subscribe((evaluation) => {
             expect(evaluation).toEqual(mockEvaluation);
-          }, 30000);
+          };
 
         const req = httpMock.expectOne(
           buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
@@ -80,7 +80,7 @@ describe('EvaluationService', () => {
         );
         expect(req.request.body).toEqual(contextData);
         req.flush(mockEvaluation);
-      }, 30000);
+      };
 
       it('should handle failed evaluation', () => {
         const failedEvaluation = EvaluationFactory.createFailedEvaluation();
@@ -90,7 +90,7 @@ describe('EvaluationService', () => {
         service.submitEvaluation(libraryId, patientId).subscribe((evaluation) => {
           expect(evaluation.status).toBe('FAILED');
           expect(evaluation.errorMessage).toBeTruthy();
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(
           buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
@@ -99,8 +99,8 @@ describe('EvaluationService', () => {
           })
         );
         req.flush(failedEvaluation);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('batchEvaluate', () => {
       it('should batch evaluate multiple patients', () => {
@@ -109,19 +109,19 @@ describe('EvaluationService', () => {
         const patientIds = ['p1', 'p2', 'p3', 'p4', 'p5'];
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS_BATCH, {
           libraryId,
-        }, 30000);
+        };
 
         service.batchEvaluate(libraryId, patientIds).subscribe((response) => {
           expect(response.totalPatients).toBe(5);
           expect(response.successfulEvaluations).toBe(5);
           expect(response.evaluations.length).toBe(5);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('POST');
         expect(req.request.body).toEqual(patientIds);
         req.flush(batchResponse);
-      }, 30000);
+      };
 
       it('should handle partial batch failures', () => {
         const batchResponse = {
@@ -141,7 +141,7 @@ describe('EvaluationService', () => {
         service.batchEvaluate('lib-1', ['p1', 'p2', 'p3']).subscribe((response) => {
           expect(response.successfulEvaluations).toBe(2);
           expect(response.failedEvaluations).toBe(1);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(
           buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS_BATCH, {
@@ -149,8 +149,8 @@ describe('EvaluationService', () => {
           })
         );
         req.flush(batchResponse);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getPatientEvaluations', () => {
       it('should fetch all evaluations for a patient', () => {
@@ -166,13 +166,13 @@ describe('EvaluationService', () => {
         service.getPatientEvaluations(patientId).subscribe((results) => {
           expect(results.length).toBe(2);
           expect(results.every((e) => e.patientId === patientId)).toBe(true);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('GET');
         req.flush(evaluations);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getLibraryEvaluations', () => {
       it('should fetch all evaluations for a library', () => {
@@ -188,12 +188,12 @@ describe('EvaluationService', () => {
         service.getLibraryEvaluations(libraryId).subscribe((results) => {
           expect(results.length).toBe(2);
           expect(results.every((e) => e.library?.id === libraryId)).toBe(true);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(evaluations);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getAllEvaluations', () => {
       it('should fetch all evaluations with default pagination', () => {
@@ -203,15 +203,15 @@ describe('EvaluationService', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
           page: '0',
           size: '1000',
-        }, 30000);
+        };
 
         service.getAllEvaluations().subscribe((results) => {
           expect(results.length).toBe(20);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(evaluations);
-      }, 30000);
+      };
 
       it('should map Spring Data REST responses with content', () => {
         const evaluations = [
@@ -221,29 +221,29 @@ describe('EvaluationService', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
           page: '0',
           size: '1000',
-        }, 30000);
+        };
 
         service.getAllEvaluations().subscribe((results) => {
           expect(results).toEqual(evaluations);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
-        req.flush({ content: evaluations }, 30000);
-      }, 30000);
+        req.flush({ content: evaluations };
+      };
 
       it('should return empty array for unexpected response', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
           page: '0',
           size: '1000',
-        }, 30000);
+        };
 
         service.getAllEvaluations().subscribe((results) => {
           expect(results).toEqual([]);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
-        req.flush({ message: 'unexpected' }, 30000);
-      }, 30000);
+        req.flush({ message: 'unexpected' };
+      };
 
       it('should fetch evaluations with custom pagination', () => {
         const evaluations = Array.from({ length: 10 }, () =>
@@ -252,16 +252,16 @@ describe('EvaluationService', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
           page: '2',
           size: '10',
-        }, 30000);
+        };
 
         service.getAllEvaluations(2, 10).subscribe((results) => {
           expect(results.length).toBe(10);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(evaluations);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('evaluateSimple', () => {
       it('should evaluate with simple endpoint', () => {
@@ -271,16 +271,16 @@ describe('EvaluationService', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATE_SIMPLE, {
           library: libraryName,
           patient: patientId,
-        }, 30000);
+        };
 
         service.evaluateSimple(libraryName, patientId).subscribe((response) => {
           expect(response).toEqual(result);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('POST');
         req.flush(result);
-      }, 30000);
+      };
 
       it('should pass parameters to simple evaluation', () => {
         const params = { measurementYear: 2024 };
@@ -297,8 +297,8 @@ describe('EvaluationService', () => {
         );
         expect(req.request.body).toEqual(params);
         req.flush({});
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('cached evaluations', () => {
       it('should cache evaluations within TTL', () => {
@@ -307,22 +307,22 @@ describe('EvaluationService', () => {
         const expectedUrl = buildCqlEngineUrl(CQL_ENGINE_ENDPOINTS.EVALUATIONS, {
           page: '0',
           size: '1000',
-        }, 30000);
+        };
 
         service.getAllEvaluationsCached().subscribe((results) => {
           expect(results.length).toBe(1);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(evaluations);
 
         service.getAllEvaluationsCached().subscribe((results) => {
           expect(results.length).toBe(1);
-        }, 30000);
+        };
 
         httpMock.expectNone(expectedUrl);
         nowSpy.mockRestore();
-      }, 30000);
+      };
 
       it('should filter recent evaluations and limit results', () => {
         const recent = new Date();
@@ -343,10 +343,10 @@ describe('EvaluationService', () => {
           expect(new Date(results[0].createdAt).getTime()).toBeGreaterThanOrEqual(
             old.getTime()
           );
-        }, 30000);
+        };
 
         cacheSpy.mockRestore();
-      }, 30000);
+      };
 
       it('should calculate evaluation stats with empty data', () => {
         const cacheSpy = jest.spyOn(service, 'getAllEvaluationsCached').mockReturnValue(of([]));
@@ -355,12 +355,12 @@ describe('EvaluationService', () => {
           expect(stats.total).toBe(0);
           expect(stats.last30Days).toBe(0);
           expect(stats.successRate).toBe(0);
-        }, 30000);
+        };
 
         cacheSpy.mockRestore();
-      }, 30000);
-    }, 30000);
-  }, 30000);
+      };
+    };
+  };
 
   describe('Quality Measure Service Endpoints', () => {
     describe('calculateQualityMeasure', () => {
@@ -372,17 +372,17 @@ describe('EvaluationService', () => {
           patient: patientId,
           measure: measureId,
           createdBy: 'system',
-        }, 30000);
+        };
 
         service.calculateQualityMeasure(patientId, measureId).subscribe((response) => {
           expect(response).toEqual(result);
           expect(response.numeratorCompliant).toBe(true);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('POST');
         req.flush(result);
-      }, 30000);
+      };
 
       it('should use custom createdBy parameter', () => {
         const result = EvaluationFactory.createCompliantResult();
@@ -393,17 +393,17 @@ describe('EvaluationService', () => {
           patient: patientId,
           measure: measureId,
           createdBy,
-        }, 30000);
+        };
 
         service
           .calculateQualityMeasure(patientId, measureId, createdBy)
           .subscribe((response) => {
             expect(response.createdBy).toBe('system'); // Backend returns its own value
-          }, 30000);
+          };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(result);
-      }, 30000);
+      };
 
       it('should handle non-compliant result', () => {
         const result = EvaluationFactory.createNonCompliantResult();
@@ -411,13 +411,13 @@ describe('EvaluationService', () => {
         service.calculateQualityMeasure('patient-002', 'lib-1').subscribe((response) => {
           expect(response.numeratorCompliant).toBe(false);
           expect(response.denominatorEligible).toBe(true);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(QUALITY_MEASURE_ENDPOINTS.CALCULATE)
         );
         req.flush(result);
-      }, 30000);
+      };
 
       it('should handle not eligible result', () => {
         const result = EvaluationFactory.createNotEligibleResult();
@@ -425,14 +425,14 @@ describe('EvaluationService', () => {
         service.calculateQualityMeasure('patient-003', 'lib-1').subscribe((response) => {
           expect(response.denominatorEligible).toBe(false);
           expect(response.numeratorCompliant).toBe(false);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(QUALITY_MEASURE_ENDPOINTS.CALCULATE)
         );
         req.flush(result);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getPatientResults', () => {
       it('should fetch all quality measure results for a patient', () => {
@@ -448,12 +448,12 @@ describe('EvaluationService', () => {
 
         service.getPatientResults(patientId).subscribe((response) => {
           expect(response.length).toBe(2);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('GET');
         req.flush(results);
-      }, 30000);
+      };
 
       it('should fetch all results without patient filter', () => {
         const expectedUrl = buildQualityMeasureUrl(
@@ -466,8 +466,8 @@ describe('EvaluationService', () => {
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('GET');
         req.flush([]);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getQualityScore', () => {
       it('should fetch quality score for a patient', () => {
@@ -475,17 +475,17 @@ describe('EvaluationService', () => {
         const patientId = 'patient-001';
         const expectedUrl = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.QUALITY_SCORE, {
           patient: patientId,
-        }, 30000);
+        };
 
         service.getQualityScore(patientId).subscribe((response) => {
           expect(response).toEqual(score);
           expect(response.scorePercentage).toBe(80.0);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(score);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getPatientReport', () => {
       it('should fetch patient quality report', () => {
@@ -493,18 +493,18 @@ describe('EvaluationService', () => {
         const patientId = 'patient-001';
         const expectedUrl = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.PATIENT_REPORT, {
           patient: patientId,
-        }, 30000);
+        };
 
         service.getPatientReport(patientId).subscribe((response) => {
           expect(response).toEqual(report);
           expect(response.patientId).toBe('patient-001');
           expect(response.measureResults.length).toBeGreaterThan(0);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(report);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('getPopulationReport', () => {
       it('should fetch population quality report', () => {
@@ -519,12 +519,12 @@ describe('EvaluationService', () => {
           expect(response).toEqual(report);
           expect(response.year).toBe(2024);
           expect(response.measureSummaries.length).toBeGreaterThan(0);
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         req.flush(report);
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     describe('checkHealth', () => {
       it('should check Quality Measure Service health', () => {
@@ -533,14 +533,14 @@ describe('EvaluationService', () => {
 
         service.checkHealth().subscribe((response) => {
           expect(response.status).toBe('UP');
-        }, 30000);
+        };
 
         const req = httpMock.expectOne(expectedUrl);
         expect(req.request.method).toBe('GET');
         req.flush(healthResponse);
-      }, 30000);
-    }, 30000);
-  }, 30000);
+      };
+    };
+  };
 
   describe('Saved Reports', () => {
     it('should fetch saved reports with and without type', () => {
@@ -556,7 +556,7 @@ describe('EvaluationService', () => {
         buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.SAVED_REPORTS, { type: 'PATIENT' })
       );
       typeReq.flush([]);
-    }, 30000);
+    };
 
     it('should export and download report as CSV', (done) => {
       const blob = new Blob(['csv']);
@@ -571,7 +571,7 @@ describe('EvaluationService', () => {
           done();
         },
         error: done.fail,
-      }, 30000);
+      };
     });
 
     it('should export and download report as Excel', (done) => {
@@ -587,7 +587,7 @@ describe('EvaluationService', () => {
           done();
         },
         error: done.fail,
-      }, 30000);
+      };
     });
   });
 

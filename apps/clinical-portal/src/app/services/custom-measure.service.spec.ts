@@ -35,7 +35,7 @@ describe('CustomMeasureService', () => {
       service.list('DRAFT').subscribe((list) => {
         expect(list.length).toBe(1);
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -47,7 +47,7 @@ describe('CustomMeasureService', () => {
       service.delete('m1').subscribe(() => {
         expect(http.delete).toHaveBeenCalled();
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -62,7 +62,7 @@ describe('CustomMeasureService', () => {
         service.batchPublish(['m1']).subscribe((result) => {
           expect(result.published).toBe(1);
           done();
-        }, 30000);
+        };
       });
     });
   });
@@ -76,7 +76,7 @@ describe('CustomMeasureService', () => {
       service.updateValueSets('m1', ['vs1']).subscribe(() => {
         expect(http.put).toHaveBeenCalledTimes(2);
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -89,7 +89,7 @@ describe('CustomMeasureService', () => {
       service.compareVersions('m1', '1.0', '1.1').subscribe((diffs) => {
         expect(diffs.length).toBe(1);
         done();
-      }, 30000);
+      };
     });
   });
 

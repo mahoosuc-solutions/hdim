@@ -214,7 +214,7 @@ describe('PatientHealthFacade', () => {
         expect(overview.riskStratification).toBeDefined();
         expect(overview.overallHealthScore).toBeDefined();
         done();
-      }, 30000);
+      };
     });
 
     it('should call all specialized services', (done) => {
@@ -225,7 +225,7 @@ describe('PatientHealthFacade', () => {
         expect(mockRiskStratificationService.getRiskStratification).toHaveBeenCalledWith('patient-1');
         expect(mockHealthScoringService.getHealthScore).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -235,21 +235,21 @@ describe('PatientHealthFacade', () => {
         expect(result).toBeDefined();
         expect(mockPhysicalHealthService.getPhysicalHealthSummary).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getLabResultsGroupedByPanel', (done) => {
       facade.getLabResultsGroupedByPanel('patient-1').subscribe(() => {
         expect(mockPhysicalHealthService.getLabResultsGroupedByPanel).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getLabHistory', (done) => {
       facade.getLabHistory('patient-1', '4548-4', 10).subscribe(() => {
         expect(mockPhysicalHealthService.getLabHistory).toHaveBeenCalledWith('patient-1', '4548-4', 10);
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate analyzeLabTrend', () => {
@@ -262,14 +262,14 @@ describe('PatientHealthFacade', () => {
       facade.getChronicConditions('patient-1').subscribe(() => {
         expect(mockPhysicalHealthService.getChronicConditions).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getVitalSignHistory', (done) => {
       facade.getVitalSignHistory('patient-1', '8480-6', 30).subscribe(() => {
         expect(mockPhysicalHealthService.getVitalSignHistory).toHaveBeenCalledWith('patient-1', '8480-6', 30);
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -278,14 +278,14 @@ describe('PatientHealthFacade', () => {
       facade.getMentalHealthSummary('patient-1').subscribe(() => {
         expect(mockMentalHealthService.getMentalHealthSummary).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getAssessmentHistory', (done) => {
       facade.getAssessmentHistory('patient-1', 'PHQ-9').subscribe(() => {
         expect(mockMentalHealthService.getAssessmentHistory).toHaveBeenCalledWith('patient-1', 'PHQ-9');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate submitMentalHealthAssessment', (done) => {
@@ -326,21 +326,21 @@ describe('PatientHealthFacade', () => {
       facade.getSDOHSummary('patient-1').subscribe(() => {
         expect(mockSDOHService.getSDOHSummary).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getSocialDeterminants', (done) => {
       facade.getSocialDeterminants('patient-1').subscribe(() => {
         expect(mockSDOHService.getSocialDeterminants).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate calculateSDOHRiskScore', (done) => {
       facade.calculateSDOHRiskScore('patient-1').subscribe(() => {
         expect(mockSDOHService.calculateSDOHRiskScore).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate mapSDOHCategoryToZCode', () => {
@@ -354,21 +354,21 @@ describe('PatientHealthFacade', () => {
       facade.getRiskStratification('patient-1').subscribe(() => {
         expect(mockRiskStratificationService.getRiskStratification).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate calculateMultiFactorRiskScore', (done) => {
       facade.calculateMultiFactorRiskScore('patient-1').subscribe(() => {
         expect(mockRiskStratificationService.calculateMultiFactorRiskScore).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getCategoryRiskAssessments', (done) => {
       facade.getCategoryRiskAssessments('patient-1').subscribe(() => {
         expect(mockRiskStratificationService.getCategoryRiskAssessments).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
   });
 
@@ -377,14 +377,14 @@ describe('PatientHealthFacade', () => {
       facade.getHealthScore('patient-1').subscribe(() => {
         expect(mockHealthScoringService.getHealthScore).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate getHealthScoreHistory', (done) => {
       facade.getHealthScoreHistory('patient-1').subscribe(() => {
         expect(mockHealthScoringService.getHealthScoreHistory).toHaveBeenCalledWith('patient-1');
         done();
-      }, 30000);
+      };
     });
 
     it('should delegate calculateWeightedHealthScore', () => {

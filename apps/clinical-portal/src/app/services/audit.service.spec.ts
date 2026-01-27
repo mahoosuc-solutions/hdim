@@ -5,7 +5,6 @@ import { AuditService, AuditAction, AuditOutcome, AuditEvent } from './audit.ser
 import { AuthService, User } from './auth.service';
 import { LoggerService } from 'services/logger.service';
 import { createMockLoggerService } from 'testing/mocks';
-import { createMockHttpClient } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 
@@ -51,7 +50,6 @@ describe('AuditService', () => {
         AuditService,
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
-        { provide: HttpClient, useValue: createMockHttpClient() },
         HttpTestingController,
       ],
     });

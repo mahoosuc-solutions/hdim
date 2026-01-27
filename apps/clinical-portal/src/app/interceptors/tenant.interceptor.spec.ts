@@ -6,7 +6,6 @@ import {
 } from '@angular/common/http/testing';
 import { tenantInterceptor } from './tenant.interceptor';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
-import { createMockHttpClient } from '../../testing/mocks';
 
 describe('TenantInterceptor', () => {
   let httpMock: HttpTestingController;
@@ -17,7 +16,6 @@ describe('TenantInterceptor', () => {
       providers: [
         provideHttpClient(withInterceptors([tenantInterceptor])),
         provideHttpClientTesting(),
-        { provide: HttpClient, useValue: createMockHttpClient() },
         HttpTestingController,
       ],
     });

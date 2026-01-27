@@ -9,7 +9,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import {
   PDCResult,
   MedicationAdherenceScore,

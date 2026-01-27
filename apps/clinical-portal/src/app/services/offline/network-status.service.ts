@@ -6,11 +6,11 @@
  * for components to respond to online/offline transitions.
  */
 import { Injectable, NgZone, OnDestroy } from '@angular/core';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable, fromEvent, merge, Subject, timer } from 'rxjs';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 import { debounceTime, distinctUntilChanged, map, takeUntil, tap } from 'rxjs/operators';
-import { LoggerService } from '../../logger.service';
+import { LoggerService } from '../logger.service';
 
 export interface NetworkState {
   isOnline: boolean;

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { Observable, Subject } from 'rxjs';
 import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data-flow.component';
 

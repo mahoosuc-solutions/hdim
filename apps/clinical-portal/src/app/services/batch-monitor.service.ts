@@ -1,23 +1,23 @@
 import { Injectable } from '@angular/core';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { Observable, Subject, merge, of, throwError, combineLatest } from 'rxjs';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { map, switchMap, catchError, tap, shareReplay, take } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 import { PatientService } from './patient.service';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { EvaluationService } from './evaluation.service';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import {
   WebSocketVisualizationService,
   BatchProgressEvent,
   WebSocketStatus,
 } from '../visualization/core/websocket-visualization.service';
 import { CqlEvaluation, BatchEvaluationResponse } from '../models/evaluation.model';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 import { Patient } from '../models/patient.model';
-import { LoggerService } from '../logger.service';
+import { LoggerService } from './logger.service';
 
 /**
  * Batch Monitor Configuration

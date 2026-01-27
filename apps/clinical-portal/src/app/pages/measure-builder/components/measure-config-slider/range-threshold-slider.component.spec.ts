@@ -165,7 +165,7 @@ describe('RangeThresholdSliderComponent - Team 3 Test Suite', () => {
     });
 
     it('should emit change event when range values change', () => {
-      spyOn(component.valueChanged, 'emit');
+      jest.spyOn(component.valueChanged, 'emit');
 
       const minSlider = fixture.debugElement.query(el =>
         el.nativeElement.classList.contains('slider-min')
@@ -558,7 +558,7 @@ describe('RangeThresholdSliderComponent - Team 3 Test Suite', () => {
       component.config = mockRangeConfig;
       fixture.detectChanges();
 
-      spyOn(component.valueChanged, 'emit');
+      jest.spyOn(component.valueChanged, 'emit');
 
       const minSlider = fixture.debugElement.query(el =>
         el.nativeElement.classList.contains('slider-min')

@@ -44,7 +44,6 @@ describe('ProviderDashboardComponent', () => {
         { provide: Router, useValue: mockRouter },
         { provide: DialogService, useValue: mockDialogService },
         { provide: NotificationService, useValue: mockNotificationService },
-        { provide: Store, useValue: createMockStore() }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProviderDashboardComponent);

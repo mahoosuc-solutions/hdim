@@ -52,7 +52,6 @@ describe('AuditService', () => {
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
         { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Store, useValue: createMockStore() },
         HttpTestingController,
       ],
     });

@@ -69,7 +69,6 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: CareGapService, useValue: mockCareGapService },
         { provide: ToastService, useValue: mockToastService },
-        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RNDashboardComponent);

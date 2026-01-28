@@ -2,7 +2,7 @@
 
 **Status**: Production ✅
 **Last Updated**: January 19, 2026
-**Total Files**: 18 docker-compose configurations
+**Total Files**: 17 docker-compose configurations
 
 ---
 
@@ -40,7 +40,6 @@ docker compose -f docker-compose.dev-hardened.yml up -d
 | **docker-compose.dev-hardened.yml** | Security hardening for dev | Core services with security | Security testing, hardened dev environment | 6-8GB |
 | **docker-compose.demo.yml** | Full demo with all features | All 28+ services + demo data | Product demos, evaluation | 8GB |
 | **docker-compose.demo-core.yml** | Demo with core services only | Core + demo data (no AI/analytics) | Lightweight demo | 4-6GB |
-| **docker-compose-demo.yml** | Minimal demo setup | Minimal demo | Quick evaluation | <2GB |
 | **docker-compose.minimal-clinical.yml** | Clinical workflows only | Clinical core services | Clinical feature development | 4-6GB |
 | **docker-compose.prod.yml** | Production template | Simplified for prod deployment | Reference for production | N/A |
 | **docker-compose.production.yml** | Full production setup | All services production-ready | Production deployment base | N/A |

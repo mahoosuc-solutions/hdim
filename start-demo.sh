@@ -5,75 +5,35 @@
 set -e
 
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
-GATEWAY_URL="${GATEWAY_URL:-http://localhost:9000}"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
 
 echo "🚀 Starting HealthData In Motion Demo..."
 
-# Start infrastructure services (PostgreSQL, Redis, Kafka)
-echo "📦 Starting infrastructure services..."
-docker compose -f "$COMPOSE_FILE" up -d postgres redis kafka zookeeper
+# Start demo stack
+echo "📦 Starting demo stack..."
+docker compose -f "$COMPOSE_FILE" up -d
 
-# Wait for database
-echo "⏳ Waiting for PostgreSQL..."
-sleep 5
-
-# Start backend services
-echo "🔧 Starting backend microservices..."
-
-# Terminal 1: Gateway Service (Port 9000)
-echo "  → Gateway Service (port 9000)"
-cd backend
-./gradlew :modules:services:gateway-service:bootRun --args='--spring.profiles.active=dev' > ../logs/gateway.log 2>&1 &
-GATEWAY_PID=$!
-
-# Wait for Gateway to start
-sleep 10
-
-# Terminal 2: CQL Engine Service (Port 8081)
-echo "  → CQL Engine Service (port 8081)"
-./gradlew :modules:services:cql-engine-service:bootRun --args='--spring.profiles.active=dev' > ../logs/cql-engine.log 2>&1 &
-CQL_PID=$!
-
-# Terminal 3: Quality Measure Service (Port 8087)
-echo "  → Quality Measure Service (port 8087)"
-./gradlew :modules:services:quality-measure-service:bootRun --args='--spring.profiles.active=dev' > ../logs/quality-measure.log 2>&1 &
-QUALITY_PID=$!
-
-# Wait for services to start
-sleep 15
-
-# Start frontend
-echo "🎨 Starting Clinical Portal..."
-cd ../apps/clinical-portal
-npm start > ../../logs/clinical-portal.log 2>&1 &
-PORTAL_PID=$!
+echo "⏳ Waiting for services to stabilize..."
+sleep 20
 
 echo ""
 echo "✅ All services started!"
 echo ""
 echo "📝 Service URLs:"
-echo "  Gateway (Auth):          ${GATEWAY_URL}"
-echo "  CQL Engine:              http://localhost:8081"
-echo "  Quality Measure:         http://localhost:8087"
-echo "  Clinical Portal:         http://localhost:4202"
+echo "  Gateway Edge:            ${GATEWAY_URL}"
+echo "  Clinical Portal:         http://localhost:4200"
 echo ""
 echo "🔐 Test Login:"
 echo "  POST ${GATEWAY_URL}/api/v1/auth/login"
 echo '  Body: {"username":"admin","password":"admin123"}'
 echo ""
 echo "📊 Service Logs:"
-echo "  Gateway:                 tail -f logs/gateway.log"
-echo "  CQL Engine:              tail -f logs/cql-engine.log"
-echo "  Quality Measure:         tail -f logs/quality-measure.log"
-echo "  Clinical Portal:         tail -f logs/clinical-portal.log"
+echo "  Gateways:                docker compose -f \"$COMPOSE_FILE\" logs -f gateway-admin-service gateway-fhir-service gateway-clinical-service"
+echo "  Edge:                    docker compose -f \"$COMPOSE_FILE\" logs -f gateway-edge"
+echo "  Clinical Portal:         docker compose -f \"$COMPOSE_FILE\" logs -f clinical-portal"
 echo ""
 echo "🛑 To stop all services:"
-echo "  kill $GATEWAY_PID $CQL_PID $QUALITY_PID $PORTAL_PID"
 echo "  docker compose -f \"$COMPOSE_FILE\" down"
 echo ""
 
-# Save PIDs
-echo "$GATEWAY_PID $CQL_PID $QUALITY_PID $PORTAL_PID" > .demo-pids
-
-echo "Press Ctrl+C to stop all services..."
-wait
+echo "Done."

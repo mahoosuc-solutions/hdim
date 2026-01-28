@@ -3,7 +3,9 @@ package com.healthdata.fhir.config;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import java.util.ArrayList;
@@ -49,6 +51,10 @@ public class WebMvcConfiguration {
     @Bean
     public HttpMessageConverters messageConverters(MappingJackson2HttpMessageConverter jsonConverter) {
         List<HttpMessageConverter<?>> converters = new ArrayList<>();
+        // Handle application/fhir+json payloads as raw strings for HAPI parsing in controllers.
+        StringHttpMessageConverter fhirStringConverter = new StringHttpMessageConverter();
+        fhirStringConverter.setSupportedMediaTypes(List.of(MediaType.valueOf("application/fhir+json")));
+        converters.add(fhirStringConverter);
         converters.add(jsonConverter);
         return new HttpMessageConverters(false, converters);
     }

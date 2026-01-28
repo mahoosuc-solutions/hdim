@@ -34,7 +34,7 @@ public class ComplianceErrorService {
         for (ComplianceErrorDto errorDto : request.getErrors()) {
             try {
                 // Generate UUID from error ID (deterministic based on timestamp and random part)
-                UUID errorId = parseErrorId(errorDto.getId());
+                UUID errorId = parseErrorId(errorDto.getId(), tenantId);
                 
                 // Check if error already exists (deduplication)
                 if (repository.existsById(errorId)) {
@@ -60,11 +60,17 @@ public class ComplianceErrorService {
 
     private ComplianceErrorEntity mapToEntity(ComplianceErrorDto dto, String tenantId) {
         try {
+            String resolvedTenantId = tenantId;
+            String dtoTenantId = dto.getContext() != null ? dto.getContext().getTenantId() : null;
+            if (dtoTenantId != null && !dtoTenantId.isBlank() && !dtoTenantId.equals(tenantId)) {
+                log.warn("Compliance error tenant mismatch ignored (dto={}, header={})", dtoTenantId, tenantId);
+            }
+            Instant timestamp = parseTimestamp(dto.getTimestamp());
+
             ComplianceErrorEntity.ComplianceErrorEntityBuilder builder = ComplianceErrorEntity.builder()
-                .id(parseErrorId(dto.getId()))
-                .timestamp(Instant.parse(dto.getTimestamp()))
-                .tenantId(dto.getContext() != null && dto.getContext().getTenantId() != null 
-                    ? dto.getContext().getTenantId() : tenantId)
+                .id(parseErrorId(dto.getId(), resolvedTenantId))
+                .timestamp(timestamp)
+                .tenantId(resolvedTenantId)
                 .userId(dto.getContext() != null ? dto.getContext().getUserId() : null)
                 .service(dto.getContext() != null ? dto.getContext().getService() : "Unknown")
                 .endpoint(dto.getContext() != null ? dto.getContext().getEndpoint() : null)
@@ -90,14 +96,15 @@ public class ComplianceErrorService {
         }
     }
 
-    private UUID parseErrorId(String errorId) {
+    private UUID parseErrorId(String errorId, String tenantId) {
         try {
             // Frontend format: err-1234567890-abc123def
             // Convert to UUID format: use hash of the full ID for deterministic UUID
-            String cleaned = errorId.replace("err-", "");
+            String cleaned = (errorId != null ? errorId.replace("err-", "") : "unknown");
+            String scopedId = tenantId + ":" + cleaned;
             // Use MD5 hash of the error ID to generate deterministic UUID
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
-            byte[] hash = md.digest(cleaned.getBytes());
+            byte[] hash = md.digest(scopedId.getBytes());
             // Convert to UUID format (version 3 style)
             long msb = 0;
             long lsb = 0;
@@ -113,6 +120,18 @@ public class ComplianceErrorService {
         } catch (Exception e) {
             log.warn("Failed to parse error ID {}, generating random UUID: {}", errorId, e.getMessage());
             return UUID.randomUUID();
+        }
+    }
+
+    private Instant parseTimestamp(String timestamp) {
+        if (timestamp == null || timestamp.isBlank()) {
+            return Instant.now();
+        }
+        try {
+            return Instant.parse(timestamp);
+        } catch (Exception e) {
+            log.warn("Invalid timestamp '{}', defaulting to now", timestamp);
+            return Instant.now();
         }
     }
 
@@ -136,11 +155,15 @@ public class ComplianceErrorService {
         return repository.countByTenantIdAndDateRange(tenantId, startDate, endDate);
     }
 
+    public long getErrorCountBySeverityInRange(String tenantId, String severity, Instant startDate, Instant endDate) {
+        return repository.countByTenantIdAndSeverityAndDateRange(tenantId, severity, startDate, endDate);
+    }
+
     @Transactional
-    public int cleanupOldErrors(String tenantId, int retentionDays) {
+    public long cleanupOldErrors(String tenantId, int retentionDays) {
         Instant cutoffDate = Instant.now().minus(retentionDays, ChronoUnit.DAYS);
-        repository.deleteByTenantIdAndTimestampBefore(tenantId, cutoffDate);
-        log.info("Cleaned up old errors for tenant {} (older than {} days)", tenantId, retentionDays);
-        return 0;
+        long deleted = repository.deleteByTenantIdAndTimestampBefore(tenantId, cutoffDate);
+        log.info("Cleaned up {} old errors for tenant {} (older than {} days)", deleted, tenantId, retentionDays);
+        return deleted;
     }
 }

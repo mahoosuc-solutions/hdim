@@ -26,6 +26,7 @@ import com.healthdata.fhir.persistence.MedicationRequestRepository;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class MedicationRequestService {
@@ -33,6 +34,7 @@ public class MedicationRequestService {
     private static final String CACHE_NAME = "fhir-medication-requests";
     private static final FhirContext FHIR_CONTEXT = FhirContext.forR4();
     private static final IParser JSON_PARSER = FHIR_CONTEXT.newJsonParser().setPrettyPrint(false);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final MedicationRequestRepository medicationRequestRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
@@ -333,7 +335,12 @@ public class MedicationRequestService {
         if (request.hasDosageInstruction() && !request.getDosageInstruction().isEmpty()) {
             Dosage dosage = request.getDosageInstructionFirstRep();
             if (dosage.hasText()) {
-                return dosage.getText();
+                try {
+                    // Store as JSON string for jsonb column.
+                    return OBJECT_MAPPER.writeValueAsString(dosage.getText());
+                } catch (Exception e) {
+                    return null;
+                }
             }
         }
         return null;

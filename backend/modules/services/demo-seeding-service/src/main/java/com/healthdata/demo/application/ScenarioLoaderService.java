@@ -20,7 +20,6 @@ import java.util.Optional;
  * - Coordinate with seeding service for data population
  */
 @Service
-@Transactional
 public class ScenarioLoaderService {
 
     private static final Logger logger = LoggerFactory.getLogger(ScenarioLoaderService.class);
@@ -158,6 +157,7 @@ public class ScenarioLoaderService {
     /**
      * End the current demo session.
      */
+    @Transactional
     public void endCurrentSession() {
         sessionRepository.findCurrentSession().ifPresent(session -> {
             session.end();

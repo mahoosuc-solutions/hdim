@@ -51,7 +51,7 @@ public class CarePlanController {
 
     private final CarePlanService carePlanService;
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new CarePlan resource")
@@ -66,7 +66,7 @@ public class CarePlanController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a CarePlan resource by ID")
@@ -80,7 +80,7 @@ public class CarePlanController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing CarePlan resource")
@@ -96,7 +96,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a CarePlan resource")
@@ -112,7 +112,7 @@ public class CarePlanController {
 
     // ==================== Search Endpoints ====================
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search CarePlan resources")
@@ -144,7 +144,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all care plans for a patient")
@@ -158,7 +158,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/active", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get active care plans for a patient")
@@ -172,7 +172,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/primary", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get primary (top-level) care plans for a patient")
@@ -186,7 +186,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/with-activities", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans with activities for a patient")
@@ -200,7 +200,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/encounter/{encounterId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans for an encounter")
@@ -214,7 +214,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/condition/{conditionId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans addressing a specific condition")
@@ -228,7 +228,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/goal/{goalId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans with a specific goal")
@@ -242,7 +242,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{carePlanId}/children", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get child care plans (part of a parent plan)")
@@ -256,7 +256,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/expiring", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get care plans expiring within a date range")
@@ -273,7 +273,7 @@ public class CarePlanController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/search", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search care plans by text (title/description)")

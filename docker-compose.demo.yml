@@ -63,6 +63,7 @@ services:
         limits:
           memory: 128M
 
+
   kafka:
     container_name: hdim-demo-kafka
     image: confluentinc/cp-kafka:7.5.0
@@ -107,7 +108,10 @@ services:
       - "14250:14250"   # Jaeger gRPC
       - "14268:14268"   # Jaeger HTTP Thrift
     networks:
-      - hdim-demo-network
+      hdim-demo-network:
+        aliases:
+          - hdim-demo-jaeger
+          - jaeger
     deploy:
       resources:
         limits:
@@ -128,6 +132,7 @@ services:
       TRACING_ENABLED: "true"
       SERVER_PORT: 8080
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_SESSION_STORE_TYPE: none
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: demo_password_2024
@@ -145,6 +150,7 @@ services:
       BACKEND_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
       BACKEND_SERVICES_AGENT_BUILDER_URL: http://agent-builder-service:8096
       BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106
+      BACKEND_SERVICES_AUDIT_URL: http://audit-query-service:8088/api/v1/audit
       AUTHENTICATION_COOKIE_SECURE: "false"
       AUTHENTICATION_COOKIE_SAME_SITE: "Lax"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
@@ -193,6 +199,7 @@ services:
       TRACING_ENABLED: "true"
       SERVER_PORT: 8080
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_SESSION_STORE_TYPE: none
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: demo_password_2024
@@ -236,6 +243,64 @@ services:
         limits:
           memory: 512M
 
+  audit-query-service:
+    container_name: hdim-demo-audit-query
+    build:
+      context: ./backend
+      dockerfile: modules/services/audit-query-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,demo
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/audit_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      HEALTHDATA_PERSISTENCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/audit_db
+      HEALTHDATA_PERSISTENCE_PRIMARY_USERNAME: healthdata
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: demo_password_2024
+      HEALTHDATA_PERSISTENCE_PRIMARY_DRIVER_CLASS_NAME: org.postgresql.Driver
+      HEALTHDATA_PERSISTENCE_PRIMARY_POOL_NAME: audit-pool
+      HEALTHDATA_PERSISTENCE_PRIMARY_MAXIMUM_POOL_SIZE: 10
+      HEALTHDATA_PERSISTENCE_PRIMARY_MINIMUM_IDLE: 2
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8088
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      HEALTHDATA_SECURITY_JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: audit-query-service
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      HEALTH_TENANT_ID: service-health-audit
+    ports:
+      - "8088:8088"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8088/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   gateway-clinical-service:
     container_name: hdim-demo-gateway-clinical
     build:
@@ -255,6 +320,7 @@ services:
       TRACING_ENABLED: "true"
       SERVER_PORT: 8080
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      SPRING_SESSION_STORE_TYPE: none
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: demo_password_2024
@@ -275,6 +341,7 @@ services:
       BACKEND_SERVICES_HCC_URL: http://hcc-service:8105/hcc
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101/ecr
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102/prior-auth
+      BACKEND_SERVICES_AUDIT_URL: http://audit-query-service:8088/api/v1/audit
       AUTHENTICATION_COOKIE_SECURE: "false"
       AUTHENTICATION_COOKIE_SAME_SITE: "Lax"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
@@ -371,6 +438,99 @@ services:
         limits:
           memory: 512M
 
+  # Customer FHIR Server (HAPI) - simulates provider-managed FHIR endpoint
+  customer-fhir-db:
+    container_name: hdim-demo-customer-fhir-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: demo_password_2024
+      POSTGRES_DB: customer_fhir_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - customer_fhir_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_fhir_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  customer-fhir:
+    container_name: hdim-demo-customer-fhir
+    image: hapiproject/hapi:v7.0.2
+    depends_on:
+      customer-fhir-db:
+        condition: service_healthy
+    environment:
+      hapi.fhir.fhir_version: R4
+      hapi.fhir.allow_external_references: "true"
+      hapi.fhir.allow_multiple_delete: "true"
+      hapi.fhir.allow_contains_searches: "true"
+      hapi.fhir.allow_override_default_search_params: "true"
+      hapi.fhir.reuse_cached_search_results_millis: 60000
+      hapi.fhir.subscription.resthook_enabled: "true"
+      hapi.fhir.cr_enabled: "true"
+      hapi.fhir.expunge_enabled: "true"
+      hapi.fhir.binary_storage_enabled: "true"
+      hapi.fhir.default_page_size: 20
+      hapi.fhir.max_page_size: 200
+      spring.datasource.url: jdbc:postgresql://customer-fhir-db:5432/customer_fhir_db
+      spring.datasource.driverClassName: org.postgresql.Driver
+      spring.datasource.username: healthdata
+      spring.datasource.password: demo_password_2024
+      spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+      spring.jpa.hibernate.ddl-auto: update
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Xms512m -Xmx2g"
+    ports:
+      - "8090:8080"
+    volumes:
+      - customer_fhir_data:/data/hapi
+    healthcheck:
+      test: ["CMD", "java", "-version"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+  # Customer CDR (relational clinical data repository)
+  customer-cdr:
+    container_name: hdim-demo-customer-cdr
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: demo_password_2024
+      POSTGRES_DB: customer_cdr
+    ports:
+      - "5441:5432"
+    volumes:
+      - customer_cdr_data:/var/lib/postgresql/data
+      - ./docker/cdr/init-cdr-schema.sql:/docker-entrypoint-initdb.d/01-init-cdr-schema.sql:ro
+      - ./docker/cdr/init-cdr-data.sql:/docker-entrypoint-initdb.d/02-init-cdr-data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_cdr"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
   cql-engine-service:
     container_name: hdim-demo-cql-engine
     build:
@@ -412,7 +572,7 @@ services:
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx2g -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-cql-engine
     ports:
@@ -451,6 +611,7 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
+      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
@@ -458,7 +619,7 @@ services:
       OTEL_SERVICE_NAME: patient-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx2g -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-patient
     ports:
@@ -501,6 +662,7 @@ services:
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: quality-measure-service
       SPRING_FLYWAY_ENABLED: "false"
@@ -551,8 +713,9 @@ services:
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: care-gap-service
+      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      GATEWAY_AUTH_DEV_MODE: "false"
+      GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       JAVA_OPTS: "-Xmx384m -Xms192m"
@@ -629,6 +792,8 @@ services:
         condition: service_healthy
       fhir-service:
         condition: service_healthy
+      customer-fhir:
+        condition: service_healthy
       care-gap-service:
         condition: service_healthy
       gateway-edge:
@@ -639,6 +804,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_JPA_OPEN_IN_VIEW: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_CLEAR_CHECKSUMS: "true"
@@ -647,8 +813,8 @@ services:
       JAVA_OPTS: "-Xmx384m -Xms192m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       # Downstream service URLs - Use direct service URLs to avoid gateway timeout issues
-      FHIR_SERVICE_URL: http://hdim-demo-fhir:8085/fhir
-      FHIR_EXTERNAL_URL: http://external-fhir-server:8080/fhir
+      FHIR_SERVICE_URL: http://fhir-service:8085/fhir
+      FHIR_EXTERNAL_URL: http://customer-fhir:8080/fhir
       FHIR_TARGET: internal
       CARE_GAP_SERVICE_URL: http://hdim-demo-care-gap:8086/care-gap
       GATEWAY_SERVICE_URL: http://gateway-edge:8080
@@ -661,6 +827,9 @@ services:
       # Snapshot storage
       DEMO_SNAPSHOTS_DIR: /app/snapshots
       DEMO_PERSISTENCE_ENABLED: "true"
+      DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "1000"
+      DEMO_PERFORMANCE_PARALLEL_GENERATION: "false"
+      DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "4"
       HEALTH_TENANT_ID: service-health-demo-seeding
     ports:
       - "8098:8098"
@@ -719,4 +888,8 @@ volumes:
   demo_postgres_data:
     driver: local
   demo_snapshots:
+    driver: local
+  customer_fhir_data:
+    driver: local
+  customer_cdr_data:
     driver: local

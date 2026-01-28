@@ -15,11 +15,11 @@ dependencies {
     api("io.micrometer:micrometer-tracing-bridge-otel:1.3.5")
 
     // OpenTelemetry SDK and OTLP Exporter
-    api("io.opentelemetry:opentelemetry-sdk:1.32.0")
-    api("io.opentelemetry:opentelemetry-exporter-otlp:1.32.0")
+    api("io.opentelemetry:opentelemetry-sdk:1.38.0")
+    api("io.opentelemetry:opentelemetry-exporter-otlp:1.38.0")
 
     // Context propagation (W3C Trace Context + B3 for Zipkin compatibility)
-    api("io.opentelemetry:opentelemetry-extension-trace-propagators:1.32.0")
+    api("io.opentelemetry:opentelemetry-extension-trace-propagators:1.38.0")
 
     // Actuator for tracing endpoints
     compileOnly("org.springframework.boot:spring-boot-starter-actuator")

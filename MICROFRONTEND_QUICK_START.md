@@ -10,7 +10,7 @@
 
 ```bash
 # 1. Start Docker infrastructure
-docker compose -f docker-compose-demo.yml up -d
+docker compose -f docker-compose.demo.yml up -d
 
 # 2. Start shell app (host)
 npx nx serve shell-app

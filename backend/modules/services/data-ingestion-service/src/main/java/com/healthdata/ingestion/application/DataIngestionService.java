@@ -138,13 +138,13 @@ public class DataIngestionService {
 
             // Stage 1: Generate patients (0-40%)
             progressTrackingService.updateProgress(sessionId, "GENERATING", 0);
-            List<Bundle> patientBundles = patientGenerator.generatePatients(
+            Bundle cohortBundle = patientGenerator.generateCohort(
                     request.getPatientCount(),
-                    request.getTenantId(),
-                    request.getScenario()
+                    request.getTenantId()
             );
+            List<Bundle> patientBundles = List.of(cohortBundle);
             progressTrackingService.updateProgress(sessionId, "GENERATING", 40);
-            log.info("[{}] Generated {} patient bundles", sessionId, patientBundles.size());
+            log.info("[{}] Generated {} patient bundle(s)", sessionId, patientBundles.size());
 
             // Stage 2: Persist to FHIR (40-70%)
             progressTrackingService.updateProgress(sessionId, "PERSISTING", 40);

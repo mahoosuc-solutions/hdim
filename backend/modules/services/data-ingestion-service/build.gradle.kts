@@ -40,6 +40,9 @@ dependencies {
     implementation(libs.hapi.fhir.base)
     implementation(libs.hapi.fhir.structures.r4)
 
+    // Demo template models (SyntheticPatientTemplate)
+    implementation(project(":modules:services:demo-seeding-service"))
+
     // HTTP Client (for calling FHIR/Care Gap/Quality Measure services)
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
@@ -49,7 +52,14 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-sdk")
 
     // Faker for realistic data generation
-    implementation(libs.javafaker)
+    implementation(libs.datafaker)
+    implementation(libs.javafaker) {
+        exclude(group = "org.yaml", module = "snakeyaml")
+    }
+    implementation(libs.snakeyaml)
+
+    // OpenAPI annotations
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Lombok
     compileOnly("org.projectlombok:lombok")

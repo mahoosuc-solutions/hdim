@@ -114,7 +114,7 @@ public class MessagingAutoConfiguration {
         factory.getContainerProperties().setPollTimeout(properties.getConsumer().getPollTimeout().toMillis());
         factory.setConcurrency(1);
         ObjectMapper mapper = mapperProvider.getIfAvailable(ObjectMapper::new);
-        factory.setMessageConverter(new StringJsonMessageConverter(mapper));
+        factory.setRecordMessageConverter(new StringJsonMessageConverter(mapper));
         return factory;
     }
 

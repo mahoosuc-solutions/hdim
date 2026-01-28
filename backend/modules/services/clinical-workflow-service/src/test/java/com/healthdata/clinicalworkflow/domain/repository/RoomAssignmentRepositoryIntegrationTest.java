@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -121,7 +120,7 @@ class RoomAssignmentRepositoryIntegrationTest {
         @Test
         @DisplayName("Should find room assignment history from date")
         void shouldFindRoomAssignmentHistory() {
-            LocalDateTime from = LocalDateTime.now().minusHours(1);
+            Instant from = Instant.now().minusSeconds(3600);
 
             List<RoomAssignmentEntity> history = roomAssignmentRepository.findRoomAssignmentHistory("101", TENANT_ID, from);
 

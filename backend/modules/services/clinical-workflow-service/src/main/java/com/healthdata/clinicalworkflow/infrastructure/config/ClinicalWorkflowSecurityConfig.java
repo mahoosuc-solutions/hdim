@@ -2,11 +2,16 @@ package com.healthdata.clinicalworkflow.infrastructure.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -35,7 +40,46 @@ import java.util.Arrays;
 @EnableMethodSecurity(prePostEnabled = true)
 public class ClinicalWorkflowSecurityConfig {
 
+    @Value("${gateway.auth.signing-secret:}")
+    private String signingSecret;
+
+    @Value("${gateway.auth.dev-mode:false}")
+    private boolean devMode;
+
     @Bean
+    @Profile("!test")
+    public TrustedHeaderAuthFilter trustedHeaderAuthFilter(MeterRegistry meterRegistry) {
+        TrustedHeaderAuthFilter.TrustedHeaderAuthConfig config;
+
+        if (devMode) {
+            config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.development();
+        } else {
+            config = TrustedHeaderAuthFilter.TrustedHeaderAuthConfig.production(signingSecret);
+        }
+
+        return new TrustedHeaderAuthFilter(config, meterRegistry);
+    }
+
+    @Bean
+    @Profile("!test")
+    public TrustedTenantAccessFilter trustedTenantAccessFilter(MeterRegistry meterRegistry) {
+        return new TrustedTenantAccessFilter(meterRegistry);
+    }
+
+    @Bean
+    @Profile("test")
+    @Order(1)
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+
+        return http.build();
+    }
+
+    @Bean
+    @Profile("!test")
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
@@ -43,7 +87,7 @@ public class ClinicalWorkflowSecurityConfig {
 
         http
             // Disable CSRF for REST API (handled by gateway)
-            .csrf().disable()
+            .csrf(AbstractHttpConfigurer::disable)
 
             // Use gateway-trust authentication (not stateful sessions)
             .sessionManagement()

@@ -45,7 +45,7 @@ public class RoomAssignmentEntity {
     @Column(name = "tenant_id", nullable = false, length = 100)
     private String tenantId;
 
-    @Column(name = "patient_id", nullable = false)
+    @Column(name = "patient_id")
     private UUID patientId;
 
     @Column(name = "appointment_id", length = 255)

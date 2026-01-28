@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0010-relax-room-assignments-patient-id" author="clinical-workflow-service">
+        <comment>Allow patient_id to be null for available rooms</comment>
+        <dropNotNullConstraint
+            tableName="room_assignments"
+            columnName="patient_id"
+            columnDataType="UUID"/>
+
+        <rollback>
+            <addNotNullConstraint
+                tableName="room_assignments"
+                columnName="patient_id"
+                columnDataType="UUID"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

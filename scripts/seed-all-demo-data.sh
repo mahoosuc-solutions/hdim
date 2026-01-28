@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-DEMO_SEEDING_URL="${DEMO_SEEDING_URL:-http://localhost:8103}"
+DEMO_SEEDING_URL="${DEMO_SEEDING_URL:-http://localhost:8098}"
 TENANT_ID="${TENANT_ID:-acme-health}"
 
 echo -e "${BLUE}========================================${NC}"

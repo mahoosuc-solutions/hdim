@@ -228,13 +228,13 @@ services:
   # CORE CLINICAL SERVICES (8080-8087)
   # ============================================
 
-  # Port 8080 - API Gateway
-  gateway-service:
-    container_name: healthdata-gateway-service
+  # Port 8080 - Gateway Admin Service
+  gateway-admin-service:
+    container_name: healthdata-gateway-admin
     restart: unless-stopped
     build:
       context: ./backend
-      dockerfile: modules/services/gateway-service/Dockerfile
+      dockerfile: modules/services/gateway-admin-service/Dockerfile
     profiles: ["core", "full"]
     depends_on:
       postgres:
@@ -253,20 +253,9 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      # Backend service URLs (include context-path + internal controller path)
-      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
-      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
-      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
-      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
-      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
-      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
-      BACKEND_SERVICES_EVENTS_URL: http://event-processing-service:8083/events
+      # Admin/agent services
       BACKEND_SERVICES_AGENT_BUILDER_URL: http://agent-builder-service:8096
       BACKEND_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
-      BACKEND_SERVICES_QRDA_EXPORT_URL: http://qrda-export-service:8104
-      BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
-      BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
-      BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
       BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106/sales-automation
       BACKEND_SERVICES_AI_ASSISTANT_URL: http://ai-assistant-service:8090
       BACKEND_SERVICES_PREDICTIVE_ANALYTICS_URL: http://predictive-analytics-service:8093
@@ -285,7 +274,7 @@ services:
       BACKEND_SERVICES_DOCUMENTATION_URL: http://documentation-service:8091
       # Authentication enforcement - require JWT tokens for all protected endpoints
       # Set to "false" only for development/demo mode (allows unauthenticated access with demo user context)
-      GATEWAY_AUTH_ENFORCED: "false"  # Development mode - use demo user context
+      GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
       GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health"
@@ -293,16 +282,141 @@ services:
       # OpenTelemetry - use Jaeger container hostname (not localhost)
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      OTEL_SERVICE_NAME: gateway-service
+      OTEL_SERVICE_NAME: gateway-admin-service
       _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
-    ports:
-      - "18080:8080"  # Use 18080 on host to avoid conflicts
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 30s
       retries: 5
       start_period: 90s
+    networks:
+      - healthdata-network
+      - hdim-clinical-network
+
+  # Port 8080 - Gateway FHIR Service
+  gateway-fhir-service:
+    container_name: healthdata-gateway-fhir
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-fhir-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
+      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
+      BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
+      BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
+      # Authentication enforcement - require JWT tokens for all protected endpoints
+      GATEWAY_AUTH_ENFORCED: "false"
+      GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
+      GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health"
+      GATEWAY_AUTH_DEMO_USER_ROLES: "ADMIN,CLINICIAN,ANALYST"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: gateway-fhir-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 90s
+    networks:
+      - healthdata-network
+      - hdim-clinical-network
+
+  # Port 8080 - Gateway Clinical Service
+  gateway-clinical-service:
+    container_name: healthdata-gateway-clinical
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-clinical-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
+      BACKEND_SERVICES_EVENTS_URL: http://event-processing-service:8083/events
+      BACKEND_SERVICES_QRDA_EXPORT_URL: http://qrda-export-service:8104
+      BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
+      BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
+      BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
+      # Authentication enforcement - require JWT tokens for all protected endpoints
+      GATEWAY_AUTH_ENFORCED: "false"
+      GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
+      GATEWAY_AUTH_DEMO_USER_USERNAME: "demo-user"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "acme-health"
+      GATEWAY_AUTH_DEMO_USER_ROLES: "ADMIN,CLINICIAN,ANALYST"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: gateway-clinical-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 90s
+    networks:
+      - healthdata-network
+      - hdim-clinical-network
+
+  # Port 8080 - Gateway Edge (nginx)
+  gateway-edge:
+    container_name: healthdata-gateway-edge
+    image: nginx:1.27-alpine
+    profiles: ["core", "full"]
+    depends_on:
+      gateway-admin-service:
+        condition: service_healthy
+      gateway-fhir-service:
+        condition: service_healthy
+      gateway-clinical-service:
+        condition: service_healthy
+    ports:
+      - "18080:8080"  # Use 18080 on host to avoid conflicts
+    volumes:
+      - ./docker/gateway-edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - healthdata-network
       - hdim-clinical-network
@@ -1987,10 +2101,10 @@ services:
       dockerfile: apps/clinical-portal/Dockerfile
     profiles: ["full"]  # Removed from core - requires build
     depends_on:
-      - gateway-service
+      - gateway-edge
     environment:
       # Clinical Portal Core Configuration
-      API_URL: http://gateway-service:8080
+      API_URL: http://gateway-edge:8080
       # Measure Builder Feature Configuration
       ENABLE_MEASURE_BUILDER: ${ENABLE_MEASURE_BUILDER:-true}
       MEASURE_BUILDER_MAX_COMPLEXITY: ${MEASURE_BUILDER_MAX_COMPLEXITY:-10}

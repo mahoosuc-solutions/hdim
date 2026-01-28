@@ -67,12 +67,26 @@ services:
   # CORE CLINICAL SERVICES - PRODUCTION CONFIG
   # ============================================
 
-  gateway-service:
+  gateway-admin-service:
     environment:
       # Use environment variable for JWT secret in production
       JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       # Enable encryption
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  gateway-fhir-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+      ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
+
+  gateway-clinical-service:
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
       ENCRYPTION_SALT: ${ENCRYPTION_SALT:-hdim-phi-salt-production}
 

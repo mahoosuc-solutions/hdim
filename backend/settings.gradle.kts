@@ -63,7 +63,6 @@ include(
     "modules:services:nurse-workflow-service",
     "modules:services:analytics-service",
     "modules:services:documentation-service",
-    "modules:services:gateway-service",
     "modules:services:gateway-admin-service",
     "modules:services:gateway-fhir-service",
     "modules:services:gateway-clinical-service",

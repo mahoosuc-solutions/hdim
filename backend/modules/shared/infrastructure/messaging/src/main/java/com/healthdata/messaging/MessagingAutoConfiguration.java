@@ -25,6 +25,7 @@ import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 
@@ -105,12 +106,15 @@ public class MessagingAutoConfiguration {
     @ConditionalOnMissingBean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
             ConsumerFactory<String, Object> consumerFactory,
-            MessagingProperties properties) {
+            MessagingProperties properties,
+            ObjectProvider<ObjectMapper> mapperProvider) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setPollTimeout(properties.getConsumer().getPollTimeout().toMillis());
         factory.setConcurrency(1);
+        ObjectMapper mapper = mapperProvider.getIfAvailable(ObjectMapper::new);
+        factory.setMessageConverter(new StringJsonMessageConverter(mapper));
         return factory;
     }
 

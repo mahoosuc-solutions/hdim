@@ -1,7 +1,5 @@
-import { HttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
-import { HttpClient } from '@angular/common/http';
-import { HttpClient, HttpClientTestingModule } from '@angular/common/http/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { BehaviorSubject, of, throwError } from 'rxjs';
@@ -15,8 +13,19 @@ import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
 import { UserRoleService, UserRole } from '../../shared/services/user-role.service';
 import { MeasureFavoritesService } from '../../services/measure-favorites.service';
+import { ContextNavigationService } from '../../services/context-navigation.service';
 import { LoggerService } from '../../services/logger.service';
 import { createMockLoggerService } from '../../../testing/mocks';
+
+jest.mock('./ma-dashboard/ma-dashboard.component', () => ({
+  MADashboardComponent: class {}
+}));
+jest.mock('./rn-dashboard/rn-dashboard.component', () => ({
+  RNDashboardComponent: class {}
+}));
+jest.mock('./provider-dashboard/provider-dashboard.component', () => ({
+  ProviderDashboardComponent: class {}
+}));
 
 /**
  * TDD Test Suite for Dashboard Component
@@ -36,6 +45,16 @@ describe('DashboardComponent (TDD)', () => {
   let mockPatientService: jest.Mocked<PatientService>;
   let mockMeasureService: jest.Mocked<MeasureService>;
   let mockRouter: jest.Mocked<Router>;
+  let mockContextNavService: {
+    navigateToCareGaps: jest.Mock;
+    navigateToEvaluations: jest.Mock;
+    navigateToPatientResult: jest.Mock;
+    navigateToMeasureResults: jest.Mock;
+    navigateToPreVisit: jest.Mock;
+    navigateToRiskStratification: jest.Mock;
+    navigateToPatientCareGap: jest.Mock;
+    navigateToAddressGap: jest.Mock;
+  };
   let mockUserRoleService: {
     currentRole$: BehaviorSubject<UserRole>;
     getCurrentRole: jest.Mock;
@@ -71,6 +90,17 @@ describe('DashboardComponent (TDD)', () => {
       navigate: jest.fn(),
     } as any;
 
+    mockContextNavService = {
+      navigateToCareGaps: jest.fn(),
+      navigateToEvaluations: jest.fn(),
+      navigateToPatientResult: jest.fn(),
+      navigateToMeasureResults: jest.fn(),
+      navigateToPreVisit: jest.fn(),
+      navigateToRiskStratification: jest.fn(),
+      navigateToPatientCareGap: jest.fn(),
+      navigateToAddressGap: jest.fn(),
+    };
+
     mockUserRoleService = {
       currentRole$: new BehaviorSubject<UserRole>(UserRole.ADMIN),
       getCurrentRole: jest.fn().mockReturnValue(UserRole.ADMIN),
@@ -90,14 +120,19 @@ describe('DashboardComponent (TDD)', () => {
       recordUsage: jest.fn(),
     };
 
+    mockEvaluationService.getAllEvaluationsCached.mockReturnValue(of([]));
+    mockPatientService.getPatientsSummaryCached.mockReturnValue(of([]));
+    mockMeasureService.getActiveMeasuresInfoCached.mockReturnValue(of([]));
+
     await TestBed.configureTestingModule({
       imports: [DashboardComponent, NoopAnimationsModule, HttpClientTestingModule],
       providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
+
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
         { provide: MeasureService, useValue: mockMeasureService },
         { provide: Router, useValue: mockRouter },
+        { provide: ContextNavigationService, useValue: mockContextNavService },
         { provide: AIAssistantService, useValue: {} },
         { provide: UserRoleService, useValue: mockUserRoleService },
         { provide: MeasureFavoritesService, useValue: mockMeasureFavoritesService },
@@ -154,10 +189,6 @@ describe('DashboardComponent (TDD)', () => {
     });
 
     it('should set loading state while fetching data', fakeAsync(() => {
-      mockEvaluationService.getAllEvaluationsCached.mockReturnValue(of([]));
-      mockPatientService.getPatientsSummaryCached.mockReturnValue(of([]));
-      mockMeasureService.getActiveMeasuresInfoCached.mockReturnValue(of([]));
-
       // Initially loading should be false
       expect(component.loading).toBe(false);
 
@@ -397,8 +428,10 @@ describe('DashboardComponent (TDD)', () => {
       (component as any).calculateMeasurePerformance();
 
       expect(component.measurePerformance.length).toBe(2);
-      expect(component.measurePerformanceChartData[0].name.endsWith('...')).toBe(true);
-      expect(component.measurePerformanceChartData[0].value).toBeGreaterThanOrEqual(0);
+      const chartLabels = component.measurePerformanceChartData.labels as string[];
+      const chartData = component.measurePerformanceChartData.datasets?.[0]?.data as number[];
+      expect(chartLabels[0]?.endsWith('...')).toBe(true);
+      expect(chartData?.[0]).toBeGreaterThanOrEqual(0);
     });
 
     it('calculates compliance trends for different periods', () => {
@@ -1007,21 +1040,22 @@ describe('DashboardComponent (TDD)', () => {
     it('should navigate to care gap view', () => {
       component.viewAllCareGaps();
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patients'],
-        { queryParams: { filter: 'care-gaps', urgency: 'high' } }
+      expect(mockContextNavService.navigateToCareGaps).toHaveBeenCalledWith(
+        undefined,
+        undefined,
+        'high'
       );
     });
 
     it('should navigate to patient care gap actions', () => {
       component.viewPatientWithCareGap('patient-1');
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients', 'patient-1']);
+      expect(mockRouter.navigate).toHaveBeenCalledWith(
+        ['/patients', 'patient-1'],
+        { queryParams: { tab: 'care-gaps' } }
+      );
 
       component.scheduleAppointment('patient-2');
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patients', 'patient-2'],
-        { queryParams: { action: 'schedule' } }
-      );
+      expect(mockContextNavService.navigateToPreVisit).toHaveBeenCalledWith('patient-2');
 
       component.sendReminder('patient-3');
       expect(mockRouter.navigate).toHaveBeenCalledWith(
@@ -1032,7 +1066,7 @@ describe('DashboardComponent (TDD)', () => {
 
     it('should navigate to evaluation and compliance views', () => {
       component.viewAllEvaluations();
-      expect(mockRouter.navigate).toHaveBeenCalledWith(['/evaluations']);
+      expect(mockContextNavService.navigateToEvaluations).toHaveBeenCalled();
 
       component.viewEvaluationsByStatus('FAILED');
       expect(mockRouter.navigate).toHaveBeenCalledWith(

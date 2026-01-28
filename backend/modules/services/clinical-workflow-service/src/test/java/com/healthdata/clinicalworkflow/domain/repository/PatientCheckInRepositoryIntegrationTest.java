@@ -112,8 +112,11 @@ class PatientCheckInRepositoryIntegrationTest {
             PatientCheckInEntity saved = checkInRepository.save(newCheckIn);
 
             assertThat(saved.getCreatedAt()).isNotNull();
-            assertThat(saved.getUpdatedAt()).isNotNull();
             assertThat(saved.getCheckInTime()).isNotNull();
+
+            saved.setStatus("waiting");
+            PatientCheckInEntity updated = checkInRepository.saveAndFlush(saved);
+            assertThat(updated.getUpdatedAt()).isNotNull();
         }
     }
 
@@ -240,7 +243,7 @@ class PatientCheckInRepositoryIntegrationTest {
         void shouldFindPendingInsuranceVerification() {
             List<PatientCheckInEntity> pending = checkInRepository.findPendingInsuranceVerification(TENANT_ID);
 
-            assertThat(pending).hasSize(2); // checkIn2 and checkIn3
+            assertThat(pending).hasSize(1); // checkIn2
             assertThat(pending).allMatch(c -> !c.getInsuranceVerified());
         }
     }

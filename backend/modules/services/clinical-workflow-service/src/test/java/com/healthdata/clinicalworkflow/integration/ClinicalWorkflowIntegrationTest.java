@@ -14,7 +14,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -263,8 +262,8 @@ class ClinicalWorkflowIntegrationTest {
         }
 
         // Query history
-        LocalDateTime from = LocalDateTime.now().minusDays(1);
-        LocalDateTime to = LocalDateTime.now().plusDays(1);
+        Instant from = Instant.now().minusSeconds(24 * 3600);
+        Instant to = Instant.now().plusSeconds(24 * 3600);
 
         List<VitalSignsRecordEntity> history = vitalsService.getPatientVitalsHistory(
                 PATIENT_ID, TENANT_ID, from, to);

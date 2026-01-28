@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -430,11 +432,9 @@ class VitalSignsServiceTest {
                 .alertStatus("critical")
                 .build();
 
-        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
-                TENANT_ID, "warning"))
+        when(vitalsRepository.findByAlertStatusAndTenant("warning", TENANT_ID))
                 .thenReturn(List.of(warning));
-        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
-                TENANT_ID, "critical"))
+        when(vitalsRepository.findByAlertStatusAndTenant("critical", TENANT_ID))
                 .thenReturn(List.of(critical));
 
         // When
@@ -449,8 +449,9 @@ class VitalSignsServiceTest {
     @Test
     void getVitalsAlerts_ShouldReturnEmpty_WhenNoAlerts() {
         // Given
-        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
-                anyString(), anyString()))
+        when(vitalsRepository.findByAlertStatusAndTenant("warning", TENANT_ID))
+                .thenReturn(Collections.emptyList());
+        when(vitalsRepository.findByAlertStatusAndTenant("critical", TENANT_ID))
                 .thenReturn(Collections.emptyList());
 
         // When
@@ -465,8 +466,8 @@ class VitalSignsServiceTest {
     @Test
     void getPatientVitalsHistory_ShouldReturnHistory_WhenCalled() {
         // Given
-        LocalDateTime from = LocalDateTime.now().minusDays(7);
-        LocalDateTime to = LocalDateTime.now();
+        Instant from = Instant.now().minusSeconds(7 * 24 * 3600);
+        Instant to = Instant.now();
         when(vitalsRepository.findPatientVitalsHistory(
                 PATIENT_ID, TENANT_ID, from, to))
                 .thenReturn(List.of(testVitals));
@@ -690,11 +691,11 @@ class VitalSignsServiceTest {
         String patientIdStr = PATIENT_ID.toString();
         testVitals.setRecordedAt(Instant.now());
         testVitals.setCreatedAt(Instant.now());
-        when(vitalsRepository.findByTenantIdAndPatientIdOrderByRecordedAtDesc(
-                TENANT_ID, PATIENT_ID))
-                .thenReturn(List.of(testVitals));
-
         Pageable pageable = Pageable.ofSize(20);
+        Page<VitalSignsRecordEntity> page = new PageImpl<>(List.of(testVitals), pageable, 1);
+        when(vitalsRepository.findByTenantIdAndPatientIdWithPagination(
+                TENANT_ID, PATIENT_ID, pageable))
+                .thenReturn(page);
 
         // When
         VitalsHistoryResponse response = vitalsService.getVitalsHistory(
@@ -722,11 +723,9 @@ class VitalSignsServiceTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
-                TENANT_ID, "warning"))
+        when(vitalsRepository.findByAlertStatusAndTenant("warning", TENANT_ID))
                 .thenReturn(Collections.emptyList());
-        when(vitalsRepository.findByTenantIdAndAlertStatusOrderByRecordedAtDesc(
-                TENANT_ID, "critical"))
+        when(vitalsRepository.findByAlertStatusAndTenant("critical", TENANT_ID))
                 .thenReturn(List.of(criticalVital));
 
         // When

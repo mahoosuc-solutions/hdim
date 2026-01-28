@@ -6,7 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -90,7 +92,8 @@ public class PreVisitChecklistEntity {
     private Boolean obtainConsent = false;
 
     // Custom Items as JSON
-    @Column(name = "custom_items", columnDefinition = "JSONB COMMENT 'Array of {task: string, completed: boolean}'")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "custom_items", columnDefinition = "jsonb")
     private JsonNode customItems;
 
     // Status

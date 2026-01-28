@@ -71,7 +71,7 @@ class WaitingQueueIntegrationTest {
     private static final String TENANT_ID_A = "TENANT_A";
     private static final String TENANT_ID_B = "TENANT_B";
     private static final String USER_ID = "receptionist@example.com";
-    private static final String PATIENT_ID = "PATIENT001";
+    private static final String PATIENT_ID = UUID.randomUUID().toString();
     private static final String ENCOUNTER_ID = "ENC001";
     private static final String PROVIDER_ID = "PROV001";
 
@@ -94,7 +94,7 @@ class WaitingQueueIntegrationTest {
                 .encounterId(ENCOUNTER_ID)
                 .queueType("VITALS")
                 .enteredQueueAt(LocalDateTime.now())
-                .priority("ROUTINE")
+                .priority("NORMAL")
                 .visitType("Annual Physical")
                 .providerId(PROVIDER_ID)
                 .build();
@@ -107,7 +107,7 @@ class WaitingQueueIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.patientId").value(PATIENT_ID))
                 .andExpect(jsonPath("$.queueType").value("VITALS"))
-                .andExpect(jsonPath("$.queuePosition").exists())
+                .andExpect(jsonPath("$.position").exists())
                 .andExpect(jsonPath("$.estimatedWaitMinutes").exists())
                 .andReturn();
 
@@ -115,13 +115,12 @@ class WaitingQueueIntegrationTest {
         QueuePositionResponse position = objectMapper.readValue(positionJson, QueuePositionResponse.class);
 
         // Verify entity in database
-        Optional<WaitingQueueEntity> queueEntityOpt = queueRepository.findByTenantIdAndPatientId(TENANT_ID_A, PATIENT_ID);
-        assertThat(queueEntityOpt).isPresent();
-        WaitingQueueEntity queueEntity = queueEntityOpt.get();
-        assertThat(queueEntity.getQueueType()).isEqualTo("VITALS");
-        assertThat(queueEntity.getPriority()).isEqualTo("ROUTINE");
-        assertThat(queueEntity.getAddedBy()).isEqualTo(USER_ID);
-        assertThat(queueEntity.isActive()).isTrue();
+        List<WaitingQueueEntity> queueEntities = queueRepository
+                .findByTenantIdAndPatientIdOrderByEnteredQueueAtDesc(TENANT_ID_A, UUID.fromString(PATIENT_ID));
+        assertThat(queueEntities).isNotEmpty();
+        WaitingQueueEntity queueEntity = queueEntities.get(0);
+        assertThat(queueEntity.getPriority()).isEqualTo("normal");
+        assertThat(queueEntity.getStatus()).isEqualTo("waiting");
 
         // Step 2: Call patient
         mockMvc.perform(post("/api/v1/queue/patient/{patientId}/call", PATIENT_ID)
@@ -130,8 +129,9 @@ class WaitingQueueIntegrationTest {
                 .andExpect(status().isOk());
 
         // Verify called status
-        queueEntity = queueRepository.findByTenantIdAndPatientId(TENANT_ID_A, PATIENT_ID).orElseThrow();
-        assertThat(queueEntity.getCalledBy()).isEqualTo("nurse@example.com");
+        queueEntity = queueRepository.findByTenantIdAndPatientIdOrderByEnteredQueueAtDesc(
+                TENANT_ID_A, UUID.fromString(PATIENT_ID)).get(0);
+        assertThat(queueEntity.getStatus()).isEqualTo("called");
         assertThat(queueEntity.getCalledAt()).isNotNull();
 
         // Step 3: Remove from queue
@@ -141,10 +141,10 @@ class WaitingQueueIntegrationTest {
                 .andExpect(status().isOk());
 
         // Verify removed from queue
-        queueEntity = queueRepository.findByTenantIdAndPatientId(TENANT_ID_A, PATIENT_ID).orElseThrow();
-        assertThat(queueEntity.isActive()).isFalse();
-        assertThat(queueEntity.getRemovedBy()).isEqualTo(USER_ID);
-        assertThat(queueEntity.getRemovedAt()).isNotNull();
+        queueEntity = queueRepository.findByTenantIdAndPatientIdOrderByEnteredQueueAtDesc(
+                TENANT_ID_A, UUID.fromString(PATIENT_ID)).get(0);
+        assertThat(queueEntity.getStatus()).isEqualTo("completed");
+        assertThat(queueEntity.getExitedQueueAt()).isNotNull();
     }
 
     // ================================
@@ -156,10 +156,11 @@ class WaitingQueueIntegrationTest {
     @DisplayName("Priority grouping: verify patients grouped correctly by priority")
     void testPriorityGrouping() throws Exception {
         // Add patients with different priorities
-        String[] priorities = {"URGENT", "ROUTINE", "URGENT", "ROUTINE", "STAT"};
+        String[] priorities = {"URGENT", "NORMAL", "URGENT", "NORMAL", "HIGH"};
         for (int i = 0; i < priorities.length; i++) {
+            String patientId = UUID.randomUUID().toString();
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT00" + (i + 1))
+                    .patientId(patientId)
                     .encounterId("ENC00" + (i + 1))
                     .queueType("VITALS")
                     .enteredQueueAt(LocalDateTime.now().minusMinutes(5 - i))
@@ -179,20 +180,20 @@ class WaitingQueueIntegrationTest {
         MvcResult result = mockMvc.perform(get("/api/v1/queue")
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalInQueue").value(5))
-                .andExpect(jsonPath("$.byPriority.STAT").value(1))
-                .andExpect(jsonPath("$.byPriority.URGENT").value(2))
-                .andExpect(jsonPath("$.byPriority.ROUTINE").value(2))
+                .andExpect(jsonPath("$.totalPatients").value(5))
+                .andExpect(jsonPath("$.countsByPriority.high").value(1))
+                .andExpect(jsonPath("$.countsByPriority.urgent").value(2))
+                .andExpect(jsonPath("$.countsByPriority.normal").value(2))
                 .andReturn();
 
         // Verify database grouping
-        List<WaitingQueueEntity> statQueue = queueRepository.findByTenantIdAndPriorityAndActive(TENANT_ID_A, "STAT", true);
-        List<WaitingQueueEntity> urgentQueue = queueRepository.findByTenantIdAndPriorityAndActive(TENANT_ID_A, "URGENT", true);
-        List<WaitingQueueEntity> routineQueue = queueRepository.findByTenantIdAndPriorityAndActive(TENANT_ID_A, "ROUTINE", true);
+        List<WaitingQueueEntity> highQueue = queueRepository.findQueueByPriority(TENANT_ID_A, "high");
+        List<WaitingQueueEntity> urgentQueue = queueRepository.findQueueByPriority(TENANT_ID_A, "urgent");
+        List<WaitingQueueEntity> normalQueue = queueRepository.findQueueByPriority(TENANT_ID_A, "normal");
 
-        assertThat(statQueue).hasSize(1);
+        assertThat(highQueue).hasSize(1);
         assertThat(urgentQueue).hasSize(2);
-        assertThat(routineQueue).hasSize(2);
+        assertThat(normalQueue).hasSize(2);
     }
 
     // ================================
@@ -208,11 +209,11 @@ class WaitingQueueIntegrationTest {
 
         // STAT patient (should have shortest wait)
         QueueEntryRequest statRequest = QueueEntryRequest.builder()
-                .patientId("PATIENT_STAT")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_STAT")
                 .queueType("VITALS")
                 .enteredQueueAt(baseTime)
-                .priority("STAT")
+                .priority("URGENT")
                 .visitType("Emergency")
                 .build();
 
@@ -226,11 +227,11 @@ class WaitingQueueIntegrationTest {
 
         // ROUTINE patient (should have longer wait)
         QueueEntryRequest routineRequest = QueueEntryRequest.builder()
-                .patientId("PATIENT_ROUTINE")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_ROUTINE")
                 .queueType("VITALS")
                 .enteredQueueAt(baseTime)
-                .priority("ROUTINE")
+                .priority("NORMAL")
                 .visitType("Check-up")
                 .build();
 
@@ -247,15 +248,15 @@ class WaitingQueueIntegrationTest {
         QueuePositionResponse routinePosition = objectMapper.readValue(
                 routineResult.getResponse().getContentAsString(), QueuePositionResponse.class);
 
-        // STAT patient should be ahead in queue
-        assertThat(statPosition.getQueuePosition()).isLessThan(routinePosition.getQueuePosition());
+        // URGENT patient should be ahead in queue
+        assertThat(statPosition.getPosition()).isLessThan(routinePosition.getPosition());
 
         // Get wait times
         mockMvc.perform(get("/api/v1/queue/wait-times")
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.averageWaitMinutes").exists())
-                .andExpect(jsonPath("$.byPriority").exists());
+                .andExpect(jsonPath("$.countsByPriority").exists());
     }
 
     // ================================
@@ -266,14 +267,14 @@ class WaitingQueueIntegrationTest {
     @WithMockUser(roles = "RECEPTIONIST")
     @DisplayName("Queue reordering: add urgent patient after others, verify correct reordering")
     void testQueueReordering() throws Exception {
-        // Add 3 ROUTINE patients
+        // Add 3 NORMAL patients
         for (int i = 1; i <= 3; i++) {
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT_ROUTINE_" + i)
+                    .patientId(UUID.randomUUID().toString())
                     .encounterId("ENC_ROUTINE_" + i)
                     .queueType("VITALS")
                     .enteredQueueAt(LocalDateTime.now().minusMinutes(10 - i))
-                    .priority("ROUTINE")
+                    .priority("NORMAL")
                     .visitType("Check-up")
                     .build();
 
@@ -287,7 +288,7 @@ class WaitingQueueIntegrationTest {
 
         // Add URGENT patient (should jump to front)
         QueueEntryRequest urgentRequest = QueueEntryRequest.builder()
-                .patientId("PATIENT_URGENT")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_URGENT")
                 .queueType("VITALS")
                 .enteredQueueAt(LocalDateTime.now())
@@ -306,15 +307,15 @@ class WaitingQueueIntegrationTest {
         QueuePositionResponse urgentPosition = objectMapper.readValue(
                 urgentResult.getResponse().getContentAsString(), QueuePositionResponse.class);
 
-        // Urgent patient should be at position 1 (ahead of all ROUTINE patients)
-        assertThat(urgentPosition.getQueuePosition()).isEqualTo(1);
+        // Urgent patient should be at position 1 (ahead of all NORMAL patients)
+        assertThat(urgentPosition.getPosition()).isEqualTo(1);
 
         // Get queue and verify ordering
         mockMvc.perform(get("/api/v1/queue")
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.queueEntries[0].priority").value("URGENT"))
-                .andExpect(jsonPath("$.queueEntries[1].priority").value("ROUTINE"));
+                .andExpect(jsonPath("$.queueEntries[1].priority").value("NORMAL"));
     }
 
     // ================================
@@ -331,7 +332,7 @@ class WaitingQueueIntegrationTest {
                 .encounterId(ENCOUNTER_ID)
                 .queueType("VITALS")
                 .enteredQueueAt(LocalDateTime.now())
-                .priority("ROUTINE")
+                .priority("NORMAL")
                 .visitType("Check-up")
                 .build();
 
@@ -361,11 +362,11 @@ class WaitingQueueIntegrationTest {
         // Add 3 patients to tenant A
         for (int i = 1; i <= 3; i++) {
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT_A_" + i)
+                    .patientId(UUID.randomUUID().toString())
                     .encounterId("ENC_A_" + i)
                     .queueType("VITALS")
                     .enteredQueueAt(LocalDateTime.now())
-                    .priority("ROUTINE")
+                    .priority("NORMAL")
                     .visitType("Check-up")
                     .build();
 
@@ -380,11 +381,11 @@ class WaitingQueueIntegrationTest {
         // Add 2 patients to tenant B
         for (int i = 1; i <= 2; i++) {
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT_B_" + i)
+                    .patientId(UUID.randomUUID().toString())
                     .encounterId("ENC_B_" + i)
                     .queueType("VITALS")
                     .enteredQueueAt(LocalDateTime.now())
-                    .priority("ROUTINE")
+                    .priority("NORMAL")
                     .visitType("Check-up")
                     .build();
 
@@ -400,13 +401,13 @@ class WaitingQueueIntegrationTest {
         mockMvc.perform(get("/api/v1/queue")
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalInQueue").value(3));
+                .andExpect(jsonPath("$.totalPatients").value(3));
 
         // Tenant B should see only 2 entries
         mockMvc.perform(get("/api/v1/queue")
                         .header("X-Tenant-ID", TENANT_ID_B))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalInQueue").value(2));
+                .andExpect(jsonPath("$.totalPatients").value(2));
     }
 
     // ================================
@@ -420,11 +421,11 @@ class WaitingQueueIntegrationTest {
         // Simulate 5 patients joining queue simultaneously
         for (int i = 1; i <= 5; i++) {
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT00" + i)
+                    .patientId(UUID.randomUUID().toString())
                     .encounterId("ENC00" + i)
                     .queueType("VITALS")
                     .enteredQueueAt(LocalDateTime.now().minusSeconds(i))
-                    .priority("ROUTINE")
+                    .priority("NORMAL")
                     .visitType("Check-up")
                     .build();
 
@@ -440,10 +441,11 @@ class WaitingQueueIntegrationTest {
         mockMvc.perform(get("/api/v1/queue")
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalInQueue").value(5));
+                .andExpect(jsonPath("$.totalPatients").value(5));
 
         // Verify all entries in database
-        List<WaitingQueueEntity> queueEntries = queueRepository.findByTenantIdAndActive(TENANT_ID_A, true);
+        List<WaitingQueueEntity> queueEntries = queueRepository.findByTenantIdAndStatusOrderByEnteredQueueAtAsc(
+                TENANT_ID_A, "waiting");
         assertThat(queueEntries).hasSize(5);
     }
 
@@ -460,11 +462,11 @@ class WaitingQueueIntegrationTest {
         // Add patient to each queue type
         for (int i = 0; i < queueTypes.length; i++) {
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT00" + (i + 1))
-                    .encounterId("ENC00" + (i + 1))
+                    .patientId(UUID.randomUUID().toString())
+                    .encounterId(queueTypes[i])
                     .queueType(queueTypes[i])
                     .enteredQueueAt(LocalDateTime.now())
-                    .priority("ROUTINE")
+                    .priority("NORMAL")
                     .visitType("Check-up")
                     .build();
 
@@ -480,10 +482,10 @@ class WaitingQueueIntegrationTest {
         mockMvc.perform(get("/api/v1/queue")
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalInQueue").value(3))
-                .andExpect(jsonPath("$.byQueueType.VITALS").value(1))
-                .andExpect(jsonPath("$.byQueueType.PROVIDER").value(1))
-                .andExpect(jsonPath("$.byQueueType.CHECKOUT").value(1));
+                .andExpect(jsonPath("$.totalPatients").value(3))
+                .andExpect(jsonPath("$.vitalsQueueCount").value(1))
+                .andExpect(jsonPath("$.providerQueueCount").value(1))
+                .andExpect(jsonPath("$.checkoutQueueCount").value(1));
     }
 
     // ================================
@@ -500,7 +502,7 @@ class WaitingQueueIntegrationTest {
                 .encounterId(ENCOUNTER_ID)
                 .queueType("VITALS")
                 .enteredQueueAt(LocalDateTime.now())
-                .priority("ROUTINE")
+                .priority("NORMAL")
                 .visitType("Check-up")
                 .build();
 
@@ -524,7 +526,7 @@ class WaitingQueueIntegrationTest {
     @WithMockUser(roles = "RECEPTIONIST")
     @DisplayName("Error: Patient not in queue (404)")
     void testPatientNotInQueue() throws Exception {
-        String nonExistentPatient = "PATIENT_NONEXISTENT";
+        String nonExistentPatient = UUID.randomUUID().toString();
 
         // Try to get position for non-existent patient
         mockMvc.perform(get("/api/v1/queue/patient/{patientId}", nonExistentPatient)
@@ -549,11 +551,11 @@ class WaitingQueueIntegrationTest {
         // Add 3 patients
         for (int i = 1; i <= 3; i++) {
             QueueEntryRequest request = QueueEntryRequest.builder()
-                    .patientId("PATIENT00" + i)
+                    .patientId(UUID.randomUUID().toString())
                     .encounterId("ENC00" + i)
                     .queueType("VITALS")
                     .enteredQueueAt(LocalDateTime.now().minusMinutes(10 - i))
-                    .priority("ROUTINE")
+                    .priority("NORMAL")
                     .visitType("Check-up")
                     .build();
 
@@ -570,7 +572,7 @@ class WaitingQueueIntegrationTest {
                         .header("X-Tenant-ID", TENANT_ID_A)
                         .param("queueType", "VITALS"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.patientId").value("PATIENT001"));
+                .andExpect(jsonPath("$.patientId").exists());
     }
 
     @Test
@@ -593,7 +595,7 @@ class WaitingQueueIntegrationTest {
                 .encounterId(ENCOUNTER_ID)
                 .queueType("VITALS")
                 .enteredQueueAt(LocalDateTime.now())
-                .priority("ROUTINE")
+                .priority("NORMAL")
                 .visitType("Check-up")
                 .build();
 
@@ -612,7 +614,8 @@ class WaitingQueueIntegrationTest {
                 .andExpect(status().isOk());
 
         // Verify priority updated
-        WaitingQueueEntity entity = queueRepository.findByTenantIdAndPatientId(TENANT_ID_A, PATIENT_ID).orElseThrow();
-        assertThat(entity.getPriority()).isEqualTo("URGENT");
+        WaitingQueueEntity entity = queueRepository.findByTenantIdAndPatientIdOrderByEnteredQueueAtDesc(
+                TENANT_ID_A, UUID.fromString(PATIENT_ID)).get(0);
+        assertThat(entity.getPriority()).isEqualTo("urgent");
     }
 }

@@ -70,7 +70,7 @@ class PreVisitChecklistIntegrationTest {
     private static final String TENANT_ID_A = "TENANT_A";
     private static final String TENANT_ID_B = "TENANT_B";
     private static final String USER_ID = "nurse@example.com";
-    private static final String PATIENT_ID = "PATIENT001";
+    private static final String PATIENT_ID = UUID.randomUUID().toString();
     private static final String ENCOUNTER_ID = "ENC001";
 
     @BeforeEach
@@ -117,28 +117,28 @@ class PreVisitChecklistIntegrationTest {
         assertThat(checklistEntityOpt).isPresent();
         PreVisitChecklistEntity checklistEntity = checklistEntityOpt.get();
         assertThat(checklistEntity.getTenantId()).isEqualTo(TENANT_ID_A);
-        assertThat(checklistEntity.getPatientId()).isEqualTo(PATIENT_ID);
-        assertThat(checklistEntity.getCreatedBy()).isEqualTo(USER_ID);
+        assertThat(checklistEntity.getPatientId()).isEqualTo(UUID.fromString(PATIENT_ID));
 
         // Step 2: Complete first checklist item
         List<ChecklistItemResponse> items = checklistResponse.getItems();
         assertThat(items).isNotEmpty();
 
-        UUID firstItemId = items.get(0).getId();
+        String firstItemCode = items.get(0).getItemCode();
         ChecklistItemUpdateRequest updateRequest = ChecklistItemUpdateRequest.builder()
+                .itemCode(firstItemCode)
                 .completed(true)
-                .notes("Check-in completed")
+                .completionNotes("Check-in completed")
                 .build();
 
-        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, firstItemId)
+        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                         .header("X-Tenant-ID", TENANT_ID_A)
                         .header("X-User-ID", USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.completed").value(true))
-                .andExpect(jsonPath("$.completedBy").value(USER_ID))
-                .andExpect(jsonPath("$.completedAt").exists());
+                .andExpect(jsonPath("$.items[0].completed").value(true))
+                .andExpect(jsonPath("$.items[0].completedBy").value(USER_ID))
+                .andExpect(jsonPath("$.items[0].completedAt").exists());
 
         // Step 3: Get progress
         mockMvc.perform(get("/api/v1/pre-visit/{checklistId}/progress", checklistId)
@@ -150,13 +150,14 @@ class PreVisitChecklistIntegrationTest {
 
         // Step 4: Complete remaining items
         for (int i = 1; i < items.size(); i++) {
-            UUID itemId = items.get(i).getId();
+            String itemCode = items.get(i).getItemCode();
             ChecklistItemUpdateRequest completeRequest = ChecklistItemUpdateRequest.builder()
+                    .itemCode(itemCode)
                     .completed(true)
-                    .notes("Item " + (i + 1) + " completed")
+                    .completionNotes("Item " + (i + 1) + " completed")
                     .build();
 
-            mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, itemId)
+            mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                             .header("X-Tenant-ID", TENANT_ID_A)
                             .header("X-User-ID", USER_ID)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -270,27 +271,27 @@ class PreVisitChecklistIntegrationTest {
 
         // Add custom item
         CustomChecklistItemRequest customItemRequest = CustomChecklistItemRequest.builder()
-                .itemName("Special Lab Test")
+                .displayName("Special Lab Test")
                 .description("Order fasting glucose test")
-                .isCritical(true)
-                .sortOrder(initialItemCount + 1)
+                .category("CLINICAL")
+                .required(true)
+                .sequenceNumber(initialItemCount + 1)
                 .build();
 
-        mockMvc.perform(post("/api/v1/pre-visit/{checklistId}/custom-item", checklistId)
+        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/custom-item", checklistId)
                         .header("X-Tenant-ID", TENANT_ID_A)
                         .header("X-User-ID", USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(customItemRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.itemName").value("Special Lab Test"))
-                .andExpect(jsonPath("$.isCritical").value(true));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.displayName == 'Special Lab Test')]").exists());
 
         // Verify custom item appears in checklist
         mockMvc.perform(get("/api/v1/pre-visit/patient/{patientId}", PATIENT_ID)
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items", hasSize(initialItemCount + 1)))
-                .andExpect(jsonPath("$.items[?(@.itemName == 'Special Lab Test')]").exists());
+                .andExpect(jsonPath("$.items[?(@.displayName == 'Special Lab Test')]").exists());
     }
 
     // ================================
@@ -324,13 +325,14 @@ class PreVisitChecklistIntegrationTest {
         // Complete non-critical items only
         List<ChecklistItemResponse> items = checklist.getItems();
         for (ChecklistItemResponse item : items) {
-            if (!item.isCritical()) {
+            if (Boolean.FALSE.equals(item.getRequired())) {
                 ChecklistItemUpdateRequest updateRequest = ChecklistItemUpdateRequest.builder()
+                        .itemCode(item.getItemCode())
                         .completed(true)
-                        .notes("Non-critical item completed")
+                        .completionNotes("Non-critical item completed")
                         .build();
 
-                mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, item.getId())
+                mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                                 .header("X-Tenant-ID", TENANT_ID_A)
                                 .header("X-User-ID", USER_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -340,11 +342,11 @@ class PreVisitChecklistIntegrationTest {
         }
 
         // Get incomplete critical items
-        mockMvc.perform(get("/api/v1/pre-visit/{checklistId}/critical-incomplete", checklistId)
+        mockMvc.perform(get("/api/v1/pre-visit/{checklistId}/critical-items", checklistId)
                         .header("X-Tenant-ID", TENANT_ID_A))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(greaterThan(0))))
-                .andExpect(jsonPath("$[*].isCritical", everyItem(is(true))))
+                .andExpect(jsonPath("$[*].required", everyItem(is(true))))
                 .andExpect(jsonPath("$[*].completed", everyItem(is(false))));
     }
 
@@ -383,11 +385,11 @@ class PreVisitChecklistIntegrationTest {
 
         // Try to update from tenant B - should fail
         ChecklistItemUpdateRequest updateRequest = ChecklistItemUpdateRequest.builder()
+                .itemCode(checklist.getItems().get(0).getItemCode())
                 .completed(true)
                 .build();
 
-        UUID firstItemId = checklist.getItems().get(0).getId();
-        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, firstItemId)
+        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                         .header("X-Tenant-ID", TENANT_ID_B)
                         .header("X-User-ID", USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -434,19 +436,21 @@ class PreVisitChecklistIntegrationTest {
 
         // Simulate concurrent updates by different users
         for (int i = 0; i < Math.min(3, items.size()); i++) {
-            UUID itemId = items.get(i).getId();
+            String itemCode = items.get(i).getItemCode();
             ChecklistItemUpdateRequest updateRequest = ChecklistItemUpdateRequest.builder()
+                    .itemCode(itemCode)
                     .completed(true)
-                    .notes("Completed by " + users[i])
+                    .completionNotes("Completed by " + users[i])
                     .build();
 
-            mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, itemId)
+            mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                             .header("X-Tenant-ID", TENANT_ID_A)
                             .header("X-User-ID", users[i])
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.completedBy").value(users[i]));
+                    .andExpect(jsonPath("$.items[?(@.itemCode == '" + itemCode + "')].completedBy")
+                            .value(hasItem(users[i])));
         }
 
         // Verify all updates succeeded
@@ -575,13 +579,14 @@ class PreVisitChecklistIntegrationTest {
         int itemsToComplete = totalItems / 2;
 
         for (int i = 0; i < itemsToComplete; i++) {
-            UUID itemId = items.get(i).getId();
+            String itemCode = items.get(i).getItemCode();
             ChecklistItemUpdateRequest updateRequest = ChecklistItemUpdateRequest.builder()
+                    .itemCode(itemCode)
                     .completed(true)
-                    .notes("Item " + (i + 1) + " completed")
+                    .completionNotes("Item " + (i + 1) + " completed")
                     .build();
 
-            mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, itemId)
+            mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                             .header("X-Tenant-ID", TENANT_ID_A)
                             .header("X-User-ID", USER_ID)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -645,34 +650,36 @@ class PreVisitChecklistIntegrationTest {
         ChecklistResponse checklist = objectMapper.readValue(
                 createResult.getResponse().getContentAsString(), ChecklistResponse.class);
         UUID checklistId = checklist.getId();
-        UUID firstItemId = checklist.getItems().get(0).getId();
+        String firstItemCode = checklist.getItems().get(0).getItemCode();
 
         // Complete item
         ChecklistItemUpdateRequest completeRequest = ChecklistItemUpdateRequest.builder()
+                .itemCode(firstItemCode)
                 .completed(true)
-                .notes("Completed")
+                .completionNotes("Completed")
                 .build();
 
-        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, firstItemId)
+        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                         .header("X-Tenant-ID", TENANT_ID_A)
                         .header("X-User-ID", USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(completeRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.completed").value(true));
+                .andExpect(jsonPath("$.items[0].completed").value(true));
 
         // Mark as incomplete
         ChecklistItemUpdateRequest incompleteRequest = ChecklistItemUpdateRequest.builder()
+                .itemCode(firstItemCode)
                 .completed(false)
-                .notes("Needs to be redone")
+                .completionNotes("Needs to be redone")
                 .build();
 
-        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/items/{itemId}", checklistId, firstItemId)
+        mockMvc.perform(put("/api/v1/pre-visit/{checklistId}/item", checklistId)
                         .header("X-Tenant-ID", TENANT_ID_A)
                         .header("X-User-ID", USER_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(incompleteRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.completed").value(false));
+                .andExpect(jsonPath("$.items[0].completed").value(false));
     }
 }

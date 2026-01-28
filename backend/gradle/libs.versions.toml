@@ -54,6 +54,8 @@ datafaker = "2.4.2"
 twilio = "9.14.0"
 totp = "1.7.1"
 poi-ooxml = "5.2.5"
+snakeyaml = "2.2"
+javafaker = "1.0.2"
 
 # Export Libraries
 opencsv = "5.9"
@@ -100,6 +102,9 @@ spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot
 spring-boot-starter-messaging = { module = "org.springframework.boot:spring-boot-starter-messaging", version.ref = "spring-boot" }
 spring-boot-starter-aop = { module = "org.springframework.boot:spring-boot-starter-aop", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+javafaker = { module = "com.github.javafaker:javafaker", version.ref = "javafaker" }
 
 # Spring Cloud
 spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }

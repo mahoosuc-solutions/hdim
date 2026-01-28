@@ -51,7 +51,7 @@ public class GoalController {
 
     private final GoalService goalService;
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new Goal resource")
@@ -66,7 +66,7 @@ public class GoalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a Goal resource by ID")
@@ -80,7 +80,7 @@ public class GoalController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing Goal resource")
@@ -96,7 +96,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a Goal resource")
@@ -112,7 +112,7 @@ public class GoalController {
 
     // ==================== Search Endpoints ====================
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search Goal resources")
@@ -146,7 +146,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all goals for a patient")
@@ -160,7 +160,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/active", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get active goals for a patient")
@@ -174,7 +174,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/overdue", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get overdue goals for a patient")
@@ -188,7 +188,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/high-priority", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get high priority goals for a patient")
@@ -202,7 +202,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/condition/{conditionId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get goals addressing a specific condition")
@@ -216,7 +216,7 @@ public class GoalController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/due", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get goals due within a date range")

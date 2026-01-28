@@ -16,6 +16,7 @@ import com.healthdata.authentication.repository.TenantRepository;
 import com.healthdata.authentication.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,12 @@ import java.util.Set;
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(
+    prefix = "authentication.controller",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = false
+)
 public class TenantService {
 
     private final TenantRepository tenantRepository;

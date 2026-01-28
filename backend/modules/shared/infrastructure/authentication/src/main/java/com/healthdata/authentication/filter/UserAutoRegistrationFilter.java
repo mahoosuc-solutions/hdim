@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
@@ -53,6 +54,7 @@ import java.util.stream.Collectors;
  * Order: 10 (runs after TrustedHeaderAuthFilter at order 5)
  */
 @Component
+@ConditionalOnBean(UserRepository.class)
 @Order(10)
 @RequiredArgsConstructor
 public class UserAutoRegistrationFilter extends OncePerRequestFilter {

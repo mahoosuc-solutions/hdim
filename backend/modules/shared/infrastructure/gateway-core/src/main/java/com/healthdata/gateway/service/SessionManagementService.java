@@ -3,6 +3,7 @@ package com.healthdata.gateway.service;
 import com.healthdata.gateway.dto.SessionMetadata;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
  * - Admin control (revoke user sessions)
  */
 @Service
+@ConditionalOnBean(FindByIndexNameSessionRepository.class)
 @RequiredArgsConstructor
 @Slf4j
 public class SessionManagementService {

@@ -10,6 +10,11 @@
     <!-- validation requires these tables to exist for the User entity -->
 
     <changeSet id="0000-create-users-table" author="care-gap-event-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
         <comment>Create users table for authentication support</comment>
         <createTable tableName="users">
             <column name="id" type="uuid">
@@ -75,6 +80,11 @@
     </changeSet>
 
     <changeSet id="0000-create-user-tenants-table" author="care-gap-event-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_tenants"/>
+            </not>
+        </preConditions>
         <comment>Create user_tenants collection table for multi-tenant support</comment>
         <createTable tableName="user_tenants">
             <column name="user_id" type="uuid">
@@ -105,6 +115,11 @@
     </changeSet>
 
     <changeSet id="0000-create-user-roles-table" author="care-gap-event-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_roles"/>
+            </not>
+        </preConditions>
         <comment>Create user_roles collection table for RBAC support</comment>
         <createTable tableName="user_roles">
             <column name="user_id" type="uuid">

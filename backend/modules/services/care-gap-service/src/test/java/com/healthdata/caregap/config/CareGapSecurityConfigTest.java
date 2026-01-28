@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import com.healthdata.caregap.security.TenantHeaderNormalizationFilter;
 import java.util.HashMap;
@@ -56,6 +57,7 @@ class CareGapSecurityConfigTest {
     void shouldBuildProductionChainWithGatewayTrustFilters() throws Exception {
         CareGapSecurityConfig config = new CareGapSecurityConfig();
         TrustedHeaderAuthFilter trustedHeaderFilter = mock(TrustedHeaderAuthFilter.class);
+        UserAutoRegistrationFilter userAutoRegistrationFilter = mock(UserAutoRegistrationFilter.class);
         TenantHeaderNormalizationFilter tenantHeaderNormalizationFilter =
             mock(TenantHeaderNormalizationFilter.class);
         TrustedTenantAccessFilter trustedTenantFilter = mock(TrustedTenantAccessFilter.class);
@@ -63,6 +65,7 @@ class CareGapSecurityConfigTest {
         SecurityFilterChain chain = config.securityFilterChain(
             httpSecurity(),
             trustedHeaderFilter,
+            userAutoRegistrationFilter,
             tenantHeaderNormalizationFilter,
             trustedTenantFilter
         );

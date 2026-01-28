@@ -9,11 +9,16 @@ version = "1.0.0"
 
 // Force correct snakeyaml version (fix for Android variant issue)
 configurations.all {
+    val snakeyamlVersion = libs.versions.snakeyaml.get()
+    attributes.attribute(
+        org.gradle.api.attributes.java.TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+        objects.named(org.gradle.api.attributes.java.TargetJvmEnvironment.STANDARD_JVM)
+    )
     resolutionStrategy {
-        force("org.yaml:snakeyaml:2.2")
+        force("org.yaml:snakeyaml:$snakeyamlVersion")
         eachDependency {
             if (requested.group == "org.yaml" && requested.name == "snakeyaml") {
-                useVersion("2.2")
+                useVersion(snakeyamlVersion)
                 because("Fix for Android variant resolution issue")
             }
         }
@@ -44,7 +49,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-sdk")
 
     // Faker for realistic data generation
-    implementation("com.github.javafaker:javafaker:1.0.2")
+    implementation(libs.javafaker)
 
     // Lombok
     compileOnly("org.projectlombok:lombok")

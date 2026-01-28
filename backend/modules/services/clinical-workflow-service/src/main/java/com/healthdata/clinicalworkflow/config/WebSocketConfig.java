@@ -28,7 +28,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  *
  * Issue: #288 - Real-time vital sign alerts via WebSocket
  */
-@Configuration
+@Configuration("vitalsWebSocketConfig")
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 

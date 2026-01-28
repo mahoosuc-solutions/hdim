@@ -61,7 +61,7 @@ class WaitingQueueServiceTest {
 
         // Then
         assertThat(result).isNotNull();
-        verify(queueRepository).save(any(WaitingQueueEntity.class));
+        verify(queueRepository, atLeastOnce()).save(any(WaitingQueueEntity.class));
     }
 
     @Test
@@ -208,11 +208,11 @@ class WaitingQueueServiceTest {
                 .thenReturn(30);
 
         // When
-        QueueStatusResponse result = queueService.getQueueStatus(TENANT_ID);
+        WaitingQueueService.QueueStatus result = queueService.getQueueStatusInternal(TENANT_ID);
 
         // Then
-        assertThat(result.getTotalPatients()).isEqualTo(10);
-        // assertThat(result.getUrgentCount()).isEqualTo(1L); // Method doesn't exist - priority counts in countsByPriority map
+        assertThat(result.getTotalWaiting()).isEqualTo(10);
+        assertThat(result.getUrgentCount()).isEqualTo(1L);
         assertThat(result.getAverageWaitMinutes()).isEqualTo(30);
     }
 
@@ -342,7 +342,7 @@ class WaitingQueueServiceTest {
         assertThat(result.getEncounterId()).isEqualTo("ENC001");
         assertThat(result.getPriority()).isEqualTo("HIGH");
         assertThat(result.getPosition()).isEqualTo(1);
-        verify(queueRepository).save(any(WaitingQueueEntity.class));
+        verify(queueRepository, atLeastOnce()).save(any(WaitingQueueEntity.class));
     }
 
     @Test

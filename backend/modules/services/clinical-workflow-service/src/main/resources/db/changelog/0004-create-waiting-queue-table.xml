@@ -26,10 +26,10 @@
             <column name="queue_position" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
-            <column name="priority" type="VARCHAR(50)" comment="urgent, high, normal, low">
+            <column name="priority" type="VARCHAR(50)" remarks="urgent, high, normal, low">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="VARCHAR(50)" comment="waiting, called, in-room, completed, cancelled">
+            <column name="status" type="VARCHAR(50)" remarks="waiting, called, in-room, completed, cancelled">
                 <constraints nullable="false"/>
             </column>
             <column name="entered_queue_at" type="TIMESTAMP WITH TIME ZONE">

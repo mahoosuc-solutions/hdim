@@ -8,6 +8,12 @@
     <!-- Audit Query Service Database Migrations -->
 
     <include file="audit/db/changelog/0001-create-audit-events-table.xml"/>
+    <include file="audit/db/changelog/0002-create-qa-reviews-table.xml"/>
+    <include file="audit/db/changelog/0003-create-ai-agent-decision-events-table.xml"/>
+    <include file="audit/db/changelog/0004-create-configuration-engine-events-table.xml"/>
+    <include file="audit/db/changelog/0005-create-user-configuration-action-events-table.xml"/>
+    <include file="audit/db/changelog/0006-create-data-quality-issues-table.xml"/>
+    <include file="audit/db/changelog/0007-create-clinical-decisions-table.xml"/>
     <!-- Only include shared audit changelogs present in this module's resources -->
     <include file="audit/db/changelog/0008-create-mpi-merges-table.xml"/>
 

@@ -66,6 +66,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
+    testImplementation(libs.testcontainers.jdbc)
     testImplementation(project(":modules:shared:test-infrastructure"))
 }
 

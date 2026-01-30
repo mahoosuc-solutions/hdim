@@ -13,7 +13,8 @@ import java.util.UUID;
  */
 @FeignClient(
     name = "cql-engine-service",
-    url = "${cql.engine.url}"
+    url = "${cql.engine.url}",
+    primary = false
 )
 public interface CqlEngineServiceClient {
 

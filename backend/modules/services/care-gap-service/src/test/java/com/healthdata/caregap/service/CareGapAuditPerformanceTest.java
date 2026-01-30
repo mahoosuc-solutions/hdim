@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.kafka.KafkaContainer;
@@ -66,7 +67,8 @@ class CareGapAuditPerformanceTest {
         registry.add("spring.kafka.producer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
         registry.add("audit.kafka.enabled", () -> "true");
-        registry.add("audit.kafka.topic.ai-decisions", () -> "ai.agent.decisions");
+        registry.add("audit.kafka.sync", () -> "true");
+        registry.add("audit.kafka.topic.ai-decisions", () -> TOPIC);
     }
 
     @Autowired
@@ -75,9 +77,12 @@ class CareGapAuditPerformanceTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired(required = false)
+    private KafkaTemplate<String, String> kafkaTemplate;
+
     private Consumer<String, String> consumer;
 
-    private static final String TOPIC = "ai.agent.decisions";
+    private static final String TOPIC = "ai.agent.decisions.perf-" + UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
@@ -91,6 +96,10 @@ class CareGapAuditPerformanceTest {
 
         consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Collections.singletonList(TOPIC));
+        waitForAssignment(Duration.ofSeconds(10));
+        if (!consumer.assignment().isEmpty()) {
+            consumer.seekToBeginning(consumer.assignment());
+        }
     }
 
     @AfterEach
@@ -105,6 +114,7 @@ class CareGapAuditPerformanceTest {
     void shouldHandleConcurrentEventPublications() throws Exception {
         // Given
         int concurrentRequests = 100;
+        String runId = UUID.randomUUID().toString();
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch completionLatch = new CountDownLatch(concurrentRequests);
         ExecutorService executor = Executors.newFixedThreadPool(20);
@@ -118,9 +128,9 @@ class CareGapAuditPerformanceTest {
                 try {
                     startLatch.await(); // All threads start together
                     
-                    String tenantId = "tenant-" + (eventNumber % 5); // 5 different tenants
-                    String patientId = "patient-" + eventNumber;
-                    String gapId = "gap-" + eventNumber;
+                    String tenantId = "tenant-" + runId + "-" + (eventNumber % 5); // 5 different tenants
+                    String patientId = "patient-" + runId + "-" + eventNumber;
+                    String gapId = "gap-" + runId + "-" + eventNumber;
                     
                     JsonNode cqlResult = objectMapper.createObjectNode()
                             .put("hasGap", true)
@@ -142,31 +152,43 @@ class CareGapAuditPerformanceTest {
         boolean completed = completionLatch.await(30, TimeUnit.SECONDS);
         executor.shutdown();
 
+        if (kafkaTemplate != null) {
+            kafkaTemplate.flush();
+        }
+
         // Then - Verify all events published successfully
         assertThat(completed).isTrue();
         assertThat(successCount.get()).isEqualTo(concurrentRequests);
 
         // Consume and verify events
         long startTime = System.currentTimeMillis();
-        int receivedCount = 0;
+        Set<String> receivedPatientIds = ConcurrentHashMap.newKeySet();
         Set<String> seenPartitionKeys = ConcurrentHashMap.newKeySet();
+        Set<String> expectedPatientIds = ConcurrentHashMap.newKeySet();
+        for (int i = 0; i < concurrentRequests; i++) {
+            expectedPatientIds.add("patient-" + runId + "-" + i);
+        }
         
-        while (receivedCount < concurrentRequests && System.currentTimeMillis() - startTime < 30000) {
+        while (receivedPatientIds.size() < concurrentRequests && System.currentTimeMillis() - startTime < 60000) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
             for (ConsumerRecord<String, String> record : records) {
                 String jsonValue = record.value();
                 assertThat(jsonValue).contains("care-gap-identifier");
                 assertThat(jsonValue).contains("CARE_GAP_IDENTIFICATION");
-                
-                // Track partition keys for distribution analysis
-                seenPartitionKeys.add(record.key());
-                receivedCount++;
+
+                String resourceId = extractResourceId(jsonValue);
+                if (resourceId != null && expectedPatientIds.contains(resourceId)) {
+                    if (record.key() != null && record.key().startsWith("tenant-" + runId + "-")) {
+                        seenPartitionKeys.add(record.key());
+                    }
+                    receivedPatientIds.add(resourceId);
+                }
             }
         }
 
-        System.out.println("Received " + receivedCount + " events from " + seenPartitionKeys.size() + " partition keys");
+        System.out.println("Received " + receivedPatientIds.size() + " events from " + seenPartitionKeys.size() + " partition keys");
         
-        assertThat(receivedCount).as("Should receive all published events")
+        assertThat(receivedPatientIds.size()).as("Should receive all published events")
                 .isEqualTo(concurrentRequests);
         assertThat(seenPartitionKeys.size())
                 .as("Events should be distributed across multiple partition keys (5 tenants)")
@@ -178,14 +200,15 @@ class CareGapAuditPerformanceTest {
     void shouldHandleHighVolumeEventPublishing() throws Exception {
         // Given
         int eventCount = 10_000;
+        String runId = UUID.randomUUID().toString();
         long startTime = System.currentTimeMillis();
         AtomicInteger successCount = new AtomicInteger(0);
 
         // When - Publish 10,000 events
         for (int i = 0; i < eventCount; i++) {
-            String tenantId = "tenant-" + (i % 10); // 10 tenants for partition distribution
-            String patientId = "patient-" + i;
-            String gapId = "gap-" + i;
+            String tenantId = "tenant-" + runId + "-" + (i % 10); // 10 tenants for partition distribution
+            String patientId = "patient-" + runId + "-" + i;
+            String gapId = "gap-" + runId + "-" + i;
             
             JsonNode cqlResult = objectMapper.createObjectNode()
                     .put("hasGap", true)
@@ -210,6 +233,9 @@ class CareGapAuditPerformanceTest {
 
         // Then - Verify throughput and successful publication
         assertThat(successCount.get()).isEqualTo(eventCount);
+        if (kafkaTemplate != null) {
+            kafkaTemplate.flush();
+        }
         System.out.println("Publishing completed:");
         System.out.println("  - Total events: " + eventCount);
         System.out.println("  - Duration: " + publishDuration + "ms");
@@ -227,9 +253,15 @@ class CareGapAuditPerformanceTest {
         while (consumedCount < 1000 && System.currentTimeMillis() - consumeStart < 30000) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
             for (ConsumerRecord<String, String> record : records) {
-                seenPartitionKeys.add(record.key());
-                assertThat(record.value()).contains("care-gap-identifier");
-                consumedCount++;
+                String jsonValue = record.value();
+                String resourceId = extractResourceId(jsonValue);
+                if (resourceId != null && resourceId.startsWith("patient-" + runId + "-")) {
+                    if (record.key() != null && record.key().startsWith("tenant-" + runId + "-")) {
+                        seenPartitionKeys.add(record.key());
+                    }
+                    assertThat(jsonValue).contains("care-gap-identifier");
+                    consumedCount++;
+                }
             }
         }
 
@@ -286,6 +318,37 @@ class CareGapAuditPerformanceTest {
                 .isLessThan(5.0);
         assertThat(max).as("Max latency should be under 50ms")
                 .isLessThan(50);
+    }
+
+    private void waitForAssignment(Duration timeout) {
+        long start = System.currentTimeMillis();
+        while (consumer.assignment().isEmpty() && System.currentTimeMillis() - start < timeout.toMillis()) {
+            consumer.poll(Duration.ofMillis(200));
+        }
+    }
+
+    private String extractResourceId(String jsonValue) {
+        String key = "\"resourceId\":\"";
+        int start = jsonValue.indexOf(key);
+        if (start != -1) {
+            start += key.length();
+            int end = jsonValue.indexOf("\"", start);
+            if (end > start) {
+                return jsonValue.substring(start, end);
+            }
+        }
+
+        String escapedKey = "\\\"resourceId\\\":\\\"";
+        start = jsonValue.indexOf(escapedKey);
+        if (start != -1) {
+            start += escapedKey.length();
+            int end = jsonValue.indexOf("\\\"", start);
+            if (end > start) {
+                return jsonValue.substring(start, end);
+            }
+        }
+
+        return null;
     }
 
     private String extractEventId(String jsonValue) {

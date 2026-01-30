@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.UUID;
 
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -58,7 +60,7 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
 
     @BeforeEach
     void setUp() {
-        testValueSet = new ValueSet(TENANT_ID, DIABETES_OID, "Diabetes", "SNOMED");
+        testValueSet = buildValueSet(TENANT_ID, DIABETES_OID, "Diabetes", "SNOMED");
         testValueSet.setVersion("2023-01");
         testValueSet.setCodes("[\"44054006\", \"73211009\"]");
         testValueSet.setDescription("Diabetes diagnoses");
@@ -158,11 +160,11 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get latest version of value set by OID")
     void testGetLatestValueSetVersion() throws Exception {
         // Create multiple versions
-        ValueSet v1 = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.999", "Test", "SNOMED");
+        ValueSet v1 = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.999", "Test", "SNOMED");
         v1.setVersion("2022-01");
         valueSetRepository.save(v1);
 
-        ValueSet v2 = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.999", "Test", "SNOMED");
+        ValueSet v2 = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.999", "Test", "SNOMED");
         v2.setVersion("2023-01");
         valueSetRepository.save(v2);
 
@@ -177,13 +179,13 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get all versions of a value set")
     void testGetAllValueSetVersions() throws Exception {
         String oid = "2.16.840.1.113883.3.464.1003.888";
-        ValueSet vs1 = new ValueSet(TENANT_ID, oid, "MultiVersion", "SNOMED");
+        ValueSet vs1 = buildValueSet(TENANT_ID, oid, "MultiVersion", "SNOMED");
         vs1.setVersion("2021-01");
         valueSetRepository.save(vs1);
-        ValueSet vs2 = new ValueSet(TENANT_ID, oid, "MultiVersion", "SNOMED");
+        ValueSet vs2 = buildValueSet(TENANT_ID, oid, "MultiVersion", "SNOMED");
         vs2.setVersion("2022-01");
         valueSetRepository.save(vs2);
-        ValueSet vs3 = new ValueSet(TENANT_ID, oid, "MultiVersion", "SNOMED");
+        ValueSet vs3 = buildValueSet(TENANT_ID, oid, "MultiVersion", "SNOMED");
         vs3.setVersion("2023-01");
         valueSetRepository.save(vs3);
 
@@ -236,7 +238,7 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get LOINC value sets")
     void testGetLoincValueSets() throws Exception {
         // Create LOINC value set
-        ValueSet loinc = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.198.12.1015",
+        ValueSet loinc = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.198.12.1015",
             "HbA1c Tests", "LOINC");
         loinc.setCodes("[\"4548-4\", \"17856-6\"]");
         valueSetRepository.save(loinc);
@@ -254,7 +256,7 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get RxNorm value sets")
     void testGetRxNormValueSets() throws Exception {
         // Create RxNorm value set
-        ValueSet rxnorm = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.196.12.1001",
+        ValueSet rxnorm = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1003.196.12.1001",
             "Diabetes Medications", "RxNorm");
         rxnorm.setCodes("[\"860975\", \"860971\"]");
         valueSetRepository.save(rxnorm);
@@ -272,9 +274,9 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get common code system value sets")
     void testGetCommonCodeSystemValueSets() throws Exception {
         // Create value sets for different code systems
-        valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.999.1", "Test1", "SNOMED"));
-        valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.999.2", "Test2", "LOINC"));
-        valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.999.3", "Test3", "RxNorm"));
+        valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.999.1", "Test1", "SNOMED"));
+        valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.999.2", "Test2", "LOINC"));
+        valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.999.3", "Test3", "RxNorm"));
 
         mockMvc.perform(get(BASE_URL + "/common")
                 .header("X-Tenant-ID", TENANT_ID))
@@ -342,7 +344,7 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @Order(19)
     @DisplayName("Should activate value set")
     void testActivateValueSet() throws Exception {
-        ValueSet draft = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.777", "ToActivate", "SNOMED");
+        ValueSet draft = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.777", "ToActivate", "SNOMED");
         draft.setStatus("DRAFT");
         draft = valueSetRepository.save(draft);
 
@@ -366,7 +368,7 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @Order(21)
     @DisplayName("Should delete value set (soft delete)")
     void testDeleteValueSet() throws Exception {
-        ValueSet toDelete = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.888", "ToDelete", "SNOMED");
+        ValueSet toDelete = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.888", "ToDelete", "SNOMED");
         toDelete = valueSetRepository.save(toDelete);
 
         mockMvc.perform(delete(BASE_URL + "/" + toDelete.getId())
@@ -432,7 +434,7 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
         String otherTenant = "other-tenant";
 
         // Create value set for other tenant
-        ValueSet otherValueSet = new ValueSet(otherTenant, "2.16.840.1.113883.3.464.666", "OtherTenant", "SNOMED");
+        ValueSet otherValueSet = buildValueSet(otherTenant, "2.16.840.1.113883.3.464.666", "OtherTenant", "SNOMED");
         otherValueSet = valueSetRepository.save(otherValueSet);
 
         // Try to access other tenant's value set
@@ -451,9 +453,9 @@ public class ValueSetControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should handle multiple code systems")
     void testMultipleCodeSystems() throws Exception {
         // Create value sets for different code systems
-        valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.111", "ICD10", "ICD-10-CM"));
-        valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.222", "CPT", "CPT"));
-        valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.333", "HCPCS", "HCPCS"));
+        valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.111", "ICD10", "ICD-10-CM"));
+        valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.222", "CPT", "CPT"));
+        valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.333", "HCPCS", "HCPCS"));
 
         // Verify all are retrievable
         mockMvc.perform(get(BASE_URL)

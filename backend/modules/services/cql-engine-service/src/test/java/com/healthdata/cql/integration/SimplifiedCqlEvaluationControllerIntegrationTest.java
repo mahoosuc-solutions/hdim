@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class SimplifiedCqlEvaluationControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -48,7 +50,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest extends CqlTestcon
 
     @BeforeEach
     void setUp() {
-        testLibrary = new CqlLibrary(TENANT_ID, "CDC", "1.0.0");
+        testLibrary = buildLibrary(TENANT_ID, "CDC", "1.0.0");
         testLibrary.setStatus("ACTIVE");
         testLibrary.setCqlContent("library CDC version '1.0.0'\ndefine DiabetesCheck: true");
         testLibrary = libraryRepository.save(testLibrary);
@@ -148,7 +150,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest extends CqlTestcon
     @DisplayName("Should use latest library version")
     void testEvaluateUsesLatestVersion() throws Exception {
         // Create newer version
-        CqlLibrary newerVersion = new CqlLibrary(TENANT_ID, "CDC", "2.0.0");
+        CqlLibrary newerVersion = buildLibrary(TENANT_ID, "CDC", "2.0.0");
         newerVersion.setStatus("ACTIVE");
         newerVersion.setCqlContent("library CDC version '2.0.0'");
         libraryRepository.save(newerVersion);
@@ -186,7 +188,7 @@ public class SimplifiedCqlEvaluationControllerIntegrationTest extends CqlTestcon
         String otherTenant = "other-tenant";
 
         // Create library for other tenant
-        CqlLibrary otherLibrary = new CqlLibrary(otherTenant, "TenantSpecific", "1.0.0");
+        CqlLibrary otherLibrary = buildLibrary(otherTenant, "TenantSpecific", "1.0.0");
         otherLibrary.setStatus("ACTIVE");
         libraryRepository.save(otherLibrary);
 

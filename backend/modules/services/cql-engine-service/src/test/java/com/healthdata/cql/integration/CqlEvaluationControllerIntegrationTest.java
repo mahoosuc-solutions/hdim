@@ -16,6 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -44,6 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class CqlEvaluationControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -68,7 +70,7 @@ public class CqlEvaluationControllerIntegrationTest extends CqlTestcontainersBas
     @BeforeEach
     void setUp() {
         // Create test library
-        testLibrary = new CqlLibrary(TENANT_ID, "TestLibrary", "1.0.0");
+        testLibrary = buildLibrary(TENANT_ID, "TestLibrary", "1.0.0");
         testLibrary.setStatus("ACTIVE");
         testLibrary.setCqlContent("library TestLibrary version '1.0.0'");
         testLibrary = libraryRepository.save(testLibrary);
@@ -419,7 +421,7 @@ public class CqlEvaluationControllerIntegrationTest extends CqlTestcontainersBas
         String otherTenant = "other-tenant";
 
         // Create library and evaluation for other tenant
-        CqlLibrary otherLibrary = new CqlLibrary(otherTenant, "OtherLibrary", "1.0.0");
+        CqlLibrary otherLibrary = buildLibrary(otherTenant, "OtherLibrary", "1.0.0");
         otherLibrary = libraryRepository.save(otherLibrary);
 
         CqlEvaluation otherEvaluation = new CqlEvaluation(otherTenant, otherLibrary, UUID.randomUUID());

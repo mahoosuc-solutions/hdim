@@ -14,10 +14,10 @@ spring:
     name: cql-engine-service-test
 
   datasource:
-    url: jdbc:postgresql://localhost:5435/cql_db
-    username: healthdata
-    password: healthdata_password
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:tc:postgresql:16-alpine:///cql_test_db
+    username: test_user
+    password: test_password
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
 
   jpa:
     hibernate:
@@ -30,6 +30,7 @@ spring:
 
   liquibase:
     enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration

@@ -125,14 +125,18 @@ public class CareGapIdentificationService {
             log.info("Created care gap: {} for measure: {}", saved.getId(), libraryName);
 
             // Publish audit event for AI-driven care gap identification
-            careGapAuditIntegration.publishCareGapIdentificationEvent(
-                    tenantId,
-                    patientId.toString(),
-                    libraryName,
-                    saved.getId().toString(),
-                    cqlResult,
-                    createdBy
-            );
+            if (saved.getId() != null) {
+                careGapAuditIntegration.publishCareGapIdentificationEvent(
+                        tenantId,
+                        patientId.toString(),
+                        libraryName,
+                        saved.getId().toString(),
+                        cqlResult,
+                        createdBy
+                );
+            } else {
+                log.warn("Skipping care gap audit event for measure {} because saved gap ID is null", libraryName);
+            }
         }
 
         return gaps;
@@ -215,15 +219,17 @@ public class CareGapIdentificationService {
         publishGapClosureEvent(tenantId, gapId.toString(), closedBy);
 
         // Publish audit event for care gap closure
-        careGapAuditIntegration.publishCareGapClosureEvent(
-                tenantId,
-                gap.getPatientId().toString(),
-                gap.getMeasureId(),
-                gapId.toString(),
-                closedBy,
-                closureReason,
-                closureAction
-        );
+        if (gap.getPatientId() != null && gap.getMeasureId() != null) {
+            careGapAuditIntegration.publishCareGapClosureEvent(
+                    tenantId,
+                    gap.getPatientId().toString(),
+                    gap.getMeasureId(),
+                    gapId.toString(),
+                    closedBy,
+                    closureReason,
+                    closureAction
+            );
+        }
 
         return saved;
     }

@@ -10,12 +10,12 @@ spring:
   application:
     name: care-gap-service
 
-  # Database Configuration - H2 in-memory for tests
+  # Database Configuration - Testcontainers PostgreSQL for tests
   datasource:
-    url: jdbc:postgresql://localhost:5435/caregap_db
-    driver-class-name: org.postgresql.Driver
-    username: healthdata
-    password: healthdata_password
+    url: jdbc:tc:postgresql:16-alpine:///caregap_test_db
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: test
+    password: test
   # JPA Configuration
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

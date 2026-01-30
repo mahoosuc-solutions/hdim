@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.UUID;
 
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -57,7 +59,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
 
     @BeforeEach
     void setUp() {
-        testLibrary = new CqlLibrary(TENANT_ID, "DiabetesScreening", "1.0.0");
+        testLibrary = buildLibrary(TENANT_ID, "DiabetesScreening", "1.0.0");
         testLibrary.setStatus("ACTIVE");
         testLibrary.setCqlContent("library DiabetesScreening version '1.0.0'");
         testLibrary.setDescription("HEDIS Diabetes Screening");
@@ -93,7 +95,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should fail to create duplicate library")
     void testCreateDuplicateLibrary() throws Exception {
         // Try to create library with same name and version
-        CqlLibrary duplicate = new CqlLibrary(TENANT_ID, "DiabetesScreening", "1.0.0");
+        CqlLibrary duplicate = buildLibrary(TENANT_ID, "DiabetesScreening", "1.0.0");
         String requestBody = objectMapper.writeValueAsString(duplicate);
 
         mockMvc.perform(post(BASE_URL)
@@ -158,10 +160,10 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get latest library version")
     void testGetLatestLibraryVersion() throws Exception {
         // Create multiple versions
-        CqlLibrary v2 = new CqlLibrary(TENANT_ID, "VersionTest", "1.0.0");
+        CqlLibrary v2 = buildLibrary(TENANT_ID, "VersionTest", "1.0.0");
         libraryRepository.save(v2);
 
-        CqlLibrary v3 = new CqlLibrary(TENANT_ID, "VersionTest", "2.0.0");
+        CqlLibrary v3 = buildLibrary(TENANT_ID, "VersionTest", "2.0.0");
         v3 = libraryRepository.save(v3);
 
         mockMvc.perform(get(BASE_URL + "/by-name/VersionTest/latest")
@@ -176,9 +178,9 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get all versions of a library")
     void testGetAllLibraryVersions() throws Exception {
         // Create multiple versions
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "MultiVersion", "1.0.0"));
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "MultiVersion", "1.1.0"));
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "MultiVersion", "2.0.0"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "MultiVersion", "1.0.0"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "MultiVersion", "1.1.0"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "MultiVersion", "2.0.0"));
 
         mockMvc.perform(get(BASE_URL + "/by-name/MultiVersion/versions")
                 .header("X-Tenant-ID", TENANT_ID))
@@ -205,7 +207,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get active libraries")
     void testGetActiveLibraries() throws Exception {
         // Create a draft library
-        CqlLibrary draft = new CqlLibrary(TENANT_ID, "DraftLibrary", "1.0.0");
+        CqlLibrary draft = buildLibrary(TENANT_ID, "DraftLibrary", "1.0.0");
         draft.setStatus("DRAFT");
         libraryRepository.save(draft);
 
@@ -254,7 +256,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should activate library")
     void testActivateLibrary() throws Exception {
         // Create a draft library
-        CqlLibrary draft = new CqlLibrary(TENANT_ID, "ToActivate", "1.0.0");
+        CqlLibrary draft = buildLibrary(TENANT_ID, "ToActivate", "1.0.0");
         draft.setStatus("DRAFT");
         draft = libraryRepository.save(draft);
 
@@ -279,7 +281,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should compile library")
     void testCompileLibrary() throws Exception {
         // Create library with CQL content
-        CqlLibrary toCompile = new CqlLibrary(TENANT_ID, "CompileTest", "1.0.0");
+        CqlLibrary toCompile = buildLibrary(TENANT_ID, "CompileTest", "1.0.0");
         toCompile.setCqlContent("library CompileTest version '1.0.0'\ndefine TestExpression: true");
         toCompile = libraryRepository.save(toCompile);
 
@@ -292,7 +294,8 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @Order(16)
     @DisplayName("Should fail to compile library without CQL content")
     void testCompileLibraryWithoutContent() throws Exception {
-        CqlLibrary empty = new CqlLibrary(TENANT_ID, "EmptyLibrary", "1.0.0");
+        CqlLibrary empty = buildLibrary(TENANT_ID, "EmptyLibrary", "1.0.0");
+        empty.setCqlContent("");
         empty = libraryRepository.save(empty);
 
         mockMvc.perform(post(BASE_URL + "/" + empty.getId() + "/compile")
@@ -305,7 +308,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should validate library")
     void testValidateLibrary() throws Exception {
         // Create library with CQL content
-        CqlLibrary toValidate = new CqlLibrary(TENANT_ID, "ValidateTest", "1.0.0");
+        CqlLibrary toValidate = buildLibrary(TENANT_ID, "ValidateTest", "1.0.0");
         toValidate.setCqlContent("library ValidateTest version '1.0.0'\ndefine TestExpression: true");
         toValidate = libraryRepository.save(toValidate);
 
@@ -319,7 +322,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @Order(18)
     @DisplayName("Should delete library (soft delete)")
     void testDeleteLibrary() throws Exception {
-        CqlLibrary toDelete = new CqlLibrary(TENANT_ID, "ToDelete", "1.0.0");
+        CqlLibrary toDelete = buildLibrary(TENANT_ID, "ToDelete", "1.0.0");
         toDelete = libraryRepository.save(toDelete);
 
         mockMvc.perform(delete(BASE_URL + "/" + toDelete.getId())
@@ -379,7 +382,7 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
         String otherTenant = "other-tenant";
 
         // Create library for other tenant
-        CqlLibrary otherLibrary = new CqlLibrary(otherTenant, "OtherTenantLibrary", "1.0.0");
+        CqlLibrary otherLibrary = buildLibrary(otherTenant, "OtherTenantLibrary", "1.0.0");
         otherLibrary = libraryRepository.save(otherLibrary);
 
         // Try to access other tenant's library
@@ -430,10 +433,10 @@ public class CqlLibraryControllerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should handle version comparison")
     void testVersionComparison() throws Exception {
         // Create multiple versions
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "VersionCompare", "1.0.0"));
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "VersionCompare", "1.0.1"));
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "VersionCompare", "1.1.0"));
-        libraryRepository.save(new CqlLibrary(TENANT_ID, "VersionCompare", "2.0.0"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "VersionCompare", "1.0.0"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "VersionCompare", "1.0.1"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "VersionCompare", "1.1.0"));
+        libraryRepository.save(buildLibrary(TENANT_ID, "VersionCompare", "2.0.0"));
 
         mockMvc.perform(get(BASE_URL + "/by-name/VersionCompare/versions")
                 .header("X-Tenant-ID", TENANT_ID))

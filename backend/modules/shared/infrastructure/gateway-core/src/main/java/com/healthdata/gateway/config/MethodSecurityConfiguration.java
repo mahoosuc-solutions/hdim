@@ -1,5 +1,6 @@
 package com.healthdata.gateway.config;
 
+import com.healthdata.gateway.security.HdimMethodSecurityExpressionHandler;
 import com.healthdata.gateway.security.HdimPermissionEvaluator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +63,7 @@ public class MethodSecurityConfiguration {
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
         DefaultMethodSecurityExpressionHandler expressionHandler =
-            new DefaultMethodSecurityExpressionHandler();
+            new HdimMethodSecurityExpressionHandler();
 
         // Register custom PermissionEvaluator
         expressionHandler.setPermissionEvaluator(permissionEvaluator);

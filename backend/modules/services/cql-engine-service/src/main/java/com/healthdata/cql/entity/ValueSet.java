@@ -22,7 +22,7 @@ import java.util.UUID;
         @Index(name = "idx_vs_tenant", columnList = "tenant_id")
     },
     uniqueConstraints = {
-        @UniqueConstraint(name = "uk_vs_oid_version", columnNames = {"oid", "version"})
+        @UniqueConstraint(name = "uk_vs_tenant_oid_version", columnNames = {"tenant_id", "oid", "version"})
     }
 )
 public class ValueSet {

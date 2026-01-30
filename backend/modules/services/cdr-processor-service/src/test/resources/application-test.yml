@@ -24,10 +24,10 @@ spring:
     name: cdr-processor-service-test
 
   datasource:
-    url: jdbc:postgresql://localhost:5435/cdr_db
-    driver-class-name: org.postgresql.Driver
-    username: healthdata
-    password: healthdata_password
+    url: jdbc:tc:postgresql:16-alpine:///cdr_test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: test
+    password: test
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:

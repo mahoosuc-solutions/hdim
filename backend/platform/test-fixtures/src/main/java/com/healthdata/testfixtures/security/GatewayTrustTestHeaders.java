@@ -101,6 +101,7 @@ public final class GatewayTrustTestHeaders {
 
     // Default test signing secret (must be at least 32 characters)
     private static final String DEFAULT_TEST_SECRET = "test-signing-secret-for-development-only-32chars";
+    private static final String DEFAULT_TEST_USERNAME = "test.user@test.hdim.io";
 
     private GatewayTrustTestHeaders() {
         // Utility class - prevent instantiation
@@ -117,10 +118,11 @@ public final class GatewayTrustTestHeaders {
      * @return HttpHeaders with super admin authentication
      */
     public static HttpHeaders superAdminHeaders(String primaryTenantId) {
+        String username = "superadmin@test.hdim.io";
         return builder()
                 .tenantId(primaryTenantId)
-                .userId(UUID.randomUUID().toString())
-                .username("superadmin@test.hdim.io")
+                .username(username)
+                .userId(deterministicUserId(username))
                 .roles("SUPER_ADMIN", "ADMIN", "EVALUATOR", "ANALYST", "VIEWER")
                 .tenantIds(primaryTenantId)
                 .build();
@@ -133,10 +135,11 @@ public final class GatewayTrustTestHeaders {
      * @return HttpHeaders with admin authentication
      */
     public static HttpHeaders adminHeaders(String tenantId) {
+        String username = "admin@test.hdim.io";
         return builder()
                 .tenantId(tenantId)
-                .userId(UUID.randomUUID().toString())
-                .username("admin@test.hdim.io")
+                .username(username)
+                .userId(deterministicUserId(username))
                 .roles("ADMIN", "EVALUATOR", "ANALYST", "VIEWER")
                 .tenantIds(tenantId)
                 .build();
@@ -149,10 +152,11 @@ public final class GatewayTrustTestHeaders {
      * @return HttpHeaders with evaluator authentication
      */
     public static HttpHeaders evaluatorHeaders(String tenantId) {
+        String username = "evaluator@test.hdim.io";
         return builder()
                 .tenantId(tenantId)
-                .userId(UUID.randomUUID().toString())
-                .username("evaluator@test.hdim.io")
+                .username(username)
+                .userId(deterministicUserId(username))
                 .roles("EVALUATOR", "ANALYST", "VIEWER")
                 .tenantIds(tenantId)
                 .build();
@@ -165,10 +169,11 @@ public final class GatewayTrustTestHeaders {
      * @return HttpHeaders with analyst authentication
      */
     public static HttpHeaders analystHeaders(String tenantId) {
+        String username = "analyst@test.hdim.io";
         return builder()
                 .tenantId(tenantId)
-                .userId(UUID.randomUUID().toString())
-                .username("analyst@test.hdim.io")
+                .username(username)
+                .userId(deterministicUserId(username))
                 .roles("ANALYST", "VIEWER")
                 .tenantIds(tenantId)
                 .build();
@@ -181,10 +186,11 @@ public final class GatewayTrustTestHeaders {
      * @return HttpHeaders with viewer authentication
      */
     public static HttpHeaders viewerHeaders(String tenantId) {
+        String username = "viewer@test.hdim.io";
         return builder()
                 .tenantId(tenantId)
-                .userId(UUID.randomUUID().toString())
-                .username("viewer@test.hdim.io")
+                .username(username)
+                .userId(deterministicUserId(username))
                 .roles("VIEWER")
                 .tenantIds(tenantId)
                 .build();
@@ -219,8 +225,8 @@ public final class GatewayTrustTestHeaders {
      */
     public static class HeaderBuilder {
         private String tenantId;
-        private String userId = UUID.randomUUID().toString();
-        private String username = "test.user@test.hdim.io";
+        private String userId;
+        private String username = DEFAULT_TEST_USERNAME;
         private Set<String> tenantIds = Set.of();
         private Set<String> roles = Set.of("VIEWER");
         private String signingSecret = DEFAULT_TEST_SECRET;
@@ -306,6 +312,9 @@ public final class GatewayTrustTestHeaders {
             if (tenantId == null || tenantId.isEmpty()) {
                 throw new IllegalStateException("tenantId is required");
             }
+            if (userId == null || userId.isEmpty()) {
+                userId = deterministicUserId(username);
+            }
 
             HttpHeaders headers = new HttpHeaders();
             headers.add(TENANT_ID_HEADER, tenantId);
@@ -340,9 +349,10 @@ public final class GatewayTrustTestHeaders {
      * @param roles    the user's roles
      */
     public static void applyHeaders(MockHttpServletRequest request, String tenantId, String... roles) {
+        String username = DEFAULT_TEST_USERNAME;
         request.addHeader(TENANT_ID_HEADER, tenantId);
-        request.addHeader(AUTH_USER_ID_HEADER, UUID.randomUUID().toString());
-        request.addHeader(AUTH_USERNAME_HEADER, "test.user@test.hdim.io");
+        request.addHeader(AUTH_USER_ID_HEADER, deterministicUserId(username));
+        request.addHeader(AUTH_USERNAME_HEADER, username);
         request.addHeader(AUTH_TENANT_IDS_HEADER, tenantId);
         request.addHeader(AUTH_ROLES_HEADER, String.join(",", roles));
         // Add validated header for development mode
@@ -364,10 +374,11 @@ public final class GatewayTrustTestHeaders {
             String... roles) {
 
         long timestamp = System.currentTimeMillis() / 1000;
+        String username = DEFAULT_TEST_USERNAME;
         return builder
                 .header(TENANT_ID_HEADER, tenantId)
-                .header(AUTH_USER_ID_HEADER, UUID.randomUUID().toString())
-                .header(AUTH_USERNAME_HEADER, "test.user@test.hdim.io")
+                .header(AUTH_USER_ID_HEADER, deterministicUserId(username))
+                .header(AUTH_USERNAME_HEADER, username)
                 .header(AUTH_TENANT_IDS_HEADER, tenantId)
                 .header(AUTH_ROLES_HEADER, String.join(",", roles))
                 .header(AUTH_VALIDATED_HEADER, "gateway-" + timestamp + "-dev-signature");
@@ -381,9 +392,10 @@ public final class GatewayTrustTestHeaders {
      * @param roles    the user's roles
      */
     public static void applyHeaders(HttpHeaders headers, String tenantId, String... roles) {
+        String username = DEFAULT_TEST_USERNAME;
         headers.add(TENANT_ID_HEADER, tenantId);
-        headers.add(AUTH_USER_ID_HEADER, UUID.randomUUID().toString());
-        headers.add(AUTH_USERNAME_HEADER, "test.user@test.hdim.io");
+        headers.add(AUTH_USER_ID_HEADER, deterministicUserId(username));
+        headers.add(AUTH_USERNAME_HEADER, username);
         headers.add(AUTH_TENANT_IDS_HEADER, tenantId);
         headers.add(AUTH_ROLES_HEADER, String.join(",", roles));
         // Add validated header for development mode
@@ -486,5 +498,9 @@ public final class GatewayTrustTestHeaders {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private static String deterministicUserId(String username) {
+        return UUID.nameUUIDFromBytes(username.getBytes(StandardCharsets.UTF_8)).toString();
     }
 }

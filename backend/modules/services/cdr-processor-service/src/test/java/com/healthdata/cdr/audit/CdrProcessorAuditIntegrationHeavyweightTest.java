@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.kafka.KafkaContainer;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * This test requires Docker and uses Testcontainers to spin up a real Kafka instance.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @Testcontainers
 @DisplayName("CDR Processor Audit Integration - Heavyweight Kafka Tests")
 class CdrProcessorAuditIntegrationHeavyweightTest {

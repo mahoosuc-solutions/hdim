@@ -32,5 +32,6 @@
     <include file="db/changelog/0015-add-missing-user-columns.xml"/>
     <!-- Align users table with User entity (remove incorrect columns, add missing MFA/SMS columns) -->
     <include file="db/changelog/0016-align-users-table-with-entity.xml"/>
+    <include file="db/changelog/0017-fix-value-set-unique-constraint.xml"/>
 
 </databaseChangeLog>

@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
  * Order: 10 (runs after TrustedHeaderAuthFilter at order 5)
  */
 @Component
+@org.springframework.context.annotation.Profile("!test")
 @ConditionalOnBean(UserRepository.class)
 @Order(10)
 @RequiredArgsConstructor

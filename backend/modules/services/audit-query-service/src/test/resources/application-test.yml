@@ -12,7 +12,7 @@ spring:
 
   # Use single test datasource (no multi-tenancy for tests)
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///testdb
+    url: jdbc:tc:postgresql:16-alpine:///testdb?TC_STARTUP_TIMEOUT=180
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
     username: healthdata
     password:
@@ -21,15 +21,20 @@ spring:
 
 # Configure persistence module to use testcontainers
 healthdata:
+  security:
+    jwt:
+      secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      issuer: healthdata-in-motion-test
   persistence:
     primary:
-      url: jdbc:tc:postgresql:16-alpine:///testdb
+      url: jdbc:tc:postgresql:16-alpine:///testdb?TC_STARTUP_TIMEOUT=180
       username: healthdata
       password:
       driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
       pool-name: test-pool
       maximum-pool-size: 5
       minimum-idle: 2
+      connection-timeout-ms: 120000
     rls-enabled: false
     jpa:
       auditing-enabled: true

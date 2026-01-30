@@ -113,6 +113,19 @@ public class AuditQuerySecurityConfig {
     }
 
     @Bean
+    @Profile("test")
+    @Order(1)
+    public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll()
+            );
+
+        return http.build();
+    }
+
+    @Bean
     @Profile("demo")
     @Order(2)
     public SecurityFilterChain demoSecurityFilterChain(

@@ -11,6 +11,7 @@
     <include file="audit/db/changelog/0001-create-audit-events-table.xml"/>
     <include file="audit/db/changelog/0002-create-qa-reviews-table.xml"/>
     <include file="audit/db/changelog/0003-create-ai-agent-decision-events-table.xml"/>
+    <include file="audit/db/changelog/0009-add-qa-review-fields-to-ai-agent-decisions.xml"/>
     <include file="audit/db/changelog/0004-create-configuration-engine-events-table.xml"/>
     <include file="audit/db/changelog/0005-create-user-configuration-action-events-table.xml"/>
     <include file="audit/db/changelog/0006-create-data-quality-issues-table.xml"/>

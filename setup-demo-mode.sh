@@ -17,9 +17,9 @@ NC='\033[0m' # No Color
 
 # Configuration
 DB_CONTAINER="${DB_CONTAINER:-hdim-demo-postgres}"
-DB_NAME="healthdata_cql"
+DB_NAME="gateway_db"
 DB_USER="healthdata"
-SQL_FILE="backend/modules/services/gateway-service/src/main/resources/data-demo.sql"
+SQL_FILE="docker/demo/demo-users.sql"
 TENANT_ID="${TENANT_ID:-acme-health}"
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${NC}"
@@ -53,7 +53,7 @@ echo -e "${BLUE}Loading demo accounts into database...${NC}"
 
 # Execute SQL file with tenant substitution
 TEMP_SQL="/tmp/data-demo-${TENANT_ID}.sql"
-sed "s/demo-clinic/${TENANT_ID}/g" "$SQL_FILE" > "$TEMP_SQL"
+sed "s/acme-health/${TENANT_ID}/g" "$SQL_FILE" > "$TEMP_SQL"
 
 if docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_SQL" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Demo accounts loaded successfully${NC}"

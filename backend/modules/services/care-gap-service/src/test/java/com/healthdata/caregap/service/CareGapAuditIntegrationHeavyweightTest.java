@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
 import com.healthdata.caregap.config.BaseIntegrationTest;
+import com.healthdata.caregap.config.TestKafkaContainerProvider;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -18,10 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -45,7 +42,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Run: ./gradlew test --tests CareGapAuditIntegrationHeavyweightTest
  */
 @BaseIntegrationTest
-@Testcontainers
 @DisplayName("Care Gap Audit Integration - Heavyweight Kafka Tests")
 @org.springframework.context.annotation.ComponentScan(basePackages = {
     "com.healthdata.caregap",
@@ -53,14 +49,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 class CareGapAuditIntegrationHeavyweightTest {
 
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("apache/kafka:3.8.0"))
-            .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
-
     @DynamicPropertySource
     static void configureKafka(DynamicPropertyRegistry registry) {
-        String bootstrapServers = kafka.getBootstrapServers();
+        String bootstrapServers = TestKafkaContainerProvider.getBootstrapServers();
         registry.add("spring.kafka.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.producer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
@@ -93,7 +84,7 @@ class CareGapAuditIntegrationHeavyweightTest {
         
         // Create Kafka consumer to verify published events
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, TestKafkaContainerProvider.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-" + UUID.randomUUID());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
@@ -211,4 +202,3 @@ class CareGapAuditIntegrationHeavyweightTest {
         assertThat(jsonValue).contains("inputMetrics");
     }
 }
-

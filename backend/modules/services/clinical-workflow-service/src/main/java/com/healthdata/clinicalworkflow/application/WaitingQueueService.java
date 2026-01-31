@@ -715,7 +715,7 @@ public class WaitingQueueService {
                 .id(entity.getId())
                 .patientId(entity.getPatientId().toString())
                 .encounterId(entity.getAppointmentId())
-                .queueType(entity.getAppointmentId())
+                .queueType(request != null ? request.getQueueType() : entity.getAppointmentId())
                 .status(entity.getStatus() != null ? entity.getStatus().toUpperCase() : "UNKNOWN")
                 .priority(entity.getPriority() != null ? entity.getPriority().toUpperCase() : "ROUTINE")
                 .position(entity.getQueuePosition())

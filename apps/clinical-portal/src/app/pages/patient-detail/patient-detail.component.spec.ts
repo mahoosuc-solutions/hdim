@@ -10,8 +10,8 @@ import { QualityMeasureResult } from '../../models/quality-result.model';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { LoggerService } from '../services/logger.service';
-import { createMockLoggerService } from '../testing/mocks';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 describe('PatientDetailComponent (TDD)', () => {
@@ -188,7 +188,7 @@ describe('PatientDetailComponent (TDD)', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    }, 30000);
+    };
 
     it('should extract patient ID from route on init', () => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -198,7 +198,7 @@ describe('PatientDetailComponent (TDD)', () => {
       component.ngOnInit();
 
       expect(component.patientId).toBe('patient-123');
-    }, 30000);
+    };
 
     it('should set error and stop loading if no patient ID provided', () => {
       const mockParamMap = mockActivatedRoute.snapshot?.paramMap as unknown as { get: jest.Mock };
@@ -209,7 +209,7 @@ describe('PatientDetailComponent (TDD)', () => {
       expect(component.error).toBe('No patient ID provided');
       expect(component.loading).toBe(false);
       expect(mockPatientService.getPatient).not.toHaveBeenCalled();
-    }, 30000);
+    };
 
     it('should load patient data on init when patient ID exists', () => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -219,15 +219,15 @@ describe('PatientDetailComponent (TDD)', () => {
       component.ngOnInit();
 
       expect(mockPatientService.getPatient).toHaveBeenCalledWith('patient-123');
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('Patient Data Loading', () => {
     beforeEach(() => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
       mockFhirClinicalService.getPatientClinicalData.mockReturnValue(of(mockClinicalData));
       mockEvaluationService.getPatientResults.mockReturnValue(of(mockQualityResults));
-    }, 30000);
+    };
 
     it('should load patient demographics successfully', (done) => {
       component.ngOnInit();
@@ -236,7 +236,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.patient).toEqual(mockPatient);
         done();
       }, 0);
-    }, 30000);
+    };
 
     it('should load clinical data after patient demographics', (done) => {
       component.ngOnInit();
@@ -246,7 +246,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.clinicalData).toEqual(mockClinicalData);
         done();
       }, 0);
-    }, 30000);
+    };
 
     it('should load quality results after patient demographics', (done) => {
       component.ngOnInit();
@@ -256,7 +256,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.qualityResults).toEqual(mockQualityResults);
         done();
       }, 0);
-    }, 30000);
+    };
 
     it('should set loading to false after all data is loaded', (done) => {
       expect(component.loading).toBe(true);
@@ -267,7 +267,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.loading).toBe(false);
         done();
       }, 0);
-    }, 30000);
+    };
   });
 
   describe('Error Handling', () => {
@@ -282,7 +282,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.patient).toBeNull();
         done();
       }, 0);
-    }, 30000);
+    };
 
     it('should continue loading even if clinical data fails', (done) => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -297,7 +297,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.loading).toBe(false);
         done();
       }, 0);
-    }, 30000);
+    };
 
     it('should continue loading even if quality results fail', (done) => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -312,7 +312,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.loading).toBe(false);
         done();
       }, 0);
-    }, 30000);
+    };
   });
 
   describe('Patient Name Formatting', () => {

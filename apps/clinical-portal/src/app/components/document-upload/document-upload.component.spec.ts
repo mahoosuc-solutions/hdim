@@ -106,7 +106,7 @@ describe('DocumentUploadComponent', () => {
 
   describe('file upload', () => {
     it('should upload file and start OCR polling', (done) => {
-      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' }, 30000);
+      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' };
       const mockResponse = {
         attachmentId: 'attach-123',
         fileName: 'test.pdf',

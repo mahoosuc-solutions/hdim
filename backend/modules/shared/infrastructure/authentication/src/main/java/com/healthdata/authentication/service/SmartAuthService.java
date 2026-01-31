@@ -4,6 +4,7 @@ import com.healthdata.authentication.config.SmartOnFhirConfig;
 import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @Service
+@ConditionalOnBean(UserRepository.class)
 @ConditionalOnProperty(prefix = "smart", name = "enabled", havingValue = "true")
 public class SmartAuthService {
 

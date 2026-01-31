@@ -8,7 +8,7 @@
     <changeSet id="0002-add-performance-indexes" author="flyway-migration">
         <comment>Add GIN and B-tree indexes for performance optimization (migrated from Flyway V2)</comment>
 
-        <sqlFile path="db/changelog/sql/0002-add-performance-indexes.sql"
+        <sqlFile path="sql/0002-add-performance-indexes.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>

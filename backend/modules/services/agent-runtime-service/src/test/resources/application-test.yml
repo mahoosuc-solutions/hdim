@@ -28,8 +28,42 @@ spring:
 
   liquibase:
     enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  kafka:
+    admin:
+      auto-create: true
+    listener:
+      auto-startup: false
+    producer:
+      properties:
+        interceptor.classes: ""
+    consumer:
+      properties:
+        interceptor.classes: ""
+audit:
+  kafka:
+    consumer:
+      enabled: false
+    sync: true
 logging:
   level:
     root: WARN
     com.healthdata: DEBUG
     org.springframework.test: INFO
+
+hdim:
+  agent:
+    config-listener:
+      enabled: false
+    custom:
+      warm-cache: false
+    security:
+      encryption:
+        master-key: test-master-key
+        salt: test-salt
+  approval:
+    kafka-listener:
+      enabled: false
+
+tracing:
+  enabled: false

@@ -315,7 +315,7 @@ class PatientCheckInServiceTest {
         verify(checkInRepository).save(argThat(entity ->
                 entity.getConsentObtained() == true &&
                 entity.getConsentObtainedBy().equals("user-123") &&
-                entity.getNotes().contains("Treatment Consent")
+                entity.getNotes().contains("Consent: TREATMENT")
         ));
     }
 

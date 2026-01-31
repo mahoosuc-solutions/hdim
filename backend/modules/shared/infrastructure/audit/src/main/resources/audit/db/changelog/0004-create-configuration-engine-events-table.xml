@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0004-create-configuration-engine-events-table" author="healthdata-system">
+        <comment>Configuration Engine Events table for tracking runtime configuration changes</comment>
+
+        <createTable tableName="configuration_engine_events">
+            <column name="event_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="timestamp" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(100)"/>
+            <column name="change_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_type" type="varchar(50)"/>
+            <column name="change_source" type="varchar(50)"/>
+            <column name="triggered_by" type="varchar(255)"/>
+            <column name="service_name" type="varchar(100)"/>
+            <column name="configuration_scope" type="varchar(50)"/>
+            <column name="resource_type" type="varchar(100)"/>
+            <column name="resource_id" type="varchar(255)"/>
+            <column name="config_key" type="varchar(255)"/>
+            <column name="previous_value" type="varchar(1000)"/>
+            <column name="new_value" type="varchar(1000)"/>
+            <column name="effective_value" type="varchar(1000)"/>
+            <column name="reason" type="text"/>
+            <column name="trigger_metrics" type="jsonb"/>
+            <column name="expected_impact" type="text"/>
+            <column name="ai_recommendation_id" type="uuid"/>
+            <column name="execution_status" type="varchar(30)"/>
+            <column name="applied_at" type="timestamp with time zone"/>
+            <column name="validation_status" type="varchar(30)"/>
+            <column name="validation_metrics" type="jsonb"/>
+            <column name="error_message" type="text"/>
+            <column name="rollback_required" type="boolean"/>
+            <column name="rolled_back_at" type="timestamp with time zone"/>
+            <column name="latency_change_percent" type="double precision"/>
+            <column name="throughput_change_percent" type="double precision"/>
+            <column name="error_rate_change_percent" type="double precision"/>
+            <column name="impact_severity" type="varchar(30)"/>
+            <column name="observation_window_minutes" type="integer"/>
+            <column name="request_id" type="varchar(100)"/>
+            <column name="correlation_id" type="varchar(100)"/>
+            <column name="change_approval_id" type="uuid"/>
+            <column name="environment" type="varchar(20)"/>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_config_change_tenant_timestamp" tableName="configuration_engine_events">
+            <column name="tenant_id"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_service" tableName="configuration_engine_events">
+            <column name="service_name"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_type" tableName="configuration_engine_events">
+            <column name="change_type"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_status" tableName="configuration_engine_events">
+            <column name="execution_status"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_source" tableName="configuration_engine_events">
+            <column name="change_source"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_correlation" tableName="configuration_engine_events">
+            <column name="correlation_id"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_ai_recommendation" tableName="configuration_engine_events">
+            <column name="ai_recommendation_id"/>
+        </createIndex>
+        <createIndex indexName="idx_config_change_environment" tableName="configuration_engine_events">
+            <column name="environment"/>
+            <column name="timestamp"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

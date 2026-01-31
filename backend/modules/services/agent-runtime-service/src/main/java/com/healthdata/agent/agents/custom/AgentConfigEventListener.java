@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,11 @@ import java.time.Instant;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    name = "hdim.agent.config-listener.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class AgentConfigEventListener {
 
     private static final String TOPIC = "agent-config-events";

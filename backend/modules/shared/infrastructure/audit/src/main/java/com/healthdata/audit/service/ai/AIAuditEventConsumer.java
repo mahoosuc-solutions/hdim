@@ -6,6 +6,7 @@ import com.healthdata.audit.models.ai.ConfigurationEngineEvent;
 import com.healthdata.audit.models.ai.UserConfigurationActionEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
@@ -29,6 +30,11 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
+@ConditionalOnProperty(
+    name = "audit.kafka.consumer.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class AIAuditEventConsumer {
 
     private final ObjectMapper objectMapper;
@@ -54,7 +60,7 @@ public class AIAuditEventConsumer {
         topics = "${audit.kafka.topic.ai-decisions:ai.agent.decisions}",
         groupId = "ai-audit-consumer-group",
         concurrency = "3",
-        containerFactory = "kafkaListenerContainerFactory"
+        containerFactory = "stringKafkaListenerContainerFactory"
     )
     public void consumeAIDecision(
             @Payload String message,
@@ -92,7 +98,7 @@ public class AIAuditEventConsumer {
         topics = "${audit.kafka.topic.config-changes:configuration.engine.changes}",
         groupId = "ai-audit-consumer-group",
         concurrency = "3",
-        containerFactory = "kafkaListenerContainerFactory"
+        containerFactory = "stringKafkaListenerContainerFactory"
     )
     public void consumeConfigurationChange(
             @Payload String message,
@@ -137,7 +143,7 @@ public class AIAuditEventConsumer {
         topics = "${audit.kafka.topic.user-actions:user.configuration.actions}",
         groupId = "ai-audit-consumer-group",
         concurrency = "3",
-        containerFactory = "kafkaListenerContainerFactory"
+        containerFactory = "stringKafkaListenerContainerFactory"
     )
     public void consumeUserAction(
             @Payload String message,

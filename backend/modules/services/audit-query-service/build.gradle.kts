@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
+    implementation(project(":modules:shared:infrastructure:gateway-core"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
@@ -65,6 +66,8 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
+    testImplementation(libs.testcontainers.jdbc)
+    testImplementation("com.h2database:h2:2.2.224")  // H2 in-memory database for tests
     testImplementation(project(":modules:shared:test-infrastructure"))
 }
 

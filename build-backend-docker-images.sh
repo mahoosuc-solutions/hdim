@@ -23,11 +23,13 @@ docker build -t healthdata/fhir-service-mock:latest \
   -f modules/services/fhir-service/Dockerfile \
   .
 
-# Build Gateway Service
-echo "Building Gateway Service..."
-docker build -t healthdata/gateway-service:latest \
-  -f modules/services/gateway-service/Dockerfile \
-  .
+# Build Gateway services
+echo "Building Gateway services..."
+for service in gateway-admin-service gateway-fhir-service gateway-clinical-service; do
+  docker build -t "healthdata/${service}:latest" \
+    -f "modules/services/${service}/Dockerfile" \
+    .
+done
 
 echo "✅ All backend images built successfully!"
 docker images | grep healthdata

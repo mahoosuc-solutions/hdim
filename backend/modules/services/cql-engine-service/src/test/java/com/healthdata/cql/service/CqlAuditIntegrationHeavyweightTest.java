@@ -2,6 +2,7 @@ package com.healthdata.cql.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 import com.healthdata.cql.measure.MeasureResult;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -14,15 +15,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -33,6 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,25 +60,14 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Run: ./gradlew test --tests CqlAuditIntegrationHeavyweightTest
  */
 @SpringBootTest(
-    classes = com.healthdata.cql.CqlEngineServiceApplication.class,
+    classes = CqlAuditIntegrationHeavyweightTest.TestConfig.class,
     properties = {
         "spring.test.context.cache.maxSize=1"
     }
 )
-@EnableAutoConfiguration(exclude = {
-    DataSourceAutoConfiguration.class,
-    HibernateJpaAutoConfiguration.class
-})
 @ActiveProfiles("test")
 @Testcontainers
 @DisplayName("CQL Audit Integration - Heavyweight Kafka Tests")
-@ComponentScan(
-    basePackages = {"com.healthdata.cql", "com.healthdata.audit.service.ai"},
-    excludeFilters = @ComponentScan.Filter(
-        type = FilterType.ASSIGNABLE_TYPE,
-        classes = com.healthdata.cql.TestCqlEngineApplication.class
-    )
-)
 class CqlAuditIntegrationHeavyweightTest {
 
     @Container
@@ -104,6 +102,36 @@ class CqlAuditIntegrationHeavyweightTest {
     private static final String EVALUATION_ID = "eval-789";
     private static final String TOPIC = "ai.agent.decisions";
 
+    @Configuration
+    @Import({CqlAuditIntegration.class, AIAuditEventPublisher.class})
+    @EnableConfigurationProperties(KafkaProperties.class)
+    static class TestConfig {
+        @Bean
+        CacheManager cacheManager() {
+            return new ConcurrentMapCacheManager();
+        }
+
+        @Bean
+        ObjectMapper objectMapper() {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.findAndRegisterModules();
+            return mapper;
+        }
+
+        @Bean
+        ProducerFactory<String, String> producerFactory(KafkaProperties properties) {
+            var props = new java.util.HashMap<>(properties.buildProducerProperties());
+            props.putIfAbsent(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            props.putIfAbsent(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+            return new DefaultKafkaProducerFactory<>(props);
+        }
+
+        @Bean
+        KafkaTemplate<String, String> kafkaTemplate(ProducerFactory<String, String> producerFactory) {
+            return new KafkaTemplate<>(producerFactory);
+        }
+    }
+
     @BeforeEach
     void setUp() {
         // ObjectMapper is now autowired from Spring, so it's configured the same way as the publisher
@@ -119,6 +147,9 @@ class CqlAuditIntegrationHeavyweightTest {
 
         consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Collections.singletonList(TOPIC));
+
+        // Prime assignment so polls work reliably.
+        consumer.poll(Duration.ofMillis(100));
     }
 
     @AfterEach
@@ -140,15 +171,8 @@ class CqlAuditIntegrationHeavyweightTest {
                 measureResult, "user@example.com", 150L);
 
         // Then - Wait for event to be published and consumed
-        long startTime = System.currentTimeMillis();
-        ConsumerRecord<String, String> record = null;
-        while (System.currentTimeMillis() - startTime < 10000) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
-            if (!records.isEmpty()) {
-                record = records.iterator().next();
-                break;
-            }
-        }
+        ConsumerRecord<String, String> record = pollForRecord(
+            r -> r.value() != null && r.value().contains("\"correlationId\":\"" + EVALUATION_ID + "\""));
         assertThat(record).isNotNull();
         
         // Verify partition key contains tenantId and agentId
@@ -178,15 +202,8 @@ class CqlAuditIntegrationHeavyweightTest {
                 TENANT_ID, PATIENT_ID, batchId, 10, 8, 2, "user@example.com");
 
         // Then
-        long startTime = System.currentTimeMillis();
-        ConsumerRecord<String, String> record = null;
-        while (System.currentTimeMillis() - startTime < 10000) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
-            if (!records.isEmpty()) {
-                record = records.iterator().next();
-                break;
-            }
-        }
+        ConsumerRecord<String, String> record = pollForRecord(
+            r -> r.value() != null && r.value().contains("\"BATCH_EVALUATION\""));
         assertThat(record).isNotNull();
         
         // Verify partition key
@@ -219,19 +236,23 @@ class CqlAuditIntegrationHeavyweightTest {
                 measureResult, "user2@example.com", 150L);
 
         // Then - Verify partition keys
-        long startTime = System.currentTimeMillis();
+        String key1 = tenantId1 + ":cql-engine";
+        String key2 = tenantId2 + ":cql-engine";
         boolean foundTenant1 = false;
         boolean foundTenant2 = false;
-        
+        long startTime = System.currentTimeMillis();
         while (System.currentTimeMillis() - startTime < 10000 && (!foundTenant1 || !foundTenant2)) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
             for (ConsumerRecord<String, String> record : records) {
                 String key = record.key();
-                if (key.equals(tenantId1 + ":cql-engine")) {
+                if (key1.equals(key)) {
                     foundTenant1 = true;
                 }
-                if (key.equals(tenantId2 + ":cql-engine")) {
+                if (key2.equals(key)) {
                     foundTenant2 = true;
+                }
+                if (foundTenant1 && foundTenant2) {
+                    break;
                 }
             }
         }
@@ -249,5 +270,17 @@ class CqlAuditIntegrationHeavyweightTest {
         result.getDetails().put("testKey", "testValue");
         return result;
     }
-}
 
+    private ConsumerRecord<String, String> pollForRecord(Predicate<ConsumerRecord<String, String>> predicate) {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < 10000) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
+            for (ConsumerRecord<String, String> record : records) {
+                if (predicate.test(record)) {
+                    return record;
+                }
+            }
+        }
+        return null;
+    }
+}

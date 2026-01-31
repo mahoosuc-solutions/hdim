@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestRedisConfiguration.class)
+@WithMockUser(authorities = {"MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE"})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
 @DisplayName("Input Validation Security Tests")
@@ -91,7 +93,7 @@ class InputValidationSecurityTest extends CqlTestcontainersBase {
     @DisplayName("Should handle SQL injection attempt in search query safely")
     void testSqlInjection_InSearchQuery_HandledSafely() throws Exception {
         // Create a valid library first
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "TestLibrary", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "TestLibrary", "1.0.0");
         library.setStatus("ACTIVE");
         libraryRepository.save(library);
 

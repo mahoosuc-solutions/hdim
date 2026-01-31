@@ -15,7 +15,6 @@ import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
 import { createMockLoggerService } from '../../../testing/mocks';
-import { createMockHttpClient } from '../../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 
@@ -76,8 +75,6 @@ describe('EvaluationsComponent', () => {
         { provide: DialogService, useValue: mockDialogService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
-        { provide: HttpClient, useValue: createMockHttpClient() },
-        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EvaluationsComponent);
@@ -264,7 +261,7 @@ describe('EvaluationsComponent', () => {
         expect(filtered.length).toBeGreaterThan(0);
         expect(filtered[0].fullName).toContain('John');
         done();
-      }, 30000);
+      };
     });
 
     it('should filter patients by MRN', (done) => {
@@ -274,11 +271,11 @@ describe('EvaluationsComponent', () => {
         expect(filtered.length).toBeGreaterThan(0);
         expect(filtered[0].mrn).toBe('MRN00001');
         done();
-      }, 30000);
+      };
     });
 
     it('should handle object values in patient search', (done) => {
-      const patient = PatientFactory.createSummary({ fullName: 'Jane Roe', mrn: 'MRN00999' }, 30000);
+      const patient = PatientFactory.createSummary({ fullName: 'Jane Roe', mrn: 'MRN00999' };
       component.patients = [patient];
       component.setupPatientAutocomplete();
 
@@ -304,7 +301,7 @@ describe('EvaluationsComponent', () => {
       component.filteredPatients.subscribe((filtered) => {
         expect(filtered.length).toBe(10);
         done();
-      }, 30000);
+      };
     });
 
     it('should be case-insensitive when filtering', (done) => {
@@ -313,7 +310,7 @@ describe('EvaluationsComponent', () => {
       component.filteredPatients.subscribe((filtered) => {
         expect(filtered.length).toBeGreaterThan(0);
         done();
-      }, 30000);
+      };
     });
 
     it('should limit results to 10 items', (done) => {

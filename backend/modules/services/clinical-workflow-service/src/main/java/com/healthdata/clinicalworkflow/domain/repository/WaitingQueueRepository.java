@@ -46,7 +46,13 @@ public interface WaitingQueueRepository extends JpaRepository<WaitingQueueEntity
         SELECT w FROM WaitingQueueEntity w
         WHERE w.tenantId = :tenantId
         AND w.status = 'waiting'
-        ORDER BY w.priority ASC, w.queuePosition ASC
+        ORDER BY CASE w.priority
+            WHEN 'urgent' THEN 1
+            WHEN 'high' THEN 2
+            WHEN 'normal' THEN 3
+            WHEN 'low' THEN 4
+            ELSE 5
+        END ASC, w.queuePosition ASC
     """)
     List<WaitingQueueEntity> findWaitingPatientsByTenant(
         @Param("tenantId") String tenantId
@@ -160,7 +166,13 @@ public interface WaitingQueueRepository extends JpaRepository<WaitingQueueEntity
         SELECT w FROM WaitingQueueEntity w
         WHERE w.tenantId = :tenantId
         AND w.status = 'waiting'
-        ORDER BY w.priority ASC, w.queuePosition ASC
+        ORDER BY CASE w.priority
+            WHEN 'urgent' THEN 1
+            WHEN 'high' THEN 2
+            WHEN 'normal' THEN 3
+            WHEN 'low' THEN 4
+            ELSE 5
+        END ASC, w.queuePosition ASC
         LIMIT 1
     """)
     Optional<WaitingQueueEntity> findNextPatientInQueue(@Param("tenantId") String tenantId);

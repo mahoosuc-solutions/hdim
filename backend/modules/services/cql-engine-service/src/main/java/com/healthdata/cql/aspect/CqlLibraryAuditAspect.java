@@ -145,6 +145,10 @@ public class CqlLibraryAuditAspect {
                                        Instant timestamp, AuditEvent.OperationResult result,
                                        String errorMessage) {
         try {
+            if (library == null || library.getId() == null) {
+                logger.warn("Skipping library audit event: missing library id (action={})", action);
+                return;
+            }
             String performedBy = extractPerformedBy();
 
             CqlLibraryAuditEvent auditEvent = CqlLibraryAuditEvent.builder()
@@ -184,6 +188,10 @@ public class CqlLibraryAuditAspect {
                                               String eventId, Instant timestamp,
                                               AuditEvent.OperationResult result, String errorMessage) {
         try {
+            if (libraryId == null) {
+                logger.warn("Skipping minimal library audit event: missing library id (action={})", action);
+                return;
+            }
             String performedBy = extractPerformedBy();
 
             CqlLibraryAuditEvent auditEvent = CqlLibraryAuditEvent.builder()

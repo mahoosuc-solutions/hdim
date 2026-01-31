@@ -7,7 +7,6 @@ import {
 import { authInterceptor } from './auth.interceptor';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
 import { AuthService } from '../services/auth.service';
-import { createMockHttpClient } from '../../testing/mocks';
 
 /**
  * Auth Interceptor Tests
@@ -34,7 +33,6 @@ describe('AuthInterceptor', () => {
         provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: authServiceMock },
-        { provide: HttpClient, useValue: createMockHttpClient() },
         HttpTestingController,
       ],
     });
@@ -58,7 +56,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
       req.flush({});
-    }, 30000);
+    };
 
     it('should add X-Tenant-ID header to Quality Measure Service requests', (done) => {
       const url = `${API_CONFIG.QUALITY_MEASURE_URL}/quality-measure/calculate`;
@@ -70,7 +68,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
 
       req.flush({});
-    }, 30000);
+    };
 
     it('should add X-Tenant-ID header to FHIR Server requests', (done) => {
       const url = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
@@ -131,7 +129,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(true);
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       req.flush(null);
-    }, 30000);
+    };
   });
 
   describe('Multiple Requests', () => {
@@ -147,7 +145,7 @@ describe('AuthInterceptor', () => {
         httpClient.get(url).subscribe(() => {
           completedRequests++;
           if (completedRequests === urls.length) done();
-        }, 30000);
+        };
       });
 
       urls.forEach((url) => {
@@ -171,7 +169,7 @@ describe('AuthInterceptor', () => {
       expect(req.request.headers.get(HTTP_HEADERS.TENANT_ID)).toBe('tenant-123');
       expect(req.request.headers.get('X-Custom-Header')).toBe('CustomValue');
       req.flush({});
-    }, 30000);
+    };
 
     it('should handle concurrent requests independently', (done) => {
       const cqlUrl = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`;

@@ -4,6 +4,7 @@ import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,12 @@ import java.util.Optional;
  * - Twilio API integration for SMS delivery
  */
 @Service
+@ConditionalOnProperty(
+    prefix = "authentication.controller",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = false
+)
 @Slf4j
 @RequiredArgsConstructor
 public class SmsMfaService {

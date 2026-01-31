@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 /**
  * CDR (Clinical Data Repository) Processor Service Application.
@@ -29,6 +30,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     "com.healthdata.audit",
     "com.healthdata.messaging",
     "com.healthdata.persistence"
+})
+@EntityScan(basePackages = {
+    "com.healthdata.cdr",
+    "com.healthdata.audit.entity",
+    "com.healthdata.authentication.domain"
 })
 @EnableConfigurationProperties
 @EnableCaching

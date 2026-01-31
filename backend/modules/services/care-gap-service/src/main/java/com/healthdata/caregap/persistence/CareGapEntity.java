@@ -1,5 +1,6 @@
 package com.healthdata.caregap.persistence;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -11,6 +12,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -119,6 +122,7 @@ public class CareGapEntity {
     @Column(name = "cql_expression", length = 200)
     private String cqlExpression;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "cql_result", columnDefinition = "JSONB")
     private String cqlResult;
 
@@ -179,5 +183,15 @@ public class CareGapEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    @JsonProperty("status")
+    public String getStatus() {
+        return gapStatus;
+    }
+
+    @JsonProperty("status")
+    public void setStatus(String status) {
+        this.gapStatus = status;
     }
 }

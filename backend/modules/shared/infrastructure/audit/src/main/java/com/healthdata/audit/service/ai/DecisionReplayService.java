@@ -7,6 +7,7 @@ import com.healthdata.audit.repository.ai.AIAgentDecisionEventRepository;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -32,19 +33,9 @@ public class DecisionReplayService {
     @Autowired
     public DecisionReplayService(
             AIAgentDecisionEventRepository aiDecisionRepository,
-            AgentRuntimeClient agentRuntimeClient) {
+            @Nullable AgentRuntimeClient agentRuntimeClient) {
         this.aiDecisionRepository = aiDecisionRepository;
         this.agentRuntimeClient = agentRuntimeClient;
-    }
-
-    /**
-     * Constructor for cases where AgentRuntimeClient is not available.
-     * Falls back to validation-only replay mode.
-     */
-    @Autowired(required = false)
-    public DecisionReplayService(AIAgentDecisionEventRepository aiDecisionRepository) {
-        this.aiDecisionRepository = aiDecisionRepository;
-        this.agentRuntimeClient = null;
     }
 
     /**

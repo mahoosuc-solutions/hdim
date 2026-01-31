@@ -33,7 +33,7 @@ describe('DocumentUploadService', () => {
   describe('uploadDocument', () => {
     it('should upload file and return attachment response', (done) => {
       const documentId = 'doc-123';
-      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' }, 30000);
+      const file = new File(['test content'], 'test.pdf', { type: 'application/pdf' };
       const mockResponse: AttachmentUploadResponse = {
         attachmentId: 'attach-456',
         fileName: 'test.pdf',
@@ -56,7 +56,7 @@ describe('DocumentUploadService', () => {
 
     it('should include X-Tenant-ID header from AuthService', (done) => {
       const documentId = 'doc-123';
-      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' }, 30000);
+      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' };
 
       service.uploadDocument(documentId, file).subscribe(() => done());
 
@@ -79,7 +79,7 @@ describe('DocumentUploadService', () => {
 
       service.pollOcrStatus(attachmentId).subscribe(status => {
         emittedStatuses.push(status);
-      }, 30000);
+      };
 
       // timer(0, 2000) emits immediately, then every 2 seconds
       // First emission (immediate at t=0)
@@ -114,7 +114,7 @@ describe('DocumentUploadService', () => {
         next: (status) => {
           emittedStatuses.push(status);
         }
-      }, 30000);
+      };
 
       // First emission (immediate at t=0)
       tick(0);
@@ -147,31 +147,31 @@ describe('DocumentUploadService', () => {
         next: (status) => {
           emittedStatuses.push(status);
         }
-      }, 30000);
+      };
 
       // First polling interval (t=0) - initial request fails
       tick(0);
       const req1 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
       attemptCount++;
-      req1.flush('Network error', { status: 500, statusText: 'Internal Server Error' }, 30000);
+      req1.flush('Network error', { status: 500, statusText: 'Internal Server Error' };
 
       // First retry (after 1 second delay from retry config)
       tick(1000);
       const req2 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
       attemptCount++;
-      req2.flush('Network error', { status: 500, statusText: 'Internal Server Error' }, 30000);
+      req2.flush('Network error', { status: 500, statusText: 'Internal Server Error' };
 
       // Second retry (after another 1 second)
       tick(1000);
       const req3 = httpMock.expectOne(`/api/documents/clinical/attachments/${attachmentId}/ocr-status`);
       attemptCount++;
-      req3.flush({ attachmentId, ocrStatus: 'COMPLETED' }, 30000);
+      req3.flush({ attachmentId, ocrStatus: 'COMPLETED' };
 
       flush();
       expect(attemptCount).toBe(3); // 1 initial + 2 retries
       expect(emittedStatuses).toEqual(['COMPLETED']);
     }));
-  }, 30000);
+  };
 
   describe('retryOcr', () => {
     it('should call reprocess endpoint', (done) => {

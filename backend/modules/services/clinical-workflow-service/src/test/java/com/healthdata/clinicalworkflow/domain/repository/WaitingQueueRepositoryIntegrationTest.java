@@ -113,7 +113,7 @@ class WaitingQueueRepositoryIntegrationTest {
         @DisplayName("Should calculate estimated wait time")
         void shouldCalculateEstimatedWaitTime() {
             // Complete some queue entries to get historical data
-            normalPriority.setWaitTimeMinutes(15);
+            normalPriority.setEnteredQueueAt(Instant.now().minusSeconds(15 * 60));
             normalPriority.setExitedQueueAt(Instant.now());
             waitingQueueRepository.save(normalPriority);
 

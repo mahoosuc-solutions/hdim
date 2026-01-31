@@ -5,6 +5,7 @@ import com.healthdata.ingestion.api.v1.IngestionRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,6 +21,7 @@ public class ProgressTrackingService {
     public void initializeSession(String sessionId, IngestionRequest request) {
         SessionProgress progress = new SessionProgress();
         progress.sessionId = sessionId;
+        progress.tenantId = request.getTenantId();
         progress.status = "INITIALIZING";
         progress.progressPercent = 0;
         progress.patientsGenerated = 0L;
@@ -102,8 +104,45 @@ public class ProgressTrackingService {
                 .build();
     }
 
+    public Map<String, Object> getAuditTrail(String sessionId) {
+        SessionProgress progress = sessions.get(sessionId);
+        if (progress == null) {
+            return Map.of();
+        }
+
+        return Map.of(
+                "tenantId", progress.tenantId,
+                "sessionId", progress.sessionId,
+                "events", List.of(
+                        Map.of(
+                                "event", "SESSION_STARTED",
+                                "timestamp", progress.startTimeMs
+                        )
+                )
+        );
+    }
+
+    public Map<String, Object> getServiceImpact(String sessionId) {
+        SessionProgress progress = sessions.get(sessionId);
+        if (progress == null) {
+            return Map.of("totalServiceCalls", 0);
+        }
+
+        long totalServiceCalls = progress.patientsPersisted
+                + progress.careGapsCreated
+                + progress.measuresSeeded;
+
+        return Map.of(
+                "totalServiceCalls", (int) totalServiceCalls,
+                "patientsPersisted", progress.patientsPersisted,
+                "careGapsCreated", progress.careGapsCreated,
+                "measuresSeeded", progress.measuresSeeded
+        );
+    }
+
     private static class SessionProgress {
         String sessionId;
+        String tenantId;
         String status;
         Integer progressPercent;
         Long patientsGenerated;

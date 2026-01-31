@@ -2,10 +2,14 @@ package com.healthdata.clinicalworkflow;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.healthdata.audit.config.AuditAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.context.annotation.Import;
 
 /**
  * Clinical Workflow Service Application
@@ -36,6 +40,16 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 @EnableCaching
 @EnableAsync
 @EnableWebSocket
+@Import(AuditAutoConfiguration.class)
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.clinicalworkflow.domain.repository",
+    "com.healthdata.featureflags"
+})
+@EntityScan(basePackages = {
+    "com.healthdata.clinicalworkflow.domain.model",
+    "com.healthdata.featureflags",
+    "com.healthdata.audit.entity.shared"
+})
 public class ClinicalWorkflowServiceApplication {
 
     public static void main(String[] args) {

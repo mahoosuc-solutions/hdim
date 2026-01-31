@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,8 +78,8 @@ public interface VitalSignsRecordRepository extends JpaRepository<VitalSignsReco
     List<VitalSignsRecordEntity> findPatientVitalsHistory(
         @Param("patientId") UUID patientId,
         @Param("tenantId") String tenantId,
-        @Param("from") LocalDateTime from,
-        @Param("to") LocalDateTime to
+        @Param("from") Instant from,
+        @Param("to") Instant to
     );
 
     /**

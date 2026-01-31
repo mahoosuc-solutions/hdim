@@ -53,7 +53,7 @@ public class ClinicalAuditController {
      * @return Page of clinical decisions
      */
     @GetMapping("/ai/decisions")
-    @PreAuthorize("hasPermission('AUDIT_READ')")
+    @PreAuthorize("hasPermission(null, 'AUDIT_READ')")
     @Operation(
         summary = "Get clinical decisions for review",
         description = "Fetch AI clinical recommendations with optional filtering by agent type, decision type, severity, review status, and date range"
@@ -98,7 +98,7 @@ public class ClinicalAuditController {
      * @return Clinical metrics
      */
     @GetMapping("/clinical/metrics")
-    @PreAuthorize("hasPermission('AUDIT_READ')")
+    @PreAuthorize("hasPermission(null, 'AUDIT_READ')")
     @Operation(
         summary = "Get clinical audit metrics",
         description = "Retrieve aggregated metrics for clinical AI decisions (acceptance rates, severity distribution, evidence grades, override rates)"
@@ -129,7 +129,7 @@ public class ClinicalAuditController {
      * @return Updated decision
      */
     @PostMapping("/clinical/decisions/{id}/accept")
-    @PreAuthorize("hasPermission('AUDIT_READ')")
+    @PreAuthorize("hasPermission(null, 'AUDIT_READ')")
     @Operation(
         summary = "Accept clinical recommendation",
         description = "Approve AI clinical recommendation and mark as accepted"
@@ -161,7 +161,7 @@ public class ClinicalAuditController {
      * @return Updated decision
      */
     @PostMapping("/clinical/decisions/{id}/reject")
-    @PreAuthorize("hasPermission('AUDIT_READ')")
+    @PreAuthorize("hasPermission(null, 'AUDIT_READ')")
     @Operation(
         summary = "Reject clinical recommendation",
         description = "Reject AI clinical recommendation with clinical rationale"
@@ -193,7 +193,7 @@ public class ClinicalAuditController {
      * @return Updated decision
      */
     @PostMapping("/clinical/decisions/{id}/modify")
-    @PreAuthorize("hasPermission('AUDIT_READ')")
+    @PreAuthorize("hasPermission(null, 'AUDIT_READ')")
     @Operation(
         summary = "Modify clinical recommendation",
         description = "Accept AI recommendation with modifications and clinical notes"
@@ -225,7 +225,7 @@ public class ClinicalAuditController {
      * @return Excel file as byte array
      */
     @GetMapping("/clinical/report/export")
-    @PreAuthorize("hasPermission('AUDIT_READ')")
+    @PreAuthorize("hasPermission(null, 'AUDIT_READ')")
     @Operation(
         summary = "Export clinical audit report",
         description = "Generate Excel report of clinical AI decisions for specified date range"

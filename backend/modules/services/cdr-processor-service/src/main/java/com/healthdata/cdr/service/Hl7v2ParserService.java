@@ -108,36 +108,44 @@ public class Hl7v2ParserService {
             log.info("Successfully parsed HL7 message: type={}, controlId={}",
                 hl7Message.getMessageCode(), hl7Message.getMessageControlId());
 
-            // Publish audit event
-            cdrProcessorAuditIntegration.publishHl7MessageIngestEvent(
-                tenantId,
-                hl7Message.getMessageCode(),
-                hl7Message.getMessageControlId(),
-                null, // Patient ID not easily extracted here
-                rawMessage.split("\r").length, // Segment count
-                true,
-                null,
-                System.currentTimeMillis() - startTime,
-                "system"
-            );
+            // Publish audit event (if available)
+            if (cdrProcessorAuditIntegration != null) {
+                cdrProcessorAuditIntegration.publishHl7MessageIngestEvent(
+                    tenantId,
+                    hl7Message.getMessageCode(),
+                    hl7Message.getMessageControlId(),
+                    null, // Patient ID not easily extracted here
+                    rawMessage.split("\r").length, // Segment count
+                    true,
+                    null,
+                    System.currentTimeMillis() - startTime,
+                    "system"
+                );
+            } else {
+                log.debug("Skipping HL7 ingest audit event because audit integration is not configured");
+            }
 
             return hl7Message;
 
         } catch (HL7Exception e) {
             log.error("Failed to parse HL7 message: {}", e.getMessage(), e);
             
-            // Publish audit event for failure
-            cdrProcessorAuditIntegration.publishHl7MessageIngestEvent(
-                tenantId,
-                "UNKNOWN",
-                "UNKNOWN",
-                null,
-                rawMessage.split("\r").length,
-                false,
-                e.getMessage(),
-                System.currentTimeMillis() - startTime,
-                "system"
-            );
+            // Publish audit event for failure (if available)
+            if (cdrProcessorAuditIntegration != null) {
+                cdrProcessorAuditIntegration.publishHl7MessageIngestEvent(
+                    tenantId,
+                    "UNKNOWN",
+                    "UNKNOWN",
+                    null,
+                    rawMessage.split("\r").length,
+                    false,
+                    e.getMessage(),
+                    System.currentTimeMillis() - startTime,
+                    "system"
+                );
+            } else {
+                log.debug("Skipping HL7 ingest failure audit event because audit integration is not configured");
+            }
             
             return Hl7v2Message.builder()
                 .tenantId(tenantId)

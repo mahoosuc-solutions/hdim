@@ -15,7 +15,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -45,8 +45,8 @@ class QualityMeasureEventServiceIntegrationTest {
 
     @Container
     static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.5.0")
-    );
+        DockerImageName.parse("apache/kafka:3.8.0")
+    ).withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
 
     @Autowired
     private MockMvc mockMvc;

@@ -67,6 +67,7 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.testcontainers.jdbc)
+    testImplementation("com.h2database:h2:2.2.224")  // H2 in-memory database for tests
     testImplementation(project(":modules:shared:test-infrastructure"))
 }
 

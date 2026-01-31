@@ -67,7 +67,10 @@ public class MessagingAutoConfiguration {
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        ObjectMapper mapper = mapperProvider.getIfAvailable(ObjectMapper::new);
+        ObjectMapper mapper = mapperProvider.getIfUnique(ObjectMapper::new);
+        if (mapper == null) {
+            mapper = new ObjectMapper();
+        }
         JsonSerializer<Object> jsonSerializer = new JsonSerializer<>(mapper);
         jsonSerializer.setAddTypeInfo(false);
         jsonSerializer.setUseTypeMapperForKey(false);
@@ -84,6 +87,29 @@ public class MessagingAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "stringKafkaTemplate")
+    public KafkaTemplate<String, String> stringKafkaTemplate(MessagingProperties properties) {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getBootstrapServers());
+        configProps.put(ProducerConfig.CLIENT_ID_CONFIG, properties.getClientId());
+        configProps.put(ProducerConfig.ACKS_CONFIG, properties.getProducer().getAcks());
+        configProps.put(ProducerConfig.RETRIES_CONFIG, properties.getProducer().getRetries());
+        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, properties.getProducer().getBatchSize());
+        configProps.put(ProducerConfig.LINGER_MS_CONFIG, (int) properties.getProducer().getLinger().toMillis());
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, properties.getProducer().isIdempotent());
+        configProps.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, properties.getProducer().getMaxInFlight());
+        configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, properties.getProducer().getCompressionType());
+        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+
+        DefaultKafkaProducerFactory<String, String> producerFactory =
+                new DefaultKafkaProducerFactory<>(configProps, new StringSerializer(), new StringSerializer());
+        KafkaTemplate<String, String> kafkaTemplate = new KafkaTemplate<>(producerFactory);
+        kafkaTemplate.setObservationEnabled(true);
+        return kafkaTemplate;
+    }
+
+    @Bean
     @ConditionalOnMissingBean(ConsumerFactory.class)
     public ConsumerFactory<String, Object> kafkaConsumerFactory(MessagingProperties properties) {
         Map<String, Object> configProps = new HashMap<>();
@@ -93,7 +119,6 @@ public class MessagingAutoConfiguration {
         configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, properties.getConsumer().isEnableAutoCommit());
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, String.join(",", properties.getConsumer().getTrustedPackages()));
 
         JsonDeserializer<Object> jsonDeserializer = new JsonDeserializer<>();
         jsonDeserializer.addTrustedPackages(properties.getConsumer().getTrustedPackages().toArray(String[]::new));
@@ -113,8 +138,37 @@ public class MessagingAutoConfiguration {
         factory.setConsumerFactory(consumerFactory);
         factory.getContainerProperties().setPollTimeout(properties.getConsumer().getPollTimeout().toMillis());
         factory.setConcurrency(1);
-        ObjectMapper mapper = mapperProvider.getIfAvailable(ObjectMapper::new);
+        ObjectMapper mapper = mapperProvider.getIfUnique(ObjectMapper::new);
+        if (mapper == null) {
+            mapper = new ObjectMapper();
+        }
         factory.setRecordMessageConverter(new StringJsonMessageConverter(mapper));
+        return factory;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(name = "stringKafkaConsumerFactory")
+    public ConsumerFactory<String, String> stringKafkaConsumerFactory(MessagingProperties properties) {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, properties.getBootstrapServers());
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, properties.getConsumer().getGroupId());
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, properties.getConsumer().getAutoOffsetReset());
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, properties.getConsumer().isEnableAutoCommit());
+        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(configProps, new StringDeserializer(), new StringDeserializer());
+    }
+
+    @Bean(name = "stringKafkaListenerContainerFactory")
+    @ConditionalOnMissingBean(name = "stringKafkaListenerContainerFactory")
+    public ConcurrentKafkaListenerContainerFactory<String, String> stringKafkaListenerContainerFactory(
+            ConsumerFactory<String, String> stringKafkaConsumerFactory,
+            MessagingProperties properties) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(stringKafkaConsumerFactory);
+        factory.getContainerProperties().setPollTimeout(properties.getConsumer().getPollTimeout().toMillis());
+        factory.setConcurrency(1);
         return factory;
     }
 

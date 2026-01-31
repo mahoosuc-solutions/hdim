@@ -16,6 +16,7 @@ spring:
 
   liquibase:
     enabled: false  # Disable Liquibase for unit tests (H2 auto-creates schema)
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   kafka:
     bootstrap-servers: localhost:9999  # Unused in unit tests
@@ -29,6 +30,7 @@ spring:
 event-store:
   service:
     url: http://localhost:9999  # Unused in tests
+  enabled: false
 
 # Disable security for tests
 spring.security:

@@ -21,7 +21,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication(scanBasePackages = {
     "com.healthdata.agentbuilder",
-    "com.healthdata.audit"
+    "com.healthdata.audit",
+    "com.healthdata.messaging"
 })
 @EnableJpaRepositories(basePackages = "com.healthdata.agentbuilder.repository")
 @EntityScan(basePackages = {

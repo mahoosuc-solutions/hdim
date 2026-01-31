@@ -3,6 +3,7 @@ package com.healthdata.caregap.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.caregap.config.BaseIntegrationTest;
+import com.healthdata.caregap.config.TestKafkaContainerProvider;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -17,10 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -51,18 +48,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  * for clinical decision support where sub-second response times are critical.
  */
 @BaseIntegrationTest
-@Testcontainers
 @DisplayName("Care Gap Audit Performance Tests")
 class CareGapAuditPerformanceTest {
 
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("apache/kafka:3.8.0"))
-            .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
-
     @DynamicPropertySource
     static void configureKafka(DynamicPropertyRegistry registry) {
-        String bootstrapServers = kafka.getBootstrapServers();
+        String bootstrapServers = TestKafkaContainerProvider.getBootstrapServers();
         registry.add("spring.kafka.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.producer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
@@ -87,7 +78,7 @@ class CareGapAuditPerformanceTest {
     @BeforeEach
     void setUp() {
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, TestKafkaContainerProvider.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "perf-test-group-" + UUID.randomUUID());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());

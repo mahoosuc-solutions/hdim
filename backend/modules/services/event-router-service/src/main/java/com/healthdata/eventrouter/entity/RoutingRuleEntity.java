@@ -38,7 +38,7 @@ public class RoutingRuleEntity {
     private String filterExpression;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "priority", nullable = false)
+    @Column(name = "priority", nullable = false, length = 50)
     private Priority priority = Priority.MEDIUM;
 
     @Column(name = "transformation_script", columnDefinition = "TEXT")
@@ -50,7 +50,7 @@ public class RoutingRuleEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     @PrePersist

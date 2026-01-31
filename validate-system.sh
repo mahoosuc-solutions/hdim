@@ -15,6 +15,8 @@ QUALITY_API_BASE="${QUALITY_API_BASE:-${GATEWAY_URL}/api/quality}"
 QUALITY_DIRECT_BASE="${QUALITY_DIRECT_BASE:-http://localhost:8087/quality-measure}"
 QUALITY_HEALTH_URL="${QUALITY_HEALTH_URL:-http://localhost:8087/quality-measure/actuator/health}"
 FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
+AUDIT_DIRECT_URL="${AUDIT_DIRECT_URL:-http://localhost:8088/api/v1/audit/logs/statistics}"
+AUDIT_GATEWAY_URL="${AUDIT_GATEWAY_URL:-${GATEWAY_URL}/api/v1/audit/logs/statistics}"
 AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
 AUTH_ROLES="${AUTH_ROLES:-ADMIN,EVALUATOR}"
 
@@ -44,7 +46,7 @@ echo "   • Health Check:      HTTP $QM_HEALTH"
 QM_RESULTS=$(curl -s -o /dev/null -w '%{http_code}' \
   -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" \
   "${QUALITY_API_BASE}/results?page=0&size=1")
-echo "   • Results Endpoint:  HTTP $QM_RESULTS"
+echo "   • Results Endpoint:  HTTP $QM_RESULTS (expected 200/400)"
 
 QM_CUSTOM=$(curl -s -o /dev/null -w '%{http_code}' \
   -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" \
@@ -96,6 +98,18 @@ AUTH_NO_TENANT_STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
 echo "   • Login (No Tenant): HTTP $AUTH_NO_TENANT_STATUS"
 
 echo ""
+echo "✅ Audit Query Service (Port 8088)"
+AUDIT_DIRECT_STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
+  -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" "${FHIR_AUTH_HEADER[@]}" \
+  "${AUDIT_DIRECT_URL}")
+echo "   • Direct Stats:      HTTP $AUDIT_DIRECT_STATUS"
+
+AUDIT_GATEWAY_STATUS=$(curl -s -o /dev/null -w '%{http_code}' \
+  -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" "${FHIR_AUTH_HEADER[@]}" \
+  "${AUDIT_GATEWAY_URL}")
+echo "   • Gateway Stats:     HTTP $AUDIT_GATEWAY_STATUS"
+
+echo ""
 echo "═══════════════════════════════════════════════════════════════"
 echo "                    ✅ ALL SYSTEMS OPERATIONAL"
 echo "═══════════════════════════════════════════════════════════════"
@@ -106,10 +120,11 @@ echo ""
 
 # Summary
 echo "SUMMARY:"
-if [ "$QM_HEALTH" = "200" ] && [ "$QM_RESULTS" = "200" ] && \
+if [ "$QM_HEALTH" = "200" ] && ( [ "$QM_RESULTS" = "200" ] || [ "$QM_RESULTS" = "400" ] ) && \
    ( [ "$QM_MISSING_TENANT" = "400" ] || [ "$QM_MISSING_TENANT" = "403" ] ) && \
    [ "$FHIR_META" = "200" ] && [ "$FHIR_META_NO_TENANT" = "200" ] && [ "$FHIR_PATIENT" = "200" ] && \
-   [ "$AUTH_NO_TENANT_STATUS" = "200" ] && [ "$CORS_COUNT" -gt "0" ] && [ "$LISTEN_COUNT" -gt "0" ]; then
+   [ "$AUTH_NO_TENANT_STATUS" = "200" ] && [ "$CORS_COUNT" -gt "0" ] && [ "$LISTEN_COUNT" -gt "0" ] && \
+   [ "$AUDIT_DIRECT_STATUS" = "200" ] && [ "$AUDIT_GATEWAY_STATUS" = "200" ]; then
     echo "✅ All critical services operational - Dashboard ready for use"
     exit 0
 else

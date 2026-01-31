@@ -51,7 +51,7 @@ public class DocumentReferenceController {
 
     private final DocumentReferenceService documentReferenceService;
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new DocumentReference resource")
@@ -66,7 +66,7 @@ public class DocumentReferenceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a DocumentReference resource by ID")
@@ -80,7 +80,7 @@ public class DocumentReferenceController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing DocumentReference resource")
@@ -96,7 +96,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a DocumentReference resource")
@@ -112,7 +112,7 @@ public class DocumentReferenceController {
 
     // ==================== Search Endpoints ====================
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search DocumentReference resources")
@@ -146,7 +146,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all document references for a patient")
@@ -160,7 +160,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/current", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get current document references for a patient")
@@ -174,7 +174,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/encounter/{encounterId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get document references for an encounter")
@@ -188,7 +188,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/type/{typeCode}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get document references by type for a patient")
@@ -203,7 +203,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/type/{typeCode}/latest", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get latest document of a specific type for a patient")
@@ -218,7 +218,7 @@ public class DocumentReferenceController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/search", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search documents by description text")
@@ -234,7 +234,7 @@ public class DocumentReferenceController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/date-range", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get documents created within a date range")

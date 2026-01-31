@@ -22,6 +22,6 @@ public interface PopulationHealthRepository extends JpaRepository<PopulationHeal
      * Find population health metrics by tenant
      * Multi-tenant isolation query
      */
-    @Query("SELECT p FROM PopulationHealthProjection p WHERE p.tenantId = :tenantId")
+    @Query("SELECT p FROM PopulationHealthHandlerProjection p WHERE p.tenantId = :tenantId")
     Optional<PopulationHealthProjection> findByTenantId(@Param("tenantId") String tenantId);
 }

@@ -1,6 +1,9 @@
 package com.healthdata.caregap.controller;
 
+import com.healthdata.caregap.dto.CareGapDetectionRequest;
+import com.healthdata.caregap.dto.CareGapDetectionResponse;
 import com.healthdata.caregap.persistence.CareGapEntity;
+import com.healthdata.caregap.persistence.CareGapRepository;
 import com.healthdata.caregap.service.CareGapIdentificationService;
 import com.healthdata.caregap.service.CareGapReportService;
 import com.healthdata.caregap.service.ProviderCareGapPrioritizationService;
@@ -78,6 +81,7 @@ public class CareGapController {
     private final CareGapIdentificationService identificationService;
     private final CareGapReportService reportService;
     private final ProviderCareGapPrioritizationService prioritizationService;
+    private final CareGapRepository careGapRepository;
 
     // ==================== Care Gap Identification Endpoints ====================
 
@@ -130,7 +134,7 @@ public class CareGapController {
         @ApiResponse(responseCode = "404", description = "Patient not found"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/identify", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> identifyAllCareGaps(
@@ -147,6 +151,78 @@ public class CareGapController {
                 tenantId, patientId, createdBy);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(gaps);
+    }
+
+    /**
+     * Detect a care gap from measure results and persist it.
+     */
+    @Operation(
+        summary = "Detect a care gap from measure results",
+        description = """
+            Creates a care gap record when a patient is eligible for a measure but is not compliant.
+            Intended for direct measure-driven workflows (e.g., Annual Wellness Visit).
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "201",
+            description = "Care gap detected and created",
+            content = @Content(mediaType = "application/json")
+        ),
+        @ApiResponse(responseCode = "204", description = "No care gap detected"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
+    @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
+    @PostMapping(value = "/detect", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CareGapDetectionResponse> detectCareGap(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody CareGapDetectionRequest request
+    ) {
+        if (!request.isDenominatorEligible() || request.isNumeratorCompliant()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        String measureId = request.getMeasureId();
+        String category = "PREVENTIVE";
+        String title = "Care Gap";
+        String priority = "HIGH";
+        String gapType = "preventive-care";
+        String description = "Preventive care gap detected";
+
+        if ("HEDIS_AWV".equalsIgnoreCase(measureId)) {
+            title = "Annual Wellness Visit";
+            description = "Annual Wellness Visit is due";
+        }
+
+        CareGapEntity gap = CareGapEntity.builder()
+                .tenantId(tenantId)
+                .patientId(request.getPatientId())
+                .measureId(measureId)
+                .measureName(title)
+                .gapCategory(category)
+                .gapType(gapType)
+                .gapStatus("OPEN")
+                .priority(priority)
+                .gapDescription(description)
+                .measureYear(LocalDate.now().getYear())
+                .dueDate(LocalDate.now().plusDays(30))
+                .createdBy(request.getCreatedBy() != null ? request.getCreatedBy() : "system")
+                .build();
+
+        CareGapEntity saved = careGapRepository.save(gap);
+
+        CareGapDetectionResponse response = CareGapDetectionResponse.builder()
+                .id(saved.getId())
+                .category(saved.getGapCategory())
+                .title(saved.getMeasureName())
+                .priority(saved.getPriority())
+                .status(saved.getGapStatus())
+                .dueDate(saved.getDueDate())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -173,7 +249,7 @@ public class CareGapController {
         @ApiResponse(responseCode = "404", description = "Patient or library not found"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/identify/{library}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> identifyCareGapsForLibrary(
@@ -215,7 +291,7 @@ public class CareGapController {
         @ApiResponse(responseCode = "404", description = "Patient not found"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> refreshCareGaps(
@@ -277,7 +353,7 @@ public class CareGapController {
         @ApiResponse(responseCode = "404", description = "Care gap not found"),
         @ApiResponse(responseCode = "403", description = "Access denied")
     })
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/close", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapEntity> closeCareGap(
@@ -311,7 +387,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get open care gaps", description = "Retrieves all currently open gaps for a patient.\n\nUse for care management worklists and patient care plans.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Open gaps retrieved", content = @Content(mediaType = "application/json")), @ApiResponse(responseCode = "404", description = "Patient not found")})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/open", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getOpenCareGaps(
@@ -334,7 +410,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get high priority care gaps", description = "Retrieves gaps marked as high priority.\n\nUse for urgent intervention planning and care team escalation.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "High priority gaps retrieved", content = @Content(mediaType = "application/json")), @ApiResponse(responseCode = "404", description = "Patient not found")})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/high-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getHighPriorityCareGaps(
@@ -357,7 +433,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get overdue care gaps", description = "Retrieves gaps past their due date.\n\nUse for quality measure deadline tracking and compliance reporting.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Overdue gaps retrieved", content = @Content(mediaType = "application/json")), @ApiResponse(responseCode = "404", description = "Patient not found")})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/overdue", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getOverdueGaps(
@@ -381,7 +457,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get upcoming care gaps", description = "Retrieves gaps due within N days.\n\nUse for proactive care planning and outreach scheduling.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Upcoming gaps retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/upcoming", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<CareGapEntity>> getUpcomingGaps(
@@ -407,7 +483,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get care gap statistics", description = "Returns aggregated statistics (open count, closed count, etc.).\n\nUse for dashboard KPIs and patient overview metrics.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Statistics retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/stats", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapIdentificationService.CareGapStats> getCareGapStats(
@@ -431,7 +507,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get care gap summary", description = "Returns comprehensive summary with counts by status, priority, category.\n\nUse for patient overview dashboards and care team coordination.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Summary retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapReportService.CareGapSummary> getCareGapSummary(
@@ -455,7 +531,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get gaps grouped by measure category", description = "Returns gap counts by HEDIS/CMS category.\n\nUse for quality measure domain analysis and focused intervention planning.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Category breakdown retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-category", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getGapsByCategory(
@@ -478,7 +554,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get gaps grouped by priority", description = "Returns gap counts by priority level.\n\nUse for workload distribution and resource allocation.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Priority breakdown retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/by-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Long>> getGapsByPriority(
@@ -500,7 +576,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get population-level gap report", description = "Returns tenant-wide gap statistics for quality reporting.\n\nUse for HEDIS/Stars reporting, population health management, and ACO quality submissions.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Population report retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population-report", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CareGapReportService.PopulationGapReport> getPopulationGapReport(
@@ -529,7 +605,7 @@ public class CareGapController {
      */
     @Operation(summary = "Bulk close multiple care gaps", description = "Closes multiple gaps with shared closure reason (Issue #241).\n\nReturns success/failure counts for each gap. Use for mass care gap closure workflows.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Bulk closure completed", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/bulk-close", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<com.healthdata.caregap.dto.BulkOperationResponse> bulkCloseCareGaps(
@@ -557,7 +633,7 @@ public class CareGapController {
      */
     @Operation(summary = "Bulk assign intervention", description = "Assigns intervention to multiple gaps (Issue #241).\n\nStreamlines provider workflows for care coordination and intervention assignment.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Bulk assignment completed", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/bulk-assign-intervention", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<com.healthdata.caregap.dto.BulkOperationResponse> bulkAssignIntervention(
@@ -585,7 +661,7 @@ public class CareGapController {
      */
     @Operation(summary = "Bulk update priority", description = "Updates priority for multiple gaps (Issue #241).\n\nUse for mass prioritization based on clinical criteria or organizational goals.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Bulk update completed", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/bulk-update-priority", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<com.healthdata.caregap.dto.BulkOperationResponse> bulkUpdatePriority(
@@ -617,7 +693,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get prioritized gaps for provider", description = "Returns provider's gaps sorted by scoring algorithm (Issue #138).\n\nScoring: urgency (40%) + due date (30%) + ease (30%).\nIncludes recommended actions for efficient workflows.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Prioritized gaps retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.READ, resourceType = "CareGap", purposeOfUse = "TREATMENT",
             description = "Provider care gap prioritization lookup")
     @GetMapping(value = "/providers/{providerId}/prioritized", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -643,7 +719,7 @@ public class CareGapController {
      */
     @Operation(summary = "Get provider gap summary", description = "Returns summary statistics for provider's patient panel.\n\nUse for provider dashboards, panel management, and performance tracking.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Provider summary retrieved", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_WRITE')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     @Audited(action = AuditAction.READ, resourceType = "CareGap", purposeOfUse = "TREATMENT",
             description = "Provider care gap summary lookup")
     @GetMapping(value = "/providers/{providerId}/summary", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -668,7 +744,7 @@ public class CareGapController {
      */
     @Operation(summary = "Service health check", description = "Returns service availability status.\n\nUse for monitoring, load balancer health probes, and readiness checks.", security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Service is healthy", content = @Content(mediaType = "application/json"))})
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {

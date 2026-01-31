@@ -35,12 +35,12 @@ describe('AuthService', () => {
   let apiService: jest.Mocked<ApiService>;
 
   const mockUser: User = {
-    id: '123',
+    id: '',
     username: 'testuser',
     email: 'test@example.com',
-    firstName: 'Test',
-    lastName: 'User',
-    fullName: 'Test User',
+    firstName: 'testuser',
+    lastName: '',
+    fullName: 'testuser',
     roles: [
       {
         id: 'role1',
@@ -56,6 +56,7 @@ describe('AuthService', () => {
       },
     ],
     tenantId: 'tenant-123',
+    tenantIds: ['tenant-123'],
     active: true,
   };
 
@@ -68,6 +69,21 @@ describe('AuthService', () => {
     email: 'test@example.com',
     roles: ['USER'],
     tenantIds: ['tenant-123'],
+    // Full role data with permissions for authorization checks
+    roleDetails: [
+      {
+        id: 'role1',
+        name: 'USER',
+        permissions: [
+          {
+            id: 'perm1',
+            name: 'READ_PATIENTS',
+            resource: 'patients',
+            action: 'read',
+          },
+        ],
+      },
+    ],
   };
 
   const mockTokenResponse: TokenResponse = {
@@ -96,9 +112,7 @@ describe('AuthService', () => {
         { provide: Router, useValue: routerMock },
         { provide: ApiService, useValue: apiServiceMock },
         { provide: LoggerService, useValue: mockLoggerService },
-        { provide: HttpClient, useValue: createMockHttpClient() },
         { provide: Store, useValue: createMockStore() },
-        HttpTestingController,
       ],
     });
 
@@ -133,7 +147,7 @@ describe('AuthService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      }, 30000);
+      };
     });
 
     it('should handle login error', (done) => {
@@ -147,7 +161,7 @@ describe('AuthService', () => {
           expect(service.isAuthenticated()).toBe(false);
           done();
         },
-      }, 30000);
+      };
     });
 
     it('should emit authentication state on successful login', (done) => {
@@ -158,7 +172,7 @@ describe('AuthService', () => {
           expect(isAuth).toBe(true);
           done();
         }
-      }, 30000);
+      };
 
       service.login('testuser', 'password').subscribe();
     });
@@ -174,7 +188,7 @@ describe('AuthService', () => {
           expect(user).toEqual(mockUser);
           done();
         }
-      }, 30000);
+      };
 
       service.login('testuser', 'password').subscribe();
     });
@@ -197,13 +211,13 @@ describe('AuthService', () => {
       expect(service.getRefreshToken()).toBeNull();
       expect(service.currentUserValue).toBeNull();
       expect(service.isAuthenticated()).toBe(false);
-    }, 30000);
+    };
 
     it('should redirect to login page on logout', () => {
       service.logout();
 
       expect(router.navigate).toHaveBeenCalledWith(['/login']);
-    }, 30000);
+    };
 
     it('should emit authentication state on logout', (done) => {
       let emissionCount = 0;
@@ -214,7 +228,7 @@ describe('AuthService', () => {
           expect(isAuth).toBe(false);
           done();
         }
-      }, 30000);
+      };
 
       service.logout();
     });
@@ -228,7 +242,7 @@ describe('AuthService', () => {
           expect(user).toBeNull();
           done();
         }
-      }, 30000);
+      };
 
       service.logout();
     });
@@ -239,8 +253,8 @@ describe('AuthService', () => {
       service.logout();
 
       expect(localStorage.getItem('healthdata_user')).toBeNull();
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('Token Management', () => {
     /**
@@ -252,38 +266,38 @@ describe('AuthService', () => {
       // Even if we try to set something in localStorage, getToken returns null
       localStorage.setItem('healthdata_auth_token', 'test-token');
       expect(service.getToken()).toBeNull();
-    }, 30000);
+    };
 
     it('should be a no-op for setToken (HttpOnly cookies)', () => {
       // setToken is a no-op - tokens are set by backend as HttpOnly cookies
       service.setToken('new-token');
       // The method doesn't throw, it's just a no-op for backwards compatibility
       expect(service.getToken()).toBeNull();
-    }, 30000);
+    };
 
     it('should handle removeToken gracefully', () => {
       localStorage.setItem('healthdata_auth_token', 'token');
       service.removeToken();
       // The token removal is a no-op but should not throw
       expect(true).toBe(true);
-    }, 30000);
+    };
 
     it('should return null from getRefreshToken (HttpOnly cookies)', () => {
       localStorage.setItem('healthdata_refresh_token', 'refresh-token');
       expect(service.getRefreshToken()).toBeNull();
-    }, 30000);
+    };
 
     it('should be a no-op for setRefreshToken (HttpOnly cookies)', () => {
       service.setRefreshToken('new-refresh-token');
       expect(service.getRefreshToken()).toBeNull();
-    }, 30000);
+    };
 
     it('should handle removeRefreshToken gracefully', () => {
       localStorage.setItem('healthdata_refresh_token', 'token');
       service.removeRefreshToken();
       expect(true).toBe(true);
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('Token Refresh', () => {
     /**
@@ -305,7 +319,7 @@ describe('AuthService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      }, 30000);
+      };
     });
 
     it('should logout on refresh token error', (done) => {
@@ -319,7 +333,7 @@ describe('AuthService', () => {
           expect(router.navigate).toHaveBeenCalledWith(['/login']);
           done();
         },
-      }, 30000);
+      };
     });
 
     it('should return error if no valid session exists', (done) => {
@@ -334,7 +348,7 @@ describe('AuthService', () => {
           expect(err.status).toBe(401);
           done();
         },
-      }, 30000);
+      };
     });
 
     it('should handle response without explicit refresh token', (done) => {
@@ -349,7 +363,7 @@ describe('AuthService', () => {
           expect(service.getRefreshToken()).toBeNull();
           done();
         },
-      }, 30000);
+      };
     });
   });
 
@@ -361,7 +375,7 @@ describe('AuthService', () => {
      */
     it('should return false when no user exists in storage', () => {
       expect(service.isAuthenticated()).toBe(false);
-    }, 30000);
+    };
 
     it('should return true when user exists in storage', () => {
       localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
@@ -373,7 +387,7 @@ describe('AuthService', () => {
         mockLoggerService as unknown as LoggerService
       );
       expect(newService.isAuthenticated()).toBe(true);
-    }, 30000);
+    };
 
     it('should return false when user storage is invalid JSON', () => {
       localStorage.setItem('healthdata_user', 'invalid-json');
@@ -384,15 +398,15 @@ describe('AuthService', () => {
         mockLoggerService as unknown as LoggerService
       );
       expect(newService.isAuthenticated()).toBe(false);
-    }, 30000);
+    };
 
     it('should return false after logout clears user', () => {
       localStorage.setItem('healthdata_user', JSON.stringify(mockUser));
       // Logout clears the user
       service.logout();
       expect(service.isAuthenticated()).toBe(false);
-    }, 30000);
-  }, 30000);
+    };
+  };
 
   describe('Tenant ID Management', () => {
     it('should return tenant ID from current user', (done) => {
@@ -403,18 +417,17 @@ describe('AuthService', () => {
           expect(service.getTenantId()).toBe('tenant-123');
           done();
         },
-      }, 30000);
+      };
     });
 
     it('should return null when no user is logged in', () => {
       expect(service.getTenantId()).toBeNull();
-    }, 30000);
+    };
 
     it('should return null when user has no tenant ID', (done) => {
-      const userWithoutTenant = { ...mockUser, tenantId: undefined };
       const loginResponse = {
         ...mockLoginResponse,
-        user: userWithoutTenant,
+        tenantIds: [],
       };
       apiService.post.mockReturnValue(of(loginResponse));
 
@@ -423,7 +436,7 @@ describe('AuthService', () => {
           expect(service.getTenantId()).toBeNull();
           done();
         },
-      }, 30000);
+      };
     });
   });
 
@@ -437,7 +450,7 @@ describe('AuthService', () => {
           expect(service.currentUserValue).toEqual(mockUser);
           done();
         },
-      }, 30000);
+      };
     });
 
     it('should return cached user if available', (done) => {
@@ -454,7 +467,7 @@ describe('AuthService', () => {
               expect(apiService.get).not.toHaveBeenCalled();
               done();
             },
-          }, 30000);
+          };
         },
       });
     });
@@ -469,7 +482,7 @@ describe('AuthService', () => {
           expect(err).toEqual(error);
           done();
         },
-      }, 30000);
+      };
     });
   });
 
@@ -485,31 +498,28 @@ describe('AuthService', () => {
     it('should check if user has specific role', () => {
       expect(service.hasRole('USER')).toBe(true);
       expect(service.hasRole('ADMIN')).toBe(false);
-    }, 30000);
+    };
 
     it('should return false for role check when not authenticated', () => {
       service.logout();
       expect(service.hasRole('USER')).toBe(false);
-    }, 30000);
+    };
 
     it('should check if user has any of specified roles', () => {
       expect(service.hasAnyRole(['USER', 'ADMIN'])).toBe(true);
       expect(service.hasAnyRole(['ADMIN', 'SUPERUSER'])).toBe(false);
-    }, 30000);
+    };
 
     it('should check if user has all specified roles', () => {
       expect(service.hasAllRoles(['USER'])).toBe(true);
       expect(service.hasAllRoles(['USER', 'ADMIN'])).toBe(false);
-    }, 30000);
+    };
 
     it('should grant ADMIN role all other roles', (done) => {
-      const adminUser = {
-        ...mockUser,
-        roles: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
-      };
       const loginResponse = {
         ...mockLoginResponse,
-        user: adminUser,
+        roles: ['ADMIN'],
+        roleDetails: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
       };
 
       // Create a new service instance to clear previous state
@@ -522,9 +532,9 @@ describe('AuthService', () => {
           expect(service.hasRole('ADMIN')).toBe(true);
           done();
         },
-      }, 30000);
-    }, 30000);
-  }, 30000);
+      };
+    });
+  };
 
   describe('Permission-Based Authorization', () => {
     beforeEach((done) => {
@@ -532,32 +542,29 @@ describe('AuthService', () => {
 
       service.login('testuser', 'password').subscribe({
         next: () => done(),
-      }, 30000);
-    }, 30000);
+      };
+    };
 
     it('should check if user has specific permission', () => {
       expect(service.hasPermission('READ_PATIENTS')).toBe(true);
       expect(service.hasPermission('DELETE_PATIENTS')).toBe(false);
-    }, 30000);
+    };
 
     it('should return false for permission check when not authenticated', () => {
       service.logout();
       expect(service.hasPermission('READ_PATIENTS')).toBe(false);
-    }, 30000);
+    };
 
     it('should check if user has any of specified permissions', () => {
       expect(service.hasAnyPermission(['READ_PATIENTS', 'WRITE_PATIENTS'])).toBe(true);
       expect(service.hasAnyPermission(['DELETE_PATIENTS', 'ADMIN_ACCESS'])).toBe(false);
-    }, 30000);
+    };
 
     it('should grant ADMIN role all permissions', (done) => {
-      const adminUser = {
-        ...mockUser,
-        roles: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
-      };
       const loginResponse = {
         ...mockLoginResponse,
-        user: adminUser,
+        roles: ['ADMIN'],
+        roleDetails: [{ id: 'admin', name: 'ADMIN', permissions: [] }],
       };
 
       service.logout();
@@ -568,9 +575,9 @@ describe('AuthService', () => {
           expect(service.hasPermission('ANY_PERMISSION')).toBe(true);
           done();
         },
-      }, 30000);
-    }, 30000);
-  }, 30000);
+      };
+    });
+  };
 
   describe('Observable Streams', () => {
     it('should emit authentication state changes', (done) => {
@@ -582,7 +589,7 @@ describe('AuthService', () => {
           expect(states).toEqual([false, true]);
           done();
         }
-      }, 30000);
+      };
 
       apiService.post.mockReturnValue(of(mockLoginResponse));
       service.login('testuser', 'password').subscribe();
@@ -598,7 +605,7 @@ describe('AuthService', () => {
           expect(users[1]).toEqual(mockUser);
           done();
         }
-      }, 30000);
+      };
 
       apiService.post.mockReturnValue(of(mockLoginResponse));
       service.login('testuser', 'password').subscribe();

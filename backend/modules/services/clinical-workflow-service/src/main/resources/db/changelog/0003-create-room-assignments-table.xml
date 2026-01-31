@@ -26,13 +26,13 @@
             <column name="room_number" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="location" type="VARCHAR(100)" comment="e.g., 'Building A, Floor 2'">
+            <column name="location" type="VARCHAR(100)" remarks="e.g., 'Building A, Floor 2'">
                 <constraints nullable="true"/>
             </column>
-            <column name="room_type" type="VARCHAR(50)" comment="standard, isolation, trauma, etc.">
+            <column name="room_type" type="VARCHAR(50)" remarks="standard, isolation, trauma, etc.">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="VARCHAR(50)" comment="available, occupied, cleaning, reserved">
+            <column name="status" type="VARCHAR(50)" remarks="available, occupied, cleaning, reserved">
                 <constraints nullable="false"/>
             </column>
             <column name="assigned_by" type="VARCHAR(255)">

@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.UUID;
 
@@ -38,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -116,7 +118,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @Order(7)
     @DisplayName("Should return 400 for missing required parameters")
     void testMissingRequiredParameters() throws Exception {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "TestLib", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "TestLib", "1.0.0");
         library = libraryRepository.save(library);
 
         mockMvc.perform(post("/api/v1/cql/evaluations")
@@ -142,12 +144,12 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should return 400 for duplicate library creation")
     void testDuplicateLibraryCreation() throws Exception {
         // Create first library
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "DuplicateTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "DuplicateTest", "1.0.0");
         library.setStatus("ACTIVE");
         libraryRepository.save(library);
 
         // Try to create duplicate
-        CqlLibrary duplicate = new CqlLibrary(TENANT_ID, "DuplicateTest", "1.0.0");
+        CqlLibrary duplicate = buildLibrary(TENANT_ID, "DuplicateTest", "1.0.0");
         String requestBody = objectMapper.writeValueAsString(duplicate);
 
         mockMvc.perform(post("/api/v1/cql/libraries")
@@ -173,7 +175,8 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @Order(11)
     @DisplayName("Should return 400 for compiling library without CQL content")
     void testCompileLibraryWithoutContent() throws Exception {
-        CqlLibrary emptyLibrary = new CqlLibrary(TENANT_ID, "EmptyLib", "1.0.0");
+        CqlLibrary emptyLibrary = buildLibrary(TENANT_ID, "EmptyLib", "1.0.0");
+        emptyLibrary.setCqlContent("");
         emptyLibrary = libraryRepository.save(emptyLibrary);
 
         // Service throws IllegalArgumentException which GlobalExceptionHandler converts to 400
@@ -186,7 +189,8 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @Order(12)
     @DisplayName("Should return 400 for validating library without CQL content")
     void testValidateLibraryWithoutContent() throws Exception {
-        CqlLibrary emptyLibrary = new CqlLibrary(TENANT_ID, "EmptyValidate", "1.0.0");
+        CqlLibrary emptyLibrary = buildLibrary(TENANT_ID, "EmptyValidate", "1.0.0");
+        emptyLibrary.setCqlContent("");
         emptyLibrary = libraryRepository.save(emptyLibrary);
 
         // Service throws IllegalArgumentException which GlobalExceptionHandler converts to 400
@@ -221,7 +225,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @Order(15)
     @DisplayName("Should return 400 for empty batch evaluation list")
     void testEmptyBatchEvaluation() throws Exception {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "BatchTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "BatchTest", "1.0.0");
         library = libraryRepository.save(library);
 
         // Service validates and rejects empty batch lists with 400
@@ -251,7 +255,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should handle excessively long strings")
     void testExcessivelyLongStrings() throws Exception {
         String longString = "A".repeat(10000);
-        CqlLibrary library = new CqlLibrary(TENANT_ID, longString, "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, longString, "1.0.0");
         String requestBody = objectMapper.writeValueAsString(library);
 
         mockMvc.perform(post("/api/v1/cql/libraries")
@@ -291,7 +295,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @Order(20)
     @DisplayName("Should handle concurrent access errors gracefully")
     void testConcurrentAccessErrors() throws Exception {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "ConcurrentTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "ConcurrentTest", "1.0.0");
         library.setCqlContent("library ConcurrentTest version '1.0.0'");
         library = libraryRepository.save(library);
 
@@ -321,7 +325,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
         String tenant2 = "tenant-2";
 
         // Create library for tenant1
-        CqlLibrary library = new CqlLibrary(tenant1, "TenantMismatchTest", "1.0.0");
+        CqlLibrary library = buildLibrary(tenant1, "TenantMismatchTest", "1.0.0");
         library = libraryRepository.save(library);
 
         // Try to access with tenant2
@@ -345,7 +349,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     @Order(23)
     @DisplayName("Should handle missing content type header")
     void testMissingContentType() throws Exception {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "NoContentType", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "NoContentType", "1.0.0");
         String requestBody = objectMapper.writeValueAsString(library);
 
         mockMvc.perform(post("/api/v1/cql/libraries")
@@ -372,7 +376,7 @@ public class ErrorHandlingIntegrationTest extends CqlTestcontainersBase {
     void testLargeResultSets() throws Exception {
         // Create many libraries
         for (int i = 0; i < 100; i++) {
-            CqlLibrary library = new CqlLibrary(TENANT_ID, "LargeTest" + i, "1.0.0");
+            CqlLibrary library = buildLibrary(TENANT_ID, "LargeTest" + i, "1.0.0");
             libraryRepository.save(library);
         }
 

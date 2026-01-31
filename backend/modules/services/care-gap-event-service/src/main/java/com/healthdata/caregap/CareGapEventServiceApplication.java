@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.kafka.annotation.EnableKafka;
 
 /**
@@ -20,8 +21,9 @@ import org.springframework.kafka.annotation.EnableKafka;
 @SpringBootApplication
 @EnableKafka
 @EnableFeignClients(basePackages = {"com.healthdata.caregap", "com.healthdata.eventstore.client"})
+@Import(com.healthdata.caregap.config.CacheConfig.class)
 @ComponentScan(basePackages = {
-    "com.healthdata.caregapevent",       // Event service package
+    "com.healthdata.caregap",            // Event service API + application logic
     "com.healthdata.caregap.config",     // JPA configuration
     "com.healthdata.eventstore.client",
     "com.healthdata.shared"

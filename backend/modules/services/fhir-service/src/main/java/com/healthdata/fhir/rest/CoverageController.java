@@ -50,7 +50,7 @@ public class CoverageController {
 
     private final CoverageService coverageService;
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new Coverage resource")
@@ -65,7 +65,7 @@ public class CoverageController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a Coverage resource by ID")
@@ -79,7 +79,7 @@ public class CoverageController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing Coverage resource")
@@ -95,7 +95,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a Coverage resource")
@@ -111,7 +111,7 @@ public class CoverageController {
 
     // ==================== Search Endpoints ====================
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search Coverage resources")
@@ -145,7 +145,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all coverages for a patient")
@@ -159,7 +159,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/active", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get active coverages for a patient")
@@ -173,7 +173,7 @@ public class CoverageController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/primary", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get primary coverage for a patient")
@@ -187,7 +187,7 @@ public class CoverageController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/has-active", produces = "application/json")
     @Operation(summary = "Check if patient has active coverage")
@@ -199,7 +199,7 @@ public class CoverageController {
         return ResponseEntity.ok(hasActive);
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/subscriber/{subscriberId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get coverages by subscriber ID")

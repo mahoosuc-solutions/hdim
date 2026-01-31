@@ -577,7 +577,7 @@ public class VitalSignsService {
      * @return list of vitals
      */
     public List<VitalSignsRecordEntity> getPatientVitalsHistory(
-            UUID patientId, String tenantId, LocalDateTime from, LocalDateTime to) {
+            UUID patientId, String tenantId, Instant from, Instant to) {
         log.debug("Retrieving vitals history for patient {} from {} to {} in tenant {}",
                 patientId, from, to, tenantId);
 

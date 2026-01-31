@@ -167,7 +167,7 @@ describe('DistributionPeriodSliderComponent - Team 4 Test Suite', () => {
     });
 
     it('should emit change event when weight changes', () => {
-      spyOn(component.valueChanged, 'emit');
+      jest.spyOn(component.valueChanged, 'emit');
 
       const slider = fixture.debugElement.query(el =>
         el.nativeElement.classList.contains('component-slider')
@@ -330,7 +330,7 @@ describe('DistributionPeriodSliderComponent - Team 4 Test Suite', () => {
     });
 
     it('should emit change event when period changes', () => {
-      spyOn(component.valueChanged, 'emit');
+      jest.spyOn(component.valueChanged, 'emit');
 
       const button = fixture.debugElement.query(el =>
         el.nativeElement.textContent?.includes('Fiscal Year')
@@ -521,7 +521,7 @@ describe('DistributionPeriodSliderComponent - Team 4 Test Suite', () => {
       component.config = mockDistributionConfig;
       fixture.detectChanges();
 
-      spyOn(component.valueChanged, 'emit');
+      jest.spyOn(component.valueChanged, 'emit');
 
       const slider = fixture.debugElement.query(el =>
         el.nativeElement.classList.contains('component-slider')

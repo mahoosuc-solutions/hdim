@@ -1,8 +1,9 @@
 package com.healthdata.caregap;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.caregap.api.v1.dto.DetectGapRequest;
 import com.healthdata.caregap.api.v1.dto.CareGapEventResponse;
+import com.healthdata.caregap.api.v1.dto.DetectGapRequest;
+import com.healthdata.caregap.persistence.PopulationHealthRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -29,8 +30,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Validates complete flow: REST → Service → EventHandler → Database
  * Tests care gap detection, severity classification, interventions, and population health
  */
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest(properties = {
+    "spring.jpa.hibernate.ddl-auto=validate",
+    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect",
+    "spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true",
+    "spring.liquibase.enabled=true",
+    "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml"
+})
+@AutoConfigureMockMvc(addFilters = false)
 @Testcontainers
 @DisplayName("CareGapEventService Integration Tests")
 class CareGapEventServiceIntegrationTest {
@@ -44,8 +51,8 @@ class CareGapEventServiceIntegrationTest {
 
     @Container
     static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("confluentinc/cp-kafka:7.5.0")
-    );
+        DockerImageName.parse("apache/kafka:3.8.0")
+    ).withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
 
     @Autowired
     private MockMvc mockMvc;
@@ -53,20 +60,29 @@ class CareGapEventServiceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private PopulationHealthRepository populationHealthRepository;
+
     private static final String TENANT_ID = "TENANT-001";
-    private static final String API_BASE_PATH = "/api/v1/gaps";
+    private static final String API_BASE_PATH = "/api/v1/gaps/events";
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
+        registry.add("spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation", () -> "true");
+        registry.add("spring.liquibase.enabled", () -> "true");
+        registry.add("spring.liquibase.change-log", () -> "classpath:db/changelog/db.changelog-master.xml");
     }
 
     @BeforeEach
     void setUp() {
-        // Test setup if needed
+        populationHealthRepository.deleteAll();
     }
 
     // ===== Gap Detection Tests =====

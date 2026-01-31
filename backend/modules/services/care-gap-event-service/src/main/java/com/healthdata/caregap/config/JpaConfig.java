@@ -11,9 +11,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * - Handler library projections (com.healthdata.caregap.projection)
  * - Event service projections (com.healthdata.caregapevent.projection)
  *
- * Both have entities with table name "care_gap_projections" but different id types,
- * causing Hibernate schema validation errors. This configuration ensures ONLY the
- * event service projections are scanned by JPA.
+ * Both have entities with table name "care_gap_projections" but different schemas.
+ * This configuration opts into the handler projections used by the API layer.
  *
  * Architecture:
  * - Handler library provides business logic (CareGapEventHandler) with no-op projection store
@@ -23,12 +22,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @Configuration
 @EnableJpaRepositories(
     basePackages = {
-        "com.healthdata.caregapevent.repository"    // Event service repositories ONLY
+        "com.healthdata.caregap.persistence"        // Care gap API repositories
     }
 )
 @EntityScan(
     basePackages = {
-        "com.healthdata.caregapevent.projection",   // Event service projections ONLY
+        "com.healthdata.caregap.projection",        // Care gap API projections
         "com.healthdata.authentication.domain"      // Authentication entities
     }
 )

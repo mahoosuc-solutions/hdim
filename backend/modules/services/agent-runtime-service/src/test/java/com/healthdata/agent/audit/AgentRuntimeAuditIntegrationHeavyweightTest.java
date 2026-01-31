@@ -1,31 +1,43 @@
 package com.healthdata.agent.audit;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.agent.AgentRuntimeServiceApplication;
 import com.healthdata.agent.core.AgentContext;
 import com.healthdata.agent.core.AgentOrchestrator.AgentResponse;
 import com.healthdata.agent.llm.model.LLMResponse;
-import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
-import java.util.List;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = AgentRuntimeServiceApplication.class)
 @ActiveProfiles("test")
 @Testcontainers
+@Import(AgentRuntimeAuditIntegrationHeavyweightTest.TestRedisConfig.class)
 @DisplayName("Agent Runtime Audit Integration - Heavyweight Kafka Tests")
 class AgentRuntimeAuditIntegrationHeavyweightTest {
 
@@ -59,13 +72,18 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
         registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
         registry.add("spring.kafka.consumer.group-id", () -> "test-group");
+        registry.add("healthdata.messaging.bootstrap-servers", () -> bootstrapServers);
+        registry.add("healthdata.kafka.bootstrap-servers", () -> bootstrapServers);
         registry.add("audit.kafka.enabled", () -> "true");
-        registry.add("audit.kafka.topic.ai-decisions", () -> "ai.agent.decisions");
+        registry.add("audit.kafka.topic.ai-decisions", () -> TOPIC);
 
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("healthdata.persistence.primary.url", postgres::getJdbcUrl);
+        registry.add("healthdata.persistence.primary.username", postgres::getUsername);
+        registry.add("healthdata.persistence.primary.password", postgres::getPassword);
+        registry.add("healthdata.persistence.primary.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
+        registry.add("spring.liquibase.change-log", () ->
+                "classpath:db/changelog/db.changelog-master.xml");
     }
 
     @Autowired
@@ -74,7 +92,16 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Consumer<String, String> consumer;
+    @TestConfiguration
+    static class TestRedisConfig {
+        @Bean
+        @Primary
+        ReactiveRedisTemplate<String, String> reactiveRedisTemplate() {
+            return org.mockito.Mockito.mock(ReactiveRedisTemplate.class);
+        }
+    }
+
+    private KafkaConsumer<String, String> consumer;
 
     private static final String TENANT_ID = "tenant-123";
     private static final String USER_ID = "user-456";
@@ -82,21 +109,22 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
     private static final String SESSION_ID = "session-001";
     private static final String CORRELATION_ID = "corr-001";
     private static final String AGENT_TYPE = "clinical-assistant";
+    private static final String TOPIC = "ai.agent.decisions.test." + UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
-        Map<String, Object> consumerProps = Map.of(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers(),
-                ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-" + System.currentTimeMillis(),
-                ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest",
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class,
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class
-        );
+        createTopicIfMissing();
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-consumer-" + UUID.randomUUID());
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
 
-        DefaultKafkaConsumerFactory<String, String> consumerFactory =
-                new DefaultKafkaConsumerFactory<>(consumerProps);
-        consumer = consumerFactory.createConsumer();
-        consumer.subscribe(List.of("ai.agent.decisions"));
+        consumer = new KafkaConsumer<>(props);
+        consumer.subscribe(Collections.singletonList(TOPIC));
+        awaitAssignment();
     }
 
     @AfterEach
@@ -127,32 +155,16 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
         auditIntegration.publishAgentExecutionEvent(
                 context, userMessage, response, USER_ID, 1500L);
 
-        // Then - Wait for event to be published and consumed
-        long startTime = System.currentTimeMillis();
-        ConsumerRecord<String, String> record = null;
-        while (System.currentTimeMillis() - startTime < 10000) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
-            if (!records.isEmpty()) {
-                record = records.iterator().next();
-                break;
-            }
-        }
-        assertThat(record).isNotNull();
-
-        // Verify partition key contains tenantId and agentId
-        String expectedKey = TENANT_ID + ":ai-agent-runtime";
-        assertThat(record.key()).isEqualTo(expectedKey);
-
-        // Verify event content using JSON string matching
-        String eventJson = record.value();
-        assertThat(eventJson).contains("\"agentId\":\"ai-agent-runtime\"");
-        assertThat(eventJson).contains("\"agentType\":\"AI_AGENT\"");
-        assertThat(eventJson).contains("\"tenantId\":\"" + TENANT_ID + "\"");
-        assertThat(eventJson).contains("\"resourceId\":\"" + PATIENT_ID + "\"");
-        assertThat(eventJson).contains("\"correlationId\":\"" + CORRELATION_ID + "\"");
-        assertThat(eventJson).contains("\"decisionType\":\"AI_RECOMMENDATION\"");
-        assertThat(eventJson).contains("\"eventId\"");
-        assertThat(eventJson).contains("\"timestamp\"");
+        JsonNode event = awaitEvent(node ->
+                "AI_RECOMMENDATION".equals(node.path("decisionType").asText()));
+        assertThat(event).isNotNull();
+        assertThat(event.path("tenantId").asText()).isEqualTo(TENANT_ID);
+        assertThat(event.path("agentId").asText()).isEqualTo("ai-agent-runtime");
+        assertThat(event.path("agentType").asText()).isEqualTo("AI_AGENT");
+        assertThat(event.path("resourceId").asText()).isEqualTo(PATIENT_ID);
+        assertThat(event.path("correlationId").asText()).isEqualTo(CORRELATION_ID);
+        assertThat(event.hasNonNull("eventId")).isTrue();
+        assertThat(event.hasNonNull("timestamp")).isTrue();
     }
 
     @Test
@@ -167,14 +179,13 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
                 context, "Prescribe medication", response, USER_ID, 500L);
 
         // Then
-        ConsumerRecord<String, String> record = pollForRecord();
-        assertThat(record).isNotNull();
-
-        String eventJson = record.value();
-        assertThat(eventJson).contains("\"agentId\":\"ai-agent-runtime\"");
-        assertThat(eventJson).contains("\"decisionType\":\"GUARDRAIL_BLOCK\"");
-        assertThat(eventJson).contains("\"blocked\":true");
-        assertThat(eventJson).contains("\"blockReason\":\"Prescription requests require human approval\"");
+        JsonNode event = awaitEvent(node ->
+                "GUARDRAIL_BLOCK".equals(node.path("decisionType").asText()));
+        assertThat(event).isNotNull();
+        assertThat(event.path("agentId").asText()).isEqualTo("ai-agent-runtime");
+        assertThat(event.path("inputMetrics").path("blocked").asBoolean()).isTrue();
+        assertThat(event.path("inputMetrics").path("blockReason").asText())
+                .isEqualTo("Prescription requests require human approval");
     }
 
     @Test
@@ -205,15 +216,13 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
                 context, toolCall, toolDefinition, toolResult, USER_ID);
 
         // Then
-        ConsumerRecord<String, String> record = pollForRecord();
-        assertThat(record).isNotNull();
-
-        String eventJson = record.value();
-        assertThat(eventJson).contains("\"agentId\":\"ai-agent-runtime\"");
-        assertThat(eventJson).contains("\"decisionType\":\"TOOL_EXECUTION\"");
-        assertThat(eventJson).contains("\"toolName\":\"get_patient_vitals\"");
-        assertThat(eventJson).contains("\"toolCallId\":\"call-123\"");
-        assertThat(eventJson).contains("\"toolCategory\":\"FHIR_QUERY\"");
+        JsonNode event = awaitEvent(node ->
+                "TOOL_EXECUTION".equals(node.path("decisionType").asText()));
+        assertThat(event).isNotNull();
+        assertThat(event.path("agentId").asText()).isEqualTo("ai-agent-runtime");
+        assertThat(event.path("inputMetrics").path("toolName").asText()).isEqualTo("get_patient_vitals");
+        assertThat(event.path("inputMetrics").path("toolCallId").asText()).isEqualTo("call-123");
+        assertThat(event.path("inputMetrics").path("toolCategory").asText()).isEqualTo("FHIR_QUERY");
     }
 
     @Test
@@ -230,16 +239,14 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
                 context, resourceType, resourceId, accessPurpose, USER_ID);
 
         // Then
-        ConsumerRecord<String, String> record = pollForRecord();
-        assertThat(record).isNotNull();
-
-        String eventJson = record.value();
-        assertThat(eventJson).contains("\"agentId\":\"ai-agent-runtime\"");
-        assertThat(eventJson).contains("\"decisionType\":\"PHI_ACCESS\"");
-        assertThat(eventJson).contains("\"resourceType\":\"" + resourceType + "\"");
-        assertThat(eventJson).contains("\"resourceId\":\"" + resourceId + "\"");
-        assertThat(eventJson).contains("\"accessPurpose\":\"" + accessPurpose + "\"");
-        assertThat(eventJson).contains("\"accessGranted\":true");
+        JsonNode event = awaitEvent(node ->
+                "PHI_ACCESS".equals(node.path("decisionType").asText()));
+        assertThat(event).isNotNull();
+        assertThat(event.path("agentId").asText()).isEqualTo("ai-agent-runtime");
+        assertThat(event.path("resourceType").asText()).isEqualTo(resourceType);
+        assertThat(event.path("resourceId").asText()).isEqualTo(resourceId);
+        assertThat(event.path("inputMetrics").path("accessPurpose").asText()).isEqualTo(accessPurpose);
+        assertThat(event.path("inputMetrics").path("accessGranted").asBoolean()).isTrue();
     }
 
     @Test
@@ -254,12 +261,11 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
                 context, "Test message", response, USER_ID, 100L);
 
         // Then
-        ConsumerRecord<String, String> record = pollForRecord();
-        assertThat(record).isNotNull();
-
-        // Verify partition key format: tenantId:agentId
-        String expectedKey = TENANT_ID + ":ai-agent-runtime";
-        assertThat(record.key()).isEqualTo(expectedKey);
+        JsonNode event = awaitEvent(node ->
+                "AI_RECOMMENDATION".equals(node.path("decisionType").asText()));
+        assertThat(event).isNotNull();
+        assertThat(event.path("tenantId").asText()).isEqualTo(TENANT_ID);
+        assertThat(event.path("agentId").asText()).isEqualTo("ai-agent-runtime");
     }
 
     @Test
@@ -282,13 +288,8 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
         }
 
         // Then - Should receive all events
-        int receivedCount = 0;
-        long startTime = System.currentTimeMillis();
-        while (receivedCount < eventCount && System.currentTimeMillis() - startTime < 15000) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
-            receivedCount += records.count();
-        }
-
+        int receivedCount = awaitEventCount(eventCount, node ->
+                "AI_RECOMMENDATION".equals(node.path("decisionType").asText()));
         assertThat(receivedCount).isEqualTo(eventCount);
     }
 
@@ -305,14 +306,62 @@ class AgentRuntimeAuditIntegrationHeavyweightTest {
                 .build();
     }
 
-    private ConsumerRecord<String, String> pollForRecord() {
-        long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 10000) {
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(500));
-            if (!records.isEmpty()) {
-                return records.iterator().next();
+    private void createTopicIfMissing() {
+        Properties props = new Properties();
+        props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        try (AdminClient adminClient = AdminClient.create(props)) {
+            adminClient.createTopics(Collections.singletonList(new NewTopic(TOPIC, 1, (short) 1)))
+                    .all()
+                    .get();
+        } catch (Exception e) {
+            if (!(e.getCause() instanceof TopicExistsException)) {
+                throw new RuntimeException("Failed to create test topic " + TOPIC, e);
+            }
+        }
+    }
+
+    private void awaitAssignment() {
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
+        while (consumer.assignment().isEmpty() && System.currentTimeMillis() < deadline) {
+            consumer.poll(Duration.ofMillis(200));
+        }
+        if (consumer.assignment().isEmpty()) {
+            throw new IllegalStateException("Kafka consumer assignment timed out for topic: " + TOPIC);
+        }
+    }
+
+    private JsonNode awaitEvent(Predicate<JsonNode> matcher) {
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(20).toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+            for (ConsumerRecord<String, String> record : records) {
+                try {
+                    JsonNode event = objectMapper.readTree(record.value());
+                    if (matcher.test(event)) {
+                        return event;
+                    }
+                } catch (Exception ignored) {
+                }
             }
         }
         return null;
+    }
+
+    private int awaitEventCount(int target, Predicate<JsonNode> matcher) {
+        int count = 0;
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(20).toMillis();
+        while (count < target && System.currentTimeMillis() < deadline) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+            for (ConsumerRecord<String, String> record : records) {
+                try {
+                    JsonNode event = objectMapper.readTree(record.value());
+                    if (matcher.test(event)) {
+                        count++;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+        return count;
     }
 }

@@ -38,8 +38,8 @@
 
             <column name="purpose_of_use" type="varchar(64)"/>
 
-            <column name="request_payload" type="text"/>
-            <column name="response_payload" type="text"/>
+            <column name="request_payload" type="jsonb"/>
+            <column name="response_payload" type="jsonb"/>
             <column name="error_message" type="text"/>
             <column name="duration_ms" type="bigint"/>
             <column name="fhir_audit_event_id" type="varchar(64)"/>

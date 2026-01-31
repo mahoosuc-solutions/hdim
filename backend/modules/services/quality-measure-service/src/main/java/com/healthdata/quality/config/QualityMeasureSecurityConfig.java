@@ -5,7 +5,9 @@ import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import com.healthdata.quality.persistence.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -117,6 +119,7 @@ public class QualityMeasureSecurityConfig {
      */
     @Bean
     @Profile("!test")
+    @ConditionalOnBean(UserRepository.class)
     public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
         return new UserAutoRegistrationFilter(userRepository);
     }
@@ -167,7 +170,7 @@ public class QualityMeasureSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
-            UserAutoRegistrationFilter userAutoRegistrationFilter,
+            ObjectProvider<UserAutoRegistrationFilter> userAutoRegistrationFilterProvider,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -198,12 +201,20 @@ public class QualityMeasureSecurityConfig {
         // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
         // This ensures users are automatically registered in service database on first access
         // Extracts user info from validated gateway headers, creates user record if doesn't exist
-        http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+        UserAutoRegistrationFilter userAutoRegistrationFilter =
+            userAutoRegistrationFilterProvider.getIfAvailable();
+        if (userAutoRegistrationFilter != null) {
+            http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+        }
 
         // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated requests
         // Uses request attributes (no database lookup)
-        http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
+        if (userAutoRegistrationFilter != null) {
+            http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
+        } else {
+            http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        }
 
         return http.build();
     }

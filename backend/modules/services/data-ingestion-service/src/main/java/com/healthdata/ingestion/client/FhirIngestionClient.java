@@ -53,4 +53,27 @@ public class FhirIngestionClient {
             throw new RuntimeException("FHIR persistence failed", e);
         }
     }
+
+    /**
+     * Count patient resources in the FHIR service.
+     *
+     * @param tenantId Tenant identifier
+     * @return Total patient count
+     */
+    public int countPatients(String tenantId) {
+        try {
+            String response = webClient.get()
+                    .uri("/Patient?_summary=count")
+                    .header("X-Tenant-ID", tenantId)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            Bundle bundle = (Bundle) fhirContext.newJsonParser().parseResource(response);
+            return bundle.getTotal();
+        } catch (Exception e) {
+            log.error("Failed to count patients for tenant: {}", tenantId, e);
+            throw new RuntimeException("FHIR patient count failed", e);
+        }
+    }
 }

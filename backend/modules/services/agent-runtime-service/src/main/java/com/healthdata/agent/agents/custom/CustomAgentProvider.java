@@ -8,6 +8,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,6 +34,9 @@ public class CustomAgentProvider {
     private final AgentBuilderClient agentBuilderClient;
     private final AgentOrchestrator orchestrator;
 
+    @Value("${hdim.agent.custom.warm-cache:true}")
+    private boolean warmCacheEnabled;
+
     /**
      * Local cache of custom agents by tenant and agent type.
      * Structure: tenantId -> (agentType -> adapter)
@@ -50,7 +54,11 @@ public class CustomAgentProvider {
     @PostConstruct
     public void initialize() {
         log.info("Initializing CustomAgentProvider...");
-        warmCache();
+        if (warmCacheEnabled) {
+            warmCache();
+        } else {
+            log.info("Custom agent cache warm-up disabled by configuration");
+        }
     }
 
     /**
@@ -200,6 +208,9 @@ public class CustomAgentProvider {
      */
     @Scheduled(fixedRateString = "${hdim.agent.custom.cache-refresh-minutes:30}000")
     public void warmCache() {
+        if (!warmCacheEnabled) {
+            return;
+        }
         log.info("Warming custom agent cache...");
         try {
             List<CustomAgentConfigDTO> allConfigs = agentBuilderClient.getAllActiveConfigurations();

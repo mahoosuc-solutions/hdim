@@ -34,6 +34,8 @@ import java.time.Instant;
 public class ComplianceErrorController {
 
     private final ComplianceErrorService complianceErrorService;
+    private static final int MAX_PAGE_SIZE = 500;
+    private static final int MAX_SYNC_ERRORS = 1000;
 
     /**
      * Sync errors from frontend
@@ -51,6 +53,15 @@ public class ComplianceErrorController {
             String tenantId = httpRequest.getHeader("X-Tenant-ID");
             if (tenantId == null || tenantId.isEmpty()) {
                 tenantId = "default-tenant";
+            }
+
+            if (request.getErrors() != null && request.getErrors().size() > MAX_SYNC_ERRORS) {
+                ErrorSyncResponse errorResponse = ErrorSyncResponse.builder()
+                    .synced(0)
+                    .timestamp(Instant.now().toString())
+                    .message("Too many errors in request (max " + MAX_SYNC_ERRORS + ")")
+                    .build();
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
             }
 
             int synced = complianceErrorService.syncErrors(request, tenantId);
@@ -96,7 +107,8 @@ public class ComplianceErrorController {
             }
         }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "timestamp"));
+        int safeSize = Math.max(1, Math.min(size, MAX_PAGE_SIZE));
+        Pageable pageable = PageRequest.of(page, safeSize, Sort.by(Sort.Direction.DESC, "timestamp"));
 
         Page<?> errors;
         if (severity != null && !severity.isEmpty()) {
@@ -136,10 +148,10 @@ public class ComplianceErrorController {
 
         return ResponseEntity.ok(new ErrorStatsResponse(
             complianceErrorService.getErrorCountInRange(tenantId, startDate, endDate),
-            complianceErrorService.getErrorCountBySeverity(tenantId, "CRITICAL"),
-            complianceErrorService.getErrorCountBySeverity(tenantId, "ERROR"),
-            complianceErrorService.getErrorCountBySeverity(tenantId, "WARNING"),
-            complianceErrorService.getErrorCountBySeverity(tenantId, "INFO")
+            complianceErrorService.getErrorCountBySeverityInRange(tenantId, "CRITICAL", startDate, endDate),
+            complianceErrorService.getErrorCountBySeverityInRange(tenantId, "ERROR", startDate, endDate),
+            complianceErrorService.getErrorCountBySeverityInRange(tenantId, "WARNING", startDate, endDate),
+            complianceErrorService.getErrorCountBySeverityInRange(tenantId, "INFO", startDate, endDate)
         ));
     }
 
@@ -162,7 +174,7 @@ public class ComplianceErrorController {
             }
         }
 
-        int deleted = complianceErrorService.cleanupOldErrors(tenantId, retentionDays);
+        long deleted = complianceErrorService.cleanupOldErrors(tenantId, retentionDays);
         return ResponseEntity.ok(new CleanupResponse(deleted, retentionDays));
     }
 
@@ -176,7 +188,7 @@ public class ComplianceErrorController {
     ) {}
 
     record CleanupResponse(
-        int deleted,
+        long deleted,
         int retentionDays
     ) {}
 }

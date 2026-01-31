@@ -13,8 +13,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -29,11 +31,22 @@ public class EventHandlerConfig {
     private final EventStoreClient eventStoreClient;
 
     @Bean
-    public CareGapEventHandler careGapEventHandler() {
-        EventStore eventStore = new EventStoreServiceAdapter(eventStoreClient);
+    public CareGapEventHandler careGapEventHandler(EventStore eventStore) {
         // No-op projection store - event service handles its own projections via Kafka listeners
         CareGapProjectionStore projectionStore = new NoOpProjectionStore();
         return new CareGapEventHandler(projectionStore, eventStore);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "event-store.enabled", havingValue = "true", matchIfMissing = true)
+    public EventStore eventStore() {
+        return new EventStoreServiceAdapter(eventStoreClient);
+    }
+
+    @Bean
+    @ConditionalOnProperty(name = "event-store.enabled", havingValue = "false")
+    public EventStore disabledEventStore() {
+        return new NoOpEventStore();
     }
 
     /**
@@ -58,9 +71,7 @@ public class EventHandlerConfig {
                 String eventType = event.getClass().getSimpleName();
 
                 // Use careGapId as aggregateId (or patientId if careGapId not available)
-                UUID aggregateId = careGapId != null
-                    ? UUID.fromString(careGapId)
-                    : UUID.fromString(patientId);
+                UUID aggregateId = resolveAggregateId(careGapId, patientId);
 
                 // Build request
                 AppendEventRequest request = AppendEventRequest.builder()
@@ -111,6 +122,30 @@ public class EventHandlerConfig {
                 // Some events might not have careGapId yet (e.g., creation events)
                 return null;
             }
+        }
+
+        private UUID resolveAggregateId(String careGapId, String patientId) {
+            String rawId = careGapId != null ? careGapId : patientId;
+            if (rawId == null || rawId.isBlank()) {
+                return UUID.randomUUID();
+            }
+
+            try {
+                return UUID.fromString(rawId);
+            } catch (IllegalArgumentException ex) {
+                return UUID.nameUUIDFromBytes(rawId.getBytes(StandardCharsets.UTF_8));
+            }
+        }
+    }
+
+    /**
+     * No-op event store for test environments.
+     */
+    @Slf4j
+    private static class NoOpEventStore implements EventStore {
+        @Override
+        public void storeEvent(Object event) {
+            log.debug("Skipping event store persistence for {}", event != null ? event.getClass().getSimpleName() : "null");
         }
     }
 

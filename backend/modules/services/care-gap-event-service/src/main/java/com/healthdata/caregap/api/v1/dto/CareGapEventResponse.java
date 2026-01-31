@@ -23,7 +23,7 @@ public class CareGapEventResponse {
     private String recommendedIntervention;
     private boolean patientQualified;
     private Instant timestamp;
-    private float closureRate;  // For population-level responses
+    private double closureRate;  // For population-level responses
     private String patientId;  // For response mapping
     private int totalGapsOpen;  // For population health responses
     private int criticalGaps;

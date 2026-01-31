@@ -58,7 +58,7 @@
       </div>
 
       <!-- Validation Message -->
-      <div class="validation-info" *ngIf="!isValidDistribution()">
+      <div class="validation-info weight-warning" *ngIf="!isValidDistribution()" role="alert">
         {{ getValidationMessage() }}
       </div>
     </div>

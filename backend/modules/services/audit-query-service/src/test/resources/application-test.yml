@@ -10,50 +10,62 @@ spring:
   application:
     name: audit-query-service-test
 
-  # Use single test datasource (no multi-tenancy for tests)
+  # Use H2 in-memory database for unit tests (no Docker required)
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: healthdata
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+    driver-class-name: org.h2.Driver
+    username: sa
     password:
     hikari:
       maximum-pool-size: 5
 
-# Configure persistence module to use testcontainers
+  # Disable Spring Boot auto-configurations for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+# Configure persistence module to use H2 in-memory database
 healthdata:
+  security:
+    jwt:
+      secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      issuer: healthdata-in-motion-test
   persistence:
     primary:
-      url: jdbc:tc:postgresql:16-alpine:///testdb
-      username: healthdata
+      url: jdbc:h2:mem:testdb;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+      username: sa
       password:
-      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+      driver-class-name: org.h2.Driver
       pool-name: test-pool
       maximum-pool-size: 5
       minimum-idle: 2
+      connection-timeout-ms: 30000
+      jpa:
+        database-platform: org.hibernate.dialect.H2Dialect
+        hibernate:
+          ddl-auto: create-drop
     rls-enabled: false
     jpa:
       auditing-enabled: true
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop  # Auto-create schema for tests
     properties:
       hibernate:
         format_sql: false
         jdbc:
           batch_size: 20
+        globally_quoted_identifiers: false
 
   liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: false  # Disable Liquibase for tests - use Hibernate auto-DDL instead
 
   # Disable Kafka for tests (we're not testing Kafka consumer)
   kafka:
     enabled: false
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
   # Disable Redis for tests (we're not testing cache)
   data:

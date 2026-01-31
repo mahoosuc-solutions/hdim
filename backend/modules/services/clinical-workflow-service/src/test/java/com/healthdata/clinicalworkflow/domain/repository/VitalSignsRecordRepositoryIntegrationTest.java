@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -90,8 +89,11 @@ class VitalSignsRecordRepositoryIntegrationTest {
             VitalSignsRecordEntity saved = vitalSignsRepository.save(newVitals);
 
             assertThat(saved.getCreatedAt()).isNotNull();
-            assertThat(saved.getUpdatedAt()).isNotNull();
             assertThat(saved.getRecordedAt()).isNotNull();
+
+            saved.setNotes("updated");
+            VitalSignsRecordEntity updated = vitalSignsRepository.saveAndFlush(saved);
+            assertThat(updated.getUpdatedAt()).isNotNull();
         }
     }
 
@@ -144,8 +146,8 @@ class VitalSignsRecordRepositoryIntegrationTest {
         @Test
         @DisplayName("Should find patient vitals history within date range")
         void shouldFindPatientVitalsHistory() {
-            LocalDateTime from = LocalDateTime.now().minusHours(1);
-            LocalDateTime to = LocalDateTime.now().plusHours(1);
+            Instant from = Instant.now().minusSeconds(3600);
+            Instant to = Instant.now().plusSeconds(3600);
 
             List<VitalSignsRecordEntity> history = vitalSignsRepository.findPatientVitalsHistory(
                 PATIENT_ID_1, TENANT_ID, from, to
@@ -158,8 +160,8 @@ class VitalSignsRecordRepositoryIntegrationTest {
         @Test
         @DisplayName("Should not return vitals outside date range")
         void shouldNotReturnVitalsOutsideDateRange() {
-            LocalDateTime from = LocalDateTime.now().minusDays(7);
-            LocalDateTime to = LocalDateTime.now().minusDays(6);
+            Instant from = Instant.now().minusSeconds(7 * 24 * 3600);
+            Instant to = Instant.now().minusSeconds(6 * 24 * 3600);
 
             List<VitalSignsRecordEntity> history = vitalSignsRepository.findPatientVitalsHistory(
                 PATIENT_ID_1, TENANT_ID, from, to
@@ -176,8 +178,8 @@ class VitalSignsRecordRepositoryIntegrationTest {
             older.setRecordedAt(Instant.now().minusSeconds(7200));
             vitalSignsRepository.save(older);
 
-            LocalDateTime from = LocalDateTime.now().minusHours(3);
-            LocalDateTime to = LocalDateTime.now().plusHours(1);
+            Instant from = Instant.now().minusSeconds(3 * 3600);
+            Instant to = Instant.now().plusSeconds(3600);
 
             List<VitalSignsRecordEntity> history = vitalSignsRepository.findPatientVitalsHistory(
                 PATIENT_ID_1, TENANT_ID, from, to
@@ -355,8 +357,8 @@ class VitalSignsRecordRepositoryIntegrationTest {
         @Test
         @DisplayName("Should handle empty date range")
         void shouldHandleEmptyDateRange() {
-            LocalDateTime from = LocalDateTime.now().plusDays(1);
-            LocalDateTime to = LocalDateTime.now().plusDays(2);
+            Instant from = Instant.now().plusSeconds(24 * 3600);
+            Instant to = Instant.now().plusSeconds(2 * 24 * 3600);
 
             List<VitalSignsRecordEntity> found = vitalSignsRepository.findPatientVitalsHistory(PATIENT_ID_1, TENANT_ID, from, to);
 

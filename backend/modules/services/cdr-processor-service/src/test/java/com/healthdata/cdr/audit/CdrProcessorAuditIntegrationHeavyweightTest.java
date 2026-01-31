@@ -7,13 +7,18 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.kafka.KafkaContainer;
@@ -22,10 +27,15 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * This test requires Docker and uses Testcontainers to spin up a real Kafka instance.
  */
 @SpringBootTest
+@ActiveProfiles("test")
 @Testcontainers
 @DisplayName("CDR Processor Audit Integration - Heavyweight Kafka Tests")
 class CdrProcessorAuditIntegrationHeavyweightTest {
@@ -52,9 +63,11 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         registry.add("spring.kafka.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.producer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
+        registry.add("healthdata.messaging.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
         registry.add("audit.kafka.enabled", () -> "true");
-        registry.add("audit.kafka.topic.ai-decisions", () -> "ai.agent.decisions");
+        registry.add("audit.kafka.sync", () -> "true");
+        registry.add("audit.kafka.topic.ai-decisions", () -> TOPIC);
     }
 
     @Autowired
@@ -68,10 +81,11 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
     private static final String TENANT_ID = "test-tenant-123";
     private static final String MESSAGE_ID = "HL7-MSG-12345";
     private static final String PATIENT_ID = "patient-456";
-    private static final String TOPIC = "ai.agent.decisions";
+    private static final String TOPIC = "ai.agent.decisions.test." + UUID.randomUUID();
 
     @BeforeEach
     void setUp() {
+        createTopicIfMissing();
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-" + UUID.randomUUID());
@@ -82,6 +96,31 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
 
         consumer = new KafkaConsumer<>(props);
         consumer.subscribe(Collections.singletonList(TOPIC));
+        awaitAssignment();
+    }
+
+    private void createTopicIfMissing() {
+        Properties props = new Properties();
+        props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
+        try (AdminClient adminClient = AdminClient.create(props)) {
+            adminClient.createTopics(Collections.singletonList(new NewTopic(TOPIC, 1, (short) 1)))
+                .all()
+                .get();
+        } catch (Exception e) {
+            if (!(e.getCause() instanceof TopicExistsException)) {
+                throw new RuntimeException("Failed to create test topic " + TOPIC, e);
+            }
+        }
+    }
+
+    private void awaitAssignment() {
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
+        while (consumer.assignment().isEmpty() && System.currentTimeMillis() < deadline) {
+            consumer.poll(Duration.ofMillis(200));
+        }
+        if (consumer.assignment().isEmpty()) {
+            throw new IllegalStateException("Kafka consumer assignment timed out for topic: " + TOPIC);
+        }
     }
 
     @AfterEach
@@ -91,18 +130,55 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         }
     }
 
+    private JsonNode awaitEvent(Predicate<JsonNode> matcher) throws Exception {
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(20).toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+            for (ConsumerRecord<String, String> record : records) {
+                JsonNode event = objectMapper.readTree(record.value());
+                if (matcher.test(event)) {
+                    return event;
+                }
+            }
+        }
+        return null;
+    }
+
+    private int[] awaitWorkflowCounts(String correlationId, long timeoutSeconds) throws Exception {
+        int ingestCount = 0;
+        int transformCount = 0;
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(timeoutSeconds).toMillis();
+        while (System.currentTimeMillis() < deadline && (ingestCount < 2 || transformCount < 1)) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+            for (ConsumerRecord<String, String> record : records) {
+                JsonNode event = objectMapper.readTree(record.value());
+                if (!correlationId.equals(event.path("correlationId").asText())) {
+                    continue;
+                }
+                String decisionType = event.path("decisionType").asText();
+                if ("CDR_INGEST".equals(decisionType)) {
+                    ingestCount++;
+                } else if ("CDR_TRANSFORM".equals(decisionType)) {
+                    transformCount++;
+                }
+            }
+        }
+        return new int[] { ingestCount, transformCount };
+    }
+
     @Test
     @DisplayName("Should publish successful HL7 message ingest event to Kafka")
     void shouldPublishSuccessfulHl7IngestEvent() throws Exception {
         // Arrange
         String messageType = "ADT^A01"; // Admit patient
+        String messageControlId = MESSAGE_ID + "-success";
         int segmentCount = 8;
 
         // Act
         auditIntegration.publishHl7MessageIngestEvent(
                 TENANT_ID,
                 messageType,
-                MESSAGE_ID,
+                messageControlId,
                 PATIENT_ID,
                 segmentCount,
                 true,
@@ -112,21 +188,19 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.isEmpty()).isFalse();
+        JsonNode event = awaitEvent(node ->
+                messageControlId.equals(node.path("inputMetrics").path("messageControlId").asText()));
+        assertThat(event).isNotNull();
 
-        ConsumerRecord<String, String> record = records.iterator().next();
-        JsonNode event = objectMapper.readTree(record.value());
+        assertThat(event.get("agentType").asText()).isEqualTo("PHI_ACCESS");
+        assertThat(event.get("decisionType").asText()).isEqualTo("CDR_INGEST");
+        assertThat(event.get("outcome").asText()).isEqualTo("APPROVED");
 
-        assertThat(event.get("agentType").asText()).isEqualTo("CDR_PROCESSOR_SERVICE");
-        assertThat(event.get("decisionType").asText()).isEqualTo("HL7_MESSAGE_INGEST");
-        assertThat(event.get("decisionOutcome").asText()).isEqualTo("PARSED");
-
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("messageType").asText()).isEqualTo(messageType);
-        assertThat(context.get("messageId").asText()).isEqualTo(MESSAGE_ID);
-        assertThat(context.get("segmentCount").asInt()).isEqualTo(segmentCount);
-        assertThat(context.get("success").asBoolean()).isTrue();
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("messageType").asText()).isEqualTo(messageType);
+        assertThat(metrics.get("messageControlId").asText()).isEqualTo(messageControlId);
+        assertThat(metrics.get("segmentCount").asInt()).isEqualTo(segmentCount);
+        assertThat(metrics.get("ingestSuccess").asBoolean()).isTrue();
     }
 
     @Test
@@ -134,12 +208,13 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
     void shouldPublishFailedHl7IngestEvent() throws Exception {
         // Arrange
         String errorMessage = "Invalid MSH segment: missing required field";
+        String failedMessageId = MESSAGE_ID + "-failed";
 
         // Act
         auditIntegration.publishHl7MessageIngestEvent(
                 TENANT_ID,
                 "UNKNOWN",
-                MESSAGE_ID + "-failed",
+                failedMessageId,
                 null,
                 0,
                 false,
@@ -149,16 +224,14 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.isEmpty()).isFalse();
+        JsonNode event = awaitEvent(node ->
+                failedMessageId.equals(node.path("inputMetrics").path("messageControlId").asText()));
+        assertThat(event).isNotNull();
 
-        ConsumerRecord<String, String> record = records.iterator().next();
-        JsonNode event = objectMapper.readTree(record.value());
-
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("success").asBoolean()).isFalse();
-        assertThat(context.get("errorMessage").asText()).isEqualTo(errorMessage);
-        assertThat(context.get("segmentCount").asInt()).isEqualTo(0);
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("ingestSuccess").asBoolean()).isFalse();
+        assertThat(metrics.get("errorMessage").asText()).isEqualTo(errorMessage);
+        assertThat(metrics.get("segmentCount").asInt()).isEqualTo(0);
     }
 
     @Test
@@ -166,13 +239,14 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
     void shouldPublishHl7MessageIngestEvent() throws Exception {
         // Arrange
         String messageType = "ORU^R01"; // Lab results
+        String messageControlId = MESSAGE_ID + "-general";
         int segmentCount = 10;
 
         // Act
         auditIntegration.publishHl7MessageIngestEvent(
                 TENANT_ID,
                 messageType,
-                MESSAGE_ID,
+                messageControlId,
                 PATIENT_ID,
                 segmentCount,
                 true,
@@ -182,13 +256,11 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.isEmpty()).isFalse();
+        JsonNode event = awaitEvent(node ->
+                messageControlId.equals(node.path("inputMetrics").path("messageControlId").asText()));
+        assertThat(event).isNotNull();
 
-        ConsumerRecord<String, String> record = records.iterator().next();
-        JsonNode event = objectMapper.readTree(record.value());
-
-        assertThat(event.get("decisionType").asText()).isEqualTo("HL7_MESSAGE_INGEST");
+        assertThat(event.get("decisionType").asText()).isEqualTo("CDR_INGEST");
 
         JsonNode metrics = event.get("inputMetrics");
         assertThat(metrics.get("messageType").asText()).isEqualTo(messageType);
@@ -217,13 +289,11 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.isEmpty()).isFalse();
+        JsonNode event = awaitEvent(node ->
+                documentId.equals(node.path("inputMetrics").path("documentId").asText()));
+        assertThat(event).isNotNull();
 
-        ConsumerRecord<String, String> record = records.iterator().next();
-        JsonNode event = objectMapper.readTree(record.value());
-
-        assertThat(event.get("decisionType").asText()).isEqualTo("CDA_DOCUMENT_INGEST");
+        assertThat(event.get("decisionType").asText()).isEqualTo("CDR_INGEST");
 
         JsonNode metrics = event.get("inputMetrics");
         assertThat(metrics.get("documentId").asText()).isEqualTo(documentId);
@@ -237,6 +307,7 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         // Arrange
         String sourceFormat = "HL7v2";
         String targetFormat = "FHIR_R4";
+        String transformId = MESSAGE_ID + "-transform";
         int resourcesConverted = 15;
 
         // Act
@@ -244,7 +315,7 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
                 TENANT_ID,
                 sourceFormat,
                 targetFormat,
-                MESSAGE_ID,
+                transformId,
                 resourcesConverted,
                 true,
                 null,
@@ -253,19 +324,17 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.isEmpty()).isFalse();
+        JsonNode event = awaitEvent(node ->
+                transformId.equals(node.path("inputMetrics").path("sourceIdentifier").asText()));
+        assertThat(event).isNotNull();
 
-        ConsumerRecord<String, String> record = records.iterator().next();
-        JsonNode event = objectMapper.readTree(record.value());
+        assertThat(event.get("decisionType").asText()).isEqualTo("CDR_TRANSFORM");
+        assertThat(event.get("outcome").asText()).isEqualTo("APPROVED");
 
-        assertThat(event.get("decisionType").asText()).isEqualTo("FHIR_CONVERSION");
-        assertThat(event.get("decisionOutcome").asText()).isEqualTo("CONVERTED");
-
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.get("sourceFormat").asText()).isEqualTo(sourceFormat);
-        assertThat(context.get("targetFormat").asText()).isEqualTo(targetFormat);
-        assertThat(context.get("resourcesConverted").asInt()).isEqualTo(resourcesConverted);
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.get("sourceFormat").asText()).isEqualTo(sourceFormat);
+        assertThat(metrics.get("targetFormat").asText()).isEqualTo(targetFormat);
+        assertThat(metrics.get("transformedResourceCount").asInt()).isEqualTo(resourcesConverted);
     }
 
     @Test
@@ -273,6 +342,7 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
     void shouldHandleHighVolumeHL7Messages() throws Exception {
         // Arrange - Simulate processing 100 HL7 messages
         int messageCount = 100;
+        String bulkPrefix = MESSAGE_ID + "-bulk-";
 
         // Act
         for (int i = 0; i < messageCount; i++) {
@@ -280,7 +350,7 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
             auditIntegration.publishHl7MessageIngestEvent(
                     TENANT_ID,
                     msgType,
-                    MESSAGE_ID + "-" + i,
+                    bulkPrefix + i,
                     PATIENT_ID + "-" + i,
                     8,
                     true,
@@ -297,7 +367,13 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
 
         while (receivedCount < messageCount && (System.currentTimeMillis() - startTime) < timeout) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
-            receivedCount += records.count();
+            for (ConsumerRecord<String, String> record : records) {
+                JsonNode event = objectMapper.readTree(record.value());
+                String correlationId = event.path("correlationId").asText();
+                if (correlationId.startsWith(bulkPrefix)) {
+                    receivedCount++;
+                }
+            }
         }
 
         assertThat(receivedCount).isEqualTo(messageCount);
@@ -318,7 +394,7 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
             auditIntegration.publishHl7MessageIngestEvent(
                     TENANT_ID,
                     msgInfo[0],
-                    MESSAGE_ID + "-perf",
+                    MESSAGE_ID + "-perf-" + msgInfo[0],
                     PATIENT_ID,
                     10,
                     true,
@@ -329,16 +405,26 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
             Thread.sleep(50); // Small delay to ensure ordering
         }
 
-        // Assert - Verify different processing times
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.count()).isGreaterThanOrEqualTo(3);
+        // Assert - Verify different processing times for each message type
+        Set<String> expectedTypes = Arrays.stream(messageTypes)
+                .map(msgInfo -> msgInfo[0])
+                .collect(java.util.stream.Collectors.toSet());
+        Map<String, JsonNode> eventsByType = new HashMap<>();
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(20).toMillis();
+        while (System.currentTimeMillis() < deadline && eventsByType.size() < expectedTypes.size()) {
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+            for (ConsumerRecord<String, String> record : records) {
+                JsonNode event = objectMapper.readTree(record.value());
+                String messageType = event.path("inputMetrics").path("messageType").asText(null);
+                if (messageType != null && expectedTypes.contains(messageType)) {
+                    eventsByType.putIfAbsent(messageType, event);
+                }
+            }
+        }
 
-        for (ConsumerRecord<String, String> record : records) {
-            JsonNode event = objectMapper.readTree(record.value());
-            JsonNode context = event.get("decisionContext");
-            long processingTime = context.get("processingTimeMs").asLong();
-
-            // Verify processing time is recorded
+        assertThat(eventsByType.keySet()).containsExactlyInAnyOrderElementsOf(expectedTypes);
+        for (JsonNode event : eventsByType.values()) {
+            long processingTime = event.path("inferenceTimeMs").asLong();
             assertThat(processingTime).isGreaterThan(0);
         }
     }
@@ -370,29 +456,9 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert - All 3 events published
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.count()).isGreaterThanOrEqualTo(3);
-
-        // Verify workflow stages
-        String[] expectedTypes = {
-            "HL7_MESSAGE_INGEST",
-            "CDA_DOCUMENT_INGEST",
-            "DATA_TRANSFORMATION"
-        };
-
-        int foundCount = 0;
-        for (ConsumerRecord<String, String> record : records) {
-            JsonNode event = objectMapper.readTree(record.value());
-            String decisionType = event.get("decisionType").asText();
-            for (String expected : expectedTypes) {
-                if (decisionType.equals(expected)) {
-                    foundCount++;
-                    break;
-                }
-            }
-        }
-
-        assertThat(foundCount).isGreaterThanOrEqualTo(3);
+        int[] counts = awaitWorkflowCounts(workflowMessageId, 20);
+        assertThat(counts[0]).isGreaterThanOrEqualTo(2);
+        assertThat(counts[1]).isGreaterThanOrEqualTo(1);
     }
 
     @Test
@@ -412,14 +478,13 @@ class CdrProcessorAuditIntegrationHeavyweightTest {
         );
 
         // Assert
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(10));
-        assertThat(records.isEmpty()).isFalse();
+        String qualityId = MESSAGE_ID + "-quality";
+        JsonNode event = awaitEvent(node ->
+                qualityId.equals(node.path("correlationId").asText()));
+        assertThat(event).isNotNull();
 
-        ConsumerRecord<String, String> record = records.iterator().next();
-        JsonNode event = objectMapper.readTree(record.value());
-
-        JsonNode context = event.get("decisionContext");
-        assertThat(context.has("resourcesTransformed")).isTrue();
-        assertThat(context.get("success").asBoolean()).isTrue();
+        JsonNode metrics = event.get("inputMetrics");
+        assertThat(metrics.has("transformedResourceCount")).isTrue();
+        assertThat(metrics.get("transformSuccess").asBoolean()).isTrue();
     }
 }

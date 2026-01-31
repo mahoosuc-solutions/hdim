@@ -20,12 +20,15 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -72,7 +75,7 @@ class VitalSignsIntegrationTest {
     private static final String TENANT_ID_A = "TENANT_A";
     private static final String TENANT_ID_B = "TENANT_B";
     private static final String USER_ID = "nurse@example.com";
-    private static final String PATIENT_ID = "PATIENT001";
+    private static final String PATIENT_ID = UUID.randomUUID().toString();
     private static final String ENCOUNTER_ID = "ENC001";
 
     @BeforeEach
@@ -96,13 +99,10 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(80)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
-                .temperatureUnit("F")
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
-                .weight(175.5)
-                .weightUnit("lbs")
-                .height(68.0)
-                .heightUnit("in")
+                .weight(BigDecimal.valueOf(175.5))
+                .height(BigDecimal.valueOf(68.0))
                 .painLevel(0)
                 .build();
 
@@ -119,7 +119,7 @@ class VitalSignsIntegrationTest {
                 .andExpect(jsonPath("$.diastolicBP").value(80))
                 .andExpect(jsonPath("$.heartRate").value(72))
                 .andExpect(jsonPath("$.bmi").exists())
-                .andExpect(jsonPath("$.hasAlerts").value(false))
+                .andExpect(jsonPath("$.hasCriticalAlerts").value(false))
                 .andReturn();
 
         String responseJson = result.getResponse().getContentAsString();
@@ -133,15 +133,17 @@ class VitalSignsIntegrationTest {
         assertThat(entity.getTenantId()).isEqualTo(TENANT_ID_A);
         assertThat(entity.getRecordedBy()).isEqualTo(USER_ID);
         assertThat(entity.getBmi()).isNotNull();
-        assertThat(entity.getBmi()).isGreaterThan(0);
+        assertThat(entity.getBmi()).isGreaterThan(BigDecimal.ZERO);
     }
 
     @Test
     @WithMockUser(roles = "NURSE")
     @DisplayName("Record vitals with unit conversions: verify lbs→kg conversion in database")
     void testVitalSignsUnitConversions() throws Exception {
-        double weightInLbs = 150.0;
-        double expectedWeightInKg = weightInLbs * 0.453592; // 68.04 kg
+        BigDecimal weightInLbs = new BigDecimal("150.0");
+        BigDecimal expectedWeightInKg = weightInLbs
+                .multiply(new BigDecimal("0.453592"))
+                .setScale(2, RoundingMode.HALF_UP);
 
         VitalSignsRequest request = VitalSignsRequest.builder()
                 .patientId(PATIENT_ID)
@@ -151,13 +153,10 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(80)
                 .heartRate(70)
                 .respiratoryRate(16)
-                .temperature(98.6)
-                .temperatureUnit("F")
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .weight(weightInLbs)
-                .weightUnit("lbs")
-                .height(70.0)
-                .heightUnit("in")
+                .height(BigDecimal.valueOf(70.0))
                 .painLevel(0)
                 .build();
 
@@ -174,7 +173,9 @@ class VitalSignsIntegrationTest {
 
         // Verify weight was converted to kg in database
         VitalSignsRecordEntity entity = vitalsRepository.findById(response.getId()).orElseThrow();
-        assertThat(entity.getWeight()).isCloseTo(expectedWeightInKg, org.assertj.core.data.Offset.offset(0.1));
+        assertThat(entity.getWeightKg()).isNotNull();
+        assertThat(entity.getWeightKg().doubleValue())
+                .isCloseTo(expectedWeightInKg.doubleValue(), within(0.1));
     }
 
     // ================================
@@ -194,13 +195,10 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(110) // Critical high
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
-                .temperatureUnit("F")
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
-                .weight(175.5)
-                .weightUnit("lbs")
-                .height(68.0)
-                .heightUnit("in")
+                .weight(BigDecimal.valueOf(175.5))
+                .height(BigDecimal.valueOf(68.0))
                 .painLevel(0)
                 .build();
 
@@ -210,7 +208,7 @@ class VitalSignsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.hasAlerts").value(true))
+                .andExpect(jsonPath("$.hasCriticalAlerts").value(true))
                 .andReturn();
 
         VitalSignsResponse response = objectMapper.readValue(
@@ -218,10 +216,10 @@ class VitalSignsIntegrationTest {
 
         // Verify alert in database
         VitalSignsRecordEntity entity = vitalsRepository.findById(response.getId()).orElseThrow();
-        assertThat(entity.isHasAlerts()).isTrue();
-        assertThat(entity.getAlertSeverity()).isNotNull();
+        assertThat(entity.getAlertStatus()).isNotNull();
+        assertThat(entity.getAlertStatus()).isEqualTo("critical");
         assertThat(entity.getAlertMessage()).isNotNull();
-        assertThat(entity.isAlertAcknowledged()).isFalse();
+        assertThat(entity.getAcknowledgedAt()).isNull();
     }
 
     @Test
@@ -230,14 +228,14 @@ class VitalSignsIntegrationTest {
     void testMultipleAlertTypes() throws Exception {
         // Test high BP alert
         VitalSignsRequest highBpRequest = VitalSignsRequest.builder()
-                .patientId("PATIENT_BP")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_BP")
                 .measuredAt(LocalDateTime.now())
                 .systolicBP(190)
                 .diastolicBP(120)
                 .heartRate(75)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .build();
 
@@ -247,18 +245,18 @@ class VitalSignsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(highBpRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.hasAlerts").value(true));
+                .andExpect(jsonPath("$.hasCriticalAlerts").value(true));
 
         // Test low O2 saturation alert
         VitalSignsRequest lowO2Request = VitalSignsRequest.builder()
-                .patientId("PATIENT_O2")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_O2")
                 .measuredAt(LocalDateTime.now())
                 .systolicBP(120)
                 .diastolicBP(80)
                 .heartRate(75)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(88) // Critical low
                 .build();
 
@@ -268,19 +266,18 @@ class VitalSignsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(lowO2Request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.hasAlerts").value(true));
+                .andExpect(jsonPath("$.hasCriticalAlerts").value(true));
 
         // Test high temperature alert
         VitalSignsRequest highTempRequest = VitalSignsRequest.builder()
-                .patientId("PATIENT_TEMP")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_TEMP")
                 .measuredAt(LocalDateTime.now())
                 .systolicBP(120)
                 .diastolicBP(80)
                 .heartRate(75)
                 .respiratoryRate(16)
-                .temperature(103.5) // High fever
-                .temperatureUnit("F")
+                .temperature(BigDecimal.valueOf(103.5)) // High fever
                 .oxygenSaturation(98)
                 .build();
 
@@ -290,10 +287,11 @@ class VitalSignsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(highTempRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.hasAlerts").value(true));
+                .andExpect(jsonPath("$.hasCriticalAlerts").value(true));
 
         // Verify all 3 alerts exist
-        List<VitalSignsRecordEntity> alerts = vitalsRepository.findByTenantIdAndHasAlertsTrue(TENANT_ID_A);
+        List<VitalSignsRecordEntity> alerts = vitalsRepository
+                .findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID_A, "critical");
         assertThat(alerts).hasSize(3);
     }
 
@@ -314,7 +312,7 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(120)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .build();
 
@@ -324,7 +322,7 @@ class VitalSignsIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.hasAlerts").value(true))
+                .andExpect(jsonPath("$.hasCriticalAlerts").value(true))
                 .andReturn();
 
         VitalSignsResponse response = objectMapper.readValue(
@@ -333,9 +331,8 @@ class VitalSignsIntegrationTest {
 
         // Verify alert not yet acknowledged
         VitalSignsRecordEntity entity = vitalsRepository.findById(vitalsId).orElseThrow();
-        assertThat(entity.isAlertAcknowledged()).isFalse();
-        assertThat(entity.getAlertAcknowledgedBy()).isNull();
-        assertThat(entity.getAlertAcknowledgedAt()).isNull();
+        assertThat(entity.getAcknowledgedBy()).isNull();
+        assertThat(entity.getAcknowledgedAt()).isNull();
 
         // Step 2: Acknowledge alert
         String acknowledgerUserId = "doctor@example.com";
@@ -349,9 +346,8 @@ class VitalSignsIntegrationTest {
 
         // Step 3: Verify acknowledgement fields in database
         entity = vitalsRepository.findById(vitalsId).orElseThrow();
-        assertThat(entity.isAlertAcknowledged()).isTrue();
-        assertThat(entity.getAlertAcknowledgedBy()).isEqualTo(acknowledgerUserId);
-        assertThat(entity.getAlertAcknowledgedAt()).isNotNull();
+        assertThat(entity.getAcknowledgedBy()).isEqualTo(acknowledgerUserId);
+        assertThat(entity.getAcknowledgedAt()).isNotNull();
     }
 
     @Test
@@ -361,14 +357,14 @@ class VitalSignsIntegrationTest {
         // Create 2 critical vitals
         for (int i = 1; i <= 2; i++) {
             VitalSignsRequest request = VitalSignsRequest.builder()
-                    .patientId("PATIENT00" + i)
+                    .patientId(UUID.randomUUID().toString())
                     .encounterId("ENC00" + i)
                     .measuredAt(LocalDateTime.now())
                     .systolicBP(190)
                     .diastolicBP(115)
                     .heartRate(72)
                     .respiratoryRate(16)
-                    .temperature(98.6)
+                    .temperature(BigDecimal.valueOf(98.6))
                     .oxygenSaturation(98)
                     .build();
 
@@ -381,7 +377,8 @@ class VitalSignsIntegrationTest {
         }
 
         // Acknowledge first alert
-        List<VitalSignsRecordEntity> alerts = vitalsRepository.findByTenantIdAndHasAlertsTrue(TENANT_ID_A);
+        List<VitalSignsRecordEntity> alerts = vitalsRepository
+                .findByTenantIdAndAlertStatusOrderByRecordedAtDesc(TENANT_ID_A, "critical");
         UUID firstAlertId = alerts.get(0).getId();
 
         mockMvc.perform(post("/api/v1/vitals/{id}/acknowledge", firstAlertId)
@@ -422,7 +419,7 @@ class VitalSignsIntegrationTest {
                     .diastolicBP(80 + i)
                     .heartRate(70 + i)
                     .respiratoryRate(16)
-                    .temperature(98.6)
+                    .temperature(BigDecimal.valueOf(98.6))
                     .oxygenSaturation(98)
                     .build();
 
@@ -470,7 +467,7 @@ class VitalSignsIntegrationTest {
                     .diastolicBP(80)
                     .heartRate(70 + i)
                     .respiratoryRate(16)
-                    .temperature(98.6)
+                    .temperature(BigDecimal.valueOf(98.6))
                     .oxygenSaturation(98)
                     .build();
 
@@ -507,7 +504,7 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(80)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .build();
 
@@ -552,7 +549,7 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(80)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .build();
 
@@ -616,14 +613,14 @@ class VitalSignsIntegrationTest {
     void testGetCriticalAlertsOnly() throws Exception {
         // Create normal vitals (no alert)
         VitalSignsRequest normalRequest = VitalSignsRequest.builder()
-                .patientId("PATIENT_NORMAL")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_NORMAL")
                 .measuredAt(LocalDateTime.now())
                 .systolicBP(120)
                 .diastolicBP(80)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .build();
 
@@ -636,14 +633,14 @@ class VitalSignsIntegrationTest {
 
         // Create critical vitals
         VitalSignsRequest criticalRequest = VitalSignsRequest.builder()
-                .patientId("PATIENT_CRITICAL")
+                .patientId(UUID.randomUUID().toString())
                 .encounterId("ENC_CRITICAL")
                 .measuredAt(LocalDateTime.now())
                 .systolicBP(220)
                 .diastolicBP(130)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(85) // Critical low
                 .build();
 
@@ -674,7 +671,7 @@ class VitalSignsIntegrationTest {
                 .diastolicBP(80)
                 .heartRate(72)
                 .respiratoryRate(16)
-                .temperature(98.6)
+                .temperature(BigDecimal.valueOf(98.6))
                 .oxygenSaturation(98)
                 .build();
 

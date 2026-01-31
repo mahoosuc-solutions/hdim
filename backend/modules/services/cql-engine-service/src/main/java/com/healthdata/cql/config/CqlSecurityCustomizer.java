@@ -4,6 +4,7 @@ import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import com.healthdata.cql.repository.UserRepository;
+import com.healthdata.gateway.security.HdimMethodSecurityExpressionHandler;
 import com.healthdata.gateway.security.HdimPermissionEvaluator;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,7 +68,7 @@ public class CqlSecurityCustomizer {
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
             HdimPermissionEvaluator permissionEvaluator) {
-        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+        DefaultMethodSecurityExpressionHandler handler = new HdimMethodSecurityExpressionHandler();
         handler.setPermissionEvaluator(permissionEvaluator);
         return handler;
     }

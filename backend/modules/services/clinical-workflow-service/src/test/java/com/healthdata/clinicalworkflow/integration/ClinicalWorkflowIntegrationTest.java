@@ -13,7 +13,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -96,10 +96,12 @@ class ClinicalWorkflowIntegrationTest {
         RoomAssignmentEntity room = RoomAssignmentEntity.builder()
                 .tenantId(TENANT_ID)
                 .roomNumber("ROOM-101")
+                .patientId(UUID.randomUUID())
                 .status("available")
                 .roomType("standard")
                 .location("Floor 1")
                 .assignedBy("system")
+                .assignedAt(Instant.now())
                 .build();
         roomRepository.save(room);
     }
@@ -120,13 +122,13 @@ class ClinicalWorkflowIntegrationTest {
         checklistService.completeChecklistItem(checklist.getId(), "reviewMedicalHistory", TENANT_ID);
 
         // 3. Check in patient
-        PatientCheckInEntity checkIn = checkInService.checkInPatient(
+        PatientCheckInEntity checkIn = checkInService.checkInPatientInternal(
                 PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
         assertThat(checkIn).isNotNull();
         assertThat(checkIn.getStatus()).isEqualTo("checked-in");
 
         // 4. Add to waiting queue
-        WaitingQueueEntity queueEntry = queueService.addToQueue(
+        WaitingQueueEntity queueEntry = queueService.addToQueueInternal(
                 PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
         assertThat(queueEntry).isNotNull();
         assertThat(queueEntry.getStatus()).isEqualTo("waiting");
@@ -169,7 +171,7 @@ class ClinicalWorkflowIntegrationTest {
         queueService.removeFromQueue(PATIENT_ID, TENANT_ID);
 
         // Verify final state
-        assertThat(checkInService.getCheckInHistory(PATIENT_ID, TENANT_ID)).hasSize(1);
+        assertThat(checkInService.getCheckInHistoryInternal(PATIENT_ID, TENANT_ID)).hasSize(1);
         assertThat(vitalsService.getAllPatientVitals(PATIENT_ID, TENANT_ID)).hasSize(1);
     }
 
@@ -178,13 +180,13 @@ class ClinicalWorkflowIntegrationTest {
     @Test
     void testPatientCheckIn_MultipleCheckIns() {
         // Create multiple check-ins
-        PatientCheckInEntity checkIn1 = checkInService.checkInPatient(
+        PatientCheckInEntity checkIn1 = checkInService.checkInPatientInternal(
                 PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
-        PatientCheckInEntity checkIn2 = checkInService.checkInPatient(
+        PatientCheckInEntity checkIn2 = checkInService.checkInPatientInternal(
                 PATIENT_ID, "Appointment/456", TENANT_ID);
 
         // Verify history
-        List<PatientCheckInEntity> history = checkInService.getCheckInHistory(
+        List<PatientCheckInEntity> history = checkInService.getCheckInHistoryInternal(
                 PATIENT_ID, TENANT_ID);
         assertThat(history).hasSize(2);
     }
@@ -192,10 +194,10 @@ class ClinicalWorkflowIntegrationTest {
     @Test
     void testPatientCheckIn_VerifyInsurance() {
         // Check in patient
-        checkInService.checkInPatient(PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
+        checkInService.checkInPatientInternal(PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
 
         // Verify insurance
-        PatientCheckInEntity verified = checkInService.verifyInsurance(PATIENT_ID, TENANT_ID);
+        PatientCheckInEntity verified = checkInService.verifyInsuranceInternal(PATIENT_ID, TENANT_ID);
 
         assertThat(verified.getInsuranceVerified()).isTrue();
     }
@@ -203,10 +205,10 @@ class ClinicalWorkflowIntegrationTest {
     @Test
     void testPatientCheckIn_ObtainConsent() {
         // Check in patient
-        checkInService.checkInPatient(PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
+        checkInService.checkInPatientInternal(PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
 
         // Obtain consent
-        PatientCheckInEntity withConsent = checkInService.obtainConsent(PATIENT_ID, TENANT_ID);
+        PatientCheckInEntity withConsent = checkInService.obtainConsentInternal(PATIENT_ID, TENANT_ID);
 
         assertThat(withConsent.getConsentObtained()).isTrue();
     }
@@ -260,8 +262,8 @@ class ClinicalWorkflowIntegrationTest {
         }
 
         // Query history
-        LocalDateTime from = LocalDateTime.now().minusDays(1);
-        LocalDateTime to = LocalDateTime.now().plusDays(1);
+        Instant from = Instant.now().minusSeconds(24 * 3600);
+        Instant to = Instant.now().plusSeconds(24 * 3600);
 
         List<VitalSignsRecordEntity> history = vitalsService.getPatientVitalsHistory(
                 PATIENT_ID, TENANT_ID, from, to);
@@ -328,7 +330,7 @@ class ClinicalWorkflowIntegrationTest {
     @Test
     void testWaitingQueue_StatusTransitions() {
         // Add to queue
-        queueService.addToQueue(PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
+        queueService.addToQueueInternal(PATIENT_ID, APPOINTMENT_ID, TENANT_ID);
 
         // Call patient
         WaitingQueueEntity called = queueService.callPatient(PATIENT_ID, TENANT_ID);
@@ -338,7 +340,9 @@ class ClinicalWorkflowIntegrationTest {
         // Remove from queue
         queueService.removeFromQueue(PATIENT_ID, TENANT_ID);
 
-        WaitingQueueEntity completed = queueService.getPatientQueueInfo(PATIENT_ID, TENANT_ID);
+        WaitingQueueEntity completed = queueRepository
+                .findByTenantIdAndPatientIdOrderByEnteredQueueAtDesc(TENANT_ID, PATIENT_ID)
+                .get(0);
         assertThat(completed.getStatus()).isEqualTo("completed");
     }
 
@@ -389,13 +393,13 @@ class ClinicalWorkflowIntegrationTest {
         String tenant2 = "TENANT_002";
 
         // Create check-ins in different tenants
-        checkInService.checkInPatient(PATIENT_ID, APPOINTMENT_ID, tenant1);
-        checkInService.checkInPatient(PATIENT_ID, "Apt456", tenant2);
+        checkInService.checkInPatientInternal(PATIENT_ID, APPOINTMENT_ID, tenant1);
+        checkInService.checkInPatientInternal(PATIENT_ID, "Apt456", tenant2);
 
         // Verify isolation
-        List<PatientCheckInEntity> tenant1CheckIns = checkInService.getCheckInHistory(
+        List<PatientCheckInEntity> tenant1CheckIns = checkInService.getCheckInHistoryInternal(
                 PATIENT_ID, tenant1);
-        List<PatientCheckInEntity> tenant2CheckIns = checkInService.getCheckInHistory(
+        List<PatientCheckInEntity> tenant2CheckIns = checkInService.getCheckInHistoryInternal(
                 PATIENT_ID, tenant2);
 
         assertThat(tenant1CheckIns).hasSize(1);

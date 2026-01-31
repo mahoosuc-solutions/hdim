@@ -35,7 +35,6 @@ import java.util.UUID;
  * - Track seeding progress and metrics
  */
 @Service
-@Transactional
 public class DemoSeedingService {
 
     private static final Logger logger = LoggerFactory.getLogger(DemoSeedingService.class);
@@ -119,7 +118,7 @@ public class DemoSeedingService {
 
             // Generate base patients
             Bundle patientBundle = patientGenerator.generateCohort(count, tenantId);
-            result.setPatientCount(patientBundle.getEntry().size());
+            result.setPatientCount((int) countResourceType(patientBundle, "Patient"));
             if (sessionId != null) {
                 progressService.updateCounts(sessionId, result.getPatientCount(), null, null, null);
             }

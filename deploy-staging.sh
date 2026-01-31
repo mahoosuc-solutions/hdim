@@ -109,7 +109,9 @@ build_services() {
         :modules:services:event-router-service:bootJar \
         :modules:services:patient-service:bootJar \
         :modules:services:care-gap-service:bootJar \
-        :modules:services:gateway-service:bootJar \
+        :modules:services:gateway-admin-service:bootJar \
+        :modules:services:gateway-fhir-service:bootJar \
+        :modules:services:gateway-clinical-service:bootJar \
         --parallel \
         --no-daemon \
         --build-cache 2>&1 | tee -a "../$DEPLOYMENT_LOG"
@@ -224,7 +226,10 @@ start_gateway_frontend() {
     log "Starting gateway and frontend..."
 
     docker compose -f "$COMPOSE_FILE" -p "$PROJECT_NAME" up -d \
-        gateway-service \
+        gateway-admin-service \
+        gateway-fhir-service \
+        gateway-clinical-service \
+        gateway-edge \
         clinical-portal
 
     sleep 20

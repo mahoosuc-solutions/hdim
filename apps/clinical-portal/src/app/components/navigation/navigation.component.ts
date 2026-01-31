@@ -120,6 +120,11 @@ export class NavigationComponent {
     return this.router.url === route || (route === '/' && this.router.url === '/');
   }
 
+  getNavTestId(item: NavigationItem): string {
+    const slug = item.route.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
+    return `nav-${slug || 'root'}`;
+  }
+
   toggleSidenav(): void {
     this.sidenavOpened = !this.sidenavOpened;
   }

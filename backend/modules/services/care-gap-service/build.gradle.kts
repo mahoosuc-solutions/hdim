@@ -77,7 +77,8 @@ dependencies {
     testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("com.h2database:h2:2.2.224")  // H2 in-memory database for tests
+    testImplementation(libs.spring.kafka.test)  // Spring Kafka test support for @EmbeddedKafka
+    testImplementation(libs.h2)  // H2 in-memory database for unit tests
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

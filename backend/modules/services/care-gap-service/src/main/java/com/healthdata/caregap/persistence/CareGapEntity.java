@@ -1,5 +1,6 @@
 package com.healthdata.caregap.persistence;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -182,5 +183,15 @@ public class CareGapEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = Instant.now();
+    }
+
+    @JsonProperty("status")
+    public String getStatus() {
+        return gapStatus;
+    }
+
+    @JsonProperty("status")
+    public void setStatus(String status) {
+        this.gapStatus = status;
     }
 }

@@ -10,7 +10,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Entity-migration validation for agent-builder-service.
  * Part of Phase 2 entity-migration validation framework.
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml")
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("entity-migration-validation")

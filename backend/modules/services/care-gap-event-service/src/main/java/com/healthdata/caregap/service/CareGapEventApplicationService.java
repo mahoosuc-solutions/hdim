@@ -1,9 +1,14 @@
 package com.healthdata.caregap.service;
 
-import com.healthdata.caregap.api.v1.dto.DetectGapRequest;
 import com.healthdata.caregap.api.v1.dto.CareGapEventResponse;
+import com.healthdata.caregap.api.v1.dto.CloseGapRequest;
+import com.healthdata.caregap.api.v1.dto.DetectGapRequest;
+import com.healthdata.caregap.api.v1.dto.InterventionRequest;
+import com.healthdata.caregap.api.v1.dto.QualifyGapRequest;
 import com.healthdata.caregap.event.CareGapDetectedEvent;
 import com.healthdata.caregap.event.GapClosedEvent;
+import com.healthdata.caregap.event.InterventionRecommendedEvent;
+import com.healthdata.caregap.event.PatientQualifiedEvent;
 import com.healthdata.caregap.eventhandler.CareGapEventHandler;
 import com.healthdata.caregap.persistence.CareGapProjectionRepository;
 import com.healthdata.caregap.persistence.PopulationHealthRepository;
@@ -127,6 +132,76 @@ public class CareGapEventApplicationService {
             .severity(severity)
             .status("CLOSED")
             .closureDate(LocalDate.now())
+            .timestamp(Instant.now())
+            .build();
+    }
+
+    /**
+     * Close care gap by payload (gap code + patient id)
+     */
+    public CareGapEventResponse closeGap(CloseGapRequest request, String tenantId) {
+        GapClosedEvent event = new GapClosedEvent(
+            tenantId,
+            request.getPatientId(),
+            request.getGapCode(),
+            request.getReason() != null ? request.getReason() : "Manual closure",
+            "CLOSED"
+        );
+
+        gapEventHandler.handle(event);
+        kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
+
+        return CareGapEventResponse.builder()
+            .gapCode(request.getGapCode())
+            .patientId(request.getPatientId())
+            .status("CLOSED")
+            .closureDate(LocalDate.now())
+            .timestamp(Instant.now())
+            .build();
+    }
+
+    /**
+     * Qualify patient for care gap
+     */
+    public CareGapEventResponse qualifyPatient(QualifyGapRequest request, String tenantId) {
+        PatientQualifiedEvent event = new PatientQualifiedEvent(
+            tenantId,
+            request.getPatientId(),
+            request.getGapCode(),
+            true,
+            request.getReason()
+        );
+
+        gapEventHandler.handle(event);
+        kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
+
+        return CareGapEventResponse.builder()
+            .gapCode(request.getGapCode())
+            .patientId(request.getPatientId())
+            .patientQualified(true)
+            .timestamp(Instant.now())
+            .build();
+    }
+
+    /**
+     * Recommend intervention for care gap
+     */
+    public CareGapEventResponse recommendIntervention(InterventionRequest request, String tenantId) {
+        InterventionRecommendedEvent event = new InterventionRecommendedEvent(
+            tenantId,
+            request.getPatientId(),
+            request.getGapCode(),
+            request.getRecommendation(),
+            request.getPriority() != null ? request.getPriority() : "STANDARD"
+        );
+
+        gapEventHandler.handle(event);
+        kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
+
+        return CareGapEventResponse.builder()
+            .gapCode(request.getGapCode())
+            .patientId(request.getPatientId())
+            .recommendedIntervention(request.getRecommendation())
             .timestamp(Instant.now())
             .build();
     }

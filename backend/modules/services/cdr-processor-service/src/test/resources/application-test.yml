@@ -12,6 +12,12 @@ healthdata:
     enabled: true
     hikari:
       traffic-tier: LOW  # Minimal connections for tests
+  persistence:
+    primary:
+      url: jdbc:h2:mem:cdr_test;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
   security:
     jwt:
       secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
@@ -23,15 +29,20 @@ spring:
   application:
     name: cdr-processor-service-test
 
+  # Disable Spring Boot auto-configurations for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///cdr_test
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: test
-    password: test
+    url: jdbc:h2:mem:cdr_test;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create-drop  # Auto-create schema for tests
     properties:
       hibernate:
         format_sql: false
@@ -39,7 +50,7 @@ spring:
           batch_size: 20
 
   liquibase:
-    enabled: true
+    enabled: false  # Disable Liquibase for tests - use Hibernate auto-DDL instead
 logging:
   level:
     root: WARN

@@ -79,6 +79,7 @@ dependencies {
     testImplementation(libs.bundles.testcontainers)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.testcontainers.redis)
+    testImplementation("com.h2database:h2:2.2.224")  // H2 in-memory database for tests
 
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)

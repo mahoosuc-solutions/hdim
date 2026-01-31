@@ -37,15 +37,20 @@ public class PopulationHealthProjection {
     private int gapsClosed;
 
     @Column(name = "closure_rate")
-    private float closureRate;  // closed / (open + closed)
+    private double closureRate;  // closed / (open + closed)
 
-    @Column(name = "version")
+    @Column(name = "version", nullable = false)
     private long version;
 
     @Column(name = "last_updated")
     private Instant lastUpdated;
 
+    protected PopulationHealthProjection() {
+        // Required by JPA
+    }
+
     public PopulationHealthProjection(String tenantId) {
+        this.id = tenantId;
         this.tenantId = tenantId;
         this.totalGapsOpen = 0;
         this.criticalGaps = 0;
@@ -53,7 +58,7 @@ public class PopulationHealthProjection {
         this.mediumGaps = 0;
         this.lowGaps = 0;
         this.gapsClosed = 0;
-        this.closureRate = 0.0f;
+        this.closureRate = 0.0d;
         this.version = 1L;
         this.lastUpdated = Instant.now();
     }
@@ -66,7 +71,7 @@ public class PopulationHealthProjection {
     public int getMediumGaps() { return mediumGaps; }
     public int getLowGaps() { return lowGaps; }
     public int getGapsClosed() { return gapsClosed; }
-    public float getClosureRate() { return closureRate; }
+    public double getClosureRate() { return closureRate; }
     public long getVersion() { return version; }
     public Instant getLastUpdated() { return lastUpdated; }
 
@@ -83,9 +88,9 @@ public class PopulationHealthProjection {
     public void calculateClosureRate() {
         int total = totalGapsOpen + gapsClosed;
         if (total > 0) {
-            this.closureRate = (float) gapsClosed / total;
+            this.closureRate = (double) gapsClosed / total;
         } else {
-            this.closureRate = 0.0f;
+            this.closureRate = 0.0d;
         }
         this.version++;
         this.lastUpdated = Instant.now();

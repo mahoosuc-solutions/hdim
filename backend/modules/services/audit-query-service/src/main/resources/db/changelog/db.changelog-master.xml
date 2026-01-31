@@ -17,6 +17,7 @@
     <include file="audit/db/changelog/0006-create-data-quality-issues-table.xml"/>
     <include file="audit/db/changelog/0007-create-clinical-decisions-table.xml"/>
     <include file="audit/db/changelog/0008-create-mpi-merges-table.xml"/>
+    <include file="audit/db/changelog/0010-enforce-audit-encrypted-not-null.xml"/>
 
     <include file="db/changelog/0001-create-audit-user-activity-daily.xml"/>
     <include file="db/changelog/0002-create-audit-resource-access-daily.xml"/>

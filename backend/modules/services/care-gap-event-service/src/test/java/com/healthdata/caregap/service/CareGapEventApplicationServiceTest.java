@@ -434,7 +434,7 @@ class CareGapEventApplicationServiceTest {
         assertThat(response.getMediumGaps()).isEqualTo(7);
         assertThat(response.getLowGaps()).isEqualTo(3);
         assertThat(response.getGapsClosed()).isEqualTo(50);
-        assertThat(response.getClosureRate()).isCloseTo(0.667f, within(0.001f));  // Use tolerance for floating point
+        assertThat(response.getClosureRate()).isCloseTo(0.667d, within(0.001d));  // Use tolerance for floating point
     }
 
     @Test

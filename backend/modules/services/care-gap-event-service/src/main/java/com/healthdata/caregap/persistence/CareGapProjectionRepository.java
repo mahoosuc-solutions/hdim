@@ -23,7 +23,7 @@ public interface CareGapProjectionRepository extends JpaRepository<CareGapProjec
      * Find care gap by patient ID and tenant
      * Multi-tenant isolation query
      */
-    @Query("SELECT c FROM CareGapProjection c WHERE c.patientId = :patientId AND c.tenantId = :tenantId")
+    @Query("SELECT c FROM CareGapHandlerProjection c WHERE c.patientId = :patientId AND c.tenantId = :tenantId")
     Optional<CareGapProjection> findByPatientIdAndTenant(
         @Param("patientId") String patientId,
         @Param("tenantId") String tenantId
@@ -32,13 +32,13 @@ public interface CareGapProjectionRepository extends JpaRepository<CareGapProjec
     /**
      * Find all open gaps for a tenant
      */
-    @Query("SELECT c FROM CareGapProjection c WHERE c.tenantId = :tenantId AND c.status = 'OPEN'")
+    @Query("SELECT c FROM CareGapHandlerProjection c WHERE c.tenantId = :tenantId AND c.status = 'OPEN'")
     List<CareGapProjection> findOpenGapsByTenant(@Param("tenantId") String tenantId);
 
     /**
      * Find all gaps by gap code and tenant
      */
-    @Query("SELECT c FROM CareGapProjection c WHERE c.gapCode = :gapCode AND c.tenantId = :tenantId ORDER BY c.lastUpdated DESC")
+    @Query("SELECT c FROM CareGapHandlerProjection c WHERE c.gapCode = :gapCode AND c.tenantId = :tenantId ORDER BY c.lastUpdated DESC")
     List<CareGapProjection> findByGapCodeAndTenant(
         @Param("gapCode") String gapCode,
         @Param("tenantId") String tenantId
@@ -47,7 +47,7 @@ public interface CareGapProjectionRepository extends JpaRepository<CareGapProjec
     /**
      * Count open gaps by severity for tenant
      */
-    @Query("SELECT COUNT(c) FROM CareGapProjection c WHERE c.tenantId = :tenantId AND c.status = 'OPEN' AND c.severity = :severity")
+    @Query("SELECT COUNT(c) FROM CareGapHandlerProjection c WHERE c.tenantId = :tenantId AND c.status = 'OPEN' AND c.severity = :severity")
     long countOpenGapsBySeverity(
         @Param("tenantId") String tenantId,
         @Param("severity") String severity

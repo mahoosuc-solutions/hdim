@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:authentication"))
     implementation(project(":modules:shared:infrastructure:security"))
+    implementation(project(":modules:shared:infrastructure:gateway-core"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
@@ -76,6 +77,7 @@ dependencies {
     testImplementation(libs.testcontainers.kafka)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("com.h2database:h2:2.2.224")  // H2 in-memory database for tests
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }

@@ -13,6 +13,10 @@ export default {
       isolatedModules: true,
     },
   },
+  moduleNameMapper: {
+    // Resolve testing mocks from anywhere in the app to the centralized mocks index
+    '^.*?/testing/mocks$': '<rootDir>/src/testing/mocks',
+  },
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',

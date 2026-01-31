@@ -8,7 +8,7 @@
     <changeSet id="0001-create-agent-builder-tables" author="flyway-migration">
         <comment>Create agent builder tables for no-code agent configuration (migrated from Flyway V1)</comment>
 
-        <sqlFile path="db/changelog/sql/0001-create-agent-builder-tables.sql"
+        <sqlFile path="sql/0001-create-agent-builder-tables.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>

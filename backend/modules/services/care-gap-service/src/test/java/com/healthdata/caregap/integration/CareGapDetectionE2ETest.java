@@ -3,6 +3,7 @@ package com.healthdata.caregap.integration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.persistence.CareGapRepository;
+import com.healthdata.caregap.config.TestKafkaInitializer;
 import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -54,6 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ContextConfiguration(initializers = TestKafkaInitializer.class)
 @Testcontainers
 @Transactional
 @DisplayName("Care Gap Detection E2E Functional Tests")

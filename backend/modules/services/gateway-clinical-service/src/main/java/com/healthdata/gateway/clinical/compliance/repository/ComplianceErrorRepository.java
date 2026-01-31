@@ -41,5 +41,14 @@ public interface ComplianceErrorRepository extends JpaRepository<ComplianceError
         @Param("endDate") Instant endDate
     );
 
-    void deleteByTenantIdAndTimestampBefore(String tenantId, Instant cutoffDate);
+    @Query("SELECT COUNT(e) FROM ComplianceErrorEntity e WHERE e.tenantId = :tenantId " +
+           "AND e.severity = :severity AND e.timestamp >= :startDate AND e.timestamp <= :endDate")
+    long countByTenantIdAndSeverityAndDateRange(
+        @Param("tenantId") String tenantId,
+        @Param("severity") String severity,
+        @Param("startDate") Instant startDate,
+        @Param("endDate") Instant endDate
+    );
+
+    long deleteByTenantIdAndTimestampBefore(String tenantId, Instant cutoffDate);
 }

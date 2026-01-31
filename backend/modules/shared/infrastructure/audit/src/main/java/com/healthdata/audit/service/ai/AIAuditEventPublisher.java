@@ -48,6 +48,9 @@ public class AIAuditEventPublisher {
     @Value("${audit.kafka.enabled:true}")
     private boolean kafkaEnabled;
 
+    @Value("${audit.kafka.sync:false}")
+    private boolean kafkaSync;
+
     @Autowired
     public AIAuditEventPublisher(
             KafkaTemplate<String, String> kafkaTemplate,
@@ -76,6 +79,10 @@ public class AIAuditEventPublisher {
 
             CompletableFuture<SendResult<String, String>> future = 
                 kafkaTemplate.send(aiDecisionsTopic, key, eventJson);
+
+            if (kafkaSync) {
+                future.join();
+            }
 
             future.whenComplete((result, ex) -> {
                 if (ex == null) {
@@ -117,6 +124,10 @@ public class AIAuditEventPublisher {
             CompletableFuture<SendResult<String, String>> future = 
                 kafkaTemplate.send(configChangesTopic, key, eventJson);
 
+            if (kafkaSync) {
+                future.join();
+            }
+
             future.whenComplete((result, ex) -> {
                 if (ex == null) {
                     log.debug("Configuration change event published successfully: {} to partition: {}", 
@@ -155,6 +166,10 @@ public class AIAuditEventPublisher {
 
             CompletableFuture<SendResult<String, String>> future = 
                 kafkaTemplate.send(userActionsTopic, key, eventJson);
+
+            if (kafkaSync) {
+                future.join();
+            }
 
             future.whenComplete((result, ex) -> {
                 if (ex == null) {

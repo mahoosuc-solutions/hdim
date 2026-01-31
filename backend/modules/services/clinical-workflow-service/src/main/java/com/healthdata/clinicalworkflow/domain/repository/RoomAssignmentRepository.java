@@ -7,7 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -109,7 +109,7 @@ public interface RoomAssignmentRepository extends JpaRepository<RoomAssignmentEn
     List<RoomAssignmentEntity> findRoomAssignmentHistory(
         @Param("roomNumber") String roomNumber,
         @Param("tenantId") String tenantId,
-        @Param("from") LocalDateTime from
+        @Param("from") Instant from
     );
 
     /**

@@ -51,7 +51,7 @@ public class DiagnosticReportController {
 
     private final DiagnosticReportService diagnosticReportService;
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Create a new DiagnosticReport resource")
@@ -66,7 +66,7 @@ public class DiagnosticReportController {
         return ResponseEntity.status(HttpStatus.CREATED).body(JSON_PARSER.encodeResourceToString(created));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get a DiagnosticReport resource by ID")
@@ -80,7 +80,7 @@ public class DiagnosticReportController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Update an existing DiagnosticReport resource")
@@ -96,7 +96,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(updated));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_WRITE')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a DiagnosticReport resource")
@@ -112,7 +112,7 @@ public class DiagnosticReportController {
 
     // ==================== Search Endpoints ====================
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Search DiagnosticReport resources")
@@ -144,7 +144,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get all diagnostic reports for a patient")
@@ -158,7 +158,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/final", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get final diagnostic reports for a patient")
@@ -172,7 +172,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/pending", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get pending diagnostic reports for a patient")
@@ -186,7 +186,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/lab", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get lab reports for a patient")
@@ -200,7 +200,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/imaging", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get imaging reports for a patient")
@@ -214,7 +214,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/encounter/{encounterId}", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get diagnostic reports for an encounter")
@@ -228,7 +228,7 @@ public class DiagnosticReportController {
         return ResponseEntity.ok(JSON_PARSER.encodeResourceToString(bundle));
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/code/{code}/latest", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get latest report of a specific type for a patient")
@@ -243,7 +243,7 @@ public class DiagnosticReportController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/patient/{patientId}/date-range", produces = {"application/fhir+json", "application/json"})
     @Operation(summary = "Get diagnostic reports within a date range")

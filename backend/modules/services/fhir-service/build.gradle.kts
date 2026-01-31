@@ -19,6 +19,7 @@ dependencies {
     implementation(project(":modules:shared:domain:fhir-models"))
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:security"))
+    implementation(project(":modules:shared:infrastructure:gateway-core"))
     implementation(project(":platform:auth"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))

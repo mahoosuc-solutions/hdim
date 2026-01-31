@@ -3,6 +3,7 @@ package com.healthdata.eventrouter.service;
 import com.healthdata.eventrouter.dto.EventMessage;
 import com.healthdata.eventrouter.entity.DeadLetterEventEntity;
 import com.healthdata.eventrouter.persistence.DeadLetterEventRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,8 @@ class DeadLetterQueueServiceTest {
 
     @BeforeEach
     void setUp() {
-        dlqService = new DeadLetterQueueService(dlqRepository, kafkaTemplate);
+        ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+        dlqService = new DeadLetterQueueService(dlqRepository, kafkaTemplate, objectMapper);
     }
 
     @Test

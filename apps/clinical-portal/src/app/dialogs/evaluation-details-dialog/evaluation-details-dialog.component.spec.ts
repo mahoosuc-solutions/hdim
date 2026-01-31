@@ -34,7 +34,6 @@ describe('EvaluationDetailsDialogComponent', () => {
             measureName: 'CMS125',
           },
         },
-        { provide: Store, useValue: createMockStore() }],
     }).compileComponents();
 
     dialogRef = TestBed.inject(MatDialogRef) as jest.Mocked<

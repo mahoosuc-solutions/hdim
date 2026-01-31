@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.Instant;
 import java.util.List;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -76,7 +78,7 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Test CqlLibrary CRUD operations")
     void testCqlLibraryCRUD() {
         // CREATE
-        CqlLibrary library = new CqlLibrary(TEST_TENANT, "DiabetesScreening", "1.0.0");
+        CqlLibrary library = buildLibrary(TEST_TENANT, "DiabetesScreening", "1.0.0");
         library.setStatus("DRAFT");
         library.setCqlContent("library DiabetesScreening version '1.0.0'");
         library.setDescription("HEDIS Diabetes Screening Measure");
@@ -116,15 +118,15 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Test CqlLibrary queries")
     void testCqlLibraryQueries() {
         // Create test data
-        CqlLibrary lib1 = new CqlLibrary(TEST_TENANT, "Library1", "1.0.0");
+        CqlLibrary lib1 = buildLibrary(TEST_TENANT, "Library1", "1.0.0");
         lib1.setStatus("ACTIVE");
         libraryRepository.save(lib1);
 
-        CqlLibrary lib2 = new CqlLibrary(TEST_TENANT, "Library1", "2.0.0");
+        CqlLibrary lib2 = buildLibrary(TEST_TENANT, "Library1", "2.0.0");
         lib2.setStatus("ACTIVE");
         libraryRepository.save(lib2);
 
-        CqlLibrary lib3 = new CqlLibrary(TEST_TENANT, "Library2", "1.0.0");
+        CqlLibrary lib3 = buildLibrary(TEST_TENANT, "Library2", "1.0.0");
         lib3.setStatus("DRAFT");
         libraryRepository.save(lib3);
 
@@ -164,7 +166,7 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Test ValueSet CRUD operations")
     void testValueSetCRUD() {
         // CREATE
-        ValueSet valueSet = new ValueSet(
+        ValueSet valueSet = buildValueSet(
                 TEST_TENANT,
                 "2.16.840.1.113883.3.464.1003.103.12.1001",
                 "Diabetes",
@@ -207,15 +209,15 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Test ValueSet queries")
     void testValueSetQueries() {
         // Create test data
-        ValueSet vs1 = new ValueSet(TEST_TENANT, "2.16.840.1.113883.3.464.1", "VS1", "SNOMED");
+        ValueSet vs1 = buildValueSet(TEST_TENANT, "2.16.840.1.113883.3.464.1", "VS1", "SNOMED");
         vs1.setStatus("ACTIVE");
         valueSetRepository.save(vs1);
 
-        ValueSet vs2 = new ValueSet(TEST_TENANT, "2.16.840.1.113883.3.464.2", "VS2", "LOINC");
+        ValueSet vs2 = buildValueSet(TEST_TENANT, "2.16.840.1.113883.3.464.2", "VS2", "LOINC");
         vs2.setStatus("ACTIVE");
         valueSetRepository.save(vs2);
 
-        ValueSet vs3 = new ValueSet(TEST_TENANT, "2.16.840.1.113883.3.464.3", "VS3", "RxNorm");
+        ValueSet vs3 = buildValueSet(TEST_TENANT, "2.16.840.1.113883.3.464.3", "VS3", "RxNorm");
         vs3.setStatus("DRAFT");
         valueSetRepository.save(vs3);
 
@@ -255,7 +257,7 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Test CqlEvaluation CRUD operations")
     void testCqlEvaluationCRUD() {
         // First create a library
-        CqlLibrary library = new CqlLibrary(TEST_TENANT, "TestLibrary", "1.0.0");
+        CqlLibrary library = buildLibrary(TEST_TENANT, "TestLibrary", "1.0.0");
         library.setStatus("ACTIVE");
         library = libraryRepository.save(library);
 
@@ -299,7 +301,7 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Test CqlEvaluation queries")
     void testCqlEvaluationQueries() {
         // Create test library
-        CqlLibrary library = new CqlLibrary(TEST_TENANT, "QueryTestLibrary", "1.0.0");
+        CqlLibrary library = buildLibrary(TEST_TENANT, "QueryTestLibrary", "1.0.0");
         library = libraryRepository.save(library);
 
         // Create test evaluations
@@ -370,10 +372,10 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
         String tenant2 = "tenant-2";
 
         // Create libraries for different tenants
-        CqlLibrary lib1 = new CqlLibrary(tenant1, "SharedName", "1.0.0");
+        CqlLibrary lib1 = buildLibrary(tenant1, "SharedName", "1.0.0");
         libraryRepository.save(lib1);
 
-        CqlLibrary lib2 = new CqlLibrary(tenant2, "SharedName", "1.0.0");
+        CqlLibrary lib2 = buildLibrary(tenant2, "SharedName", "1.0.0");
         libraryRepository.save(lib2);
 
         // Verify isolation - tenant1 can only see their library
@@ -401,7 +403,7 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
         System.out.println("Testing index performance...");
 
         // Create test data
-        CqlLibrary library = new CqlLibrary(TEST_TENANT, "PerfTestLibrary", "1.0.0");
+        CqlLibrary library = buildLibrary(TEST_TENANT, "PerfTestLibrary", "1.0.0");
         library = libraryRepository.save(library);
 
         // Create multiple evaluations
@@ -440,7 +442,7 @@ class CqlEngineServiceIntegrationTest extends CqlTestcontainersBase {
     void testTransactionRollback() {
         // This should fail due to NOT NULL constraint on tenant_id
         assertThrows(Exception.class, () -> {
-            CqlLibrary library = new CqlLibrary(null, "InvalidLibrary", "1.0.0"); // null tenant
+            CqlLibrary library = buildLibrary(null, "InvalidLibrary", "1.0.0"); // null tenant
             libraryRepository.save(library);
             libraryRepository.flush(); // Force database constraint check
         });

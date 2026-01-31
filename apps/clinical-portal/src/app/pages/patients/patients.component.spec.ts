@@ -14,7 +14,6 @@ import { AIAssistantService } from '../../services/ai-assistant.service';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
-import { createMockHttpClient } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 /**
@@ -101,7 +100,6 @@ describe('PatientsComponent (TDD)', () => {
         { provide: AIAssistantService, useValue: mockAIAssistantService },
         { provide: Router, useValue: mockRouter },
       
-        { provide: HttpClient, useValue: createMockHttpClient() },
         { provide: Router, useValue: createMockRouter() }],
     }).compileComponents();
 

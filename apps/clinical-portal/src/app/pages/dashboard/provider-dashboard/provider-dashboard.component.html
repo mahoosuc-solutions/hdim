@@ -290,7 +290,7 @@
 
                   <!-- Issue #10: Quick action buttons -->
                   <div class="result-actions">
-                    <button mat-stroked-button color="primary" (click)="reviewResult(result)" matTooltip="Review full result">
+                    <button mat-stroked-button color="primary" (click)="reviewResult(result)" matTooltip="Review full result" data-testid="provider-review-result">
                       <mat-icon>visibility</mat-icon>
                       Review
                     </button>
@@ -431,7 +431,8 @@
                   <button
                     mat-raised-button
                     color="primary"
-                    (click)="addressCareGap(gap)">
+                    (click)="addressCareGap(gap)"
+                    data-testid="provider-care-gap-address">
                     <mat-icon>medical_services</mat-icon>
                     Address
                   </button>

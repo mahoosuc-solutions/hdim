@@ -54,6 +54,8 @@ datafaker = "2.4.2"
 twilio = "9.14.0"
 totp = "1.7.1"
 poi-ooxml = "5.2.5"
+snakeyaml = "2.2"
+javafaker = "1.0.2"
 
 # Export Libraries
 opencsv = "5.9"
@@ -63,7 +65,7 @@ itext7 = "8.0.2"
 micrometer = "1.13.6"
 prometheus = "1.13.6"
 micrometer-tracing = "1.3.5"
-opentelemetry = "1.32.0"
+opentelemetry = "1.38.0"
 
 # Build Tools
 openapi-generator = "7.18.0"
@@ -100,6 +102,9 @@ spring-boot-starter-websocket = { module = "org.springframework.boot:spring-boot
 spring-boot-starter-messaging = { module = "org.springframework.boot:spring-boot-starter-messaging", version.ref = "spring-boot" }
 spring-boot-starter-aop = { module = "org.springframework.boot:spring-boot-starter-aop", version.ref = "spring-boot" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "spring-boot" }
+
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+javafaker = { module = "com.github.javafaker:javafaker", version.ref = "javafaker" }
 
 # Spring Cloud
 spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }
@@ -170,6 +175,7 @@ testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-kafka = { module = "org.testcontainers:kafka", version.ref = "testcontainers" }
+testcontainers-jdbc = { module = "org.testcontainers:jdbc", version.ref = "testcontainers" }
 testcontainers-redis = { module = "com.redis:testcontainers-redis", version.ref = "testcontainers-redis" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
 

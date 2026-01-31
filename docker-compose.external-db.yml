@@ -15,7 +15,23 @@ services:
     profiles: ["disabled"]
 
   # Override each service to use external PostgreSQL
-  gateway-service:
+  gateway-admin-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/gateway_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  gateway-fhir-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/gateway_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  gateway-clinical-service:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/gateway_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}

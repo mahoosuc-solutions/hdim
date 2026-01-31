@@ -6,9 +6,22 @@
                         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
     <!-- Audit Query Service Database Migrations -->
-    <!-- Note: audit_events table is created by shared audit infrastructure -->
+
+    <!-- Shared audit changelogs -->
+    <include file="audit/db/changelog/0001-create-audit-events-table.xml"/>
+    <include file="audit/db/changelog/0002-create-qa-reviews-table.xml"/>
+    <include file="audit/db/changelog/0003-create-ai-agent-decision-events-table.xml"/>
+    <include file="audit/db/changelog/0009-add-qa-review-fields-to-ai-agent-decisions.xml"/>
+    <include file="audit/db/changelog/0004-create-configuration-engine-events-table.xml"/>
+    <include file="audit/db/changelog/0005-create-user-configuration-action-events-table.xml"/>
+    <include file="audit/db/changelog/0006-create-data-quality-issues-table.xml"/>
+    <include file="audit/db/changelog/0007-create-clinical-decisions-table.xml"/>
+    <include file="audit/db/changelog/0008-create-mpi-merges-table.xml"/>
+    <include file="audit/db/changelog/0010-enforce-audit-encrypted-not-null.xml"/>
 
     <include file="db/changelog/0001-create-audit-user-activity-daily.xml"/>
     <include file="db/changelog/0002-create-audit-resource-access-daily.xml"/>
+    <include file="db/changelog/0003-alter-audit-events-jsonb.xml"/>
+    <include file="db/changelog/0004-create-tenant-functions.xml"/>
 
 </databaseChangeLog>

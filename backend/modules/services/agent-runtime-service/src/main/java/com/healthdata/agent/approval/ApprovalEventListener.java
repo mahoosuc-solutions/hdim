@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    name = "hdim.approval.kafka-listener.enabled",
+    havingValue = "true",
+    matchIfMissing = true
+)
 public class ApprovalEventListener {
 
     private static final String TOPIC = "approval-events";

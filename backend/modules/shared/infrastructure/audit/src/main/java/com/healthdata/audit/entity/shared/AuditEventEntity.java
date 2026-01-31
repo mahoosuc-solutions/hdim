@@ -55,7 +55,7 @@ public class AuditEventEntity {
 
     // What - Action performed
     @Enumerated(EnumType.STRING)
-    @Column(length = 50)
+    @Column(length = 50, nullable = false)
     private AuditAction action;
 
     @Column(name = "resource_type", length = 100)
@@ -65,7 +65,7 @@ public class AuditEventEntity {
     private String resourceId;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 50)
+    @Column(length = 50, nullable = false)
     private AuditOutcome outcome;
 
     // Where - System context

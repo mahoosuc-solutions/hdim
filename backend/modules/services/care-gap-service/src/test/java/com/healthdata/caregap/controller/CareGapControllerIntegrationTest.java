@@ -283,6 +283,7 @@ class CareGapControllerIntegrationTest {
             // Given
             CareGapReportService.CareGapSummary summary =
                     new CareGapReportService.CareGapSummary(
+                            PATIENT_ID,
                             10, 5, 3, 2, 1, 85.0,
                             List.of("HEDIS", "CMS"),
                             Map.of("CDC", 3L, "BCS", 2L));

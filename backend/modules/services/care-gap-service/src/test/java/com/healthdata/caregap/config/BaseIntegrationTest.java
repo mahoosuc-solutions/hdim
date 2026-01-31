@@ -3,6 +3,7 @@ package com.healthdata.caregap.config;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.annotation.ElementType;
@@ -33,6 +34,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @SpringBootTest
 @ActiveProfiles("test")
+@ContextConfiguration(initializers = TestKafkaInitializer.class)
 @Transactional
 @Import({
     TestCacheConfiguration.class,

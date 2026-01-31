@@ -8,7 +8,7 @@
     <changeSet id="0003-create-audit-events-table" author="flyway-migration">
         <comment>Create HIPAA-compliant audit events table (migrated from Flyway V3)</comment>
 
-        <sqlFile path="db/changelog/sql/0003-create-audit-events-table.sql"
+        <sqlFile path="sql/0003-create-audit-events-table.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>

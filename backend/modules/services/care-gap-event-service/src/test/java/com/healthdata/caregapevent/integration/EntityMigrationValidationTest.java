@@ -1,5 +1,6 @@
 package com.healthdata.caregapevent.integration;
 
+import com.healthdata.caregap.CareGapEventServiceApplication;
 import com.healthdata.testfixtures.validation.AbstractEntityMigrationValidationTest;
 import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +24,10 @@ import java.util.Set;
  *
  * @author HDIM Platform Team
  */
-@SpringBootTest
+@SpringBootTest(
+        classes = CareGapEventServiceApplication.class,
+        properties = "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml"
+)
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("entity-migration-validation")

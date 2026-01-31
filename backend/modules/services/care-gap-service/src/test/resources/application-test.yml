@@ -10,17 +10,22 @@ spring:
   application:
     name: care-gap-service
 
-  # Database Configuration - Testcontainers PostgreSQL for tests
+  # Disable Spring Boot auto-configurations for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+
+  # Database Configuration - H2 in-memory for tests (no Docker required)
   datasource:
-    url: jdbc:tc:postgresql:16-alpine:///caregap_test_db
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: test
-    password: test
+    url: jdbc:h2:mem:caregap_test_db;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
   # JPA Configuration
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop  # Use create-drop for tests to avoid Liquibase timing issues
+      ddl-auto: create-drop  # Use create-drop for tests
     properties:
       hibernate:
         format_sql: true

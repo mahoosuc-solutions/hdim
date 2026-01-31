@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 /**
  * Auto-configuration for HIPAA audit module.
@@ -19,7 +20,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @EnableAspectJAutoProxy
-@EnableJpaRepositories(basePackages = "com.healthdata.audit.repository.shared")
+@EnableJpaRepositories(basePackages = "com.healthdata.audit.repository")
+@EntityScan(basePackages = "com.healthdata.audit.entity")
 @ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditAutoConfiguration {
 

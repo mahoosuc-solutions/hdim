@@ -2,6 +2,7 @@ package com.healthdata.caregap.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
+import com.healthdata.caregap.config.TestKafkaInitializer;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.service.CareGapIdentificationService;
 import com.healthdata.caregap.service.CareGapReportService;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -34,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ContextConfiguration(initializers = TestKafkaInitializer.class)
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @WithMockUser(roles = "ADMIN")
 @DisplayName("Care Gap Controller Tests")
@@ -322,6 +325,7 @@ class CareGapControllerTest {
         void shouldReturnSummary() throws Exception {
             // Given
             CareGapReportService.CareGapSummary summary = new CareGapReportService.CareGapSummary(
+                    PATIENT_UUID,
                     10, 6, 4, 2, 1, 40.0,
                     List.of("HEDIS", "CMS"),
                     Map.of("CDC_A1C", 3L, "BCS", 2L)

@@ -32,13 +32,13 @@ public class CareGapProjection {
     @Column(name = "gap_description")
     private String gapDescription;
 
-    @Column(name = "severity")
+    @Column(name = "severity", length = 50)
     private String severity;  // CRITICAL, HIGH, MEDIUM, LOW
 
-    @Column(name = "status")
+    @Column(name = "status", length = 50)
     private String status;  // OPEN, CLOSED, WAIVED
 
-    @Column(name = "qualified")
+    @Column(name = "qualified", nullable = false)
     private boolean qualified;
 
     @Column(name = "recommended_intervention")
@@ -50,13 +50,18 @@ public class CareGapProjection {
     @Column(name = "closure_date")
     private LocalDate closureDate;
 
-    @Column(name = "version")
+    @Column(name = "version", nullable = false)
     private long version;
 
     @Column(name = "last_updated")
     private Instant lastUpdated;
 
+    protected CareGapProjection() {
+        // Required by JPA
+    }
+
     public CareGapProjection(String patientId, String tenantId, String gapCode, String gapDescription, String severity) {
+        this.id = tenantId + ":" + patientId + ":" + gapCode;
         this.patientId = patientId;
         this.tenantId = tenantId;
         this.gapCode = gapCode;

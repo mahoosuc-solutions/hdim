@@ -21,7 +21,7 @@ public class DeadLetterQueueService {
 
     private final DeadLetterEventRepository dlqRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public void sendToDeadLetterQueue(EventMessage event, String reason) {
         try {

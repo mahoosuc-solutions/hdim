@@ -61,7 +61,9 @@ export class MedicationService {
   private readonly METRICS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   constructor(
-    private logger: LoggerService,private http: HttpClient) {
+    private logger: LoggerService,
+    private http: HttpClient
+  ) {}
 
   // ==================== Context Management ====================
 

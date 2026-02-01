@@ -55,14 +55,14 @@ interface CacheEntry<T> {
   providedIn: 'root',
 })
 export class CarePlanService {
-  private readonly logger: any;
   private tenantContext$ = new BehaviorSubject<string | null>(null);
   private cache = new Map<string, CacheEntry<any>>();
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private readonly METRICS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   constructor(
-    private logger: LoggerService,private http: HttpClient) {
+    private logger: LoggerService,
+    private http: HttpClient) {
 
   // ==================== Context Management ====================
 

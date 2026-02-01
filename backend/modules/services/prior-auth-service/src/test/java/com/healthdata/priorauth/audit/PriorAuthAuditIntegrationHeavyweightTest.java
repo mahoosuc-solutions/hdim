@@ -271,14 +271,14 @@ class PriorAuthAuditIntegrationHeavyweightTest {
         );
 
         // Step 2: Submission
-        Thread.sleep(100);
+        Thread.sleep(10);
         auditIntegration.publishPriorAuthSubmissionEvent(
                 TENANT_ID, workflowRequestId, PATIENT_ID, PAYER_ID,
                 true, null, 50L, "system"
         );
 
         // Step 3: Approval Decision
-        Thread.sleep(100);
+        Thread.sleep(10);
         auditIntegration.publishPriorAuthDecisionEvent(
                 TENANT_ID, workflowRequestId, PATIENT_ID, PAYER_ID,
                 "APPROVED", "All criteria met", true, 150L, "reviewer"

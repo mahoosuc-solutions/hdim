@@ -20,8 +20,18 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
  */
 @Configuration
 @EnableAspectJAutoProxy
-@EnableJpaRepositories(basePackages = "com.healthdata.audit.repository")
-@EntityScan(basePackages = "com.healthdata.audit.entity")
+@EnableJpaRepositories(basePackages = {
+    "com.healthdata.audit.repository",
+    "com.healthdata.audit.repository.shared",
+    "com.healthdata.audit.repository.ai",
+    "com.healthdata.audit.repository.clinical"
+})
+@EntityScan(basePackages = {
+    "com.healthdata.audit.entity",
+    "com.healthdata.audit.entity.shared",
+    "com.healthdata.audit.entity.ai",
+    "com.healthdata.audit.entity.clinical"
+})
 @ConditionalOnProperty(prefix = "audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AuditAutoConfiguration {
 

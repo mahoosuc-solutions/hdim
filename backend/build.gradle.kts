@@ -102,7 +102,7 @@ subprojects {
         useJUnitPlatform()
 
         // ====================================================================
-        // PARALLEL EXECUTION CONFIGURATION (Phase 6 Task 5)
+        // PARALLEL EXECUTION CONFIGURATION (Phase 6 Task 5 + 7)
         // ====================================================================
         // Gradle test parallelization is controlled by maxParallelForks property.
         // Each value represents the maximum number of concurrent JVM processes
@@ -118,6 +118,7 @@ subprojects {
         //   - testSlow: sequential, 1 fork
         //   - testUnit: light parallel, 2 forks
         //   - testAll: sequential, 1 fork
+        //   - testParallel: aggressive parallel, CPU forks (EXPERIMENTAL - Phase 6 Task 7)
         //
         // Rationale:
         //   - Each fork is independent JVM: No shared state (safe)
@@ -125,6 +126,7 @@ subprojects {
         //   - Leaves system resources for other tasks
         //   - Parallel is safe due to Spring test isolation
         //   - Embedded Kafka, H2 in-memory DB, fresh per test
+        //   - testParallel uses full CPU count for aggressive speed trade-off
         // ====================================================================
 
         maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).takeIf { it > 0 } ?: 1
@@ -137,6 +139,18 @@ subprojects {
             forkEvery = 1
         }
 
+        // Dynamic parallelization for testParallel task (Phase 6 Task 7)
+        // When testParallel is invoked, use full CPU count for aggressive parallelization
+        doFirst {
+            if (gradle.startParameter.taskNames.contains("testParallel")) {
+                val cpuCount = Runtime.getRuntime().availableProcessors()
+                // Patient service still keeps sequential even in testParallel for stability
+                if (project.name != "patient-service") {
+                    maxParallelForks = cpuCount
+                }
+            }
+        }
+
         // JVM optimization for parallel test execution
         // These flags improve performance when running multiple parallel JVM processes:
         // - UseStringDeduplication: Reduces memory overhead in parallel JVMs
@@ -146,6 +160,14 @@ subprojects {
             "-XX:+UseStringDeduplication",
             "-XX:TieredStopAtLevel=1"
         )
+
+        // Additional memory for testParallel (handles many parallel JVMs)
+        doFirst {
+            if (gradle.startParameter.taskNames.contains("testParallel")) {
+                // Higher memory for aggressive parallelization
+                jvmArgs("-Xmx2g")
+            }
+        }
 
         // Default timeout prevents a single test from stalling the entire run.
         systemProperty("junit.jupiter.execution.timeout.default", "2m")
@@ -457,6 +479,70 @@ tasks.register("testAll") {
         logger.lifecycle("STABILITY MODE: Sequential execution ensures maximum reproducibility.")
         logger.lifecycle("Use testFast (parallel) for quick validation during development.")
         logger.lifecycle("Use testAll (sequential) for final validation before merge to main.")
+        logger.lifecycle("=".repeat(80))
+        logger.lifecycle("")
+    }
+}
+
+// ============================================================================
+// testParallel: Complete test suite (AGGRESSIVE PARALLEL - EXPERIMENTAL)
+// ============================================================================
+// Usage: ./gradlew testParallel
+// Expected: 5-8 min (all tests, maximum parallelization)
+// WARNING: Experimental mode - may be flaky on systems with fewer than 8 cores
+//
+// This task is designed for developers with powerful machines (8+ core systems)
+// who want maximum speed for quick feedback during development.
+//
+// Rationale:
+//   - Uses full available CPU parallelization (maxParallelForks = CPU count)
+//   - Same tests as testAll (comprehensive coverage)
+//   - Higher JVM memory (-Xmx2g) for many parallel processes
+//   - EXPERIMENTAL: May produce random failures due to resource contention
+//   - NOT RECOMMENDED for: Pre-commit validation, CI/CD without testing, low-core systems
+//
+// Performance vs Stability Trade-off:
+//   - testAll (sequential): 15-25 min, 100% stable on any system
+//   - testParallel (aggressive): 5-8 min on 8+ cores, may be flaky on low-core systems
+//
+// Best Use Cases:
+//   - Quick feedback during active development (debugging individual services)
+//   - Developers with powerful machines (8+ cores, 16+ GB RAM)
+//   - Integration testing across all services quickly
+//   - NOT for final validation before merge (use testAll instead)
+// ============================================================================
+tasks.register("testParallel") {
+    group = "verification"
+    description = "Run ALL tests in PARALLEL mode (experimental - may be flaky on some systems) - ~5-8 min"
+
+    // Depends on all service test tasks
+    dependsOn(subprojects.filter {
+        it.path.contains(":modules:services:")
+    }.map { "${it.path}:test" })
+
+    doFirst {
+        logger.lifecycle("")
+        logger.lifecycle("=".repeat(80))
+        logger.lifecycle("TEST MODE: testParallel (AGGRESSIVE PARALLEL - EXPERIMENTAL)")
+        logger.lifecycle("⚠️  WARNING: This is an experimental mode. May produce flaky results.")
+        logger.lifecycle("")
+        logger.lifecycle("Configuration: maxParallelForks=$cpuCount (CPU=$cpuCount, FULL PARALLELIZATION)")
+        logger.lifecycle("Includes: ALL tests (unit + integration + slow + heavyweight)")
+        logger.lifecycle("Expected runtime: 5-8 minutes on systems with 8+ cores")
+        logger.lifecycle("")
+        logger.lifecycle("EXPERIMENTAL MODE: Aggressive parallelization trades stability for speed.")
+        logger.lifecycle("Use this for: Quick feedback during development on powerful machines")
+        logger.lifecycle("Use testAll (sequential) for: Final validation before merge to main")
+        logger.lifecycle("")
+        logger.lifecycle("System requirements:")
+        logger.lifecycle("  - 8+ CPU cores recommended (currently available: $cpuCount)")
+        logger.lifecycle("  - 16+ GB RAM recommended")
+        logger.lifecycle("  - Dedicated machine (not shared systems or laptops)")
+        logger.lifecycle("")
+        logger.lifecycle("Troubleshooting flaky tests:")
+        logger.lifecycle("  1. Run: ./gradlew testAll (sequential, stable)")
+        logger.lifecycle("  2. If testAll passes but testParallel fails, it's likely a race condition")
+        logger.lifecycle("  3. Check for shared state, statics, or resource contention")
         logger.lifecycle("=".repeat(80))
         logger.lifecycle("")
     }

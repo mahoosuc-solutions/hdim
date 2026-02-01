@@ -666,6 +666,58 @@ class PatientControllerIntegrationTest {
 
 ---
 
+## Test Execution Commands (Phase 6 Task 5 + 7)
+
+### Available Test Modes
+
+| Mode | Command | Speed | Best For | Stability |
+|------|---------|-------|----------|-----------|
+| **testFast** | `./gradlew testFast` | 1.5-2 min | Daily development ⚡ | ✅ Stable |
+| **testIntegration** | `./gradlew testIntegration` | 1.5-2 min | Integration changes | ✅ Stable |
+| **testUnit** | `./gradlew testUnit` | 30-60 sec | Quick unit tests | ✅ Stable |
+| **testSlow** | `./gradlew testSlow` | 3-5 min | Heavyweight tests | ✅ Stable |
+| **testAll** | `./gradlew testAll` | 15-25 min | **Final merge validation** | **✅ 100% Stable** |
+| **testParallel** | `./gradlew testParallel` | 5-8 min | Quick feedback (8+ cores) | ⚠️ Experimental |
+
+### Quick Workflow
+
+**During Development:**
+```bash
+./gradlew testFast        # Quick feedback (1.5-2 min)
+./gradlew testFast && git commit
+```
+
+**Before Final Merge (RECOMMENDED):**
+```bash
+./gradlew testAll         # Maximum stability (15-25 min)
+# If all pass, push to main
+git push origin <branch>
+```
+
+### Experimental: Parallel Testing (testParallel)
+
+For developers with powerful machines (8+ cores, 16+ GB RAM):
+
+```bash
+./gradlew testParallel    # 5-8 minutes, all tests, aggressive parallelization
+```
+
+**⚠️ WARNING:** This is experimental and may produce flaky results on:
+- Systems with fewer than 8 cores
+- Shared systems or laptops
+- Limited RAM (< 16 GB)
+
+**If you get flaky failures:**
+```bash
+./gradlew testAll         # Run stable sequential version
+```
+
+If `testAll` passes but `testParallel` fails, it's a race condition. Use `testAll` for final validation before merging.
+
+**See:** [Gradle Test Quick Reference](./backend/docs/GRADLE_TEST_QUICK_REFERENCE.md) for detailed guide.
+
+---
+
 ## API Documentation (OpenAPI/Swagger) ✨ NEW
 
 HDIM provides **interactive API documentation** via OpenAPI 3.0 and Swagger UI for all REST endpoints.

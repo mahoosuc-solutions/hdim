@@ -38,7 +38,7 @@ jobs:
   # STAGE 1: Change Detection (Fast, under 1 minute)
   # ============================================================================
   # Detects which services/modules changed to enable selective test execution.
-  # Output: flags indicating whether backend/services changed.
+  # Outputs: 20+ service-specific flags for fine-grained job conditioning
   # ============================================================================
   change-detection:
     name: Detect Changes
@@ -46,14 +46,26 @@ jobs:
     timeout-minutes: 5
     outputs:
       backend-changed: ${{ steps.filter.outputs.backend }}
-      services-changed: ${{ steps.filter.outputs.services }}
-      approval-service-changed: ${{ steps.filter.outputs.approval-service }}
-      quality-service-changed: ${{ steps.filter.outputs.quality-service }}
-      patient-service-changed: ${{ steps.filter.outputs.patient-service }}
-      care-gap-service-changed: ${{ steps.filter.outputs.care-gap-service }}
-      fhir-service-changed: ${{ steps.filter.outputs.fhir-service }}
-      cql-engine-changed: ${{ steps.filter.outputs.cql-engine }}
+      infrastructure-changed: ${{ steps.filter.outputs.infrastructure }}
+      gradle-changed: ${{ steps.filter.outputs.gradle }}
       shared-changed: ${{ steps.filter.outputs.shared }}
+      approval-service-changed: ${{ steps.filter.outputs.approval-service }}
+      agent-builder-service-changed: ${{ steps.filter.outputs.agent-builder-service }}
+      agent-runtime-service-changed: ${{ steps.filter.outputs.agent-runtime-service }}
+      audit-query-service-changed: ${{ steps.filter.outputs.audit-query-service }}
+      care-gap-service-changed: ${{ steps.filter.outputs.care-gap-service }}
+      care-gap-event-service-changed: ${{ steps.filter.outputs.care-gap-event-service }}
+      cdr-processor-service-changed: ${{ steps.filter.outputs.cdr-processor-service }}
+      cql-engine-changed: ${{ steps.filter.outputs.cql-engine }}
+      event-router-service-changed: ${{ steps.filter.outputs.event-router-service }}
+      fhir-service-changed: ${{ steps.filter.outputs.fhir-service }}
+      patient-service-changed: ${{ steps.filter.outputs.patient-service }}
+      patient-event-service-changed: ${{ steps.filter.outputs.patient-event-service }}
+      quality-service-changed: ${{ steps.filter.outputs.quality-service }}
+      quality-measure-event-service-changed: ${{ steps.filter.outputs.quality-measure-event-service }}
+      clinical-workflow-service-changed: ${{ steps.filter.outputs.clinical-workflow-service }}
+      gateway-services-changed: ${{ steps.filter.outputs.gateway-services }}
+      event-services-changed: ${{ steps.filter.outputs.event-services }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -67,29 +79,71 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
-            services:
-              - 'backend/modules/services/**'
-            approval-service:
-              - 'backend/modules/services/approval-service/**'
-            quality-service:
-              - 'backend/modules/services/quality-measure-service/**'
-            patient-service:
-              - 'backend/modules/services/patient-service/**'
-            care-gap-service:
-              - 'backend/modules/services/care-gap-service/**'
-            fhir-service:
-              - 'backend/modules/services/fhir-service/**'
-            cql-engine:
-              - 'backend/modules/services/cql-engine-service/**'
+            infrastructure:
+              - '.github/workflows/**'
+              - 'backend/build.gradle.kts'
+              - 'docker-compose.yml'
+            gradle:
+              - 'backend/gradle.properties'
+              - 'backend/gradle/**'
+              - 'backend/settings.gradle.kts'
             shared:
               - 'backend/modules/shared/**'
+            approval-service:
+              - 'backend/modules/services/approval-service/**'
+            agent-builder-service:
+              - 'backend/modules/services/agent-builder-service/**'
+            agent-runtime-service:
+              - 'backend/modules/services/agent-runtime-service/**'
+            audit-query-service:
+              - 'backend/modules/services/audit-query-service/**'
+            care-gap-service:
+              - 'backend/modules/services/care-gap-service/**'
+            care-gap-event-service:
+              - 'backend/modules/services/care-gap-event-service/**'
+              - 'backend/modules/services/care-gap-event-handler-service/**'
+            cdr-processor-service:
+              - 'backend/modules/services/cdr-processor-service/**'
+            cql-engine:
+              - 'backend/modules/services/cql-engine-service/**'
+            event-router-service:
+              - 'backend/modules/services/event-router-service/**'
+            fhir-service:
+              - 'backend/modules/services/fhir-service/**'
+              - 'backend/modules/services/fhir-event-bridge-service/**'
+            patient-service:
+              - 'backend/modules/services/patient-service/**'
+            patient-event-service:
+              - 'backend/modules/services/patient-event-service/**'
+              - 'backend/modules/services/patient-event-handler-service/**'
+            quality-service:
+              - 'backend/modules/services/quality-measure-service/**'
+            quality-measure-event-service:
+              - 'backend/modules/services/quality-measure-event-service/**'
+              - 'backend/modules/services/quality-measure-event-handler-service/**'
+            clinical-workflow-service:
+              - 'backend/modules/services/clinical-workflow-service/**'
+              - 'backend/modules/services/clinical-workflow-event-service/**'
+              - 'backend/modules/services/clinical-workflow-event-handler-service/**'
+            gateway-services:
+              - 'backend/modules/services/gateway-**'
+            event-services:
+              - 'backend/modules/services/**-event-service/**'
+              - 'backend/modules/services/**-event-handler-service/**'
 
-      - name: Summary
+      - name: Print Detection Results
         run: |
           echo "=== Change Detection Results ==="
-          echo "Backend changed: ${{ steps.filter.outputs.backend }}"
-          echo "Services changed: ${{ steps.filter.outputs.services }}"
-          echo "Shared changed: ${{ steps.filter.outputs.shared }}"
+          echo "Infrastructure: ${{ steps.filter.outputs.infrastructure }}"
+          echo "Gradle Config: ${{ steps.filter.outputs.gradle }}"
+          echo "Shared Modules: ${{ steps.filter.outputs.shared }}"
+          echo "Patient Service: ${{ steps.filter.outputs.patient-service }}"
+          echo "Care Gap Service: ${{ steps.filter.outputs.care-gap-service }}"
+          echo "Quality Service: ${{ steps.filter.outputs.quality-service }}"
+          echo "FHIR Service: ${{ steps.filter.outputs.fhir-service }}"
+          echo "CQL Engine: ${{ steps.filter.outputs.cql-engine }}"
+          echo "Event Services: ${{ steps.filter.outputs.event-services }}"
+          echo "Backend (any): ${{ steps.filter.outputs.backend }}"
 
   # ============================================================================
   # STAGE 2: Build (Required by all test jobs)
@@ -165,7 +219,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 15
-    if: ${{ needs.build.result == 'success' }}
+    if: |
+      ${{ needs.build.result == 'success' || needs.build.result == 'skipped' }}
 
     steps:
       - name: Checkout code
@@ -203,7 +258,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 20
-    if: ${{ needs.build.result == 'success' }}
+    if: |
+      ${{ needs.build.result == 'success' || needs.build.result == 'skipped' }}
 
     services:
       postgres:
@@ -271,7 +327,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 25
-    if: ${{ needs.build.result == 'success' }}
+    if: |
+      ${{ needs.build.result == 'success' || needs.build.result == 'skipped' }}
 
     services:
       postgres:
@@ -339,7 +396,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 35
-    if: ${{ needs.build.result == 'success' }}
+    if: |
+      ${{ needs.build.result == 'success' || needs.build.result == 'skipped' }}
 
     services:
       postgres:
@@ -445,9 +503,13 @@ jobs:
   validate-database:
     name: Validate - Database & Entity Migrations
     runs-on: ubuntu-latest
-    needs: build
+    needs: [change-detection, build]
     timeout-minutes: 20
-    if: ${{ needs.build.result == 'success' }}
+    if: |
+      ${{ (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+          (needs.change-detection.outputs.shared-changed == 'true' ||
+           needs.change-detection.outputs.backend-changed == 'true' ||
+           github.event_name == 'push') }}
 
     services:
       postgres:
@@ -528,9 +590,13 @@ jobs:
   security-scan:
     name: Validate - Security Scanning
     runs-on: ubuntu-latest
-    needs: build
+    needs: [change-detection, build]
     timeout-minutes: 30
-    if: ${{ needs.build.result == 'success' }}
+    if: |
+      ${{ (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+          (needs.change-detection.outputs.backend-changed == 'true' ||
+           needs.change-detection.outputs.infrastructure-changed == 'true' ||
+           github.event_name == 'push') }}
 
     steps:
       - name: Checkout code
@@ -583,11 +649,13 @@ jobs:
   code-quality:
     name: Validate - Code Quality (SonarQube)
     runs-on: ubuntu-latest
-    needs: build
+    needs: [change-detection, build]
     timeout-minutes: 30
     if: |
-      github.event_name == 'push' ||
-      github.event.pull_request.head.repo.full_name == github.repository
+      ${{ (needs.build.result == 'success' || needs.build.result == 'skipped') &&
+          (needs.change-detection.outputs.backend-changed == 'true' ||
+           github.event_name == 'push' ||
+           github.event.pull_request.head.repo.full_name == github.repository) }}
 
     steps:
       - name: Checkout code
@@ -639,7 +707,7 @@ jobs:
   pr-validation-gate:
     name: PR Validation Gate
     runs-on: ubuntu-latest
-    needs: [test-unit, test-fast, test-integration, test-slow, validate-database, security-scan, code-quality]
+    needs: [change-detection, test-unit, test-fast, test-integration, test-slow, validate-database, security-scan, code-quality]
     timeout-minutes: 5
     if: always()
 
@@ -656,35 +724,41 @@ jobs:
           echo "code-quality: ${{ needs.code-quality.result }}"
 
           FAILED_JOBS=""
+          SKIPPED_JOBS=""
 
-          if [ "${{ needs.test-unit.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS test-unit"
-          fi
-          if [ "${{ needs.test-fast.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS test-fast"
-          fi
-          if [ "${{ needs.test-integration.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS test-integration"
-          fi
-          if [ "${{ needs.test-slow.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS test-slow"
-          fi
-          if [ "${{ needs.validate-database.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS validate-database"
-          fi
-          if [ "${{ needs.security-scan.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS security-scan"
-          fi
-          if [ "${{ needs.code-quality.result }}" != "success" ]; then
-            FAILED_JOBS="$FAILED_JOBS code-quality"
+          # Function to check job result
+          check_job() {
+            local job_name=$1
+            local result=$2
+
+            if [ "$result" = "skipped" ]; then
+              SKIPPED_JOBS="$SKIPPED_JOBS $job_name"
+            elif [ "$result" != "success" ]; then
+              FAILED_JOBS="$FAILED_JOBS $job_name"
+            fi
+          }
+
+          # Check all jobs
+          check_job "test-unit" "${{ needs.test-unit.result }}"
+          check_job "test-fast" "${{ needs.test-fast.result }}"
+          check_job "test-integration" "${{ needs.test-integration.result }}"
+          check_job "test-slow" "${{ needs.test-slow.result }}"
+          check_job "validate-database" "${{ needs.validate-database.result }}"
+          check_job "security-scan" "${{ needs.security-scan.result }}"
+          check_job "code-quality" "${{ needs.code-quality.result }}"
+
+          # Report skipped jobs (informational only)
+          if [ -n "$SKIPPED_JOBS" ]; then
+            echo "Skipped jobs (filtered out by change detection):$SKIPPED_JOBS"
           fi
 
+          # Report failed jobs and exit with error
           if [ -n "$FAILED_JOBS" ]; then
-            echo "FAILED JOBS:$FAILED_JOBS"
+            echo "::error::FAILED JOBS:$FAILED_JOBS"
             exit 1
           fi
 
-          echo "All validations passed!"
+          echo "All validation checks passed or were appropriately skipped!"
 
   # ============================================================================
   # STAGE 5: Docker Build (Conditional, depends on gate)

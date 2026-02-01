@@ -1,4 +1,5 @@
 package com.healthdata.cdr.handler;
+import org.junit.jupiter.api.Tag;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.v25.message.RDE_O11;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("RDE Message Handler Tests")
+@Tag("unit")
 class RdeMessageHandlerTest {
 
     @InjectMocks

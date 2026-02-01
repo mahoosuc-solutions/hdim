@@ -1,0 +1,365 @@
+{
+  "report_metadata": {
+    "title": "HDIM Test Infrastructure Analysis - Slow Test Identification",
+    "generated_date": "2026-02-01",
+    "total_test_files": 613,
+    "total_test_lines_of_code": "~500000+",
+    "analysis_scope": "backend/modules services and shared infrastructure"
+  },
+  "executive_summary": {
+    "critical_findings": [
+      "11 heavyweight tests with Kafka polling and Thread.sleep() calls",
+      "6 tests marked @Disabled (Kafka/PostgreSQL dependencies)",
+      "24 tests using Thread.sleep() for synchronization (anti-pattern)",
+      "69 tests using @Testcontainers (Docker startup overhead)",
+      "507 tests exceeding 100 lines (complex/slow execution)",
+      "Top 5 tests exceed 900 lines each"
+    ],
+    "estimated_total_ci_cd_time": "30-45 minutes",
+    "primary_bottleneck": "@Testcontainers Docker startup (10+ minutes)"
+  },
+  "categories": {
+    "disabled_tests": {
+      "total": 6,
+      "status": "@Disabled",
+      "breakdown": {
+        "kafka_dependent": 3,
+        "test_implementation_mismatch": 2,
+        "postgresql_specific": 1
+      },
+      "kafka_tests": [
+        {
+          "name": "CareGapAuditPerformanceTest",
+          "file": "/backend/modules/services/care-gap-service/src/test/java/com/healthdata/caregap/service/CareGapAuditPerformanceTest.java",
+          "reason": "Kafka-dependent tests disabled for local H2 testing. KRaft implementation plan pending."
+        },
+        {
+          "name": "CareGapAuditIntegrationHeavyweightTest",
+          "file": "/backend/modules/services/care-gap-service/src/test/java/com/healthdata/caregap/service/CareGapAuditIntegrationHeavyweightTest.java",
+          "reason": "Kafka-dependent tests disabled for local H2 testing. KRaft implementation plan pending."
+        },
+        {
+          "name": "CdrProcessorAuditIntegrationHeavyweightTest",
+          "file": "/backend/modules/services/cdr-processor-service/src/test/java/com/healthdata/cdr/audit/CdrProcessorAuditIntegrationHeavyweightTest.java",
+          "lines": 497,
+          "reason": "Phase 1: Kafka Docker dependency removed - requires KRaft implementation for Phase 2"
+        }
+      ],
+      "oauth2_tests": [
+        {
+          "name": "OAuth2IntegrationTest",
+          "file": "/backend/modules/services/cms-connector-service/src/test/java/com/healthdata/cms/auth/OAuth2IntegrationTest.java",
+          "reason": "@RestClientTest does not provide RestTemplate bean for OAuth2Manager",
+          "fix": "Update OAuth2Manager to use RestClient or provide RestTemplate mock"
+        },
+        {
+          "name": "OAuth2ManagerTest",
+          "file": "/backend/modules/services/cms-connector-service/src/test/java/com/healthdata/cms/auth/OAuth2ManagerTest.java",
+          "reason": "Tests mock postForObject() but implementation uses exchange()",
+          "fix": "Update test mocks to match actual OAuth2Manager.exchange() usage"
+        }
+      ],
+      "postgresql_tests": [
+        {
+          "name": "EntityMigrationValidationTest",
+          "file": "/backend/modules/services/cdr-processor-service/src/test/java/com/healthdata/cdr/integration/EntityMigrationValidationTest.java",
+          "reason": "Phase 2: Skipped in H2 tests - requires PostgreSQL for JSONB/ENUM types"
+        }
+      ]
+    },
+    "heavyweight_tests_active": {
+      "total": 11,
+      "status": "ACTIVE",
+      "estimated_execution_time": "2-5 minutes",
+      "key_features": [
+        "Kafka polling with ConsumerRecords",
+        "Docker container dependencies (@Testcontainers)",
+        "Thread.sleep() synchronization calls",
+        "Multi-service event flow validation"
+      ],
+      "tier_1_heaviest": [
+        {
+          "rank": 1,
+          "name": "PayerWorkflowsAuditIntegrationHeavyweightTest",
+          "file": "/backend/modules/services/payer-workflows-service/src/test/java/com/healthdata/payer/audit/PayerWorkflowsAuditIntegrationHeavyweightTest.java",
+          "lines": 471,
+          "thread_sleep_calls": 14,
+          "kafka_poll_calls": 10,
+          "estimated_execution_time_seconds": "15-25",
+          "priority": "CRITICAL - 14x Thread.sleep() calls"
+        }
+      ],
+      "tier_2_cross_service_e2e": [
+        {
+          "rank": 3,
+          "name": "ClinicalDecisionAuditE2ETest",
+          "file": "/backend/testing/cross-service-audit/src/test/java/com/healthdata/testing/audit/ClinicalDecisionAuditE2ETest.java",
+          "lines": 397,
+          "thread_sleep_calls": 13,
+          "kafka_poll_calls": 6,
+          "estimated_execution_time_seconds": "10-20",
+          "priority": "CRITICAL - 13x Thread.sleep() calls"
+        },
+        {
+          "rank": 4,
+          "name": "ApprovalAuditIntegrationHeavyweightTest",
+          "file": "/backend/modules/services/approval-service/src/test/java/com/healthdata/approval/audit/ApprovalAuditIntegrationHeavyweightTest.java",
+          "lines": 397,
+          "thread_sleep_calls": 13,
+          "kafka_poll_calls": 9,
+          "estimated_execution_time_seconds": "10-20",
+          "priority": "CRITICAL - 13x Thread.sleep() calls"
+        }
+      ]
+    },
+    "thread_sleep_tests": {
+      "total": 24,
+      "status": "ACTIVE",
+      "anti_pattern_severity": "HIGH",
+      "issue": "Using Thread.sleep() for synchronization wastes CPU and creates flaky tests",
+      "solution": "Replace with CountDownLatch, Awaitility, or @Testcontainers wait strategies",
+      "critical_tests": [
+        {
+          "rank": 1,
+          "name": "PayerWorkflowsAuditIntegrationHeavyweightTest",
+          "calls": 14
+        },
+        {
+          "rank": 2,
+          "name": "ClinicalDecisionAuditE2ETest",
+          "calls": 13
+        },
+        {
+          "rank": 3,
+          "name": "ApprovalAuditIntegrationHeavyweightTest",
+          "calls": 13
+        },
+        {
+          "rank": 4,
+          "name": "HIPAAAuditComplianceTest",
+          "calls": 11
+        }
+      ]
+    },
+    "testcontainers_tests": {
+      "total": 69,
+      "status": "ACTIVE",
+      "estimated_execution_time": "10-15 minutes",
+      "primary_overhead": "Docker image initialization and container startup",
+      "services_with_highest_usage": [
+        {
+          "service": "Clinical Workflow Service",
+          "count": "12+"
+        },
+        {
+          "service": "Quality Measure Service",
+          "count": "11+"
+        },
+        {
+          "service": "Patient Service",
+          "count": "9+"
+        },
+        {
+          "service": "Payer Workflows Service",
+          "count": "8+"
+        }
+      ],
+      "optimization_opportunities": [
+        "Reuse Testcontainer instances across test classes",
+        "Use Docker Compose mode for multi-service tests",
+        "Cache Docker images locally",
+        "Use static @Container resources instead of instance methods"
+      ]
+    },
+    "large_test_files": {
+      "total": 10,
+      "status": "ACTIVE",
+      "threshold": ">500 lines",
+      "estimated_execution_time": "3-5 minutes",
+      "top_5": [
+        {
+          "rank": 1,
+          "name": "HealthScoreServiceTest.java",
+          "lines": 1912,
+          "issue": "Numerous test cases, complex setup, mock intensive",
+          "recommendation": "Break into 5 focused test classes by feature"
+        },
+        {
+          "rank": 2,
+          "name": "CdsServiceTest.java",
+          "lines": 1376,
+          "issue": "Clinical decision support service test suite",
+          "recommendation": "Refactor to use @ParameterizedTest for readability"
+        },
+        {
+          "rank": 3,
+          "name": "VitalSignsServiceTest.java",
+          "lines": 1319,
+          "issue": "Complex vital signs validation logic",
+          "recommendation": "Extract test data builders, use @ParameterizedTest"
+        },
+        {
+          "rank": 4,
+          "name": "CdsControllerTest.java",
+          "lines": 1199,
+          "issue": "REST API endpoint test coverage",
+          "recommendation": "Use MockMvc with @ParameterizedTest"
+        },
+        {
+          "rank": 5,
+          "name": "PatientAggregationServiceTest.java",
+          "lines": 1108,
+          "issue": "Multi-tenant patient aggregation logic",
+          "recommendation": "Extract to feature-based test classes"
+        }
+      ]
+    },
+    "high_volume_loop_tests": {
+      "total": 22,
+      "status": "ACTIVE",
+      "threshold": "1000+ iterations per loop",
+      "estimated_execution_time": "5-10 minutes",
+      "examples": [
+        {
+          "name": "PHIEncryptionTest.java",
+          "pattern": "1000+ encryption operations in loop"
+        },
+        {
+          "name": "CdaToFhirConverterTest.java",
+          "pattern": "CDA to FHIR conversion with large datasets"
+        },
+        {
+          "name": "CqlEngineServiceIntegrationTest.java",
+          "pattern": "CQL expression evaluation on 1000+ patient records"
+        },
+        {
+          "name": "DeadLetterQueueServiceTest.java",
+          "pattern": "DLQ processing with 1000+ message retry cycles"
+        }
+      ],
+      "recommendation": "Reduce dataset sizes for unit tests, use performance benchmarks for volume tests"
+    }
+  },
+  "execution_time_breakdown": {
+    "disabled_tests": {
+      "count": 6,
+      "estimated_minutes": 0,
+      "reason": "Skipped - not executed"
+    },
+    "heavyweight_kafka_tests": {
+      "count": 11,
+      "estimated_minutes": "2-5",
+      "reason": "Kafka polling with Thread.sleep() overhead"
+    },
+    "thread_sleep_tests": {
+      "count": 24,
+      "estimated_minutes": "2-3",
+      "reason": "Synchronization anti-pattern overhead"
+    },
+    "docker_testcontainers": {
+      "count": 69,
+      "estimated_minutes": "10+",
+      "reason": "Container startup and initialization"
+    },
+    "large_test_files": {
+      "count": 10,
+      "estimated_minutes": "3-5",
+      "reason": "Complex/slow execution"
+    },
+    "high_volume_loops": {
+      "count": 22,
+      "estimated_minutes": "5-10",
+      "reason": "1000+ iteration dataset processing"
+    },
+    "all_other_tests": {
+      "count": 480,
+      "estimated_minutes": "10-15",
+      "reason": "Baseline unit and integration tests"
+    },
+    "total": {
+      "count": 613,
+      "estimated_minutes": "30-45",
+      "description": "Full CI/CD test suite execution time"
+    }
+  },
+  "recommendations": {
+    "priority_1_high_impact": [
+      {
+        "action": "Implement KRaft mode for Kafka in Docker Compose",
+        "impact": "Re-enable 3 disabled tests covering care gap and CDR processor services",
+        "effort": "2-3 days",
+        "estimated_time_saved": "5-10 minutes per CI/CD run"
+      }
+    ],
+    "priority_2_medium_impact": [
+      {
+        "action": "Replace Thread.sleep() with Awaitility in critical tests",
+        "target_tests": [
+          "PayerWorkflowsAuditIntegrationHeavyweightTest (14 calls)",
+          "ClinicalDecisionAuditE2ETest (13 calls)",
+          "ApprovalAuditIntegrationHeavyweightTest (13 calls)",
+          "HIPAAAuditComplianceTest (11 calls)"
+        ],
+        "pattern": "Thread.sleep(500) -> Awaitility.await().timeout(Duration.ofSeconds(5))",
+        "effort": "1-2 days",
+        "estimated_time_saved": "1-2 minutes per CI/CD run",
+        "benefit": "More reliable tests, CPU efficient"
+      }
+    ],
+    "priority_3_structural_improvements": [
+      {
+        "action": "Refactor 10 mega-test files (>900 lines)",
+        "examples": [
+          "HealthScoreServiceTest (1912 lines) -> 5 focused classes",
+          "CdsServiceTest (1376 lines) -> 3 feature-based classes",
+          "VitalSignsServiceTest (1319 lines) -> 4 test classes"
+        ],
+        "effort": "3-5 days",
+        "estimated_time_saved": "2-3 minutes per CI/CD run",
+        "benefit": "Faster execution, better parallelization, improved maintainability"
+      }
+    ],
+    "priority_4_optimization": [
+      {
+        "action": "Optimize @Testcontainers usage (69 tests)",
+        "strategies": [
+          "Use static @Container resources for reuse",
+          "Consolidate multi-service tests to shared container instances",
+          "Cache Docker images locally",
+          "Use Docker Compose mode for related services"
+        ],
+        "effort": "2-3 days",
+        "estimated_time_saved": "5-10 minutes per CI/CD run"
+      },
+      {
+        "action": "Reduce dataset sizes in high-volume loop tests",
+        "target": "22 tests with 1000+ iteration loops",
+        "strategy": "Unit tests: 10-100 iterations; Performance tests: 1000+ (marked @Tag('performance'))",
+        "effort": "1-2 days",
+        "estimated_time_saved": "2-3 minutes per CI/CD run"
+      }
+    ],
+    "quick_wins": [
+      {
+        "action": "Enable PostgreSQL-dependent validation in CI",
+        "target": "EntityMigrationValidationTest",
+        "effort": "4 hours",
+        "impact": "Catch schema drift earlier in CI/CD pipeline"
+      },
+      {
+        "action": "Fix OAuth2 test mocks (2 tests)",
+        "targets": [
+          "OAuth2IntegrationTest - @RestClientTest bean issue",
+          "OAuth2ManagerTest - postForObject/exchange mismatch"
+        ],
+        "effort": "4 hours",
+        "impact": "Enable OAuth2Manager testing"
+      }
+    ]
+  },
+  "files_generated": {
+    "main_report": "/mnt/wdblack/dev/projects/hdim-master/TEST_INFRASTRUCTURE_ANALYSIS.md",
+    "summary_csv": "test_analysis_summary.csv",
+    "this_json": "test_analysis.json"
+  }
+}

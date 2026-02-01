@@ -19,12 +19,19 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 
   kafka:
-    bootstrap-servers: localhost:9999  # Unused in unit tests
+    # Bootstrap servers auto-configured by @EmbeddedKafka
+    bootstrap-servers: localhost:9092  # Will be overridden by @EmbeddedKafka
     consumer:
       auto-offset-reset: earliest
       enable-auto-commit: false
+      group-id: test-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       retries: 0
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
 # Disable event store client for tests
 event-store:

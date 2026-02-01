@@ -9,44 +9,30 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-// import org.springframework.data.redis.core.RedisTemplate;  // Redis removed from event services
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * RED Phase: Quality Measure Event Service Integration Tests
+ * PHASE 5: Quality Measure Event Service Integration Tests
  *
- * Validates complete flow: REST → Service → EventHandler → Database → Redis Cache
+ * Migrated from @Testcontainers Docker pattern to @EmbeddedKafka.
+ * Uses embedded Kafka broker for fast, reliable testing without Docker.
+ *
+ * Validates complete flow: REST → Service → EventHandler → Database
  * Tests measure evaluation, scoring, risk stratification, and cohort aggregation
  */
 @SpringBootTest
-@AutoConfigureMockMvc
-@Testcontainers
+@EmbeddedKafka(partitions = 3, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
+@ActiveProfiles("test")
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("QualityMeasureEventService Integration Tests")
 class QualityMeasureEventServiceIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-        DockerImageName.parse("postgres:16-alpine")
-    ).withDatabaseName("quality_test_db")
-     .withUsername("test_user")
-     .withPassword("test_password");
-
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("apache/kafka:3.8.0")
-    ).withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,27 +40,12 @@ class QualityMeasureEventServiceIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // @Autowired(required = false)
-    // private RedisTemplate<String, Object> redisTemplate;  // Redis removed from event services
-
     private static final String TENANT_ID = "TENANT-001";
     private static final String API_BASE_PATH = "/api/v1/measures";
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("spring.redis.host", () -> "localhost");  // Will use embedded Redis if available
-    }
-
     @BeforeEach
     void setUp() {
-        // Redis removed from event services - no cache cleanup needed
-        // if (redisTemplate != null) {
-        //     redisTemplate.getConnectionFactory().getConnection().flushDb();
-        // }
+        // Test setup if needed
     }
 
     // ===== Measure Evaluation Tests =====

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
 import com.healthdata.caregap.config.BaseIntegrationTest;
-import com.healthdata.caregap.config.TestKafkaContainerProvider;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -29,14 +28,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Heavyweight Integration Test for Care Gap Audit Integration with real Kafka.
- * 
+ *
  * This test requires Docker and uses Testcontainers to spin up a real Kafka instance.
  * It verifies end-to-end audit event publishing to Kafka.
- * 
+ *
  * Test Categories:
  * - Lightweight: CareGapAuditIntegrationTest (uses mocks, no Docker)
  * - Heavyweight: This class (uses real Kafka via Testcontainers, requires Docker)
- * 
+ *
  * To run:
  * - Ensure Docker is running
  * - Run: ./gradlew test --tests CareGapAuditIntegrationHeavyweightTest
@@ -51,7 +50,7 @@ class CareGapAuditIntegrationHeavyweightTest {
 
     @DynamicPropertySource
     static void configureKafka(DynamicPropertyRegistry registry) {
-        String bootstrapServers = TestKafkaContainerProvider.getBootstrapServers();
+        String bootstrapServers = System.getProperty("spring.kafka.bootstrap-servers", "localhost:9092");
         registry.add("spring.kafka.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.producer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
@@ -81,10 +80,10 @@ class CareGapAuditIntegrationHeavyweightTest {
     @BeforeEach
     void setUp() {
         // ObjectMapper is now autowired from Spring, so it's configured the same way as the publisher
-        
+
         // Create Kafka consumer to verify published events
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, TestKafkaContainerProvider.getBootstrapServers());
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getProperty("spring.kafka.bootstrap-servers", "localhost:9092"));
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-" + UUID.randomUUID());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());

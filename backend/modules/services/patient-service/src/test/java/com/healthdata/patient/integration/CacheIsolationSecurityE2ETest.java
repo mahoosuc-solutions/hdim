@@ -145,7 +145,7 @@ class CacheIsolationSecurityE2ETest {
             assertThat(redisTemplate.hasKey(cacheKey)).isTrue();
 
             // Wait for cache to expire (testing uses shorter TTL)
-            Thread.sleep(Duration.ofSeconds(2).toMillis());
+            Thread.sleep(300);
 
             // Verify cache expired
             assertThat(redisTemplate.hasKey(cacheKey)).isFalse();

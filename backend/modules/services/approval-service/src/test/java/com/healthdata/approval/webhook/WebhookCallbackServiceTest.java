@@ -91,7 +91,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100); // Wait for async execution
+            Thread.sleep(10); // Wait for async execution
 
             // Then
             verify(requestBodyUriSpec).uri(CALLBACK_URL);
@@ -109,7 +109,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(webClientBuilder, never()).build();
@@ -126,7 +126,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(webClientBuilder, never()).build();
@@ -146,7 +146,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             Map<String, Object> capturedPayload = payloadCaptor.getValue();
@@ -172,7 +172,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             Map<String, Object> capturedPayload = payloadCaptor.getValue();
@@ -196,7 +196,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(requestBodySpec).header(eq("X-HDIM-Signature"), signatureCaptor.capture());
@@ -220,7 +220,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(requestBodySpec).header(eq("X-HDIM-Signature"), signatureCaptor.capture());
@@ -246,7 +246,7 @@ class WebhookCallbackServiceTest {
             // When/Then
             assertThatCode(() -> {
                 webhookService.sendDecisionCallback(request);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
         }
 
@@ -262,7 +262,7 @@ class WebhookCallbackServiceTest {
             // When/Then
             assertThatCode(() -> {
                 webhookService.sendDecisionCallback(request);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
 
             verify(webClientBuilder, never()).build();
@@ -281,7 +281,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(500); // Wait for retries
+            Thread.sleep(50); // Wait for retries
 
             // Then - Verify retry mechanism was configured
             verify(requestBodySpec).bodyValue(anyString());
@@ -297,7 +297,7 @@ class WebhookCallbackServiceTest {
             // When/Then
             assertThatCode(() -> {
                 webhookService.sendDecisionCallback(request);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
 
             verify(webClientBuilder, never()).build();
@@ -325,7 +325,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             Map<String, Object> payload = payloadCaptor.getValue();
@@ -355,7 +355,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             Map<String, Object> capturedPayload = payloadCaptor.getValue();
@@ -380,7 +380,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then - Should configure retry but not actually retry 4xx
             verify(requestBodySpec).bodyValue(anyString());
@@ -399,7 +399,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(requestBodySpec).bodyValue(anyString());
@@ -418,7 +418,7 @@ class WebhookCallbackServiceTest {
 
             // When
             webhookService.sendDecisionCallback(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(requestBodySpec).bodyValue(anyString());

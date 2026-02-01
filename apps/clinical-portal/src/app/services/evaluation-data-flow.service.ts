@@ -10,7 +10,6 @@ import { DataFlowStep } from '../components/evaluation-data-flow/evaluation-data
   providedIn: 'root',
 })
 export class EvaluationDataFlowService {
-  private readonly logger: any;
   private ws?: WebSocket;
   private dataFlowSubject = new Subject<DataFlowStep>();
   private connected = false;

@@ -58,7 +58,6 @@ export interface BatchMonitorState {
   providedIn: 'root'
 })
 export class BatchMonitorService {
-  private readonly logger: any;
   private stateSubject = new Subject<BatchMonitorState>();
   // ⚠️ CRITICAL HIPAA COMPLIANCE - DO NOT REMOVE refCount: true ⚠️
   // refCount: true ensures cache is destroyed when all subscribers unsubscribe

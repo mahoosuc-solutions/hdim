@@ -63,7 +63,6 @@ export class DocumentUploadComponent {
   ocrStatus: OcrStatus | null = null;
   uploadedFiles: AttachmentUploadResponse[] = [];
 
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private uploadService: DocumentUploadService,

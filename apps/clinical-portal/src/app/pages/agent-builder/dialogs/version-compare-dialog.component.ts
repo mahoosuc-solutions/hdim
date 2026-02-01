@@ -482,7 +482,6 @@ interface ConfigDiff {
 })
 export class VersionCompareDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.logger.withContext('VersionCompareDialogComponent');
 
   version1: AgentVersion | null = null;
   version2: AgentVersion | null = null;

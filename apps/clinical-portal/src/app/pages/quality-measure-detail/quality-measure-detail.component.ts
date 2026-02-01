@@ -144,7 +144,6 @@ export class QualityMeasureDetailComponent implements OnInit {
   // Button loading states
   backButtonLoading = false;
 
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   // HEDIS Measures Database (matches quality-measures.component.ts)
   private hedisMeasures: QualityMeasure[] = [

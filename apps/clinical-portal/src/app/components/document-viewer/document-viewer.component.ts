@@ -62,7 +62,6 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
   previewUrl: SafeResourceUrl | null = null;
 
   private destroy$ = new Subject<void>();
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private documentService: DocumentService,

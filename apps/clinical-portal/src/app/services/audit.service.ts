@@ -23,7 +23,6 @@ import { API_CONFIG } from '../config/api.config';
   providedIn: 'root',
 })
 export class AuditService {
-  private readonly logger: any;
   private readonly AUDIT_ENDPOINT = '/audit/events';
   private readonly BATCH_INTERVAL_MS = 5000; // Batch events every 5 seconds
   private readonly MAX_BUFFER_SIZE = 50; // Maximum events to buffer before force flush

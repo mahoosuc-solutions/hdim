@@ -105,7 +105,6 @@ export class PatientTimelineComponent implements OnInit, OnDestroy {
   expandedEventIds = new Set<string>();
 
   private destroy$ = new Subject<void>();
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private patientService: PatientService,

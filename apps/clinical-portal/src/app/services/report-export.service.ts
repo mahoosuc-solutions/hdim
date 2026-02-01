@@ -39,7 +39,6 @@ export interface MeasureStats {
   providedIn: 'root',
 })
 export class ReportExportService {
-  private readonly logger: any;
 
   constructor(private readonly loggerService: LoggerService) {
   }

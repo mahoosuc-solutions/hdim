@@ -24,7 +24,6 @@ import { LoggerService } from '../../services/logger.service';
 })
 export class AiAuditDashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   // Natural language query
   naturalLanguageQuery = '';

@@ -63,7 +63,6 @@ const RETRY_DELAY_MS = 5000;
   providedIn: 'root',
 })
 export class SyncQueueService implements OnDestroy {
-  private readonly logger: any;
   private readonly destroy$ = new Subject<void>();
   private readonly syncInProgress = new BehaviorSubject<boolean>(false);
   private readonly syncProgress = new BehaviorSubject<SyncProgress>({

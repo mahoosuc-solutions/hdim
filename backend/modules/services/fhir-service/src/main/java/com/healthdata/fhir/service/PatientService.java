@@ -23,6 +23,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 
+import com.healthdata.fhir.audit.FhirAuditIntegration;
 import com.healthdata.fhir.persistence.PatientEntity;
 import com.healthdata.fhir.persistence.PatientRepository;
 import com.healthdata.fhir.validation.PatientValidator;
@@ -43,6 +44,7 @@ public class PatientService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final Cache cache;
     private final MeterRegistry meterRegistry;
+    private final FhirAuditIntegration auditIntegration;
 
     // Query timing metrics for Issue #137
     private final Timer singlePatientQueryTimer;
@@ -54,10 +56,12 @@ public class PatientService {
             PatientValidator patientValidator,
             KafkaTemplate<String, Object> kafkaTemplate,
             CacheManager cacheManager,
-            MeterRegistry meterRegistry) {
+            MeterRegistry meterRegistry,
+            FhirAuditIntegration auditIntegration) {
         this.patientRepository = patientRepository;
         this.patientValidator = patientValidator;
         this.kafkaTemplate = kafkaTemplate;
+        this.auditIntegration = auditIntegration;
         this.cache = cacheManager.getCache(CACHE_NAME);
         this.meterRegistry = meterRegistry;
 
@@ -184,12 +188,29 @@ public class PatientService {
             meterRegistry.counter("fhir.patient.cache", "result", "miss").increment();
 
             // Use findActiveByTenantIdAndId to exclude soft-deleted patients
-            return patientRepository.findActiveByTenantIdAndId(tenantId, uuid)
+            Optional<Patient> result = patientRepository.findActiveByTenantIdAndId(tenantId, uuid)
                     .map(entity -> {
                         Patient parsed = fromEntity(entity);
                         cachePut(tenantId, patientId, parsed);
+                        
+                        // Publish audit event
+                        auditIntegration.publishFhirQueryEvent(
+                                tenantId, "Patient", patientId,
+                                "read", new HashMap<>(), 1, 0, "system"
+                        );
+                        
                         return parsed;
                     });
+            
+            if (result.isEmpty()) {
+                // Audit failed access attempt
+                auditIntegration.publishFhirQueryEvent(
+                        tenantId, "Patient", patientId,
+                        "read", new HashMap<>(), 0, 0, "system"
+                );
+            }
+            
+            return result;
         });
     }
 

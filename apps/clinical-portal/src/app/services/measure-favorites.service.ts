@@ -1,4 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { MeasureInfo } from '../models/cql-library.model';
 
 const STORAGE_KEYS = {
@@ -43,7 +44,8 @@ export class MeasureFavoritesService {
   readonly favoritesCount = computed(() => this._favorites().length);
   readonly hasRecent = computed(() => this._recentMeasures().length > 0);
 
-  constructor() {
+  constructor(
+    private logger: LoggerService,) {
     this.loadFromStorage();
   }
 
@@ -62,7 +64,7 @@ export class MeasureFavoritesService {
         this._recentMeasures.set(JSON.parse(recentJson));
       }
     } catch (error) {
-      console.error('Error loading measure favorites from storage:', error);
+      this.logger.error('Error loading measure favorites from storage:', { error });
       this._favorites.set([]);
       this._recentMeasures.set([]);
     }
@@ -75,7 +77,7 @@ export class MeasureFavoritesService {
     try {
       localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(this._favorites()));
     } catch (error) {
-      console.error('Error saving measure favorites:', error);
+      this.logger.error('Error saving measure favorites:', { error });
     }
   }
 
@@ -86,7 +88,7 @@ export class MeasureFavoritesService {
     try {
       localStorage.setItem(STORAGE_KEYS.RECENT, JSON.stringify(this._recentMeasures()));
     } catch (error) {
-      console.error('Error saving recent measures:', error);
+      this.logger.error('Error saving recent measures:', { error });
     }
   }
 

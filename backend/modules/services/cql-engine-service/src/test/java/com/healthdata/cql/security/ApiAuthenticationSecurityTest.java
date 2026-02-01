@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Import(TestRedisConfiguration.class)
+@WithMockUser(authorities = {"MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE"})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
 @DisplayName("API Authentication Security Tests")
@@ -75,7 +77,7 @@ class ApiAuthenticationSecurityTest extends CqlTestcontainersBase {
 
     @BeforeEach
     void setUp() {
-        testLibrary = new CqlLibrary(TENANT_ID, "AuthTestLibrary", "1.0.0");
+        testLibrary = buildLibrary(TENANT_ID, "AuthTestLibrary", "1.0.0");
         testLibrary.setStatus("ACTIVE");
         testLibrary.setCqlContent("library AuthTestLibrary version '1.0.0'\ndefine Test: true");
         testLibrary = libraryRepository.save(testLibrary);
@@ -325,7 +327,7 @@ class ApiAuthenticationSecurityTest extends CqlTestcontainersBase {
     @DisplayName("Should not expose library from different tenant")
     void testCrossTenantAccess_DifferentTenant_NotVisible() throws Exception {
         // Create library for a different tenant
-        CqlLibrary otherTenantLibrary = new CqlLibrary("other-tenant", "SecretLibrary", "1.0.0");
+        CqlLibrary otherTenantLibrary = buildLibrary("other-tenant", "SecretLibrary", "1.0.0");
         otherTenantLibrary.setStatus("ACTIVE");
         otherTenantLibrary.setCqlContent("library SecretLibrary version '1.0.0'");
         libraryRepository.save(otherTenantLibrary);

@@ -2,6 +2,8 @@ package com.healthdata.patient.config;
 
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
 import com.healthdata.authentication.security.TenantAccessFilter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -26,7 +28,8 @@ class PatientSecurityConfigTest {
                             WebMvcAutoConfiguration.class
                     ))
                     .withUserConfiguration(PatientSecurityConfig.class)
-                    .withBean(JwtAuthenticationFilter.class, () -> mock(JwtAuthenticationFilter.class));
+                    .withBean(JwtAuthenticationFilter.class, () -> mock(JwtAuthenticationFilter.class))
+                    .withBean(MeterRegistry.class, SimpleMeterRegistry::new);
 
     @Test
     @DisplayName("Should create test profile security chain and cors config")

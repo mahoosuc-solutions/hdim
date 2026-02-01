@@ -15,7 +15,7 @@ curl http://localhost:8080/actuator/health
 
 ## 📊 Architecture
 
-This is a **modular monolith** built with Spring Boot 3.3.5 and Spring Modulith 1.3. It replaces the previous 9-microservice architecture with a single, high-performance application.
+This is a **modular monolith** built with Spring Boot 3.3.6 and Spring Modulith 1.3. It replaces the previous 9-microservice architecture with a single, high-performance application.
 
 ### Modules
 

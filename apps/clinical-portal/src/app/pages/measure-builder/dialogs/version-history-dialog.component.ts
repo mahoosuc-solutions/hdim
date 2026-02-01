@@ -18,6 +18,7 @@ import {
   MeasureVersion,
   VersionDiff,
 } from '../../../services/custom-measure.service';
+import { LoggerService } from '../../../services/logger.service';
 
 export interface VersionHistoryDialogData {
   measure: CustomMeasure;
@@ -706,12 +707,11 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
   // Comparison state
   comparisonResult: VersionDiff[] | null = null;
   comparisonV1 = '';
-  comparisonV2 = '';
-
-  constructor(
+  comparisonV2 = '';  constructor(
     private dialogRef: MatDialogRef<VersionHistoryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VersionHistoryDialogData,
-    private customMeasureService: CustomMeasureService
+    private customMeasureService: CustomMeasureService,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -880,7 +880,7 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
           });
         },
         error: (err) => {
-          console.error('Failed to create version:', err);
+          this.logger.error('Failed to create version', err);
         },
       });
   }
@@ -912,7 +912,7 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
           });
         },
         error: (err) => {
-          console.error('Failed to publish version:', err);
+          this.logger.error('Failed to publish version', err);
         },
       });
   }
@@ -944,7 +944,7 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
           });
         },
         error: (err) => {
-          console.error('Failed to retire version:', err);
+          this.logger.error('Failed to retire version', err);
         },
       });
   }

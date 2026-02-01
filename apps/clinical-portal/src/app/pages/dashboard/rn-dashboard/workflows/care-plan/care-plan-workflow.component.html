@@ -1,0 +1,603 @@
+<div class="care-plan-workflow-container">
+  <!-- Header -->
+  <div class="workflow-header">
+    <div class="patient-info">
+      <h2>{{ data.patientName }} - Care Plan Management</h2>
+      <p class="patient-id">Patient ID: {{ data.patientId }}</p>
+    </div>
+    <mat-progress-bar
+      mode="determinate"
+      [value]="(currentStep / (totalSteps - 1)) * 100"
+      class="step-progress"
+    ></mat-progress-bar>
+    <div class="step-counter">Step {{ currentStep + 1 }} of {{ totalSteps }}</div>
+  </div>
+
+  <!-- Loading Spinner -->
+  @if (loading) {
+    <div class="loading-overlay">
+      <mat-spinner diameter="50"></mat-spinner>
+    </div>
+  }
+
+  <!-- Step 0: Select Template -->
+  @if (currentStep === 0) {
+    <div class="step-content">
+      <h3>Step 1: Select Care Plan Template</h3>
+      <p class="step-description">Choose a care plan template to initialize this care plan</p>
+
+      <mat-form-field class="full-width">
+        <mat-label>Care Plan Template</mat-label>
+        <mat-select formControlName="selectedTemplate">
+          <mat-option value="">-- Select Template --</mat-option>
+          @for (template of carePlanTemplates; track template.id) {
+            <mat-option [value]="template.id">
+              {{ template.name }} ({{ template.category }})
+            </mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      @if (form.get('selectedTemplate')?.value) {
+        <mat-card class="template-selection-card">
+          <mat-card-header>
+            <mat-card-title>Selected Template</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Template: {{ getSelectedTemplate()?.name }}</p>
+            <p>Category: {{ getSelectedTemplate()?.category }}</p>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 1: Add Problems -->
+  @if (currentStep === 1) {
+    <div class="step-content">
+      <h3>Step 2: Add Problems/Diagnoses</h3>
+      <p class="step-description">Identify and document the patient's current health problems</p>
+
+      <div class="form-section">
+        <mat-form-field class="full-width">
+          <mat-label>Problem/Diagnosis</mat-label>
+          <input matInput formControlName="problemName" />
+          @if (problemForm.get('problemName')?.invalid && problemForm.get('problemName')?.touched) {
+            <mat-error>Problem name is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Severity</mat-label>
+          <mat-select formControlName="severity">
+            <mat-option value="HIGH">High</mat-option>
+            <mat-option value="MEDIUM">Medium</mat-option>
+            <mat-option value="LOW">Low</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" (click)="addProblem()" [disabled]="!problemForm.valid">
+          <mat-icon>add</mat-icon>
+          Add Problem
+        </button>
+      </div>
+
+      <!-- Problems List -->
+      @if (problems.length > 0) {
+        <mat-card class="list-card">
+          <mat-card-header>
+            <mat-card-title>Problems ({{ problems.length }})</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table mat-table [dataSource]="problems" class="problems-table">
+              <!-- Problem Name Column -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell>Problem</th>
+                <td mat-cell>
+                  @for (problem of problems; track problem.id; let i = $index) {
+                    @if (i === problems.indexOf(problems[0])) {
+                      {{ problem.problemName }}
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Severity Column -->
+              <ng-container matColumnDef="severity">
+                <th mat-header-cell>Severity</th>
+                <td mat-cell>
+                  @for (problem of problems; track problem.id; let i = $index) {
+                    @if (i === problems.indexOf(problems[0])) {
+                      <mat-chip [color]="problem.severity === 'HIGH' ? 'warn' : 'primary'">
+                        {{ problem.severity }}
+                      </mat-chip>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Action Column -->
+              <ng-container matColumnDef="action">
+                <th mat-header-cell>Action</th>
+                <td mat-cell>
+                  @for (problem of problems; track problem.id; let i = $index) {
+                    @if (i === problems.indexOf(problems[0])) {
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeProblem(i)" matTooltip="Remove">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row></tr>
+              @for (problem of problems; track problem.id) {
+                <tr mat-row>
+                  <td>{{ problem.problemName }}</td>
+                  <td>
+                    <mat-chip [color]="problem.severity === 'HIGH' ? 'warn' : 'primary'">
+                      {{ problem.severity }}
+                    </mat-chip>
+                  </td>
+                  <td>
+                    <button aria-label="Delete"
+                      mat-icon-button
+                      color="warn"
+                      (click)="removeProblem(problems.indexOf(problem))"
+                      matTooltip="Remove"
+                    >
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </table>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 2: Define Goals -->
+  @if (currentStep === 2) {
+    <div class="step-content">
+      <h3>Step 3: Define Goals</h3>
+      <p class="step-description">Set measurable goals to address the identified problems</p>
+
+      <div class="form-section">
+        <mat-form-field class="full-width">
+          <mat-label>Related Problem</mat-label>
+          <mat-select formControlName="relatedProblemId">
+            <mat-option value="">-- Select Problem --</mat-option>
+            @for (problem of problems; track problem.id) {
+              <mat-option [value]="problem.id">{{ problem.problemName }}</mat-option>
+            }
+          </mat-select>
+          @if (goalForm.get('relatedProblemId')?.invalid && goalForm.get('relatedProblemId')?.touched) {
+            <mat-error>Problem selection is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <mat-label>Goal Description</mat-label>
+          <textarea
+            matInput
+            formControlName="goalDescription"
+           
+            rows="3"
+          ></textarea>
+          @if (goalForm.get('goalDescription')?.invalid && goalForm.get('goalDescription')?.touched) {
+            <mat-error>Goal description is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Target Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="picker"
+            formControlName="targetDate"
+           
+          />
+          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          @if (goalForm.get('targetDate')?.hasError('required')) {
+            <mat-error>Target date is required</mat-error>
+          }
+          @if (goalForm.get('targetDate')?.hasError('pastDate')) {
+            <mat-error>Target date must be in the future</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" (click)="addGoal()" [disabled]="!goalForm.valid">
+          <mat-icon>add</mat-icon>
+          Add Goal
+        </button>
+      </div>
+
+      <!-- Goals List -->
+      @if (goals.length > 0) {
+        <mat-card class="list-card">
+          <mat-card-header>
+            <mat-card-title>Goals ({{ goals.length }})</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table mat-table [dataSource]="goals" class="goals-table">
+              <!-- Goal Column -->
+              <ng-container matColumnDef="goal">
+                <th mat-header-cell>Goal</th>
+                <td mat-cell>
+                  @for (goal of goals; track goal.id; let i = $index) {
+                    @if (i === goals.indexOf(goals[0])) {
+                      {{ goal.goalDescription }}
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Target Date Column -->
+              <ng-container matColumnDef="target">
+                <th mat-header-cell>Target Date</th>
+                <td mat-cell>
+                  @for (goal of goals; track goal.id; let i = $index) {
+                    @if (i === goals.indexOf(goals[0])) {
+                      {{ goal.targetDate | date : 'MMM d, yyyy' }}
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Action Column -->
+              <ng-container matColumnDef="action">
+                <th mat-header-cell>Action</th>
+                <td mat-cell>
+                  @for (goal of goals; track goal.id; let i = $index) {
+                    @if (i === goals.indexOf(goals[0])) {
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeGoal(i)" matTooltip="Remove">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row></tr>
+              @for (goal of goals; track goal.id; let i = $index) {
+                <tr mat-row>
+                  <td>{{ goal.goalDescription }}</td>
+                  <td>{{ goal.targetDate | date : 'MMM d, yyyy' }}</td>
+                  <td>
+                    <button aria-label="Delete" mat-icon-button color="warn" (click)="removeGoal(i)" matTooltip="Remove">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </table>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 3: Plan Interventions -->
+  @if (currentStep === 3) {
+    <div class="step-content">
+      <h3>Step 4: Plan Interventions</h3>
+      <p class="step-description">Define specific actions to achieve the goals</p>
+
+      <div class="form-section">
+        <mat-form-field class="full-width">
+          <mat-label>Related Goal</mat-label>
+          <mat-select formControlName="relatedGoalId">
+            <mat-option value="">-- Select Goal --</mat-option>
+            @for (goal of goals; track goal.id) {
+              <mat-option [value]="goal.id">{{ goal.goalDescription }}</mat-option>
+            }
+          </mat-select>
+          @if (interventionForm.get('relatedGoalId')?.invalid && interventionForm.get('relatedGoalId')?.touched) {
+            <mat-error>Goal selection is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <mat-label>Intervention Name</mat-label>
+          <input matInput formControlName="interventionName" />
+          @if (interventionForm.get('interventionName')?.invalid && interventionForm.get('interventionName')?.touched) {
+            <mat-error>Intervention name is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Frequency</mat-label>
+          <mat-select formControlName="frequency">
+            <mat-option value="DAILY">Daily</mat-option>
+            <mat-option value="WEEKLY">Weekly</mat-option>
+            <mat-option value="MONTHLY">Monthly</mat-option>
+            <mat-option value="AS_NEEDED">As Needed</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" (click)="addIntervention()" [disabled]="!interventionForm.valid">
+          <mat-icon>add</mat-icon>
+          Add Intervention
+        </button>
+      </div>
+
+      <!-- Interventions List -->
+      @if (interventions.length > 0) {
+        <mat-card class="list-card">
+          <mat-card-header>
+            <mat-card-title>Interventions ({{ interventions.length }})</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table mat-table [dataSource]="interventions" class="interventions-table">
+              <!-- Intervention Column -->
+              <ng-container matColumnDef="intervention">
+                <th mat-header-cell>Intervention</th>
+                <td mat-cell>
+                  @for (intervention of interventions; track intervention.id; let i = $index) {
+                    @if (i === interventions.indexOf(interventions[0])) {
+                      {{ intervention.interventionName }}
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Frequency Column -->
+              <ng-container matColumnDef="frequency">
+                <th mat-header-cell>Frequency</th>
+                <td mat-cell>
+                  @for (intervention of interventions; track intervention.id; let i = $index) {
+                    @if (i === interventions.indexOf(interventions[0])) {
+                      {{ intervention.frequency | titlecase }}
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Action Column -->
+              <ng-container matColumnDef="action">
+                <th mat-header-cell>Action</th>
+                <td mat-cell>
+                  @for (intervention of interventions; track intervention.id; let i = $index) {
+                    @if (i === interventions.indexOf(interventions[0])) {
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeIntervention(i)" matTooltip="Remove">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row></tr>
+              @for (intervention of interventions; track intervention.id; let i = $index) {
+                <tr mat-row>
+                  <td>{{ intervention.interventionName }}</td>
+                  <td>{{ intervention.frequency | titlecase }}</td>
+                  <td>
+                    <button aria-label="Delete" mat-icon-button color="warn" (click)="removeIntervention(i)" matTooltip="Remove">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </table>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 4: Assign Team Members -->
+  @if (currentStep === 4) {
+    <div class="step-content">
+      <h3>Step 5: Assign Team Members</h3>
+      <p class="step-description">Add team members responsible for care coordination</p>
+
+      <div class="form-section">
+        <mat-form-field class="full-width">
+          <mat-label>Team Member Name</mat-label>
+          <input matInput formControlName="teamMemberName" />
+          @if (teamMemberForm.get('teamMemberName')?.invalid && teamMemberForm.get('teamMemberName')?.touched) {
+            <mat-error>Team member name is required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field>
+          <mat-label>Role</mat-label>
+          <mat-select formControlName="role">
+            <mat-option value="PRIMARY_NURSE">Primary Nurse</mat-option>
+            <mat-option value="PHYSICIAN">Physician</mat-option>
+            <mat-option value="CASE_MANAGER">Case Manager</mat-option>
+            <mat-option value="SOCIAL_WORKER">Social Worker</mat-option>
+            <mat-option value="OTHER">Other</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="addTeamMember()"
+          [disabled]="!teamMemberForm.valid || !canAddTeamMember()"
+        >
+          <mat-icon>add</mat-icon>
+          Add Team Member
+        </button>
+
+        @if (!canAddTeamMember()) {
+          <mat-error class="full-width">Only one Primary Nurse allowed</mat-error>
+        }
+      </div>
+
+      <!-- Team Members List -->
+      @if (teamMembers.length > 0) {
+        <mat-card class="list-card">
+          <mat-card-header>
+            <mat-card-title>Team Members ({{ teamMembers.length }})</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <table mat-table [dataSource]="teamMembers" class="team-table">
+              <!-- Name Column -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell>Name</th>
+                <td mat-cell>
+                  @for (member of teamMembers; track member.id; let i = $index) {
+                    @if (i === teamMembers.indexOf(teamMembers[0])) {
+                      {{ member.name }}
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Role Column -->
+              <ng-container matColumnDef="role">
+                <th mat-header-cell>Role</th>
+                <td mat-cell>
+                  @for (member of teamMembers; track member.id; let i = $index) {
+                    @if (i === teamMembers.indexOf(teamMembers[0])) {
+                      <mat-chip color="accent">{{ member.role | titlecase }}</mat-chip>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <!-- Action Column -->
+              <ng-container matColumnDef="action">
+                <th mat-header-cell>Action</th>
+                <td mat-cell>
+                  @for (member of teamMembers; track member.id; let i = $index) {
+                    @if (i === teamMembers.indexOf(teamMembers[0])) {
+                      <button aria-label="Delete" mat-icon-button color="warn" (click)="removeTeamMember(i)" matTooltip="Remove">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    }
+                  }
+                </td>
+              </ng-container>
+
+              <tr mat-header-row></tr>
+              @for (member of teamMembers; track member.id; let i = $index) {
+                <tr mat-row>
+                  <td>{{ member.name }}</td>
+                  <td>
+                    <mat-chip color="accent">{{ member.role | titlecase }}</mat-chip>
+                  </td>
+                  <td>
+                    <button aria-label="Delete" mat-icon-button color="warn" (click)="removeTeamMember(i)" matTooltip="Remove">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </td>
+                </tr>
+              }
+            </table>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Step 5: Review & Schedule Reviews -->
+  @if (currentStep === 5) {
+    <div class="step-content">
+      <h3>Step 6: Review & Schedule Next Review</h3>
+      <p class="step-description">Review the complete care plan and schedule the next review date</p>
+
+      <mat-form-field>
+        <mat-label>Next Review Date</mat-label>
+        <input matInput [matDatepicker]="reviewPicker" formControlName="nextReviewDate" />
+        <mat-datepicker-toggle matSuffix [for]="reviewPicker"></mat-datepicker-toggle>
+        <mat-datepicker #reviewPicker></mat-datepicker>
+        @if (form.get('nextReviewDate')?.invalid) {
+          <mat-error>Next review date is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Care Plan Summary -->
+      @if (carePlanSummary) {
+        <mat-card class="summary-card">
+          <mat-card-header>
+            <mat-card-title>Care Plan Summary</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <!-- Problems Summary -->
+            <div class="summary-section">
+              <h4>Problems ({{ carePlanSummary.problems.length }})</h4>
+              <ul class="summary-list">
+                @for (problem of carePlanSummary.problems; track problem.id) {
+                  <li>{{ problem.problemName }} - <span class="severity-badge">{{ problem.severity }}</span></li>
+                }
+              </ul>
+            </div>
+
+            <!-- Goals Summary -->
+            <div class="summary-section">
+              <h4>Goals ({{ carePlanSummary.goals.length }})</h4>
+              <ul class="summary-list">
+                @for (goal of carePlanSummary.goals; track goal.id) {
+                  <li>{{ goal.goalDescription }} (by {{ goal.targetDate | date : 'MMM d, yyyy' }})</li>
+                }
+              </ul>
+            </div>
+
+            <!-- Interventions Summary -->
+            <div class="summary-section">
+              <h4>Interventions ({{ carePlanSummary.interventions.length }})</h4>
+              <ul class="summary-list">
+                @for (intervention of carePlanSummary.interventions; track intervention.id) {
+                  <li>{{ intervention.interventionName }} - {{ intervention.frequency | lowercase }}</li>
+                }
+              </ul>
+            </div>
+
+            <!-- Team Members Summary -->
+            <div class="summary-section">
+              <h4>Team Members ({{ carePlanSummary.teamMembers.length }})</h4>
+              <ul class="summary-list">
+                @for (member of carePlanSummary.teamMembers; track member.id) {
+                  <li>{{ member.name }} - <span class="role-badge">{{ member.role | titlecase }}</span></li>
+                }
+              </ul>
+            </div>
+
+            <div class="next-review-info">
+              <p>
+                <strong>Next Review Date:</strong>
+                {{ carePlanSummary.nextReviewDate | date : 'MMMM d, yyyy' }}
+              </p>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      }
+    </div>
+  }
+
+  <!-- Dialog Actions -->
+  <mat-dialog-actions class="dialog-actions">
+    <button mat-button (click)="cancelWorkflow()">Cancel</button>
+
+    @if (currentStep > 0) {
+      <button mat-button (click)="previousStep()">Back</button>
+    }
+
+    @if (currentStep < totalSteps - 1) {
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="nextStep()"
+        [disabled]="!canProceedToNextStep() || loading"
+      >
+        Next
+      </button>
+    } @else {
+      <button
+        mat-raised-button
+        color="accent"
+        (click)="completeCarePlanWorkflow()"
+        [disabled]="!canProceedToNextStep() || loading"
+      >
+        Complete Care Plan
+      </button>
+    }
+  </mat-dialog-actions>
+</div>

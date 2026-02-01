@@ -566,7 +566,7 @@ version: '3.8'
 
 services:
   demo-postgres:
-    image: postgres:15
+    image: postgres:16
     environment:
       POSTGRES_DB: healthdata_demo
     volumes:
@@ -642,6 +642,7 @@ ls -l demo-data-snapshots/
 - [ ] Bookmarks bar hidden
 - [ ] Demo user logged in
 - [ ] Test run through script completed
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Recording Setup
 

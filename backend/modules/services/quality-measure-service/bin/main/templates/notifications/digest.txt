@@ -1,0 +1,15 @@
+📊 DAILY HEALTH DIGEST
+
+Date: [(${digestDate})]
+
+Summary:
+• [(${criticalAlertCount})] Critical Alerts
+• [(${careGapCount})] Care Gaps
+• [(${appointmentCount})] Appointments
+• [(${labResultCount})] Lab Results
+
+[# th:if="${patientName}"]Patient: [(${patientName})][/]
+
+View full dashboard: [(${actionUrl})]
+
+- HealthData-in-Motion

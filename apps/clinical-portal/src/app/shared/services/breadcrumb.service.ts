@@ -44,7 +44,7 @@ export class BreadcrumbService {
    */
   private buildBreadcrumbs(
     route: ActivatedRoute,
-    url: string = '',
+    url = '',
     breadcrumbs: Breadcrumb[] = []
   ): Breadcrumb[] {
     // Get the child routes

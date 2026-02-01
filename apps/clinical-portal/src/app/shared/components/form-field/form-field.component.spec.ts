@@ -3,6 +3,7 @@ import { FormControl, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { FormFieldComponent } from './form-field.component';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * TDD Test Suite for FormField Component - Accessibility (WCAG 2.1 AA)
@@ -15,8 +16,22 @@ describe('FormFieldComponent - Accessibility (WCAG 2.1 AA)', () => {
   let fixture: ComponentFixture<FormFieldComponent>;
 
   beforeEach(async () => {
+    const mockLoggerService = {
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      withContext: jest.fn().mockReturnValue({
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn()
+      })
+    };
+
     await TestBed.configureTestingModule({
       imports: [FormFieldComponent, NoopAnimationsModule],
+      providers: [
+        { provide: LoggerService, useValue: mockLoggerService }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(FormFieldComponent);
@@ -36,10 +51,10 @@ describe('FormFieldComponent - Accessibility (WCAG 2.1 AA)', () => {
     });
 
     it('should require a form control input', () => {
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const loggerService = TestBed.inject(LoggerService);
+      const loggerSpy = jest.spyOn(loggerService, 'error');
       component.ngOnInit();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('FormFieldComponent: control input is required');
-      consoleErrorSpy.mockRestore();
+      expect(loggerSpy).toHaveBeenCalledWith('FormFieldComponent: control input is required');
     });
 
     it('should initialize with default values', () => {

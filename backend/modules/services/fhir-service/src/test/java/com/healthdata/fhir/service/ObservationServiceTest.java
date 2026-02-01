@@ -42,6 +42,7 @@ import com.healthdata.fhir.persistence.ObservationRepository;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Observation Service Tests")
@@ -62,12 +63,15 @@ class ObservationServiceTest {
     @Mock
     private Cache cache;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     private ObservationService service;
 
     @BeforeEach
     void setUp() {
         when(cacheManager.getCache("fhir-observations")).thenReturn(cache);
-        service = new ObservationService(repository, kafkaTemplate, cacheManager);
+        service = new ObservationService(repository, kafkaTemplate, cacheManager, objectMapper);
     }
 
     @Test
@@ -376,7 +380,7 @@ class ObservationServiceTest {
     void shouldHandleMissingCache() {
         CacheManager noCacheManager = org.mockito.Mockito.mock(CacheManager.class);
         when(noCacheManager.getCache("fhir-observations")).thenReturn(null);
-        ObservationService noCacheService = new ObservationService(repository, kafkaTemplate, noCacheManager);
+        ObservationService noCacheService = new ObservationService(repository, kafkaTemplate, noCacheManager, objectMapper);
 
         UUID observationId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();

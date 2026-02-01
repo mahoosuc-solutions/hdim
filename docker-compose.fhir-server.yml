@@ -19,7 +19,7 @@ services:
 
   hapi-fhir:
     container_name: external-fhir-server
-    image: hapiproject/hapi:latest
+    image: hapiproject/hapi:v7.0.2
     restart: unless-stopped
     ports:
       - "8088:8080"
@@ -70,7 +70,7 @@ services:
 
   synthea-generator:
     container_name: synthea-generator
-    image: synthetichealth/synthea:latest
+    image: synthetichealth/synthea:3.1.1
     profiles: ["generate"]
     command: >
       -p 100
@@ -89,7 +89,7 @@ services:
 
   fhir-loader:
     container_name: fhir-data-loader
-    image: curlimages/curl:latest
+    image: curlimages/curl:8.10.1
     profiles: ["load"]
     depends_on:
       hapi-fhir:

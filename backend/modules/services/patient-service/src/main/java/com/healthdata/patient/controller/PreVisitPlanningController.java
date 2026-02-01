@@ -18,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
+
 /**
  * Pre-Visit Planning Controller
  *
@@ -53,7 +56,7 @@ public class PreVisitPlanningController {
      */
     @GetMapping(value = "/{providerId}/patients/{patientId}/pre-visit-summary",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, resourceType = "PreVisitSummary", description = "Pre-visit summary access")
     @Operation(
             summary = "Get pre-visit summary for a patient",
@@ -122,7 +125,7 @@ public class PreVisitPlanningController {
      */
     @GetMapping(value = "/{providerId}/pre-visit-summaries",
             produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER')")
+    @PreAuthorize("hasPermission('PATIENT_READ')")
     @Audited(action = AuditAction.READ, resourceType = "PreVisitSummary", description = "Batch pre-visit summaries access")
     @Operation(
             summary = "Get pre-visit summaries for scheduled patients",
@@ -161,20 +164,42 @@ public class PreVisitPlanningController {
         log.info("GET /api/v1/providers/{}/pre-visit-summaries - tenant: {}, date: {}",
                 providerId, tenantId, date);
 
-        // TODO: Implement batch endpoint when scheduling service is available
-        // For now, return empty response
-        BatchPreVisitResponse response = BatchPreVisitResponse.builder()
-                .providerId(providerId)
-                .date(date != null ? date : java.time.LocalDate.now().plusDays(1).toString())
-                .totalPatients(0)
-                .summaries(java.util.Collections.emptyList())
-                .message("Scheduling service integration pending")
-                .build();
+        try {
+            // Parse date (default to tomorrow)
+            LocalDate targetDate = date != null ? 
+                LocalDate.parse(date) : LocalDate.now().plusDays(1);
 
-        return ResponseEntity.ok()
-                .header("Cache-Control", "no-store, no-cache, must-revalidate")
-                .header("Pragma", "no-cache")
-                .body(response);
+            // Get batch pre-visit summaries
+            List<PreVisitSummaryResponse> summaries = 
+                preVisitPlanningService.getBatchPreVisitSummaries(tenantId, providerId, targetDate);
+
+            BatchPreVisitResponse response = BatchPreVisitResponse.builder()
+                    .providerId(providerId)
+                    .date(targetDate.toString())
+                    .totalPatients(summaries.size())
+                    .summaries(summaries)
+                    .message(summaries.isEmpty() ? 
+                        "No scheduled appointments found for this date" : 
+                        "Pre-visit summaries generated successfully")
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "no-store, no-cache, must-revalidate")
+                    .header("Pragma", "no-cache")
+                    .body(response);
+
+        } catch (Exception e) {
+            log.error("Error generating batch pre-visit summaries: {}", e.getMessage(), e);
+            BatchPreVisitResponse errorResponse = BatchPreVisitResponse.builder()
+                    .providerId(providerId)
+                    .date(date != null ? date : LocalDate.now().plusDays(1).toString())
+                    .totalPatients(0)
+                    .summaries(java.util.Collections.emptyList())
+                    .message("Error generating summaries: " + e.getMessage())
+                    .build();
+            return ResponseEntity.internalServerError()
+                    .body(errorResponse);
+        }
     }
 
     /**

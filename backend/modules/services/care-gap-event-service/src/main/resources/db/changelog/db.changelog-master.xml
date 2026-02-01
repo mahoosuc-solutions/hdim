@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Tenants table (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-tenants-table.xml"/>
+
+    <!-- Authentication tables (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
+
+    <include file="db/changelog/0011-add-missing-user-mfa-columns.xml"/>
+
+    <include file="db/changelog/0001-create-care-gap-projections-table.xml"/>
+
+    <include file="db/changelog/0002-create-population-health-projections-table.xml"/>
+    <include file="db/changelog/0003-population-health-version-not-null.xml"/>
+
+</databaseChangeLog>

@@ -29,6 +29,7 @@ import { PatientHealthService } from '../../../services/patient-health.service';
 import { RiskAssessmentService } from '../../../services/risk-assessment.service';
 import { HealthScoreHistory, RiskLevel } from '../../../models/patient-health.model';
 import { RiskAssessment } from '../../../models/risk-assessment.model';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Time range options for the chart
@@ -448,10 +449,14 @@ export class RiskTrendChartComponent
   };
 
   private destroy$ = new Subject<void>();
+  private get logger() {
+    return this.loggerService.withContext('RiskTrendChartComponent');
+  }
 
   constructor(
     private patientHealthService: PatientHealthService,
-    private riskAssessmentService: RiskAssessmentService
+    private riskAssessmentService: RiskAssessmentService,
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -532,7 +537,7 @@ export class RiskTrendChartComponent
           }
         },
         error: (error) => {
-          console.error('Error loading risk assessment data:', error);
+          this.loggerService.error('Error loading risk assessment data', error);
           // Fallback to PatientHealthService on error
           this.loadHealthScoreData();
         },
@@ -553,7 +558,7 @@ export class RiskTrendChartComponent
           this.initializeChart();
         },
         error: (error) => {
-          console.error('Error loading health score data:', error);
+          this.loggerService.error('Error loading health score data', error);
           this.loading = false;
           this.dataSeries = [];
         },

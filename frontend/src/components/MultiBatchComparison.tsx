@@ -63,26 +63,11 @@ const MultiBatchComparison: React.FC<MultiBatchComparisonProps> = ({
   maxBatches = 5,
   onClose,
 }) => {
+  // All hooks must be called before any conditional returns
   const [selectedBatchIds, setSelectedBatchIds] = useState<string[]>([]);
   const [sortColumn, setSortColumn] = useState<string>('');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [chartMetric, setChartMetric] = useState<MetricType>('successRate');
-
-  // Show empty state if fewer than 3 batches
-  if (batches.length < 3) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Multi-Batch Comparison
-          </Typography>
-          <Typography color="textSecondary">
-            At least 3 batches are required for multi-batch comparison
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const selectedBatches = batches.filter((b) =>
     selectedBatchIds.includes(b.batchId)
@@ -115,7 +100,7 @@ const MultiBatchComparison: React.FC<MultiBatchComparisonProps> = ({
     };
   };
 
-  // Prepare metrics data
+  // Prepare metrics data - hook always called, returns empty array if insufficient batches
   const metricsData: MetricRow[] = useMemo(() => {
     if (selectedBatches.length < 3) return [];
 
@@ -179,7 +164,7 @@ const MultiBatchComparison: React.FC<MultiBatchComparisonProps> = ({
     return 'transparent';
   };
 
-  // Prepare chart data
+  // Prepare chart data - hook always called, returns empty array if insufficient batches
   const chartData = useMemo(() => {
     if (selectedBatches.length < 3) return [];
 
@@ -194,6 +179,22 @@ const MultiBatchComparison: React.FC<MultiBatchComparisonProps> = ({
       };
     });
   }, [selectedBatches]);
+
+  // NOW we can do conditional returns after all hooks are called
+  if (batches.length < 3) {
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Multi-Batch Comparison
+          </Typography>
+          <Typography color="textSecondary">
+            At least 3 batches are required for multi-batch comparison
+          </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleToggleBatch = (batchId: string) => {
     setSelectedBatchIds((prev) => {

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-patient-projections-table" author="phase5-team1">
+        <comment>Create patient_projections table for patient denormalized read model</comment>
+
+        <createTable tableName="patient_projections">
+            <column name="id" type="VARCHAR(50)">
+                <constraints primaryKey="true" primaryKeyName="pk_patient_projections"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="ACTIVE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_of_birth" type="VARCHAR(10)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="enrollment_status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="enrollment_reason" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="fhir_resource_id" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="identifiers" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="identity_status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="merged_into_patient_id" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="merged_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_patient_projections_tenant_id" tableName="patient_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_patient_projections_status" tableName="patient_projections">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_patient_projections_tenant_status" tableName="patient_projections">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_patient_projections_patient_tenant" tableName="patient_projections">
+            <column name="patient_id"/>
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="patient_projections"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

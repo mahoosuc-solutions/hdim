@@ -61,5 +61,8 @@ public interface LeadRepository extends JpaRepository<Lead, UUID> {
     @Query("SELECT l FROM Lead l WHERE l.tenantId = :tenantId AND l.zohoLeadId IS NULL")
     List<Lead> findUnsyncedLeads(@Param("tenantId") UUID tenantId);
 
+    @Query("SELECT DISTINCT l.tenantId FROM Lead l")
+    List<UUID> findDistinctTenantIds();
+
     boolean existsByEmailAndTenantId(String email, UUID tenantId);
 }

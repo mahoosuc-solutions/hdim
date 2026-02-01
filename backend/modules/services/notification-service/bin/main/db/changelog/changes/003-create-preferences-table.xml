@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-create-preferences-table" author="hdim">
+        <createTable tableName="notification_preferences">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="varchar(255)"/>
+            <column name="phone" type="varchar(50)"/>
+            <column name="quiet_hours_enabled" type="boolean" defaultValueBoolean="false"/>
+            <column name="quiet_hours_start" type="time"/>
+            <column name="quiet_hours_end" type="time"/>
+            <column name="timezone" type="varchar(50)" defaultValue="UTC"/>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp"/>
+        </createTable>
+
+        <addUniqueConstraint tableName="notification_preferences"
+            columnNames="tenant_id, user_id, channel"
+            constraintName="uk_preferences_tenant_user_channel"/>
+
+        <createIndex indexName="idx_preferences_tenant_user" tableName="notification_preferences">
+            <column name="tenant_id"/>
+            <column name="user_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="notification_preferences"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

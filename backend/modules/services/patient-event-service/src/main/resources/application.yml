@@ -1,0 +1,77 @@
+server:
+  port: 8110
+  servlet:
+    context-path: /patient-event
+
+spring:
+  application:
+    name: patient-event-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/patient_event_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # Kafka configuration for event consumption
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: patient-event-service
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+
+  # Cache Configuration
+  # No caching for event services (projection read model)
+  cache:
+    type: none
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # CQRS read model: event-driven projections
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  flyway:
+    enabled: false
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

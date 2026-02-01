@@ -1,0 +1,628 @@
+<div class="clinical-audit-dashboard">
+  <div class="dashboard-header">
+    <h1>Clinical Decision Audit Dashboard</h1>
+    <p class="subtitle">Review AI-powered clinical decisions, medication alerts, care gaps, and risk stratification</p>
+  </div>
+
+  <!-- Analytics Cards -->
+  <div class="analytics-cards">
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Total Decisions (30d)</div>
+        <div class="metric-value">{{ metrics.totalDecisions }}</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Approval Rate</div>
+        <div class="metric-value text-success">{{ metrics.approvalRate.toFixed(1) }}%</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Avg Confidence</div>
+        <div class="metric-value">{{ (metrics.averageConfidenceScore * 100).toFixed(0) }}%</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Pending Review</div>
+        <div class="metric-value text-warning">{{ metrics.pendingReview }}</div>
+      </div>
+    </div>
+
+    <div class="card metric-card">
+      <div class="card-body">
+        <div class="metric-label">Override Rate</div>
+        <div class="metric-value text-info">{{ metrics.overrideRate.toFixed(1) }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs">
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'decisions'" (click)="selectTab('decisions')">
+        <i class="fas fa-clipboard-check"></i> Decisions
+        <span class="badge badge-warning ml-1" *ngIf="metrics.pendingReview > 0">{{ metrics.pendingReview }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'medication'" (click)="selectTab('medication')">
+        <i class="fas fa-pills"></i> Medication Alerts
+        <span class="badge badge-danger ml-1" *ngIf="medicationAlertCount > 0">{{ medicationAlertCount }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'careGaps'" (click)="selectTab('careGaps')">
+        <i class="fas fa-heartbeat"></i> Care Gaps
+        <span class="badge badge-info ml-1" *ngIf="careGapCount > 0">{{ careGapCount }}</span>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'riskStrat'" (click)="selectTab('riskStrat')">
+        <i class="fas fa-exclamation-triangle"></i> Risk Stratification
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" [class.active]="activeTab === 'metrics'" (click)="selectTab('metrics')">
+        <i class="fas fa-chart-bar"></i> Metrics & Trends
+      </a>
+    </li>
+  </ul>
+
+  <!-- Decisions Tab -->
+  <div *ngIf="activeTab === 'decisions'" class="tab-content">
+    <!-- Filters -->
+    <div class="filters-card">
+      <div class="row">
+        <div class="col-md-3">
+          <label>Decision Type</label>
+          <select class="form-control" [(ngModel)]="filters.decisionType" (change)="applyFilters()">
+            <option value="">All Types</option>
+            <option value="MEDICATION_ALERT">Medication Alert</option>
+            <option value="CARE_GAP">Care Gap</option>
+            <option value="RISK_STRATIFICATION">Risk Stratification</option>
+            <option value="CLINICAL_PATHWAY">Clinical Pathway</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label>Severity</label>
+          <select class="form-control" [(ngModel)]="filters.alertSeverity" (change)="applyFilters()">
+            <option value="">All Severities</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MODERATE">Moderate</option>
+            <option value="LOW">Low</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label>Review Status</label>
+          <select class="form-control" [(ngModel)]="filters.reviewStatus" (change)="applyFilters()">
+            <option value="">All Statuses</option>
+            <option value="PENDING">Pending</option>
+            <option value="APPROVED">Approved</option>
+            <option value="REJECTED">Rejected</option>
+            <option value="NEEDS_REVISION">Needs Revision</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label>Evidence Grade</label>
+          <select class="form-control" [(ngModel)]="filters.evidenceGrade" (change)="applyFilters()">
+            <option value="">All Grades</option>
+            <option value="A">Grade A (Strong)</option>
+            <option value="B">Grade B (Moderate)</option>
+            <option value="C">Grade C (Weak)</option>
+            <option value="D">Grade D (Expert Opinion)</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label>Specialty Area</label>
+          <input type="text" class="form-control" [(ngModel)]="filters.specialtyArea" 
+                 (keyup.enter)="applyFilters()" placeholder="e.g., Cardiology">
+        </div>
+      </div>
+      <div class="row mt-2">
+        <div class="col-md-3">
+          <label>Start Date</label>
+          <input type="date" class="form-control" [(ngModel)]="filters.startDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <label>End Date</label>
+          <input type="date" class="form-control" [(ngModel)]="filters.endDate" (change)="applyFilters()">
+        </div>
+        <div class="col-md-3">
+          <label>&nbsp;</label>
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="hasOverride" 
+                   [(ngModel)]="filters.hasOverride" (change)="applyFilters()">
+            <label class="form-check-label" for="hasOverride">Has Override</label>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <label>&nbsp;</label>
+          <button class="btn btn-secondary btn-block" (click)="clearFilters()">
+            <i class="fas fa-times"></i> Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decisions Table -->
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Decision Time</th>
+            <th>Type</th>
+            <th>Patient</th>
+            <th>Severity</th>
+            <th>Evidence</th>
+            <th>Confidence</th>
+            <th>Specialty</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let decision of decisions" class="decision-row">
+            <td>{{ formatTimestamp(decision.decisionTimestamp) }}</td>
+            <td>
+              <span class="badge badge-secondary">{{ decision.decisionType.replace(/_/g, ' ') }}</span>
+            </td>
+            <td>
+              <strong>{{ decision.patientName }}</strong><br>
+              <small class="text-muted">{{ decision.patientId }}</small>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getSeverityClass(decision.alertSeverity)">
+                {{ decision.alertSeverity }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getEvidenceGradeClass(decision.evidenceGrade)">
+                Grade {{ decision.evidenceGrade }}
+              </span>
+            </td>
+            <td>
+              <span [ngClass]="getConfidenceClass(decision.confidenceScore)">
+                {{ (decision.confidenceScore * 100).toFixed(0) }}%
+              </span>
+            </td>
+            <td>{{ decision.specialtyArea }}</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusClass(decision.reviewStatus)">
+                {{ decision.reviewStatus.replace(/_/g, ' ') }}
+              </span>
+              <i class="fas fa-flag text-danger ml-1" *ngIf="decision.hasOverride" 
+                 title="Override Applied"></i>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-primary" (click)="viewDecisionDetail(decision.decisionId)">
+                <i class="fas fa-eye"></i> View
+              </button>
+              <button class="btn btn-sm btn-success ml-1" *ngIf="decision.reviewStatus === 'PENDING'"
+                      (click)="quickApprove(decision.decisionId)">
+                <i class="fas fa-check"></i>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-controls">
+      <button class="btn btn-secondary" [disabled]="currentPage === 0" (click)="previousPage()">
+        <i class="fas fa-chevron-left"></i> Previous
+      </button>
+      <span class="mx-3">Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+      <button class="btn btn-secondary" [disabled]="currentPage >= totalPages - 1" (click)="nextPage()">
+        Next <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Medication Alerts Tab -->
+  <div *ngIf="activeTab === 'medication'" class="tab-content">
+    <div class="filters-card">
+      <div class="row">
+        <div class="col-md-4">
+          <label>Severity</label>
+          <select class="form-control" [(ngModel)]="medicationFilters.severity" (change)="loadMedicationAlerts()">
+            <option value="">All Severities</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MODERATE">Moderate</option>
+            <option value="LOW">Low</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert-list">
+      <div *ngFor="let alert of medicationAlerts" class="card alert-card mb-3">
+        <div class="card-header" [ngClass]="'alert-' + alert.severity.toLowerCase()">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge badge-danger">{{ alert.alertType.replace(/_/g, ' ') }}</span>
+              <span class="ml-2"><strong>{{ alert.severity }}</strong></span>
+            </div>
+            <span class="badge" [ngClass]="getEvidenceGradeClass(alert.evidenceGrade)">
+              Evidence: Grade {{ alert.evidenceGrade }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h2>{{ alert.alertMessage }}</h2>
+          <div class="mb-2">
+            <strong>Patient:</strong> {{ alert.patientId }}<br>
+            <strong>Medications Involved:</strong> {{ alert.involvedMedications.join(', ') }}
+          </div>
+          <div class="recommendation-box">
+            <strong>Clinical Recommendation:</strong><br>
+            {{ alert.clinicalRecommendation }}
+          </div>
+          <div class="mt-2" *ngIf="alert.acknowledged">
+            <small class="text-muted">
+              <i class="fas fa-check-circle text-success"></i> 
+              Acknowledged by {{ alert.acknowledgedBy }}
+            </small>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-primary" (click)="viewAlertDetail(alert.alertId)">
+            <i class="fas fa-eye"></i> View Details
+          </button>
+          <button class="btn btn-sm btn-success ml-2" *ngIf="!alert.acknowledged"
+                  (click)="acknowledgeAlert(alert.alertId)">
+            <i class="fas fa-check"></i> Acknowledge
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Care Gaps Tab -->
+  <div *ngIf="activeTab === 'careGaps'" class="tab-content">
+    <div class="filters-card">
+      <div class="row">
+        <div class="col-md-4">
+          <label>Status</label>
+          <select class="form-control" [(ngModel)]="careGapFilters.status" (change)="loadCareGaps()">
+            <option value="">All Statuses</option>
+            <option value="OPEN">Open</option>
+            <option value="IN_PROGRESS">In Progress</option>
+            <option value="CLOSED">Closed</option>
+            <option value="DISMISSED">Dismissed</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="care-gap-list">
+      <div *ngFor="let gap of careGaps" class="card gap-card mb-3">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge" [ngClass]="getPriorityClass(gap.priority)">
+                {{ gap.priority }} Priority
+              </span>
+              <span class="ml-2">{{ gap.gapType.replace(/_/g, ' ') }}</span>
+            </div>
+            <span class="badge" [ngClass]="getEvidenceGradeClass(gap.evidenceGrade)">
+              Evidence: Grade {{ gap.evidenceGrade }}
+            </span>
+          </div>
+        </div>
+        <div class="card-body">
+          <h5>{{ gap.serviceDescription }}</h5>
+          <div class="mb-2">
+            <strong>Patient:</strong> {{ gap.patientId }}<br>
+            <strong>Due Date:</strong> {{ formatDate(gap.dueDate) }}
+            <span class="text-danger ml-2" *ngIf="gap.daysPastDue > 0">
+              ({{ gap.daysPastDue }} days overdue)
+            </span>
+          </div>
+          <div class="guideline-box">
+            <strong>Guideline Reference:</strong><br>
+            {{ gap.guidelineReference }}
+          </div>
+          <div class="mt-2">
+            <span class="badge" [ngClass]="getStatusClass(gap.status)">{{ gap.status }}</span>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-primary" (click)="viewGapDetail(gap.gapId)">
+            <i class="fas fa-eye"></i> View Details
+          </button>
+          <button class="btn btn-sm btn-success ml-2" *ngIf="gap.status === 'OPEN'"
+                  (click)="markGapInProgress(gap.gapId)">
+            <i class="fas fa-play"></i> Start
+          </button>
+          <button class="btn btn-sm btn-info ml-2" *ngIf="gap.status === 'IN_PROGRESS'"
+                  (click)="closeGap(gap.gapId)">
+            <i class="fas fa-check"></i> Complete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Risk Stratification Tab -->
+  <div *ngIf="activeTab === 'riskStrat'" class="tab-content">
+    <div class="filters-card">
+      <div class="row">
+        <div class="col-md-4">
+          <label>Risk Level</label>
+          <select class="form-control" [(ngModel)]="riskFilters.riskLevel" (change)="loadRiskStratifications()">
+            <option value="">All Risk Levels</option>
+            <option value="HIGH">High Risk</option>
+            <option value="MODERATE">Moderate Risk</option>
+            <option value="LOW">Low Risk</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="risk-list">
+      <div *ngFor="let risk of riskStratifications" class="card risk-card mb-3">
+        <div class="card-header" [ngClass]="'risk-' + risk.overallRiskLevel.toLowerCase()">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="badge badge-danger">{{ risk.riskCategory.replace(/_/g, ' ') }}</span>
+              <span class="ml-2"><strong>{{ risk.overallRiskLevel }} Risk</strong></span>
+            </div>
+            <div>
+              <span class="badge" [ngClass]="getEvidenceGradeClass(risk.evidenceGrade)">
+                Evidence: Grade {{ risk.evidenceGrade }}
+              </span>
+              <span class="ml-2">Score: {{ (risk.riskScore * 100).toFixed(0) }}%</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="mb-2">
+            <strong>Patient:</strong> {{ risk.patientId }}<br>
+            <strong>Assessment Model:</strong> {{ risk.assessmentModel }}
+          </div>
+          
+          <div class="contributing-factors mb-3" *ngIf="risk.contributingFactors.length > 0">
+            <strong>Contributing Risk Factors:</strong>
+            <ul class="mt-2">
+              <li *ngFor="let factor of risk.contributingFactors">
+                <span [ngClass]="getContributionClass(factor.contribution)">
+                  {{ factor.factorName }}: {{ factor.factorValue }}
+                </span>
+                <span class="badge badge-sm badge-secondary ml-2" *ngIf="factor.modifiable">
+                  Modifiable
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="interventions-box" *ngIf="risk.recommendedInterventions.length > 0">
+            <strong>Recommended Interventions:</strong>
+            <ul class="mt-2">
+              <li *ngFor="let intervention of risk.recommendedInterventions">
+                {{ intervention }}
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-sm btn-primary" (click)="viewRiskDetail(risk.stratificationId)">
+            <i class="fas fa-eye"></i> View Full Assessment
+          </button>
+          <button class="btn btn-sm btn-warning ml-2" (click)="createCarePlan(risk.stratificationId)">
+            <i class="fas fa-clipboard-list"></i> Create Care Plan
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metrics & Trends Tab -->
+  <div *ngIf="activeTab === 'metrics'" class="tab-content">
+    <div class="row">
+      <!-- Decision Type Distribution -->
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-chart-pie"></i> Decision Type Distribution</h5>
+          </div>
+          <div class="card-body">
+            <div class="distribution-item">
+              <span>Medication Alerts</span>
+              <span class="badge badge-primary">
+                {{ metrics.decisionTypeDistribution.medicationAlerts }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Care Gaps</span>
+              <span class="badge badge-info">
+                {{ metrics.decisionTypeDistribution.careGaps }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Risk Stratifications</span>
+              <span class="badge badge-warning">
+                {{ metrics.decisionTypeDistribution.riskStratifications }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Clinical Pathways</span>
+              <span class="badge badge-secondary">
+                {{ metrics.decisionTypeDistribution.clinicalPathways }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Severity Distribution -->
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-exclamation-circle"></i> Severity Distribution</h5>
+          </div>
+          <div class="card-body">
+            <div class="distribution-item">
+              <span>Critical</span>
+              <span class="badge badge-danger">
+                {{ metrics.severityDistribution.critical }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>High</span>
+              <span class="badge badge-warning">
+                {{ metrics.severityDistribution.high }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Moderate</span>
+              <span class="badge badge-info">
+                {{ metrics.severityDistribution.moderate }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Low</span>
+              <span class="badge badge-secondary">
+                {{ metrics.severityDistribution.low }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Evidence Grade Distribution -->
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-graduation-cap"></i> Evidence Grade Distribution</h5>
+          </div>
+          <div class="card-body">
+            <div class="distribution-item">
+              <span>Grade A (Strong Evidence)</span>
+              <span class="badge badge-success">
+                {{ metrics.evidenceGradeDistribution.gradeA }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Grade B (Moderate Evidence)</span>
+              <span class="badge badge-primary">
+                {{ metrics.evidenceGradeDistribution.gradeB }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Grade C (Weak Evidence)</span>
+              <span class="badge badge-warning">
+                {{ metrics.evidenceGradeDistribution.gradeC }}
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Grade D (Expert Opinion)</span>
+              <span class="badge badge-secondary">
+                {{ metrics.evidenceGradeDistribution.gradeD }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Performance Metrics -->
+      <div class="col-md-6 mb-4">
+        <div class="card">
+          <div class="card-header">
+            <h5><i class="fas fa-tachometer-alt"></i> Performance Metrics</h5>
+          </div>
+          <div class="card-body">
+            <div class="distribution-item">
+              <span>Approval Rate</span>
+              <span class="badge badge-success">
+                {{ metrics.approvalRate.toFixed(1) }}%
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Rejection Rate</span>
+              <span class="badge badge-danger">
+                {{ ((metrics.rejectedDecisions / metrics.totalDecisions) * 100).toFixed(1) }}%
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Override Rate</span>
+              <span class="badge badge-warning">
+                {{ metrics.overrideRate.toFixed(1) }}%
+              </span>
+            </div>
+            <div class="distribution-item">
+              <span>Avg Review Time</span>
+              <span class="badge badge-info">
+                {{ metrics.averageReviewTimeHours }} hours
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trends Chart -->
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="fas fa-chart-line"></i> 30-Day Performance Trends</h5>
+      </div>
+      <div class="card-body">
+        <div class="trend-summary mb-3">
+          <span class="mr-4">
+            <strong>Avg Approval Rate:</strong> {{ trends.averageApprovalRate.toFixed(1) }}%
+          </span>
+          <span class="mr-4">
+            <strong>Avg Override Rate:</strong> {{ trends.averageOverrideRate.toFixed(1) }}%
+          </span>
+          <span>
+            <strong>Avg Confidence:</strong> {{ (trends.averageConfidenceScore * 100).toFixed(0) }}%
+          </span>
+        </div>
+        
+        <!-- Placeholder for chart - integrate with chart library -->
+        <div class="chart-placeholder text-center p-5 bg-light">
+          <p class="text-muted">
+            <i class="fas fa-chart-area fa-3x mb-3"></i><br>
+            Chart visualization showing daily trends in approvals, overrides, and confidence scores<br>
+            <small>Integrate with Chart.js, D3, or preferred charting library</small>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Decision Detail Modal -->
+<div class="modal" *ngIf="selectedDecision" (click)="closeDecisionModal()">
+  <div class="modal-dialog modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Clinical Decision Details</h5>
+        <button type="button" class="close" (click)="closeDecisionModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Decision detail content would go here -->
+        <p>Loading decision details...</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDecisionModal()">Close</button>
+        <button type="button" class="btn btn-success" *ngIf="selectedDecision.reviewStatus === 'PENDING'">
+          <i class="fas fa-check"></i> Approve
+        </button>
+        <button type="button" class="btn btn-danger" *ngIf="selectedDecision.reviewStatus === 'PENDING'">
+          <i class="fas fa-times"></i> Reject
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

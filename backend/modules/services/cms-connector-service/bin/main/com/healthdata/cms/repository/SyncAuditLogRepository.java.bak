@@ -1,0 +1,82 @@
+package com.healthdata.cms.repository;
+
+import com.healthdata.cms.model.SyncAuditLog;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+/**
+ * SyncAuditLog Repository
+ * Manages persistence and retrieval of sync operation audit logs
+ */
+@Repository
+public interface SyncAuditLogRepository extends JpaRepository<SyncAuditLog, UUID> {
+
+    /**
+     * Find all sync operations for a specific source
+     */
+    List<SyncAuditLog> findBySource(String source);
+
+    /**
+     * Count sync operations for a source
+     */
+    long countBySource(String source);
+
+    /**
+     * Find all sync operations with specific status
+     */
+    List<SyncAuditLog> findByStatus(SyncAuditLog.SyncStatus status);
+
+    /**
+     * Find sync operations for a specific tenant
+     */
+    List<SyncAuditLog> findByTenantId(UUID tenantId);
+
+    /**
+     * Find sync operations within date range
+     */
+    List<SyncAuditLog> findByStartedAtBetween(LocalDateTime start, LocalDateTime end);
+
+    /**
+     * Find sync operations by source and date range
+     */
+    List<SyncAuditLog> findBySourceAndStartedAtBetween(String source, LocalDateTime start, LocalDateTime end);
+
+    /**
+     * Find completed sync operations
+     */
+    List<SyncAuditLog> findByStatusOrderByCompletedAtDesc(SyncAuditLog.SyncStatus status);
+
+    /**
+     * Find failed sync operations
+     */
+    @Query("SELECT sal FROM SyncAuditLog sal WHERE sal.status = 'FAILED' ORDER BY sal.startedAt DESC")
+    List<SyncAuditLog> findFailedSyncs();
+
+    /**
+     * Get sync statistics for a source
+     */
+    @Query("SELECT SUM(sal.totalClaims), SUM(sal.successfulClaims), SUM(sal.failedClaims) " +
+           "FROM SyncAuditLog sal WHERE sal.source = :source AND sal.status = 'COMPLETED'")
+    Object[] getSyncStatistics(@Param("source") String source);
+
+    /**
+     * Find latest sync for a source
+     */
+    @Query("SELECT sal FROM SyncAuditLog sal WHERE sal.source = :source " +
+           "ORDER BY sal.startedAt DESC LIMIT 1")
+    Optional<SyncAuditLog> findLatestSync(@Param("source") String source);
+
+    /**
+     * Count total claims synced from a source
+     */
+    @Query("SELECT COALESCE(SUM(sal.successfulClaims), 0) FROM SyncAuditLog sal " +
+           "WHERE sal.source = :source AND sal.status = 'COMPLETED'")
+    Long getTotalClaimsSynced(@Param("source") String source);
+}

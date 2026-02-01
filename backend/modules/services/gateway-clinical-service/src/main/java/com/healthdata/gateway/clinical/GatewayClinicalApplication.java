@@ -21,10 +21,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 })
 @EntityScan(basePackages = {
     "com.healthdata.authentication.domain",
-    "com.healthdata.authentication.entity"
+    "com.healthdata.authentication.entity",
+    "com.healthdata.gateway.clinical.compliance.entity"
 })
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.authentication.repository"
+    "com.healthdata.authentication.repository",
+    "com.healthdata.gateway.clinical.compliance.repository"
 })
 public class GatewayClinicalApplication {
 

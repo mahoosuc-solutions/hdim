@@ -1,0 +1,102 @@
+package com.healthdata.authentication.security;
+
+import com.healthdata.authentication.domain.User;
+import com.healthdata.authentication.domain.UserRole;
+import com.healthdata.authentication.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+/**
+ * Custom UserDetailsService implementation that loads users from the database.
+ * This integrates Spring Security with our User entity and authentication system.
+ *
+ * SECURITY CRITICAL: This service is the bridge between Spring Security and our user database.
+ * It handles account status checks (locked, disabled, expired) during authentication.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    /**
+     * Loads a user by username or email for Spring Security authentication.
+     *
+     * @param usernameOrEmail The username or email to look up
+     * @return UserDetails object for Spring Security
+     * @throws UsernameNotFoundException if user not found
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        log.debug("Loading user by username/email: {}", usernameOrEmail);
+
+        // Find user by username or email
+        User user = userRepository.findByUsernameOrEmail(usernameOrEmail)
+            .orElseThrow(() -> {
+                log.warn("User not found: {}", usernameOrEmail);
+                return new UsernameNotFoundException("User not found: " + usernameOrEmail);
+            });
+
+        log.debug("Found user: {} (ID: {}, Active: {}, Roles: {})",
+            user.getUsername(), user.getId(), user.isAccountActive(), user.getRoles());
+
+        // Convert our User entity to Spring Security UserDetails
+        return org.springframework.security.core.userdetails.User
+            .withUsername(user.getUsername())
+            .password(user.getPasswordHash())
+            .authorities(mapRolesToAuthorities(user.getRoles()))
+            .accountLocked(isAccountLocked(user))
+            .disabled(!user.isAccountActive())
+            .accountExpired(false)  // We don't have expiration logic yet
+            .credentialsExpired(false)  // We don't have password expiration yet
+            .build();
+    }
+
+    /**
+     * Checks if the account is currently locked.
+     * Account is locked if accountLockedUntil is set and in the future.
+     *
+     * @param user The user to check
+     * @return true if account is locked
+     */
+    private boolean isAccountLocked(User user) {
+        if (user.getAccountLockedUntil() == null) {
+            return false;
+        }
+
+        boolean locked = user.getAccountLockedUntil().isAfter(Instant.now());
+
+        if (locked) {
+            log.warn("Account locked for user: {} until {}",
+                user.getUsername(), user.getAccountLockedUntil());
+        }
+
+        return locked;
+    }
+
+    /**
+     * Converts our UserRole enum to Spring Security GrantedAuthority objects.
+     * Spring Security uses ROLE_ prefix convention.
+     *
+     * @param roles Set of UserRole enums
+     * @return Collection of GrantedAuthority objects
+     */
+    private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Collection<UserRole> roles) {
+        return roles.stream()
+            .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
+            .collect(Collectors.toList());
+    }
+}

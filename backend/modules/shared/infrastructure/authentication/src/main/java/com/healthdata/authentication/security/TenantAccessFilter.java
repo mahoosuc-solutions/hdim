@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,6 +44,12 @@ public class TenantAccessFilter extends OncePerRequestFilter {
 
     private final UserRepository userRepository;
 
+    @Value("${tenant.enforcement.health-tenant-enabled:true}")
+    private boolean healthTenantEnabled;
+
+    @Value("${tenant.enforcement.health-tenant-prefix:service-health-}")
+    private String healthTenantPrefix;
+
     /**
      * Public endpoints that don't require tenant validation
      */
@@ -65,6 +72,13 @@ public class TenantAccessFilter extends OncePerRequestFilter {
 
         String requestPath = request.getRequestURI();
         String tenantId = request.getHeader("X-Tenant-ID");
+
+        if ((tenantId == null || tenantId.trim().isEmpty()) && healthTenantEnabled && isHealthPath(requestPath)) {
+            String serviceTenant = healthTenantPrefix + deriveServiceName(requestPath);
+            log.info("Health request assigned service tenant: tenant={}, path={}", serviceTenant, requestPath);
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         log.debug("Tenant access filter: path={}, tenantId={}", requestPath, tenantId);
 
@@ -138,6 +152,19 @@ public class TenantAccessFilter extends OncePerRequestFilter {
      */
     private boolean isPublicPath(String path) {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+    }
+
+    private boolean isHealthPath(String path) {
+        return path.contains("/actuator");
+    }
+
+    private String deriveServiceName(String path) {
+        String normalized = path.startsWith("/") ? path.substring(1) : path;
+        int actuatorIndex = normalized.indexOf("/actuator");
+        if (actuatorIndex <= 0) {
+            return "root";
+        }
+        return normalized.substring(0, actuatorIndex);
     }
 
     /**

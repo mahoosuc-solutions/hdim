@@ -1,5 +1,6 @@
 package com.healthdata.hcc.service;
 
+import com.healthdata.hcc.audit.HccAuditIntegration;
 import com.healthdata.hcc.persistence.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class RafCalculationService {
 
     private final DiagnosisHccMapRepository diagnosisMapRepository;
     private final PatientHccProfileRepository profileRepository;
+    private final HccAuditIntegration hccAuditIntegration;
 
     @Value("${hcc.model.v24-weight:0.33}")
     private double v24Weight;
@@ -108,6 +110,15 @@ public class RafCalculationService {
 
         log.info("RAF calculation complete for patient {}: V24={}, V28={}, Blended={}",
             patientId, scoreV24, scoreV28, blendedScore);
+
+        // Publish audit event
+        hccAuditIntegration.publishRafCalculationEvent(
+            tenantId,
+            patientId,
+            result,
+            0, // Processing time not tracked
+            "system"
+        );
 
         return result;
     }

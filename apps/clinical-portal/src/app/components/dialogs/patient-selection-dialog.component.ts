@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
+import { LoggerService } from '../../services/logger.service';
 import { PatientService } from '../../services/patient.service';
 import { Patient, PatientSummary } from '../../models/patient.model';
 
@@ -406,6 +407,7 @@ export class PatientSelectionDialogComponent implements OnInit {
   isLoading = signal(false);
 
   constructor(
+    private logger: LoggerService,
     private dialogRef: MatDialogRef<PatientSelectionDialogComponent>,
     private patientService: PatientService
   ) {}
@@ -427,7 +429,7 @@ export class PatientSelectionDialogComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Error loading patients:', error);
+        this.logger.error('Error loading patients:', { error });
         this.isLoading.set(false);
       },
     });

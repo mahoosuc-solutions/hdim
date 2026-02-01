@@ -10,6 +10,8 @@ import { QualityMeasureResult } from '../../models/quality-result.model';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { LoggerService } from '../../services/logger.service';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('PatientDetailComponent (TDD)', () => {
   let component: PatientDetailComponent;
@@ -162,7 +164,8 @@ describe('PatientDetailComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [PatientDetailComponent, NoopAnimationsModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: PatientService, useValue: mockPatientService },
@@ -170,7 +173,7 @@ describe('PatientDetailComponent (TDD)', () => {
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: Router, useValue: mockRouter },
         { provide: ActivatedRoute, useValue: mockActivatedRoute },
-      ],
+        { provide: Router, useValue: createMockRouter() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientDetailComponent);
@@ -184,7 +187,7 @@ describe('PatientDetailComponent (TDD)', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    });
+    };
 
     it('should extract patient ID from route on init', () => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -194,7 +197,7 @@ describe('PatientDetailComponent (TDD)', () => {
       component.ngOnInit();
 
       expect(component.patientId).toBe('patient-123');
-    });
+    };
 
     it('should set error and stop loading if no patient ID provided', () => {
       const mockParamMap = mockActivatedRoute.snapshot?.paramMap as unknown as { get: jest.Mock };
@@ -205,7 +208,7 @@ describe('PatientDetailComponent (TDD)', () => {
       expect(component.error).toBe('No patient ID provided');
       expect(component.loading).toBe(false);
       expect(mockPatientService.getPatient).not.toHaveBeenCalled();
-    });
+    };
 
     it('should load patient data on init when patient ID exists', () => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -215,15 +218,15 @@ describe('PatientDetailComponent (TDD)', () => {
       component.ngOnInit();
 
       expect(mockPatientService.getPatient).toHaveBeenCalledWith('patient-123');
-    });
-  });
+    };
+  };
 
   describe('Patient Data Loading', () => {
     beforeEach(() => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
       mockFhirClinicalService.getPatientClinicalData.mockReturnValue(of(mockClinicalData));
       mockEvaluationService.getPatientResults.mockReturnValue(of(mockQualityResults));
-    });
+    };
 
     it('should load patient demographics successfully', (done) => {
       component.ngOnInit();
@@ -232,7 +235,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.patient).toEqual(mockPatient);
         done();
       }, 0);
-    });
+    };
 
     it('should load clinical data after patient demographics', (done) => {
       component.ngOnInit();
@@ -242,7 +245,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.clinicalData).toEqual(mockClinicalData);
         done();
       }, 0);
-    });
+    };
 
     it('should load quality results after patient demographics', (done) => {
       component.ngOnInit();
@@ -252,7 +255,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.qualityResults).toEqual(mockQualityResults);
         done();
       }, 0);
-    });
+    };
 
     it('should set loading to false after all data is loaded', (done) => {
       expect(component.loading).toBe(true);
@@ -263,7 +266,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.loading).toBe(false);
         done();
       }, 0);
-    });
+    };
   });
 
   describe('Error Handling', () => {
@@ -278,7 +281,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.patient).toBeNull();
         done();
       }, 0);
-    });
+    };
 
     it('should continue loading even if clinical data fails', (done) => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -293,7 +296,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.loading).toBe(false);
         done();
       }, 0);
-    });
+    };
 
     it('should continue loading even if quality results fail', (done) => {
       mockPatientService.getPatient.mockReturnValue(of(mockPatient));
@@ -308,7 +311,7 @@ describe('PatientDetailComponent (TDD)', () => {
         expect(component.loading).toBe(false);
         done();
       }, 0);
-    });
+    };
   });
 
   describe('Patient Name Formatting', () => {

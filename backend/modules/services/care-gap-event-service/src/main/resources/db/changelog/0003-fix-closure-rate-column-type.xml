@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-fix-closure-rate-column-type" author="platform-team">
+        <comment>Fix closure_rate column type from DECIMAL to REAL (float4) to match Hibernate entity definition</comment>
+
+        <!-- Modify column type from DECIMAL(10,4) to REAL -->
+        <modifyDataType tableName="population_health_projections" columnName="closure_rate" newDataType="REAL"/>
+
+        <rollback>
+            <!-- Rollback: restore original type -->
+            <modifyDataType tableName="population_health_projections" columnName="closure_rate" newDataType="DECIMAL(10,4)"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

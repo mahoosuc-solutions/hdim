@@ -25,14 +25,14 @@ spring:
       ADJUST_DATES_TO_CONTEXT_TIME_ZONE: false
 
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb?TC_STARTUP_TIMEOUT=180
-    username: sa
-    password:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:postgresql://localhost:5435/quality_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate  # Validate schema against entities (entity-migration sync enforcement)
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -40,7 +40,8 @@ spring:
     show-sql: false
 
   liquibase:
-    enabled: false
+    enabled: true  # Run Liquibase migrations including 0042 column type fix
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   # Cache Configuration - must be at spring.cache level
   cache:
@@ -52,14 +53,18 @@ spring:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
 
-# HDIM shared persistence module configuration
+# HDIM shared database-config module configuration
 healthdata:
+  database:
+    enabled: true
+    hikari:
+      traffic-tier: LOW  # Minimal connections for tests
   persistence:
     primary:
-      url: jdbc:tc:postgresql:15-alpine:///testdb?TC_STARTUP_TIMEOUT=180
-      username: sa
-      password: ""
-      driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+      url: jdbc:postgresql://localhost:5435/quality_db
+      username: healthdata
+      password: healthdata_password
+      driver-class-name: org.postgresql.Driver
       pool-name: test-pool
       maximum-pool-size: 5
       minimum-idle: 1

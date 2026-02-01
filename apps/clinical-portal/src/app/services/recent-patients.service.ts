@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 /**
@@ -34,8 +35,8 @@ export class RecentPatientsService {
   private recentPatientsSubject = new BehaviorSubject<RecentPatientEntry[]>([]);
   readonly recentPatients$ = this.recentPatientsSubject.asObservable();
 
-  constructor() {
-    this.loadFromStorage();
+  constructor(
+    private logger: LoggerService,) {    this.loadFromStorage();
   }
 
   /**
@@ -48,7 +49,7 @@ export class RecentPatientsService {
   /**
    * Get top N frequently accessed patients
    */
-  getFrequentPatients(limit: number = 5): RecentPatientEntry[] {
+  getFrequentPatients(limit = 5): RecentPatientEntry[] {
     return [...this.getRecentPatients()]
       .sort((a, b) => b.accessCount - a.accessCount)
       .slice(0, limit);
@@ -57,7 +58,7 @@ export class RecentPatientsService {
   /**
    * Get most recently accessed patients
    */
-  getMostRecentPatients(limit: number = 5): RecentPatientEntry[] {
+  getMostRecentPatients(limit = 5): RecentPatientEntry[] {
     return [...this.getRecentPatients()]
       .sort((a, b) => new Date(b.accessedAt).getTime() - new Date(a.accessedAt).getTime())
       .slice(0, limit);
@@ -162,7 +163,7 @@ export class RecentPatientsService {
         this.recentPatientsSubject.next(withDates);
       }
     } catch (error) {
-      console.error('[RecentPatientsService] Error loading from storage:', error);
+      this.logger.error('[RecentPatientsService] Error loading from storage:', { error });
       // Clear corrupted data
       localStorage.removeItem(this.STORAGE_KEY);
     }
@@ -175,7 +176,7 @@ export class RecentPatientsService {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(patients));
     } catch (error) {
-      console.error('[RecentPatientsService] Error saving to storage:', error);
+      this.logger.error('[RecentPatientsService] Error saving to storage:', { error });
     }
   }
 }

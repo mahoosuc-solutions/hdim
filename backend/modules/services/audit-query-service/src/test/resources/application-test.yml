@@ -1,0 +1,91 @@
+# JWT Authentication Configuration for Tests
+jwt:
+  secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+  access-token-expiration: 1h
+  refresh-token-expiration: 1d
+  issuer: healthdata-in-motion-test
+  audience: healthdata-api-test
+
+spring:
+  application:
+    name: audit-query-service-test
+
+  # Use H2 in-memory database for unit tests (no Docker required)
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 5
+
+  # JPA Configuration - H2 schema creation
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create  # Create schema from entities for tests
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # Disable Spring Boot auto-configurations for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+# Configure persistence module to use H2 in-memory database
+healthdata:
+  security:
+    jwt:
+      secret: test_jwt_secret_key_for_testing_only_minimum_256_bits_required_for_hs512_algorithm_this_is_long_enough
+      issuer: healthdata-in-motion-test
+  persistence:
+    primary:
+      url: jdbc:h2:mem:testdb;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+      pool-name: test-pool
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout-ms: 30000
+    rls-enabled: false
+    jpa:
+      auditing-enabled: true
+
+  liquibase:
+    enabled: false  # Disable Liquibase in tests
+
+  # Disable Kafka for tests (we're not testing Kafka consumer)
+  kafka:
+    enabled: false
+
+  # Disable Redis for tests (we're not testing cache)
+  data:
+    redis:
+      enabled: false
+  cache:
+    type: none
+
+# Audit query service specific configuration
+audit-query:
+  retention:
+    years: 7
+    cleanup-cron: "-"  # Disabled for tests
+  export:
+    max-records: 100000
+    temp-directory: /tmp/audit-exports
+  projection:
+    daily-rollup-cron: "-"  # Disabled for tests
+
+logging:
+  level:
+    root: WARN
+    com.healthdata: DEBUG
+    org.springframework.test: INFO
+    liquibase: INFO

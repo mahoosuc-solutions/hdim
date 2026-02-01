@@ -1,6 +1,8 @@
 package com.healthdata.documentation.repository;
 
 import com.healthdata.documentation.persistence.DocumentAttachmentEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -31,4 +33,40 @@ public interface DocumentAttachmentRepository extends JpaRepository<DocumentAtta
     long countByClinicalDocumentId(@Param("clinicalDocumentId") UUID clinicalDocumentId);
 
     boolean existsByIdAndTenantId(UUID id, String tenantId);
+
+    /**
+     * Full-text search on OCR extracted text using PostgreSQL's full-text search
+     * Uses to_tsvector and plainto_tsquery for efficient full-text search
+     * Searches for query string in ocrText field with stemming and ranking
+     *
+     * Note: Requires GIN index on to_tsvector(ocr_text) for optimal performance
+     * Created by migration: 0005-add-ocr-fields-to-document-attachments.xml
+     */
+    @Query(value = "SELECT a.* FROM document_attachments a " +
+           "WHERE a.tenant_id = :tenantId " +
+           "AND a.ocr_text IS NOT NULL " +
+           "AND to_tsvector('english', a.ocr_text) @@ plainto_tsquery('english', :query) " +
+           "ORDER BY ts_rank(to_tsvector('english', a.ocr_text), plainto_tsquery('english', :query)) DESC",
+           countQuery = "SELECT COUNT(*) FROM document_attachments a " +
+           "WHERE a.tenant_id = :tenantId " +
+           "AND a.ocr_text IS NOT NULL " +
+           "AND to_tsvector('english', a.ocr_text) @@ plainto_tsquery('english', :query)",
+           nativeQuery = true)
+    Page<DocumentAttachmentEntity> searchOcrText(@Param("tenantId") String tenantId,
+                                                   @Param("query") String query,
+                                                   Pageable pageable);
+
+    /**
+     * Find all attachments with completed OCR status
+     */
+    @Query("SELECT a FROM DocumentAttachmentEntity a WHERE a.tenantId = :tenantId " +
+           "AND a.ocrStatus = 'COMPLETED'")
+    List<DocumentAttachmentEntity> findByTenantIdAndOcrCompleted(@Param("tenantId") String tenantId);
+
+    /**
+     * Find attachments pending OCR processing
+     */
+    @Query("SELECT a FROM DocumentAttachmentEntity a WHERE a.tenantId = :tenantId " +
+           "AND a.ocrStatus = 'PENDING'")
+    List<DocumentAttachmentEntity> findByTenantIdAndOcrPending(@Param("tenantId") String tenantId);
 }

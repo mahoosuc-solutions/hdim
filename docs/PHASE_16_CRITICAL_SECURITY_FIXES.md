@@ -348,6 +348,7 @@ private User createdByUser;
 - [ ] JWT tokens generated and validated correctly
 - [ ] Rate limiting prevents DoS attacks
 - [ ] Audit logs capture all security events
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 - [ ] User foreign keys enforce referential integrity
 - [ ] Input validation rejects invalid data
 - [ ] Security headers present in all responses

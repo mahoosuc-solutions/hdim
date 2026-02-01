@@ -114,7 +114,7 @@ describe('RiskAssessmentService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-  });
+  };
 
   // ==========================================================================
   // Get Risk Assessment Tests
@@ -139,7 +139,7 @@ describe('RiskAssessmentService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      });
+      };
     });
 
     it('should transform date strings to Date objects', (done) => {
@@ -156,7 +156,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment.createdAt).toBeInstanceOf(Date);
           done();
         },
-      });
+      };
     });
 
     it('should return null when patient has no risk assessment', (done) => {
@@ -167,7 +167,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment).toBeNull();
           done();
         },
-      });
+      };
     });
 
     it('should handle server errors gracefully', (done) => {
@@ -179,7 +179,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment).toBeNull();
           done();
         },
-      });
+      };
     });
 
     it('should handle missing patient ID', (done) => {
@@ -189,7 +189,7 @@ describe('RiskAssessmentService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      };
     });
   });
 
@@ -212,7 +212,7 @@ describe('RiskAssessmentService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      });
+      };
     });
 
     it('should transform all dates in history to Date objects', (done) => {
@@ -238,7 +238,7 @@ describe('RiskAssessmentService', () => {
           expect(history[1].createdAt).toBeInstanceOf(Date);
           done();
         },
-      });
+      };
     });
 
     it('should return empty array when patient has no history', (done) => {
@@ -249,7 +249,7 @@ describe('RiskAssessmentService', () => {
           expect(history).toEqual([]);
           done();
         },
-      });
+      };
     });
 
     it('should return empty array on error', (done) => {
@@ -261,7 +261,7 @@ describe('RiskAssessmentService', () => {
           expect(history).toEqual([]);
           done();
         },
-      });
+      };
     });
 
     it('should handle missing patient ID', (done) => {
@@ -271,7 +271,7 @@ describe('RiskAssessmentService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      };
     });
   });
 
@@ -294,7 +294,7 @@ describe('RiskAssessmentService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      });
+      };
     });
 
     it('should return null when category assessment not found', (done) => {
@@ -305,7 +305,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment).toBeNull();
           done();
         },
-      });
+      };
     });
 
     it('should handle multiple categories', (done) => {
@@ -321,7 +321,7 @@ describe('RiskAssessmentService', () => {
           );
           done();
         },
-      });
+      };
     });
 
     it('should handle server errors gracefully', (done) => {
@@ -333,7 +333,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment).toBeNull();
           done();
         },
-      });
+      };
     });
 
     it('should handle missing parameters', (done) => {
@@ -343,7 +343,7 @@ describe('RiskAssessmentService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      };
     });
   });
 
@@ -389,7 +389,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment.createdAt).toBeInstanceOf(Date);
           done();
         },
-      });
+      };
     });
 
     it('should handle recalculation errors', (done) => {
@@ -402,7 +402,7 @@ describe('RiskAssessmentService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      };
     });
 
     it('should handle missing patient ID', (done) => {
@@ -412,7 +412,7 @@ describe('RiskAssessmentService', () => {
           expect(err).toBeDefined();
           done();
         },
-      });
+      };
     });
 
     it('should return updated risk level after recalculation', (done) => {
@@ -429,7 +429,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment.riskLevel).toBe('moderate');
           done();
         },
-      });
+      };
     });
   });
 
@@ -453,7 +453,7 @@ describe('RiskAssessmentService', () => {
           done();
         },
         error: () => fail('should not fail'),
-      });
+      };
     });
 
     it('should handle empty population', (done) => {
@@ -474,8 +474,8 @@ describe('RiskAssessmentService', () => {
           expect(stats.riskLevelDistribution.low).toBe(0);
           done();
         },
-      });
-    });
+      };
+    };
 
     it('should return empty stats on error', (done) => {
       const error = { status: 500, message: 'Server error' };
@@ -490,7 +490,7 @@ describe('RiskAssessmentService', () => {
           expect(stats.riskLevelDistribution['very-high']).toBe(0);
           done();
         },
-      });
+      };
     });
 
     it('should validate distribution totals match total patients', (done) => {
@@ -506,7 +506,7 @@ describe('RiskAssessmentService', () => {
           expect(sum).toBe(stats.totalPatients);
           done();
         },
-      });
+      };
     });
   });
 
@@ -528,7 +528,7 @@ describe('RiskAssessmentService', () => {
           expect(factor.evidence).toBe('BP readings consistently >140/90');
           done();
         },
-      });
+      };
     });
 
     it('should correctly transform predicted outcomes', (done) => {
@@ -542,7 +542,7 @@ describe('RiskAssessmentService', () => {
           expect(outcome.timeframe).toBe('5 years');
           done();
         },
-      });
+      };
     });
 
     it('should handle multiple risk factors', (done) => {
@@ -576,8 +576,8 @@ describe('RiskAssessmentService', () => {
           expect(assessment.riskFactors[2].factor).toBe('Smoking');
           done();
         },
-      });
-    });
+      };
+    };
 
     it('should handle multiple predicted outcomes', (done) => {
       const multiOutcomeAssessment = {
@@ -600,9 +600,9 @@ describe('RiskAssessmentService', () => {
           expect(assessment.predictedOutcomes[1].outcome).toBe('Stroke');
           done();
         },
-      });
-    });
-  });
+      };
+    };
+  };
 
   // ==========================================================================
   // Error Handling Tests
@@ -620,7 +620,7 @@ describe('RiskAssessmentService', () => {
           consoleSpy.mockRestore();
           done();
         },
-      });
+      };
     });
 
     it('should handle network errors', (done) => {
@@ -632,7 +632,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment).toBeNull();
           done();
         },
-      });
+      };
     });
 
     it('should handle malformed response data', (done) => {
@@ -645,7 +645,7 @@ describe('RiskAssessmentService', () => {
           expect(assessment).toBeDefined();
           done();
         },
-      });
+      };
     });
   });
 
@@ -668,7 +668,7 @@ describe('RiskAssessmentService', () => {
               expect(newAssessment.riskScore).toBe(65);
               done();
             },
-          });
+          };
         },
       });
     });
@@ -686,7 +686,7 @@ describe('RiskAssessmentService', () => {
               expect(diabetesAssessment.riskCategory).toBe('DIABETES');
               done();
             },
-          });
+          };
         },
       });
     });

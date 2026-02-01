@@ -1,0 +1,190 @@
+// ============================================================================
+// Care Gap Stats Dashboard Component Styles
+// ============================================================================
+
+.care-gap-stats-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ============================================================================
+// Statistics Cards Grid
+// ============================================================================
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+
+  // Ensure cards are equal height
+  app-stat-card {
+    display: flex;
+    height: 100%;
+  }
+}
+
+// ============================================================================
+// Trend Chart Card
+// ============================================================================
+
+.trend-card {
+  mat-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 500;
+      margin: 0;
+
+      mat-icon {
+        color: #1976d2;
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+
+    mat-card-subtitle {
+      font-size: 0.875rem;
+      color: rgba(0, 0, 0, 0.6);
+      margin-top: 4px;
+    }
+  }
+
+  mat-card-content {
+    padding: 0;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+// ============================================================================
+// State Messages (Loading, Error, No Data)
+// ============================================================================
+
+.loading-state,
+.error-state,
+.no-data-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+
+  mat-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+.loading-state {
+  mat-icon {
+    color: rgba(0, 0, 0, 0.38);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.error-state {
+  mat-icon {
+    color: #d32f2f;
+  }
+
+  p {
+    color: #d32f2f;
+    font-weight: 500;
+  }
+}
+
+.no-data-state {
+  mat-icon {
+    color: rgba(0, 0, 0, 0.26);
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.38);
+  }
+}
+
+// ============================================================================
+// Animations
+// ============================================================================
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// ============================================================================
+// Responsive Design
+// ============================================================================
+
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .care-gap-stats-dashboard {
+    gap: 16px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .trend-card {
+    mat-card-content {
+      min-height: 200px;
+    }
+  }
+}
+
+// ============================================================================
+// Accessibility
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+  }
+}
+
+@media (prefers-contrast: high) {
+  .trend-card {
+    border: 2px solid #000;
+  }
+
+  .loading-state,
+  .error-state,
+  .no-data-state {
+    border: 1px solid currentColor;
+  }
+}

@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM Platform Architecture | 36 Microservices Data Flow</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-pink: #ec4899;
+            --accent-yellow: #fbbf24;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+
+            /* Message Type Colors */
+            --hl7: #ef4444;
+            --fhir: #3b82f6;
+            --ccda: #8b5cf6;
+            --cql: #10b981;
+            --qrda: #f59e0b;
+            --ndjson: #06b6d4;
+            --kafka: #ec4899;
+            --rest: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 10% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 90% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+
+        .header {
+            text-align: center;
+            padding: 3rem 2rem 2rem;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 800;
+            margin-bottom: 0.75rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 1rem;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Message Type Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+        }
+
+        .legend-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.65rem;
+            color: white;
+        }
+
+        .legend-badge.hl7 { background: var(--hl7); }
+        .legend-badge.fhir { background: var(--fhir); }
+        .legend-badge.ccda { background: var(--ccda); }
+        .legend-badge.cql { background: var(--cql); }
+        .legend-badge.qrda { background: var(--qrda); }
+        .legend-badge.ndjson { background: var(--ndjson); }
+        .legend-badge.kafka { background: var(--kafka); }
+        .legend-badge.rest { background: var(--rest); }
+
+        /* Main Container */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Architecture Diagram */
+        .architecture-diagram {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        /* Domain Sections */
+        .domain-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: stretch;
+        }
+
+        .domain-label {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            padding: 1rem 0.5rem;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 0.5rem;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .domain-label.external { background: rgba(239, 68, 68, 0.2); color: var(--hl7); }
+        .domain-label.gateway { background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); }
+        .domain-label.clinical { background: rgba(16, 185, 129, 0.2); color: var(--accent-green); }
+        .domain-label.integration { background: rgba(59, 130, 246, 0.2); color: var(--accent-blue); }
+        .domain-label.analytics { background: rgba(139, 92, 246, 0.2); color: var(--accent-purple); }
+        .domain-label.platform { background: rgba(245, 158, 11, 0.2); color: var(--accent-orange); }
+        .domain-label.infra { background: rgba(236, 72, 153, 0.2); color: var(--accent-pink); }
+
+        .domain-content {
+            flex: 1;
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        /* Service Nodes */
+        .service-node {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            min-width: 140px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .service-node:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .service-node.green { border-color: var(--accent-green); }
+        .service-node.green:hover { box-shadow: 0 10px 30px rgba(16, 185, 129, 0.3); }
+        .service-node.blue { border-color: var(--accent-blue); }
+        .service-node.blue:hover { box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); }
+        .service-node.purple { border-color: var(--accent-purple); }
+        .service-node.purple:hover { box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3); }
+        .service-node.cyan { border-color: var(--accent-cyan); }
+        .service-node.cyan:hover { box-shadow: 0 10px 30px rgba(6, 182, 212, 0.3); }
+        .service-node.orange { border-color: var(--accent-orange); }
+        .service-node.orange:hover { box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3); }
+        .service-node.pink { border-color: var(--accent-pink); }
+        .service-node.pink:hover { box-shadow: 0 10px 30px rgba(236, 72, 153, 0.3); }
+        .service-node.red { border-color: var(--hl7); }
+        .service-node.red:hover { box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3); }
+
+        .service-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .service-name {
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            white-space: nowrap;
+        }
+
+        .service-port {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+
+        .service-badges {
+            display: flex;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .msg-badge {
+            font-size: 0.5rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .msg-badge.hl7 { background: var(--hl7); }
+        .msg-badge.fhir { background: var(--fhir); }
+        .msg-badge.ccda { background: var(--ccda); }
+        .msg-badge.cql { background: var(--cql); }
+        .msg-badge.qrda { background: var(--qrda); }
+        .msg-badge.ndjson { background: var(--ndjson); }
+        .msg-badge.kafka { background: var(--kafka); }
+        .msg-badge.rest { background: var(--rest); }
+
+        /* Flow Arrows */
+        .flow-connector {
+            display: flex;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            padding: 0 0.25rem;
+        }
+
+        .flow-connector.down {
+            writing-mode: vertical-rl;
+            padding: 0.5rem 0;
+        }
+
+        /* Data Flow Sections */
+        .data-flow-section {
+            margin-top: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--accent-green);
+            display: inline-block;
+        }
+
+        /* Flow Cards */
+        .flow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .flow-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .flow-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .flow-card-icon {
+            font-size: 2rem;
+        }
+
+        .flow-card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .flow-card-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .flow-step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .flow-step-content {
+            flex: 1;
+        }
+
+        .flow-step-service {
+            font-weight: 600;
+        }
+
+        .flow-step-action {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+        }
+
+        .flow-step-badges {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        /* Customer/HIE/Payer/CMS Flow Diagram */
+        .ecosystem-diagram {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .ecosystem-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .ecosystem-entity {
+            background: var(--bg-secondary);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            min-width: 180px;
+            border: 2px solid var(--border-color);
+        }
+
+        .ecosystem-entity.customer { border-color: var(--accent-green); }
+        .ecosystem-entity.hie { border-color: var(--accent-blue); }
+        .ecosystem-entity.payer { border-color: var(--accent-purple); }
+        .ecosystem-entity.cms { border-color: var(--accent-orange); }
+        .ecosystem-entity.hdim {
+            border-color: var(--accent-cyan);
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(16, 185, 129, 0.1));
+            min-width: 300px;
+        }
+
+        .ecosystem-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .ecosystem-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .ecosystem-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .ecosystem-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+        }
+
+        .arrow-label {
+            font-size: 0.65rem;
+            max-width: 80px;
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .arrow-line {
+            font-size: 1.5rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .footer-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .domain-row {
+                flex-direction: column;
+            }
+            .domain-label {
+                writing-mode: horizontal-tb;
+                transform: none;
+                min-width: auto;
+                padding: 0.5rem 1rem;
+            }
+            .service-node {
+                min-width: 120px;
+            }
+            .flow-grid {
+                grid-template-columns: 1fr;
+            }
+            .ecosystem-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <header class="header">
+        <div class="badge">Complete Platform Architecture</div>
+        <h1>HDIM 36-Service Architecture</h1>
+        <p class="subtitle">Enterprise healthcare interoperability platform with Customer, HIE, Payer, and CMS data flows</p>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value">36</div>
+                <div class="stat-label">Microservices</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">29</div>
+                <div class="stat-label">Databases</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Domains</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">8</div>
+                <div class="stat-label">Message Types</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">52</div>
+                <div class="stat-label">HEDIS Measures</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Message Type Legend -->
+    <div class="legend">
+        <div class="legend-item"><span class="legend-badge hl7">HL7 v2.x</span> ADT/ORU/ORM</div>
+        <div class="legend-item"><span class="legend-badge fhir">FHIR R4</span> Resources/Bundles</div>
+        <div class="legend-item"><span class="legend-badge ccda">C-CDA</span> CCD/Discharge</div>
+        <div class="legend-item"><span class="legend-badge cql">CQL</span> Measure Logic</div>
+        <div class="legend-item"><span class="legend-badge qrda">QRDA</span> I/III Export</div>
+        <div class="legend-item"><span class="legend-badge ndjson">NDJSON</span> Bulk Data</div>
+        <div class="legend-item"><span class="legend-badge kafka">Kafka</span> Events</div>
+        <div class="legend-item"><span class="legend-badge rest">REST</span> JSON API</div>
+    </div>
+
+    <main class="container">
+
+        <!-- Ecosystem Data Flow Diagram -->
+        <section class="data-flow-section">
+            <h2 class="section-title">Healthcare Ecosystem Data Flows</h2>
+
+            <div class="ecosystem-diagram">
+                <h3 style="text-align: center; margin-bottom: 2rem; color: var(--accent-cyan);">End-to-End Data Exchange Architecture</h3>
+
+                <!-- Top Row: External Systems -->
+                <div class="ecosystem-row" style="justify-content: center; gap: 3rem;">
+                    <div class="ecosystem-entity customer">
+                        <div class="ecosystem-icon">🏥</div>
+                        <div class="ecosystem-title">Customer EHRs</div>
+                        <div class="ecosystem-subtitle">Epic, Cerner, Athena</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge hl7">HL7</span>
+                            <span class="msg-badge ccda">C-CDA</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-entity hie">
+                        <div class="ecosystem-icon">🔗</div>
+                        <div class="ecosystem-title">HIE Networks</div>
+                        <div class="ecosystem-subtitle">Commonwell, Carequality, eHealth Exchange</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge ccda">C-CDA</span>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-entity payer">
+                        <div class="ecosystem-icon">💼</div>
+                        <div class="ecosystem-title">Payer Systems</div>
+                        <div class="ecosystem-subtitle">Claims, Eligibility, Auth</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge rest">X12 EDI</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-entity cms">
+                        <div class="ecosystem-icon">🏛️</div>
+                        <div class="ecosystem-title">CMS APIs</div>
+                        <div class="ecosystem-subtitle">BCDA, DPC, BB2.0, AB2D, QPP</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge ndjson">NDJSON</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge qrda">QRDA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow Arrows Down -->
+                <div style="display: flex; justify-content: center; gap: 6rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-label">ADT, ORU, ORM Events</div>
+                        <div class="arrow-line">↓ <span class="msg-badge hl7">HL7</span></div>
+                    </div>
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-label">Patient Records Query</div>
+                        <div class="arrow-line">↓ <span class="msg-badge fhir">FHIR</span></div>
+                    </div>
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-label">Claims & Eligibility</div>
+                        <div class="arrow-line">↓ <span class="msg-badge rest">REST</span></div>
+                    </div>
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-label">Medicare Bulk Export</div>
+                        <div class="arrow-line">↓ <span class="msg-badge ndjson">NDJSON</span></div>
+                    </div>
+                </div>
+
+                <!-- HDIM Platform (Center) -->
+                <div style="display: flex; justify-content: center; margin: 2rem 0;">
+                    <div class="ecosystem-entity hdim" style="width: 100%; max-width: 900px;">
+                        <div class="ecosystem-icon">⚡</div>
+                        <div class="ecosystem-title" style="font-size: 1.3rem;">HDIM Platform</div>
+                        <div class="ecosystem-subtitle" style="font-size: 0.9rem; margin-bottom: 1rem;">36 Microservices | 29 Databases | 52 HEDIS Measures</div>
+
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-top: 1rem;">
+                            <div style="background: rgba(16, 185, 129, 0.2); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem;">
+                                <strong style="color: var(--accent-green);">Core Clinical</strong><br>
+                                quality-measure, cql-engine, care-gap, hcc, prior-auth, sdoh, consent
+                            </div>
+                            <div style="background: rgba(59, 130, 246, 0.2); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem;">
+                                <strong style="color: var(--accent-blue);">Integration</strong><br>
+                                fhir, patient, ehr-connector, cdr-processor, cms-connector, event-router
+                            </div>
+                            <div style="background: rgba(139, 92, 246, 0.2); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem;">
+                                <strong style="color: var(--accent-purple);">Analytics</strong><br>
+                                analytics, predictive-analytics, qrda-export, payer-workflows
+                            </div>
+                            <div style="background: rgba(6, 182, 212, 0.2); padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.75rem;">
+                                <strong style="color: var(--accent-cyan);">Platform</strong><br>
+                                gateway (x4), notification, approval, ai-assistant, documentation
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow Arrows Up (Outputs) -->
+                <div style="display: flex; justify-content: center; gap: 6rem; margin: 1rem 0; flex-wrap: wrap;">
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-line">↑ <span class="msg-badge fhir">FHIR</span></div>
+                        <div class="arrow-label">Care Gap Alerts, Results</div>
+                    </div>
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-line">↑ <span class="msg-badge ccda">C-CDA</span></div>
+                        <div class="arrow-label">Care Summaries</div>
+                    </div>
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-line">↑ <span class="msg-badge rest">REST</span></div>
+                        <div class="arrow-label">Prior Auth, RAF Scores</div>
+                    </div>
+                    <div class="ecosystem-arrow">
+                        <div class="arrow-line">↑ <span class="msg-badge qrda">QRDA</span></div>
+                        <div class="arrow-label">Quality Submissions</div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row: Outputs -->
+                <div class="ecosystem-row" style="justify-content: center; gap: 3rem;">
+                    <div class="ecosystem-entity customer" style="border-color: var(--accent-green);">
+                        <div class="ecosystem-icon">👨‍⚕️</div>
+                        <div class="ecosystem-title">Clinical Teams</div>
+                        <div class="ecosystem-subtitle">Care Gap Worklists, Alerts</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-entity hie" style="border-color: var(--accent-blue);">
+                        <div class="ecosystem-icon">📊</div>
+                        <div class="ecosystem-title">Quality Dashboards</div>
+                        <div class="ecosystem-subtitle">Star Ratings, Trends</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-entity payer" style="border-color: var(--accent-purple);">
+                        <div class="ecosystem-icon">💰</div>
+                        <div class="ecosystem-title">Risk Adjustment</div>
+                        <div class="ecosystem-subtitle">HCC/RAF, Recapture</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+
+                    <div class="ecosystem-entity cms" style="border-color: var(--accent-orange);">
+                        <div class="ecosystem-icon">📋</div>
+                        <div class="ecosystem-title">CMS Submissions</div>
+                        <div class="ecosystem-subtitle">QPP/MIPS, MA Star Ratings</div>
+                        <div class="service-badges" style="margin-top: 0.5rem;">
+                            <span class="msg-badge qrda">QRDA III</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Architecture Diagram -->
+        <div class="architecture-diagram">
+            <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--accent-cyan);">Platform Service Architecture (36 Services)</h2>
+
+            <!-- External Systems Row -->
+            <div class="domain-row">
+                <div class="domain-label external">EXTERNAL</div>
+                <div class="domain-content">
+                    <div class="service-node red">
+                        <div class="service-icon">🏥</div>
+                        <div class="service-name">Customer EHRs</div>
+                        <div class="service-port">Epic/Cerner/Athena</div>
+                        <div class="service-badges">
+                            <span class="msg-badge hl7">HL7</span>
+                            <span class="msg-badge ccda">C-CDA</span>
+                        </div>
+                    </div>
+                    <span class="flow-connector">→</span>
+                    <div class="service-node red">
+                        <div class="service-icon">🔗</div>
+                        <div class="service-name">HIE Networks</div>
+                        <div class="service-port">Commonwell/Carequality</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge ccda">C-CDA</span>
+                        </div>
+                    </div>
+                    <span class="flow-connector">→</span>
+                    <div class="service-node red">
+                        <div class="service-icon">🏛️</div>
+                        <div class="service-name">CMS APIs</div>
+                        <div class="service-port">BCDA/DPC/BB2.0/AB2D/QPP</div>
+                        <div class="service-badges">
+                            <span class="msg-badge ndjson">NDJSON</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <span class="flow-connector">→</span>
+                    <div class="service-node red">
+                        <div class="service-icon">💼</div>
+                        <div class="service-name">Payer Systems</div>
+                        <div class="service-port">Claims/Eligibility</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">X12</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gateway Layer -->
+            <div class="domain-row">
+                <div class="domain-label gateway">GATEWAYS</div>
+                <div class="domain-content">
+                    <div class="service-node cyan">
+                        <div class="service-icon">🚪</div>
+                        <div class="service-name">gateway-service</div>
+                        <div class="service-port">:8001</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node cyan">
+                        <div class="service-icon">🔐</div>
+                        <div class="service-name">gateway-admin</div>
+                        <div class="service-port">:8002</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node cyan">
+                        <div class="service-icon">🩺</div>
+                        <div class="service-name">gateway-clinical</div>
+                        <div class="service-port">:8003</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node cyan">
+                        <div class="service-icon">📁</div>
+                        <div class="service-name">gateway-fhir</div>
+                        <div class="service-port">:8004</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integration Layer -->
+            <div class="domain-row">
+                <div class="domain-label integration">INTEGRATION</div>
+                <div class="domain-content">
+                    <div class="service-node blue">
+                        <div class="service-icon">🔌</div>
+                        <div class="service-name">ehr-connector</div>
+                        <div class="service-port">:8090</div>
+                        <div class="service-badges">
+                            <span class="msg-badge hl7">HL7</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node blue">
+                        <div class="service-icon">⚙️</div>
+                        <div class="service-name">cdr-processor</div>
+                        <div class="service-port">:8091</div>
+                        <div class="service-badges">
+                            <span class="msg-badge ccda">C-CDA</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node blue">
+                        <div class="service-icon">🏛️</div>
+                        <div class="service-name">cms-connector</div>
+                        <div class="service-port">:8103</div>
+                        <div class="service-badges">
+                            <span class="msg-badge ndjson">NDJSON</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node blue">
+                        <div class="service-icon">✨</div>
+                        <div class="service-name">data-enrichment</div>
+                        <div class="service-port">:8093</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node blue">
+                        <div class="service-icon">⚡</div>
+                        <div class="service-name">event-processing</div>
+                        <div class="service-port">:8094</div>
+                        <div class="service-badges">
+                            <span class="msg-badge kafka">Kafka</span>
+                        </div>
+                    </div>
+                    <div class="service-node blue">
+                        <div class="service-icon">🔀</div>
+                        <div class="service-name">event-router</div>
+                        <div class="service-port">:8095</div>
+                        <div class="service-badges">
+                            <span class="msg-badge kafka">Kafka</span>
+                        </div>
+                    </div>
+                    <div class="service-node blue">
+                        <div class="service-icon">📋</div>
+                        <div class="service-name">ecr-service</div>
+                        <div class="service-port">:8092</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Data Layer -->
+            <div class="domain-row">
+                <div class="domain-label clinical">CORE DATA</div>
+                <div class="domain-content">
+                    <div class="service-node green">
+                        <div class="service-icon">📁</div>
+                        <div class="service-name">fhir-service</div>
+                        <div class="service-port">:8085</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR R4</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">👤</div>
+                        <div class="service-name">patient-service</div>
+                        <div class="service-port">:8084</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">✅</div>
+                        <div class="service-name">consent-service</div>
+                        <div class="service-port">:8108</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Intelligence Layer -->
+            <div class="domain-row">
+                <div class="domain-label clinical">CLINICAL</div>
+                <div class="domain-content">
+                    <div class="service-node green">
+                        <div class="service-icon">🧮</div>
+                        <div class="service-name">cql-engine</div>
+                        <div class="service-port">:8081</div>
+                        <div class="service-badges">
+                            <span class="msg-badge cql">CQL</span>
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">📊</div>
+                        <div class="service-name">quality-measure</div>
+                        <div class="service-port">:8087</div>
+                        <div class="service-badges">
+                            <span class="msg-badge cql">CQL</span>
+                            <span class="msg-badge fhir">MeasureReport</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">🎯</div>
+                        <div class="service-name">care-gap</div>
+                        <div class="service-port">:8086</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge kafka">Kafka</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">💰</div>
+                        <div class="service-name">hcc-service</div>
+                        <div class="service-port">:8105</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">📝</div>
+                        <div class="service-name">prior-auth</div>
+                        <div class="service-port">:8106</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <div class="service-node green">
+                        <div class="service-icon">🏠</div>
+                        <div class="service-name">sdoh-service</div>
+                        <div class="service-port">:8107</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Layer -->
+            <div class="domain-row">
+                <div class="domain-label analytics">ANALYTICS</div>
+                <div class="domain-content">
+                    <div class="service-node purple">
+                        <div class="service-icon">📈</div>
+                        <div class="service-name">analytics</div>
+                        <div class="service-port">:8098</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node purple">
+                        <div class="service-icon">🤖</div>
+                        <div class="service-name">predictive-analytics</div>
+                        <div class="service-port">:8099</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node purple">
+                        <div class="service-icon">📋</div>
+                        <div class="service-name">qrda-export</div>
+                        <div class="service-port">:8104</div>
+                        <div class="service-badges">
+                            <span class="msg-badge qrda">QRDA I/III</span>
+                        </div>
+                    </div>
+                    <div class="service-node purple">
+                        <div class="service-icon">💼</div>
+                        <div class="service-name">payer-workflows</div>
+                        <div class="service-port">:8100</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node purple">
+                        <div class="service-icon">💵</div>
+                        <div class="service-name">cost-analysis</div>
+                        <div class="service-port">:8113</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node purple">
+                        <div class="service-icon">🔄</div>
+                        <div class="service-name">migration-workflow</div>
+                        <div class="service-port">:8101</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Services Layer -->
+            <div class="domain-row">
+                <div class="domain-label platform">PLATFORM</div>
+                <div class="domain-content">
+                    <div class="service-node orange">
+                        <div class="service-icon">🔔</div>
+                        <div class="service-name">notification</div>
+                        <div class="service-port">:8096</div>
+                        <div class="service-badges">
+                            <span class="msg-badge kafka">Kafka</span>
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node orange">
+                        <div class="service-icon">✓</div>
+                        <div class="service-name">approval</div>
+                        <div class="service-port">:8097</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node orange">
+                        <div class="service-icon">🤖</div>
+                        <div class="service-name">ai-assistant</div>
+                        <div class="service-port">:8109</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node orange">
+                        <div class="service-icon">📚</div>
+                        <div class="service-name">documentation</div>
+                        <div class="service-port">:8102</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node orange">
+                        <div class="service-icon">💼</div>
+                        <div class="service-name">sales-automation</div>
+                        <div class="service-port">:8110</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node orange">
+                        <div class="service-icon">🛠️</div>
+                        <div class="service-name">agent-builder</div>
+                        <div class="service-port">:8111</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node orange">
+                        <div class="service-icon">⚡</div>
+                        <div class="service-name">agent-runtime</div>
+                        <div class="service-port">:8112</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Infrastructure Layer -->
+            <div class="domain-row">
+                <div class="domain-label infra">INFRA</div>
+                <div class="domain-content">
+                    <div class="service-node pink">
+                        <div class="service-icon">🔧</div>
+                        <div class="service-name">devops-agent</div>
+                        <div class="service-port">:8114</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node pink">
+                        <div class="service-icon">🎭</div>
+                        <div class="service-name">demo-orchestrator</div>
+                        <div class="service-port">:8115</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">REST</span>
+                        </div>
+                    </div>
+                    <div class="service-node pink">
+                        <div class="service-icon">🌱</div>
+                        <div class="service-name">demo-seeding</div>
+                        <div class="service-port">:8116</div>
+                        <div class="service-badges">
+                            <span class="msg-badge fhir">FHIR</span>
+                        </div>
+                    </div>
+                    <span class="flow-connector" style="margin-left: auto;">|</span>
+                    <div class="service-node pink">
+                        <div class="service-icon">🐘</div>
+                        <div class="service-name">PostgreSQL 16</div>
+                        <div class="service-port">:5435</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">29 DBs</span>
+                        </div>
+                    </div>
+                    <div class="service-node pink">
+                        <div class="service-icon">⚡</div>
+                        <div class="service-name">Redis 7</div>
+                        <div class="service-port">:6380</div>
+                        <div class="service-badges">
+                            <span class="msg-badge rest">Cache</span>
+                        </div>
+                    </div>
+                    <div class="service-node pink">
+                        <div class="service-icon">📨</div>
+                        <div class="service-name">Apache Kafka</div>
+                        <div class="service-port">:9094</div>
+                        <div class="service-badges">
+                            <span class="msg-badge kafka">Events</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Flow Scenarios -->
+        <section class="data-flow-section">
+            <h2 class="section-title">Primary Data Flow Scenarios</h2>
+
+            <div class="flow-grid">
+                <!-- Customer EHR Data Flow -->
+                <div class="flow-card">
+                    <div class="flow-card-header">
+                        <div class="flow-card-icon">🏥</div>
+                        <div>
+                            <div class="flow-card-title">Customer EHR Integration</div>
+                            <div class="flow-card-subtitle">HL7 v2.x / C-CDA → FHIR R4</div>
+                        </div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">Epic/Cerner/Athena</div>
+                                <div class="flow-step-action">Sends ADT, ORU, ORM messages</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge hl7">HL7</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">ehr-connector :8090</div>
+                                <div class="flow-step-action">Receives & validates HL7</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge hl7">HL7</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cdr-processor :8091</div>
+                                <div class="flow-step-action">Transforms HL7/C-CDA → FHIR</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">data-enrichment :8093</div>
+                                <div class="flow-step-action">Normalizes codes, validates</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">fhir-service :8085</div>
+                                <div class="flow-step-action">Persists FHIR resources</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">6</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">event-router :8095</div>
+                                <div class="flow-step-action">Triggers quality evaluation</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge kafka">Kafka</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HIE Data Exchange Flow -->
+                <div class="flow-card">
+                    <div class="flow-card-header">
+                        <div class="flow-card-icon">🔗</div>
+                        <div>
+                            <div class="flow-card-title">HIE Data Exchange</div>
+                            <div class="flow-card-subtitle">Commonwell / Carequality / eHealth Exchange</div>
+                        </div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">HIE Network</div>
+                                <div class="flow-step-action">Patient record query request</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">gateway-fhir :8004</div>
+                                <div class="flow-step-action">Authenticates, routes query</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">consent-service :8108</div>
+                                <div class="flow-step-action">Validates patient consent</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">fhir-service :8085</div>
+                                <div class="flow-step-action">Retrieves patient records</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cdr-processor :8091</div>
+                                <div class="flow-step-action">Transforms to C-CDA if needed</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge ccda">C-CDA</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">6</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">HIE Network</div>
+                                <div class="flow-step-action">Receives care summary</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge ccda">C-CDA</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CMS Bulk Data Import Flow -->
+                <div class="flow-card">
+                    <div class="flow-card-header">
+                        <div class="flow-card-icon">🏛️</div>
+                        <div>
+                            <div class="flow-card-title">CMS Bulk Data Import</div>
+                            <div class="flow-card-subtitle">BCDA / DPC / AB2D → FHIR Store</div>
+                        </div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cms-connector :8103</div>
+                                <div class="flow-step-action">OAuth2 auth, initiates bulk export</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">CMS BCDA API</div>
+                                <div class="flow-step-action">Returns NDJSON file URLs</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge ndjson">NDJSON</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cms-connector :8103</div>
+                                <div class="flow-step-action">Downloads & streams files</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge ndjson">NDJSON</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">event-processing :8094</div>
+                                <div class="flow-step-action">Streams to Kafka topics</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge kafka">Kafka</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">fhir-service :8085</div>
+                                <div class="flow-step-action">Stores EOB, Patient, Coverage</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">6</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">patient-service :8084</div>
+                                <div class="flow-step-action">Updates patient registry</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payer Integration Flow -->
+                <div class="flow-card">
+                    <div class="flow-card-header">
+                        <div class="flow-card-icon">💼</div>
+                        <div>
+                            <div class="flow-card-title">Payer Integration</div>
+                            <div class="flow-card-subtitle">Claims / Eligibility / Prior Auth</div>
+                        </div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">Payer System</div>
+                                <div class="flow-step-action">Eligibility/claims request</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">X12 EDI</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">payer-workflows :8100</div>
+                                <div class="flow-step-action">Processes payer transactions</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">prior-auth :8106</div>
+                                <div class="flow-step-action">Handles auth workflows</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">hcc-service :8105</div>
+                                <div class="flow-step-action">Calculates RAF scores</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cost-analysis :8113</div>
+                                <div class="flow-step-action">Projects costs, identifies savings</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">6</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">Payer System</div>
+                                <div class="flow-step-action">Receives response/reports</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quality Measure Evaluation Flow -->
+                <div class="flow-card">
+                    <div class="flow-card-header">
+                        <div class="flow-card-icon">📊</div>
+                        <div>
+                            <div class="flow-card-title">HEDIS Measure Evaluation</div>
+                            <div class="flow-card-subtitle">CQL Execution → Care Gap Detection</div>
+                        </div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">quality-measure :8087</div>
+                                <div class="flow-step-action">Receives evaluation request</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">fhir-service :8085</div>
+                                <div class="flow-step-action">Retrieves patient data</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cql-engine :8081</div>
+                                <div class="flow-step-action">Executes 52 HEDIS measures</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge cql">CQL</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">quality-measure :8087</div>
+                                <div class="flow-step-action">Generates MeasureReport</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">care-gap :8086</div>
+                                <div class="flow-step-action">Identifies care gaps</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">6</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">notification :8096</div>
+                                <div class="flow-step-action">Sends care gap alerts</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge kafka">Kafka</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CMS Quality Submission Flow -->
+                <div class="flow-card">
+                    <div class="flow-card-header">
+                        <div class="flow-card-icon">📋</div>
+                        <div>
+                            <div class="flow-card-title">CMS Quality Submission</div>
+                            <div class="flow-card-subtitle">MeasureReport → QRDA III → QPP</div>
+                        </div>
+                    </div>
+                    <div class="flow-steps">
+                        <div class="flow-step">
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">analytics :8098</div>
+                                <div class="flow-step-action">Aggregates quality data</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">quality-measure :8087</div>
+                                <div class="flow-step-action">Retrieves MeasureReports</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge fhir">FHIR</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">qrda-export :8104</div>
+                                <div class="flow-step-action">Generates QRDA III XML</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge qrda">QRDA</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">qrda-export :8104</div>
+                                <div class="flow-step-action">Validates against CMS schema</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge qrda">QRDA</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">cms-connector :8103</div>
+                                <div class="flow-step-action">Submits to QPP/MIPS</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge rest">REST</span></div>
+                        </div>
+                        <div class="flow-step">
+                            <div class="flow-step-num">6</div>
+                            <div class="flow-step-content">
+                                <div class="flow-step-service">CMS QPP Portal</div>
+                                <div class="flow-step-action">Accepts submission</div>
+                            </div>
+                            <div class="flow-step-badges"><span class="msg-badge qrda">QRDA</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Service Communication Patterns -->
+        <section class="data-flow-section">
+            <h2 class="section-title">Service Communication Patterns</h2>
+
+            <div style="background: var(--bg-card); border-radius: 1rem; padding: 1.5rem; border: 1px solid var(--border-color); overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--accent-cyan);">Pattern</th>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--accent-cyan);">Protocol</th>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--accent-cyan);">External Partners</th>
+                            <th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid var(--border-color); color: var(--accent-cyan);">Use Case</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><strong>Customer EHR Integration</strong></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><span class="msg-badge hl7">HL7 v2.x</span> <span class="msg-badge ccda">C-CDA</span></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Epic, Cerner, Athena, AllScripts</td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">ADT events, lab results, orders, clinical documents</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><strong>HIE Data Exchange</strong></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><span class="msg-badge fhir">FHIR R4</span> <span class="msg-badge ccda">C-CDA</span></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Commonwell, Carequality, eHealth Exchange</td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Patient record queries, care summaries, consent</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><strong>CMS Bulk Data</strong></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><span class="msg-badge ndjson">NDJSON</span> <span class="msg-badge fhir">FHIR</span></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">BCDA, DPC, Blue Button 2.0, AB2D</td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Medicare claims, Part D, beneficiary data</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><strong>CMS Quality Submission</strong></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><span class="msg-badge qrda">QRDA I/III</span></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">QPP, MIPS, Hospital Quality, MA Star</td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">eCQM reporting, quality program submissions</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><strong>Payer Transactions</strong></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><span class="msg-badge rest">X12 EDI</span> <span class="msg-badge fhir">FHIR</span></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Commercial Payers, MA Plans, Medicaid</td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Eligibility, claims, prior authorization</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><strong>Internal Event Bus</strong></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);"><span class="msg-badge kafka">Kafka</span></td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">N/A (Internal)</td>
+                            <td style="padding: 0.75rem; border-bottom: 1px solid var(--border-color);">Domain events, real-time updates, async processing</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>HDIM Platform Architecture - 36 Microservices</p>
+        <div style="margin-top: 1rem;">
+            <a href="cms-vision.html" class="footer-link">CMS Vision</a>
+            <a href="validation-report.html" class="footer-link">Validation Report</a>
+            <a href="kill-tony-vision-deck.html" class="footer-link">Slide Deck</a>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">Generated: January 16, 2026 | HealthData-in-Motion (HDIM)</p>
+    </footer>
+</body>
+</html>

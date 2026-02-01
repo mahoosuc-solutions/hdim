@@ -598,6 +598,7 @@ Examples:
 4. Integration tests passing
 5. Documentation updated
 6. PR approved by ≥2 reviewers
+7. License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Merge Process
 ```bash

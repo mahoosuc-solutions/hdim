@@ -5,9 +5,12 @@ import { of, throwError } from 'rxjs';
 import { ResultsComponent } from './results.component';
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
+import { LoggerService } from '../../services/logger.service';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { CSVHelper } from '../../utils/csv-helper';
+import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 /**
  * TDD Test Suite for Results Management Component
@@ -25,6 +28,7 @@ describe('ResultsComponent (TDD)', () => {
   let fixture: ComponentFixture<ResultsComponent>;
   let mockEvaluationService: jest.Mocked<EvaluationService>;
   let mockPatientService: jest.Mocked<PatientService>;
+  let mockLoggerService: jest.Mocked<any>;
   let globalConsoleErrorSpy: jest.SpyInstance;
 
   beforeAll(() => {
@@ -45,13 +49,15 @@ describe('ResultsComponent (TDD)', () => {
       toPatientSummary: jest.fn(),
     } as any;
 
+    mockLoggerService = createMockLoggerService();
+
     await TestBed.configureTestingModule({
       imports: [ResultsComponent, ReactiveFormsModule],
       providers: [
         provideHttpClient(),
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
-      ],
+        { provide: LoggerService, useValue: mockLoggerService },
     }).compileComponents();
 
     fixture = TestBed.createComponent(ResultsComponent);

@@ -433,6 +433,7 @@ receivers:
 - [ ] security-alerts.yml created
 - [ ] hdim-authentication-security.json created
 - [ ] docker-compose.yml updated with Prometheus and Grafana
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Deployment (Staging)
 - [ ] Stop existing containers: `docker-compose down`

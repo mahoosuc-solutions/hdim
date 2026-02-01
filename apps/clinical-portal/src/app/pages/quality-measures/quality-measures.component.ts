@@ -17,6 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../config/api.config';
+import { LoggerService } from '../../services/logger.service';
 
 interface QualityMeasure {
   id: string;
@@ -221,6 +222,7 @@ export class QualityMeasuresComponent implements OnInit {
   loadError = signal<string | null>(null);
 
   private http = inject(HttpClient);
+  private logger = inject(LoggerService).withContext('QualityMeasuresComponent');
 
   constructor(
     private router: Router,
@@ -265,7 +267,7 @@ export class QualityMeasuresComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: (error) => {
-        console.error('Failed to load care gap statistics:', error);
+        this.logger.error('Failed to load care gap statistics', error);
         this.loadError.set('Failed to load care gap data. Using default measures.');
         this.isLoading.set(false);
       }
@@ -286,7 +288,7 @@ export class QualityMeasuresComponent implements OnInit {
         this.totalPatients.set(total);
       },
       error: (error) => {
-        console.error('Failed to load patient count:', error);
+        this.logger.error('Failed to load patient count', error);
         // Keep default value
       }
     });
@@ -295,6 +297,10 @@ export class QualityMeasuresComponent implements OnInit {
   selectMeasure(measure: QualityMeasure): void {
     this.selectedMeasure.set(measure);
     this.evaluationResult.set(null);
+  }
+
+  viewMeasureDetail(measure: QualityMeasure): void {
+    this.router.navigate(['/quality-measures', measure.code]);
   }
 
   closeMeasureDetail(): void {

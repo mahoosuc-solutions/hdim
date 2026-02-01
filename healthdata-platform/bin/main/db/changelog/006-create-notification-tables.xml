@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.25.xsd">
+
+    <changeSet id="006-001-create-notification-templates-table" author="healthdata">
+        <comment>Create notification templates table for reusable notification content</comment>
+        <createTable tableName="templates" schemaName="notification">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_notification_templates"/>
+            </column>
+            <column name="template_id" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uk_templates_template_id"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="channel" type="VARCHAR(50)">
+                <constraints nullable="false" checkConstraint="channel IN ('EMAIL', 'SMS', 'PUSH', 'IN_APP')"/>
+            </column>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="body" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="variables" type="JSONB"/>
+            <column name="active" type="BOOLEAN" defaultValue="true"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="006-002-create-notification-history-table" author="healthdata">
+        <comment>Create notification history table for sent notifications</comment>
+        <createTable tableName="history" schemaName="notification">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_notification_history"/>
+            </column>
+            <column name="notification_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID"/>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="template_id" type="VARCHAR(100)"/>
+            <column name="channel" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="content" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent_at" type="TIMESTAMP"/>
+            <column name="delivered_at" type="TIMESTAMP"/>
+            <column name="failed_at" type="TIMESTAMP"/>
+            <column name="error_message" type="TEXT"/>
+            <column name="metadata" type="JSONB"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="006-003-add-notification-history-foreign-keys" author="healthdata">
+        <comment>Add foreign key constraints for notification history</comment>
+        <addForeignKeyConstraint
+            baseTableSchemaName="notification"
+            baseTableName="history"
+            baseColumnNames="patient_id"
+            referencedTableSchemaName="patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            constraintName="fk_notification_history_patient"
+            onDelete="SET NULL"/>
+        <addForeignKeyConstraint
+            baseTableSchemaName="notification"
+            baseTableName="history"
+            baseColumnNames="template_id"
+            referencedTableSchemaName="notification"
+            referencedTableName="templates"
+            referencedColumnNames="template_id"
+            constraintName="fk_notification_history_template"
+            onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="006-004-create-notification-history-indexes" author="healthdata">
+        <comment>Create indexes on notification history table</comment>
+        <createIndex tableName="history" schemaName="notification" indexName="idx_notif_patient">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex tableName="history" schemaName="notification" indexName="idx_notif_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="history" schemaName="notification" indexName="idx_notif_sent">
+            <column name="sent_at" descending="true"/>
+        </createIndex>
+        <createIndex tableName="history" schemaName="notification" indexName="idx_notif_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="006-005-create-notification-preferences-table" author="healthdata">
+        <comment>Create notification preferences table for user notification settings</comment>
+        <createTable tableName="preferences" schemaName="notification">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_notification_preferences"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_enabled" type="BOOLEAN" defaultValue="true"/>
+            <column name="sms_enabled" type="BOOLEAN" defaultValue="true"/>
+            <column name="push_enabled" type="BOOLEAN" defaultValue="true"/>
+            <column name="in_app_enabled" type="BOOLEAN" defaultValue="true"/>
+            <column name="quiet_hours_start" type="TIME"/>
+            <column name="quiet_hours_end" type="TIME"/>
+            <column name="timezone" type="VARCHAR(50)"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="006-006-add-notification-preferences-foreign-key" author="healthdata">
+        <comment>Add foreign key constraint for notification preferences</comment>
+        <addForeignKeyConstraint
+            baseTableSchemaName="notification"
+            baseTableName="preferences"
+            baseColumnNames="patient_id"
+            referencedTableSchemaName="patient"
+            referencedTableName="patients"
+            referencedColumnNames="id"
+            constraintName="fk_notification_preferences_patient"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="006-007-create-notification-preferences-indexes" author="healthdata">
+        <comment>Create indexes on notification preferences table</comment>
+        <createIndex tableName="preferences" schemaName="notification" indexName="idx_preferences_patient">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex tableName="preferences" schemaName="notification" indexName="idx_preferences_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

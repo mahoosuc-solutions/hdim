@@ -1,0 +1,448 @@
+package com.healthdata.quality.ml;
+
+import com.healthdata.quality.persistence.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+/**
+ * Test-Driven Development for Feature Extractor
+ *
+ * Extracts ML features from patient health data:
+ * - Demographics
+ * - Clinical indicators
+ * - Utilization patterns
+ * - Care gaps
+ * - Risk factors
+ */
+@ExtendWith(MockitoExtension.class)
+class FeatureExtractorTest {
+
+    @Mock
+    private RiskAssessmentRepository riskAssessmentRepository;
+
+    @Mock
+    private CareGapRepository careGapRepository;
+
+    @Mock
+    private HealthScoreRepository healthScoreRepository;
+
+    @Mock
+    private MentalHealthAssessmentRepository mentalHealthRepository;
+
+    @InjectMocks
+    private FeatureExtractor featureExtractor;
+
+    private String tenantId;
+    private String patientId;
+    private Instant now;
+
+    @BeforeEach
+    void setUp() {
+        tenantId = "test-tenant";
+        patientId = "Patient/123";
+        now = Instant.now();
+    }
+
+    /**
+     * TEST 1: Extract Basic Demographic Features
+     * Should extract age, gender from patient data
+     */
+    @Test
+    void testExtractDemographicFeatures() {
+        // Arrange - Mock patient data would come from FHIR service
+        // For this test, we'll assume the extractor queries patient data
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        // In production, these would be extracted from FHIR Patient resource
+        // For now, verify the feature keys are present
+        assertTrue(features.containsKey("patientId"));
+    }
+
+    /**
+     * TEST 2: Extract Chronic Condition Features
+     * Should count and categorize chronic conditions
+     */
+    @Test
+    void testExtractChronicConditionFeatures() {
+        // Arrange
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .riskScore(65)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.HIGH)
+            .riskFactors(Arrays.asList(
+                Map.of("factor", "Type 2 Diabetes", "category", "chronic-disease"),
+                Map.of("factor", "Hypertension", "category", "chronic-disease"),
+                Map.of("factor", "COPD", "category", "chronic-disease")
+            ))
+            .assessmentDate(now)
+            .build();
+
+        when(riskAssessmentRepository.findMostRecent(tenantId, patientId))
+            .thenReturn(Optional.of(riskAssessment));
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractRiskFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertEquals(3, features.get("chronicConditionCount"));
+        assertTrue((Boolean) features.get("hasDiabetes"));
+        assertTrue((Boolean) features.get("hasHypertension"));
+        assertEquals(65, features.get("riskScore"));
+        assertEquals("HIGH", features.get("riskLevel"));
+    }
+
+    /**
+     * TEST 3: Extract Care Gap Features
+     * Should count open and addressed care gaps
+     */
+    @Test
+    void testExtractCareGapFeatures() {
+        // Arrange
+        when(careGapRepository.countByTenantIdAndPatientIdAndStatus(
+            tenantId,
+            patientId,
+            CareGapEntity.Status.OPEN
+        )).thenReturn(5L);
+
+        when(careGapRepository.countByTenantIdAndPatientIdAndStatus(
+            tenantId,
+            patientId,
+            CareGapEntity.Status.ADDRESSED
+        )).thenReturn(12L);
+
+        when(careGapRepository.countByTenantIdAndPatientIdAndPriority(
+            tenantId,
+            patientId,
+            CareGapEntity.Priority.URGENT
+        )).thenReturn(2L);
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractCareGapFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertEquals(5, features.get("activeCareGaps"));
+        assertEquals(12, features.get("addressedCareGaps"));
+        assertEquals(2, features.get("urgentCareGaps"));
+        assertEquals(17, features.get("totalCareGaps")); // 5 + 12
+    }
+
+    /**
+     * TEST 4: Extract Health Score Features
+     * Should include overall and component scores
+     */
+    @Test
+    void testExtractHealthScoreFeatures() {
+        // Arrange
+        HealthScoreEntity healthScore = HealthScoreEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .overallScore(72.5)
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(65.0)
+            .socialDeterminantsScore(75.0)
+            .preventiveCareScore(68.0)
+            .chronicDiseaseScore(80.0)
+            .previousScore(70.0)
+            .significantChange(true)
+            .calculatedAt(now)
+            .build();
+
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.of(healthScore));
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractHealthScoreFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertEquals(72.5, features.get("overallHealthScore"));
+        assertEquals(70.0, features.get("physicalHealthScore"));
+        assertEquals(65.0, features.get("mentalHealthScore"));
+        assertEquals(2.5, features.get("healthScoreDelta")); // 72.5 - 70.0
+        assertTrue((Boolean) features.get("hasSignificantChange"));
+    }
+
+    /**
+     * TEST 5: Extract Mental Health Features
+     * Should include screening scores and severity
+     */
+    @Test
+    void testExtractMentalHealthFeatures() {
+        // Arrange
+        MentalHealthAssessmentEntity assessment = MentalHealthAssessmentEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .type(MentalHealthAssessmentEntity.AssessmentType.PHQ_9)
+            .score(15)
+            .maxScore(27)
+            .severity("moderate")
+            .positiveScreen(true)
+            .requiresFollowup(true)
+            .assessmentDate(now.minus(30, ChronoUnit.DAYS))
+            .build();
+
+        when(mentalHealthRepository.findMostRecentByType(
+            tenantId,
+            patientId,
+            MentalHealthAssessmentEntity.AssessmentType.PHQ_9
+        )).thenReturn(Optional.of(assessment));
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractMentalHealthFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertTrue((Boolean) features.get("hasDepression"));
+        assertEquals(15, features.get("phq9Score"));
+        assertEquals("moderate", features.get("depressionSeverity"));
+        assertEquals(30, ((Long) features.get("daysSinceLastMHScreen")).intValue(), 5);
+    }
+
+    /**
+     * TEST 6: Extract Utilization Features
+     * Should include hospitalization and ED visit counts
+     */
+    @Test
+    void testExtractUtilizationFeatures() {
+        // Arrange
+        // In production, this would query FHIR Encounter resources
+        // For testing, we'll mock the utilization data extraction
+
+        Map<String, Object> mockUtilization = Map.of(
+            "hospitalizationsLast90Days", 1,
+            "edVisitsLast90Days", 3,
+            "primaryCareVisitsLast90Days", 2,
+            "daysSinceLastVisit", 15
+        );
+
+        when(featureExtractor.extractUtilizationFromFHIR(tenantId, patientId))
+            .thenReturn(mockUtilization);
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractUtilizationFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertEquals(1, features.get("hospitalizationsLast90Days"));
+        assertEquals(3, features.get("edVisitsLast90Days"));
+        assertEquals(2, features.get("primaryCareVisitsLast90Days"));
+        assertEquals(15, features.get("daysSinceLastVisit"));
+    }
+
+    /**
+     * TEST 7: Extract Complete Feature Set
+     * Should combine all feature categories
+     */
+    @Test
+    void testExtractCompleteFeatureSet() {
+        // Arrange - Setup all mocks
+        setupAllMocks();
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertTrue(features.size() >= 15); // Should have features from all categories
+
+        // Verify all feature categories present
+        assertTrue(features.containsKey("patientId"));
+        assertTrue(features.containsKey("chronicConditionCount") || features.containsKey("riskScore"));
+        assertTrue(features.containsKey("activeCareGaps") || features.containsKey("totalCareGaps"));
+        assertTrue(features.containsKey("overallHealthScore") || features.containsKey("healthScore"));
+    }
+
+    /**
+     * TEST 8: Calculate Feature Completeness
+     * Should measure how many expected features are available
+     */
+    @Test
+    void testCalculateFeatureCompleteness() {
+        // Arrange
+        Map<String, Object> completeFeatures = Map.of(
+            "age", 72,
+            "chronicConditionCount", 3,
+            "activeCareGaps", 5,
+            "overallHealthScore", 72.5,
+            "edVisitsLast90Days", 2,
+            "hospitalizationsLast90Days", 1,
+            "phq9Score", 12,
+            "riskScore", 65
+        );
+
+        Map<String, Object> incompleteFeatures = Map.of(
+            "age", 72,
+            "chronicConditionCount", 3
+            // Missing many features
+        );
+
+        // Act
+        double completenessComplete = featureExtractor.getFeatureCompleteness(completeFeatures);
+        double completenessIncomplete = featureExtractor.getFeatureCompleteness(incompleteFeatures);
+
+        // Assert
+        assertTrue(completenessComplete > 0.8); // >80% complete
+        assertTrue(completenessIncomplete < 0.5); // <50% complete
+    }
+
+    /**
+     * TEST 9: Handle Missing Data Gracefully
+     * Should use default values for missing features
+     */
+    @Test
+    void testHandleMissingDataGracefully() {
+        // Arrange - No data available
+        when(riskAssessmentRepository.findMostRecent(tenantId, patientId))
+            .thenReturn(Optional.empty());
+        when(careGapRepository.countByTenantIdAndPatientIdAndStatus(anyString(), anyString(), any()))
+            .thenReturn(0L);
+        when(healthScoreRepository.findLatestByPatientId(tenantId, patientId))
+            .thenReturn(Optional.empty());
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        // Should have default values instead of null
+        assertNotNull(features.get("chronicConditionCount"));
+        assertNotNull(features.get("activeCareGaps"));
+    }
+
+    /**
+     * TEST 10: Normalize Feature Values
+     * Should scale features to appropriate ranges for ML
+     */
+    @Test
+    void testNormalizeFeatureValues() {
+        // Arrange
+        Map<String, Object> rawFeatures = Map.of(
+            "age", 72,
+            "chronicConditionCount", 5,
+            "riskScore", 85,
+            "overallHealthScore", 65.5
+        );
+
+        // Act
+        Map<String, Object> normalized = featureExtractor.normalizeFeatures(rawFeatures);
+
+        // Assert
+        assertNotNull(normalized);
+
+        // Age normalized to 0-1 range (assuming max age 120)
+        double normalizedAge = (Double) normalized.get("age");
+        assertTrue(normalizedAge >= 0.0 && normalizedAge <= 1.0);
+
+        // Risk score already 0-100, normalize to 0-1
+        double normalizedRisk = (Double) normalized.get("riskScore");
+        assertTrue(normalizedRisk >= 0.0 && normalizedRisk <= 1.0);
+    }
+
+    /**
+     * TEST 11: Extract Temporal Features
+     * Should include time-based patterns
+     */
+    @Test
+    void testExtractTemporalFeatures() {
+        // Arrange
+        HealthScoreEntity currentScore = createHealthScore(75.0, now);
+        HealthScoreEntity scoreWeekAgo = createHealthScore(70.0, now.minus(7, ChronoUnit.DAYS));
+        HealthScoreEntity scoreMonthAgo = createHealthScore(68.0, now.minus(30, ChronoUnit.DAYS));
+
+        List<HealthScoreEntity> scoreHistory = Arrays.asList(
+            currentScore,
+            scoreWeekAgo,
+            scoreMonthAgo
+        );
+
+        when(healthScoreRepository.findRecentHistory(tenantId, patientId, 30))
+            .thenReturn(scoreHistory);
+
+        // Act
+        Map<String, Object> features = featureExtractor.extractTemporalFeatures(tenantId, patientId);
+
+        // Assert
+        assertNotNull(features);
+        assertEquals(7.0, features.get("healthScoreChange7Days")); // 75 - 68
+        assertEquals(5.0, features.get("healthScoreChange30Days")); // 75 - 70
+        assertEquals("improving", features.get("healthScoreTrend"));
+    }
+
+    /**
+     * TEST 12: Multi-Tenant Feature Isolation
+     * Should extract features only for specified tenant
+     */
+    @Test
+    void testMultiTenantFeatureIsolation() {
+        // Arrange
+        String tenant1 = "tenant-1";
+        String tenant2 = "tenant-2";
+
+        setupAllMocks();
+
+        // Act
+        Map<String, Object> features1 = featureExtractor.extractFeatures(tenant1, patientId);
+        Map<String, Object> features2 = featureExtractor.extractFeatures(tenant2, patientId);
+
+        // Assert
+        verify(riskAssessmentRepository).findMostRecent(tenant1, patientId);
+        verify(riskAssessmentRepository).findMostRecent(tenant2, patientId);
+        // Verify separate calls per tenant
+    }
+
+    /**
+     * Helper Methods
+     */
+
+    private void setupAllMocks() {
+        // Risk assessment
+        RiskAssessmentEntity riskAssessment = RiskAssessmentEntity.builder()
+            .riskScore(65)
+            .riskLevel(RiskAssessmentEntity.RiskLevel.HIGH)
+            .riskFactors(Arrays.asList())
+            .build();
+        when(riskAssessmentRepository.findMostRecent(anyString(), anyString()))
+            .thenReturn(Optional.of(riskAssessment));
+
+        // Care gaps
+        when(careGapRepository.countByTenantIdAndPatientIdAndStatus(anyString(), anyString(), any()))
+            .thenReturn(3L);
+
+        // Health score
+        HealthScoreEntity healthScore = HealthScoreEntity.builder()
+            .overallScore(72.5)
+            .physicalHealthScore(70.0)
+            .mentalHealthScore(65.0)
+            .build();
+        when(healthScoreRepository.findLatestByPatientId(anyString(), anyString()))
+            .thenReturn(Optional.of(healthScore));
+    }
+
+    private HealthScoreEntity createHealthScore(double score, Instant calculatedAt) {
+        return HealthScoreEntity.builder()
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .overallScore(score)
+            .calculatedAt(calculatedAt)
+            .build();
+    }
+}

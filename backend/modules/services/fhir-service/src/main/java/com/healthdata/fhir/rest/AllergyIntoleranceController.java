@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.Map;
 import com.healthdata.audit.annotations.Audited;
@@ -28,6 +29,7 @@ public class AllergyIntoleranceController {
     private final IParser jsonParser = fhirContext.newJsonParser().setPrettyPrint(true);
 
     // Create AllergyIntolerance
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createAllergyIntolerance(
@@ -47,6 +49,7 @@ public class AllergyIntoleranceController {
     }
 
     // Get AllergyIntolerance by ID
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getAllergyIntolerance(
@@ -63,6 +66,7 @@ public class AllergyIntoleranceController {
     }
 
     // Update AllergyIntolerance
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateAllergyIntolerance(
@@ -83,6 +87,7 @@ public class AllergyIntoleranceController {
     }
 
     // Delete AllergyIntolerance
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAllergyIntolerance(
@@ -97,6 +102,7 @@ public class AllergyIntoleranceController {
     }
 
     // Search by patient
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchByPatient(
@@ -122,6 +128,7 @@ public class AllergyIntoleranceController {
     }
 
     // Get active allergies
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/active", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getActiveAllergies(
@@ -140,6 +147,7 @@ public class AllergyIntoleranceController {
     }
 
     // Get critical allergies
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/critical", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getCriticalAllergies(
@@ -158,6 +166,7 @@ public class AllergyIntoleranceController {
     }
 
     // Get medication allergies
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/medication", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getMedicationAllergies(
@@ -176,6 +185,7 @@ public class AllergyIntoleranceController {
     }
 
     // Get food allergies
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/food", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getFoodAllergies(
@@ -194,6 +204,7 @@ public class AllergyIntoleranceController {
     }
 
     // Get confirmed allergies
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/confirmed", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getConfirmedAllergies(
@@ -212,6 +223,7 @@ public class AllergyIntoleranceController {
     }
 
     // Check if patient has specific allergy
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-allergy", produces = "application/json")
     public ResponseEntity<Map<String, Boolean>> hasActiveAllergy(
@@ -228,6 +240,7 @@ public class AllergyIntoleranceController {
     }
 
     // Count active allergies
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/count", produces = "application/json")
     public ResponseEntity<Map<String, Long>> countActiveAllergies(
@@ -243,6 +256,7 @@ public class AllergyIntoleranceController {
     }
 
     // Health check
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<Map<String, String>> health() {

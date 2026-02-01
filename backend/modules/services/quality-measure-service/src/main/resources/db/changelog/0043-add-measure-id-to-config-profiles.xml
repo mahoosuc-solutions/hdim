@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0043-add-measure-id-column" author="tdd-swarm-team">
+        <comment>
+            Fix entity-migration synchronization issue: Add missing measure_id column to measure_config_profiles
+
+            Root Cause: MeasureConfigProfileEntity expects measure_id column but migration 0036 never created it.
+            This mismatch causes schema validation failures with ddl-auto: validate on all databases.
+
+            Impact: 1 missing column in measure_config_profiles table
+            Related: Entity line 58-59, migration 0036 (original table creation)
+        </comment>
+
+        <!-- Add measure_id column (missing from original migration 0036) -->
+        <addColumn tableName="measure_config_profiles">
+            <column name="measure_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Create index on measure_id (expected by entity @Index annotation line 34) -->
+        <createIndex indexName="idx_mcp_measure" tableName="measure_config_profiles">
+            <column name="measure_id"/>
+            <column name="active"/>
+        </createIndex>
+
+        <!-- Drop old unique constraint -->
+        <dropUniqueConstraint tableName="measure_config_profiles" constraintName="uk_mcp_profile_code"/>
+
+        <!-- Add new unique constraint including measure_id (expected by entity @UniqueConstraint line 39) -->
+        <addUniqueConstraint
+            constraintName="uk_mcp_measure_profile_code"
+            tableName="measure_config_profiles"
+            columnNames="measure_id, profile_code"/>
+
+        <rollback>
+            <!-- Rollback: Remove added column and restore original constraint -->
+            <dropUniqueConstraint tableName="measure_config_profiles" constraintName="uk_mcp_measure_profile_code"/>
+            <addUniqueConstraint
+                constraintName="uk_mcp_profile_code"
+                tableName="measure_config_profiles"
+                columnNames="tenant_id, profile_code"/>
+            <dropIndex tableName="measure_config_profiles" indexName="idx_mcp_measure"/>
+            <dropColumn tableName="measure_config_profiles" columnName="measure_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

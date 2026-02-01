@@ -14,14 +14,14 @@ spring:
     name: sdoh-service-test
 
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    username: sa
-    password:
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:postgresql://localhost:5435/sdoh_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -29,8 +29,7 @@ spring:
     show-sql: false
 
   liquibase:
-    enabled: false
-
+    enabled: true
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration

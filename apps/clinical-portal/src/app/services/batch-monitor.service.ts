@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { Observable, Subject, merge, of, throwError, combineLatest } from 'rxjs';
 import { map, switchMap, catchError, tap, shareReplay, take } from 'rxjs/operators';
 
@@ -49,7 +50,7 @@ export interface BatchMonitorState {
  *   libraryId: 'cql-lib-123',
  *   patientCount: 100
  * }).subscribe(progress => {
- *   console.log('Batch progress:', progress);
+ *   this.logger.info('Batch progress:', progress);
  * });
  * ```
  */
@@ -69,6 +70,7 @@ export class BatchMonitorService {
   private currentBatchId?: string;
 
   constructor(
+    private logger: LoggerService,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
     private websocketService: WebSocketVisualizationService
@@ -84,7 +86,7 @@ export class BatchMonitorService {
    * @returns Observable stream of batch progress events
    */
   startBatchEvaluation(config: BatchMonitorConfig): Observable<BatchProgressEvent> {
-    console.log('Starting batch evaluation with config:', config);
+    this.logger.info('Starting batch evaluation with config:', config);
 
     // Update state
     this.updateState({ status: 'LOADING_PATIENTS' });
@@ -92,7 +94,7 @@ export class BatchMonitorService {
     // Create the workflow
     return this.loadPatients(config).pipe(
       switchMap(patients => {
-        console.log(`Loaded ${patients.length} patients`);
+        this.logger.info(`Loaded ${patients.length} patients`);
         this.updateState({
           status: 'SUBMITTING_BATCH',
           patientsLoaded: patients.length
@@ -105,7 +107,7 @@ export class BatchMonitorService {
         return this.submitBatch(config.libraryId, patientIds);
       }),
       switchMap(batchResponse => {
-        console.log('Batch evaluation submitted:', batchResponse);
+        this.logger.info('Batch evaluation submitted:', batchResponse);
 
         // Generate a local batch ID for tracking (backend returns array directly)
         const localBatchId = crypto.randomUUID();
@@ -133,7 +135,7 @@ export class BatchMonitorService {
           }
         },
         error: (error) => {
-          console.error('Batch evaluation error:', error);
+          this.logger.error('Batch evaluation error:', { error });
           this.updateState({ status: 'ERROR', error });
         }
       }),
@@ -202,7 +204,7 @@ export class BatchMonitorService {
     const status = this.websocketService.getStatus();
 
     if (status === WebSocketStatus.DISCONNECTED || status === WebSocketStatus.ERROR) {
-      console.log('Connecting to WebSocket...');
+      this.logger.info('Connecting to WebSocket...');
       this.websocketService.connect();
     }
   }
@@ -211,7 +213,7 @@ export class BatchMonitorService {
    * Stop monitoring current batch
    */
   stopBatchMonitoring(): void {
-    console.log('Stopping batch monitoring');
+    this.logger.info('Stopping batch monitoring');
     this.currentBatchId = undefined;
     this.updateState({ status: 'IDLE', batchId: undefined });
   }

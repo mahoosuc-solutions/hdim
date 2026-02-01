@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0004-create-waiting-queue-table" author="hdim-platform-team">
+        <comment>Create waiting_queue table for MA waiting room management with priority-based triage</comment>
+
+        <createTable tableName="waiting_queue">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_waiting_queue"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="appointment_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="check_in_id" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+            <column name="queue_position" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(50)" remarks="urgent, high, normal, low">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" remarks="waiting, called, in-room, completed, cancelled">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entered_queue_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="called_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="exited_queue_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="wait_time_minutes" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="estimated_wait_minutes" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="provider_assigned" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_waiting_queue_tenant_status" tableName="waiting_queue">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_waiting_queue_priority" tableName="waiting_queue">
+            <column name="tenant_id"/>
+            <column name="priority"/>
+            <column name="queue_position"/>
+        </createIndex>
+
+        <createIndex indexName="idx_waiting_queue_patient_id" tableName="waiting_queue">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_waiting_queue_entered_at" tableName="waiting_queue">
+            <column name="tenant_id"/>
+            <column name="entered_queue_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="waiting_queue"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -15,15 +15,18 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-GATEWAY_URL="http://localhost:9000"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.admin}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
 CQL_ENGINE_PORT=8081
 QUALITY_MEASURE_PORT=8087
 PATIENT_SERVICE_PORT=8084
 
 echo -e "${BLUE}📋 Demo Credentials:${NC}"
-echo "  Username: admin"
-echo "  Password: admin123"
-echo "  Tenant: tenant-1"
+echo "  Username: ${AUTH_USERNAME}"
+echo "  Password: ${AUTH_PASSWORD}"
+echo "  Tenant: ${TENANT_ID}"
 echo ""
 
 # Step 1: Login
@@ -32,7 +35,7 @@ echo "POST $GATEWAY_URL/api/v1/auth/login"
 
 LOGIN_RESPONSE=$(curl -s -X POST $GATEWAY_URL/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}')
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
 
 ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['accessToken'])" 2>/dev/null)
 
@@ -58,7 +61,7 @@ echo -e "${YELLOW}Step 3: Test CQL Engine Routing${NC}"
 echo "GET $GATEWAY_URL/api/cql/actuator/health"
 CQL_HEALTH=$(curl -s $GATEWAY_URL/api/cql/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: tenant-1")
+  -H "X-Tenant-ID: ${TENANT_ID}")
 echo "CQL Engine Health: $CQL_HEALTH"
 echo -e "${GREEN}✅ CQL Engine accessible through Gateway${NC}"
 echo ""
@@ -68,7 +71,7 @@ echo -e "${YELLOW}Step 4: Test Quality Measure Service Routing${NC}"
 echo "GET $GATEWAY_URL/api/quality/actuator/health"
 QUALITY_HEALTH=$(curl -s $GATEWAY_URL/api/quality/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: tenant-1")
+  -H "X-Tenant-ID: ${TENANT_ID}")
 echo "Quality Measure Health: $QUALITY_HEALTH"
 echo -e "${GREEN}✅ Quality Measure Service accessible through Gateway${NC}"
 echo ""
@@ -78,7 +81,7 @@ echo -e "${YELLOW}Step 5: Test Patient Service Routing${NC}"
 echo "GET $GATEWAY_URL/api/patients/actuator/health"
 PATIENT_HEALTH=$(curl -s $GATEWAY_URL/api/patients/actuator/health \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
-  -H "X-Tenant-ID: tenant-1")
+  -H "X-Tenant-ID: ${TENANT_ID}")
 echo "Patient Health: $PATIENT_HEALTH"
 echo -e "${GREEN}✅ Patient Service accessible through Gateway${NC}"
 echo ""
@@ -122,6 +125,6 @@ echo ""
 echo "Next Steps:"
 echo "  1. Start remaining backend services (Quality Measure, Patient, etc.)"
 echo "  2. Start Clinical Portal frontend: cd apps/clinical-portal && npm start"
-echo "  3. Access Clinical Portal at http://localhost:4202"
-echo "  4. Login with admin/admin123"
+echo "  3. Access Clinical Portal at http://localhost:4200"
+echo "  4. Login with ${AUTH_USERNAME}/${AUTH_PASSWORD}"
 echo ""

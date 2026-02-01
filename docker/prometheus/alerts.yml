@@ -282,3 +282,118 @@ groups:
         annotations:
           summary: "Database disk space running low"
           description: "Database disk space is below 20%"
+
+  # ============================================
+  # HIPAA COMPLIANCE ALERTS
+  # ============================================
+  - name: hipaa_compliance
+    interval: 30s
+    rules:
+      - alert: PHICacheTTLViolation
+        expr: cache_ttl_seconds{cache_type="phi"} > 300
+        for: 1m
+        labels:
+          severity: critical
+          component: hipaa
+          compliance: "HIPAA-164-312-b"
+        annotations:
+          summary: "PHI cache TTL exceeds 5 minutes"
+          description: "Cache TTL for PHI data is {{ $value }} seconds (max allowed: 300s / 5 minutes) - HIPAA violation"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/phi-cache-ttl-violation"
+
+      - alert: AuditLogFailure
+        expr: rate(audit_log_failures_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: hipaa
+          compliance: "HIPAA-164-312-b"
+        annotations:
+          summary: "Audit logging failures detected"
+          description: "Audit log writes are failing - HIPAA compliance at risk"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/audit-log-failure"
+
+      - alert: UnauthenticatedPHIAccess
+        expr: rate(phi_access_unauthenticated_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: hipaa
+          compliance: "HIPAA-164-312-a"
+        annotations:
+          summary: "Unauthenticated PHI access attempts detected"
+          description: "PHI data accessed without authentication - critical HIPAA violation"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/unauthenticated-phi-access"
+
+      - alert: SessionTimeoutNotEnforced
+        expr: session_timeout_seconds > 900
+        for: 5m
+        labels:
+          severity: warning
+          component: hipaa
+          compliance: "HIPAA-164-312-a-2-iii"
+        annotations:
+          summary: "Session timeout exceeds 15 minutes"
+          description: "Session timeout is {{ $value }} seconds (max allowed: 900s / 15 minutes) - HIPAA recommendation"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/session-timeout"
+
+      - alert: MultiTenantIsolationBreach
+        expr: rate(tenant_isolation_violations_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: hipaa
+          compliance: "HIPAA-164-308-a-4-ii-C"
+        annotations:
+          summary: "Multi-tenant isolation breach detected"
+          description: "Data from one tenant accessed by another tenant - critical HIPAA violation"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/tenant-isolation-breach"
+
+  # ============================================
+  # EVENT SOURCING HEALTH (CQRS)
+  # ============================================
+  - name: event_sourcing_health
+    interval: 30s
+    rules:
+      - alert: EventStoreHighLag
+        expr: event_store_write_lag_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: event-sourcing
+        annotations:
+          summary: "Event store write lag is high"
+          description: "Event store write lag is {{ $value }} seconds (threshold: 30s)"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/event-store-lag"
+
+      - alert: ProjectionRebuildInProgress
+        expr: projection_rebuild_in_progress > 0
+        for: 1h
+        labels:
+          severity: info
+          component: event-sourcing
+        annotations:
+          summary: "Projection rebuild running for over 1 hour"
+          description: "Projection {{ $labels.projection_name }} rebuild has been running for over 1 hour"
+
+      - alert: EventHandlerFailureRate
+        expr: rate(event_handler_failures_total[5m]) / rate(event_handler_processed_total[5m]) > 0.05
+        for: 10m
+        labels:
+          severity: critical
+          component: event-sourcing
+        annotations:
+          summary: "High event handler failure rate"
+          description: "Event handler {{ $labels.handler_name }} failure rate is {{ $value | humanizePercentage }}"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/event-handler-failures"
+
+      - alert: EventReplayStuck
+        expr: event_replay_progress_percent < 100 and delta(event_replay_progress_percent[10m]) == 0
+        for: 30m
+        labels:
+          severity: warning
+          component: event-sourcing
+        annotations:
+          summary: "Event replay appears stuck"
+          description: "Event replay for {{ $labels.replay_id }} has not progressed in 30 minutes"
+          runbook_url: "https://docs.healthdata.example.com/runbooks/event-replay-stuck"

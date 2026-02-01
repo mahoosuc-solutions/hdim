@@ -1,0 +1,189 @@
+<div class="service-graph-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>Service Dependency Graph</h1>
+      <p class="subtitle">Visualize service relationships and impact analysis</p>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="category-filter">Category:</label>
+        <select
+          id="category-filter"
+          [(ngModel)]="selectedCategory"
+          class="category-select"
+          aria-label="Filter services by category">
+          <option value="all">All Services</option>
+          <option *ngFor="let category of getCategories()" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <button
+        *ngIf="selectedService"
+        class="clear-btn"
+        (click)="clearSelection()"
+        aria-label="Clear service selection">
+        Clear Selection
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Summary -->
+  <div class="stats-summary">
+    <div class="stat-card">
+      <div class="stat-value">{{ services.length }}</div>
+      <div class="stat-label">Total Services</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ getTotalDependencies() }}</div>
+      <div class="stat-label">Dependencies</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ getDependencyCountByType()['HTTP'] }}</div>
+      <div class="stat-label">HTTP Links</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ getDependencyCountByType()['KAFKA'] }}</div>
+      <div class="stat-label">Kafka Links</div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading service data...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading" class="content">
+    <!-- Service List -->
+    <div class="service-list">
+      <h2>Services</h2>
+      <div class="service-grid">
+        <div
+          *ngFor="let service of getFilteredServices()"
+          class="service-item"
+          [class.selected]="selectedService === service.id"
+          [class.impacted]="isImpacted(service.id)"
+          [class.status-up]="getServiceStatus(service.id) === 'UP'"
+          [class.status-degraded]="getServiceStatus(service.id) === 'DEGRADED'"
+          [class.status-down]="getServiceStatus(service.id) === 'DOWN'"
+          (click)="selectService(service.id)"
+          [attr.aria-label]="'Select ' + service.displayName"
+          role="button"
+          tabindex="0">
+          <div class="service-status-indicator"></div>
+          <div class="service-info">
+            <h3>{{ service.displayName }}</h3>
+            <span class="service-category">{{ service.category }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dependency Details -->
+    <div class="dependency-details" *ngIf="selectedService">
+      <h2>{{ getService(selectedService)?.displayName }}</h2>
+      <p class="service-description">{{ getService(selectedService)?.purpose }}</p>
+
+      <!-- Dependencies (services this depends on) -->
+      <div class="dependency-section">
+        <h3>Dependencies ({{ serviceDependencies.length }})</h3>
+        <p class="section-desc">Services that {{ getService(selectedService)?.displayName }} depends on:</p>
+        <div *ngIf="serviceDependencies.length === 0" class="empty-message">
+          This service has no dependencies
+        </div>
+        <div *ngIf="serviceDependencies.length > 0" class="dependency-list">
+          <div *ngFor="let dep of serviceDependencies" class="dependency-item">
+            <span class="dep-icon">{{ getDependencyTypeIcon(dep.type) }}</span>
+            <div class="dep-info">
+              <span class="dep-name">{{ getService(dep.target)?.displayName }}</span>
+              <span class="dep-type">{{ dep.type }}</span>
+            </div>
+            <div class="dep-status" [class]="'status-' + getServiceStatus(dep.target).toLowerCase()">
+              {{ getServiceStatus(dep.target) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dependents (services that depend on this) -->
+      <div class="dependency-section">
+        <h3>Dependents ({{ serviceDependents.length }})</h3>
+        <p class="section-desc">Services that depend on {{ getService(selectedService)?.displayName }}:</p>
+        <div *ngIf="serviceDependents.length === 0" class="empty-message">
+          No services depend on this service
+        </div>
+        <div *ngIf="serviceDependents.length > 0" class="dependency-list">
+          <div *ngFor="let dep of serviceDependents" class="dependency-item">
+            <span class="dep-icon">{{ getDependencyTypeIcon(dep.type) }}</span>
+            <div class="dep-info">
+              <span class="dep-name">{{ getService(dep.source)?.displayName }}</span>
+              <span class="dep-type">{{ dep.type }}</span>
+            </div>
+            <div class="dep-status" [class]="'status-' + getServiceStatus(dep.source).toLowerCase()">
+              {{ getServiceStatus(dep.source) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Impact Analysis -->
+      <div class="dependency-section impact">
+        <h3>Impact Analysis</h3>
+        <p class="section-desc">
+          If {{ getService(selectedService)?.displayName }} goes down, these services would be affected:
+        </p>
+        <div *ngIf="impactedServices.size === 0" class="empty-message success">
+          ✅ No services would be directly impacted
+        </div>
+        <div *ngIf="impactedServices.size > 0" class="impact-warning">
+          <div class="warning-header">
+            <span class="warning-icon">⚠️</span>
+            <strong>{{ impactedServices.size }} services would be affected</strong>
+          </div>
+          <div class="impact-list">
+            <span *ngFor="let serviceId of impactedServices" class="impact-badge">
+              {{ getService(serviceId)?.displayName }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State (no selection) -->
+    <div class="dependency-details empty" *ngIf="!selectedService">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <h2>Select a Service</h2>
+        <p>Click on a service from the list to view its dependencies and impact analysis</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <h3>Legend</h3>
+    <div class="legend-items">
+      <div class="legend-item">
+        <span class="color-box status-up"></span>
+        <span>Service UP</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-box status-degraded"></span>
+        <span>Service DEGRADED</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-box status-down"></span>
+        <span>Service DOWN</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-box impacted"></span>
+        <span>Would be impacted</span>
+      </div>
+    </div>
+  </div>
+</div>

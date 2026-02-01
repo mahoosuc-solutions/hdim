@@ -76,7 +76,7 @@ class MultiTenantSecurityTest extends CqlTestcontainersBase {
     @BeforeEach
     void setUp() {
         // Create test data for Tenant A
-        tenantALibrary = new CqlLibrary(TENANT_A, "TenantALibrary", "1.0.0");
+        tenantALibrary = buildLibrary(TENANT_A, "TenantALibrary", "1.0.0");
         tenantALibrary.setStatus("ACTIVE");
         tenantALibrary.setCqlContent("library TenantALibrary version '1.0.0'");
         tenantALibrary.setDescription("Confidential Tenant A Measure");
@@ -88,11 +88,11 @@ class MultiTenantSecurityTest extends CqlTestcontainersBase {
         tenantAEvaluation.setDurationMs(100L);
         tenantAEvaluation = evaluationRepository.save(tenantAEvaluation);
 
-        tenantAValueSet = new ValueSet(TENANT_A, "2.16.840.1.113883.3.464.1003.101.12.1001", "TenantA-ValueSet", "SNOMED");
+        tenantAValueSet = buildValueSet(TENANT_A, "2.16.840.1.113883.3.464.1003.101.12.1001", "TenantA-ValueSet", "SNOMED");
         tenantAValueSet = valueSetRepository.save(tenantAValueSet);
 
         // Create test data for Tenant B
-        tenantBLibrary = new CqlLibrary(TENANT_B, "TenantBLibrary", "1.0.0");
+        tenantBLibrary = buildLibrary(TENANT_B, "TenantBLibrary", "1.0.0");
         tenantBLibrary.setStatus("ACTIVE");
         tenantBLibrary.setCqlContent("library TenantBLibrary version '1.0.0'");
         tenantBLibrary.setDescription("Confidential Tenant B Measure");
@@ -104,7 +104,7 @@ class MultiTenantSecurityTest extends CqlTestcontainersBase {
         tenantBEvaluation.setDurationMs(150L);
         tenantBEvaluation = evaluationRepository.save(tenantBEvaluation);
 
-        tenantBValueSet = new ValueSet(TENANT_B, "2.16.840.1.113883.3.464.1003.101.12.1002", "TenantB-ValueSet", "SNOMED");
+        tenantBValueSet = buildValueSet(TENANT_B, "2.16.840.1.113883.3.464.1003.101.12.1002", "TenantB-ValueSet", "SNOMED");
         tenantBValueSet = valueSetRepository.save(tenantBValueSet);
     }
 
@@ -334,11 +334,11 @@ class MultiTenantSecurityTest extends CqlTestcontainersBase {
     @DisplayName("Multiple tenants can have same-named libraries")
     void testMultipleTenants_SameNamedLibraries_Isolated() {
         // Create library with same name for both tenants
-        CqlLibrary tenantADup = new CqlLibrary(TENANT_A, "SharedMeasure", "1.0.0");
+        CqlLibrary tenantADup = buildLibrary(TENANT_A, "SharedMeasure", "1.0.0");
         tenantADup.setStatus("ACTIVE");
         libraryRepository.save(tenantADup);
 
-        CqlLibrary tenantBDup = new CqlLibrary(TENANT_B, "SharedMeasure", "1.0.0");
+        CqlLibrary tenantBDup = buildLibrary(TENANT_B, "SharedMeasure", "1.0.0");
         tenantBDup.setStatus("ACTIVE");
         libraryRepository.save(tenantBDup);
 

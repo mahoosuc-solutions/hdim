@@ -1,0 +1,173 @@
+server:
+  port: 8106
+  servlet:
+    context-path: /sales-automation
+
+spring:
+  application:
+    name: sales-automation-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sales_automation_db
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW  # Sales automation: <10 req/sec, CRM workflows
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # Distributed tracing: Propagate trace context through Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+    consumer:
+      group-id: sales-automation-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.healthdata.sales
+        # Distributed tracing: Extract trace context from Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaConsumerTraceInterceptor
+
+  mail:
+    host: ${MAIL_HOST:smtp.zoho.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# Email sending configuration
+email:
+  from:
+    address: ${MAIL_FROM:${MAIL_USERNAME:noreply@healthdatainmotion.com}}
+    name: ${MAIL_FROM_NAME:HealthData-in-Motion}
+  tracking:
+    enabled: ${EMAIL_TRACKING_ENABLED:true}
+    pixel-url: ${EMAIL_TRACKING_URL:${app.base-url}/api/sales/track}
+
+# Zoho CRM Integration
+zoho:
+  api:
+    base-url: https://www.zohoapis.com/crm/v3
+    accounts-url: https://accounts.zoho.com
+  oauth:
+    client-id: ${ZOHO_CLIENT_ID:}
+    client-secret: ${ZOHO_CLIENT_SECRET:}
+    refresh-token: ${ZOHO_REFRESH_TOKEN:}
+    scope: ZohoCRM.modules.ALL,ZohoCRM.settings.ALL
+  sync:
+    enabled: ${ZOHO_SYNC_ENABLED:false}
+    interval-minutes: 15
+  webhook:
+    enabled: ${ZOHO_WEBHOOK_ENABLED:false}
+    secret: ${ZOHO_WEBHOOK_SECRET:}
+
+# LinkedIn Integration
+linkedin:
+  api:
+    base-url: https://api.linkedin.com/v2
+    oauth-url: https://www.linkedin.com/oauth/v2
+  oauth:
+    client-id: ${LINKEDIN_CLIENT_ID:}
+    client-secret: ${LINKEDIN_CLIENT_SECRET:}
+    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8106/sales-automation/api/linkedin/oauth/callback}
+  outreach:
+    daily-connection-limit: ${LINKEDIN_DAILY_CONNECTION_LIMIT:50}
+    daily-inmail-limit: ${LINKEDIN_DAILY_INMAIL_LIMIT:25}
+    min-delay-between-actions-ms: ${LINKEDIN_MIN_DELAY_MS:30000}
+    max-delay-between-actions-ms: ${LINKEDIN_MAX_DELAY_MS:120000}
+
+# Security
+jwt:
+  secret: ${JWT_SECRET:mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456}
+  expiration: 86400000
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    mail:
+      enabled: false
+
+# OpenAPI/Swagger
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# Resilience4j
+resilience4j:
+  circuitbreaker:
+    instances:
+      zohoService:
+        registerHealthIndicator: true
+        slidingWindowSize: 100
+        failureRateThreshold: 50
+        waitDurationInOpenState: 10000
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      zohoService:
+        maxAttempts: 3
+        waitDuration: 1000
+  ratelimiter:
+    instances:
+      zohoService:
+        limitForPeriod: 100
+        limitRefreshPeriod: 1m
+        timeoutDuration: 0
+
+# Logging
+logging:
+  level:
+    com.healthdata.sales: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG

@@ -144,6 +144,54 @@ public class RoleService {
                     "audit:read"
                 ));
                 break;
+
+            case QA_ANALYST:
+                permissions.addAll(List.of(
+                    "patient:read",
+                    "measure:read",
+                    "report:read", "report:generate",
+                    "audit:read", "audit:query",
+                    "ai-decision:review",
+                    "quality-metric:validate",
+                    "care-gap:review"
+                ));
+                break;
+
+            case MPI_ADMIN:
+                permissions.addAll(List.of(
+                    "patient:read", "patient:merge", "patient:unmerge",
+                    "mpi:read", "mpi:write", "mpi:resolve",
+                    "identity:match", "identity:review",
+                    "audit:read", "audit:query",
+                    "data-quality:review"
+                ));
+                break;
+
+            case CLINICAL_NURSE:
+                permissions.addAll(List.of(
+                    "patient:read", "patient:write",
+                    "appointment:read", "appointment:write",
+                    "diagnosis:read",
+                    "care-gap:read", "care-gap:update",
+                    "audit:read",
+                    "vitals:read", "vitals:write",
+                    "medication:read"
+                ));
+                break;
+
+            case CLINICAL_PHYSICIAN:
+                permissions.addAll(List.of(
+                    "patient:read", "patient:write",
+                    "appointment:read", "appointment:write", "appointment:delete",
+                    "diagnosis:read", "diagnosis:write", "diagnosis:delete",
+                    "care-gap:read", "care-gap:update", "care-gap:close",
+                    "audit:read", "audit:query",
+                    "ai-decision:review", "ai-decision:approve", "ai-decision:reject",
+                    "report:generate", "report:export",
+                    "medication:read", "medication:prescribe",
+                    "order:read", "order:write"
+                ));
+                break;
         }
 
         return permissions;

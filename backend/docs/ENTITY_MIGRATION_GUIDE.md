@@ -440,16 +440,32 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 ```
 
-### application-test.yml (Unit Tests)
+### application-test.yml (Integration Tests - Entity-Migration Validation)
+
+**CRITICAL FIX (January 2026)**: Entity-migration validation tests now properly validate against Liquibase migrations.
+
 ```yaml
 spring:
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Tests create schema from scratch
+      ddl-auto: validate  # CRITICAL: Validates entities against actual Liquibase migrations
+      show-sql: false
 
   liquibase:
-    enabled: false  # Tests don't use Liquibase
+    enabled: true  # REQUIRED: Run actual migrations during test
+    change-log: classpath:db/changelog/db.changelog-master.xml
 ```
+
+**What This Does**:
+1. Liquibase runs all migrations (loading actual database schema)
+2. Hibernate validates that entity `@Column` annotations match the migrated schema
+3. Test fails if entity columns don't match migrated columns
+4. Catches schema drift BEFORE production deployment
+
+**Why This Changed**:
+- Old approach: Tests used `create-drop` + `liquibase: false`, which validated entities against Hibernate-generated schemas, not actual migrations
+- New approach: Tests use `validate` + `liquibase: true`, which validates entities against the real Liquibase migrations
+- This catches mismatches like the FHIR service's `dosage_instruction` column type mismatch (TEXT vs JSONB)
 
 ---
 

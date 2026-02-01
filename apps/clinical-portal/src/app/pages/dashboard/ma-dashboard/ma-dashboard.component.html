@@ -79,7 +79,7 @@
       Today's Schedule
     </mat-card-title>
     <div class="header-actions">
-      <button mat-icon-button (click)="viewSchedule()">
+      <button aria-label="View" mat-icon-button (click)="viewSchedule()">
         <mat-icon>open_in_new</mat-icon>
       </button>
     </div>
@@ -187,10 +187,11 @@
                   <mat-icon>meeting_room</mat-icon>
                 </button>
               }
-              <button
+              <button aria-label="View"
                 mat-icon-button
                 (click)="viewPatient(task)"
-                matTooltip="View Patient">
+                matTooltip="View Patient"
+                data-testid="ma-view-patient">
                 <mat-icon>visibility</mat-icon>
               </button>
             </div>

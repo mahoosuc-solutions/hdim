@@ -66,3 +66,73 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/**
+ * Enhanced Focus Indicators for Keyboard Navigation
+ * WCAG 2.4.7 (Level AA) - Focus Visible
+ *
+ * Provides highly visible focus indicators for all interactive elements
+ * to help keyboard users understand their current position in the interface.
+ */
+
+/* Global focus styles for all interactive elements */
+*:focus-visible {
+  outline: 3px solid #1976d2 !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+
+/* Dark mode focus indicators */
+@media (prefers-color-scheme: dark) {
+  *:focus-visible {
+    outline-color: #90caf9 !important;
+  }
+}
+
+/* Enhanced focus for buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #1976d2 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.2) !important;
+}
+
+/* Enhanced focus for links */
+a:focus-visible {
+  outline: 3px solid #1976d2 !important;
+  outline-offset: 2px !important;
+  text-decoration: underline;
+}
+
+/* Enhanced focus for inputs and form elements */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid #1976d2 !important;
+  outline-offset: 2px !important;
+  border-color: #1976d2 !important;
+}
+
+/* Enhanced focus for custom interactive elements */
+[tabindex]:focus-visible {
+  outline: 3px solid #1976d2 !important;
+  outline-offset: 2px !important;
+}
+
+/* Ensure focus indicators work with Material-UI components */
+.MuiButton-root:focus-visible,
+.MuiIconButton-root:focus-visible,
+.MuiChip-root:focus-visible {
+  outline: 3px solid #1976d2 !important;
+  outline-offset: 2px !important;
+}
+
+/* Remove default browser focus ring to avoid double outlines */
+*:focus {
+  outline: none;
+}
+
+/* But keep focus-visible for keyboard navigation */
+*:focus:not(:focus-visible) {
+  outline: none;
+}

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM Platform - API Developer Portal</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #fafafa;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav-bar {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .nav-label {
+            font-weight: 600;
+            color: #333;
+            min-width: 120px;
+        }
+
+        .service-selector {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .service-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .service-btn:hover {
+            background: #f0f4ff;
+        }
+
+        .service-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .info-banner {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 4px;
+        }
+
+        .info-banner h3 {
+            color: #856404;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .info-banner p {
+            color: #856404;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .info-banner code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        #swagger-ui {
+            margin-top: 0;
+        }
+
+        .swagger-ui .topbar {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border-radius: 4px;
+        }
+
+        .error h3 {
+            color: #721c24;
+            margin-bottom: 0.5rem;
+        }
+
+        .error p {
+            color: #721c24;
+            line-height: 1.6;
+        }
+
+        .error code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .quick-links {
+            background: white;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .quick-links h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .quick-links ul {
+            list-style: none;
+        }
+
+        .quick-links li {
+            padding: 0.5rem 0;
+        }
+
+        .quick-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .quick-links a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .service-selector {
+                width: 100%;
+            }
+
+            .service-btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>🏥 HDIM Platform API Developer Portal</h1>
+            <p>Interactive API documentation for healthcare quality measures, FHIR R4 resources, and care gap management</p>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-label">Select API Service:</div>
+            <div class="service-selector">
+                <button class="service-btn active" onclick="loadSpec('quality-measure-service')">Quality Measures</button>
+                <button class="service-btn" onclick="loadSpec('patient-service')">Patient Management</button>
+                <button class="service-btn" onclick="loadSpec('fhir-service')">FHIR R4</button>
+                <button class="service-btn" onclick="loadSpec('care-gap-service')">Care Gaps</button>
+                <button class="service-btn" onclick="loadSpec('cql-engine-service')">CQL Engine</button>
+                <button class="service-btn" onclick="loadSpec('gateway-service')">API Gateway</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="info-banner">
+            <h3>📖 Getting Started</h3>
+            <p>
+                <strong>Authentication Required:</strong> All API endpoints require a JWT token.
+                Use the <code>POST /auth/login</code> endpoint in the Gateway API to obtain a token.
+                Then click "Authorize" button in the API explorer and enter: <code>Bearer YOUR_TOKEN</code>
+            </p>
+            <p style="margin-top: 0.5rem;">
+                <strong>Test Credentials:</strong> <code>username: test_evaluator</code> | <code>password: password123</code> | <code>X-Tenant-ID: TENANT-001</code>
+            </p>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading OpenAPI specification...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <h3>⚠️ Error Loading API Specification</h3>
+            <p id="error-message"></p>
+            <p style="margin-top: 1rem;">
+                <strong>Troubleshooting:</strong><br>
+                • Ensure the service is running: <code>docker compose ps [service-name]</code><br>
+                • Check service health: <code>docker compose logs -f [service-name]</code><br>
+                • Verify OpenAPI spec exists in <code>docs/api/</code> directory<br>
+                • Try regenerating specs: <code>cd docs/api && ./generate-openapi-specs.sh</code>
+            </p>
+        </div>
+
+        <div id="swagger-ui"></div>
+
+        <div class="quick-links">
+            <h2>📚 Additional Resources</h2>
+            <ul>
+                <li>📖 <a href="../api/GETTING_STARTED.md">API Getting Started Guide</a> - Authentication, workflows, error handling</li>
+                <li>📮 <a href="./postman/README.md">Postman Collections</a> - Pre-configured API requests for testing</li>
+                <li>🔧 <a href="../services/SERVICE_CATALOG.md">Service Catalog</a> - All 50+ microservices</li>
+                <li>🏗️ <a href="../architecture/SYSTEM_ARCHITECTURE.md">System Architecture</a> - Platform overview</li>
+                <li>🔐 <a href="../../backend/docs/GATEWAY_TRUST_ARCHITECTURE.md">Authentication Guide</a> - JWT and RBAC</li>
+                <li>📊 <a href="http://localhost:3000" target="_blank">Monitoring Dashboard</a> - Grafana (requires services running)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.10.5/swagger-ui-standalone-preset.js"></script>
+    <script>
+        const API_VERSION = 'v1.2.0';
+        let currentUi = null;
+
+        function loadSpec(serviceName) {
+            // Update active button
+            document.querySelectorAll('.service-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('swagger-ui').textContent = '';
+
+            // Construct spec URL
+            const specUrl = `../api/openapi-${serviceName}-${API_VERSION}.json`;
+
+            // Load and display spec
+            fetch(specUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(spec => {
+                    document.getElementById('loading').style.display = 'none';
+
+                    // Initialize Swagger UI
+                    currentUi = SwaggerUIBundle({
+                        spec: spec,
+                        dom_id: '#swagger-ui',
+                        deepLinking: true,
+                        presets: [
+                            SwaggerUIBundle.presets.apis,
+                            SwaggerUIStandalonePreset
+                        ],
+                        plugins: [
+                            SwaggerUIBundle.plugins.DownloadUrl
+                        ],
+                        layout: "BaseLayout",
+                        defaultModelsExpandDepth: 1,
+                        defaultModelExpandDepth: 3,
+                        docExpansion: 'list',
+                        filter: true,
+                        tryItOutEnabled: true,
+                        persistAuthorization: true,
+                        requestInterceptor: (request) => {
+                            // Auto-add X-Tenant-ID header if not present
+                            if (!request.headers['X-Tenant-ID']) {
+                                request.headers['X-Tenant-ID'] = 'TENANT-001';
+                            }
+                            return request;
+                        }
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    const errorDiv = document.getElementById('error');
+                    errorDiv.style.display = 'block';
+
+                    // Safely display error message using textContent
+                    const errorMsg = document.getElementById('error-message');
+                    errorMsg.textContent = '';
+
+                    const failedMsg = document.createElement('div');
+                    failedMsg.textContent = `Failed to load: ${specUrl}`;
+                    errorMsg.appendChild(failedMsg);
+
+                    const errorText = document.createElement('div');
+                    errorText.textContent = `Error: ${error.message}`;
+                    errorMsg.appendChild(errorText);
+
+                    const causeText = document.createElement('div');
+                    causeText.style.marginTop = '1rem';
+                    causeText.textContent = 'Possible causes: OpenAPI specification file not found, service not configured with SpringDoc OpenAPI, or spec needs to be regenerated from running service.';
+                    errorMsg.appendChild(causeText);
+                });
+        }
+
+        // Load default service on page load
+        window.addEventListener('load', () => {
+            loadSpec('quality-measure-service');
+        });
+    </script>
+</body>
+</html>

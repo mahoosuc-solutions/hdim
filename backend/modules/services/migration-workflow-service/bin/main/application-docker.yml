@@ -1,0 +1,9 @@
+# Docker-specific configuration for Migration Workflow Service
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/migration_db
+    username: healthdata
+    password: healthdata_password
+  jpa:
+    hibernate:
+      ddl-auto: create-drop

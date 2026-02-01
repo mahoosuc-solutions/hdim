@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import PortalNav from '../../components/PortalNav'
+import VideoPlayer from '../../components/VideoPlayer'
 import {
   Play,
   Building2,
@@ -166,6 +167,34 @@ export default function DemoPage() {
               Experience HDIM with real synthetic data. Select your customer type and demo scenario
               to see care gap detection, quality measures, and ROI in action.
             </p>
+          </div>
+
+          {/* Quick Video Preview */}
+          <div className="mb-16 max-w-4xl mx-auto">
+            <div className="bg-gradient-to-r from-blue-50 to-teal-50 rounded-2xl p-8">
+              <div className="text-center mb-6">
+                <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+                  See It In 30 Seconds
+                </span>
+                <h2 className="text-2xl font-bold text-gray-900 mt-2 mb-2">
+                  Care Gap Closure in Action
+                </h2>
+                <p className="text-gray-600">
+                  Watch how HDIM identifies and closes care gaps in real-time
+                </p>
+              </div>
+              <VideoPlayer
+                videoSrc="/videos/care-gap-closure-30s.mp4"
+                thumbnailSrc="/videos/care-gap-closure-30s-thumb.png"
+                title="Care Gap Closure Demo - 30 Second Preview"
+                description="Watch HDIM identify Eleanor Anderson's overdue mammogram screening and close the care gap with automated workflow"
+                youtubeId="pUVxBhRGRLg"
+                preferYouTube={false}
+              />
+              <p className="text-center text-gray-500 mt-4 text-sm">
+                Click to watch the 30-second demo • No registration required
+              </p>
+            </div>
           </div>
 
           {demoState === 'select' && (
@@ -451,13 +480,11 @@ export default function DemoPage() {
 
                 <div className="flex justify-center gap-4">
                   <a
-                    href="http://localhost:4200"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="/explorer"
                     className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <ExternalLink className="w-5 h-5 mr-2" />
-                    Open Clinical Portal
+                    Explore Demo Portal
                   </a>
                   <button
                     onClick={() => {
@@ -499,7 +526,7 @@ export default function DemoPage() {
               Technical Implementation
             </h2>
             <p className="text-gray-600 text-center mb-8 max-w-2xl mx-auto">
-              HDIM is built on enterprise-grade open source technologies, designed for HIPAA compliance and healthcare-scale performance.
+              HDIM is built on enterprise-grade open source technologies with compliance-aligned controls and scalable performance.
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-blue-50 p-6 rounded-xl">
@@ -507,7 +534,7 @@ export default function DemoPage() {
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <span className="font-medium w-28 flex-shrink-0">Backend:</span>
-                    <span>28 Spring Boot 3.x microservices (Java 21 LTS)</span>
+                    <span>Spring Boot 3.x microservices (Java 21 LTS)</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-28 flex-shrink-0">Frontend:</span>
@@ -515,7 +542,7 @@ export default function DemoPage() {
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-28 flex-shrink-0">FHIR:</span>
-                    <span>HAPI FHIR 7.x (FHIR R4 certified)</span>
+                    <span>HAPI FHIR 7.x (FHIR R4 aligned)</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-28 flex-shrink-0">CQL Engine:</span>
@@ -527,7 +554,7 @@ export default function DemoPage() {
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-28 flex-shrink-0">Cache:</span>
-                    <span>Redis 7 (5-minute PHI TTL for HIPAA)</span>
+                    <span>Redis 7 (configurable PHI cache TTL)</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-28 flex-shrink-0">Messaging:</span>
@@ -541,38 +568,33 @@ export default function DemoPage() {
               </div>
 
               <div className="bg-green-50 p-6 rounded-xl">
-                <h3 className="font-semibold text-lg text-gray-900 mb-4">Performance Benchmarks</h3>
+                <h3 className="font-semibold text-lg text-gray-900 mb-4">Performance Targets</h3>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start">
                     <span className="font-medium w-32 flex-shrink-0">FHIR Queries:</span>
-                    <span>&lt;200ms p95 latency</span>
+                    <span>p95 targets based on deployment</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-32 flex-shrink-0">CQL Execution:</span>
-                    <span>~500ms avg per patient per measure</span>
+                    <span>optimized per tenant and measure mix</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-32 flex-shrink-0">Throughput:</span>
-                    <span>200+ evaluations/sec per tenant</span>
+                    <span>scales with data volume and concurrency</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-32 flex-shrink-0">Cache Hit Rate:</span>
-                    <span>&gt;85% for repeat queries</span>
+                    <span>tuned per workload</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-32 flex-shrink-0">API Gateway:</span>
-                    <span>&lt;10ms authentication overhead</span>
+                    <span>optimized auth throughput</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium w-32 flex-shrink-0">Uptime SLA:</span>
-                    <span>99.9% (excluding maintenance)</span>
+                    <span>SLA-based availability (excluding maintenance)</span>
                   </li>
                 </ul>
-                <div className="mt-4 pt-4 border-t border-green-200">
-                  <p className="text-xs text-gray-500">
-                    Benchmarks from production load testing with 10,000 patients, 56 HEDIS measures, 1,000 concurrent users (December 2024).
-                  </p>
-                </div>
               </div>
             </div>
 
@@ -593,7 +615,7 @@ export default function DemoPage() {
                   <ul className="text-sm text-gray-700 space-y-1">
                     <li>• AES-256 encryption at rest</li>
                     <li>• TLS 1.3 encryption in transit</li>
-                    <li>• 5-minute PHI cache TTL (enforced)</li>
+                    <li>• Configurable PHI cache TTL</li>
                   </ul>
                 </div>
                 <div>

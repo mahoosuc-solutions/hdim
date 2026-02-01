@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0004-create-search-queries-table" author="agent-5">
+        <comment>Create table for tracking search queries and analytics</comment>
+
+        <createTable tableName="search_queries">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="query_text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="portal_type" type="VARCHAR(10)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="filters_applied" type="JSONB">
+                <constraints nullable="true"/>
+            </column>
+            <column name="results_count" type="INTEGER">
+                <constraints nullable="false" checkConstraint="results_count &gt;= 0"/>
+            </column>
+            <column name="user_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="session_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="clicked_result_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="clicked_result_position" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)" defaultValue="default">
+                <constraints nullable="false"/>
+            </column>
+            <column name="searched_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for analytics -->
+        <createIndex indexName="idx_search_query_text" tableName="search_queries">
+            <column name="query_text"/>
+        </createIndex>
+
+        <createIndex indexName="idx_search_portal_type" tableName="search_queries">
+            <column name="portal_type"/>
+        </createIndex>
+
+        <createIndex indexName="idx_search_user" tableName="search_queries">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_search_tenant" tableName="search_queries">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_search_searched_at" tableName="search_queries">
+            <column name="searched_at"/>
+        </createIndex>
+
+        <!-- GIN index for filters -->
+        <sql>
+            CREATE INDEX idx_search_filters ON search_queries USING GIN(filters_applied);
+        </sql>
+
+        <rollback>
+            <dropTable tableName="search_queries"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

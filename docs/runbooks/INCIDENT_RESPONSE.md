@@ -449,6 +449,7 @@ Update components:
 6. [ ] Database replication healthy
 7. [ ] Cache hit rate normal
 8. [ ] All pods healthy and ready
+9. [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 ```
 
 ### Recovery Testing
@@ -569,7 +570,7 @@ kubectl exec -it <pod-name> -n healthdata-prod -- /bin/sh
 
 # Network debugging
 kubectl run debug --image=busybox -it --rm -- nslookup <service>
-kubectl run debug --image=curlimages/curl -it --rm -- curl <url>
+kubectl run debug --image=curlimages/curl:8.10.1 -it --rm -- curl <url>
 
 # Resource inspection
 kubectl top pods -n healthdata-prod

@@ -24,14 +24,29 @@ export default [
           style: 'kebab-case',
         },
       ],
-      // Security: Prevent console statements in production code
-      // Use LoggerService instead for proper log handling
-      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      // HIPAA Compliance: Prevent console statements in production code
+      // PHI MUST NOT be logged to browser console - use LoggerService instead
+      // LoggerService automatically filters PHI and provides proper audit trails
+      'no-console': 'error',
     },
   },
   {
     files: ['**/*.html'],
     // Override or add rules here
     rules: {},
+  },
+  {
+    // Allow console in main.ts (bootstrap error handler before LoggerService initialization)
+    files: ['**/main.ts'],
+    rules: {
+      'no-console': ['error', { allow: ['error'] }],
+    },
+  },
+  {
+    // Allow console in test files
+    files: ['**/*.spec.ts', '**/*.test.ts'],
+    rules: {
+      'no-console': 'off',
+    },
   },
 ];

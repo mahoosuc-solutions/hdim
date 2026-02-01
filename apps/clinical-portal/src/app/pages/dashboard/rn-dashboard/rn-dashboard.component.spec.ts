@@ -7,6 +7,8 @@ import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { CareGapService, InterventionType } from '../../../services/care-gap.service';
 import { ToastService } from '../../../services/toast.service';
+import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
 
 /**
  * TDD Test Suite for RN Dashboard Component
@@ -67,7 +69,6 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: CareGapService, useValue: mockCareGapService },
         { provide: ToastService, useValue: mockToastService },
-      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RNDashboardComponent);

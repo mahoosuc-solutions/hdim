@@ -9,9 +9,10 @@ import { test, expect, APIRequestContext } from '@playwright/test';
  * Issue: #89
  */
 
-const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:8001';
+const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:18080';
 const API_BASE = `${GATEWAY_URL}/api`;
 const TEST_TENANT_ID = '11111111-1111-1111-1111-111111111111';
+const DEMO_SAFE = process.env['DEMO_SAFE'] === '1' || process.env['DEMO_SAFE'] === 'true';
 
 // Complete service routing configuration (28 services)
 const SERVICE_ROUTES = [
@@ -65,7 +66,7 @@ const SERVICE_ROUTES = [
   {
     name: 'gateway-service',
     basePath: '',
-    port: 8001,
+    port: 18080,
     endpoints: [
       { method: 'GET', path: '/actuator/health', description: 'Health check' },
       { method: 'GET', path: '/actuator/info', description: 'Service info' },
@@ -318,6 +319,9 @@ test.describe('Gateway Routing Tests', () => {
   });
 
   test.describe('Extended Service Routing', () => {
+    if (DEMO_SAFE) {
+      test.skip(true, 'Extended services are not required in demo-safe runs.');
+    }
     const extendedServices = SERVICE_ROUTES.filter(s =>
       !['quality-measure-service', 'cql-engine-service', 'fhir-service',
         'patient-service', 'care-gap-service', 'gateway-service'].includes(s.name)

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, Subject } from 'rxjs';
 import { catchError, debounceTime, bufferTime, filter, tap } from 'rxjs/operators';
@@ -31,6 +32,7 @@ export class AuditService {
   private pendingEvents: AuditEvent[] = [];
 
   constructor(
+    private logger: LoggerService,
     private http: HttpClient,
     private authService: AuthService
   ) {
@@ -80,7 +82,7 @@ export class AuditService {
 
     this.http.post<void>(url, { events }).pipe(
       catchError((error) => {
-        console.warn('[AuditService] Failed to send audit batch, storing locally:', error);
+        this.logger.warn('[AuditService] Failed to send audit batch, storing locally:', error);
         this.storeEventsLocally(events);
         return of(null);
       })
@@ -170,7 +172,7 @@ export class AuditService {
     const url = this.getAuditUrl();
     return this.http.post<void>(url, { events: [fullEvent] }).pipe(
       catchError((error) => {
-        console.warn('[AuditService] Failed to log immediate event:', error);
+        this.logger.warn('[AuditService] Failed to log immediate event:', error);
         this.storeEventsLocally([fullEvent]);
         return of(undefined);
       })
@@ -460,12 +462,378 @@ export class AuditService {
   }
 
   /**
+   * Log session timeout event
+   * HIPAA §164.312(a)(2)(iii) - Automatic Logoff Audit Requirement
+   *
+   * This method provides the audit trail required by HIPAA to prove that
+   * automatic logoff occurred after a period of inactivity.
+   */
+  logSessionTimeout(params: {
+    reason: 'IDLE_TIMEOUT' | 'EXPLICIT_LOGOUT' | 'TOKEN_EXPIRED';
+    idleDurationMinutes?: number;
+    warningShown?: boolean;
+  }): void {
+    this.log({
+      action: AuditAction.LOGOUT,
+      outcome: AuditOutcome.SUCCESS,
+      methodName: 'sessionTimeout',
+      purposeOfUse: 'AUTHENTICATION',
+      metadata: {
+        sessionTimeoutReason: params.reason,
+        idleDurationMinutes: params.idleDurationMinutes,
+        warningShown: params.warningShown,
+        automaticLogoff: params.reason === 'IDLE_TIMEOUT',
+        complianceNote: 'HIPAA §164.312(a)(2)(iii) - Automatic Logoff',
+      },
+    });
+  }
+
+  /**
    * Force flush all buffered events immediately
    * Call this on application shutdown or before navigation
    */
   flush(): void {
     // Send any events still in the buffer subject
     // The bufferTime operator will handle this
+  }
+
+  // ==================== QA Audit Dashboard Methods ====================
+
+  /**
+   * Get AI decision review queue for QA analysts
+   */
+  getReviewQueue(filters: {
+    agentType?: string;
+    minConfidence?: number;
+    maxConfidence?: number;
+    startDate?: string;
+    endDate?: string;
+    includeReviewed?: boolean;
+    page?: number;
+    size?: number;
+  }): Observable<any> {
+    const params = new URLSearchParams();
+    if (filters.agentType) params.append('agentType', filters.agentType);
+    if (filters.minConfidence !== undefined) params.append('minConfidence', filters.minConfidence.toString());
+    if (filters.maxConfidence !== undefined) params.append('maxConfidence', filters.maxConfidence.toString());
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.includeReviewed !== undefined) params.append('includeReviewed', filters.includeReviewed.toString());
+    if (filters.page !== undefined) params.append('page', filters.page.toString());
+    if (filters.size !== undefined) params.append('size', filters.size.toString());
+
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review-queue?${params.toString()}`
+      : `/api/v1/audit/ai/qa/review-queue?${params.toString()}`;
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Get QA metrics dashboard data
+   */
+  getQAMetrics(dateRange?: { startDate: string; endDate: string }): Observable<any> {
+    let url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/metrics`
+      : `/api/v1/audit/ai/qa/metrics`;
+
+    if (dateRange) {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      });
+      url += `?${params.toString()}`;
+    }
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Get QA trend analysis data
+   */
+  getTrendData(): Observable<any> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/trends`
+      : `/api/v1/audit/ai/qa/trends`;
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Approve an AI decision after QA review
+   */
+  approveReview(id: string, request: { reviewNotes?: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review/${id}/approve`
+      : `/api/v1/audit/ai/qa/review/${id}/approve`;
+
+    return this.http.post<void>(url, request);
+  }
+
+  /**
+   * Reject an AI decision after QA review
+   */
+  rejectReview(id: string, request: { rejectionReason: string; reviewNotes?: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review/${id}/reject`
+      : `/api/v1/audit/ai/qa/review/${id}/reject`;
+
+    return this.http.post<void>(url, request);
+  }
+
+  /**
+   * Flag an AI decision for manual escalation
+   */
+  flagReview(id: string, request: { escalationReason: string; severity: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review/${id}/flag`
+      : `/api/v1/audit/ai/qa/review/${id}/flag`;
+
+    return this.http.post<void>(url, request);
+  }
+
+  /**
+   * Mark an AI decision as false positive
+   */
+  markFalsePositive(id: string): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review/${id}/false-positive`
+      : `/api/v1/audit/ai/qa/review/${id}/false-positive`;
+
+    return this.http.post<void>(url, {});
+  }
+
+  /**
+   * Mark an AI decision as false negative
+   */
+  markFalseNegative(id: string): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review/${id}/false-negative`
+      : `/api/v1/audit/ai/qa/review/${id}/false-negative`;
+
+    return this.http.post<void>(url, {});
+  }
+
+  /**
+   * Get detailed review information for a specific decision
+   */
+  getReviewDetail(id: string): Observable<any> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/review/${id}`
+      : `/api/v1/audit/ai/qa/review/${id}`;
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Export QA report (returns blob for file download)
+   */
+  exportQAReport(): Observable<Blob> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/qa/report/export`
+      : `/api/v1/audit/ai/qa/report/export`;
+
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  // ==================== Clinical Audit Dashboard Methods ====================
+
+  /**
+   * Get clinical AI decisions (filtered by CLINICAL_* agent types)
+   */
+  getClinicalDecisions(filters: {
+    agentType?: string;
+    priority?: string;
+    status?: string;
+    patientId?: string;
+    startDate?: string;
+    endDate?: string;
+    decisionType?: string;
+    page?: number;
+    size?: number;
+  }): Observable<any> {
+    const params = new URLSearchParams();
+
+    // Filter for clinical agent types
+    const agentTypeFilter = filters.agentType || 'CLINICAL_';
+    params.append('agentType', agentTypeFilter);
+
+    if (filters.priority) params.append('priority', filters.priority);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.patientId) params.append('patientId', filters.patientId);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.decisionType) params.append('decisionType', filters.decisionType);
+    if (filters.page !== undefined) params.append('page', filters.page.toString());
+    if (filters.size !== undefined) params.append('size', filters.size.toString());
+
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/decisions?${params.toString()}`
+      : `/api/v1/audit/ai/decisions?${params.toString()}`;
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Get clinical metrics
+   */
+  getClinicalMetrics(dateRange?: { startDate: string; endDate: string }): Observable<any> {
+    let url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/clinical/metrics`
+      : `/api/v1/audit/clinical/metrics`;
+
+    if (dateRange) {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      });
+      url += `?${params.toString()}`;
+    }
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Accept a clinical AI recommendation
+   */
+  acceptClinicalRecommendation(id: string, request: { clinicalNotes?: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/clinical/decisions/${id}/accept`
+      : `/api/v1/clinical/decisions/${id}/accept`;
+
+    return this.http.post<void>(url, request);
+  }
+
+  /**
+   * Reject a clinical AI recommendation with rationale
+   */
+  rejectClinicalRecommendation(id: string, request: { clinicalRationale: string; clinicalNotes?: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/clinical/decisions/${id}/reject`
+      : `/api/v1/clinical/decisions/${id}/reject`;
+
+    return this.http.post<void>(url, request);
+  }
+
+  /**
+   * Modify a clinical AI recommendation with clinical judgment
+   */
+  modifyClinicalRecommendation(id: string, request: { modifications: string; clinicalNotes?: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/clinical/decisions/${id}/modify`
+      : `/api/v1/clinical/decisions/${id}/modify`;
+
+    return this.http.post<void>(url, request);
+  }
+
+  /**
+   * Export clinical audit report (returns blob for file download)
+   */
+  exportClinicalReport(): Observable<Blob> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/clinical/report/export`
+      : `/api/v1/audit/clinical/report/export`;
+
+    return this.http.get(url, { responseType: 'blob' });
+  }
+
+  // ==================== MPI Audit Dashboard Methods ====================
+
+  /**
+   * Get MPI audit events (filtered by MPI_* action types)
+   */
+  getMPIEvents(filters: {
+    actionType?: string;
+    eventType?: string;
+    tenantId?: string;
+    userId?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    size?: number;
+  }): Observable<any> {
+    const params = new URLSearchParams();
+
+    // Filter for MPI action types
+    const actionTypeFilter = filters.actionType || 'MPI_';
+    params.append('actionType', actionTypeFilter);
+
+    if (filters.eventType && filters.eventType !== 'all') params.append('eventType', filters.eventType);
+    if (filters.tenantId && filters.tenantId !== 'all') params.append('tenantId', filters.tenantId);
+    if (filters.userId) params.append('userId', filters.userId);
+    if (filters.startDate) params.append('startDate', filters.startDate);
+    if (filters.endDate) params.append('endDate', filters.endDate);
+    if (filters.page !== undefined) params.append('page', filters.page.toString());
+    if (filters.size !== undefined) params.append('size', filters.size.toString());
+
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/ai/user-actions?${params.toString()}`
+      : `/api/v1/audit/ai/user-actions?${params.toString()}`;
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Get MPI metrics
+   */
+  getMPIMetrics(dateRange?: { startDate: string; endDate: string }): Observable<any> {
+    let url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/mpi/metrics`
+      : `/api/v1/audit/mpi/metrics`;
+
+    if (dateRange) {
+      const params = new URLSearchParams({
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      });
+      url += `?${params.toString()}`;
+    }
+
+    return this.http.get<any>(url);
+  }
+
+  /**
+   * Validate a patient merge operation
+   */
+  validateMerge(mergeId: string): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/mpi/merges/${mergeId}/validate`
+      : `/api/v1/mpi/merges/${mergeId}/validate`;
+
+    return this.http.post<void>(url, {});
+  }
+
+  /**
+   * Rollback a patient merge operation
+   */
+  rollbackMerge(mergeId: string): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/mpi/merges/${mergeId}/rollback`
+      : `/api/v1/mpi/merges/${mergeId}/rollback`;
+
+    return this.http.post<void>(url, {});
+  }
+
+  /**
+   * Resolve a data quality issue
+   */
+  resolveDataQualityIssue(issueId: string, resolution?: { notes?: string }): Observable<void> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/mpi/data-quality/${issueId}/resolve`
+      : `/api/v1/mpi/data-quality/${issueId}/resolve`;
+
+    return this.http.post<void>(url, resolution || {});
+  }
+
+  /**
+   * Export MPI audit report (returns blob for file download)
+   */
+  exportMPIReport(): Observable<Blob> {
+    const url = API_CONFIG.USE_API_GATEWAY
+      ? `${API_CONFIG.API_GATEWAY_URL}/api/v1/audit/mpi/report/export`
+      : `/api/v1/audit/mpi/report/export`;
+
+    return this.http.get(url, { responseType: 'blob' });
   }
 }
 

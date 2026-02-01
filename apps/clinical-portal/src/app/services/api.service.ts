@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular
 import { Observable, throwError, timer, of } from 'rxjs';
 import { catchError, retry, retryWhen, mergeMap, finalize, tap } from 'rxjs/operators';
 import { API_CONFIG } from '../config/api.config';
+import { LoggerService } from './logger.service';
 
 /**
  * Base API Service - Central configuration for all HTTP operations
@@ -24,7 +25,10 @@ export class ApiService {
   private readonly retryDelay = 1000; // 1 second
   private readonly maxRetryDelay = 10000; // 10 seconds
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private logger: LoggerService
+  ) {}
 
   /**
    * Generic GET request with error handling and retry
@@ -270,7 +274,7 @@ export class ApiService {
   private logResponse(method: string, url: string, response: unknown): void {
     if (!API_CONFIG.ENABLE_LOGGING) return;
 
-    console.log(`[API Service] ${method} ${url}`, response);
+    this.logger.info(`${method} ${url}`, response);
   }
 
   /**
@@ -279,7 +283,7 @@ export class ApiService {
   private logError(method: string, url: string, error: HttpErrorResponse, message: string): void {
     if (!API_CONFIG.ENABLE_LOGGING) return;
 
-    console.error(`[API Service] ${method} ${url} - Error:`, {
+    this.logger.error(`${method} ${url} - Error`, {
       message,
       status: error.status,
       statusText: error.statusText,
@@ -293,7 +297,7 @@ export class ApiService {
   private logRetry(attempt: number, maxRetries: number, delay: number): void {
     if (!API_CONFIG.ENABLE_LOGGING) return;
 
-    console.log(`[API Service] Retry attempt ${attempt}/${maxRetries} after ${delay}ms`);
+    this.logger.info(`Retry attempt ${attempt}/${maxRetries} after ${delay}ms`);
   }
 }
 

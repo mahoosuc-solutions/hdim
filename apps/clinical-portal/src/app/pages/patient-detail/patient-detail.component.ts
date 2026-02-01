@@ -21,6 +21,11 @@ import { QualityMeasureResult } from '../../models/quality-result.model';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { PatientHealthOverviewComponent } from '../patient-health-overview/patient-health-overview.component';
+import { PatientDemographicsCardComponent } from '../../components/patient-demographics-card/patient-demographics-card.component';
+import { PatientTimelineComponent } from '../../components/patient-timeline/patient-timeline.component';
+import { AiClinicalAssistantComponent } from '../../components/ai-clinical-assistant/ai-clinical-assistant.component';
+import { DocumentUploadComponent } from '../../components/document-upload/document-upload.component';
+import { LoggerService } from '../../services/logger.service';
 
 @Component({
   selector: 'app-patient-detail',
@@ -39,6 +44,10 @@ import { PatientHealthOverviewComponent } from '../patient-health-overview/patie
     LoadingButtonComponent,
     LoadingOverlayComponent,
     PatientHealthOverviewComponent,
+    PatientDemographicsCardComponent,
+    PatientTimelineComponent,
+    AiClinicalAssistantComponent,
+    DocumentUploadComponent,
   ],
   templateUrl: './patient-detail.component.html',
   styleUrls: ['./patient-detail.component.scss'],
@@ -55,6 +64,9 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
 
   loading = true;
   error: string | null = null;
+
+  // Document upload (Issue #249 - OCR Phase 1)
+  currentDocumentId: string | null = null;
 
   // Button loading states
   backButtonLoading = false;
@@ -77,8 +89,12 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     'overview': 0,
     'clinical': 1,
     'care-gaps': 2,
-    'results': 3
+    'results': 3,
+    'timeline': 4,
+    'ai-assistant': 5,
+    'documents': 6
   };
+
 
   constructor(
     private route: ActivatedRoute,
@@ -86,8 +102,10 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     private patientService: PatientService,
     private fhirClinicalService: FhirClinicalService,
     private evaluationService: EvaluationService,
-    private contextNavService: ContextNavigationService
-  ) {}
+    private contextNavService: ContextNavigationService,
+    private logger: LoggerService
+  ) {
+  }
 
   ngOnInit(): void {
     this.patientId = this.route.snapshot.paramMap.get('id');
@@ -176,7 +194,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
   private initiateGapClosure(careGapId: string): void {
     // This would open a dialog or panel for gap closure
     // Implementation depends on the care gap service integration
-    console.log('Initiating gap closure for:', careGapId);
+    this.logger.info('Initiating gap closure', careGapId);
   }
 
   /**
@@ -207,7 +225,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.loadQualityResults();
       },
       error: (err: any) => {
-        console.error('Error loading patient:', err);
+        this.logger.error('Error loading patient', err);
         this.error = 'Failed to load patient information';
         this.loading = false;
       },
@@ -223,7 +241,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.loading = false;
       },
       error: (err: any) => {
-        console.error('Error loading clinical data:', err);
+        this.logger.error('Error loading clinical data', err);
         this.loading = false;
       },
     });
@@ -237,7 +255,7 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.qualityResults = results;
       },
       error: (err: any) => {
-        console.error('Error loading quality results:', err);
+        this.logger.error('Error loading quality results', err);
       },
     });
   }
@@ -361,5 +379,50 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
 
   hasCareGaps(): boolean {
     return this.getCareGaps().length > 0;
+  }
+
+  /**
+   * Handle document upload success (Issue #249 - OCR Phase 1)
+   */
+  onDocumentUploadSuccess(response: any): void {
+    this.logger.info('Document uploaded successfully', { attachmentId: response.attachmentId });
+    // Optionally refresh document list or show success message
+  }
+
+  /**
+   * Handle document upload error (Issue #249 - OCR Phase 1)
+   */
+  onDocumentUploadError(error: string): void {
+    this.logger.error('Document upload failed', new Error(error));
+    this.error = `Document upload failed: ${error}`;
+    // Error will be displayed to user by DocumentUploadComponent
+  }
+
+  /**
+   * Handle OCR completion (Issue #249 - OCR Phase 1)
+   */
+  onOcrComplete(event: { attachmentId: string; ocrStatus: string }): void {
+    this.logger.info('OCR processing complete', event);
+    // Optionally refresh document list or show notification
+    if (event.ocrStatus === 'COMPLETED') {
+      // OCR successful - document is searchable
+    } else if (event.ocrStatus === 'FAILED') {
+      // OCR failed - user can retry via DocumentUploadComponent
+    }
+  }
+
+  /**
+   * Get or create clinical document ID for uploads (Issue #249 - OCR Phase 1)
+   *
+   * For Phase 1, we'll use a default document ID format.
+   * In a real implementation, this would create a clinical document via backend API.
+   */
+  getCurrentDocumentId(): string {
+    if (!this.currentDocumentId && this.patientId) {
+      // Create a default document ID for this patient
+      // Format: patient-{patientId}-documents
+      this.currentDocumentId = `patient-${this.patientId}-documents`;
+    }
+    return this.currentDocumentId || '';
   }
 }

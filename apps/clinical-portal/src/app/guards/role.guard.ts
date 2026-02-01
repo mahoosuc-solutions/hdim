@@ -8,6 +8,7 @@ import {
 } from '@angular/router';
 import { Observable } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { LoggerService } from '../services/logger.service';
 
 /**
  * Role Guard - Protects routes based on user roles
@@ -25,10 +26,10 @@ import { AuthService } from '../services/auth.service';
 @Injectable({
   providedIn: 'root',
 })
-export class RoleGuard implements CanActivate {
-  constructor(
+export class RoleGuard implements CanActivate {  constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {}
 
   canActivate(
@@ -50,7 +51,7 @@ export class RoleGuard implements CanActivate {
     }
 
     // User doesn't have required role
-    console.warn(
+    this.logger.warn(
       `User doesn't have required roles: ${requiredRoles.join(', ')}. Redirecting to unauthorized.`
     );
 

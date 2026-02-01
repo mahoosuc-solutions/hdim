@@ -71,7 +71,7 @@
                 <mat-chip [class]="measure.status.toLowerCase()">{{ measure.status }}</mat-chip>
               </div>
 
-              <h3 class="measure-name">{{ measure.name }}</h3>
+              <h2 class="measure-name">{{ measure.name }}</h2>
 
               <p class="measure-description">{{ measure.description }}</p>
 
@@ -132,8 +132,11 @@
               <span class="code-badge">{{ selectedMeasure()!.code }}</span>
               <h2>{{ selectedMeasure()!.name }}</h2>
             </div>
-            <button mat-icon-button (click)="closeMeasureDetail()">
-              <mat-icon>close</mat-icon>
+            <button
+              mat-icon-button
+              (click)="closeMeasureDetail()"
+              aria-label="Close measure details">
+              <mat-icon aria-hidden="true">close</mat-icon>
             </button>
           </div>
 
@@ -171,7 +174,7 @@
 
             <!-- Population Criteria -->
             <div class="criteria-section">
-              <h4>Population Criteria</h4>
+              <h3>Population Criteria</h3>
               <p class="description">{{ selectedMeasure()!.description }}</p>
 
               @if (selectedMeasure()!.code === 'BCS') {
@@ -195,6 +198,10 @@
                   <button mat-raised-button color="primary" (click)="runEvaluation()">
                     <mat-icon>play_arrow</mat-icon>
                     Run Evaluation
+                  </button>
+                  <button mat-stroked-button (click)="viewMeasureDetail(selectedMeasure()!)">
+                    <mat-icon>visibility</mat-icon>
+                    View Full Details
                   </button>
                   <button mat-stroked-button (click)="viewCqlLogic()">
                     <mat-icon>code</mat-icon>

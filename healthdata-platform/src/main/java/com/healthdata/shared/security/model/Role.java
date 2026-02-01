@@ -121,7 +121,11 @@ public class Role implements Serializable {
         CARE_MANAGER("CARE_MANAGER", "Care Manager - Manages patient care coordination"),
         PATIENT("PATIENT", "Patient - Limited access to own health information"),
         ANALYST("ANALYST", "Data Analyst - Read-only access to reports and analytics"),
-        QUALITY_OFFICER("QUALITY_OFFICER", "Quality Officer - Manages quality measures and reports");
+        QUALITY_OFFICER("QUALITY_OFFICER", "Quality Officer - Manages quality measures and reports"),
+        QA_ANALYST("QA_ANALYST", "Quality Assurance Analyst - Reviews AI decisions and validates quality metrics"),
+        MPI_ADMIN("MPI_ADMIN", "Master Patient Index Administrator - Manages patient identity resolution"),
+        CLINICAL_NURSE("CLINICAL_NURSE", "Clinical Nurse - Patient care delivery and documentation"),
+        CLINICAL_PHYSICIAN("CLINICAL_PHYSICIAN", "Clinical Physician - Medical decision making and care oversight");
 
         private final String roleName;
         private final String description;

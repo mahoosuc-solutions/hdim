@@ -1,0 +1,53 @@
+{
+  "description": "Proactive technology agent triggers for HDIM platform - automatically launches specialized agents when relevant configuration files are modified",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Analyze the file being modified to determine if a specialized HDIM technology agent should be proactively launched.\n\nFile path: $TOOL_INPUT.file_path\nOperation: $TOOL_NAME\n\n**Agent Trigger Patterns:**\n\n1. **spring-boot-agent** - Launch if file matches:\n   - application*.yml (any profile: dev, staging, prod)\n   - build.gradle.kts\n   - *Application.java (Spring Boot main class)\n   - *Config.java (Spring configuration classes)\n\n2. **spring-security-agent** - Launch if file matches:\n   - *SecurityConfig.java\n   - *Filter.java (authentication/authorization filters)\n   - *Controller.java that uses @PreAuthorize annotations\n\n3. **redis-agent** - Launch if file matches:\n   - application*.yml containing 'spring.cache' or 'spring.data.redis'\n   - *Service.java containing '@Cacheable' annotations\n   - Redis configuration classes\n\n4. **postgres-agent** - Launch if file matches:\n   - application*.yml containing 'spring.datasource' or 'spring.jpa'\n   - *Entity.java (JPA entities)\n   - db/changelog/**/*.xml (Liquibase migrations)\n   - database configuration classes\n\n5. **kafka-agent** - Launch if file matches:\n   - application*.yml containing 'spring.kafka'\n   - *Listener.java (Kafka message listeners)\n   - Files using KafkaTemplate\n   - Event/message model classes\n\n6. **docker-agent** - Launch if file matches:\n   - Dockerfile (any location)\n   - docker-compose*.yml\n   - .dockerignore\n\n7. **gcp-agent** - Launch if file matches:\n   - scripts/gcp-*.sh\n   - infrastructure/**/*.tf (Terraform)\n   - k8s/**/*.yaml (Kubernetes manifests)\n   - GCP deployment scripts\n\n**Decision Logic:**\n\n1. Check if file path matches ANY of the patterns above\n2. If multiple agents match, determine the PRIMARY agent (most specific match)\n3. Return JSON output with decision:\n\n```json\n{\n  \"hookSpecificOutput\": {\n    \"permissionDecision\": \"allow\",\n    \"launchAgent\": \"<agent-name>|none\",\n    \"reason\": \"<explanation>\"\n  },\n  \"systemMessage\": \"✓ Will launch <agent-name> after file modification to validate <aspect>.\"\n}\n```\n\n**Examples:**\n\n- File: `application-dev.yml` → Launch: `spring-boot-agent` (validates profile config, ddl-auto, actuator)\n- File: `SecurityConfig.java` → Launch: `spring-security-agent` (validates filter ordering, @PreAuthorize)\n- File: `Patient.java` (@Entity) → Launch: `postgres-agent` (validates entity-migration sync)\n- File: `docker-compose.yml` → Launch: `docker-agent` (validates health checks, non-root user)\n- File: `infrastructure/main.tf` → Launch: `gcp-agent` (validates IAM, quotas, multi-region)\n\n**Rules:**\n- ALWAYS allow the file operation (permissionDecision: allow)\n- Launch agent ONLY if pattern matches (otherwise launchAgent: none)\n- Provide clear systemMessage explaining what validation will occur\n- If unsure, err on side of NOT launching (avoid false positives)\n\n**Output the decision in valid JSON format.**",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "After file modification, check if the PreToolUse hook requested launching a specialized agent.\n\nFile modified: $TOOL_INPUT.file_path\nOperation result: $TOOL_RESULT\n\n**Action Required:**\n\nIf the PreToolUse hook determined that a specialized agent should be launched (check systemMessage from PreToolUse), then:\n\n1. Identify which agent was recommended: spring-boot-agent, spring-security-agent, redis-agent, postgres-agent, kafka-agent, docker-agent, or gcp-agent\n\n2. Use the Task tool to launch that agent with appropriate prompt:\n\n   ```\n   Task({\n     subagent_type: \"hdim-accelerator:<agent-name>\",\n     prompt: \"Validate recent changes to <file-path>. Check for: <validation-points>\",\n     description: \"Validate <technology> config\"\n   })\n   ```\n\n3. Return feedback:\n\n```json\n{\n  \"systemMessage\": \"Launched <agent-name> to validate <file-path> for <validation-aspects>.\"\n}\n```\n\n**If NO agent launch was recommended:**\n\n```json\n{\n  \"systemMessage\": \"File modification complete. No specialized validation required.\"\n}\n```\n\n**Validation Aspects by Agent:**\n\n- **spring-boot-agent**: Profile config, ddl-auto settings, actuator security, dependency versions\n- **spring-security-agent**: Filter ordering, @PreAuthorize coverage, tenant isolation, authentication patterns\n- **redis-agent**: HIPAA TTL compliance (≤5min), cache key tenant prefixing, serialization config\n- **postgres-agent**: HikariCP timing formula, entity-migration sync, Liquibase rollback SQL, traffic tier config\n- **kafka-agent**: Type header config, topic naming conventions, idempotent consumers, event versioning\n- **docker-agent**: Non-root user (UID 1001), health check timing, JVM container optimization, IPv4 stack\n- **gcp-agent**: IAM least-privilege, quota validation, multi-region HA, cost optimization, network security\n\n**Output the decision in valid JSON format.**",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Before allowing the conversation to stop, verify that all HDIM platform quality standards have been met.\n\n**Verification Checklist:**\n\n1. **Code Quality:**\n   - [ ] All new entities have corresponding Liquibase migrations\n   - [ ] All @Cacheable annotations have HIPAA-compliant TTL (≤5 min)\n   - [ ] All API endpoints have @PreAuthorize annotations\n   - [ ] All database queries include tenant_id filtering\n   - [ ] All PHI responses have Cache-Control: no-store headers\n\n2. **Configuration Quality:**\n   - [ ] ddl-auto is set to 'validate' (NEVER create/update)\n   - [ ] HikariCP timing follows formula: max-lifetime ≥ 6x idle-timeout\n   - [ ] Kafka type headers are disabled (spring.json.add.type.headers: false)\n   - [ ] Docker containers use non-root user (UID 1001)\n   - [ ] All services have proper health check configuration\n\n3. **Testing:**\n   - [ ] Unit tests written for new service methods\n   - [ ] Integration tests added for new API endpoints\n   - [ ] Entity-migration validation tests pass\n   - [ ] External dependencies are mocked (no live FHIR calls)\n\n4. **Documentation:**\n   - [ ] New endpoints documented in service README\n   - [ ] Configuration changes noted in application.yml comments\n   - [ ] Migration files include descriptive comments\n\n**Decision Logic:**\n\nAnalyze the recent conversation transcript and tool results to determine if the above standards are met.\n\nReturn JSON:\n\n```json\n{\n  \"decision\": \"approve|block\",\n  \"reason\": \"<explanation of what's complete or missing>\",\n  \"systemMessage\": \"<feedback for Claude about completion status>\"\n}\n```\n\n**Block examples:**\n- \"block\" - \"Entity Patient.java was created but no Liquibase migration was added\"\n- \"block\" - \"@Cacheable annotation added without verifying HIPAA TTL compliance\"\n- \"block\" - \"New endpoint created without @PreAuthorize annotation\"\n- \"block\" - \"Kafka configuration modified but type headers not validated\"\n\n**Approve examples:**\n- \"approve\" - \"All entity-migration synchronization complete, tests passing\"\n- \"approve\" - \"Configuration changes validated by appropriate agent, all checks pass\"\n- \"approve\" - \"Informational query answered, no code changes made\"\n\n**Output the decision in valid JSON format.**",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/scripts/load-hdim-context.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

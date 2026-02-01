@@ -1,0 +1,218 @@
+.demographics-card {
+  margin-bottom: 1.5rem;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .header-icon {
+        color: var(--primary-color, #1976d2);
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+      }
+
+      mat-card-title {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0;
+      }
+    }
+
+    mat-chip {
+      font-weight: 500;
+    }
+  }
+
+  mat-card-content {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+  }
+}
+
+.demographics-section {
+  padding: 1.5rem 0;
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+
+    mat-icon {
+      color: var(--accent-color, #00796b);
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 500;
+      margin: 0;
+      color: var(--text-primary, rgba(0, 0, 0, 0.87));
+    }
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      &.full-width {
+        grid-column: 1 / -1;
+      }
+
+      .info-label {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+
+        .inline-icon {
+          font-size: 1rem;
+          width: 1rem;
+          height: 1rem;
+        }
+      }
+
+      .info-value {
+        font-size: 1rem;
+        color: var(--text-primary, rgba(0, 0, 0, 0.87));
+        line-height: 1.5;
+
+        a {
+          color: var(--primary-color, #1976d2);
+          text-decoration: none;
+          transition: color 0.2s ease;
+
+          &:hover,
+          &:focus {
+            color: var(--primary-dark, #115293);
+            text-decoration: underline;
+          }
+
+          &:focus {
+            outline: 2px solid var(--primary-color, #1976d2);
+            outline-offset: 2px;
+            border-radius: 2px;
+          }
+        }
+
+        &.address-value {
+          white-space: pre-line;
+        }
+
+        .age-badge {
+          display: inline-block;
+          margin-left: 0.5rem;
+          padding: 0.125rem 0.5rem;
+          background-color: var(--info-light, #e3f2fd);
+          color: var(--info-dark, #0d47a1);
+          border-radius: 12px;
+          font-size: 0.875rem;
+          font-weight: 500;
+        }
+      }
+
+      .no-data-inline {
+        color: var(--text-disabled, rgba(0, 0, 0, 0.38));
+        font-style: italic;
+      }
+    }
+  }
+
+  .info-note {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: var(--info-light, #e3f2fd);
+    border-left: 4px solid var(--info, #2196f3);
+    border-radius: 4px;
+
+    .note-icon {
+      color: var(--info, #2196f3);
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    span {
+      font-size: 0.875rem;
+      color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+      line-height: 1.5;
+    }
+  }
+}
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--text-disabled, rgba(0, 0, 0, 0.38));
+
+  mat-icon {
+    font-size: 4rem;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+mat-divider {
+  margin: 1.5rem 0;
+}
+
+// Accessibility: Ensure sufficient color contrast
+@media (prefers-contrast: high) {
+  .info-item .info-label {
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  .info-note {
+    border-left-width: 6px;
+  }
+}
+
+// Accessibility: Respect reduced motion preferences
+@media (prefers-reduced-motion: reduce) {
+  .info-value a {
+    transition: none;
+  }
+}

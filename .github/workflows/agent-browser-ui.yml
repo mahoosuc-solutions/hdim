@@ -1,0 +1,70 @@
+name: agent-browser-ui
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "apps/clinical-portal/**"
+      - "scripts/agent-browser/**"
+      - "scripts/agent-browser-smoke.sh"
+      - "docker-compose.demo.yml"
+      - ".github/workflows/agent-browser-ui.yml"
+
+jobs:
+  agent-browser-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install agent-browser
+        run: |
+          npm install -g agent-browser
+          agent-browser install
+
+      - name: Start demo stack
+        run: |
+          docker compose -f docker-compose.demo.yml up -d
+
+      - name: Wait for gateway
+        run: |
+          ./scripts/wait-for-services.sh http://localhost:18080
+
+      - name: Seed demo data
+        run: |
+          ./scripts/seed-all-demo-data.sh
+
+      - name: Run agent-browser suites
+        env:
+          PORTAL_URL: http://localhost:18080
+          SCREENSHOT_DIR: /tmp/agent-browser-smoke
+        run: |
+          ./scripts/agent-browser/nav-global.sh
+          ./scripts/agent-browser/dashboard-admin.sh
+          ./scripts/agent-browser/provider-care-gaps.sh
+          ./scripts/agent-browser/provider-results.sh
+          ./scripts/agent-browser/provider-measures.sh
+          ./scripts/agent-browser/rn-care-gaps.sh
+          ./scripts/agent-browser/rn-followups.sh
+          ./scripts/agent-browser/ma-prep.sh
+          ./scripts/agent-browser/ma-reminders.sh
+          ./scripts/agent-browser/quality-trends.sh
+          ./scripts/agent-browser/quality-reports.sh
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-browser-screenshots
+          path: /tmp/agent-browser-smoke
+
+      - name: Teardown
+        if: always()
+        run: |
+          docker compose -f docker-compose.demo.yml down -v

@@ -4,6 +4,7 @@
 --
 -- Note: This script needs to be run against the gateway_db database
 -- The initialization system connects to each database and runs this script
+\connect gateway_db
 
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -72,5 +73,71 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
+
+-- Create tenant_service_config_versions table (for per-tenant configuration versioning)
+CREATE TABLE IF NOT EXISTS tenant_service_config_versions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id VARCHAR(100) NOT NULL,
+    service_name VARCHAR(120) NOT NULL,
+    version_number INT NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    config_json JSONB NOT NULL,
+    config_hash VARCHAR(64) NOT NULL,
+    change_summary TEXT,
+    source_version_id UUID,
+    created_by VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_tenant_service_config_versions UNIQUE (tenant_id, service_name, version_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_config_versions_tenant_service
+    ON tenant_service_config_versions(tenant_id, service_name);
+
+-- Current active config per tenant/service
+CREATE TABLE IF NOT EXISTS tenant_service_config_current (
+    tenant_id VARCHAR(100) NOT NULL,
+    service_name VARCHAR(120) NOT NULL,
+    active_version_id UUID NOT NULL REFERENCES tenant_service_config_versions(id),
+    updated_by VARCHAR(255),
+    updated_at TIMESTAMP WITH TIME ZONE,
+    PRIMARY KEY (tenant_id, service_name)
+);
+
+-- Configuration audit log
+CREATE TABLE IF NOT EXISTS tenant_service_config_audit (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id VARCHAR(100) NOT NULL,
+    service_name VARCHAR(120) NOT NULL,
+    version_id UUID NOT NULL REFERENCES tenant_service_config_versions(id),
+    action VARCHAR(30) NOT NULL,
+    actor VARCHAR(255) NOT NULL,
+    details JSONB,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_config_audit_tenant_service
+    ON tenant_service_config_audit(tenant_id, service_name);
+
+CREATE INDEX IF NOT EXISTS idx_config_audit_version
+    ON tenant_service_config_audit(version_id);
+
+-- Configuration approvals (two-person gate)
+CREATE TABLE IF NOT EXISTS tenant_service_config_approvals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id VARCHAR(100) NOT NULL,
+    service_name VARCHAR(120) NOT NULL,
+    version_id UUID NOT NULL REFERENCES tenant_service_config_versions(id),
+    action VARCHAR(30) NOT NULL,
+    actor VARCHAR(255) NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_config_approvals_tenant_service
+    ON tenant_service_config_approvals(tenant_id, service_name);
+
+CREATE INDEX IF NOT EXISTS idx_config_approvals_version
+    ON tenant_service_config_approvals(version_id);
 
 -- Schema creation complete

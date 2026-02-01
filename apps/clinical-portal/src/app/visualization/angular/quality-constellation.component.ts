@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,7 +13,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import * as THREE from 'three';
-import { Subject, takeUntil, forkJoin, of, catchError } from 'rxjs';
+import { Subject, takeUntil, forkJoin, of, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 import { ThreeSceneService } from '../core/three-scene.service';
 import { DataTransformService } from '../data/data-transform.service';
@@ -22,6 +24,9 @@ import { MeasureService } from '../../services/measure.service';
 import { QualityConstellationScene, ConstellationFilters, PatientPoint, ConstellationStats } from '../scenes/quality-constellation.scene';
 import { QualityMeasureResult, MeasureCategory } from '../../models/quality-result.model';
 import { PatientSummary } from '../../models/patient.model';
+import { ErrorValidationService } from '../../services/error-validation.service';
+import { COMPLIANCE_CONFIG } from '../../config/compliance.config';
+import { ErrorCode, ErrorSeverity } from '../../models/error.model';
 
 /**
  * Quality Constellation Component
@@ -102,11 +107,13 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
   private hoveredPatient?: PatientPoint;
 
   constructor(
+    private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private transformService: DataTransformService,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
-    private measureService: MeasureService
+    private measureService: MeasureService,
+    private errorValidationService: ErrorValidationService
   ) {}
 
   ngOnInit(): void {
@@ -141,7 +148,23 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
       patients: this.patientService.getPatientsSummary(),
       qualityResults: this.evaluationService.getAllResults(0, 10000).pipe(
         catchError((error) => {
-          console.warn('Quality results API unavailable, using mock data:', error.message);
+          this.logger.warn('Quality results API unavailable:', error.message);
+          
+          // Check if fallbacks are disabled
+          if (COMPLIANCE_CONFIG.disableFallbacks && 
+              !this.errorValidationService.isFallbackAllowed('QualityConstellation')) {
+            // Track error for compliance
+            this.errorValidationService.trackError(error, {
+              service: 'QualityConstellation',
+              operation: 'loadData',
+              errorCode: ErrorCode.DATA_LOADING_ERROR,
+              severity: ErrorSeverity.WARNING,
+            });
+            // Throw error instead of fallback
+            return throwError(() => error);
+          }
+          
+          // Return empty array only if allowed
           return of([] as QualityMeasureResult[]);
         })
       ),
@@ -152,20 +175,37 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
           this.patients = patients;
           this.loadingMessage = 'Processing quality results...';
 
-          // Use API results if available, otherwise generate mock data
+          // Use API results if available
           if (qualityResults && qualityResults.length > 0) {
             this.qualityResults = qualityResults;
-            console.log(`Loaded ${qualityResults.length} quality results from API for ${patients.length} patients`);
+            this.logger.info(`Loaded ${qualityResults.length} quality results from API for ${patients.length} patients`);
           } else {
-            // Generate mock quality results for demo when API is unavailable
-            this.generateMockQualityResults(patients);
+            // Check if fallbacks are disabled
+            if (COMPLIANCE_CONFIG.disableFallbacks && 
+                !this.errorValidationService.isFallbackAllowed('QualityConstellation')) {
+              // Track error for compliance
+              this.errorValidationService.trackError(
+                new Error('No quality results returned from API'),
+                {
+                  service: 'QualityConstellation',
+                  operation: 'loadData',
+                  errorCode: ErrorCode.DATA_LOADING_ERROR,
+                  severity: ErrorSeverity.WARNING,
+                }
+              );
+              // Don't generate mock data, leave empty
+              this.qualityResults = [];
+            } else {
+              // Generate mock quality results for demo when API is unavailable (only if allowed)
+              this.generateMockQualityResults(patients);
+            }
           }
 
           // Initialize scene
           this.initScene();
         },
         error: (error) => {
-          console.error('Error loading data:', error);
+          this.logger.error('Error loading data:', { error });
           this.loadingMessage = 'Error loading data. Please try again.';
         }
       });
@@ -212,7 +252,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
       }
     });
 
-    console.log(`Generated ${this.qualityResults.length} mock quality results for ${patients.length} patients`);
+    this.logger.info(`Generated ${this.qualityResults.length} mock quality results for ${patients.length} patients`);
   }
 
   /**
@@ -232,7 +272,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
 
     // Create constellation scene
     const scene = this.sceneService.getScene();
-    this.constellation = new QualityConstellationScene(scene, this.transformService);
+    this.constellation = new QualityConstellationScene(this.logger, scene, this.transformService);
     this.constellation.initialize(this.qualityResults, this.patients);
 
     // Get initial stats

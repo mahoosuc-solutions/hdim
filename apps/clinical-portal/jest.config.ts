@@ -1,8 +1,22 @@
 export default {
   displayName: 'clinical-portal',
   preset: '../../jest.preset.js',
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  setupFilesAfterEnv: [
+    '<rootDir>/src/test-setup.ts',
+    '<rootDir>/src/testing/setup-accessibility-tests.ts',
+  ],
   coverageDirectory: '../../coverage/apps/clinical-portal',
+  testTimeout: 30000, // Increased from Jest default 5000ms for async/accessibility tests
+  testEnvironment: 'jsdom',
+  globals: {
+    'ts-jest': {
+      isolatedModules: true,
+    },
+  },
+  moduleNameMapper: {
+    // Resolve testing mocks from anywhere in the app to the centralized mocks index
+    '^.*?/testing/mocks$': '<rootDir>/src/testing/mocks',
+  },
   transform: {
     '^.+\\.(ts|mjs|js|html)$': [
       'jest-preset-angular',
@@ -12,7 +26,7 @@ export default {
       },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|d3-.*|internmap|delaunator|robust-predicates)'],
+  transformIgnorePatterns: ['node_modules/(?!.*\\.mjs$|d3-.*|internmap|delaunator|robust-predicates|lodash-es)'],
   snapshotSerializers: [
     'jest-preset-angular/build/serializers/no-ng-attributes',
     'jest-preset-angular/build/serializers/ng-snapshot',

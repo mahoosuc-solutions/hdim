@@ -40,7 +40,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/screening/{patientId}")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:write')")
     @Operation(summary = "Submit SDOH screening for patient")
     public ResponseEntity<SdohAssessment> submitScreening(
             @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
@@ -63,7 +63,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/assessment/{patientId}")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:read')")
     @Operation(summary = "Get most recent SDOH assessment for patient")
     public ResponseEntity<SdohAssessment> getPatientAssessment(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -76,7 +76,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/z-codes/{patientId}")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:read')")
     @Operation(summary = "Get SDOH Z-codes for patient")
     public ResponseEntity<List<SdohDiagnosis>> getPatientZCodes(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -88,7 +88,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/resources")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:read')")
     @Operation(summary = "Search community resources")
     public ResponseEntity<List<CommunityResource>> searchCommunityResources(
             @RequestParam(required = false) String category,
@@ -113,7 +113,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/referral")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:write')")
     @Operation(summary = "Create resource referral for patient")
     public ResponseEntity<ResourceReferral> createResourceReferral(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -133,7 +133,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/equity/report")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('report:read')")
     @Operation(summary = "Generate health equity analytics report")
     public ResponseEntity<EquityReport> getHealthEquityReport(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -150,7 +150,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/risk/{patientId}")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:read')")
     @Operation(summary = "Get SDOH risk score for patient")
     public ResponseEntity<List<SdohRiskScore>> getPatientRiskScore(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -162,7 +162,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/referrals/{patientId}")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:read')")
     @Operation(summary = "Get resource referrals for patient")
     public ResponseEntity<List<ResourceReferral>> getPatientReferrals(
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -174,7 +174,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/referral/{referralId}/status")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:write')")
     @Operation(summary = "Update referral status")
     public ResponseEntity<Void> updateReferralStatus(
             @PathVariable String referralId,
@@ -188,7 +188,7 @@ public class SdohController {
 
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/screening/questions")
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('patient:read')")
     @Operation(summary = "Get screening questionnaire")
     public ResponseEntity<List<SdohScreeningQuestion>> getScreeningQuestions(
             @RequestParam(defaultValue = "AHC-HRSN") String tool) {

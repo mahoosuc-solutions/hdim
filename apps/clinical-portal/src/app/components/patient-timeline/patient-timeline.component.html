@@ -1,0 +1,177 @@
+<div class="patient-timeline-container">
+  <!-- Header with Filters -->
+  <mat-card class="timeline-header">
+    <mat-card-content>
+      <div class="header-row">
+        <div class="header-title">
+          <mat-icon aria-hidden="true">timeline</mat-icon>
+          <h2>Patient Timeline</h2>
+          <span class="event-count">{{ filteredEvents().length }} events</span>
+        </div>
+
+        <div class="header-actions">
+          <button
+            mat-stroked-button
+            (click)="toggleSortOrder()"
+            [attr.aria-label]="'Sort ' + (sortOrder() === 'newest' ? 'oldest first' : 'newest first')">
+            <mat-icon>{{ sortOrder() === 'newest' ? 'arrow_downward' : 'arrow_upward' }}</mat-icon>
+            {{ sortOrder() === 'newest' ? 'Newest First' : 'Oldest First' }}
+          </button>
+
+          @if (getActiveFilterCount() > 0) {
+            <button
+              mat-stroked-button
+              color="warn"
+              (click)="clearFilters()"
+              aria-label="Clear all filters">
+              <mat-icon>clear</mat-icon>
+              Clear Filters ({{ getActiveFilterCount() }})
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Filters Row -->
+      <div class="filters-row">
+        <!-- Event Type Filters -->
+        <div class="event-type-filters">
+          <span class="filter-label">Event Types:</span>
+          @for (type of ['ENCOUNTER', 'OBSERVATION', 'MEDICATION', 'PROCEDURE', 'CARE_GAP']; track type) {
+            <mat-checkbox
+              [checked]="eventTypeFilters()[type]"
+              (change)="toggleEventType(type)"
+              [attr.aria-label]="'Show ' + getEventTypeLabel(type)">
+              {{ getEventTypeLabel(type) }}
+            </mat-checkbox>
+          }
+        </div>
+
+        <!-- Search Filter -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Search events</mat-label>
+          <input
+            matInput
+            [(ngModel)]="searchKeyword"
+            (ngModelChange)="onSearchChange($event)"
+            placeholder="Search title or description"
+            aria-label="Search timeline events" />
+          <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+        </mat-form-field>
+
+        <!-- Date Range Filters -->
+        <mat-form-field appearance="outline" class="date-field">
+          <mat-label>Start Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="startPicker"
+            [(ngModel)]="startDate"
+            (ngModelChange)="onDateRangeChange()"
+            aria-label="Filter events from date" />
+          <mat-datepicker-toggle matIconSuffix [for]="startPicker"></mat-datepicker-toggle>
+          <mat-datepicker #startPicker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="date-field">
+          <mat-label>End Date</mat-label>
+          <input
+            matInput
+            [matDatepicker]="endPicker"
+            [(ngModel)]="endDate"
+            (ngModelChange)="onDateRangeChange()"
+            aria-label="Filter events until date" />
+          <mat-datepicker-toggle matIconSuffix [for]="endPicker"></mat-datepicker-toggle>
+          <mat-datepicker #endPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Timeline Content -->
+  <div class="timeline-content">
+    @if (loading()) {
+      <!-- Loading State -->
+      <mat-card class="loading-state">
+        <mat-card-content>
+          <mat-icon aria-hidden="true">hourglass_empty</mat-icon>
+          <p>Loading timeline events...</p>
+        </mat-card-content>
+      </mat-card>
+    } @else if (loadError()) {
+      <!-- Error State -->
+      <mat-card class="error-state">
+        <mat-card-content>
+          <mat-icon color="warn" aria-hidden="true">error</mat-icon>
+          <p>{{ loadError() }}</p>
+        </mat-card-content>
+      </mat-card>
+    } @else if (filteredEvents().length === 0) {
+      <!-- No Events State -->
+      <mat-card class="no-events-state">
+        <mat-card-content>
+          <mat-icon aria-hidden="true">event_note</mat-icon>
+          <p>No timeline events found</p>
+          @if (getActiveFilterCount() > 0) {
+            <button mat-raised-button color="primary" (click)="clearFilters()">
+              Clear Filters
+            </button>
+          }
+        </mat-card-content>
+      </mat-card>
+    } @else {
+      <!-- Timeline Events -->
+      <div class="timeline-track" role="list" aria-label="Patient timeline events">
+        @for (event of filteredEvents(); track event.id) {
+          <div
+            class="timeline-event"
+            [class.expanded]="isEventExpanded(event.id)"
+            role="listitem">
+            <div class="event-marker" [style.background-color]="event.color">
+              <mat-icon [attr.aria-label]="event.type">{{ event.icon }}</mat-icon>
+            </div>
+
+            <mat-card class="event-card">
+              <mat-card-header (click)="toggleEventDetails(event.id)" class="event-header">
+                <div class="event-header-content">
+                  <div class="event-title-row">
+                    <h3>{{ event.title }}</h3>
+                    <span class="event-type-badge" [style.color]="event.color">
+                      {{ getEventTypeLabel(event.type) }}
+                    </span>
+                  </div>
+                  <p class="event-description">{{ event.description }}</p>
+                  <span class="event-timestamp">
+                    <mat-icon aria-hidden="true">schedule</mat-icon>
+                    {{ formatTimestamp(event.timestamp) }}
+                  </span>
+                </div>
+
+                <button
+                  mat-icon-button
+                  class="expand-button"
+                  [attr.aria-label]="isEventExpanded(event.id) ? 'Collapse event details' : 'Expand event details'"
+                  [attr.aria-expanded]="isEventExpanded(event.id)">
+                  <mat-icon>
+                    {{ isEventExpanded(event.id) ? 'expand_less' : 'expand_more' }}
+                  </mat-icon>
+                </button>
+              </mat-card-header>
+
+              @if (isEventExpanded(event.id) && event.details) {
+                <mat-card-content class="event-details">
+                  <div class="details-grid">
+                    @for (detail of event.details | keyvalue; track detail.key) {
+                      <div class="detail-item">
+                        <span class="detail-label">{{ detail.key }}:</span>
+                        <span class="detail-value">{{ detail.value }}</span>
+                      </div>
+                    }
+                  </div>
+                </mat-card-content>
+              }
+            </mat-card>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

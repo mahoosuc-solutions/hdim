@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0004-fix-due-date-column-type" author="hdim-platform-team">
+        <comment>Fix due_date column type from DATE to TIMESTAMP WITH TIME ZONE to match WorkflowProjection entity</comment>
+
+        <!-- Change due_date from DATE to TIMESTAMP WITH TIME ZONE -->
+        <modifyDataType tableName="workflow_projections"
+                        columnName="due_date"
+                        newDataType="TIMESTAMP WITH TIME ZONE"/>
+
+        <rollback>
+            <modifyDataType tableName="workflow_projections"
+                            columnName="due_date"
+                            newDataType="DATE"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -56,6 +56,7 @@ public class CareGapReportService {
                 (double) closedGaps.size() / allGaps.size() * 100;
 
         return new CareGapSummary(
+                patientId,
                 allGaps.size(),
                 openGaps.size(),
                 closedGaps.size(),
@@ -227,6 +228,7 @@ public class CareGapReportService {
      * Care gap summary for a patient
      */
     public record CareGapSummary(
+            UUID patientId,
             int totalGaps,
             int openGaps,
             int closedGaps,

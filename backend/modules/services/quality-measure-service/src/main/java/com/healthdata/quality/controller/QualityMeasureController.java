@@ -29,12 +29,38 @@ import java.util.UUID;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * Quality Measure Controller - REST API for HEDIS quality measures
- * Endpoints: /quality-measure/calculate, /quality-measure/results, /quality-measure/score, etc.
+ * Endpoints (context path /quality-measure): /calculate, /results, /score, etc.
  */
+@Tag(
+    name = "Quality Measure Evaluation",
+    description = """
+        APIs for HEDIS/CMS quality measure calculation, evaluation, and reporting.
+
+        Provides comprehensive quality measure functionality:
+        - Individual measure calculation (CQL-based)
+        - Batch population-level evaluation jobs
+        - Quality score calculation and aggregation
+        - Patient and population quality reports
+        - Saved report management
+        - CSV/Excel export capabilities
+
+        All endpoints require JWT authentication and X-Tenant-ID header.
+        Measure calculations use CQL (Clinical Quality Language) evaluation engine.
+        """
+)
 @RestController
-@RequestMapping("/quality-measure")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
@@ -45,14 +71,29 @@ public class QualityMeasureController {
     private final QualityReportService reportService;
     private final ReportExportService exportService;
 
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Operation(
+        summary = "Calculate quality measure for patient",
+        description = """
+            Evaluates a specific HEDIS/CMS quality measure for a patient using CQL.
+
+            Returns numerator, denominator, and exclusion status.
+            Use for single measure calculation, care gap identification, and quality reporting.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Measure calculated successfully", content = @Content(mediaType = "application/json")),
+        @ApiResponse(responseCode = "404", description = "Patient or measure not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied")
+    })
+    @PreAuthorize("hasPermission('MEASURE_EXECUTE')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityMeasureResultDTO> calculateMeasure(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
-            @RequestParam("measure") @NotBlank(message = "Measure ID is required") String measureId,
-            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Patient ID (UUID)", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
+            @Parameter(description = "Measure ID (e.g., COL, BCS, CDC)", required = true, example = "COL") @RequestParam("measure") @NotBlank(message = "Measure ID is required") String measureId,
+            @Parameter(description = "User performing calculation", example = "dr.smith") @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
         log.info("POST /quality-measure/calculate - patient: {}, measure: {}", patientId, measureId);
         QualityMeasureResultEntity result = calculationService.calculateMeasure(tenantId, patientId, measureId, createdBy);
@@ -60,14 +101,16 @@ public class QualityMeasureController {
         return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @Operation(summary = "Get quality measure results", description = "Retrieves measure results for a patient or all results (paginated).\n\nUse for measure history, quality reporting, and compliance tracking.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Results retrieved", content = @Content(mediaType = "application/json"))})
+    @PreAuthorize("hasPermission('MEASURE_READ')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/results", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<QualityMeasureResultDTO>> getPatientResults(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam(value = "patient", required = false) UUID patientId,
-            @RequestParam(value = "page", required = false, defaultValue = "0") @PositiveOrZero Integer page,
-            @RequestParam(value = "size", required = false, defaultValue = "20") @PositiveOrZero Integer size
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Patient ID (optional for all results)", example = "550e8400-e29b-41d4-a716-446655440000") @RequestParam(value = "patient", required = false) UUID patientId,
+            @Parameter(description = "Page number", example = "0") @RequestParam(value = "page", required = false, defaultValue = "0") @PositiveOrZero Integer page,
+            @Parameter(description = "Page size", example = "20") @RequestParam(value = "size", required = false, defaultValue = "20") @PositiveOrZero Integer size
     ) {
         if (patientId != null) {
             log.info("GET /quality-measure/results - patient: {}", patientId);
@@ -82,34 +125,37 @@ public class QualityMeasureController {
         }
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @Operation(summary = "Get patient quality score", description = "Returns aggregated quality score across all measures.\n\nUse for patient dashboards, Stars rating, and overall quality assessment.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Quality score retrieved", content = @Content(mediaType = "application/json"))})
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/score", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MeasureCalculationService.QualityScore> getQualityScore(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Patient ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId
     ) {
         log.info("GET /quality-measure/score - patient: {}", patientId);
         return ResponseEntity.ok(calculationService.getQualityScore(tenantId, patientId));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @Operation(summary = "Get patient quality report", description = "Returns comprehensive quality report with all measure results.\n\nUse for patient quality summaries and clinical review.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Report retrieved", content = @Content(mediaType = "application/json"))})
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/report/patient", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.QualityReport> getPatientQualityReport(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Patient ID", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId
     ) {
         log.info("GET /quality-measure/report/patient - patient: {}", patientId);
         return ResponseEntity.ok(reportService.getPatientQualityReport(tenantId, patientId));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @Operation(summary = "Get population quality report", description = "Returns population-level quality report for HEDIS/Stars reporting.\n\nUse for ACO quality submissions and value-based care contracts.", security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({@ApiResponse(responseCode = "200", description = "Population report retrieved", content = @Content(mediaType = "application/json"))})
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/report/population", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<QualityReportService.PopulationQualityReport> getPopulationQualityReport(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam(value = "year", required = false) Integer year
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Reporting year (optional)", example = "2024") @RequestParam(value = "year", required = false) Integer year
     ) {
         // Validate year is positive if provided
         if (year != null && year <= 0) {
@@ -120,8 +166,7 @@ public class QualityMeasureController {
         return ResponseEntity.ok(reportService.getPopulationQualityReport(tenantId, reportYear));
     }
 
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {
         return ResponseEntity.ok(Map.of("status", "UP", "service", "quality-measure-service", "timestamp", LocalDate.now().toString()));
@@ -189,8 +234,7 @@ public class QualityMeasureController {
      * @param jobId Job ID
      * @return Job status details including progress, counts, and errors
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getJobStatus(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -260,8 +304,7 @@ public class QualityMeasureController {
      * @param tenantId Tenant ID
      * @return List of all jobs (active and completed) for the tenant
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, Object>>> getAllJobs(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId
@@ -348,8 +391,7 @@ public class QualityMeasureController {
     /**
      * Export batch calculation results to CSV
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}/export/csv", produces = "text/csv")
     public ResponseEntity<String> exportJobResultsToCsv(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -444,8 +486,7 @@ public class QualityMeasureController {
     /**
      * Get all saved reports for a tenant (optionally filtered by type)
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<SavedReportEntity>> getSavedReports(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -464,8 +505,7 @@ public class QualityMeasureController {
     /**
      * Get a saved report by ID
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> getSavedReport(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -516,8 +556,7 @@ public class QualityMeasureController {
     /**
      * Export report to CSV
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportReportToCsv(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
@@ -554,8 +593,7 @@ public class QualityMeasureController {
     /**
      * Export report to Excel
      */
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
-    @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
+    @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/excel")
     public ResponseEntity<byte[]> exportReportToExcel(
             @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,

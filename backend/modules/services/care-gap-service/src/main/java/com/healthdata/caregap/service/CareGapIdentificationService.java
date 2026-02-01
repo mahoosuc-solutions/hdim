@@ -40,6 +40,7 @@ public class CareGapIdentificationService {
     private final PatientServiceClient patientServiceClient;
     private final CqlEngineServiceClient cqlEngineServiceClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final CareGapAuditIntegration careGapAuditIntegration;
     private final FhirContext fhirContext = FhirContext.forR4();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -122,6 +123,20 @@ public class CareGapIdentificationService {
             gaps.add(saved);
 
             log.info("Created care gap: {} for measure: {}", saved.getId(), libraryName);
+
+            // Publish audit event for AI-driven care gap identification
+            if (saved.getId() != null) {
+                careGapAuditIntegration.publishCareGapIdentificationEvent(
+                        tenantId,
+                        patientId.toString(),
+                        libraryName,
+                        saved.getId().toString(),
+                        cqlResult,
+                        createdBy
+                );
+            } else {
+                log.warn("Skipping care gap audit event for measure {} because saved gap ID is null", libraryName);
+            }
         }
 
         return gaps;
@@ -203,6 +218,19 @@ public class CareGapIdentificationService {
         // Publish gap closure event
         publishGapClosureEvent(tenantId, gapId.toString(), closedBy);
 
+        // Publish audit event for care gap closure
+        if (gap.getPatientId() != null && gap.getMeasureId() != null) {
+            careGapAuditIntegration.publishCareGapClosureEvent(
+                    tenantId,
+                    gap.getPatientId().toString(),
+                    gap.getMeasureId(),
+                    gapId.toString(),
+                    closedBy,
+                    closureReason,
+                    closureAction
+            );
+        }
+
         return saved;
     }
 
@@ -228,6 +256,226 @@ public class CareGapIdentificationService {
     public List<CareGapEntity> getHighPriorityCareGaps(String tenantId, UUID patientId) {
         return careGapRepository.findHighPriorityOpenGaps(tenantId, patientId);
     }
+
+    // ==================== Bulk Operations (Issue #241) ====================
+
+    /**
+     * Bulk close multiple care gaps
+     *
+     * Issue #241: Care Gap Bulk Actions
+     * Processes multiple gap closures in a single operation, tracking success/failure for each gap.
+     *
+     * @param tenantId Tenant ID
+     * @param request Bulk closure request with gap IDs, reason, and notes
+     * @return Bulk operation response with success/failure counts and error details
+     */
+    @Transactional
+    public com.healthdata.caregap.dto.BulkOperationResponse bulkCloseCareGaps(
+            String tenantId,
+            com.healthdata.caregap.dto.BulkClosureRequest request
+    ) {
+        long startTime = System.currentTimeMillis();
+        log.info("Bulk closing {} care gaps for tenant: {}", request.getGapIds().size(), tenantId);
+
+        List<String> successfulGapIds = new ArrayList<>();
+        List<com.healthdata.caregap.dto.BulkOperationError> errors = new ArrayList<>();
+
+        for (String gapIdStr : request.getGapIds()) {
+            try {
+                UUID gapId = UUID.fromString(gapIdStr);
+
+                // Close the gap using existing method
+                closeCareGap(
+                    tenantId,
+                    gapId,
+                    request.getClosedBy(),
+                    request.getClosureReason(),
+                    request.getClosureAction() != null ? request.getClosureAction() : request.getNotes()
+                );
+
+                successfulGapIds.add(gapIdStr);
+                log.debug("Successfully closed gap: {}", gapIdStr);
+
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid gap ID format: {}", gapIdStr, e);
+                errors.add(com.healthdata.caregap.dto.BulkOperationError.builder()
+                        .gapId(gapIdStr)
+                        .errorMessage("Invalid gap ID format")
+                        .errorCode("INVALID_GAP_ID")
+                        .details(e.getMessage())
+                        .build());
+
+            } catch (RuntimeException e) {
+                log.error("Failed to close gap: {}", gapIdStr, e);
+                errors.add(com.healthdata.caregap.dto.BulkOperationError.builder()
+                        .gapId(gapIdStr)
+                        .errorMessage(e.getMessage())
+                        .errorCode("CLOSURE_FAILED")
+                        .details(e.getClass().getSimpleName())
+                        .build());
+
+            } catch (Exception e) {
+                log.error("Unexpected error closing gap: {}", gapIdStr, e);
+                errors.add(com.healthdata.caregap.dto.BulkOperationError.builder()
+                        .gapId(gapIdStr)
+                        .errorMessage("Unexpected error occurred")
+                        .errorCode("INTERNAL_ERROR")
+                        .details(e.getMessage())
+                        .build());
+            }
+        }
+
+        long processingTime = System.currentTimeMillis() - startTime;
+
+        log.info("Bulk close completed: {} successful, {} failed, {}ms",
+                successfulGapIds.size(), errors.size(), processingTime);
+
+        // Publish bulk closure event
+        publishBulkClosureEvent(tenantId, successfulGapIds.size(), errors.size());
+
+        return com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                .totalRequested(request.getGapIds().size())
+                .successCount(successfulGapIds.size())
+                .failureCount(errors.size())
+                .successfulGapIds(successfulGapIds)
+                .errors(errors)
+                .processingTimeMs(processingTime)
+                .message(String.format("Closed %d of %d care gaps",
+                        successfulGapIds.size(), request.getGapIds().size()))
+                .build();
+    }
+
+    /**
+     * Bulk assign intervention to multiple care gaps
+     *
+     * Issue #241: Care Gap Bulk Actions
+     *
+     * @param tenantId Tenant ID
+     * @param request Bulk intervention request
+     * @return Bulk operation response
+     */
+    @Transactional
+    public com.healthdata.caregap.dto.BulkOperationResponse bulkAssignIntervention(
+            String tenantId,
+            com.healthdata.caregap.dto.BulkInterventionRequest request
+    ) {
+        long startTime = System.currentTimeMillis();
+        log.info("Bulk assigning intervention to {} care gaps", request.getGapIds().size());
+
+        List<String> successfulGapIds = new ArrayList<>();
+        List<com.healthdata.caregap.dto.BulkOperationError> errors = new ArrayList<>();
+
+        for (String gapIdStr : request.getGapIds()) {
+            try {
+                UUID gapId = UUID.fromString(gapIdStr);
+
+                CareGapEntity gap = careGapRepository.findByIdAndTenantId(gapId, tenantId)
+                        .orElseThrow(() -> new RuntimeException("Care gap not found: " + gapId));
+
+                // Update gap with intervention information
+                gap.setRecommendation(request.getDescription());
+                gap.setRecommendationType(request.getInterventionType());
+                gap.setRecommendedAction(request.getDescription());
+                gap.setUpdatedBy(request.getAssignedTo() != null ?
+                        request.getAssignedTo() : "system");
+
+                careGapRepository.save(gap);
+                successfulGapIds.add(gapIdStr);
+
+                log.debug("Successfully assigned intervention to gap: {}", gapIdStr);
+
+            } catch (Exception e) {
+                log.error("Failed to assign intervention to gap: {}", gapIdStr, e);
+                errors.add(com.healthdata.caregap.dto.BulkOperationError.builder()
+                        .gapId(gapIdStr)
+                        .errorMessage(e.getMessage())
+                        .errorCode("INTERVENTION_ASSIGNMENT_FAILED")
+                        .build());
+            }
+        }
+
+        long processingTime = System.currentTimeMillis() - startTime;
+
+        log.info("Bulk intervention assignment completed: {} successful, {} failed",
+                successfulGapIds.size(), errors.size());
+
+        return com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                .totalRequested(request.getGapIds().size())
+                .successCount(successfulGapIds.size())
+                .failureCount(errors.size())
+                .successfulGapIds(successfulGapIds)
+                .errors(errors)
+                .processingTimeMs(processingTime)
+                .message(String.format("Assigned intervention to %d of %d care gaps",
+                        successfulGapIds.size(), request.getGapIds().size()))
+                .build();
+    }
+
+    /**
+     * Bulk update priority for multiple care gaps
+     *
+     * Issue #241: Care Gap Bulk Actions
+     *
+     * @param tenantId Tenant ID
+     * @param request Bulk priority update request
+     * @return Bulk operation response
+     */
+    @Transactional
+    public com.healthdata.caregap.dto.BulkOperationResponse bulkUpdatePriority(
+            String tenantId,
+            com.healthdata.caregap.dto.BulkPriorityUpdateRequest request
+    ) {
+        long startTime = System.currentTimeMillis();
+        log.info("Bulk updating priority to {} for {} care gaps",
+                request.getPriority(), request.getGapIds().size());
+
+        List<String> successfulGapIds = new ArrayList<>();
+        List<com.healthdata.caregap.dto.BulkOperationError> errors = new ArrayList<>();
+
+        for (String gapIdStr : request.getGapIds()) {
+            try {
+                UUID gapId = UUID.fromString(gapIdStr);
+
+                CareGapEntity gap = careGapRepository.findByIdAndTenantId(gapId, tenantId)
+                        .orElseThrow(() -> new RuntimeException("Care gap not found: " + gapId));
+
+                // Update gap priority
+                gap.setPriority(request.getPriority());
+                gap.setUpdatedBy("system"); // Could be parameterized if needed
+
+                careGapRepository.save(gap);
+                successfulGapIds.add(gapIdStr);
+
+                log.debug("Successfully updated priority for gap: {}", gapIdStr);
+
+            } catch (Exception e) {
+                log.error("Failed to update priority for gap: {}", gapIdStr, e);
+                errors.add(com.healthdata.caregap.dto.BulkOperationError.builder()
+                        .gapId(gapIdStr)
+                        .errorMessage(e.getMessage())
+                        .errorCode("PRIORITY_UPDATE_FAILED")
+                        .build());
+            }
+        }
+
+        long processingTime = System.currentTimeMillis() - startTime;
+
+        log.info("Bulk priority update completed: {} successful, {} failed",
+                successfulGapIds.size(), errors.size());
+
+        return com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                .totalRequested(request.getGapIds().size())
+                .successCount(successfulGapIds.size())
+                .failureCount(errors.size())
+                .successfulGapIds(successfulGapIds)
+                .errors(errors)
+                .processingTimeMs(processingTime)
+                .message(String.format("Updated priority for %d of %d care gaps",
+                        successfulGapIds.size(), request.getGapIds().size()))
+                .build();
+    }
+
+    // ==================== Statistics Methods ====================
 
     /**
      * Get care gap statistics for a patient
@@ -436,6 +684,16 @@ public class CareGapIdentificationService {
             kafkaTemplate.send("care-gap-closed", event);
         } catch (Exception e) {
             log.error("Error publishing gap closure event: {}", e.getMessage());
+        }
+    }
+
+    private void publishBulkClosureEvent(String tenantId, int successCount, int failureCount) {
+        try {
+            String event = String.format("{\"tenantId\":\"%s\",\"successCount\":%d,\"failureCount\":%d,\"timestamp\":\"%s\"}",
+                    tenantId, successCount, failureCount, LocalDate.now());
+            kafkaTemplate.send("care-gap-bulk-closed", event);
+        } catch (Exception e) {
+            log.error("Error publishing bulk closure event: {}", e.getMessage());
         }
     }
 

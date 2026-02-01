@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0014-seed-essential-value-sets" author="healthdata-system">
+        <comment>
+            Seed essential LOINC, SNOMED, ICD-10, CPT, and RxNorm value sets required for HEDIS measure evaluation.
+
+            This migration seeds the most critical code systems needed by the 56 HEDIS measures:
+            - Mammography codes (BCS measure)
+            - Blood pressure codes (CBP measure)
+            - HbA1c codes (CDC diabetes measure)
+            - Colorectal screening codes (COL measure)
+            - Hypertension diagnosis codes (CBP measure)
+            - Common procedures and medications
+
+            Uses acme-health as default demo tenant. For production, create additional
+            value sets for each tenant as needed.
+        </comment>
+
+        <!-- Value Set 1: Mammography Procedures (BCS - Breast Cancer Screening) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1018"/>
+            <column name="name" value="Mammography Procedures"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["24606-6", "24604-1", "37768-7", "37551-7", "42174-9"]'/>
+            <column name="description" value="LOINC codes for mammography studies used in breast cancer screening"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 2: Mammography Procedures (SNOMED) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1019"/>
+            <column name="name" value="Mammography Procedures (SNOMED)"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="SNOMED"/>
+            <column name="codes" value='["71651007", "24623002", "241055006", "439324009", "566571000119105"]'/>
+            <column name="description" value="SNOMED codes for mammography procedures"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 3: Mammography CPT Codes -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1020"/>
+            <column name="name" value="Mammography CPT Codes"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="CPT"/>
+            <column name="codes" value='["77067", "77063", "77065", "77066", "77061", "77062"]'/>
+            <column name="description" value="CPT codes for screening and diagnostic mammography"/>
+            <column name="publisher" value="AMA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 4: Blood Pressure (LOINC) for CBP -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.111.12.1001"/>
+            <column name="name" value="Blood Pressure"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["85354-9", "8480-6", "8462-4", "8478-0", "96607-7", "96608-5"]'/>
+            <column name="description" value="LOINC codes for blood pressure measurements (systolic/diastolic)"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 5: Hypertension Diagnosis (SNOMED) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.104.12.1011"/>
+            <column name="name" value="Hypertension"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="SNOMED"/>
+            <column name="codes" value='["38341003", "59621000", "56218007", "10725009", "23130000", "428575007"]'/>
+            <column name="description" value="SNOMED codes for hypertension diagnosis"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 6: Hypertension (ICD-10) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.104.12.1012"/>
+            <column name="name" value="Hypertension ICD-10"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="ICD10CM"/>
+            <column name="codes" value='["I10", "I11.0", "I11.9", "I12.0", "I12.9", "I13.0", "I13.10", "I13.11", "I15.0", "I15.1", "I15.2", "I15.8", "I15.9"]'/>
+            <column name="description" value="ICD-10-CM codes for essential hypertension and secondary hypertension"/>
+            <column name="publisher" value="CMS"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 7: HbA1c Laboratory Tests (CDC - Diabetes) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.198.12.1013"/>
+            <column name="name" value="HbA1c Laboratory Test"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["4548-4", "17856-6", "71875-9", "59261-8", "62388-4", "17855-8"]'/>
+            <column name="description" value="LOINC codes for Hemoglobin A1c laboratory tests"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 8: Diabetes Diagnosis (ICD-10) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.103.12.1001"/>
+            <column name="name" value="Diabetes"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="ICD10CM"/>
+            <column name="codes" value='["E10.9", "E11.9", "E10.65", "E11.65", "E10.21", "E11.21", "E10.22", "E11.22", "E10.29", "E11.29", "E10.8", "E11.8"]'/>
+            <column name="description" value="ICD-10-CM codes for Type 1 and Type 2 diabetes mellitus"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 9: Diabetes Diagnosis (SNOMED) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.103.12.1002"/>
+            <column name="name" value="Diabetes SNOMED"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="SNOMED"/>
+            <column name="codes" value='["73211009", "44054006", "46635009", "51002006", "26298008", "199223000"]'/>
+            <column name="description" value="SNOMED codes for diabetes mellitus"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 10: Colorectal Cancer Screening - Colonoscopy -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1022"/>
+            <column name="name" value="Colonoscopy"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="SNOMED"/>
+            <column name="codes" value='["73761001", "12350003", "446521004", "174158000", "310634005"]'/>
+            <column name="description" value="SNOMED codes for colonoscopy procedures"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 11: Colorectal Screening - Colonoscopy CPT -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1021"/>
+            <column name="name" value="Colonoscopy CPT"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="CPT"/>
+            <column name="codes" value='["44388", "44389", "44392", "44394", "45355", "45378", "45380", "45384", "45385"]'/>
+            <column name="description" value="CPT codes for colonoscopy screening and diagnostic procedures"/>
+            <column name="publisher" value="AMA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 12: Fecal Occult Blood Test (FOBT) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.198.12.1011"/>
+            <column name="name" value="Fecal Occult Blood Test"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["2335-8", "27396-1", "27401-9", "27925-7", "27926-5", "29771-3", "57905-2", "58453-2"]'/>
+            <column name="description" value="LOINC codes for fecal occult blood tests (FOBT)"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 13: Cervical Cancer Screening - Pap Test (LOINC) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.108.12.1017"/>
+            <column name="name" value="Pap Test"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["10524-7", "18500-9", "19762-4", "19764-0", "19765-7", "19766-5", "19774-9", "33717-0", "47527-7", "47528-5"]'/>
+            <column name="description" value="LOINC codes for cervical cytology (Pap test)"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 14: Cervical Cancer Screening - HPV Test -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.110.12.1059"/>
+            <column name="name" value="HPV Test"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["21440-3", "30167-1", "38372-9", "49896-4", "59263-4", "59264-2", "69002-4", "71431-1", "75694-0", "77379-6", "77399-4", "77400-0"]'/>
+            <column name="description" value="LOINC codes for HPV (human papillomavirus) testing"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 15: LDL Cholesterol (CDC - Diabetes) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.198.12.1050"/>
+            <column name="name" value="LDL-C Laboratory Test"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["2089-1", "13457-7", "18261-8", "18262-6", "39469-2", "49132-4", "55440-2"]'/>
+            <column name="description" value="LOINC codes for LDL cholesterol measurements"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 16: Statin Medications (RxNorm) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.196.12.1068"/>
+            <column name="name" value="Statin Medications"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="RXNORM"/>
+            <column name="codes" value='["36567", "41127", "83367", "42463", "617312", "259255", "301542", "6472", "861634", "1545149"]'/>
+            <column name="description" value="RxNorm codes for statin medications (atorvastatin, simvastatin, rosuvastatin, etc.)"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 17: ACE Inhibitors/ARBs (RxNorm) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.196.12.1516"/>
+            <column name="name" value="ACE Inhibitors and ARBs"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="RXNORM"/>
+            <column name="codes" value='["1998", "3827", "18867", "29046", "35296", "35296", "52175", "69749", "83818", "83818", "214354", "349199"]'/>
+            <column name="description" value="RxNorm codes for ACE inhibitors and ARBs (lisinopril, losartan, etc.)"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 18: Metformin (RxNorm) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.196.12.1456"/>
+            <column name="name" value="Metformin"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="RXNORM"/>
+            <column name="codes" value='["6809", "861004", "861006", "861007", "861009", "861010", "861013", "861014", "861016", "861017"]'/>
+            <column name="description" value="RxNorm codes for metformin (oral diabetes medication)"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 19: BMI (Body Mass Index) -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.121.12.1012"/>
+            <column name="name" value="BMI"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="LOINC"/>
+            <column name="codes" value='["39156-5", "59574-4", "89270-3"]'/>
+            <column name="description" value="LOINC codes for body mass index measurements"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <!-- Value Set 20: Eye Exam for Diabetes -->
+        <insert tableName="value_sets">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="acme-health"/>
+            <column name="oid" value="2.16.840.1.113883.3.464.1003.115.12.1088"/>
+            <column name="name" value="Diabetic Retinal Exam"/>
+            <column name="version" value="2024"/>
+            <column name="code_system" value="CPT"/>
+            <column name="codes" value='["67028", "67030", "67031", "67036", "67039", "67040", "67041", "67042", "67043", "92002", "92004", "92012", "92014", "92227", "92228", "92250"]'/>
+            <column name="description" value="CPT codes for diabetic retinal screening exams"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="active" valueBoolean="true"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="value_sets">
+                <where>tenant_id = 'acme-health' AND oid LIKE '2.16.840.1.113883.3.464%'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

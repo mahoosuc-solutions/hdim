@@ -17,6 +17,22 @@
 7. [Security Architecture](#security-architecture)
 8. [Technology Decisions](#technology-decisions)
 
+## Flow Documentation
+
+For detailed round-trip flow diagrams showing complete workflows from button press through data processing:
+
+- **[Platform Flow Overview](./PLATFORM_FLOW_OVERVIEW.md)**: High-level flow architecture, patterns, and component interactions
+- **[Round-Trip Flows](./ROUND_TRIP_FLOWS.md)**: Complete sequence diagrams for:
+  - Evaluation Flow (CQL + FHIR)
+  - Patient Search Flow
+  - Care Gap Detection Flow
+  - Quality Measure Calculation Flow
+  - Batch Evaluation Flow
+  - Data Flow Visualization Flow
+  - Authentication & Authorization Flow
+  - Event Processing Flow (Kafka)
+  - FHIR Resource Retrieval Flow
+
 ---
 
 ## Overview

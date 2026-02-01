@@ -1,0 +1,229 @@
+package com.healthdata.authentication.monitoring;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+
+/**
+ * Metrics collector for rate limiting operations.
+ * Exposes metrics to Prometheus for monitoring and alerting.
+ *
+ * METRICS EXPOSED:
+ * - rate_limit_requests_total{endpoint, result} - Total requests processed (allowed/blocked)
+ * - rate_limit_blocks_total{endpoint, ip} - Total times an IP was blocked
+ * - rate_limit_redis_errors_total - Total Redis connection errors
+ * - rate_limit_fallback_total - Total times fell back to in-memory rate limiting
+ *
+ * USAGE:
+ * These metrics can be used to:
+ * - Monitor rate limiting effectiveness
+ * - Detect potential attacks (high block rate)
+ * - Alert on Redis failures
+ * - Track system health
+ */
+@Component
+@Slf4j
+@ConditionalOnProperty(prefix = "rate-limiting", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RateLimitMetrics {
+
+    private final MeterRegistry meterRegistry;
+
+    // Counters for tracking rate limiting events
+    private final Map<String, Counter> requestCounters = new ConcurrentHashMap<>();
+    private final Map<String, Counter> blockCounters = new ConcurrentHashMap<>();
+
+    // Counter for Redis errors
+    private final Counter redisErrorCounter;
+
+    // Counter for fallback to in-memory
+    private final Counter fallbackCounter;
+
+    // Gauge for tracking number of blocked IPs
+    private final AtomicLong blockedIPCount = new AtomicLong(0);
+
+    /**
+     * Constructor initializes all metrics.
+     *
+     * @param meterRegistry Micrometer meter registry (auto-injected by Spring)
+     */
+    public RateLimitMetrics(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+
+        // Initialize Redis error counter
+        this.redisErrorCounter = Counter.builder("rate_limit_redis_errors_total")
+                .description("Total number of Redis errors encountered during rate limiting")
+                .register(meterRegistry);
+
+        // Initialize fallback counter
+        this.fallbackCounter = Counter.builder("rate_limit_fallback_total")
+                .description("Total number of times fell back to in-memory rate limiting")
+                .register(meterRegistry);
+
+        // Initialize blocked IP count gauge
+        Gauge.builder("rate_limit_blocked_ips", blockedIPCount, AtomicLong::get)
+                .description("Current number of blocked IP addresses")
+                .register(meterRegistry);
+
+        log.info("Rate limit metrics initialized and registered with Prometheus");
+    }
+
+    /**
+     * Records a rate limit request (allowed or blocked).
+     *
+     * @param endpoint API endpoint
+     * @param allowed true if request was allowed, false if blocked
+     */
+    public void recordRequest(String endpoint, boolean allowed) {
+        String result = allowed ? "allowed" : "blocked";
+        String key = endpoint + ":" + result;
+
+        Counter counter = requestCounters.computeIfAbsent(key, k ->
+                Counter.builder("rate_limit_requests_total")
+                        .description("Total number of rate limit requests")
+                        .tag("endpoint", endpoint)
+                        .tag("result", result)
+                        .register(meterRegistry)
+        );
+
+        counter.increment();
+
+        log.debug("Recorded rate limit request: endpoint={}, result={}", endpoint, result);
+    }
+
+    /**
+     * Records that an IP was blocked by rate limiting.
+     *
+     * @param endpoint API endpoint
+     * @param ip Client IP address (anonymized for privacy if needed)
+     */
+    public void recordBlock(String endpoint, String ip) {
+        String key = endpoint + ":" + ip;
+
+        Counter counter = blockCounters.computeIfAbsent(key, k ->
+                Counter.builder("rate_limit_blocks_total")
+                        .description("Total number of times an IP was blocked")
+                        .tag("endpoint", endpoint)
+                        .tag("ip", anonymizeIP(ip))
+                        .register(meterRegistry)
+        );
+
+        counter.increment();
+
+        log.debug("Recorded rate limit block: endpoint={}, ip={}", endpoint, anonymizeIP(ip));
+    }
+
+    /**
+     * Records a Redis error.
+     * Used to monitor Redis availability and alert on issues.
+     */
+    public void recordRedisError() {
+        redisErrorCounter.increment();
+        log.warn("Recorded Redis error for rate limiting");
+    }
+
+    /**
+     * Records a fallback to in-memory rate limiting.
+     * Indicates Redis was unavailable and system fell back to local cache.
+     */
+    public void recordFallback() {
+        fallbackCounter.increment();
+        log.warn("Recorded fallback to in-memory rate limiting");
+    }
+
+    /**
+     * Updates the count of currently blocked IPs.
+     * Should be called periodically by a scheduler or stats service.
+     *
+     * @param count Current number of blocked IPs
+     */
+    public void updateBlockedIPCount(long count) {
+        blockedIPCount.set(count);
+        log.debug("Updated blocked IP count: {}", count);
+    }
+
+    /**
+     * Anonymizes IP address for privacy.
+     * Keeps first 3 octets for IPv4, replaces last octet with 'x'.
+     * Example: 192.168.1.100 becomes 192.168.1.x
+     *
+     * @param ip IP address to anonymize
+     * @return Anonymized IP address
+     */
+    private String anonymizeIP(String ip) {
+        if (ip == null || ip.isEmpty()) {
+            return "unknown";
+        }
+
+        // For IPv4, keep first 3 octets
+        String[] parts = ip.split("\\.");
+        if (parts.length == 4) {
+            return parts[0] + "." + parts[1] + "." + parts[2] + ".x";
+        }
+
+        // For IPv6 or other formats, just hash it
+        return "hashed-" + Math.abs(ip.hashCode() % 1000);
+    }
+
+    /**
+     * Gets total number of allowed requests.
+     *
+     * @return Total allowed requests
+     */
+    public double getTotalAllowedRequests() {
+        return requestCounters.entrySet().stream()
+                .filter(e -> e.getKey().endsWith(":allowed"))
+                .mapToDouble(e -> e.getValue().count())
+                .sum();
+    }
+
+    /**
+     * Gets total number of blocked requests.
+     *
+     * @return Total blocked requests
+     */
+    public double getTotalBlockedRequests() {
+        return requestCounters.entrySet().stream()
+                .filter(e -> e.getKey().endsWith(":blocked"))
+                .mapToDouble(e -> e.getValue().count())
+                .sum();
+    }
+
+    /**
+     * Gets total number of Redis errors.
+     *
+     * @return Total Redis errors
+     */
+    public double getTotalRedisErrors() {
+        return redisErrorCounter.count();
+    }
+
+    /**
+     * Gets total number of fallbacks to in-memory.
+     *
+     * @return Total fallbacks
+     */
+    public double getTotalFallbacks() {
+        return fallbackCounter.count();
+    }
+
+    /**
+     * Gets block rate (percentage of requests that were blocked).
+     *
+     * @return Block rate (0.0 to 1.0)
+     */
+    public double getBlockRate() {
+        double total = getTotalAllowedRequests() + getTotalBlockedRequests();
+        if (total == 0) {
+            return 0.0;
+        }
+        return getTotalBlockedRequests() / total;
+    }
+}

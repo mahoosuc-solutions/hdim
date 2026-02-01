@@ -38,6 +38,9 @@ dependencies {
     // Distributed Tracing (uses shared module for W3C + B3 context propagation)
     implementation(project(":modules:shared:infrastructure:tracing"))
 
+    // Kafka for distributed tracing and audit events (required by TracingAutoConfiguration)
+    implementation(libs.bundles.kafka)
+
     // HAPI FHIR Client (for FHIR resource parsing and integration)
     implementation(libs.bundles.hapi.fhir.client)
 
@@ -80,11 +83,13 @@ dependencyManagement {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
-    systemProperty("spring.datasource.username", "test")
-    systemProperty("spring.datasource.password", "test")
-    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    // Testcontainers system properties disabled - using running Docker PostgreSQL
+    // Configuration now managed in src/test/resources/application-test.yml
+    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:16-alpine:///testdb")
+    // systemProperty("spring.datasource.username", "test")
+    // systemProperty("spring.datasource.password", "test")
+    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
 }
 

@@ -425,7 +425,7 @@ phase_data_seeding() {
     chmod +x ./seed-demo-data.sh
 
     if ./seed-demo-data.sh --wait &> "$REPORT_DIR/seed_data.log"; then
-        test_pass "Seed demo data" "10 patients and 18 care gaps created"
+        test_pass "Seed demo data" "10 patients and 16 care gaps created"
     else
         test_fail "Seed demo data" "Data seeding failed. See $REPORT_DIR/seed_data.log"
     fi
@@ -485,6 +485,27 @@ phase_api_testing() {
         test_pass "Quality Measure endpoint" "Returned $measure_count HEDIS measures"
     else
         test_fail "Quality Measure endpoint" "Did not return valid measure array"
+    fi
+
+    # Test: demo.developer login + evaluation preset access via gateway
+    test_start "demo.developer gateway access (evaluation presets)"
+    auth_response=$(curl -sf "http://localhost:8080/api/v1/auth/login" \
+        -H "Content-Type: application/json" \
+        -d '{"username":"demo.developer","password":"demo123"}' 2>&1)
+    access_token=$(echo "$auth_response" | jq -r '.accessToken // empty' 2>/dev/null)
+
+    if [ -n "$access_token" ]; then
+        preset_status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "http://localhost:8080/quality-measure/evaluation-presets/default" \
+            -H "Authorization: Bearer $access_token" \
+            -H "X-Tenant-ID: acme-health")
+        if [ "$preset_status" = "200" ] || [ "$preset_status" = "404" ]; then
+            test_pass "demo.developer gateway access (evaluation presets)" "Preset endpoint reachable (status $preset_status)"
+        else
+            test_fail "demo.developer gateway access (evaluation presets)" "Unexpected status $preset_status"
+        fi
+    else
+        test_fail "demo.developer gateway access (evaluation presets)" "Login failed for demo.developer"
     fi
 }
 
@@ -734,7 +755,7 @@ EOF
         echo -e "Next steps:"
         echo -e "  1. Review report: cat $TEST_REPORT"
         echo -e "  2. Access demo: http://localhost:4200"
-        echo -e "  3. Login: demo_user / demo_password"
+        echo -e "  3. Login: demo_admin / demo123"
         return 0
     else
         echo -e "${RED}✗ Some tests failed. Review the report for details.${NC}"

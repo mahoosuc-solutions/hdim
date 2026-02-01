@@ -1,5 +1,6 @@
 package com.healthdata.approval.service;
 
+import com.healthdata.approval.audit.ApprovalAuditIntegration;
 import com.healthdata.approval.domain.entity.ApprovalHistory;
 import com.healthdata.approval.domain.entity.ApprovalHistory.HistoryAction;
 import com.healthdata.approval.domain.entity.ApprovalRequest;
@@ -36,6 +37,7 @@ public class ApprovalService {
     private final ApprovalNotificationService notificationService;
     private final WebhookCallbackService webhookCallbackService;
     private final ApprovalEventPublisher eventPublisher;
+    private final ApprovalAuditIntegration approvalAuditIntegration;
 
     @Value("${hdim.approval.default-timeout-hours:24}")
     private int defaultTimeoutHours;
@@ -80,6 +82,18 @@ public class ApprovalService {
 
         // Publish Kafka event for other services
         eventPublisher.publishCreated(request);
+
+        // Publish audit event
+        approvalAuditIntegration.publishApprovalRequestEvent(
+            dto.tenantId(),
+            request.getId(),
+            dto.requestType().name(),
+            dto.entityType(),
+            dto.entityId(),
+            dto.riskLevel().name(),
+            dto.confidenceScore().doubleValue(),
+            dto.requestedBy()
+        );
 
         log.info("Created approval request: id={}", request.getId());
         return request;
@@ -142,6 +156,19 @@ public class ApprovalService {
         // Publish Kafka event for Agent Runtime and other services
         eventPublisher.publishApproved(request, approvedBy);
 
+        // Publish audit event
+        approvalAuditIntegration.publishApprovalDecisionEvent(
+            tenantId,
+            requestId,
+            request.getEntityType(),
+            request.getEntityId(),
+            true, // approved
+            approvedBy,
+            reason,
+            Duration.between(request.getCreatedAt(), Instant.now()).toMillis(),
+            approvedBy
+        );
+
         log.info("Approved request {} by {}", requestId, approvedBy);
         return request;
     }
@@ -172,6 +199,19 @@ public class ApprovalService {
         // Publish Kafka event for Agent Runtime and other services
         eventPublisher.publishRejected(request, rejectedBy);
 
+        // Publish audit event
+        approvalAuditIntegration.publishApprovalDecisionEvent(
+            tenantId,
+            requestId,
+            request.getEntityType(),
+            request.getEntityId(),
+            false, // rejected
+            rejectedBy,
+            reason,
+            Duration.between(request.getCreatedAt(), Instant.now()).toMillis(),
+            rejectedBy
+        );
+
         log.info("Rejected request {} by {}", requestId, rejectedBy);
         return request;
     }
@@ -201,6 +241,17 @@ public class ApprovalService {
 
         // Publish Kafka event
         eventPublisher.publishEscalated(request, escalatedBy);
+
+        // Publish audit event
+        approvalAuditIntegration.publishApprovalEscalationEvent(
+            tenantId,
+            requestId,
+            request.getEntityType(),
+            request.getEntityId(),
+            reason,
+            escalatedTo,
+            escalatedBy
+        );
 
         log.info("Escalated request {} to {} by {}", requestId, escalatedTo, escalatedBy);
         return request;

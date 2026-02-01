@@ -59,7 +59,6 @@ export interface ParsedQuestionnaireItem {
   providedIn: 'root',
 })
 export class FhirQuestionnaireService extends CacheableService {
-  private log: ContextualLogger;
 
   // Questionnaire identifiers
   private readonly QUESTIONNAIRE_TYPES = {
@@ -76,7 +75,6 @@ export class FhirQuestionnaireService extends CacheableService {
     private logger: LoggerService
   ) {
     super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('FhirQuestionnaireService');
   }
 
   /**
@@ -94,7 +92,7 @@ export class FhirQuestionnaireService extends CacheableService {
    */
   getQuestionnaireResponses(
     patientId: string,
-    limit: number = 50
+    limit = 50
   ): Observable<FhirQuestionnaireResponse[]> {
     const cacheKey = `questionnaire:all:${patientId}:${limit}`;
     const cached = this.getCached<FhirQuestionnaireResponse[]>(cacheKey);
@@ -123,7 +121,7 @@ export class FhirQuestionnaireService extends CacheableService {
           return responses;
         }),
         catchError((error) => {
-          this.log.error('Error fetching questionnaire responses from FHIR:', error);
+          this.logger.error('Error fetching questionnaire responses from FHIR:', error);
           return of([]);
         })
       );

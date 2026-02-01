@@ -4,6 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { ValueSetPickerDialogComponent } from './value-set-picker-dialog.component';
 import { CqlEngineService } from '../../../services/cql-engine.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('ValueSetPickerDialogComponent', () => {
   let fixture: ComponentFixture<ValueSetPickerDialogComponent>;
@@ -24,11 +25,11 @@ describe('ValueSetPickerDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ValueSetPickerDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRef },
+      providers: [{ provide: MatDialogRef, useValue: dialogRef },
         {
           provide: MAT_DIALOG_DATA,
-          useValue: { measureId: 'm1', currentValueSets: [{ id: 'v2' }] },
+          useValue: { measureId: 'm1', currentValueSets: [{ id: 'v2' },
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }] },
         },
         { provide: CqlEngineService, useValue: cqlEngineService },
       ],

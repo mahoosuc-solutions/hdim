@@ -1,6 +1,9 @@
 package com.healthdata.demo.generator;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.demo.domain.model.SyntheticPatientTemplate;
 import net.datafaker.Faker;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
@@ -43,11 +46,27 @@ public class SyntheticPatientGenerator {
     private final FhirContext fhirContext;
     private final Faker faker;
     private final Random random;
+    private final MedicationGenerator medicationGenerator;
+    private final ObservationGenerator observationGenerator;
+    private final EncounterGenerator encounterGenerator;
+    private final ProcedureGenerator procedureGenerator;
+    private final ObjectMapper objectMapper;
 
-    public SyntheticPatientGenerator(FhirContext fhirContext) {
+    public SyntheticPatientGenerator(
+            FhirContext fhirContext,
+            MedicationGenerator medicationGenerator,
+            ObservationGenerator observationGenerator,
+            EncounterGenerator encounterGenerator,
+            ProcedureGenerator procedureGenerator,
+            ObjectMapper objectMapper) {
         this.fhirContext = fhirContext;
         this.faker = new Faker();
         this.random = new Random();
+        this.medicationGenerator = medicationGenerator;
+        this.observationGenerator = observationGenerator;
+        this.encounterGenerator = encounterGenerator;
+        this.procedureGenerator = procedureGenerator;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -93,9 +112,9 @@ public class SyntheticPatientGenerator {
      *
      * @param template Patient template/persona
      * @param tenantId Tenant context
-     * @return Bundlewith patient and related resources
+     * @return Bundle with patient and related resources
      */
-    public Bundle generateFromTemplate(PatientTemplate template, String tenantId) {
+    public Bundle generateFromTemplate(SyntheticPatientTemplate template, String tenantId) {
         logger.info("Generating patient from template: {}", template.getPersonaName());
 
         Bundle bundle = new Bundle();
@@ -108,6 +127,16 @@ public class SyntheticPatientGenerator {
         applyTemplateConditions(patient, template, bundle);
         applyTemplateMedications(patient, template, bundle);
         applyTemplateObservations(patient, template, bundle);
+        
+        // Generate encounters and procedures based on template
+        String riskCategory = template.getRiskCategory().name();
+        encounterGenerator.generateEncounters(patient, riskCategory, bundle);
+        
+        int age = template.getAge();
+        String gender = template.getGender().name();
+        List<String> conditionCodes = parseConditionCodes(template.getConditions());
+        boolean createCareGap = random.nextDouble() < 0.3; // 30% have gaps
+        procedureGenerator.generateProcedures(patient, age, gender, conditionCodes, createCareGap, bundle);
 
         return bundle;
     }
@@ -313,40 +342,206 @@ public class SyntheticPatientGenerator {
     }
 
     private void generateMedications(Patient patient, PatientGenerationContext context, Bundle bundle) {
-        // TODO: Generate medications based on conditions
-        // e.g., Metformin for diabetes, Lisinopril for hypertension, etc.
+        // Extract condition codes from bundle entries
+        List<String> conditionCodes = bundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Condition)
+            .map(e -> {
+                Condition condition = (Condition) e.getResource();
+                return condition.getCode().getCodingFirstRep().getCode();
+            })
+            .toList();
+
+        if (!conditionCodes.isEmpty()) {
+            medicationGenerator.generateMedications(patient, conditionCodes, bundle);
+        }
     }
 
     private void generateObservations(Patient patient, PatientGenerationContext context, Bundle bundle) {
-        // TODO: Generate vital signs, lab results
-        // e.g., A1C for diabetics, BP readings, BMI, etc.
+        // Extract condition codes from bundle entries
+        List<String> conditionCodes = bundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Condition)
+            .map(e -> {
+                Condition condition = (Condition) e.getResource();
+                return condition.getCode().getCodingFirstRep().getCode();
+            })
+            .toList();
+
+        // Convert risk category to string
+        String riskCategory = context.getRiskCategory().name();
+
+        observationGenerator.generateObservations(patient, conditionCodes, riskCategory, bundle);
     }
 
     private void generateEncounters(Patient patient, PatientGenerationContext context, Bundle bundle) {
-        // TODO: Generate encounter history
-        // e.g., Office visits, ER visits, hospitalizations
+        // Convert risk category to string
+        String riskCategory = context.getRiskCategory().name();
+        encounterGenerator.generateEncounters(patient, riskCategory, bundle);
     }
 
     private void generateProcedures(Patient patient, PatientGenerationContext context, Bundle bundle) {
-        // TODO: Generate procedures
-        // e.g., Mammograms, colonoscopies, etc.
+        // Calculate patient age
+        LocalDate birthDate = patient.getBirthDate().toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate();
+        int age = LocalDate.now().getYear() - birthDate.getYear();
+        if (LocalDate.now().getDayOfYear() < birthDate.getDayOfYear()) {
+            age--;
+        }
+
+        // Get gender
+        String gender = patient.getGender() != null 
+            ? patient.getGender().name() 
+            : "UNKNOWN";
+
+        // Extract condition codes from bundle entries
+        List<String> conditionCodes = bundle.getEntry().stream()
+            .filter(e -> e.getResource() instanceof Condition)
+            .map(e -> {
+                Condition condition = (Condition) e.getResource();
+                return condition.getCode().getCodingFirstRep().getCode();
+            })
+            .toList();
+
+        // Determine if we should create care gaps (30% of patients have gaps)
+        boolean createCareGap = random.nextDouble() < 0.3;
+
+        procedureGenerator.generateProcedures(patient, age, gender, conditionCodes, createCareGap, bundle);
     }
 
-    private Patient createPatientFromTemplate(PatientTemplate template, String tenantId) {
-        // TODO: Implement template-based generation
-        return new Patient();
+    private Patient createPatientFromTemplate(SyntheticPatientTemplate template, String tenantId) {
+        Patient patient = new Patient();
+        patient.setId(UUID.randomUUID().toString());
+
+        // Name
+        HumanName name = new HumanName();
+        name.setFamily(template.getLastName());
+        name.addGiven(template.getFirstName());
+        name.setUse(HumanName.NameUse.OFFICIAL);
+        patient.addName(name);
+
+        // Gender
+        patient.setGender(switch (template.getGender()) {
+            case MALE -> Enumerations.AdministrativeGender.MALE;
+            case FEMALE -> Enumerations.AdministrativeGender.FEMALE;
+            default -> Enumerations.AdministrativeGender.UNKNOWN;
+        });
+
+        // Birth date (calculate from age)
+        LocalDate birthDate = LocalDate.now().minusYears(template.getAge())
+            .minusDays(random.nextInt(365));
+        patient.setBirthDate(Date.from(birthDate.atStartOfDay(ZoneId.systemDefault()).toInstant()));
+
+        // Address
+        Address address = new Address();
+        address.addLine(faker.address().streetAddress());
+        address.setCity(faker.address().city());
+        address.setState(faker.address().stateAbbr());
+        address.setPostalCode(faker.address().zipCode());
+        address.setCountry("USA");
+        patient.addAddress(address);
+
+        // Telecom
+        ContactPoint phone = new ContactPoint();
+        phone.setSystem(ContactPoint.ContactPointSystem.PHONE);
+        phone.setValue(faker.phoneNumber().phoneNumber());
+        patient.addTelecom(phone);
+
+        // Identifier - MRN
+        Identifier mrn = new Identifier();
+        mrn.setSystem("urn:oid:2.16.840.1.113883.4.1");
+        mrn.setValue(generateMRN());
+        patient.addIdentifier(mrn);
+
+        // Extension for tenant context
+        Extension tenantExt = new Extension();
+        tenantExt.setUrl("http://healthdata.com/fhir/StructureDefinition/tenant-id");
+        tenantExt.setValue(new StringType(tenantId));
+        patient.addExtension(tenantExt);
+
+        // Extension for HCC risk score
+        Extension hccExt = new Extension();
+        hccExt.setUrl("http://healthdata.com/fhir/StructureDefinition/hcc-risk-score");
+        hccExt.setValue(new DecimalType(template.getHccScore()));
+        patient.addExtension(hccExt);
+
+        return patient;
     }
 
-    private void applyTemplateConditions(Patient patient, PatientTemplate template, Bundle bundle) {
-        // TODO: Apply template conditions
+    private void applyTemplateConditions(Patient patient, SyntheticPatientTemplate template, Bundle bundle) {
+        List<String> conditionCodes = parseConditionCodes(template.getConditions());
+        
+        for (String icd10Code : conditionCodes) {
+            Condition condition = new Condition();
+            condition.setId(UUID.randomUUID().toString());
+            condition.setSubject(new Reference("Patient/" + patient.getId()));
+
+            // Clinical status
+            CodeableConcept clinicalStatus = new CodeableConcept();
+            clinicalStatus.addCoding()
+                .setSystem("http://terminology.hl7.org/CodeSystem/condition-clinical")
+                .setCode("active")
+                .setDisplay("Active");
+            condition.setClinicalStatus(clinicalStatus);
+
+            // Verification status
+            CodeableConcept verificationStatus = new CodeableConcept();
+            verificationStatus.addCoding()
+                .setSystem("http://terminology.hl7.org/CodeSystem/condition-ver-status")
+                .setCode("confirmed")
+                .setDisplay("Confirmed");
+            condition.setVerificationStatus(verificationStatus);
+
+            // Condition code
+            CodeableConcept code = new CodeableConcept();
+            code.addCoding()
+                .setSystem("http://hl7.org/fhir/sid/icd-10-cm")
+                .setCode(icd10Code);
+            condition.setCode(code);
+
+            // Onset date (1-5 years ago)
+            Date onsetDate = faker.date().past(365 * 5, TimeUnit.DAYS);
+            condition.setOnset(new DateTimeType(onsetDate));
+
+            bundle.addEntry()
+                .setFullUrl("Condition/" + condition.getId())
+                .setResource(condition);
+        }
     }
 
-    private void applyTemplateMedications(Patient patient, PatientTemplate template, Bundle bundle) {
-        // TODO: Apply template medications
+    private void applyTemplateMedications(Patient patient, SyntheticPatientTemplate template, Bundle bundle) {
+        List<String> conditionCodes = parseConditionCodes(template.getConditions());
+        if (!conditionCodes.isEmpty()) {
+            medicationGenerator.generateMedications(patient, conditionCodes, bundle);
+        }
     }
 
-    private void applyTemplateObservations(Patient patient, PatientTemplate template, Bundle bundle) {
-        // TODO: Apply template observations
+    private void applyTemplateObservations(Patient patient, SyntheticPatientTemplate template, Bundle bundle) {
+        List<String> conditionCodes = parseConditionCodes(template.getConditions());
+        String riskCategory = template.getRiskCategory().name();
+        observationGenerator.generateObservations(patient, conditionCodes, riskCategory, bundle);
+    }
+
+    /**
+     * Parse condition codes from JSON string.
+     */
+    private List<String> parseConditionCodes(String conditionsJson) {
+        if (conditionsJson == null || conditionsJson.trim().isEmpty() || "[]".equals(conditionsJson.trim())) {
+            return Collections.emptyList();
+        }
+
+        try {
+            List<Map<String, String>> conditions = objectMapper.readValue(
+                conditionsJson, 
+                new TypeReference<List<Map<String, String>>>() {}
+            );
+            return conditions.stream()
+                .map(c -> c.get("code"))
+                .filter(Objects::nonNull)
+                .toList();
+        } catch (Exception e) {
+            logger.warn("Failed to parse condition codes from JSON: {}", conditionsJson, e);
+            return Collections.emptyList();
+        }
     }
 
     // Supporting classes
@@ -396,15 +591,5 @@ public class SyntheticPatientGenerator {
             new ConditionTemplate("J44.9", "Chronic Obstructive Pulmonary Disease");
         public static final ConditionTemplate CKD_STAGE_3 =
             new ConditionTemplate("N18.3", "Chronic Kidney Disease, Stage 3");
-    }
-
-    public static class PatientTemplate {
-        private String personaName;
-        private Map<String, Object> attributes;
-
-        public String getPersonaName() { return personaName; }
-        public void setPersonaName(String personaName) { this.personaName = personaName; }
-        public Map<String, Object> getAttributes() { return attributes; }
-        public void setAttributes(Map<String, Object> attributes) { this.attributes = attributes; }
     }
 }

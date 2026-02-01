@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
-import { provideHttpClient } from '@angular/common/http';
+import { HttpClient, provideHttpClient } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { MeasureBuilderComponent } from './measure-builder.component';
 import { CustomMeasureService, CustomMeasure } from '../../services/custom-measure.service';
@@ -9,6 +9,10 @@ import { DialogService } from '../../services/dialog.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
+import { LoggerService } from '../../services/logger.service';
+import { createMockMatDialog } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
+import { provideMockStore } from '@ngrx/store/testing';
 
 describe('MeasureBuilderComponent (TDD)', () => {
   let component: MeasureBuilderComponent;
@@ -78,13 +82,14 @@ describe('MeasureBuilderComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [MeasureBuilderComponent, NoopAnimationsModule],
-      providers: [
+      providers: [provideMockStore(),
+        { provide: LoggerService, useValue: createMockLoggerService() },
         provideHttpClient(),
         { provide: CustomMeasureService, useValue: mockCustomMeasureService },
         { provide: ToastService, useValue: mockToast },
         { provide: DialogService, useValue: mockDialogService },
         { provide: AIAssistantService, useValue: mockAIAssistantService },
-      ],
+        { provide: MatDialog, useValue: createMockMatDialog() },
     })
       .overrideProvider(MatDialog, { useValue: mockDialog })
       .compileComponents();

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0010-create-health-events-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="health_events"/>
+            </not>
+        </preConditions>
+        <comment>Create health events table for event sourcing and complete audit trail</comment>
+
+        <createTable tableName="health_events">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Event sequence number for ordering -->
+            <column name="event_number" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Tenant isolation -->
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Aggregate identification -->
+            <column name="aggregate_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="aggregate_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Event type and versioning -->
+            <column name="event_type" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="event_version" type="integer" defaultValue="1">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Event payload (JSONB for PostgreSQL) -->
+            <column name="event_data" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Metadata (actor, correlation ID, etc.) -->
+            <column name="metadata" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Timestamps -->
+            <column name="occurred_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="recorded_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Primary index on event number for ordering -->
+        <createIndex indexName="idx_he_event_number" tableName="health_events">
+            <column name="event_number"/>
+        </createIndex>
+
+        <!-- Index for aggregate stream queries -->
+        <createIndex indexName="idx_he_aggregate" tableName="health_events">
+            <column name="tenant_id"/>
+            <column name="aggregate_type"/>
+            <column name="aggregate_id"/>
+            <column name="event_number"/>
+        </createIndex>
+
+        <!-- Index for event type queries -->
+        <createIndex indexName="idx_he_event_type" tableName="health_events">
+            <column name="tenant_id"/>
+            <column name="event_type"/>
+            <column name="occurred_at" descending="true"/>
+        </createIndex>
+
+        <!-- Index for time-travel queries -->
+        <createIndex indexName="idx_he_time_travel" tableName="health_events">
+            <column name="tenant_id"/>
+            <column name="aggregate_type"/>
+            <column name="aggregate_id"/>
+            <column name="occurred_at"/>
+        </createIndex>
+
+        <!-- Index for tenant isolation -->
+        <createIndex indexName="idx_he_tenant" tableName="health_events">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- GIN index on JSONB columns for fast querying -->
+        <sql>
+            CREATE INDEX idx_he_event_data_gin ON health_events USING GIN (event_data);
+            CREATE INDEX idx_he_metadata_gin ON health_events USING GIN (metadata);
+        </sql>
+
+        <!-- Unique constraint on tenant + aggregate + event_number -->
+        <addUniqueConstraint
+            tableName="health_events"
+            columnNames="tenant_id, aggregate_type, aggregate_id, event_number"
+            constraintName="uk_he_tenant_aggregate_event_number"/>
+
+        <rollback>
+            <dropTable tableName="health_events"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

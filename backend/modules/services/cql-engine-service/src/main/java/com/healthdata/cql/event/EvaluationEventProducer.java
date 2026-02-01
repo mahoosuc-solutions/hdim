@@ -1,7 +1,9 @@
 package com.healthdata.cql.event;
 
+import com.healthdata.cql.audit.DataFlowTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -19,6 +21,9 @@ public class EvaluationEventProducer {
     private static final Logger logger = LoggerFactory.getLogger(EvaluationEventProducer.class);
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Autowired(required = false)
+    private DataFlowTracker dataFlowTracker;
 
     @Value("${visualization.kafka.topics.evaluation-started:evaluation.started}")
     private String evaluationStartedTopic;
@@ -88,6 +93,18 @@ public class EvaluationEventProducer {
                             result.getRecordMetadata().partition(),
                             result.getRecordMetadata().offset(),
                             key);
+                    
+                    // Track Kafka publishing step
+                    if (dataFlowTracker != null && dataFlowTracker.isTracking()) {
+                        dataFlowTracker.recordStep(
+                            "Publish to Kafka: " + topic,
+                            "KAFKA_PUBLISH",
+                            String.format("Published to partition %d, offset %d", 
+                                result.getRecordMetadata().partition(),
+                                result.getRecordMetadata().offset()),
+                            String.format("Event published to Kafka topic: %s", topic)
+                        );
+                    }
                 } else {
                     logger.error("Failed to publish event to topic {}: key={}, error={}",
                             topic, key, ex.getMessage(), ex);

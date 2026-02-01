@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -131,7 +132,7 @@ class HccRiskAdjustmentE2ETest {
                     .rafScoreBlended(new BigDecimal("1.478"))
                     .hccsV24(Arrays.asList("HCC18", "HCC85"))
                     .hccsV28(Arrays.asList("HCC18", "HCC85"))
-                    .paymentYear(2024)
+                    .profileYear(2024)
                     .build();
 
             when(rafCalculationService.calculateRaf(
@@ -152,7 +153,7 @@ class HccRiskAdjustmentE2ETest {
                 .andExpect(jsonPath("$.rafScoreBlended").value(1.478))
                 .andExpect(jsonPath("$.hccsV24").isArray())
                 .andExpect(jsonPath("$.hccsV28").isArray())
-                .andExpect(jsonPath("$.paymentYear").value(2024));
+                .andExpect(jsonPath("$.profileYear").value(2024));
         }
 
         @Test
@@ -170,7 +171,7 @@ class HccRiskAdjustmentE2ETest {
                     .rafScoreBlended(new BigDecimal("2.178"))
                     .hccsV24(Arrays.asList("HCC85"))
                     .hccsV28(Arrays.asList("HCC85"))
-                    .paymentYear(2024)
+                    .profileYear(2024)
                     .build();
 
             when(rafCalculationService.calculateRaf(any(), any(), any(), any()))
@@ -204,7 +205,7 @@ class HccRiskAdjustmentE2ETest {
                     .rafScoreBlended(new BigDecimal("2.503"))
                     .hccsV24(Arrays.asList("HCC18", "HCC85", "HCC96", "HCC111"))
                     .hccsV28(Arrays.asList("HCC18", "HCC85", "HCC96", "HCC111"))
-                    .paymentYear(2024)
+                    .profileYear(2024)
                     .build();
 
             when(rafCalculationService.calculateRaf(any(), any(), any(), any()))
@@ -235,7 +236,7 @@ class HccRiskAdjustmentE2ETest {
                     .rafScoreBlended(new BigDecimal("1.299"))
                     .hccsV24(Arrays.asList("HCC18"))
                     .hccsV28(Arrays.asList("HCC18"))
-                    .paymentYear(2024)
+                    .profileYear(2024)
                     .build();
 
             when(rafCalculationService.calculateRaf(any(), any(), any(), any()))
@@ -333,12 +334,15 @@ class HccRiskAdjustmentE2ETest {
             );
 
             // Mock crosswalk result
+            Map<String, DiagnosisHccMapEntity> crosswalkMap = new java.util.HashMap<>();
+            crosswalkMap.put(ICD10_DIABETES_COMPLICATIONS, DiagnosisHccMapEntity.builder()
+                .icd10Code(ICD10_DIABETES_COMPLICATIONS).hccCodeV24("HCC18").hccCodeV28("HCC18").build());
+            crosswalkMap.put(ICD10_CHF, DiagnosisHccMapEntity.builder()
+                .icd10Code(ICD10_CHF).hccCodeV24("HCC85").hccCodeV28("HCC85").build());
+            crosswalkMap.put(ICD10_COPD, DiagnosisHccMapEntity.builder()
+                .icd10Code(ICD10_COPD).hccCodeV24("HCC111").hccCodeV28("HCC111").build());
             when(rafCalculationService.batchCrosswalk(icd10Codes))
-                .thenReturn(Arrays.asList(
-                    new RafCalculationService.HccCrosswalk(ICD10_DIABETES_COMPLICATIONS, "HCC18", "HCC18"),
-                    new RafCalculationService.HccCrosswalk(ICD10_CHF, "HCC85", "HCC85"),
-                    new RafCalculationService.HccCrosswalk(ICD10_COPD, "HCC111", "HCC111")
-                ));
+                .thenReturn(crosswalkMap);
 
             mockMvc.perform(get("/api/v1/hcc/crosswalk")
                     .param("icd10Codes", String.join(",", icd10Codes)))
@@ -353,10 +357,11 @@ class HccRiskAdjustmentE2ETest {
             // Some ICD-10 codes map to different HCCs in V24 vs V28
             List<String> icd10Codes = Arrays.asList("E11.9"); // Diabetes without complications
 
+            Map<String, DiagnosisHccMapEntity> crosswalkMap = new java.util.HashMap<>();
+            crosswalkMap.put("E11.9", DiagnosisHccMapEntity.builder()
+                .icd10Code("E11.9").hccCodeV24("HCC19").hccCodeV28("HCC37").build());
             when(rafCalculationService.batchCrosswalk(icd10Codes))
-                .thenReturn(Arrays.asList(
-                    new RafCalculationService.HccCrosswalk("E11.9", "HCC19", "HCC37")
-                ));
+                .thenReturn(crosswalkMap);
 
             mockMvc.perform(get("/api/v1/hcc/crosswalk")
                     .param("icd10Codes", "E11.9"))
@@ -377,11 +382,11 @@ class HccRiskAdjustmentE2ETest {
                 .tenantId(TENANT_ID)
                 .patientId(PATIENT_ID)
                 .profileYear(PROFILE_YEAR)
-                .suspectedHcc("HCC111")
-                .suspectedCondition("COPD - Chronic Obstructive Pulmonary Disease")
-                .evidence("Patient has history of smoking, recent pulmonary function tests show obstruction")
-                .potentialRafUplift(new BigDecimal("0.323"))
-                .status("OPEN")
+                .recommendedHccV24("HCC111")
+                .recommendedIcd10Description("COPD - Chronic Obstructive Pulmonary Disease")
+                .clinicalGuidance("Patient has history of smoking, recent pulmonary function tests show obstruction")
+                .rafImpactBlended(new BigDecimal("0.323"))
+                .status(DocumentationGapEntity.GapStatus.OPEN)
                 .priority("HIGH")
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -390,11 +395,11 @@ class HccRiskAdjustmentE2ETest {
                 .tenantId(TENANT_ID)
                 .patientId(PATIENT_ID)
                 .profileYear(PROFILE_YEAR)
-                .suspectedHcc("HCC85")
-                .suspectedCondition("Congestive Heart Failure")
-                .evidence("Recent hospitalization for CHF exacerbation, on diuretics")
-                .potentialRafUplift(new BigDecimal("0.451"))
-                .status("OPEN")
+                .recommendedHccV24("HCC85")
+                .recommendedIcd10Description("Congestive Heart Failure")
+                .clinicalGuidance("Recent hospitalization for CHF exacerbation, on diuretics")
+                .rafImpactBlended(new BigDecimal("0.451"))
+                .status(DocumentationGapEntity.GapStatus.OPEN)
                 .priority("CRITICAL")
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -408,8 +413,8 @@ class HccRiskAdjustmentE2ETest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[?(@.suspectedHcc == 'HCC111')]").exists())
-                .andExpect(jsonPath("$[?(@.suspectedHcc == 'HCC85')]").exists());
+                .andExpect(jsonPath("$[?(@.recommendedHccV24 == 'HCC111')]").exists())
+                .andExpect(jsonPath("$[?(@.recommendedHccV24 == 'HCC85')]").exists());
         }
 
         @Test
@@ -420,9 +425,9 @@ class HccRiskAdjustmentE2ETest {
                 .tenantId(TENANT_ID)
                 .patientId(PATIENT_ID)
                 .profileYear(PROFILE_YEAR)
-                .suspectedHcc("HCC85")
-                .potentialRafUplift(new BigDecimal("0.800"))
-                .status("OPEN")
+                .recommendedHccV24("HCC85")
+                .rafImpactBlended(new BigDecimal("0.800"))
+                .status(DocumentationGapEntity.GapStatus.OPEN)
                 .priority("CRITICAL")
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -558,8 +563,8 @@ class HccRiskAdjustmentE2ETest {
                 .tenantId(TENANT_ID)
                 .patientId(PATIENT_ID)
                 .profileYear(PROFILE_YEAR)
-                .suspectedHcc("HCC85")
-                .status("OPEN")
+                .recommendedHccV24("HCC85")
+                .status(DocumentationGapEntity.GapStatus.OPEN)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -637,7 +642,7 @@ class HccRiskAdjustmentE2ETest {
                     .rafScoreBlended(new BigDecimal("0.440"))
                     .hccsV24(List.of())
                     .hccsV28(List.of())
-                    .paymentYear(2024)
+                    .profileYear(2024)
                     .build();
 
             when(rafCalculationService.calculateRaf(any(), any(), any(), any()))
@@ -657,7 +662,7 @@ class HccRiskAdjustmentE2ETest {
         @DisplayName("should return empty array for crosswalk with no codes")
         void shouldReturnEmptyArrayForNoCrosswalkCodes() throws Exception {
             when(rafCalculationService.batchCrosswalk(List.of()))
-                .thenReturn(List.of());
+                .thenReturn(java.util.Collections.emptyMap());
 
             mockMvc.perform(get("/api/v1/hcc/crosswalk")
                     .param("icd10Codes", ""))

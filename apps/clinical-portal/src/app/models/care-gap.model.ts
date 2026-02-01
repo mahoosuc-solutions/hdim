@@ -3,6 +3,7 @@
  * Represents an urgent patient care gap that requires attention
  */
 export interface CareGapAlert {
+  gapId?: string;
   patientId: string;
   patientName: string;
   mrn: string;

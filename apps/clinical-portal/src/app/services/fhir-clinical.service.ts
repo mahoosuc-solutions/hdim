@@ -138,11 +138,11 @@ export class FhirClinicalService {
 
   /**
    * Get observations for a patient
-   * Endpoint: GET /Observation?subject=Patient/{id}
+   * Endpoint: GET /Observation?patient={id}
    */
-  getObservations(patientId: string, count: number = 100): Observable<Observation[]> {
+  getObservations(patientId: string, count = 100): Observable<Observation[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION, {
-      subject: `Patient/${patientId}`,
+      patient: patientId,
       _count: count.toString(),
       _sort: '-date',
     });
@@ -154,11 +154,11 @@ export class FhirClinicalService {
 
   /**
    * Get conditions for a patient
-   * Endpoint: GET /Condition?subject=Patient/{id}
+   * Endpoint: GET /Condition?patient={id}
    */
-  getConditions(patientId: string, count: number = 100): Observable<Condition[]> {
+  getConditions(patientId: string, count = 100): Observable<Condition[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.CONDITION, {
-      subject: `Patient/${patientId}`,
+      patient: patientId,
       _count: count.toString(),
       _sort: '-recorded-date',
     });
@@ -170,11 +170,11 @@ export class FhirClinicalService {
 
   /**
    * Get procedures for a patient
-   * Endpoint: GET /Procedure?subject=Patient/{id}
+   * Endpoint: GET /Procedure?patient={id}
    */
-  getProcedures(patientId: string, count: number = 100): Observable<Procedure[]> {
+  getProcedures(patientId: string, count = 100): Observable<Procedure[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.PROCEDURE, {
-      subject: `Patient/${patientId}`,
+      patient: patientId,
       _count: count.toString(),
       _sort: '-date',
     });
@@ -189,7 +189,7 @@ export class FhirClinicalService {
    */
   getObservationsByCode(patientId: string, code: string): Observable<Observation[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.OBSERVATION, {
-      subject: `Patient/${patientId}`,
+      patient: patientId,
       code,
       _sort: '-date',
     });

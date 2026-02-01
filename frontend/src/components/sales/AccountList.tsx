@@ -245,7 +245,7 @@ export function AccountList({ tenantId }: AccountListProps) {
                     </TableCell>
                     <TableCell align="right">
                       <Tooltip title="View Details">
-                        <IconButton size="small">
+                        <IconButton size="small" aria-label={`View details for ${account.name}`}>
                           <OpenIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>

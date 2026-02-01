@@ -8,11 +8,22 @@ import com.healthdata.documentation.repository.ClinicalDocumentRepository;
 import com.healthdata.documentation.repository.DocumentAttachmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +36,10 @@ public class ClinicalDocumentService {
 
     private final ClinicalDocumentRepository documentRepository;
     private final DocumentAttachmentRepository attachmentRepository;
+    private final OcrService ocrService;
+
+    @Value("${healthdata.document.storage.base-path:/var/lib/healthdata/documents}")
+    private String storageBasePath;
 
     @Transactional(readOnly = true)
     public List<ClinicalDocumentDto> getDocuments(String tenantId) {
@@ -175,6 +190,150 @@ public class ClinicalDocumentService {
         return false;
     }
 
+    /**
+     * Upload a file and attach to clinical document
+     * Saves file to local storage and creates attachment record
+     * Triggers async OCR processing for supported file types (PDF, images)
+     */
+    @Transactional
+    public DocumentAttachmentDto uploadFile(UUID documentId, MultipartFile file, String title, String tenantId) {
+        // Validate document exists
+        ClinicalDocumentEntity document = documentRepository.findByIdAndTenantId(documentId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Document not found: " + documentId));
+
+        // Validate file
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        String contentType = file.getContentType();
+        long fileSize = file.getSize();
+
+        // Validate file type (only PDF and images supported for OCR)
+        if (!isSupportedFileType(contentType)) {
+            throw new IllegalArgumentException("Unsupported file type: " + contentType + ". Supported: PDF, PNG, JPG, JPEG, TIFF");
+        }
+
+        // Validate file size (max 10MB)
+        long maxSize = 10 * 1024 * 1024; // 10MB
+        if (fileSize > maxSize) {
+            throw new IllegalArgumentException("File size exceeds maximum allowed size of 10MB");
+        }
+
+        try {
+            // Generate unique filename
+            UUID attachmentId = UUID.randomUUID();
+            String fileExtension = getFileExtension(originalFilename);
+            String storedFilename = attachmentId + fileExtension;
+
+            // Define storage path: {storageBasePath}/{tenantId}/{documentId}/{filename}
+            Path storageDirectory = Paths.get(storageBasePath, tenantId, documentId.toString());
+            Files.createDirectories(storageDirectory);
+
+            Path storagePath = storageDirectory.resolve(storedFilename);
+
+            // Save file to disk
+            Files.copy(file.getInputStream(), storagePath, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Saved file to: {}", storagePath);
+
+            // Calculate SHA-256 hash for integrity verification
+            String hashValue = calculateSha256(file.getBytes());
+
+            // Create attachment entity
+            DocumentAttachmentEntity entity = DocumentAttachmentEntity.builder()
+                    .id(attachmentId)
+                    .clinicalDocumentId(documentId)
+                    .tenantId(tenantId)
+                    .contentType(contentType)
+                    .fileName(originalFilename)
+                    .fileSize(fileSize)
+                    .storagePath(storagePath.toString())
+                    .storageType("LOCAL")
+                    .hashAlgorithm("SHA-256")
+                    .hashValue(hashValue)
+                    .title(title != null ? title : originalFilename)
+                    .creationDate(LocalDateTime.now())
+                    .ocrStatus("PENDING") // Initial OCR status
+                    .build();
+
+            entity = attachmentRepository.save(entity);
+            log.info("Created attachment {} for document {} (patient: {})", attachmentId, documentId, document.getPatientId());
+
+            // Trigger async OCR processing for supported file types
+            if (entity.isOcrSupported()) {
+                ocrService.processDocumentAsync(entity.getId(), tenantId);
+                log.info("Triggered async OCR processing for attachment {}", attachmentId);
+            }
+
+            return toAttachmentDto(entity);
+
+        } catch (IOException e) {
+            log.error("Failed to upload file: {}", originalFilename, e);
+            throw new RuntimeException("Failed to upload file: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Trigger OCR re-processing for an attachment
+     */
+    @Transactional
+    public void triggerOcrReprocessing(UUID attachmentId, String tenantId) {
+        DocumentAttachmentEntity attachment = attachmentRepository.findByIdAndTenantId(attachmentId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Attachment not found: " + attachmentId));
+
+        // Reset OCR status to PENDING
+        attachment.setOcrStatus("PENDING");
+        attachment.setOcrProcessedAt(null);
+        attachment.setOcrText(null);
+        attachment.setOcrErrorMessage(null);
+        attachmentRepository.save(attachment);
+
+        log.info("Triggered OCR reprocessing for attachment {}", attachmentId);
+
+        // Trigger async OCR processing
+        if (attachment.isOcrSupported()) {
+            ocrService.processDocumentAsync(attachmentId, tenantId);
+        }
+    }
+
+    /**
+     * Full-text search across OCR extracted text
+     */
+    @Transactional(readOnly = true)
+    public Page<DocumentAttachmentDto> searchOcrText(String tenantId, String query, Pageable pageable) {
+        log.debug("Searching OCR text for query: {} in tenant: {}", query, tenantId);
+        return attachmentRepository.searchOcrText(tenantId, query, pageable)
+                .map(this::toAttachmentDto);
+    }
+
+    private boolean isSupportedFileType(String contentType) {
+        if (contentType == null) return false;
+        return contentType.equals("application/pdf") ||
+               contentType.startsWith("image/png") ||
+               contentType.startsWith("image/jpeg") ||
+               contentType.startsWith("image/jpg") ||
+               contentType.startsWith("image/tiff");
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return "";
+        }
+        return filename.substring(filename.lastIndexOf("."));
+    }
+
+    private String calculateSha256(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data);
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            log.error("SHA-256 algorithm not available", e);
+            return null;
+        }
+    }
+
     private ClinicalDocumentDto toDto(ClinicalDocumentEntity entity) {
         return ClinicalDocumentDto.builder()
                 .id(entity.getId())
@@ -226,6 +385,10 @@ public class ClinicalDocumentService {
                 .title(entity.getTitle())
                 .creationDate(entity.getCreationDate())
                 .createdAt(entity.getCreatedAt())
+                .ocrText(entity.getOcrText())
+                .ocrProcessedAt(entity.getOcrProcessedAt())
+                .ocrStatus(entity.getOcrStatus())
+                .ocrErrorMessage(entity.getOcrErrorMessage())
                 .build();
     }
 }

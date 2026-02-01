@@ -28,8 +28,7 @@ import java.util.UUID;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID id;  // ID provided by authentication service/gateway, not auto-generated
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;
@@ -139,6 +138,46 @@ public class User {
     @Column
     private Instant mfaEnabledAt;
 
+    /**
+     * MFA method type (TOTP, SMS, or BOTH).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    @Builder.Default
+    private MfaMethod mfaMethod = MfaMethod.TOTP;
+
+    /**
+     * Phone number for SMS MFA (E.164 format: +15555551234).
+     */
+    @Column(length = 20)
+    private String mfaPhoneNumber;
+
+    /**
+     * Hashed SMS verification code (6-digit).
+     */
+    @JsonIgnore
+    @Column(length = 255)
+    private String smsCode;
+
+    /**
+     * SMS code expiration timestamp (5-minute TTL).
+     */
+    @Column
+    private Instant smsCodeExpiry;
+
+    /**
+     * SMS code send count (for rate limiting).
+     */
+    @Column
+    @Builder.Default
+    private Integer smsCodeSentCount = 0;
+
+    /**
+     * Last reset timestamp for hourly rate limit counter.
+     */
+    @Column
+    private Instant smsCodeLastReset;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -231,5 +270,57 @@ public class User {
         failedLoginAttempts = 0;
         accountLockedUntil = null;
         lastLoginAt = Instant.now();
+    }
+
+    /**
+     * Check if SMS code rate limit has been exceeded.
+     */
+    public boolean isSmsRateLimitExceeded() {
+        if (smsCodeLastReset == null) {
+            return false;
+        }
+
+        // Reset counter if more than 1 hour has passed
+        if (smsCodeLastReset.isBefore(Instant.now().minusSeconds(3600))) {
+            return false;
+        }
+
+        // Max 5 SMS codes per hour
+        return smsCodeSentCount != null && smsCodeSentCount >= 5;
+    }
+
+    /**
+     * Increment SMS code send count for rate limiting.
+     */
+    public void incrementSmsCodeSentCount() {
+        Instant now = Instant.now();
+
+        // Reset counter if more than 1 hour has passed
+        if (smsCodeLastReset == null || smsCodeLastReset.isBefore(now.minusSeconds(3600))) {
+            smsCodeSentCount = 1;
+            smsCodeLastReset = now;
+        } else {
+            smsCodeSentCount = (smsCodeSentCount == null ? 0 : smsCodeSentCount) + 1;
+        }
+    }
+
+    /**
+     * MFA method enum.
+     */
+    public enum MfaMethod {
+        /**
+         * TOTP-based MFA (Google Authenticator, Authy, etc.)
+         */
+        TOTP,
+
+        /**
+         * SMS-based MFA (text message verification code)
+         */
+        SMS,
+
+        /**
+         * Dual MFA (both TOTP and SMS required)
+         */
+        BOTH
     }
 }

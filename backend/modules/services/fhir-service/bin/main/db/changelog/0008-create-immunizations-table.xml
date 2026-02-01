@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="008-create-immunizations-table" author="claude-code">
+        <createTable tableName="immunizations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Multi-tenancy -->
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Patient reference -->
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Vaccine information (CVX codes) -->
+            <column name="vaccine_code" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="vaccine_system" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="vaccine_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Status -->
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status_reason" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Occurrence -->
+            <column name="occurrence_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Primary source -->
+            <column name="primary_source" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Lot details -->
+            <column name="lot_number" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="expiration_date" type="date">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Administration site and route -->
+            <column name="site" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="site_display" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="route" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="route_display" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Dose information -->
+            <column name="dose_quantity" type="integer">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="dose_unit" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="dose_number" type="integer">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="series_doses" type="integer">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Performer -->
+            <column name="performer_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="performer_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Location -->
+            <column name="location_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="location_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Manufacturer -->
+            <column name="manufacturer" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Encounter reference -->
+            <column name="encounter_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Reaction -->
+            <column name="had_reaction" type="boolean">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reaction_detail" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reaction_date" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Education -->
+            <column name="education_document" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="education_publication_date" type="date">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="education_presentation_date" type="date">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Funding source -->
+            <column name="funding_source" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Program eligibility -->
+            <column name="program_eligibility" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Notes -->
+            <column name="note" type="text">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Reason codes -->
+            <column name="reason_code" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="reason_display" type="varchar(500)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- FHIR resource stored as JSONB -->
+            <column name="fhir_resource" type="jsonb">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit fields -->
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_modified_at" type="timestamp">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Optimistic locking -->
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <!-- Index 1: Primary lookup by tenant + patient + occurrence date (DESC for most recent first) -->
+        <createIndex indexName="idx_immunization_tenant_patient_date"
+                     tableName="immunizations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="occurrence_date" descending="true"/>
+        </createIndex>
+
+        <!-- Index 2: Vaccine code lookup (for checking specific vaccines and series tracking) -->
+        <createIndex indexName="idx_immunization_vaccine_code"
+                     tableName="immunizations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="vaccine_code"/>
+        </createIndex>
+
+        <!-- Index 3: Status filtering (for completed immunizations) -->
+        <createIndex indexName="idx_immunization_status"
+                     tableName="immunizations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index 4: Date range queries (for quality measure reporting) -->
+        <createIndex indexName="idx_immunization_date_range"
+                     tableName="immunizations">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+            <column name="occurrence_date"/>
+        </createIndex>
+
+        <!-- Index 5: Performer lookup -->
+        <createIndex indexName="idx_immunization_performer"
+                     tableName="immunizations">
+            <column name="tenant_id"/>
+            <column name="performer_id"/>
+        </createIndex>
+
+        <!-- Index 6: Encounter reference -->
+        <createIndex indexName="idx_immunization_encounter"
+                     tableName="immunizations">
+            <column name="tenant_id"/>
+            <column name="encounter_id"/>
+        </createIndex>
+
+        <!-- Foreign key constraints -->
+        <addForeignKeyConstraint
+                constraintName="fk_immunization_patient"
+                baseTableName="immunizations"
+                baseColumnNames="patient_id"
+                referencedTableName="patients"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="immunizations"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

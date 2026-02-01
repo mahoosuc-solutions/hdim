@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Auto-create schema for tests
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: false  # Disable Liquibase for unit tests (H2 auto-creates schema)
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  kafka:
+    # Bootstrap servers auto-configured by @EmbeddedKafka
+    bootstrap-servers: localhost:9092  # Will be overridden by @EmbeddedKafka
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      group-id: test-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      retries: 0
+      acks: all
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+# Disable event store client for tests
+event-store:
+  service:
+    url: http://localhost:9999  # Unused in tests
+  enabled: false
+
+# Disable security for tests
+spring.security:
+  enabled: false
+
+logging:
+  level:
+    com.healthdata: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

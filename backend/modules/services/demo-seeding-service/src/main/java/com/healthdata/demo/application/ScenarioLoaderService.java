@@ -20,7 +20,6 @@ import java.util.Optional;
  * - Coordinate with seeding service for data population
  */
 @Service
-@Transactional
 public class ScenarioLoaderService {
 
     private static final Logger logger = LoggerFactory.getLogger(ScenarioLoaderService.class);
@@ -29,16 +28,19 @@ public class ScenarioLoaderService {
     private final DemoSessionRepository sessionRepository;
     private final DemoSeedingService seedingService;
     private final DemoResetService resetService;
+    private final DemoProgressService progressService;
 
     public ScenarioLoaderService(
             DemoScenarioRepository scenarioRepository,
             DemoSessionRepository sessionRepository,
             DemoSeedingService seedingService,
-            DemoResetService resetService) {
+            DemoResetService resetService,
+            DemoProgressService progressService) {
         this.scenarioRepository = scenarioRepository;
         this.sessionRepository = sessionRepository;
         this.seedingService = seedingService;
         this.resetService = resetService;
+        this.progressService = progressService;
     }
 
     /**
@@ -68,16 +70,22 @@ public class ScenarioLoaderService {
             // Create new session
             DemoSession session = new DemoSession(scenario, "Demo session for " + scenario.getDisplayName());
             session = sessionRepository.save(session);
+            progressService.createForSession(session, scenario);
 
             // Generate demo data for the scenario
+            progressService.updateStage(session.getId(), DemoProgressService.Stage.RESETTING, 10,
+                "Resetting tenant data");
             DemoSeedingService.GenerationResult genResult = seedingService.generatePatientCohort(
                 scenario.getPatientCount(),
                 scenario.getTenantId(),
-                calculateCareGapPercentage(scenario)
+                calculateCareGapPercentage(scenario),
+                session.getId()
             );
 
             if (!genResult.isSuccess()) {
-                throw new RuntimeException("Failed to generate demo data: " + genResult.getErrorMessage());
+                result.setSuccess(false);
+                result.setErrorMessage(genResult.getErrorMessage());
+                return result;
             }
 
             // Mark session as ready
@@ -149,6 +157,7 @@ public class ScenarioLoaderService {
     /**
      * End the current demo session.
      */
+    @Transactional
     public void endCurrentSession() {
         sessionRepository.findCurrentSession().ifPresent(session -> {
             session.end();

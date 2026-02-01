@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- clinical_documents table -->
+    <changeSet id="0000-create-clinical-documents-table" author="claude-sonnet-4.5">
+        <createTable tableName="clinical_documents">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="document_type_code" type="VARCHAR(50)"/>
+            <column name="document_type_system" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="current">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(500)"/>
+            <column name="description" type="TEXT"/>
+            <column name="author_reference" type="VARCHAR(255)"/>
+            <column name="author_name" type="VARCHAR(255)"/>
+            <column name="custodian_reference" type="VARCHAR(255)"/>
+            <column name="document_date" type="TIMESTAMP"/>
+            <column name="period_start" type="TIMESTAMP"/>
+            <column name="period_end" type="TIMESTAMP"/>
+            <column name="encounter_reference" type="VARCHAR(255)"/>
+            <column name="facility_reference" type="VARCHAR(255)"/>
+            <column name="fhir_resource" type="JSONB"/>
+            <column name="category_codes" type="JSONB"/>
+            <column name="security_labels" type="JSONB"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+            <column name="version" type="INTEGER" defaultValue="0"/>
+        </createTable>
+
+        <createIndex tableName="clinical_documents" indexName="idx_clinical_doc_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="clinical_documents" indexName="idx_clinical_doc_patient">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex tableName="clinical_documents" indexName="idx_clinical_doc_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="clinical_documents" indexName="idx_clinical_doc_type">
+            <column name="document_type"/>
+        </createIndex>
+        <createIndex tableName="clinical_documents" indexName="idx_clinical_doc_date">
+            <column name="document_date"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="clinical_documents" indexName="idx_clinical_doc_date"/>
+            <dropIndex tableName="clinical_documents" indexName="idx_clinical_doc_type"/>
+            <dropIndex tableName="clinical_documents" indexName="idx_clinical_doc_status"/>
+            <dropIndex tableName="clinical_documents" indexName="idx_clinical_doc_patient"/>
+            <dropIndex tableName="clinical_documents" indexName="idx_clinical_doc_tenant"/>
+            <dropTable tableName="clinical_documents"/>
+        </rollback>
+    </changeSet>
+
+    <!-- cda_documents table -->
+    <changeSet id="0000-create-cda-documents-table" author="claude-sonnet-4.5">
+        <createTable tableName="cda_documents">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="clinical_document_id" type="UUID">
+                <constraints foreignKeyName="fk_cda_clinical_document"
+                             references="clinical_documents(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cda_type" type="VARCHAR(50)"/>
+            <column name="template_id" type="VARCHAR(100)"/>
+            <column name="raw_xml" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parsed_data" type="JSONB"/>
+            <column name="rendered_html" type="TEXT"/>
+            <column name="validation_status" type="VARCHAR(50)" defaultValue="NOT_VALIDATED"/>
+            <column name="validation_errors" type="JSONB"/>
+            <column name="document_id" type="VARCHAR(100)"/>
+            <column name="set_id" type="VARCHAR(100)"/>
+            <column name="version_number" type="INTEGER"/>
+            <column name="effective_time" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="cda_documents" indexName="idx_cda_doc_clinical">
+            <column name="clinical_document_id"/>
+        </createIndex>
+        <createIndex tableName="cda_documents" indexName="idx_cda_doc_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="cda_documents" indexName="idx_cda_doc_type">
+            <column name="cda_type"/>
+        </createIndex>
+        <createIndex tableName="cda_documents" indexName="idx_cda_doc_validation">
+            <column name="validation_status"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="cda_documents" indexName="idx_cda_doc_validation"/>
+            <dropIndex tableName="cda_documents" indexName="idx_cda_doc_type"/>
+            <dropIndex tableName="cda_documents" indexName="idx_cda_doc_tenant"/>
+            <dropIndex tableName="cda_documents" indexName="idx_cda_doc_clinical"/>
+            <dropTable tableName="cda_documents"/>
+        </rollback>
+    </changeSet>
+
+    <!-- document_attachments table -->
+    <changeSet id="0000-create-document-attachments-table" author="claude-sonnet-4.5">
+        <createTable tableName="document_attachments">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="clinical_document_id" type="UUID">
+                <constraints nullable="false"
+                             foreignKeyName="fk_attachment_clinical_document"
+                             references="clinical_documents(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)"/>
+            <column name="file_size" type="BIGINT"/>
+            <column name="storage_path" type="VARCHAR(500)"/>
+            <column name="storage_type" type="VARCHAR(50)" defaultValue="LOCAL"/>
+            <column name="hash_algorithm" type="VARCHAR(20)" defaultValue="SHA-256"/>
+            <column name="hash_value" type="VARCHAR(128)"/>
+            <column name="language" type="VARCHAR(10)"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="creation_date" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="document_attachments" indexName="idx_attachment_clinical_doc">
+            <column name="clinical_document_id"/>
+        </createIndex>
+        <createIndex tableName="document_attachments" indexName="idx_attachment_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="document_attachments" indexName="idx_attachment_content_type">
+            <column name="content_type"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="document_attachments" indexName="idx_attachment_content_type"/>
+            <dropIndex tableName="document_attachments" indexName="idx_attachment_tenant"/>
+            <dropIndex tableName="document_attachments" indexName="idx_attachment_clinical_doc"/>
+            <dropTable tableName="document_attachments"/>
+        </rollback>
+    </changeSet>
+
+    <!-- document_versions table -->
+    <changeSet id="0000-create-document-versions-table" author="claude-sonnet-4.5">
+        <createTable tableName="document_versions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="document_id" type="VARCHAR(100)">
+                <constraints nullable="false"
+                             foreignKeyName="fk_version_document"
+                             references="document_metadata(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version_number" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="TEXT"/>
+            <column name="change_summary" type="TEXT"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+            <column name="is_major_version" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="is_published" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="document_versions" indexName="idx_doc_version_document">
+            <column name="document_id"/>
+        </createIndex>
+        <createIndex tableName="document_versions" indexName="idx_doc_version_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="document_versions" indexName="idx_doc_version_number">
+            <column name="document_id"/>
+            <column name="version_number"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="document_versions" indexName="idx_doc_version_number"/>
+            <dropIndex tableName="document_versions" indexName="idx_doc_version_tenant"/>
+            <dropIndex tableName="document_versions" indexName="idx_doc_version_document"/>
+            <dropTable tableName="document_versions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- document_feedback table -->
+    <changeSet id="0000-create-document-feedback-table" author="claude-sonnet-4.5">
+        <createTable tableName="document_feedback">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="document_id" type="VARCHAR(100)">
+                <constraints nullable="false"
+                             foreignKeyName="fk_feedback_document"
+                             references="document_metadata(id)"
+                             deleteCascade="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(100)"/>
+            <column name="rating" type="INTEGER">
+                <constraints checkConstraint="CHECK (rating &gt;= 1 AND rating &lt;= 5)"/>
+            </column>
+            <column name="comment" type="TEXT"/>
+            <column name="helpful" type="BOOLEAN"/>
+            <column name="feedback_type" type="VARCHAR(50)" defaultValue="GENERAL"/>
+            <column name="status" type="VARCHAR(50)" defaultValue="PENDING"/>
+            <column name="admin_response" type="TEXT"/>
+            <column name="responded_by" type="VARCHAR(100)"/>
+            <column name="responded_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="document_feedback" indexName="idx_feedback_document">
+            <column name="document_id"/>
+        </createIndex>
+        <createIndex tableName="document_feedback" indexName="idx_feedback_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="document_feedback" indexName="idx_feedback_user">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="document_feedback" indexName="idx_feedback_rating">
+            <column name="rating"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="document_feedback" indexName="idx_feedback_rating"/>
+            <dropIndex tableName="document_feedback" indexName="idx_feedback_user"/>
+            <dropIndex tableName="document_feedback" indexName="idx_feedback_tenant"/>
+            <dropIndex tableName="document_feedback" indexName="idx_feedback_document"/>
+            <dropTable tableName="document_feedback"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

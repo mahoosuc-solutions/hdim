@@ -117,7 +117,7 @@ export interface BatchProgressEvent {
 export interface WebSocketMessage {
   type: 'EVALUATION_EVENT' | 'WELCOME' | 'ERROR' | 'CONNECTION_ESTABLISHED';
   timestamp: number;
-  data?: any;
+  data?: AnyEvaluationEvent | Record<string, unknown>;
   message?: string;
 }
 
@@ -133,18 +133,18 @@ export type AnyEvaluationEvent =
 /**
  * Type guards for event type checking
  */
-export const isEvaluationStartedEvent = (event: any): event is EvaluationStartedEvent => {
-  return event.eventType === EventType.EVALUATION_STARTED;
+export const isEvaluationStartedEvent = (event: unknown): event is EvaluationStartedEvent => {
+  return (event as EvaluationEvent).eventType === EventType.EVALUATION_STARTED;
 };
 
-export const isEvaluationCompletedEvent = (event: any): event is EvaluationCompletedEvent => {
-  return event.eventType === EventType.EVALUATION_COMPLETED;
+export const isEvaluationCompletedEvent = (event: unknown): event is EvaluationCompletedEvent => {
+  return (event as EvaluationEvent).eventType === EventType.EVALUATION_COMPLETED;
 };
 
-export const isEvaluationFailedEvent = (event: any): event is EvaluationFailedEvent => {
-  return event.eventType === EventType.EVALUATION_FAILED;
+export const isEvaluationFailedEvent = (event: unknown): event is EvaluationFailedEvent => {
+  return (event as EvaluationEvent).eventType === EventType.EVALUATION_FAILED;
 };
 
-export const isBatchProgressEvent = (event: any): event is BatchProgressEvent => {
-  return event.eventType === EventType.BATCH_PROGRESS;
+export const isBatchProgressEvent = (event: unknown): event is BatchProgressEvent => {
+  return (event as EvaluationEvent).eventType === EventType.BATCH_PROGRESS;
 };

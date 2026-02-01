@@ -1,0 +1,86 @@
+{
+  "uid": "hdim-demo",
+  "title": "HDIM Demo Overview",
+  "tags": ["demo", "hdim"],
+  "timezone": "browser",
+  "schemaVersion": 37,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Services Up",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(up{job=~\"care-gap-service|cql-engine-service|fhir-service|gateway-service|patient-service|quality-measure-service\"})",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value"
+      }
+    },
+    {
+      "type": "stat",
+      "title": "Care Gap API Requests (5m rate)",
+      "id": 2,
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=\"care-gap-service\"}[5m]))",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "textMode": "value",
+        "colorMode": "value"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Request Rate by Service",
+      "id": 3,
+      "gridPos": { "x": 0, "y": 4, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"care-gap-service|cql-engine-service|fhir-service|gateway-service|patient-service|quality-measure-service\"}[5m])) by (job)",
+          "refId": "A",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "req/s"
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Care Gap Service Response Time (p95)",
+      "id": 4,
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=\"care-gap-service\"}[5m])) by (le))",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        }
+      }
+    }
+  ]
+}

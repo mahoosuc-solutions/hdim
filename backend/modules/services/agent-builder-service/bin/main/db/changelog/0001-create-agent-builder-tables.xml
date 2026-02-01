@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-agent-builder-tables" author="flyway-migration">
+        <comment>Create agent builder tables for no-code agent configuration (migrated from Flyway V1)</comment>
+
+        <sqlFile path="db/changelog/sql/0001-create-agent-builder-tables.sql"
+                 relativeToChangelogFile="true"/>
+
+        <rollback>
+            <sql>
+                DROP TABLE IF EXISTS tool_definitions;
+                DROP TABLE IF EXISTS agent_usage_analytics;
+                DROP TABLE IF EXISTS agent_test_sessions;
+                DROP TABLE IF EXISTS prompt_templates;
+                DROP TABLE IF EXISTS agent_versions;
+                DROP TABLE IF EXISTS agent_configurations;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

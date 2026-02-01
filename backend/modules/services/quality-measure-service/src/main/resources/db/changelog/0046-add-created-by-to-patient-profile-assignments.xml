@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0046-add-created-by-to-patient-profile-assignments" author="claude-code">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="patient_profile_assignments" columnName="created_by"/>
+            </not>
+        </preConditions>
+
+        <comment>Add missing created_by audit column to patient_profile_assignments table</comment>
+
+        <addColumn tableName="patient_profile_assignments">
+            <column name="created_by" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="patient_profile_assignments" columnName="created_by"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

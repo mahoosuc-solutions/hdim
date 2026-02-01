@@ -49,7 +49,7 @@ export default function SchedulePage() {
   const benefits = [
     'See real-time care gap detection in action',
     'Review your potential ROI with our calculator',
-    'Discuss HEDIS 2025 compliance requirements',
+    'Discuss HEDIS 2026 compliance requirements',
     'Explore FHIR integration with your systems',
     'Get pricing tailored to your member volume'
   ]
@@ -318,7 +318,11 @@ export default function SchedulePage() {
                 </button>
 
                 <p className="text-xs text-gray-500 text-center">
-                  By submitting, you agree to our Privacy Policy. We'll never share your information.
+                  By submitting, you agree to our{' '}
+                  <Link href="/privacy" className="text-primary hover:underline">
+                    Privacy Policy
+                  </Link>
+                  . We&apos;ll never share your information.
                 </p>
               </form>
             </div>
@@ -327,7 +331,7 @@ export default function SchedulePage() {
             <div className="mt-6 text-center">
               <p className="text-gray-600">
                 Prefer to talk now?{' '}
-                <a href="mailto:aaron@mahoosuc.solutions" className="text-primary hover:underline font-medium">
+                <a href="mailto:sales@hdim.io" className="text-primary hover:underline font-medium">
                   Email us directly
                 </a>
               </p>

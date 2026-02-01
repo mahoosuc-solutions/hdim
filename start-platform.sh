@@ -95,7 +95,9 @@ fi
 
 # Step 2: Build backend artifacts if needed
 BACKEND_SERVICES=(
-    "gateway-service"
+    "gateway-admin-service"
+    "gateway-fhir-service"
+    "gateway-clinical-service"
     "cql-engine-service"
     "consent-service"
     "event-processing-service"
@@ -158,7 +160,10 @@ CORE_SERVICES=(
     "patient-service"
     "care-gap-service"
     "quality-measure-service"
-    "gateway-service"
+    "gateway-admin-service"
+    "gateway-fhir-service"
+    "gateway-clinical-service"
+    "gateway-edge"
 )
 
 if [ "$BUILD_IMAGES" = true ]; then
@@ -175,7 +180,6 @@ info "Running health checks..."
 sleep 20
 
 services=(
-    "gateway-service:8080"
     "cql-engine-service:8081"
     "consent-service:8082"
     "event-processing-service:8083"
@@ -216,7 +220,7 @@ if [ "$all_healthy" = true ]; then
     info "Platform startup completed successfully!"
     echo ""
     echo "Services available at:"
-    echo "  - Gateway API: http://localhost:8080"
+    echo "  - Gateway Edge: http://localhost:8080"
     echo "  - Quality Measure API: http://localhost:8087"
     echo "  - FHIR API: http://localhost:8085"
     echo "  - CQL Engine API: http://localhost:8081"

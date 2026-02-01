@@ -27,6 +27,7 @@ import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { PageHeaderComponent } from '../../shared/components/page-header/page-header.component';
 import { ConfirmationDialogComponent } from '../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { LoggerService } from '../../services/logger.service';
 
 import { AgentBuilderService } from './services/agent-builder.service';
 import {
@@ -39,6 +40,7 @@ import {
 // Dialog imports (to be created)
 import { CreateAgentDialogComponent } from './dialogs/create-agent-dialog.component';
 import { TestAgentDialogComponent } from './dialogs/test-agent-dialog.component';
+import { AgentVersionsDialogComponent } from './dialogs/agent-versions-dialog.component';
 
 @Component({
   selector: 'app-agent-builder',
@@ -127,15 +129,14 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Button loading states
   publishLoading = false;
-  deleteLoading = false;
-
-  constructor(
+  deleteLoading = false;  constructor(
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -181,7 +182,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           this.toast.error('Failed to load agents');
-          console.error('Error loading agents:', err);
+          this.logger.error('Error loading agents', err);
           this.loading = false;
         },
       });
@@ -194,7 +195,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (tools) => (this.availableTools = tools),
-        error: () => console.warn('Failed to load tools - using cached'),
+        error: () => this.logger.warn('Failed to load tools - using cached'),
       });
 
     // Load providers
@@ -203,7 +204,7 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (providers) => (this.providers = providers),
-        error: () => console.warn('Failed to load providers - using cached'),
+        error: () => this.logger.warn('Failed to load providers - using cached'),
       });
 
     // Check runtime health
@@ -431,9 +432,18 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   viewVersions(agent: AgentConfiguration): void {
-    // Navigate to versions view or open dialog
-    this.router.navigate(['/agent-builder', agent.id], {
-      queryParams: { tab: 'versions' },
+    const dialogRef = this.dialog.open(AgentVersionsDialogComponent, {
+      width: '95vw',
+      maxWidth: '1200px',
+      height: '85vh',
+      data: { agent },
+    });
+
+    dialogRef.afterClosed().subscribe((shouldRefresh) => {
+      if (shouldRefresh) {
+        // Refresh agent list if rollback occurred
+        this.loadAgents();
+      }
     });
   }
 

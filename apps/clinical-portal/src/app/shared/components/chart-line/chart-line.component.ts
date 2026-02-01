@@ -160,7 +160,7 @@ export class ChartLineComponent implements OnInit, OnChanges, AfterViewInit, OnD
   @Input() options: ChartOptions = {};
 
   /** Chart height in pixels */
-  @Input() height: number = 300;
+  @Input() height = 300;
 
   @ViewChild('chartCanvas', { static: false }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
@@ -274,7 +274,7 @@ export class ChartLineComponent implements OnInit, OnChanges, AfterViewInit, OnD
     };
   }
 
-  private getDefaultColor(index: number, alpha: number = 1): string {
+  private getDefaultColor(index: number, alpha = 1): string {
     const colors = [
       [54, 162, 235],   // Blue
       [255, 99, 132],   // Red

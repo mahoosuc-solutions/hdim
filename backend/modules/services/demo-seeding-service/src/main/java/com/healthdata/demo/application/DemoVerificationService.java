@@ -1,10 +1,16 @@
 package com.healthdata.demo.application;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import com.healthdata.demo.client.FhirServiceClient;
 import com.healthdata.demo.strategy.*;
+import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -26,15 +32,24 @@ public class DemoVerificationService {
     private static final Logger logger = LoggerFactory.getLogger(DemoVerificationService.class);
 
     private final FhirServiceClient fhirServiceClient;
+    private final RestTemplate restTemplate;
+    private final IParser fhirParser;
+    private final String fhirServiceUrl;
     private final Map<String, ScenarioSeedingStrategy> strategies;
 
     public DemoVerificationService(
             FhirServiceClient fhirServiceClient,
+            RestTemplate restTemplate,
+            FhirContext fhirContext,
+            @Value("${demo.services.fhir.internal-url:http://fhir-service:8085/fhir}") String fhirServiceUrl,
             HedisEvaluationStrategy hedisStrategy,
             PatientJourneyStrategy journeyStrategy,
             RiskStratificationStrategy riskStrategy,
             MultiTenantStrategy multiTenantStrategy) {
         this.fhirServiceClient = fhirServiceClient;
+        this.restTemplate = restTemplate;
+        this.fhirParser = fhirContext.newJsonParser().setPrettyPrint(false);
+        this.fhirServiceUrl = fhirServiceUrl;
 
         // Register all available strategies
         this.strategies = new HashMap<>();
@@ -162,10 +177,13 @@ public class DemoVerificationService {
      */
     private int getPatientCount(String tenantId) {
         try {
-            // This would call the FHIR service to get actual count
-            // For now, return 0 as placeholder
-            // TODO: Implement actual FHIR service call
-            return 0;
+            Bundle bundle = searchFhirResource("Patient", tenantId, null);
+            if (bundle == null) return 0;
+            // Use total if available, otherwise count entries
+            if (bundle.hasTotal()) {
+                return bundle.getTotalElement().getValue().intValue();
+            }
+            return bundle.getEntry().size();
         } catch (Exception e) {
             logger.warn("Failed to get patient count for tenant: {}", tenantId, e);
             return 0;
@@ -177,8 +195,12 @@ public class DemoVerificationService {
      */
     private int getObservationCount(String tenantId) {
         try {
-            // TODO: Implement actual FHIR service call
-            return 0;
+            Bundle bundle = searchFhirResource("Observation", tenantId, null);
+            if (bundle == null) return 0;
+            if (bundle.hasTotal()) {
+                return bundle.getTotalElement().getValue().intValue();
+            }
+            return bundle.getEntry().size();
         } catch (Exception e) {
             logger.warn("Failed to get observation count for tenant: {}", tenantId, e);
             return 0;
@@ -190,8 +212,12 @@ public class DemoVerificationService {
      */
     private int getMedicationCount(String tenantId) {
         try {
-            // TODO: Implement actual FHIR service call
-            return 0;
+            Bundle bundle = searchFhirResource("MedicationRequest", tenantId, null);
+            if (bundle == null) return 0;
+            if (bundle.hasTotal()) {
+                return bundle.getTotalElement().getValue().intValue();
+            }
+            return bundle.getEntry().size();
         } catch (Exception e) {
             logger.warn("Failed to get medication count for tenant: {}", tenantId, e);
             return 0;
@@ -203,11 +229,57 @@ public class DemoVerificationService {
      */
     private int getEncounterCount(String tenantId) {
         try {
-            // TODO: Implement actual FHIR service call
-            return 0;
+            Bundle bundle = searchFhirResource("Encounter", tenantId, null);
+            if (bundle == null) return 0;
+            if (bundle.hasTotal()) {
+                return bundle.getTotalElement().getValue().intValue();
+            }
+            return bundle.getEntry().size();
         } catch (Exception e) {
             logger.warn("Failed to get encounter count for tenant: {}", tenantId, e);
             return 0;
+        }
+    }
+
+    /**
+     * Search FHIR resources using FHIR search API.
+     *
+     * @param resourceType FHIR resource type (Patient, Observation, etc.)
+     * @param tenantId Tenant ID for multi-tenant isolation
+     * @param searchParams Optional search parameters (e.g., "patient=123")
+     * @return FHIR Bundle containing search results
+     */
+    private Bundle searchFhirResource(String resourceType, String tenantId, String searchParams) {
+        try {
+            String url = fhirServiceUrl + "/" + resourceType;
+            if (searchParams != null && !searchParams.isEmpty()) {
+                url += "?" + searchParams;
+            }
+            // Add _summary=count for efficient counting
+            url += (url.contains("?") ? "&" : "?") + "_summary=count";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType("application/fhir+json"));
+            headers.set("X-Tenant-ID", tenantId);
+            headers.set("X-Auth-User-Id", "demo-verification-service");
+            headers.set("X-Auth-Username", "demo-verifier");
+            headers.set("X-Auth-Tenant-Ids", tenantId);
+            headers.set("X-Auth-Roles", "ADMIN,SYSTEM");
+            headers.set("X-Auth-Validated", "gateway-demo-verification");
+
+            HttpEntity<Void> request = new HttpEntity<>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(
+                url, HttpMethod.GET, request, String.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return (Bundle) fhirParser.parseResource(response.getBody());
+            } else {
+                logger.warn("FHIR search failed for {}: HTTP {}", resourceType, response.getStatusCode());
+                return null;
+            }
+        } catch (Exception e) {
+            logger.error("Error searching FHIR resource {}: {}", resourceType, e.getMessage(), e);
+            return null;
         }
     }
 

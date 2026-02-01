@@ -17,6 +17,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE event_db;
     CREATE DATABASE event_router_db;
     CREATE DATABASE gateway_db;
+    CREATE DATABASE audit_db;
 
     -- AI Services
     CREATE DATABASE agent_db;
@@ -33,6 +34,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE cdr_db;
 
     -- Workflow Services
+    CREATE DATABASE workflow_db;
     CREATE DATABASE approval_db;
     CREATE DATABASE payer_db;
     CREATE DATABASE migration_db;
@@ -56,6 +58,18 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Demo Services
     CREATE DATABASE healthdata_demo;
 
+    -- Load Testing Services (Separate Container)
+    CREATE DATABASE data_ingestion_db;
+
+    -- CQRS Event Projection Services (Read Models)
+    CREATE DATABASE patient_event_db;
+    CREATE DATABASE care_gap_event_db;
+    CREATE DATABASE quality_event_db;
+    CREATE DATABASE clinical_workflow_event_db;
+
+    -- Event Store Service (Immutable Event Log)
+    CREATE DATABASE event_store_db;
+
     -- Grant privileges to postgres user
     GRANT ALL PRIVILEGES ON DATABASE fhir_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE cql_db TO "$POSTGRES_USER";
@@ -66,6 +80,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE event_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE event_router_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE gateway_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE audit_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE agent_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE agent_runtime_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ai_assistant_db TO "$POSTGRES_USER";
@@ -74,6 +89,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE sdoh_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE enrichment_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE cdr_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE workflow_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE approval_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE payer_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE migration_db TO "$POSTGRES_USER";
@@ -86,6 +102,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE qrda_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ecr_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE healthdata_demo TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE data_ingestion_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE patient_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE care_gap_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE quality_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE clinical_workflow_event_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE event_store_db TO "$POSTGRES_USER";
 EOSQL
 
 # Note: PostgreSQL extensions are now managed by service Liquibase migrations

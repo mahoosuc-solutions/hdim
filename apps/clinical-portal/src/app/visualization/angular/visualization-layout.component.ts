@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -66,12 +67,13 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
   @ViewChild('visualizationContent') visualizationContent!: ElementRef<HTMLDivElement>;
 
   constructor(
+    private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
-    console.log('Visualization Layout initialized');
+    this.logger.info('Visualization Layout initialized');
   }
 
   ngAfterViewInit(): void {
@@ -82,7 +84,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
    * Handle reset camera action
    */
   handleResetCamera(): void {
-    console.log('Reset camera requested');
+    this.logger.info('Reset camera requested');
     this.sceneService.resetCamera();
     this.showNotification('Camera reset to default position');
   }
@@ -91,7 +93,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
    * Handle fullscreen toggle
    */
   handleToggleFullscreen(): void {
-    console.log('Fullscreen toggle requested');
+    this.logger.info('Fullscreen toggle requested');
     // Fullscreen is handled in navigation component
   }
 
@@ -99,7 +101,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
    * Handle screenshot capture
    */
   handleCaptureScreenshot(): void {
-    console.log('Screenshot capture requested');
+    this.logger.info('Screenshot capture requested');
     try {
       const canvas = this.sceneService.getRenderer()?.domElement;
       if (canvas) {
@@ -122,7 +124,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
         this.showNotification('No active visualization to capture', 'error');
       }
     } catch (error) {
-      console.error('Screenshot capture failed:', error);
+      this.logger.error('Screenshot capture failed:', { error });
       this.showNotification('Failed to capture screenshot', 'error');
     }
   }
@@ -131,7 +133,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
    * Handle FPS display toggle
    */
   handleToggleFPS(enabled: boolean): void {
-    console.log('FPS display toggle:', enabled);
+    this.logger.info('FPS display toggle:', enabled);
     this.sceneService.toggleStats(enabled);
     this.showNotification(enabled ? 'FPS display enabled' : 'FPS display disabled');
   }
@@ -140,7 +142,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
    * Handle VR mode toggle
    */
   handleToggleVR(): void {
-    console.log('VR mode requested');
+    this.logger.info('VR mode requested');
     this.showNotification('VR mode coming soon!', 'info');
   }
 
@@ -148,7 +150,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
    * Handle visualization mode change
    */
   handleModeChanged(modeId: string): void {
-    console.log('Visualization mode changed:', modeId);
+    this.logger.info('Visualization mode changed:', modeId);
     this.showNotification(`Switching to ${modeId}...`);
   }
 

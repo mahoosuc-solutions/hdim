@@ -622,6 +622,7 @@ ORDER BY u.username;
 - [ ] Refresh tokens work
 - [ ] Password hashing with BCrypt
 - [ ] All sensitive data encrypted
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

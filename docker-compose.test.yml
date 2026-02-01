@@ -33,7 +33,7 @@ services:
       - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh
       - ./e2e/fixtures/seed-data.sql:/docker-entrypoint-initdb.d/02-seed-data.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -57,11 +57,41 @@ services:
   # BACKEND SERVICES
   # ============================================
 
-  gateway-service:
-    container_name: hdim-test-gateway
+  gateway-admin-service:
+    container_name: hdim-test-gateway-admin
     build:
       context: ./backend
-      dockerfile: modules/services/gateway-service/Dockerfile
+      dockerfile: modules/services/gateway-admin-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8080
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  gateway-fhir-service:
+    container_name: hdim-test-gateway-fhir
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-fhir-service/Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,18 +110,71 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: create
       # Backend service URLs
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
-      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
       BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir/fhir
-      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
-    ports:
-      - "8080:8080"
+      BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 30s
+    networks:
+      - hdim-test-network
+
+  gateway-clinical-service:
+    container_name: hdim-test-gateway-clinical
+    build:
+      context: ./backend
+      dockerfile: modules/services/gateway-clinical-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+      SERVER_PORT: 8080
+      JWT_SECRET: testSecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_test
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Backend service URLs
+      BACKEND_SERVICES_CARE_GAP_URL: http://care-gap-service:8086/care-gap
+      BACKEND_SERVICES_CONSENT_URL: http://consent-service:8082/consent
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - hdim-test-network
+
+  gateway-edge:
+    container_name: hdim-test-gateway-edge
+    image: nginx:1.27-alpine
+    depends_on:
+      gateway-admin-service:
+        condition: service_healthy
+      gateway-fhir-service:
+        condition: service_healthy
+      gateway-clinical-service:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker/gateway-edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     networks:
       - hdim-test-network
 
@@ -260,11 +343,11 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.test
     depends_on:
-      gateway-service:
+      gateway-edge:
         condition: service_healthy
     environment:
-      VITE_API_URL: http://gateway-service:8080
-      VITE_WS_URL: ws://gateway-service:8080
+      VITE_API_URL: http://gateway-edge:8080
+      VITE_WS_URL: ws://gateway-edge:8080
     ports:
       - "4200:80"
     healthcheck:

@@ -99,6 +99,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void authenticateUser(String jwt) {
         String username = tokenProvider.getUsernameFromToken(jwt);
         List<String> roles = tokenProvider.getRolesFromToken(jwt);
+        String tenantId = tokenProvider.getTenantIdFromToken(jwt);
+        String userId = tokenProvider.getUserIdFromToken(jwt);
 
         // Convert roles to Spring Security authorities
         List<SimpleGrantedAuthority> authorities = roles.stream()
@@ -110,7 +112,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 new UsernamePasswordAuthenticationToken(username, null, authorities);
 
         // Store additional information in details (optional)
-        authentication.setDetails(jwt);
+        authentication.setDetails(new JwtAuthenticationDetails(jwt, userId, tenantId));
 
         // Set authentication in SecurityContext
         SecurityContextHolder.getContext().setAuthentication(authentication);

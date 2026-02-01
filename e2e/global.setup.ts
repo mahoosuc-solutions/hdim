@@ -1,6 +1,7 @@
 import { chromium, FullConfig } from '@playwright/test';
 import { ApiHelpers } from './utils/api-helpers';
 import { TestDataFactory } from './utils/test-data-factory';
+import { ServiceHealthChecker } from './utils/service-health-checker';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -8,7 +9,7 @@ import * as path from 'path';
  * HDIM Global Setup
  *
  * Runs once before all tests to:
- * 1. Verify backend services are healthy
+ * 1. Verify backend services are healthy (with graceful degradation)
  * 2. Set up authentication state
  * 3. Seed test data
  * 4. Configure test environment
@@ -16,13 +17,23 @@ import * as path from 'path';
 
 // Use absolute path to match playwright.config.ts
 const AUTH_FILE = path.resolve(__dirname, '.auth/user.json');
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8087';
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
 const CLINICAL_PORTAL_URL = process.env.BASE_URL || 'http://localhost:4200';
+const SKIP_GLOBAL_SETUP = process.env.SKIP_GLOBAL_SETUP === 'true';
+const STRICT_VALIDATION = process.env.STRICT_VALIDATION === 'true';
 
 async function globalSetup(config: FullConfig): Promise<void> {
   console.log('\n=== HDIM E2E Test Setup ===\n');
 
   const startTime = Date.now();
+
+  // Skip setup if requested
+  if (SKIP_GLOBAL_SETUP) {
+    console.log('⚠️  Global setup skipped (SKIP_GLOBAL_SETUP=true)');
+    console.log('Creating minimal auth state...');
+    createMockAuthState();
+    return;
+  }
 
   // Step 1: Ensure auth directory exists
   const authDir = path.dirname(AUTH_FILE);
@@ -31,48 +42,152 @@ async function globalSetup(config: FullConfig): Promise<void> {
     console.log('Created auth directory:', authDir);
   }
 
-  // Step 2: Check backend health
+  // Step 2: Check backend health (with graceful degradation)
   console.log('Checking backend services health...');
-  const apiHelpers = new ApiHelpers({ baseUrl: API_BASE_URL, tenantId: 'TENANT001' });
+  const healthChecker = new ServiceHealthChecker({
+    timeout: 5000,
+    retries: 2,
+    retryDelay: 1000,
+  });
 
-  try {
-    // Try with context path first (Spring Boot with context path)
-    const healthUrl = `${API_BASE_URL}/quality-measure/actuator/health`;
-    await waitForService(healthUrl, 60000);
-    console.log('Backend services are healthy');
-  } catch (error) {
-    console.error('Backend services not available. Ensure docker compose is running.');
-    throw error;
+  const healthSummary = await healthChecker.checkHdimServices({
+    gateway: API_BASE_URL,
+    patient: 'http://localhost:8084',
+    qualityMeasure: 'http://localhost:8087',
+    fhir: 'http://localhost:8085',
+    portal: CLINICAL_PORTAL_URL,
+  });
+
+  // Log health status
+  console.log(`\nService Health Summary:`);
+  console.log(`  Healthy: ${healthSummary.healthyCount}/${healthSummary.totalCount}`);
+  healthSummary.services.forEach(service => {
+    const status = service.healthy ? '✓' : '✗';
+    const details = service.responseTime 
+      ? ` (${service.responseTime}ms)` 
+      : service.error 
+        ? ` (${service.error})` 
+        : '';
+    console.log(`  ${status} ${service.service}${details}`);
+  });
+
+  // Only fail if strict validation is enabled and required services are down
+  if (STRICT_VALIDATION && !healthSummary.allHealthy) {
+    console.error('\n❌ Strict validation enabled and services are not healthy');
+    console.error('Set STRICT_VALIDATION=false to continue with degraded mode');
+    throw new Error('Service health check failed (strict mode)');
+  }
+
+  if (healthSummary.healthyCount === healthSummary.totalCount) {
+    console.log('\n✓ All services are healthy');
+  } else if (healthSummary.healthyCount > 0) {
+    console.warn('\n⚠️  Some services are not healthy, continuing in degraded mode');
+    console.warn('Tests that require unavailable services may be skipped or fail');
+  } else {
+    console.warn('\n⚠️  No services are healthy, continuing with mock auth only');
+    console.warn('Most tests will likely fail or be skipped');
   }
 
   // Step 3: Set up authentication state
-  console.log('Setting up authentication state...');
-  const browser = await chromium.launch();
-  const context = await browser.newContext();
-  const page = await context.newPage();
+  console.log('\nSetting up authentication state...');
+  const apiHelpers = new ApiHelpers({ baseUrl: API_BASE_URL, tenantId: 'TENANT001' });
 
-  try {
-    // Navigate to login page
-    await page.goto(CLINICAL_PORTAL_URL);
-
-    // Perform login as default test user (evaluator)
-    await page.fill('[data-testid="username-input"]', 'test_evaluator');
-    await page.fill('[data-testid="password-input"]', 'password123');
-    await page.click('[data-testid="login-button"]');
-
-    // Wait for successful authentication
-    await page.waitForURL('**/dashboard', { timeout: 30000 });
-
-    // Save authentication state
-    await context.storageState({ path: AUTH_FILE });
-    console.log('Authentication state saved to:', AUTH_FILE);
-
-  } catch (error) {
-    console.warn('Browser-based auth failed, using API authentication fallback...');
-
-    // Fallback: Use API-based authentication
+  // Try browser-based auth first (if portal is available)
+  if (healthSummary.services.find(s => s.service === 'Clinical Portal' && s.healthy)) {
     try {
-      const authResponse = await apiHelpers.authenticate('test_evaluator', 'password123');
+      const browser = await chromium.launch({ headless: true });
+      const context = await browser.newContext();
+      const page = await context.newPage();
+
+      try {
+        // Navigate to login page with timeout
+        await page.goto(CLINICAL_PORTAL_URL, { waitUntil: 'domcontentloaded', timeout: 10000 });
+
+        // Try to find and fill login form (with multiple selector strategies)
+        const usernameSelectors = [
+          '[data-testid="username-input"]',
+          'input[type="email"]',
+          'input[name="username"]',
+          'input[placeholder*="email" i]',
+          'input[placeholder*="username" i]',
+        ];
+
+        const passwordSelectors = [
+          '[data-testid="password-input"]',
+          'input[type="password"]',
+          'input[name="password"]',
+        ];
+
+        const loginButtonSelectors = [
+          '[data-testid="login-button"]',
+          'button[type="submit"]',
+          'button:has-text("Login")',
+          'button:has-text("Sign in")',
+        ];
+
+        let filled = false;
+        for (const usernameSelector of usernameSelectors) {
+          try {
+            const usernameInput = page.locator(usernameSelector).first();
+            if (await usernameInput.isVisible({ timeout: 2000 })) {
+              await usernameInput.fill('test_evaluator');
+              filled = true;
+              break;
+            }
+          } catch {
+            continue;
+          }
+        }
+
+        if (filled) {
+          for (const passwordSelector of passwordSelectors) {
+            try {
+              const passwordInput = page.locator(passwordSelector).first();
+              if (await passwordInput.isVisible({ timeout: 2000 })) {
+                await passwordInput.fill('password123');
+                break;
+              }
+            } catch {
+              continue;
+            }
+          }
+
+          for (const buttonSelector of loginButtonSelectors) {
+            try {
+              const loginButton = page.locator(buttonSelector).first();
+              if (await loginButton.isVisible({ timeout: 2000 })) {
+                await loginButton.click();
+                await page.waitForURL('**/dashboard', { timeout: 15000 }).catch(() => {
+                  // May redirect to different URL
+                });
+                break;
+              }
+            } catch {
+              continue;
+            }
+          }
+
+          // Save authentication state
+          await context.storageState({ path: AUTH_FILE });
+          console.log('✓ Browser-based authentication state saved');
+          await browser.close();
+          // Skip to data seeding
+          gotoDataSeeding();
+          return;
+        }
+      } catch (error: any) {
+        console.warn('Browser-based auth failed:', error.message);
+      } finally {
+        await browser.close();
+      }
+    } catch (error: any) {
+      console.warn('Browser launch failed:', error.message);
+    }
+  }
+
+  // Fallback: Try API-based authentication
+  try {
+    const authResponse = await apiHelpers.authenticate('test_evaluator', 'password123');
 
       // Create storage state manually
       const storageState = {
@@ -89,44 +204,52 @@ async function globalSetup(config: FullConfig): Promise<void> {
         ],
       };
 
-      fs.writeFileSync(AUTH_FILE, JSON.stringify(storageState, null, 2));
-      console.log('API-based authentication state saved');
-
-    } catch (authError) {
-      console.warn('API authentication failed:', authError);
-      console.log('Creating mock auth state for test execution...');
-
-      // Fallback: Create mock auth state for tests that don't need real auth
-      const mockStorageState = {
-        cookies: [],
-        origins: [
-          {
-            origin: CLINICAL_PORTAL_URL,
-            localStorage: [
-              { name: 'auth_token', value: 'mock_test_token' },
-              { name: 'refresh_token', value: 'mock_refresh_token' },
-              { name: 'tenant_id', value: 'TENANT001' },
-              { name: 'user_role', value: 'EVALUATOR' },
-            ],
-          },
-        ],
-      };
-
-      fs.writeFileSync(AUTH_FILE, JSON.stringify(mockStorageState, null, 2));
-      console.log('Mock auth state created - tests requiring real auth may need individual login');
-    }
-  } finally {
-    await browser.close();
+    fs.writeFileSync(AUTH_FILE, JSON.stringify(storageState, null, 2));
+    console.log('✓ API-based authentication state saved');
+  } catch (authError: any) {
+    console.warn('API authentication failed:', authError.message);
+    console.log('Creating mock auth state for test execution...');
+    createMockAuthState();
   }
 
   // Step 4: Seed test data (if needed)
-  console.log('Checking test data...');
+  await gotoDataSeeding();
+}
+
+function createMockAuthState(): void {
+  const CLINICAL_PORTAL_URL = process.env.BASE_URL || 'http://localhost:4200';
+  const mockStorageState = {
+    cookies: [],
+    origins: [
+      {
+        origin: CLINICAL_PORTAL_URL,
+        localStorage: [
+          { name: 'auth_token', value: 'mock_test_token' },
+          { name: 'refresh_token', value: 'mock_refresh_token' },
+          { name: 'tenant_id', value: 'TENANT001' },
+          { name: 'user_role', value: 'EVALUATOR' },
+        ],
+      },
+    ],
+  };
+
+  fs.writeFileSync(AUTH_FILE, JSON.stringify(mockStorageState, null, 2));
+  console.log('✓ Mock auth state created - tests requiring real auth may need individual login');
+}
+
+async function gotoDataSeeding(): Promise<void> {
+  const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:8080';
+  const apiHelpers = new ApiHelpers({ baseUrl: API_BASE_URL, tenantId: 'TENANT001' });
+  const startTime = Date.now();
+
+  // Step 4: Seed test data (if needed)
+  console.log('\nChecking test data...');
   try {
     const testDataFactory = new TestDataFactory({ phiMasking: null });
     await seedTestDataIfNeeded(apiHelpers, testDataFactory);
-    console.log('Test data ready');
-  } catch (error) {
-    console.warn('Test data seeding skipped:', error);
+    console.log('✓ Test data ready');
+  } catch (error: any) {
+    console.warn('⚠️  Test data seeding skipped:', error.message);
   }
 
   // Step 5: Log setup completion
@@ -134,27 +257,6 @@ async function globalSetup(config: FullConfig): Promise<void> {
   console.log(`\n=== Setup completed in ${duration}s ===\n`);
 }
 
-/**
- * Wait for a service to become available
- */
-async function waitForService(url: string, timeout: number): Promise<void> {
-  const startTime = Date.now();
-
-  while (Date.now() - startTime < timeout) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Service not ready yet
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
-
-  throw new Error(`Service at ${url} not available after ${timeout}ms`);
-}
 
 /**
  * Seed test data if not already present

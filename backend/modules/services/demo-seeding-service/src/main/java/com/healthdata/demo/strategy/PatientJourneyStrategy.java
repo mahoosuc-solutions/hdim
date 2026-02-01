@@ -2,6 +2,8 @@ package com.healthdata.demo.strategy;
 
 import com.healthdata.demo.application.DemoSeedingService;
 import com.healthdata.demo.application.DemoSeedingService.GenerationResult;
+import com.healthdata.demo.generator.PatientTemplates;
+import org.hl7.fhir.r4.model.Bundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -68,8 +70,12 @@ public class PatientJourneyStrategy implements ScenarioSeedingStrategy {
                 CARE_GAP_PERCENTAGE
             );
 
-            // TODO: Add named persona generation when SyntheticPatientTemplate support is added
-            // For now, the base cohort includes realistic patient data
+            // Generate named personas for consistent demo experiences
+            int namedPersonasGenerated = generateNamedPersonas(tenantId);
+            logger.info("Generated {} named personas for Patient Journey scenario", namedPersonasGenerated);
+
+            // Update patient count to include named personas
+            int totalPatients = generationResult.getPatientCount() + namedPersonasGenerated;
 
             long durationMs = System.currentTimeMillis() - startTime;
 
@@ -79,12 +85,12 @@ public class PatientJourneyStrategy implements ScenarioSeedingStrategy {
 
             return SeedingResult.builder()
                 .scenarioName(SCENARIO_NAME)
-                .patientsCreated(generationResult.getPatientCount())
+                .patientsCreated(totalPatients)
                 .observationsCreated(generationResult.getObservationCount())
                 .proceduresCreated(generationResult.getProcedureCount())
                 .encountersCreated(generationResult.getEncounterCount())
                 .medicationsCreated(generationResult.getMedicationCount())
-                .conditionsCreated(estimateConditions(generationResult.getPatientCount()))
+                .conditionsCreated(estimateConditions(totalPatients))
                 .careGapsExpected(generationResult.getCareGapCount())
                 .durationMs(durationMs)
                 .success(true)
@@ -116,6 +122,36 @@ public class PatientJourneyStrategy implements ScenarioSeedingStrategy {
     @Override
     public int getExpectedPatientCount() {
         return PATIENT_COUNT;
+    }
+
+    /**
+     * Generate named personas from pre-defined templates.
+     *
+     * @param tenantId Tenant ID
+     * @return Number of personas successfully generated
+     */
+    private int generateNamedPersonas(String tenantId) {
+        int generated = 0;
+        String[] personaNames = {
+            "complex-diabetic",      // Michael Chen
+            "preventive-gap",        // Sarah Martinez
+            "high-risk-multimorbid", // Emma Johnson
+            "sdoh-barriers"          // Carlos Rodriguez
+        };
+
+        for (String personaName : personaNames) {
+            try {
+                Bundle personaBundle = demoSeedingService.generateFromTemplate(personaName, tenantId);
+                if (personaBundle != null && !personaBundle.getEntry().isEmpty()) {
+                    generated++;
+                    logger.debug("Generated persona: {}", personaName);
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to generate persona {}: {}", personaName, e.getMessage());
+            }
+        }
+
+        return generated;
     }
 
     /**

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0011-create-event-snapshots-table" author="healthdata-team">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="event_snapshots"/>
+            </not>
+        </preConditions>
+        <comment>Create event snapshots table for performance optimization</comment>
+
+        <createTable tableName="event_snapshots">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Tenant isolation -->
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Aggregate identification -->
+            <column name="aggregate_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="aggregate_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Event number at which snapshot was taken -->
+            <column name="event_number" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Snapshot data (aggregate state at event_number) -->
+            <column name="snapshot_data" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Timestamp -->
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for finding latest snapshot -->
+        <createIndex indexName="idx_es_latest" tableName="event_snapshots">
+            <column name="tenant_id"/>
+            <column name="aggregate_type"/>
+            <column name="aggregate_id"/>
+            <column name="event_number" descending="true"/>
+        </createIndex>
+
+        <!-- Index for tenant isolation -->
+        <createIndex indexName="idx_es_tenant" tableName="event_snapshots">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- GIN index on snapshot_data for fast querying -->
+        <sql>
+            CREATE INDEX idx_es_snapshot_data_gin ON event_snapshots USING GIN (snapshot_data);
+        </sql>
+
+        <!-- Unique constraint to prevent duplicate snapshots -->
+        <addUniqueConstraint
+            tableName="event_snapshots"
+            columnNames="tenant_id, aggregate_type, aggregate_id, event_number"
+            constraintName="uk_es_tenant_aggregate_event_number"/>
+
+        <rollback>
+            <dropTable tableName="event_snapshots"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

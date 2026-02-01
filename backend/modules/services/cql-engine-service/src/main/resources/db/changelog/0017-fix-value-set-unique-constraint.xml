@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0017-fix-value-set-unique-constraint" author="healthdata-system">
+        <comment>Allow multiple value set versions per tenant by including version in unique constraint</comment>
+
+        <dropUniqueConstraint
+            tableName="value_sets"
+            constraintName="uk_value_sets_tenant_oid"/>
+
+        <addUniqueConstraint
+            tableName="value_sets"
+            columnNames="tenant_id, oid, version"
+            constraintName="uk_vs_tenant_oid_version"/>
+
+        <rollback>
+            <dropUniqueConstraint tableName="value_sets" constraintName="uk_vs_tenant_oid_version"/>
+            <addUniqueConstraint tableName="value_sets" columnNames="tenant_id, oid" constraintName="uk_value_sets_tenant_oid"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

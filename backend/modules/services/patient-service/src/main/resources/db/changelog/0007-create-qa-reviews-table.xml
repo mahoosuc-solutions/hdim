@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0007-create-qa-reviews-table" author="healthdata-system">
+        <comment>QA Reviews table for tracking AI decision reviews</comment>
+
+        <createTable tableName="qa_reviews">
+            <column name="id" type="varchar(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="decision_id" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reviewed_by" type="varchar(255)"/>
+            <column name="reviewed_at" type="timestamp with time zone"/>
+            <column name="review_status" type="varchar(255)"/>
+            <column name="review_outcome" type="varchar(255)"/>
+            <column name="review_notes" type="varchar(2000)"/>
+            <column name="is_false_positive" type="boolean"/>
+            <column name="is_false_negative" type="boolean"/>
+            <column name="correct_decision_type" type="varchar(255)"/>
+            <column name="flag_type" type="varchar(255)"/>
+            <column name="flag_reason" type="varchar(2000)"/>
+            <column name="flag_priority" type="varchar(255)"/>
+            <column name="resolution_status" type="varchar(255)"/>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone"/>
+        </createTable>
+
+        <createIndex indexName="idx_qa_decision_id" tableName="qa_reviews">
+            <column name="decision_id"/>
+        </createIndex>
+        <createIndex indexName="idx_qa_tenant_status" tableName="qa_reviews">
+            <column name="tenant_id"/>
+            <column name="review_status"/>
+        </createIndex>
+        <createIndex indexName="idx_qa_reviewed_at" tableName="qa_reviews">
+            <column name="reviewed_at"/>
+        </createIndex>
+        <createIndex indexName="idx_qa_flag_type" tableName="qa_reviews">
+            <column name="flag_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

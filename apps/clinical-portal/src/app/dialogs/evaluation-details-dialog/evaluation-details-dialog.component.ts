@@ -12,6 +12,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatCardModule } from '@angular/material/card';
 import { EvaluationService } from '../../services/evaluation.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Evaluation Details Dialog Data Interface
@@ -96,12 +97,11 @@ interface EvaluationHistoryItem {
 export class EvaluationDetailsDialogComponent implements OnInit {
   evaluationDetails = signal<EvaluationDetails | null>(null);
   isLoading = signal(true);
-  error = signal<string | null>(null);
-
-  constructor(
+  error = signal<string | null>(null);  constructor(
     private dialogRef: MatDialogRef<EvaluationDetailsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: EvaluationDetailsDialogData,
-    private evaluationService: EvaluationService
+    private evaluationService: EvaluationService,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -229,7 +229,7 @@ export class EvaluationDetailsDialogComponent implements OnInit {
    * Export to PDF (placeholder)
    */
   onExportPdf(): void {
-    console.log('Export to PDF functionality would be implemented here');
+    this.logger.info('Export to PDF functionality would be implemented here');
     // In production, use a library like jsPDF or pdfmake
   }
 

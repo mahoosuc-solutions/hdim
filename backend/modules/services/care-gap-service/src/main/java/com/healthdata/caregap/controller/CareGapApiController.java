@@ -32,19 +32,47 @@ public class CareGapApiController {
     private final CareGapRepository careGapRepository;
 
     /**
-     * List care gaps with pagination
+     * List care gaps with pagination and optional filters
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     public ResponseEntity<Page<CareGapEntity>> listCareGaps(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID patientId) {
 
-        log.info("GET /api/v1/care-gaps - tenant: {}, page: {}, size: {}", tenantId, page, size);
+        log.info("GET /api/v1/care-gaps - tenant: {}, page: {}, size: {}, priority: {}, status: {}, patientId: {}", 
+                tenantId, page, size, priority, status, patientId);
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<CareGapEntity> gaps = careGapRepository.findByTenantId(tenantId, pageable);
+        Page<CareGapEntity> gaps;
+
+        // Filter by priority if provided
+        if (priority != null && !priority.isEmpty()) {
+            if (patientId != null) {
+                // Filter by tenant, patient, and priority
+                gaps = careGapRepository.findByTenantIdAndPatientIdAndPriority(
+                    tenantId, patientId, priority.toUpperCase(), pageable);
+            } else {
+                // Filter by tenant and priority
+                gaps = careGapRepository.findByTenantIdAndPriority(
+                    tenantId, priority.toUpperCase(), pageable);
+            }
+        } else if (patientId != null) {
+            // Filter by tenant and patient
+            gaps = careGapRepository.findByTenantIdAndPatientId(
+                tenantId, patientId, pageable);
+        } else if (status != null && !status.isEmpty()) {
+            // Filter by tenant and status
+            gaps = careGapRepository.findByTenantIdAndStatus(
+                tenantId, status.toUpperCase(), pageable);
+        } else {
+            // No filters - get all for tenant
+            gaps = careGapRepository.findByTenantId(tenantId, pageable);
+        }
 
         return ResponseEntity.ok(gaps);
     }
@@ -53,7 +81,7 @@ public class CareGapApiController {
      * Get a single care gap by ID
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ANALYST', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_READ')")
     public ResponseEntity<CareGapEntity> getCareGap(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable UUID id) {
@@ -69,7 +97,7 @@ public class CareGapApiController {
      * Create a new care gap
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission(null, 'CARE_GAP_WRITE')")
     public ResponseEntity<CareGapEntity> createCareGap(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestBody CareGapCreateRequest request) {

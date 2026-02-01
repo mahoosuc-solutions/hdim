@@ -569,47 +569,8 @@ tasks.register("testAllServices") {
 // Test Classification Tasks - Enable selective test execution
 // See: backend/docs/TEST_CLASSIFICATION_GUIDE.md
 
-tasks.register<Test>("testUnit") {
-    useJUnitPlatform {
-        includeTags("unit")
-    }
-    description = "Run unit tests only (~30-60 seconds)"
-    group = "verification"
-}
-
-tasks.register<Test>("testIntegration") {
-    useJUnitPlatform {
-        includeTags("integration")
-    }
-    description = "Run integration tests only (~3-5 minutes)"
-    group = "verification"
-}
-
-tasks.register<Test>("testAll") {
-    useJUnitPlatform()
-    description = "Run all tests - unit and integration (~4-6 minutes)"
-    group = "verification"
-}
-
 // Performance Optimization Tasks (Phase 4)
 // See: backend/docs/PERFORMANCE_BASELINE.md
-
-tasks.register<Test>("testFast") {
-    useJUnitPlatform {
-        includeTags("unit", "integration")
-        excludeTags("slow")
-    }
-    description = "Run fast tests (unit + quick integration, excluding slow tests) (~2-3 minutes)"
-    group = "verification"
-}
-
-tasks.register<Test>("testSlow") {
-    useJUnitPlatform {
-        includeTags("slow")
-    }
-    description = "Run slow tests only (~5-10 minutes)"
-    group = "verification"
-}
 
 tasks.register("cleanAll") {
     group = "build"

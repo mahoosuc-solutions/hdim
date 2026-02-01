@@ -62,8 +62,7 @@ export class CarePlanService {
   private readonly METRICS_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
 
   constructor(
-    private loggerService: LoggerService,private http: HttpClient) {
-    this.logger = this.loggerService.withContext(\'CarePlanService');}
+    private logger: LoggerService,private http: HttpClient) {
 
   // ==================== Context Management ====================
 

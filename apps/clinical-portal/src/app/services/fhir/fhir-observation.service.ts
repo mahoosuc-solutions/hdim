@@ -43,15 +43,12 @@ import {
   providedIn: 'root',
 })
 export class FhirObservationService extends CacheableService {
-  private log: ContextualLogger;
 
   constructor(
     private http: HttpClient,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('FhirObservationService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get HTTP headers with tenant ID
@@ -90,7 +87,7 @@ export class FhirObservationService extends CacheableService {
           return vitals;
         }),
         catchError((error) => {
-          this.log.error('Error fetching vital signs from FHIR:', error);
+          this.logger.error('Error fetching vital signs from FHIR:', error);
           return of({});
         })
       );
@@ -122,7 +119,7 @@ export class FhirObservationService extends CacheableService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab results from FHIR:', error);
+          this.logger.error('Error fetching lab results from FHIR:', error);
           return of([]);
         })
       );
@@ -143,7 +140,7 @@ export class FhirObservationService extends CacheableService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab results from FHIR:', error);
+          this.logger.error('Error fetching lab results from FHIR:', error);
           return of([]);
         })
       );
@@ -186,7 +183,7 @@ export class FhirObservationService extends CacheableService {
           return reports;
         }),
         catchError((error) => {
-          this.log.error('Error fetching diagnostic reports from FHIR:', error);
+          this.logger.error('Error fetching diagnostic reports from FHIR:', error);
           return of([]);
         })
       );
@@ -230,7 +227,7 @@ export class FhirObservationService extends CacheableService {
           return vitals;
         }),
         catchError((error) => {
-          this.log.error('Error fetching vital sign history:', error);
+          this.logger.error('Error fetching vital sign history:', error);
           return of([]);
         })
       );
@@ -270,7 +267,7 @@ export class FhirObservationService extends CacheableService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab history:', error);
+          this.logger.error('Error fetching lab history:', error);
           return of([]);
         })
       );

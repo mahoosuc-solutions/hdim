@@ -15,7 +15,6 @@ export class FilterPersistenceService {
   private readonly STORAGE_PREFIX = 'clinical-portal-filters';
 
   constructor(private readonly loggerService: LoggerService) {
-    this.logger = this.loggerService.withContext('FilterPersistenceService');
   }
 
   /**

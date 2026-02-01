@@ -67,9 +67,8 @@ export class DocumentUploadComponent {
 
   constructor(
     private uploadService: DocumentUploadService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('DocumentUploadComponent');
   }
 
   get acceptedFileTypes(): string {

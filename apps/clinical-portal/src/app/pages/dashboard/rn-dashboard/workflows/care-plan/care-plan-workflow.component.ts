@@ -134,7 +134,6 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
   teamColumns = ['name', 'role', 'action'];
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -143,9 +142,7 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
     private logger: LoggerService,
     private dialogRef: MatDialogRef<CarePlanWorkflowComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CarePlanWorkflowData
-  ) {
-    this.log = this.logger.withContext('CarePlanWorkflowComponent');
-    this.initializeForm();
+  ) {    this.initializeForm();
   }
 
   ngOnInit(): void {
@@ -222,10 +219,10 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
         next: (templates: CarePlanTemplate[]) => {
           this.carePlanTemplates = templates || [];
           this.loading = false;
-          this.log.info(`Loaded ${templates?.length || 0} care plan templates`);
+          this.logger.info(`Loaded ${templates?.length || 0} care plan templates`);
         },
         error: (error: unknown) => {
-          this.log.error('Failed to load care plan templates:', error);
+          this.logger.error('Failed to load care plan templates:', error);
           this.toastService.error('Failed to load care plan templates');
           this.loading = false;
         },
@@ -284,11 +281,11 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
         next: (result: unknown) => {
           this.loading = false;
           this.toastService.success('Care plan initialized');
-          this.log.info('Care plan initialized successfully');
+          this.logger.info('Care plan initialized successfully');
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to initialize care plan:', error);
+          this.logger.error('Failed to initialize care plan:', error);
           this.toastService.error('Failed to initialize care plan');
         },
       });
@@ -480,7 +477,7 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
         next: (result: unknown) => {
           this.loading = false;
           this.toastService.success('Care plan completed successfully');
-          this.log.info('Care plan workflow completed');
+          this.logger.info('Care plan workflow completed');
 
           const workflowResult: CarePlanResult = {
             success: true,
@@ -491,7 +488,7 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to complete care plan:', error);
+          this.logger.error('Failed to complete care plan:', error);
           this.toastService.error('Failed to save care plan');
         },
       });

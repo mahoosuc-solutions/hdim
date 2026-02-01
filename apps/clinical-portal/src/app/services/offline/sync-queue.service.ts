@@ -94,12 +94,11 @@ export class SyncQueueService implements OnDestroy {
   readonly hasPendingChanges$ = this.pendingCount$.pipe(map((count) => count > 0));
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private http: HttpClient,
     private storage: OfflineStorageService,
     private networkStatus: NetworkStatusService
   ) {
-    this.logger = this.loggerService.withContext(\'SyncQueueService');
     this.initializeAutoSync();
     this.updatePendingCount();
   }

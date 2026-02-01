@@ -111,6 +111,7 @@ export class WebSocketVisualizationService {
   private readonly maxReconnectAttempts = 5;
   private readonly reconnectDelay = 2000; // Initial delay in ms
   private reconnectTimer?: ReturnType<typeof setTimeout>;
+  private logger: ContextualLogger;
 
   // Observable streams
   private statusSubject = new BehaviorSubject<WebSocketStatus>(WebSocketStatus.DISCONNECTED);
@@ -132,10 +133,9 @@ export class WebSocketVisualizationService {
     .replace(/^https:\/\//, 'wss://')
     .replace(/^http:\/\//, 'ws://')
     .replace('/cql-engine', '') + '/ws/evaluation-progress';
-  private log: ContextualLogger;
 
-  constructor(private ngZone: NgZone, private logger: LoggerService) {
-    this.log = this.logger.withContext('WebSocketVisualizationService');
+  constructor(private ngZone: NgZone, loggerService: LoggerService) {
+    this.logger = loggerService.withContext('WebSocketVisualizationService');
   }
 
   /**
@@ -143,16 +143,16 @@ export class WebSocketVisualizationService {
    */
   connect(): void {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      this.log.debug('WebSocket already connected');
+      this.logger.debug('WebSocket already connected');
       return;
     }
 
     if (this.socket && this.socket.readyState === WebSocket.CONNECTING) {
-      this.log.debug('WebSocket connection in progress');
+      this.logger.debug('WebSocket connection in progress');
       return;
     }
 
-    this.log.debug(`Connecting to WebSocket: ${this.wsUrl}`);
+    this.logger.debug(`Connecting to WebSocket: ${this.wsUrl}`);
     this.statusSubject.next(WebSocketStatus.CONNECTING);
 
     try {
@@ -177,7 +177,7 @@ export class WebSocketVisualizationService {
         };
       });
     } catch (error) {
-      this.log.error('Failed to create WebSocket:', error);
+      this.logger.error('Failed to create WebSocket:', error);
       this.statusSubject.next(WebSocketStatus.ERROR);
       this.errorSubject.next(error as Error);
       this.scheduleReconnect();
@@ -188,7 +188,7 @@ export class WebSocketVisualizationService {
    * Disconnect from WebSocket
    */
   disconnect(): void {
-    this.log.debug('Disconnecting WebSocket');
+    this.logger.debug('Disconnecting WebSocket');
 
     // Clear reconnect timer
     window.clearTimeout(this.reconnectTimer as any);
@@ -210,7 +210,7 @@ export class WebSocketVisualizationService {
    * Handle WebSocket open event
    */
   private onOpen(event: Event): void {
-    this.log.debug('WebSocket connected', event);
+    this.logger.debug('WebSocket connected', event);
     this.statusSubject.next(WebSocketStatus.CONNECTED);
     this.reconnectAttempts = 0;
 
@@ -227,7 +227,7 @@ export class WebSocketVisualizationService {
   private onMessage(event: MessageEvent): void {
     try {
       const data = JSON.parse(event.data);
-      this.log.debug('WebSocket message received:', data);
+      this.logger.debug('WebSocket message received:', data);
 
       // Route message based on type
       // Check care gap notifications first (they have specific type markers)
@@ -238,10 +238,10 @@ export class WebSocketVisualizationService {
       } else if (data.type === 'evaluation_progress' || data.patientId) {
         this.handleEvaluationProgress(data);
       } else {
-        this.log.warn('Unknown WebSocket message type:', data);
+        this.logger.warn('Unknown WebSocket message type:', data);
       }
     } catch (error) {
-      this.log.error('Failed to parse WebSocket message:', error);
+      this.logger.error('Failed to parse WebSocket message:', error);
       this.errorSubject.next(new Error('Failed to parse WebSocket message'));
     }
   }
@@ -268,7 +268,7 @@ export class WebSocketVisualizationService {
       metadata: data.metadata,
     };
 
-    this.log.debug('Care gap notification received:', notification);
+    this.logger.debug('Care gap notification received:', notification);
     this.careGapNotificationSubject.next(notification);
   }
 
@@ -276,7 +276,7 @@ export class WebSocketVisualizationService {
    * Handle WebSocket error event
    */
   private onError(event: Event): void {
-    this.log.error('WebSocket error:', event);
+    this.logger.error('WebSocket error:', event);
     this.statusSubject.next(WebSocketStatus.ERROR);
     this.errorSubject.next(new Error('WebSocket connection error'));
   }
@@ -285,7 +285,7 @@ export class WebSocketVisualizationService {
    * Handle WebSocket close event
    */
   private onClose(event: CloseEvent): void {
-    this.log.debug(`WebSocket closed: ${event.code} ${event.reason}`);
+    this.logger.debug(`WebSocket closed: ${event.code} ${event.reason}`);
     this.statusSubject.next(WebSocketStatus.DISCONNECTED);
     this.socket = undefined;
 
@@ -300,7 +300,7 @@ export class WebSocketVisualizationService {
    */
   private scheduleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      this.log.error('Max reconnection attempts reached');
+      this.logger.error('Max reconnection attempts reached');
       this.statusSubject.next(WebSocketStatus.ERROR);
       return;
     }
@@ -308,11 +308,11 @@ export class WebSocketVisualizationService {
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1); // Exponential backoff
 
-    this.log.debug(`Scheduling reconnection attempt ${this.reconnectAttempts} in ${delay}ms`);
+    this.logger.debug(`Scheduling reconnection attempt ${this.reconnectAttempts} in ${delay}ms`);
     this.statusSubject.next(WebSocketStatus.RECONNECTING);
 
     this.reconnectTimer = setTimeout(() => {
-      this.log.debug(`Reconnection attempt ${this.reconnectAttempts}`);
+      this.logger.debug(`Reconnection attempt ${this.reconnectAttempts}`);
       this.connect();
     }, delay);
   }
@@ -397,11 +397,11 @@ export class WebSocketVisualizationService {
       try {
         this.socket.send(JSON.stringify(message));
       } catch (error) {
-        this.log.error('Failed to send WebSocket message:', error);
+        this.logger.error('Failed to send WebSocket message:', error);
         this.errorSubject.next(error as Error);
       }
     } else {
-      this.log.warn('Cannot send message: WebSocket not connected');
+      this.logger.warn('Cannot send message: WebSocket not connected');
     }
   }
 

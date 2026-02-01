@@ -97,16 +97,11 @@ interface EvaluationHistoryItem {
 export class EvaluationDetailsDialogComponent implements OnInit {
   evaluationDetails = signal<EvaluationDetails | null>(null);
   isLoading = signal(true);
-  error = signal<string | null>(null);
-  private get logger() {
-    return this.loggerService.withContext('EvaluationDetailsDialogComponent');
-  }
-
-  constructor(
+  error = signal<string | null>(null);  constructor(
     private dialogRef: MatDialogRef<EvaluationDetailsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: EvaluationDetailsDialogData,
     private evaluationService: EvaluationService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

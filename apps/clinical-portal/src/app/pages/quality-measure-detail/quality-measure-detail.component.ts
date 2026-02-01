@@ -291,9 +291,8 @@ export class QualityMeasureDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('QualityMeasureDetailComponent');
   }
 
   ngOnInit(): void {

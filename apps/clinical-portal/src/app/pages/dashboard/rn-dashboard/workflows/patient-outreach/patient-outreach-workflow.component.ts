@@ -84,7 +84,6 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
   outcomeTypes = ['SUCCESSFUL', 'BUSY', 'VOICEMAIL', 'DISCONNECTED', 'NO_ANSWER', 'LEFT_MESSAGE'];
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -93,9 +92,7 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
     private logger: LoggerService,
     private dialogRef: MatDialogRef<PatientOutreachWorkflowComponent>,
     @Inject(MAT_DIALOG_DATA) public data: OutreachWorkflowData
-  ) {
-    this.log = this.logger.withContext('PatientOutreachWorkflowComponent');
-    this.outreachLogId = data.outreachLogId;
+  ) {    this.outreachLogId = data.outreachLogId;
     this.patientId = data.patientId;
     this.patientName = data.patientName;
     this.initializeForm();
@@ -200,7 +197,7 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (error: unknown) => {
-          this.log.error('Failed to load outreach log:', error);
+          this.logger.error('Failed to load outreach log:', error);
           this.toastService.error('Failed to load outreach information');
           this.loading = false;
         },
@@ -265,10 +262,10 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result: unknown) => {
-          this.log.info('Contact attempt logged successfully');
+          this.logger.info('Contact attempt logged successfully');
         },
         error: (error: unknown) => {
-          this.log.error('Failed to log contact attempt:', error);
+          this.logger.error('Failed to log contact attempt:', error);
           this.toastService.error('Failed to log contact attempt');
         },
       });
@@ -426,7 +423,7 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
         next: (result: OutreachLog) => {
           this.loading = false;
           this.toastService.success('Outreach logged successfully');
-          this.log.info('Workflow completed successfully');
+          this.logger.info('Workflow completed successfully');
 
           const workflowResult: OutreachWorkflowResult = {
             success: true,
@@ -438,7 +435,7 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to complete workflow:', error);
+          this.logger.error('Failed to complete workflow:', error);
           this.toastService.error('Failed to save outreach information');
         },
       });

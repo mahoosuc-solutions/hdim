@@ -129,20 +129,14 @@ export class AgentBuilderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Button loading states
   publishLoading = false;
-  deleteLoading = false;
-
-  private get logger() {
-    return this.loggerService.withContext('AgentBuilderComponent');
-  }
-
-  constructor(
+  deleteLoading = false;  constructor(
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MatDialog,
     private agentService: AgentBuilderService,
     private toast: ToastService,
     private dialogService: DialogService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

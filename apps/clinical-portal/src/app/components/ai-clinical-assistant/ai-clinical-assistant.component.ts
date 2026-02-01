@@ -72,9 +72,8 @@ export class AiClinicalAssistantComponent implements OnInit, OnDestroy, AfterVie
 
   constructor(
     private aiAssistantService: AIAssistantService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('AiClinicalAssistantComponent');
   }
 
   ngOnInit(): void {

@@ -47,7 +47,6 @@ export class OfflineDataCacheService {
   private readonly loggerService = inject(LoggerService);
 
   constructor() {
-    this.logger = this.loggerService.withContext('OfflineDataCacheService');
   }
 
   /**

@@ -66,10 +66,9 @@ export class DocumentViewerComponent implements OnInit, OnDestroy {
 
   constructor(
     private documentService: DocumentService,
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private sanitizer: DomSanitizer
   ) {
-    this.logger = this.loggerService.withContext('DocumentViewerComponent');
   }
 
   ngOnInit(): void {

@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { LoggerService } from '../../../services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -107,7 +107,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
   private hoveredPatient?: PatientPoint;
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private transformService: DataTransformService,
     private patientService: PatientService,
@@ -272,7 +272,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
 
     // Create constellation scene
     const scene = this.sceneService.getScene();
-    this.constellation = new QualityConstellationScene(scene, this.transformService);
+    this.constellation = new QualityConstellationScene(this.logger, scene, this.transformService);
     this.constellation.initialize(this.qualityResults, this.patients);
 
     // Get initial stats

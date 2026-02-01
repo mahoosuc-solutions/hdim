@@ -27,12 +27,7 @@ import { AuditService } from '../../services/audit.service';
 })
 export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
 
-  // Contextual logger
-  private get logger() {
-    return this.loggerService.withContext('MpiAuditDashboardComponent');
-  }
-
-  // MPI Audit Events
+  // Contextual logger  // MPI Audit Events
   mpiEvents: MPIAuditEvent[] = [];
   mergeEvents: MergeEvent[] = [];
   dataQualityIssues: DataQualityIssue[] = [];
@@ -74,7 +69,7 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
   autoRefreshEnabled = true;
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private auditService: AuditService
   ) {}
 

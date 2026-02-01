@@ -74,14 +74,9 @@ export class DialogService {
     autoFocus: true,
     restoreFocus: true,
     panelClass: 'custom-dialog-container',
-  };
-  private get logger() {
-    return this.loggerService.withContext('DialogService');
-  }
-
-  constructor(
+  };  constructor(
     private dialog: MatDialog,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   /**

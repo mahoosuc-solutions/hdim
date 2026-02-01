@@ -26,15 +26,10 @@ import { LoggerService } from '../services/logger.service';
 @Injectable({
   providedIn: 'root',
 })
-export class PermissionGuard implements CanActivate {
-  private get logger() {
-    return this.loggerService.withContext('PermissionGuard');
-  }
-
-  constructor(
+export class PermissionGuard implements CanActivate {  constructor(
     private authService: AuthService,
     private router: Router,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   canActivate(

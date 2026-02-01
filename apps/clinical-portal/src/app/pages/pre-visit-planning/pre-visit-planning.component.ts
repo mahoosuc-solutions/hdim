@@ -105,16 +105,10 @@ export class PreVisitPlanningComponent implements OnInit, OnDestroy {
   highUrgencyCount = computed(() =>
     this.patients().reduce((sum, p) =>
       sum + p.careGaps.filter(g => g.urgency === 'high').length, 0)
-  );
-
-  private get logger() {
-    return this.loggerService.withContext('PreVisitPlanningComponent');
-  }
-
-  constructor(
+  );  constructor(
     private patientService: PatientService,
     private router: Router,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

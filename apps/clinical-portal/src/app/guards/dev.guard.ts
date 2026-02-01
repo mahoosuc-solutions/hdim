@@ -27,14 +27,9 @@ import { LoggerService } from '../services/logger.service';
 @Injectable({
   providedIn: 'root',
 })
-export class DevGuard implements CanActivate {
-  private get logger() {
-    return this.loggerService.withContext('DevGuard');
-  }
-
-  constructor(
+export class DevGuard implements CanActivate {  constructor(
     private router: Router,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   canActivate(

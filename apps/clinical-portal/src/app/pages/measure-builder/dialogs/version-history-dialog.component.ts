@@ -707,17 +707,11 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
   // Comparison state
   comparisonResult: VersionDiff[] | null = null;
   comparisonV1 = '';
-  comparisonV2 = '';
-
-  private get logger() {
-    return this.loggerService.withContext('VersionHistoryDialogComponent');
-  }
-
-  constructor(
+  comparisonV2 = '';  constructor(
     private dialogRef: MatDialogRef<VersionHistoryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VersionHistoryDialogData,
     private customMeasureService: CustomMeasureService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

@@ -106,7 +106,6 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
   specialistColumns = ['name', 'phone', 'accepting', 'action'];
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -115,9 +114,7 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
     private logger: LoggerService,
     private dialogRef: MatDialogRef<ReferralCoordinationWorkflowComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ReferralCoordinationWorkflowData
-  ) {
-    this.log = this.logger.withContext('ReferralCoordinationWorkflowComponent');
-    this.referralId = data.referralId;
+  ) {    this.referralId = data.referralId;
     this.patientId = data.patientId;
     this.patientName = data.patientName;
     this.referralType = data.referralType;
@@ -188,10 +185,10 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
       .subscribe({
         next: (referral: unknown) => {
           this.loading = false;
-          this.log.info('Referral loaded successfully');
+          this.logger.info('Referral loaded successfully');
         },
         error: (error: unknown) => {
-          this.log.error('Failed to load referral:', error);
+          this.logger.error('Failed to load referral:', error);
           this.toastService.error('Failed to load referral details');
           this.loading = false;
         },
@@ -234,10 +231,10 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
         next: (specialists: Specialist[]) => {
           this.availableSpecialists = specialists || [];
           this.loading = false;
-          this.log.info(`Loaded ${specialists.length} specialists`);
+          this.logger.info(`Loaded ${specialists.length} specialists`);
         },
         error: (error: unknown) => {
-          this.log.error('Failed to load specialists:', error);
+          this.logger.error('Failed to load specialists:', error);
           this.toastService.error('Failed to load specialist list');
           this.loading = false;
         },
@@ -285,7 +282,7 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to verify insurance:', error);
+          this.logger.error('Failed to verify insurance:', error);
           this.toastService.error('Failed to verify insurance coverage');
         },
       });
@@ -317,11 +314,11 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
           this.loading = false;
           this.referralSent = true;
           this.toastService.success('Referral sent successfully');
-          this.log.info('Referral sent to specialist');
+          this.logger.info('Referral sent to specialist');
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to send referral:', error);
+          this.logger.error('Failed to send referral:', error);
           this.toastService.error('Failed to send referral');
         },
       });
@@ -350,11 +347,11 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
             this.toastService.warning(`Referral status: ${status.status}`);
           }
 
-          this.log.info(`Referral status: ${status.status}`);
+          this.logger.info(`Referral status: ${status.status}`);
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to get referral status:', error);
+          this.logger.error('Failed to get referral status:', error);
           this.toastService.error('Failed to check referral status');
         },
       });
@@ -414,7 +411,7 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
         next: (result: unknown) => {
           this.loading = false;
           this.toastService.success('Referral coordination completed');
-          this.log.info('Workflow completed successfully');
+          this.logger.info('Workflow completed successfully');
 
           const workflowResult: ReferralCoordinationResult = {
             success: true,
@@ -426,7 +423,7 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to complete referral coordination:', error);
+          this.logger.error('Failed to complete referral coordination:', error);
           this.toastService.error('Failed to save referral coordination');
         },
       });

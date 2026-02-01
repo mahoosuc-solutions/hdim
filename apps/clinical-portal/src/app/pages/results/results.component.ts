@@ -88,12 +88,7 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
   styleUrl: './results.component.scss',
 })
 export class ResultsComponent implements OnInit, AfterViewInit {
-  private destroy$ = injectDestroy();
-  private get logger() {
-    return this.loggerService.withContext('ResultsComponent');
-  }
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  private destroy$ = injectDestroy();  @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   filterForm: FormGroup;
@@ -224,7 +219,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     private qrdaExportService: QrdaExportService,
     private reportExportService: ReportExportService,
     public aiAssistant: AIAssistantService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
     this.filterForm = this.fb.group({
       dateFrom: [null],

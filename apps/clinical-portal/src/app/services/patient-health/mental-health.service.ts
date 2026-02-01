@@ -45,7 +45,6 @@ import {
   providedIn: 'root',
 })
 export class MentalHealthService extends CacheableService {
-  private log: ContextualLogger;
 
   // Assessment name mappings
   private readonly ASSESSMENT_NAMES: Record<string, string> = {
@@ -63,9 +62,7 @@ export class MentalHealthService extends CacheableService {
     private fhirCondition: FhirConditionService,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('MentalHealthService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get HTTP headers with tenant ID
@@ -94,7 +91,7 @@ export class MentalHealthService extends CacheableService {
         return summary;
       }),
       catchError((error) => {
-        this.log.error('Error fetching mental health summary:', error);
+        this.logger.error('Error fetching mental health summary:', error);
         return this.getMentalHealthFromFhir(patientId);
       })
     );
@@ -151,7 +148,7 @@ export class MentalHealthService extends CacheableService {
         return summary;
       }),
       catchError((error) => {
-        this.log.error('Error fetching mental health from FHIR:', error);
+        this.logger.error('Error fetching mental health from FHIR:', error);
         return of(this.getDefaultMentalHealthSummary());
       })
     );
@@ -176,7 +173,7 @@ export class MentalHealthService extends CacheableService {
         }))
       ),
       catchError((error) => {
-        this.log.error(`Error fetching ${assessmentType} history:`, error);
+        this.logger.error(`Error fetching ${assessmentType} history:`, error);
         return this.getAssessmentHistoryFromFhir(patientId, assessmentType);
       })
     );
@@ -236,7 +233,7 @@ export class MentalHealthService extends CacheableService {
         requiresFollowup: response.requiresFollowup,
       })),
       catchError((error) => {
-        this.log.error('Error submitting mental health assessment:', error);
+        this.logger.error('Error submitting mental health assessment:', error);
         // Fallback to client-side scoring
         return of(this.scoreMentalHealthAssessment(assessmentType, responses));
       })
@@ -274,7 +271,7 @@ export class MentalHealthService extends CacheableService {
         return history;
       }),
       catchError((error) => {
-        this.log.error('Error fetching mental health assessment history:', error);
+        this.logger.error('Error fetching mental health assessment history:', error);
         return of([]);
       })
     );
@@ -379,7 +376,7 @@ export class MentalHealthService extends CacheableService {
           })
       ),
       catchError((error) => {
-        this.log.error('Error fetching mental health diagnoses:', error);
+        this.logger.error('Error fetching mental health diagnoses:', error);
         return of([]);
       })
     );

@@ -26,12 +26,7 @@ import { AuditService } from '../../services/audit.service';
 })
 export class QaAuditDashboardComponent implements OnInit, OnDestroy {
 
-  // Contextual logger
-  private get logger() {
-    return this.loggerService.withContext('QaAuditDashboardComponent');
-  }
-
-  // QA Review Queues
+  // Contextual logger  // QA Review Queues
   pendingReviewDecisions: AIDecisionForReview[] = [];
   flaggedDecisions: AIDecisionForReview[] = [];
   
@@ -69,7 +64,7 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
   accuracyTrends: AccuracyTrendData[] = [];
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private auditService: AuditService
   ) {}
 

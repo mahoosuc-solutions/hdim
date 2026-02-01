@@ -482,7 +482,7 @@ interface ConfigDiff {
 })
 export class VersionCompareDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('VersionCompareDialogComponent');
+  private logger = this.logger.withContext('VersionCompareDialogComponent');
 
   version1: AgentVersion | null = null;
   version2: AgentVersion | null = null;
@@ -496,7 +496,7 @@ export class VersionCompareDialogComponent implements OnInit, OnDestroy {
   constructor(
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private dialogRef: MatDialogRef<VersionCompareDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VersionCompareDialogData
   ) {}

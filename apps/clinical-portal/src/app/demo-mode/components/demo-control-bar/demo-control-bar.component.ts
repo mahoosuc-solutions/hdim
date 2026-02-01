@@ -395,15 +395,9 @@ import { DemoSeedingDataFlowComponent } from '../demo-seeding-data-flow/demo-see
 })
 export class DemoControlBarComponent implements OnInit {
   scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
-  showDataFlow = false;
-
-  private get logger() {
-    return this.loggerService.withContext('DemoControlBarComponent');
-  }
-
-  constructor(
+  showDataFlow = false;  constructor(
     public demoService: DemoModeService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   async ngOnInit(): Promise<void> {

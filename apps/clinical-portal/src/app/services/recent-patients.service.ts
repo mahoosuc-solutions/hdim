@@ -29,7 +29,6 @@ export interface RecentPatientEntry {
   providedIn: 'root',
 })
 export class RecentPatientsService {
-  private readonly logger: any;
   private readonly STORAGE_KEY = 'hdim_recent_patients';
   private readonly MAX_RECENT_PATIENTS = 20;
 
@@ -37,9 +36,7 @@ export class RecentPatientsService {
   readonly recentPatients$ = this.recentPatientsSubject.asObservable();
 
   constructor(
-    private loggerService: LoggerService,) {
-    this.logger = this.loggerService.withContext(\'RecentPatientsService');
-    this.loadFromStorage();
+    private logger: LoggerService,) {    this.loadFromStorage();
   }
 
   /**

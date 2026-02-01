@@ -33,7 +33,6 @@ import {
   providedIn: 'root',
 })
 export class ScheduledEvaluationService implements OnDestroy {
-  private readonly logger: any;
   private readonly STORAGE_KEY = 'healthdata_scheduled_evaluations';
   private readonly HISTORY_KEY = 'healthdata_schedule_history';
   private readonly CHECK_INTERVAL_MS = 60000; // Check every minute
@@ -47,14 +46,12 @@ export class ScheduledEvaluationService implements OnDestroy {
   private checkSubscription?: Subscription;
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private http: HttpClient,
     private authService: AuthService,
     private evaluationService: EvaluationService,
     private auditService: AuditService
-  ) {
-    this.logger = this.loggerService.withContext(\'ScheduledEvaluationService');
-    this.loadSchedules();
+  ) {    this.loadSchedules();
     this.loadExecutionHistory();
     this.startScheduleChecker();
   }

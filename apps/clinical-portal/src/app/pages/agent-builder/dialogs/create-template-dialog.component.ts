@@ -227,7 +227,7 @@ export interface CreateTemplateDialogData {
 })
 export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('CreateTemplateDialogComponent');
+  private logger = this.logger.withContext('CreateTemplateDialogComponent');
 
   templateForm!: FormGroup;
   detectedVariables: PromptVariable[] = [];
@@ -248,7 +248,7 @@ export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private dialogRef: MatDialogRef<CreateTemplateDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CreateTemplateDialogData
   ) {}

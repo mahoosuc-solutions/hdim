@@ -102,7 +102,7 @@ class CQRSEventFlowIntegrationTest {
         kafkaTemplate.send(TEST_TOPIC, eventJson).get(5, TimeUnit.SECONDS);
 
         // Allow time for event processing (eventual consistency)
-        Thread.sleep(1000);
+        Thread.sleep(100);
 
         // Then: Query the projection and verify data is present
         MvcResult result = mockMvc.perform(

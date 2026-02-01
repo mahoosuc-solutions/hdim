@@ -131,7 +131,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
         Instant updatedAt = library.getUpdatedAt();
         assertNotNull(createdAt);
 
-        Thread.sleep(100); // Ensure time difference
+        Thread.sleep(10); // Ensure time difference
 
         library.setDescription("Updated");
         library = libraryRepository.save(library);

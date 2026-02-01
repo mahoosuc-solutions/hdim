@@ -798,7 +798,7 @@ class AgentOrchestratorTest {
 
             // Give it a moment to register the task
             try {
-                Thread.sleep(100);
+                Thread.sleep(10);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

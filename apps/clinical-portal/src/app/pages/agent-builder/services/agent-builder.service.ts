@@ -28,10 +28,9 @@ import {
 export class AgentBuilderService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/agent-builder';
-  private readonly loggerService = inject(LoggerService);
+  private readonly logger = inject(LoggerService);
 
-  constructor() {
-  }
+  constructor() {}
 
   // ============================================================================
   // AGENT CRUD OPERATIONS

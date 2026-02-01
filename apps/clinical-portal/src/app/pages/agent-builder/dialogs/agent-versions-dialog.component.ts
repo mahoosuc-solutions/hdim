@@ -16,7 +16,7 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { AgentConfiguration, AgentVersion, VersionStatus } from '../models/agent.model';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
-import { ConfirmationDialogComponent } from '../../../components/dialogs/confirmation-dialog.component';
+import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { VersionCompareDialogComponent } from './version-compare-dialog.component';
 
 export interface AgentVersionsDialogData {

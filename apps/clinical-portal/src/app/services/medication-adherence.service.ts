@@ -52,7 +52,7 @@ export class MedicationAdherenceService {
   constructor(
     private http: HttpClient,
     private logger: LoggerService
-  ) {
+  ) {}
 
   /**
    * Get HTTP headers with tenant ID

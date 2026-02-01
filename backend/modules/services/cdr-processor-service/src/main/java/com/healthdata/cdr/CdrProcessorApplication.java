@@ -33,9 +33,14 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 })
 @EntityScan(basePackages = {
     "com.healthdata.cdr",
-    "com.healthdata.audit.entity",
+    "com.healthdata.audit.entity.shared",     // Shared AuditEventEntity
+    "com.healthdata.audit.entity.ai",         // AI Agent Decision Events
+    "com.healthdata.audit.entity.clinical",   // Clinical Decision Events
+    "com.healthdata.audit.entity",            // MPIMergeEntity, QAReviewEntity, DataQualityIssueEntity (top-level)
     "com.healthdata.authentication.domain"
 })
+// Repository scanning provided by AuditAutoConfiguration - do NOT add @EnableJpaRepositories here
+// to avoid duplicate bean registration when AuditAutoConfiguration is included
 @EnableConfigurationProperties
 @EnableCaching
 @EnableAsync

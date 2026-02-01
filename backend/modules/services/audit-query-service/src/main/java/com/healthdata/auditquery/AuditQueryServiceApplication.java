@@ -76,8 +76,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 })
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.auditquery.repository",    // Projection repositories
-    "com.healthdata.audit.repository",         // MPIMergeRepository (top-level)
-    "com.healthdata.audit.repository.ai",      // AIAgentDecisionEventRepository
+    "com.healthdata.audit.repository",         // MPIMergeRepository, QAReviewRepository, DataQualityIssueRepository (top-level)
+    "com.healthdata.audit.repository.shared",  // AuditEventRepository
+    "com.healthdata.audit.repository.ai",      // AIAgentDecisionEventRepository, ConfigurationEngineEventRepository, UserConfigurationActionEventRepository
     "com.healthdata.audit.repository.clinical" // ClinicalDecisionRepository
 })
 public class AuditQueryServiceApplication {

@@ -14,6 +14,7 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
   # Database Configuration - H2 in-memory for tests (no Docker required)
   datasource:
@@ -54,10 +55,6 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 0
-  # Disable kafka auto-configuration to avoid broker startup if not using embedded kafka
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
 # Logging
 logging:

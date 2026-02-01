@@ -19,6 +19,19 @@ spring:
     hikari:
       maximum-pool-size: 5
 
+  # JPA Configuration - H2 schema creation
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create  # Create schema from entities for tests
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
   # Disable Spring Boot auto-configurations for tests
   autoconfigure:
     exclude:
@@ -41,27 +54,12 @@ healthdata:
       maximum-pool-size: 5
       minimum-idle: 2
       connection-timeout-ms: 30000
-      jpa:
-        database-platform: org.hibernate.dialect.H2Dialect
-        hibernate:
-          ddl-auto: create-drop
     rls-enabled: false
     jpa:
       auditing-enabled: true
 
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop  # Auto-create schema for tests
-    properties:
-      hibernate:
-        format_sql: false
-        jdbc:
-          batch_size: 20
-        globally_quoted_identifiers: false
-
   liquibase:
-    enabled: false  # Disable Liquibase for tests - use Hibernate auto-DDL instead
+    enabled: false  # Disable Liquibase in tests
 
   # Disable Kafka for tests (we're not testing Kafka consumer)
   kafka:

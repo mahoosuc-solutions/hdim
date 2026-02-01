@@ -14,6 +14,7 @@ cql-engine = "3.3.1"
 
 # Databases & Persistence
 postgresql = "42.7.7"
+h2 = "2.2.224"  # In-memory database for unit tests
 hikaricp = "6.0.0"
 hibernate = "6.6.1.Final"
 liquibase = "4.29.2"
@@ -127,12 +128,14 @@ cql-engine-fhir = { module = "org.opencds.cqf.cql:engine.fhir", version.ref = "c
 
 # Databases
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
 hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 liquibase = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
 httpclient5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpclient5" }
 
 # Kafka
 spring-kafka = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-kafka" }
+spring-kafka-test = { module = "org.springframework.kafka:spring-kafka-test", version.ref = "spring-kafka" }
 kafka-clients = { module = "org.apache.kafka:kafka-clients", version.ref = "kafka" }
 
 # Redis

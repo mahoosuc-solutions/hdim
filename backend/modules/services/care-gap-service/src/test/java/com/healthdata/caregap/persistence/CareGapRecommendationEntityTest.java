@@ -2,6 +2,7 @@ package com.healthdata.caregap.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Tag;
 import java.time.Instant;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("CareGapRecommendationEntity")
+@Tag("unit")
 class CareGapRecommendationEntityTest {
 
     @Test

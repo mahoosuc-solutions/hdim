@@ -20,6 +20,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import org.junit.jupiter.api.Tag;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @BaseIntegrationTest
 @Disabled("Kafka-dependent tests disabled for local H2 testing. See class documentation for KRaft implementation plan.")
 @DisplayName("Care Gap Audit Integration - Kafka Tests (Disabled)")
+@Tag("integration")
 class CareGapAuditIntegrationHeavyweightTest {
 
     @DynamicPropertySource

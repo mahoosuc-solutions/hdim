@@ -1,4 +1,5 @@
 package com.healthdata.cdr.converter;
+import org.junit.jupiter.api.Tag;
 
 import com.healthdata.cdr.dto.CdaDocument;
 import org.hl7.fhir.r4.model.*;
@@ -20,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CDA to FHIR Converter Tests")
+@Tag("unit")
 class CdaToFhirConverterTest {
 
     @InjectMocks

@@ -39,7 +39,6 @@ import java.util.UUID;
  * All endpoints require X-Tenant-ID header and appropriate role-based authorization.
  */
 @RestController
-@RequestMapping("/quality-measure")
 @RequiredArgsConstructor
 @Slf4j
 @Validated

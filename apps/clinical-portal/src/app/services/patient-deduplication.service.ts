@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 import {
   PatientSummaryWithLinks,
   PatientLink,
@@ -29,7 +30,7 @@ export class PatientDeduplicationService {
   private patientLinks: Map<string, PatientLink[]> = new Map();
   private masterPatientIds: Set<string> = new Set();
 
-  constructor() {
+  constructor(private logger: LoggerService) {
     // Initialize with some sample duplicate relationships for demonstration
     this.initializeSampleDuplicates();
   }
@@ -49,7 +50,7 @@ export class PatientDeduplicationService {
     }
 
     // Count duplicates if this is a master
-    let duplicateIds: string[] = [];
+    const duplicateIds: string[] = [];
     if (isMaster) {
       // Find all patients that link to this one as master
       this.patientLinks.forEach((patientLinks, patientId) => {
@@ -90,7 +91,7 @@ export class PatientDeduplicationService {
   /**
    * Link a duplicate patient to a master patient
    */
-  linkPatient(duplicateId: string, masterId: string, verified: boolean = false): Observable<boolean> {
+  linkPatient(duplicateId: string, masterId: string, verified = false): Observable<boolean> {
     // Add link from duplicate to master
     const duplicateLinks = this.patientLinks.get(duplicateId) || [];
     duplicateLinks.push({
@@ -411,7 +412,7 @@ export class PatientDeduplicationService {
           linkedPatients.add(duplicateId);
           duplicatesLinked++;
 
-          console.log(`Linked duplicate: ${duplicateId} -> master: ${masterId} (score: ${matchScore})`);
+          this.logger.info('Linked duplicate patient to master', { duplicateId, masterId, matchScore });
         }
       }
     }
@@ -419,7 +420,7 @@ export class PatientDeduplicationService {
     // Count unique masters created
     const mastersCreated = this.masterPatientIds.size;
 
-    console.log(`Detection complete: ${mastersCreated} masters, ${duplicatesLinked} duplicates linked`);
+    this.logger.info('Patient deduplication detection complete', { mastersCreated, duplicatesLinked });
 
     return of({
       mastersCreated,

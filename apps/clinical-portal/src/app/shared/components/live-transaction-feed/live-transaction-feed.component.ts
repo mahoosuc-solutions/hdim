@@ -470,14 +470,14 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
 })
 export class LiveTransactionFeedComponent implements OnInit, OnDestroy {
   /** Maximum events to display */
-  @Input() maxEvents: number = 100;
+  @Input() maxEvents = 100;
 
   @ViewChild('feedContainer') feedContainer!: ElementRef;
 
   // State
   events: SystemEvent[] = [];
   filteredEvents: SystemEvent[] = [];
-  isPaused: boolean = false;
+  isPaused = false;
   expandedEventId: string | null = null;
   connectionStatus: 'connected' | 'disconnected' | 'simulating' = 'disconnected';
   lastEventTime: string | null = null;

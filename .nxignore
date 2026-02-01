@@ -1,0 +1,8 @@
+# Ignore directories without proper Nx project configuration
+e2e/
+landing-page-v0/
+documentation-site/
+landing-page/
+scripts/
+test-harness/
+tools/implementation-planner/

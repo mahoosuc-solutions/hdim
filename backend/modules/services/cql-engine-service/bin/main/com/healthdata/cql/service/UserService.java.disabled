@@ -1,0 +1,237 @@
+package com.healthdata.cql.service;
+
+import com.healthdata.authentication.domain.User;
+import com.healthdata.authentication.domain.UserRole;
+import com.healthdata.authentication.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Service for user management operations.
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class UserService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Create a new user.
+     */
+    @Transactional
+    public User createUser(User user, String plainPassword) {
+        // Validate username and email uniqueness
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new IllegalArgumentException("Username already exists: " + user.getUsername());
+        }
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
+        }
+
+        // Hash password
+        user.setPasswordHash(passwordEncoder.encode(plainPassword));
+
+        // Save user
+        User savedUser = userRepository.save(user);
+        log.info("Created new user: {} with roles: {}", savedUser.getUsername(), savedUser.getRoles());
+
+        return savedUser;
+    }
+
+    /**
+     * Find user by username.
+     */
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+    /**
+     * Find user by email.
+     */
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    /**
+     * Find user by username or email.
+     */
+    public Optional<User> findByUsernameOrEmail(String usernameOrEmail) {
+        return userRepository.findByUsernameOrEmail(usernameOrEmail);
+    }
+
+    /**
+     * Find user by ID.
+     */
+    public Optional<User> findById(UUID id) {
+        return userRepository.findById(id);
+    }
+
+    /**
+     * Authenticate user with username/email and password.
+     */
+    @Transactional
+    public Optional<User> authenticate(String usernameOrEmail, String password) {
+        Optional<User> userOpt = userRepository.findByUsernameOrEmail(usernameOrEmail);
+
+        if (userOpt.isEmpty()) {
+            log.warn("Authentication failed: user not found: {}", usernameOrEmail);
+            return Optional.empty();
+        }
+
+        User user = userOpt.get();
+
+        // Check if account is locked
+        if (user.isAccountLocked()) {
+            log.warn("Authentication failed: account locked: {}", user.getUsername());
+            return Optional.empty();
+        }
+
+        // Check if account is active
+        if (!user.isAccountActive()) {
+            log.warn("Authentication failed: account inactive: {}", user.getUsername());
+            return Optional.empty();
+        }
+
+        // Verify password
+        if (passwordEncoder.matches(password, user.getPasswordHash())) {
+            user.resetFailedLoginAttempts();
+            userRepository.save(user);
+            log.info("User authenticated successfully: {}", user.getUsername());
+            return Optional.of(user);
+        } else {
+            user.incrementFailedLoginAttempts();
+            userRepository.save(user);
+            log.warn("Authentication failed: invalid password for user: {}", user.getUsername());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Update user password.
+     */
+    @Transactional
+    public void updatePassword(UUID userId, String newPassword) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        log.info("Password updated for user: {}", user.getUsername());
+    }
+
+    /**
+     * Add role to user.
+     */
+    @Transactional
+    public void addRole(UUID userId, UserRole role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.getRoles().add(role);
+        userRepository.save(user);
+        log.info("Added role {} to user: {}", role, user.getUsername());
+    }
+
+    /**
+     * Remove role from user.
+     */
+    @Transactional
+    public void removeRole(UUID userId, UserRole role) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.getRoles().remove(role);
+        userRepository.save(user);
+        log.info("Removed role {} from user: {}", role, user.getUsername());
+    }
+
+    /**
+     * Add tenant access to user.
+     */
+    @Transactional
+    public void addTenantAccess(UUID userId, String tenantId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.getTenantIds().add(tenantId);
+        userRepository.save(user);
+        log.info("Added tenant {} access to user: {}", tenantId, user.getUsername());
+    }
+
+    /**
+     * Remove tenant access from user.
+     */
+    @Transactional
+    public void removeTenantAccess(UUID userId, String tenantId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.getTenantIds().remove(tenantId);
+        userRepository.save(user);
+        log.info("Removed tenant {} access from user: {}", tenantId, user.getUsername());
+    }
+
+    /**
+     * Deactivate user.
+     */
+    @Transactional
+    public void deactivateUser(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.setActive(false);
+        userRepository.save(user);
+        log.info("Deactivated user: {}", user.getUsername());
+    }
+
+    /**
+     * Activate user.
+     */
+    @Transactional
+    public void activateUser(UUID userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+        user.setActive(true);
+        userRepository.save(user);
+        log.info("Activated user: {}", user.getUsername());
+    }
+
+    /**
+     * Get all users by tenant.
+     */
+    public List<User> getUsersByTenant(String tenantId) {
+        return userRepository.findByTenantId(tenantId);
+    }
+
+    /**
+     * Get all users by role.
+     */
+    public List<User> getUsersByRole(UserRole role) {
+        return userRepository.findByRole(role);
+    }
+
+    /**
+     * Get all active users.
+     */
+    public List<User> getAllActiveUsers() {
+        return userRepository.findByActiveTrue();
+    }
+
+    /**
+     * Get all users.
+     */
+    public List<User> getAllUsers() {
+        return userRepository.findAllNonDeleted();
+    }
+}

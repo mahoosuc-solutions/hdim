@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { delay, map } from 'rxjs/operators';
 
@@ -288,8 +289,8 @@ export class ReportBuilderService {
   private historySubject = new BehaviorSubject<GeneratedReport[]>([]);
   readonly history$ = this.historySubject.asObservable();
 
-  constructor() {
-    this.loadFromStorage();
+  constructor(
+    private logger: LoggerService,) {    this.loadFromStorage();
   }
 
   /**
@@ -302,7 +303,7 @@ export class ReportBuilderService {
   /**
    * Create a new custom report with default sections
    */
-  createReport(name: string, description: string = ''): CustomReport {
+  createReport(name: string, description = ''): CustomReport {
     const defaultSections = SECTION_TEMPLATES.filter(s =>
       ['executive-summary', 'quality-measures', 'care-gaps'].includes(s.type)
     ).map((section, index) => ({
@@ -597,7 +598,7 @@ export class ReportBuilderService {
         this.historySubject.next(history);
       }
     } catch (e) {
-      console.error('Error loading reports from storage:', e);
+      this.logger.error('Error loading reports from storage:', e);
     }
   }
 
@@ -608,7 +609,7 @@ export class ReportBuilderService {
         JSON.stringify(this.reportsSubject.value)
       );
     } catch (e) {
-      console.error('Error saving reports to storage:', e);
+      this.logger.error('Error saving reports to storage:', e);
     }
   }
 
@@ -619,7 +620,7 @@ export class ReportBuilderService {
         JSON.stringify(this.historySubject.value)
       );
     } catch (e) {
-      console.error('Error saving history to storage:', e);
+      this.logger.error('Error saving history to storage:', e);
     }
   }
 

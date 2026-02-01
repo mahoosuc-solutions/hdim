@@ -20,45 +20,8 @@
     </div>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-row">
-    <mat-card class="summary-card total-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.totalGaps || 0 }}</div>
-        <div class="summary-label">Total Care Gaps</div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card high-urgency-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.highUrgencyCount || 0 }}</div>
-        <div class="summary-label">
-          <mat-icon class="urgency-icon-high">error</mat-icon>
-          High Urgency
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card medium-urgency-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.mediumUrgencyCount || 0 }}</div>
-        <div class="summary-label">
-          <mat-icon class="urgency-icon-medium">warning</mat-icon>
-          Medium Urgency
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="summary-card low-urgency-card">
-      <mat-card-content>
-        <div class="summary-value">{{ summary.lowUrgencyCount || 0 }}</div>
-        <div class="summary-label">
-          <mat-icon class="urgency-icon-low">info</mat-icon>
-          Low Urgency
-        </div>
-      </mat-card-content>
-    </mat-card>
-  </div>
+  <!-- Care Gap Statistics Dashboard -->
+  <app-care-gap-stats-dashboard></app-care-gap-stats-dashboard>
 
   <!-- Intervention Recommendations Section -->
   <mat-card class="interventions-card">
@@ -74,7 +37,7 @@
               <mat-icon>{{ intervention.icon }}</mat-icon>
             </div>
             <div class="intervention-content">
-              <h4>{{ intervention.name }}</h4>
+              <h2>{{ intervention.name }}</h2>
               <p>{{ intervention.description }}</p>
               <div class="intervention-metrics">
                 <div class="metric">
@@ -335,8 +298,9 @@
                     color="primary"
                     class="quick-action-btn primary-action"
                     [matTooltip]="getPrimaryAction(gap).description"
+                    [attr.aria-label]="getPrimaryAction(gap).label + ' for ' + gap.patientName + ' - ' + gap.measureName"
                     (click)="executePrimaryAction(gap); $event.stopPropagation()">
-                    <mat-icon>{{ getPrimaryAction(gap).icon }}</mat-icon>
+                    <mat-icon aria-hidden="true">{{ getPrimaryAction(gap).icon }}</mat-icon>
                     {{ getPrimaryAction(gap).label }}
                   </button>
 
@@ -346,8 +310,9 @@
                     color="accent"
                     class="close-gap-btn"
                     matTooltip="Close gap"
+                    [attr.aria-label]="'Close care gap for ' + gap.patientName + ' - ' + gap.measureName"
                     (click)="quickCloseGap(gap); $event.stopPropagation()">
-                    <mat-icon>check_circle</mat-icon>
+                    <mat-icon aria-hidden="true">check_circle</mat-icon>
                   </button>
 
                   <!-- More Actions Menu -->
@@ -368,10 +333,15 @@
             <tr
               mat-row
               *matRowDef="let row; columns: displayedColumns"
-              class="care-gap-row"
+              class="care-gap-row clickable-row"
               [class.high-urgency-row]="row.urgency === 'high'"
               [class.medium-urgency-row]="row.urgency === 'medium'"
               [class.low-urgency-row]="row.urgency === 'low'"
+              (click)="onRowClick(row, $event)"
+              [attr.aria-label]="'View patient ' + row.patientName + ' details'"
+              tabindex="0"
+              (keydown.enter)="onRowClick(row, $event)"
+              (keydown.space)="onRowClick(row, $event); $event.preventDefault()"
             ></tr>
           </table>
         </div>
@@ -504,7 +474,7 @@
       <span>Close Gap</span>
     </button>
     <mat-divider></mat-divider>
-    <button mat-menu-item (click)="openQuickActionDialog(gap, 'SEND_REMINDER')">
+    <button mat-menu-item (click)="openQuickActionDialog(gap, 'SEND_REMINDER')" data-testid="care-gap-send-reminder">
       <mat-icon>email</mat-icon>
       <span>Send Reminder</span>
     </button>

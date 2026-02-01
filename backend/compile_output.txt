@@ -1,0 +1,706 @@
+Type-safe project accessors is an incubating feature.
+> Task :modules:shared:domain:common:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:tracing:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:database-config:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:security:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:persistence:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:cache:compileJava UP-TO-DATE
+> Task :modules:shared:domain:fhir-models:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:audit:compileJava UP-TO-DATE
+> Task :modules:shared:infrastructure:authentication:compileJava UP-TO-DATE
+
+> Task :modules:services:clinical-workflow-service:compileJava
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:46: warning: [removal] csrf() in HttpSecurity has been deprecated and marked for removal
+            .csrf().disable()
+            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:49: warning: [removal] sessionManagement() in HttpSecurity has been deprecated and marked for removal
+            .sessionManagement()
+            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:51: warning: [removal] and() in SecurityConfigurerAdapter has been deprecated and marked for removal
+                .and()
+                ^
+  where B,O are type-variables:
+    B extends SecurityBuilder<O> declared in class SecurityConfigurerAdapter
+    O extends Object declared in class SecurityConfigurerAdapter
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:58: warning: [removal] cors() in HttpSecurity has been deprecated and marked for removal
+            .cors()
+            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:59: warning: [removal] and() in SecurityConfigurerAdapter has been deprecated and marked for removal
+                .and()
+                ^
+  where B,O are type-variables:
+    B extends SecurityBuilder<O> declared in class SecurityConfigurerAdapter
+    O extends Object declared in class SecurityConfigurerAdapter
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:62: warning: [removal] authorizeHttpRequests() in HttpSecurity has been deprecated and marked for removal
+            .authorizeHttpRequests()
+            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:69: warning: [removal] and() in AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry has been deprecated and marked for removal
+                .and()
+                ^
+  where H is a type-variable:
+    H extends HttpSecurityBuilder<H> declared in class AuthorizeHttpRequestsConfigurer
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:72: warning: [removal] exceptionHandling() in HttpSecurity has been deprecated and marked for removal
+            .exceptionHandling();
+            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                      ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                      ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                      ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                      ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                      ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                            ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                             ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                         ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                         ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                         ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                         ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                         ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                 ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                   ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                        ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                        ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                        ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                        ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                        ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CreateChecklistRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CreateChecklistRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+    @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:76: error: incompatible types: QueueStatusResponse cannot be converted to List<WaitingQueueEntity>
+                queueService.getQueueStatus(tenantId)));
+                                           ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:131: error: incompatible types: QueuePositionResponse cannot be converted to WaitingQueueEntity
+                queueService.addToQueue(tenantId, request, userId)));
+                                       ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:164: error: incompatible types: QueuePositionResponse cannot be converted to WaitingQueueEntity
+                queueService.getPatientQueueInfo(tenantId, patientId)));
+                                                ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:199: error: incompatible types: QueuePositionResponse cannot be converted to WaitingQueueEntity
+                queueService.callPatient(tenantId, patientId, userId)));
+                                        ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/PreVisitController.java:281: error: incompatible types: ChecklistProgress cannot be converted to PreVisitChecklistEntity
+                checklistService.getChecklistProgress(tenantId, id)));
+                                                     ^
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/PreVisitController.java:314: error: invalid method reference
+                .map(checklistMapper::toChecklistItemResponse)
+                     ^
+  cannot find symbol
+    symbol:   method toChecklistItemResponse()
+    location: class PreVisitChecklistMapper
+/home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/CheckInController.java:209: error: method toCheckInHistoryResponse in class PatientCheckInMapper cannot be applied to given types;
+            checkInMapper.toCheckInHistoryResponse(
+                         ^
+  required: List<PatientCheckInEntity>,Long,Integer,Integer
+  found:    List<PatientCheckInEntity>
+  reason: actual and formal argument lists differ in length
+Note: Some input files additionally use or override a deprecated API.
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+7 errors
+100 warnings
+
+> Task :modules:services:clinical-workflow-service:compileJava FAILED
+[Incubating] Problems report is available at: file:///home/webemo-aaron/projects/hdim-master/backend/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':modules:services:clinical-workflow-service:compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/PreVisitController.java:314: error: invalid method reference
+                  .map(checklistMapper::toChecklistItemResponse)
+                       ^
+    cannot find symbol
+      symbol:   method toChecklistItemResponse()
+      location: class PreVisitChecklistMapper
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                        ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                        ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                        ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                        ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Appointment FHIR ID", example = "APPT001", required = true)
+                                                                        ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CheckInRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Check-in timestamp", example = "2026-01-17T09:30:00", required = true)
+                                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/InsuranceVerificationRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Insurance verification status", example = "true", required = true)
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether consent was obtained", example = "true", required = true)
+                                                                              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/ConsentRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of consent obtained", example = "TREATMENT", required = true,
+                                                                               ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/DemographicsUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Whether demographics were confirmed", example = "true", required = true)
+                                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomAssignmentRequest.java:25: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/RoomStatusUpdateRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "New room status", example = "CLEANING", required = true,
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:24: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:28: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:32: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Type of queue", example = "CHECK_IN", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                           ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                           ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                           ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                           ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:37: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When patient entered queue", example = "2026-01-17T09:30:00", required = true)
+                                                                                           ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/QueueEntryRequest.java:41: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Priority level", example = "ROUTINE", required = true,
+                                                                   ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:26: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:30: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Encounter FHIR ID", example = "ENC001", required = true)
+                                                                     ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                          ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                          ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                          ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                          ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/VitalSignsRequest.java:34: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "When vitals were measured", example = "2026-01-17T09:35:00", required = true)
+                                                                                          ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CreateChecklistRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/dto/CreateChecklistRequest.java:21: warning: [deprecation] required() in Schema has been deprecated
+      @Schema(description = "Patient FHIR ID", example = "PATIENT001", required = true)
+                                                                       ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:76: error: incompatible types: QueueStatusResponse cannot be converted to List<WaitingQueueEntity>
+                  queueService.getQueueStatus(tenantId)));
+                                             ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:131: error: incompatible types: QueuePositionResponse cannot be converted to WaitingQueueEntity
+                  queueService.addToQueue(tenantId, request, userId)));
+                                         ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:164: error: incompatible types: QueuePositionResponse cannot be converted to WaitingQueueEntity
+                  queueService.getPatientQueueInfo(tenantId, patientId)));
+                                                  ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/QueueController.java:199: error: incompatible types: QueuePositionResponse cannot be converted to WaitingQueueEntity
+                  queueService.callPatient(tenantId, patientId, userId)));
+                                          ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/PreVisitController.java:281: error: incompatible types: ChecklistProgress cannot be converted to PreVisitChecklistEntity
+                  checklistService.getChecklistProgress(tenantId, id)));
+                                                       ^
+  Note: Some input files additionally use or override a deprecated API.
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:46: warning: [removal] csrf() in HttpSecurity has been deprecated and marked for removal
+              .csrf().disable()
+              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:49: warning: [removal] sessionManagement() in HttpSecurity has been deprecated and marked for removal
+              .sessionManagement()
+              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:51: warning: [removal] and() in SecurityConfigurerAdapter has been deprecated and marked for removal
+                  .and()
+                  ^
+    where B,O are type-variables:
+      B extends SecurityBuilder<O> declared in class SecurityConfigurerAdapter
+      O extends Object declared in class SecurityConfigurerAdapter
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:58: warning: [removal] cors() in HttpSecurity has been deprecated and marked for removal
+              .cors()
+              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:59: warning: [removal] and() in SecurityConfigurerAdapter has been deprecated and marked for removal
+                  .and()
+                  ^
+    where B,O are type-variables:
+      B extends SecurityBuilder<O> declared in class SecurityConfigurerAdapter
+      O extends Object declared in class SecurityConfigurerAdapter
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:62: warning: [removal] authorizeHttpRequests() in HttpSecurity has been deprecated and marked for removal
+              .authorizeHttpRequests()
+              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:69: warning: [removal] and() in AuthorizeHttpRequestsConfigurer.AuthorizationManagerRequestMatcherRegistry has been deprecated and marked for removal
+                  .and()
+                  ^
+    where H is a type-variable:
+      H extends HttpSecurityBuilder<H> declared in class AuthorizeHttpRequestsConfigurer
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/infrastructure/config/ClinicalWorkflowSecurityConfig.java:72: warning: [removal] exceptionHandling() in HttpSecurity has been deprecated and marked for removal
+              .exceptionHandling();
+              ^
+  /home/webemo-aaron/projects/hdim-master/backend/modules/services/clinical-workflow-service/src/main/java/com/healthdata/clinicalworkflow/api/v1/CheckInController.java:209: error: method toCheckInHistoryResponse in class PatientCheckInMapper cannot be applied to given types;
+              checkInMapper.toCheckInHistoryResponse(
+                           ^
+    required: List<PatientCheckInEntity>,Long,Integer,Integer
+    found:    List<PatientCheckInEntity>
+    reason: actual and formal argument lists differ in length
+  Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+  7 errors
+  100 warnings
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights.
+
+BUILD FAILED in 7s
+10 actionable tasks: 1 executed, 9 up-to-date

@@ -1,0 +1,267 @@
+{
+	"info": {
+		"_postman_id": "hdim-quality-measures-collection",
+		"name": "HDIM - 03 Quality Measures",
+		"description": "HEDIS quality measure evaluation workflows\n\n**Prerequisites:**\n1. Authenticate via \"Authentication > Login\"\n2. Have a valid patient ID (from \"Patient Management > Search Patients\")\n\n**Features:**\n- List available HEDIS measures\n- Trigger measure evaluations\n- View evaluation results\n- Assign measures to patients\n- Override measure results (with approval workflow)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "List Measures",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save first measure ID to environment",
+							"if (pm.response.code === 200) {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.measures && jsonData.measures.length > 0) {",
+							"        pm.environment.set(\"measure_id\", jsonData.measures[0].id);",
+							"        console.log(\"✅ Found\", jsonData.totalCount, \"measure(s)\");",
+							"        console.log(\"Measure ID saved:\", jsonData.measures[0].id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{quality_measure_url}}/api/v1/measures?status=ACTIVE&version=2024",
+					"host": [
+						"{{quality_measure_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"measures"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "ACTIVE",
+							"description": "Filter by status (ACTIVE, DRAFT, RETIRED)"
+						},
+						{
+							"key": "version",
+							"value": "2024",
+							"description": "Measure version year"
+						},
+						{
+							"key": "category",
+							"value": "PREVENTION",
+							"disabled": true,
+							"description": "Filter by category"
+						}
+					]
+				},
+				"description": "**List available HEDIS quality measures**\n\n**Common HEDIS Measures:**\n- `COL` - Colorectal Cancer Screening\n- `BCS` - Breast Cancer Screening\n- `CDC` - Diabetes Care - HbA1c Control\n- `CBP` - Controlling High Blood Pressure\n- `IMA` - Immunizations for Adolescents\n\n**Response:**\n```json\n{\n  \"measures\": [\n    {\n      \"id\": \"COL-001\",\n      \"name\": \"Colorectal Cancer Screening\",\n      \"description\": \"HEDIS COL measure\",\n      \"version\": \"2024\",\n      \"status\": \"ACTIVE\",\n      \"category\": \"PREVENTION\"\n    }\n  ],\n  \"totalCount\": 1\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Evaluate Measure",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save evaluation ID to environment",
+							"if (pm.response.code === 201) {",
+							"    const jsonData = pm.response.json();",
+							"    pm.environment.set(\"evaluation_id\", jsonData.evaluationId);",
+							"    console.log(\"✅ Evaluation created:\", jsonData.evaluationId);",
+							"    console.log(\"Result:\", jsonData.result);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"patientId\": \"{{patient_id}}\",\n  \"measureId\": \"{{measure_id}}\",\n  \"evaluationDate\": \"2026-01-24T00:00:00Z\"\n}"
+				},
+				"url": {
+					"raw": "{{quality_measure_url}}/api/v1/evaluations",
+					"host": [
+						"{{quality_measure_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"evaluations"
+					]
+				},
+				"description": "**Trigger quality measure evaluation for a patient**\n\n**Request:**\n```json\n{\n  \"patientId\": \"PAT-12345\",\n  \"measureId\": \"COL-001\",\n  \"evaluationDate\": \"2026-01-24T00:00:00Z\"\n}\n```\n\n**Response:**\n```json\n{\n  \"evaluationId\": \"EVAL-98765\",\n  \"patientId\": \"PAT-12345\",\n  \"measureId\": \"COL-001\",\n  \"result\": \"MET\",\n  \"numerator\": true,\n  \"denominator\": true,\n  \"exclusion\": false,\n  \"evaluatedAt\": \"2026-01-24T10:30:45Z\",\n  \"details\": {\n    \"screeningDate\": \"2025-06-15\",\n    \"screeningType\": \"Colonoscopy\"\n  }\n}\n```\n\n**Result Values:**\n- `MET` - Patient met the measure\n- `NOT_MET` - Patient did not meet the measure\n- `EXCLUDED` - Patient excluded from measure\n- `NOT_APPLICABLE` - Measure not applicable"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Evaluation Result",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{quality_measure_url}}/api/v1/evaluations/{{evaluation_id}}",
+					"host": [
+						"{{quality_measure_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"evaluations",
+						"{{evaluation_id}}"
+					]
+				},
+				"description": "**Retrieve detailed evaluation results**\n\n**Response:**\n```json\n{\n  \"evaluationId\": \"EVAL-98765\",\n  \"patientId\": \"PAT-12345\",\n  \"measureId\": \"COL-001\",\n  \"result\": \"MET\",\n  \"numerator\": true,\n  \"denominator\": true,\n  \"exclusion\": false,\n  \"evaluatedAt\": \"2026-01-24T10:30:45Z\",\n  \"cqlResults\": {\n    \"InDenominator\": true,\n    \"InNumerator\": true,\n    \"InExclusion\": false\n  },\n  \"evidenceLinks\": [\n    {\n      \"resourceType\": \"Procedure\",\n      \"resourceId\": \"PROC-12345\",\n      \"date\": \"2025-06-15\",\n      \"code\": \"44388\",\n      \"description\": \"Colonoscopy with biopsy\"\n    }\n  ]\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "List Patient Evaluations",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{quality_measure_url}}/api/v1/patients/{{patient_id}}/evaluations",
+					"host": [
+						"{{quality_measure_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}",
+						"evaluations"
+					]
+				},
+				"description": "**List all evaluations for a patient**\n\n**Response:**\n```json\n{\n  \"evaluations\": [\n    {\n      \"evaluationId\": \"EVAL-98765\",\n      \"measureId\": \"COL-001\",\n      \"result\": \"MET\",\n      \"evaluatedAt\": \"2026-01-24T10:30:45Z\"\n    },\n    {\n      \"evaluationId\": \"EVAL-98766\",\n      \"measureId\": \"BCS-001\",\n      \"result\": \"NOT_MET\",\n      \"evaluatedAt\": \"2026-01-24T10:31:00Z\"\n    }\n  ],\n  \"totalCount\": 2\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Assign Measure to Patient",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"measureId\": \"{{measure_id}}\",\n  \"assignmentType\": \"MANUAL\",\n  \"validFrom\": \"2026-01-01T00:00:00Z\",\n  \"validTo\": \"2026-12-31T23:59:59Z\",\n  \"notes\": \"High-risk patient - prioritize screening\"\n}"
+				},
+				"url": {
+					"raw": "{{quality_measure_url}}/api/v1/patients/{{patient_id}}/measure-assignments",
+					"host": [
+						"{{quality_measure_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}",
+						"measure-assignments"
+					]
+				},
+				"description": "**Manually assign a quality measure to a patient**\n\n**Use Cases:**\n- Patient is high-risk and needs priority screening\n- Measure not automatically assigned by business rules\n- Override exclusion criteria\n\n**Response:**\n```json\n{\n  \"assignmentId\": \"ASSIGN-12345\",\n  \"patientId\": \"PAT-12345\",\n  \"measureId\": \"COL-001\",\n  \"assignmentType\": \"MANUAL\",\n  \"validFrom\": \"2026-01-01T00:00:00Z\",\n  \"validTo\": \"2026-12-31T23:59:59Z\",\n  \"createdAt\": \"2026-01-24T10:30:00Z\"\n}\n```"
+			},
+			"response": []
+		}
+	]
+}

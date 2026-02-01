@@ -750,6 +750,7 @@ Support: support@hdim.io
 - [ ] Set up analytics (PostHog, GA4, LinkedIn Insight Tag)
 - [ ] Create UTM strategy document
 - [ ] Prepare clinical portal for demo capture (anonymize data)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Week 2: Demo Build
 

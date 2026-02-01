@@ -9,6 +9,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
+import { LoggerService } from './logger.service';
 import {
   PDCResult,
   MedicationAdherenceScore,
@@ -47,7 +48,11 @@ interface CoveredPeriod {
   providedIn: 'root',
 })
 export class MedicationAdherenceService {
-  constructor(private http: HttpClient) {}
+
+  constructor(
+    private http: HttpClient,
+    private logger: LoggerService
+  ) {}
 
   /**
    * Get HTTP headers with tenant ID
@@ -84,7 +89,7 @@ export class MedicationAdherenceService {
           return bundle.entry.map((entry: any) => entry.resource as MedicationRequest);
         }),
         catchError((error) => {
-          console.error('Error fetching active medications:', error);
+          this.logger.error('Error fetching active medications', { error });
           return of([]);
         })
       );
@@ -181,7 +186,7 @@ export class MedicationAdherenceService {
         };
       }),
       catchError((error) => {
-        console.error('Error calculating overall adherence:', error);
+        this.logger.error('Error calculating overall adherence', { error });
         return of({
           overallPDC: 0,
           adherentCount: 0,
@@ -270,7 +275,7 @@ export class MedicationAdherenceService {
         return problematic;
       }),
       catchError((error) => {
-        console.error('Error getting problematic medications:', error);
+        this.logger.error('Error getting problematic medications', { error });
         return of([]);
       })
     );
@@ -307,7 +312,7 @@ export class MedicationAdherenceService {
           return bundle.entry.map((entry: any) => entry.resource as MedicationDispense);
         }),
         catchError((error) => {
-          console.error('Error fetching medication dispenses:', error);
+          this.logger.error('Error fetching medication dispenses', { error });
           return of([]);
         })
       );

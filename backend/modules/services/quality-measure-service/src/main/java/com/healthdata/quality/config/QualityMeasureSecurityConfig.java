@@ -1,9 +1,13 @@
 package com.healthdata.quality.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.quality.persistence.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -50,7 +54,7 @@ public class QualityMeasureSecurityConfig {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
 
     /**
@@ -107,6 +111,20 @@ public class QualityMeasureSecurityConfig {
     }
 
     /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    @ConditionalOnBean(UserRepository.class)
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -120,7 +138,7 @@ public class QualityMeasureSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            .anonymous(anonymous -> anonymous.authorities("ROLE_ANALYST", "ROLE_EVALUATOR", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"));
+            .anonymous(anonymous -> anonymous.authorities("ROLE_MEASURE_DEVELOPER", "ROLE_EVALUATOR", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"));
 
         return http.build();
     }
@@ -152,6 +170,7 @@ public class QualityMeasureSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            ObjectProvider<UserAutoRegistrationFilter> userAutoRegistrationFilterProvider,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -179,10 +198,23 @@ public class QualityMeasureSecurityConfig {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
+        // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+        // This ensures users are automatically registered in service database on first access
+        // Extracts user info from validated gateway headers, creates user record if doesn't exist
+        UserAutoRegistrationFilter userAutoRegistrationFilter =
+            userAutoRegistrationFilterProvider.getIfAvailable();
+        if (userAutoRegistrationFilter != null) {
+            http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+        }
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated requests
         // Uses request attributes (no database lookup)
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        if (userAutoRegistrationFilter != null) {
+            http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
+        } else {
+            http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        }
 
         return http.build();
     }

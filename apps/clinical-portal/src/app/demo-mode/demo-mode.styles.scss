@@ -96,6 +96,25 @@
   animation: demo-pulse-animation 2s infinite;
 }
 
+.demo-storyboard-highlight {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid rgba(56, 189, 248, 0.7);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+}
+
+.demo-storyboard-popup {
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.4);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 @keyframes demo-pulse-animation {
   0%,
   100% {

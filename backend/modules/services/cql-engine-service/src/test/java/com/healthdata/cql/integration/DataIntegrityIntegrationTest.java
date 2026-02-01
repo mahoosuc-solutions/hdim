@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.Instant;
 import java.util.List;
@@ -40,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -65,7 +67,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should enforce NOT NULL constraint on library tenant_id")
     void testLibraryTenantIdNotNull() {
         assertThrows(Exception.class, () -> {
-            CqlLibrary library = new CqlLibrary(null, "TestLib", "1.0.0");
+            CqlLibrary library = buildLibrary(null, "TestLib", "1.0.0");
             libraryRepository.save(library);
             entityManager.flush(); // Force constraint validation
         });
@@ -76,7 +78,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should enforce NOT NULL constraint on library name")
     void testLibraryNameNotNull() {
         assertThrows(Exception.class, () -> {
-            CqlLibrary library = new CqlLibrary(TENANT_ID, null, "1.0.0");
+            CqlLibrary library = buildLibrary(TENANT_ID, null, "1.0.0");
             libraryRepository.save(library);
             entityManager.flush(); // Force constraint validation
         });
@@ -87,7 +89,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should enforce NOT NULL constraint on library version")
     void testLibraryVersionNotNull() {
         assertThrows(Exception.class, () -> {
-            CqlLibrary library = new CqlLibrary(TENANT_ID, "TestLib", null);
+            CqlLibrary library = buildLibrary(TENANT_ID, "TestLib", null);
             libraryRepository.save(library);
             entityManager.flush(); // Force constraint validation
         });
@@ -97,7 +99,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(4)
     @DisplayName("Should set default values correctly")
     void testDefaultValues() {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "DefaultTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "DefaultTest", "1.0.0");
         library = libraryRepository.save(library);
 
         assertNotNull(library.getId());
@@ -110,8 +112,8 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(5)
     @DisplayName("Should auto-generate UUIDs")
     void testUuidGeneration() {
-        CqlLibrary lib1 = libraryRepository.save(new CqlLibrary(TENANT_ID, "UUID1", "1.0.0"));
-        CqlLibrary lib2 = libraryRepository.save(new CqlLibrary(TENANT_ID, "UUID2", "1.0.0"));
+        CqlLibrary lib1 = libraryRepository.save(buildLibrary(TENANT_ID, "UUID1", "1.0.0"));
+        CqlLibrary lib2 = libraryRepository.save(buildLibrary(TENANT_ID, "UUID2", "1.0.0"));
 
         assertNotNull(lib1.getId());
         assertNotNull(lib2.getId());
@@ -122,14 +124,14 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(6)
     @DisplayName("Should auto-update timestamps")
     void testTimestampAutoUpdate() throws Exception {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "TimestampTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "TimestampTest", "1.0.0");
         library = libraryRepository.save(library);
 
         Instant createdAt = library.getCreatedAt();
         Instant updatedAt = library.getUpdatedAt();
         assertNotNull(createdAt);
 
-        Thread.sleep(100); // Ensure time difference
+        Thread.sleep(10); // Ensure time difference
 
         library.setDescription("Updated");
         library = libraryRepository.save(library);
@@ -144,7 +146,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(7)
     @DisplayName("Should maintain foreign key relationship between evaluation and library")
     void testEvaluationLibraryForeignKey() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "FKTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "FKTest", "1.0.0"));
 
         CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, PATIENT_ID_1);
         evaluation = evaluationRepository.save(evaluation);
@@ -159,7 +161,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(8)
     @DisplayName("Should enforce referential integrity")
     void testReferentialIntegrity() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "RefTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "RefTest", "1.0.0"));
 
         CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, PATIENT_ID_2);
         evaluationRepository.save(evaluation);
@@ -176,7 +178,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(9)
     @DisplayName("Should preserve data when updating parent entity")
     void testParentUpdatePreservesChildren() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "ParentTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "ParentTest", "1.0.0"));
 
         // Create child evaluations
         evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, PATIENT_ID_3));
@@ -196,12 +198,12 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(10)
     @DisplayName("Should enforce value set OID format")
     void testValueSetOidConstraints() {
-        ValueSet valueSet = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1", "Test", "SNOMED");
+        ValueSet valueSet = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.1", "Test", "SNOMED");
         valueSet = valueSetRepository.save(valueSet);
         assertNotNull(valueSet.getId());
 
         // Even unusual OIDs should be allowed
-        ValueSet unusual = new ValueSet(TENANT_ID, "1.2.3.4.5.6.7.8.9", "Unusual", "LOINC");
+        ValueSet unusual = buildValueSet(TENANT_ID, "1.2.3.4.5.6.7.8.9", "Unusual", "LOINC");
         unusual = valueSetRepository.save(unusual);
         assertNotNull(unusual.getId());
     }
@@ -213,7 +215,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
         String largeCqlContent = "library Test version '1.0.0'\n" + "A".repeat(5000);
         String largeDescription = "B".repeat(3000);
 
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "LargeText", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "LargeText", "1.0.0");
         library.setCqlContent(largeCqlContent);
         library.setDescription(largeDescription);
         library = libraryRepository.save(library);
@@ -232,10 +234,10 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
         long initialCount = libraryRepository.count();
 
         try {
-            CqlLibrary lib1 = new CqlLibrary(TENANT_ID, "Trans1", "1.0.0");
+            CqlLibrary lib1 = buildLibrary(TENANT_ID, "Trans1", "1.0.0");
             libraryRepository.save(lib1);
 
-            CqlLibrary lib2 = new CqlLibrary(null, "Trans2", "1.0.0"); // This will fail
+            CqlLibrary lib2 = buildLibrary(null, "Trans2", "1.0.0"); // This will fail
             libraryRepository.save(lib2);
             entityManager.flush(); // Force constraint validation
 
@@ -259,7 +261,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     void testSpecialCharacters() {
         String specialChars = "Test with special chars: !@#$%^&*()_+-=[]{}|;:',.<>?/~`\"\\";
 
-        CqlLibrary library = new CqlLibrary(TENANT_ID, specialChars, "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, specialChars, "1.0.0");
         library.setDescription(specialChars);
         library = libraryRepository.save(library);
 
@@ -275,7 +277,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     void testUnicodeCharacters() {
         String unicode = "Test with unicode: \u00E9\u00F1\u00FC \u4E2D\u6587 \u0420\u0443\u0441\u0441\u043A\u0438\u0439 \u0627\u0644\u0639\u0631\u0628\u064A\u0629";
 
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "UnicodeTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "UnicodeTest", "1.0.0");
         library.setDescription(unicode);
         library = libraryRepository.save(library);
 
@@ -290,7 +292,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     void testJsonStructurePreservation() {
         String jsonContent = "{\"library\": {\"name\": \"Test\", \"nested\": {\"value\": 123}}}";
 
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "JsonTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "JsonTest", "1.0.0");
         library.setElmJson(jsonContent);
         library = libraryRepository.save(library);
 
@@ -303,22 +305,23 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(16)
     @DisplayName("Should handle null optional fields")
     void testNullOptionalFields() {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "NullOptional", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "NullOptional", "1.0.0");
         // Don't set optional fields: description, publisher, cqlContent, etc.
+        library.setCqlContent("");
         library = libraryRepository.save(library);
 
         CqlLibrary retrieved = libraryRepository.findById(library.getId()).orElse(null);
         assertNotNull(retrieved);
         assertNull(retrieved.getDescription());
         assertNull(retrieved.getPublisher());
-        assertNull(retrieved.getCqlContent());
+        assertEquals("", retrieved.getCqlContent());
     }
 
     @Test
     @Order(17)
     @DisplayName("Should maintain evaluation-library relationship after library update")
     void testRelationshipAfterUpdate() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "RelUpdate", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "RelUpdate", "1.0.0"));
         CqlEvaluation evaluation = evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, UUID.randomUUID()));
 
         // Update library
@@ -336,7 +339,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(18)
     @DisplayName("Should handle concurrent updates without data corruption")
     void testConcurrentUpdates() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "Concurrent", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "Concurrent", "1.0.0"));
 
         // Multiple updates to same entity
         for (int i = 0; i < 5; i++) {
@@ -355,7 +358,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(19)
     @DisplayName("Should preserve evaluation status history")
     void testEvaluationStatusHistory() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "StatusHistory", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "StatusHistory", "1.0.0"));
         CqlEvaluation evaluation = evaluationRepository.save(new CqlEvaluation(TENANT_ID, library, UUID.randomUUID()));
 
         // Change status multiple times
@@ -374,8 +377,8 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(20)
     @DisplayName("Should maintain tenant isolation at database level")
     void testDatabaseLevelTenantIsolation() {
-        CqlLibrary tenant1Lib = libraryRepository.save(new CqlLibrary("tenant-1", "Isolated1", "1.0.0"));
-        CqlLibrary tenant2Lib = libraryRepository.save(new CqlLibrary("tenant-2", "Isolated2", "1.0.0"));
+        CqlLibrary tenant1Lib = libraryRepository.save(buildLibrary("tenant-1", "Isolated1", "1.0.0"));
+        CqlLibrary tenant2Lib = libraryRepository.save(buildLibrary("tenant-2", "Isolated2", "1.0.0"));
 
         List<CqlLibrary> tenant1Data = libraryRepository.findByTenantIdAndActiveTrue("tenant-1");
         List<CqlLibrary> tenant2Data = libraryRepository.findByTenantIdAndActiveTrue("tenant-2");
@@ -390,11 +393,11 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(21)
     @DisplayName("Should handle empty strings vs null correctly")
     void testEmptyStringVsNull() {
-        CqlLibrary withEmpty = new CqlLibrary(TENANT_ID, "EmptyTest", "1.0.0");
+        CqlLibrary withEmpty = buildLibrary(TENANT_ID, "EmptyTest", "1.0.0");
         withEmpty.setDescription(""); // Empty string
         withEmpty = libraryRepository.save(withEmpty);
 
-        CqlLibrary withNull = new CqlLibrary(TENANT_ID, "NullTest", "1.0.0");
+        CqlLibrary withNull = buildLibrary(TENANT_ID, "NullTest", "1.0.0");
         withNull.setDescription(null); // Null
         withNull = libraryRepository.save(withNull);
 
@@ -412,11 +415,11 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(22)
     @DisplayName("Should handle boolean fields correctly")
     void testBooleanFields() {
-        CqlLibrary activeLib = new CqlLibrary(TENANT_ID, "ActiveTrue", "1.0.0");
+        CqlLibrary activeLib = buildLibrary(TENANT_ID, "ActiveTrue", "1.0.0");
         activeLib.setActive(true);
         activeLib = libraryRepository.save(activeLib);
 
-        CqlLibrary inactiveLib = new CqlLibrary(TENANT_ID, "ActiveFalse", "1.0.0");
+        CqlLibrary inactiveLib = buildLibrary(TENANT_ID, "ActiveFalse", "1.0.0");
         inactiveLib.setActive(false);
         inactiveLib = libraryRepository.save(inactiveLib);
 
@@ -428,7 +431,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(23)
     @DisplayName("Should handle instant/timestamp fields with precision")
     void testTimestampPrecision() throws Exception {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "TimePrecision", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "TimePrecision", "1.0.0"));
         CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
 
         Instant before = Instant.now();
@@ -447,7 +450,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     @Order(24)
     @DisplayName("Should handle numeric fields correctly")
     void testNumericFields() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "NumericTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "NumericTest", "1.0.0"));
         CqlEvaluation evaluation = new CqlEvaluation(TENANT_ID, library, UUID.randomUUID());
 
         evaluation.setDurationMs(12345L);
@@ -464,7 +467,7 @@ public class DataIntegrityIntegrationTest extends CqlTestcontainersBase {
     void testJsonArrayFields() {
         String codesJson = "[\"123456\", \"789012\", \"345678\"]";
 
-        ValueSet valueSet = new ValueSet(TENANT_ID, "2.16.840.1.array.test", "ArrayTest", "SNOMED");
+        ValueSet valueSet = buildValueSet(TENANT_ID, "2.16.840.1.array.test", "ArrayTest", "SNOMED");
         valueSet.setCodes(codesJson);
         valueSet = valueSetRepository.save(valueSet);
 

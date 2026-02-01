@@ -10,6 +10,7 @@
  * - Export functionality
  */
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -787,6 +788,7 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
   currentProviderId = 'provider-current'; // Would come from auth service
 
   constructor(
+    private logger: LoggerService,
     private dialogRef: MatDialogRef<ProviderLeaderboardDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ProviderLeaderboardDialogData
   ) {}
@@ -1191,7 +1193,7 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
    * View provider details
    */
   viewProviderDetails(provider: ProviderPerformance): void {
-    console.log('View provider details:', provider);
+    this.logger.info('View provider details:', provider);
     // Would open a detailed provider performance dialog
   }
 
@@ -1199,21 +1201,21 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
    * Compare provider with org average
    */
   compareWithOrg(provider: ProviderPerformance): void {
-    console.log('Compare with org:', provider);
+    this.logger.info('Compare with org:', provider);
   }
 
   /**
    * View provider's patient panel
    */
   viewPatientPanel(provider: ProviderPerformance): void {
-    console.log('View patient panel:', provider);
+    this.logger.info('View patient panel:', provider);
   }
 
   /**
    * View provider's care gaps
    */
   viewCareGaps(provider: ProviderPerformance): void {
-    console.log('View care gaps:', provider);
+    this.logger.info('View care gaps:', provider);
   }
 
   /**

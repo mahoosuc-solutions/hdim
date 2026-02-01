@@ -1,0 +1,109 @@
+spring:
+  application:
+    name: event-store-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/event_store_db
+    username: ${DB_USERNAME:healthdata}
+    password: ${DB_PASSWORD:healthdata123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate  # CRITICAL: Never use create/update in production
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        jdbc:
+          batch_size: 50
+          fetch_size: 100
+        order_inserts: true
+        order_updates: true
+        query:
+          in_clause_parameter_padding: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+    liquibase-schema: public
+    drop-first: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+      indent-output: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+    time-zone: UTC
+
+server:
+  port: ${SERVER_PORT:8090}
+  shutdown: graceful
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    connection-timeout: 30s
+    accept-count: 100
+
+# Management & Monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,liquibase
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENVIRONMENT:local}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata.eventstore: DEBUG
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    org.springframework.orm.jpa: WARN
+    org.springframework.transaction: WARN
+    liquibase: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# Application-specific configuration
+eventstore:
+  snapshot:
+    # Create snapshot every N events
+    frequency: 100
+    # Enable automatic snapshot creation
+    auto-create: true
+  processing:
+    # Maximum consumer lag before alerting (seconds)
+    max-lag-seconds: 300
+    # Enable consumer health checks
+    health-check-enabled: true
+  retention:
+    # Event retention policy (keep forever for audit trail)
+    enabled: false
+    # Snapshot retention (keep only last N snapshots per aggregate)
+    max-snapshots-per-aggregate: 10

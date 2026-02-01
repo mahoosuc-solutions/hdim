@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Align vital_signs_records table with entity fields -->
+
+    <changeSet id="0008-add-missing-vitals-ack-columns" author="clinical-workflow-service">
+        <comment>Add missing vitals acknowledgment columns (acknowledged_by, acknowledged_at)</comment>
+
+        <addColumn tableName="vital_signs_records">
+            <column name="acknowledged_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="acknowledged_at" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="vital_signs_records" columnName="acknowledged_by"/>
+            <dropColumn tableName="vital_signs_records" columnName="acknowledged_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

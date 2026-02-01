@@ -7,6 +7,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.healthdata.fhir.service.MedicationRequestService;
 
@@ -32,6 +33,7 @@ public class MedicationRequestController {
      * Create a new MedicationRequest resource
      * POST /fhir/MedicationRequest
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> createMedicationRequest(
@@ -56,6 +58,7 @@ public class MedicationRequestController {
      * Read a MedicationRequest resource by ID
      * GET /fhir/MedicationRequest/{id}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/{id}", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getMedicationRequest(
@@ -73,6 +76,7 @@ public class MedicationRequestController {
      * Update a MedicationRequest resource
      * PUT /fhir/MedicationRequest/{id}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/{id}", consumes = "application/fhir+json", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> updateMedicationRequest(
@@ -98,6 +102,7 @@ public class MedicationRequestController {
      * Delete a MedicationRequest resource
      * DELETE /fhir/MedicationRequest/{id}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_WRITE\')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMedicationRequest(
@@ -116,6 +121,7 @@ public class MedicationRequestController {
      * Search MedicationRequests by patient
      * GET /fhir/MedicationRequest?patient={patientId}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> searchMedicationRequests(
@@ -152,6 +158,7 @@ public class MedicationRequestController {
      * Get active medication requests for a patient
      * GET /fhir/MedicationRequest/active?patient={patientId}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/active", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getActiveMedicationRequests(
@@ -171,6 +178,7 @@ public class MedicationRequestController {
      * Get prescriptions for a patient (intent=order)
      * GET /fhir/MedicationRequest/prescriptions?patient={patientId}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/prescriptions", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getPrescriptions(
@@ -190,6 +198,7 @@ public class MedicationRequestController {
      * Get medication requests with refills remaining
      * GET /fhir/MedicationRequest/with-refills?patient={patientId}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/with-refills", produces = {"application/fhir+json", "application/json"})
     public ResponseEntity<String> getRequestsWithRefills(
@@ -209,6 +218,7 @@ public class MedicationRequestController {
      * Check if patient has active medication by code
      * GET /fhir/MedicationRequest/has-medication?patient={patientId}&code={code}
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/has-medication", produces = "application/json")
     public ResponseEntity<String> hasActiveMedication(
@@ -229,6 +239,7 @@ public class MedicationRequestController {
      * Health check endpoint
      * GET /fhir/MedicationRequest/_health
      */
+    @PreAuthorize("@hdimPermissionEvaluator.hasPermission(authentication, null, \'PATIENT_READ\')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/_health")
     public ResponseEntity<String> healthCheck() {

@@ -1,0 +1,477 @@
+// ============================================================================
+// Patient Timeline Component Styles
+// ============================================================================
+
+.patient-timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 0;
+}
+
+// ============================================================================
+// Timeline Header Card
+// ============================================================================
+
+.timeline-header {
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+
+    .header-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      mat-icon {
+        color: #1976d2;
+        font-size: 2rem;
+        width: 2rem;
+        height: 2rem;
+      }
+
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 500;
+        margin: 0;
+      }
+
+      .event-count {
+        font-size: 0.875rem;
+        color: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.05);
+        padding: 4px 12px;
+        border-radius: 12px;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+  }
+
+  .filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+    .event-type-filters {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .filter-label {
+        font-weight: 500;
+        font-size: 0.875rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      mat-checkbox {
+        font-size: 0.875rem;
+      }
+    }
+
+    .search-field,
+    .date-field {
+      flex: 0 1 200px;
+      min-width: 150px;
+    }
+  }
+}
+
+// ============================================================================
+// Timeline Content
+// ============================================================================
+
+.timeline-content {
+  position: relative;
+}
+
+// ============================================================================
+// Timeline Track (Vertical Line)
+// ============================================================================
+
+.timeline-track {
+  position: relative;
+  padding-left: 60px;
+
+  // Vertical line
+  &::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.12),
+      rgba(0, 0, 0, 0.06)
+    );
+  }
+}
+
+// ============================================================================
+// Timeline Event
+// ============================================================================
+
+.timeline-event {
+  position: relative;
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  // Event Marker (Circle on timeline)
+  .event-marker {
+    position: absolute;
+    left: -30px;
+    top: 12px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+
+    mat-icon {
+      color: white;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  // Event Card
+  .event-card {
+    flex: 1;
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .event-header {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      cursor: pointer;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.02);
+      }
+
+      .event-header-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .event-title-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+
+          h3 {
+            font-size: 1.125rem;
+            font-weight: 500;
+            margin: 0;
+            color: rgba(0, 0, 0, 0.87);
+          }
+
+          .event-type-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.05);
+          }
+        }
+
+        .event-description {
+          font-size: 0.875rem;
+          color: rgba(0, 0, 0, 0.6);
+          margin: 0;
+        }
+
+        .event-timestamp {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 0.75rem;
+          color: rgba(0, 0, 0, 0.5);
+
+          mat-icon {
+            font-size: 16px;
+            width: 16px;
+            height: 16px;
+          }
+        }
+      }
+
+      .expand-button {
+        margin-left: 8px;
+      }
+    }
+
+    .event-details {
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.02);
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+      .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+
+        .detail-item {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+
+          .detail-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.6);
+            text-transform: capitalize;
+          }
+
+          .detail-value {
+            font-size: 0.875rem;
+            color: rgba(0, 0, 0, 0.87);
+          }
+        }
+      }
+    }
+  }
+
+  // Expanded state
+  &.expanded {
+    .event-card {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+// ============================================================================
+// State Messages (Loading, Error, No Events)
+// ============================================================================
+
+.loading-state,
+.error-state,
+.no-events-state {
+  mat-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+
+    mat-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      margin: 0 0 1rem 0;
+    }
+  }
+}
+
+.loading-state {
+  mat-icon {
+    color: rgba(0, 0, 0, 0.38);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.error-state {
+  mat-icon {
+    color: #d32f2f;
+  }
+
+  p {
+    color: #d32f2f;
+    font-weight: 500;
+  }
+}
+
+.no-events-state {
+  mat-icon {
+    color: rgba(0, 0, 0, 0.26);
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.38);
+  }
+}
+
+// ============================================================================
+// Animations
+// ============================================================================
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// ============================================================================
+// Responsive Design
+// ============================================================================
+
+@media (max-width: 1200px) {
+  .timeline-header {
+    .filters-row {
+      flex-direction: column;
+      align-items: stretch;
+
+      .event-type-filters {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .search-field,
+      .date-field {
+        flex: 1 1 auto;
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-timeline-container {
+    gap: 16px;
+  }
+
+  .timeline-header {
+    .header-row {
+      flex-direction: column;
+      align-items: stretch;
+
+      .header-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .header-actions {
+        flex-direction: column;
+        width: 100%;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .timeline-track {
+    padding-left: 40px;
+
+    &::before {
+      left: 20px;
+    }
+  }
+
+  .timeline-event {
+    .event-marker {
+      left: -20px;
+      width: 40px;
+      height: 40px;
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .event-card {
+      .event-header {
+        .event-header-content {
+          .event-title-row {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+        }
+      }
+
+      .event-details {
+        .details-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// Accessibility
+// ============================================================================
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .event-card,
+  .event-header {
+    transition: none;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .timeline-track::before {
+    background: #000;
+  }
+
+  .event-marker {
+    border: 2px solid #000;
+  }
+
+  .event-card {
+    border: 1px solid #000;
+  }
+}

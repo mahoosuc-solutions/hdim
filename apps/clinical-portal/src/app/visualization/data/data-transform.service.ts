@@ -208,7 +208,7 @@ export class DataTransformService {
    * Create radial layout positions
    * Arranges items in a circular pattern
    */
-  createRadialLayout(count: number, radius: number = 50, layers: number = 1): Position3D[] {
+  createRadialLayout(count: number, radius = 50, layers = 1): Position3D[] {
     const positions: Position3D[] = [];
     const itemsPerLayer = Math.ceil(count / layers);
     const angleStep = (Math.PI * 2) / itemsPerLayer;
@@ -233,7 +233,7 @@ export class DataTransformService {
   /**
    * Create grid layout positions
    */
-  createGridLayout(count: number, spacing: number = 5): Position3D[] {
+  createGridLayout(count: number, spacing = 5): Position3D[] {
     const positions: Position3D[] = [];
     const gridSize = Math.ceil(Math.sqrt(count));
     const offset = (gridSize - 1) / 2;
@@ -255,7 +255,7 @@ export class DataTransformService {
   /**
    * Create spiral layout positions
    */
-  createSpiralLayout(count: number, radiusStep: number = 2, heightStep: number = 0.5): Position3D[] {
+  createSpiralLayout(count: number, radiusStep = 2, heightStep = 0.5): Position3D[] {
     const positions: Position3D[] = [];
     const angleStep = Math.PI / 4; // 45 degrees per step
 
@@ -304,7 +304,7 @@ export class DataTransformService {
   /**
    * Map score to color using D3 viridis scale
    */
-  scoreToColor(score: number, min: number = 0, max: number = 100): THREE.Color {
+  scoreToColor(score: number, min = 0, max = 100): THREE.Color {
     const normalized = (score - min) / (max - min);
     const colorScale = scaleSequential(interpolateViridis).domain([0, 1]);
     const d3Color = colorScale(normalized);

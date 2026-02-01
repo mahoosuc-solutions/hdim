@@ -183,6 +183,7 @@ curl http://localhost:8000/api/v1/patients?tenantId=DEMO_TENANT | jq '.total'
 - [ ] Audio setup tested (voiceover narration)
 - [ ] Screen recording software configured (OBS, Camtasia, Loom)
 - [ ] Practice run completed (identify timing issues)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 **Act**: Configure recording environment
 ```bash

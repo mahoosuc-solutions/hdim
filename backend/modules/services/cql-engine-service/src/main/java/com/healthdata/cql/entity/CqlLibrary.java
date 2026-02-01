@@ -2,7 +2,9 @@ package com.healthdata.cql.entity;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -43,6 +45,7 @@ public class CqlLibrary {
     @Column(name = "cql_content", columnDefinition = "TEXT")
     private String cqlContent;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "elm_json", columnDefinition = "JSONB")
     private String elmJson; // Expression Logical Model (compiled CQL)
 

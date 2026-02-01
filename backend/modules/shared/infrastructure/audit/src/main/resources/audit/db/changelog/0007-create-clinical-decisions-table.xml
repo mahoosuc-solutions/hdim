@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0007-create-clinical-decisions-table" author="healthdata-system">
+        <comment>Clinical Decisions table for tracking clinical decision reviews</comment>
+
+        <createTable tableName="clinical_decisions">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="decision_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alert_severity" type="varchar(20)"/>
+            <column name="decision_timestamp" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="review_status" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evidence_grade" type="varchar(10)"/>
+            <column name="confidence_score" type="double precision"/>
+            <column name="specialty_area" type="varchar(100)"/>
+            <column name="patient_context" type="jsonb"/>
+            <column name="recommendation" type="jsonb"/>
+            <column name="evidence" type="jsonb"/>
+            <column name="clinical_details" type="jsonb"/>
+            <column name="reviewed_by" type="varchar(100)"/>
+            <column name="reviewed_at" type="timestamp"/>
+            <column name="review_notes" type="varchar(2000)"/>
+            <column name="has_override" type="boolean"/>
+            <column name="override_reason" type="varchar(1000)"/>
+            <column name="override_applied_by" type="varchar(100)"/>
+            <column name="override_applied_at" type="timestamp"/>
+            <column name="created_at" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp"/>
+        </createTable>
+
+        <createIndex indexName="idx_clinical_tenant_status" tableName="clinical_decisions">
+            <column name="tenant_id"/>
+            <column name="review_status"/>
+        </createIndex>
+        <createIndex indexName="idx_clinical_decision_timestamp" tableName="clinical_decisions">
+            <column name="decision_timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_clinical_patient_id" tableName="clinical_decisions">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_clinical_decision_type" tableName="clinical_decisions">
+            <column name="decision_type"/>
+        </createIndex>
+        <createIndex indexName="idx_clinical_severity" tableName="clinical_decisions">
+            <column name="alert_severity"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

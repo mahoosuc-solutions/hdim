@@ -1,0 +1,111 @@
+server:
+  port: ${SERVER_PORT:8103}
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: migration-workflow-service
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:migration_db}
+    username: ${DB_USER:healthdata}
+    password: ${DB_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW  # Migration workflow: <10 req/sec, batch processing
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        # Distributed tracing: Propagate trace context through Kafka messages
+        interceptor.classes: com.healthdata.tracing.KafkaProducerTraceInterceptor
+
+# Migration service configuration
+migration:
+  # Default batch size for processing
+  default-batch-size: 100
+  # Checkpoint interval (number of records between checkpoints)
+  checkpoint-interval: 500
+  # Progress update interval (milliseconds)
+  progress-update-interval: 1000
+  # Maximum concurrent migrations per tenant
+  max-concurrent-jobs: 3
+  # SFTP connection timeout (milliseconds)
+  sftp-connection-timeout: 30000
+  # MLLP default port
+  mllp-default-port: 2575
+
+# Resilience4j configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      source-connector:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+
+  retry:
+    instances:
+      source-connector:
+        maxAttempts: 3
+        waitDuration: 2s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# CDR Processor Service configuration
+cdr-processor:
+  url: ${CDR_PROCESSOR_SERVICE_URL:http://localhost:8099}
+  connect-timeout: 10s
+  read-timeout: 30s
+  timeout: 30s
+
+# Logging
+logging:
+  level:
+    com.healthdata.migration: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+
+# OpenAPI configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method

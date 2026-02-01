@@ -121,6 +121,9 @@ export interface TemplateVariable {
   required: boolean;
 }
 
+// Alias for backward compatibility
+export type PromptVariable = TemplateVariable;
+
 // Prompt Template entity
 export interface PromptTemplate {
   id: string;
@@ -151,19 +154,38 @@ export interface TestMessage {
 // Tool invocation during test
 export interface ToolInvocation {
   name: string;
+  toolName?: string; // Alias for name
   arguments: Record<string, unknown>;
+  input?: Record<string, unknown>; // Alias for arguments
   result?: string;
+  output?: string; // Alias for result
   success: boolean;
+  status?: string; // SUCCESS | FAILED | TIMEOUT
+  error?: string; // Error message if failed
   durationMs: number;
+  timestamp?: number; // When tool was invoked
+}
+
+// Guardrail trigger detail
+export interface GuardrailTrigger {
+  guardrailType: 'PHI_FILTERING' | 'CLINICAL_DISCLAIMER' | 'BLOCKED_PATTERN' | 'TOKEN_LIMIT' | 'RISK_THRESHOLD';
+  timestamp: string;
+  messageIndex: number;
+  triggeredBy: string; // What triggered it (e.g., "detected PHI", "exceeded 1000 tokens")
+  action: 'FILTERED' | 'BLOCKED' | 'WARNING' | 'REQUIRES_REVIEW';
+  details?: string;
 }
 
 // Test metrics
 export interface TestMetrics {
   totalMessages: number;
+  userMessages: number;
+  assistantMessages: number;
   toolInvocations: number;
   totalTokens: number;
-  avgLatencyMs: number;
-  guardrailTriggers: number;
+  averageLatency: number;
+  guardrailsTriggered: number;
+  guardrailTriggers?: GuardrailTrigger[]; // Optional detailed triggers
 }
 
 // Agent Test Session entity

@@ -182,6 +182,7 @@ The demo environment includes 25,000 synthetic patients with:
 - [ ] Test each scenario flow
 - [ ] Prepare backup screenshots in case of issues
 - [ ] Know your audience (CMO, CIO, Quality Director)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Technical Requirements
 

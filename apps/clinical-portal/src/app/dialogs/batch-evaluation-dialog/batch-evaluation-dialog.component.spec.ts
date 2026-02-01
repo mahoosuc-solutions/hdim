@@ -13,6 +13,8 @@ import { ScheduledEvaluationService } from '../../services/scheduled-evaluation.
 import { ToastService } from '../../services/toast.service';
 import { MeasureInfo } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
+import { createMockMatDialogRef } from '../../testing/mocks';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('BatchEvaluationDialogComponent', () => {
   let component: BatchEvaluationDialogComponent;
@@ -100,8 +102,7 @@ describe('BatchEvaluationDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [BatchEvaluationDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRefSpy },
+      providers: [{ provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: null },
         { provide: MeasureService, useValue: mockMeasureService },
         { provide: PatientService, useValue: mockPatientService },
@@ -111,7 +112,8 @@ describe('BatchEvaluationDialogComponent', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: Router, useValue: mockRouter },
         provideNativeDateAdapter(),
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() },
+        { provide: Router, useValue: createMockRouter() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BatchEvaluationDialogComponent);
@@ -121,23 +123,23 @@ describe('BatchEvaluationDialogComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  });
+  };
 
   it('should load measures from service', () => {
     expect(mockMeasureService.getAllAvailableMeasures).toHaveBeenCalled();
     expect(component.availableMeasures.length).toBe(3);
-  });
+  };
 
   it('should load patients from service', () => {
     expect(mockPatientService.getPatientsSummary).toHaveBeenCalled();
     expect(component.dataSource.data.length).toBe(3);
-  });
+  };
 
   it('should filter measures by category', () => {
     const chronicMeasures = component.getMeasuresByCategory('CHRONIC_DISEASE');
     expect(chronicMeasures.length).toBe(2);
     expect(chronicMeasures.every(m => m.category === 'CHRONIC_DISEASE')).toBe(true);
-  });
+  };
 
   it('should select and deselect all patients', () => {
     component.selectAll();
@@ -145,7 +147,7 @@ describe('BatchEvaluationDialogComponent', () => {
 
     component.deselectAll();
     expect(component.selection.selected.length).toBe(0);
-  });
+  };
 
   it('should toggle master selection', () => {
     component.masterToggle();
@@ -153,32 +155,32 @@ describe('BatchEvaluationDialogComponent', () => {
 
     component.masterToggle();
     expect(component.selection.selected.length).toBe(0);
-  });
+  };
 
   it('should not allow run without patient selection', () => {
     component.deselectAll();
     component.selectedMeasures = ['CDC'];
     expect(component.canRun()).toBe(false);
-  });
+  };
 
   it('should not allow run without measure selection', () => {
     component.selectAll();
     component.selectedMeasures = [];
     expect(component.canRun()).toBe(false);
-  });
+  };
 
   it('should allow run with both patient and measure selections', () => {
     component.selection.select(mockPatients[0]);
     component.selectedMeasures = ['CDC'];
     expect(component.canRun()).toBe(true);
-  });
+  };
 
   it('should calculate total evaluations correctly', () => {
     component.selection.select(mockPatients[0]);
     component.selection.select(mockPatients[1]);
     component.selectedMeasures = ['CDC', 'BCS'];
     expect(component.getTotalEvaluations()).toBe(4);
-  });
+  };
 
   it('should provide appropriate run tooltip', () => {
     component.deselectAll();
@@ -190,19 +192,19 @@ describe('BatchEvaluationDialogComponent', () => {
 
     component.selectedMeasures = ['CDC'];
     expect(component.getRunTooltip()).toContain('Run 1 evaluations');
-  });
+  };
 
   it('should calculate success rate correctly', () => {
     component.successCount.set(8);
     component.errorCount.set(2);
     expect(component.getSuccessRate()).toBe(80);
-  });
+  };
 
   it('should handle zero evaluations for success rate', () => {
     component.successCount.set(0);
     component.errorCount.set(0);
     expect(component.getSuccessRate()).toBe(0);
-  });
+  };
 
   it('closes with result when complete', () => {
     component.isComplete.set(true);
@@ -220,14 +222,14 @@ describe('BatchEvaluationDialogComponent', () => {
       errors: [],
       careGapsDetected: 0,
       careGaps: [],
-    });
-  });
+    };
+  };
 
   it('closes with null when cancelled before completion', () => {
     component.isComplete.set(false);
     component.onCancel();
     expect(dialogRefSpy.close).toHaveBeenCalledWith(null);
-  });
+  };
 
   it('should handle view results action', () => {
     component.isComplete.set(true);
@@ -245,8 +247,8 @@ describe('BatchEvaluationDialogComponent', () => {
       errors: [],
       careGapsDetected: 0,
       careGaps: [],
-    });
-  });
+    };
+  };
 
   it('should apply pre-selected data from dialog input', async () => {
     // Reset and create with pre-selected data
@@ -276,7 +278,7 @@ describe('BatchEvaluationDialogComponent', () => {
 
     expect(newComponent.selection.selected.length).toBe(1);
     expect(newComponent.selectedMeasures).toEqual(['CDC']);
-  });
+  };
 
   it('should handle evaluation errors gracefully', (done) => {
     mockEvaluationService.calculateQualityMeasure = jest.fn()
@@ -294,7 +296,7 @@ describe('BatchEvaluationDialogComponent', () => {
       expect(component.errors[0].error).toBe('Evaluation failed');
       done();
     }, 200);
-  });
+  };
 
   // Care Gap Integration Tests
   describe('Care Gap Integration', () => {

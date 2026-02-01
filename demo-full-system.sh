@@ -16,7 +16,18 @@ CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 NC='\033[0m'
 
-GATEWAY_URL="http://localhost:9000"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.doctor}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+ADMIN_USERNAME="${ADMIN_USERNAME:-demo.admin}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-demo123}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
+GATEWAY_DB_NAME="${GATEWAY_DB_NAME:-gateway_db}"
+QUALITY_DB_NAME="${QUALITY_DB_NAME:-quality_db}"
+CAREGAP_DB_NAME="${CAREGAP_DB_NAME:-caregap_db}"
+CQL_DB_NAME="${CQL_DB_NAME:-cql_db}"
 
 clear
 
@@ -51,11 +62,13 @@ api_demo() {
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     
     if [ -n "$token" ]; then
-        result=$(curl -s "$curl_cmd" \
+        response=$(curl -s "$curl_cmd" \
             -H "Authorization: Bearer $token" \
-            -H "X-Tenant-ID: demo-clinic" | jq '.' 2>/dev/null || echo "Error or no data")
+            -H "X-Tenant-ID: $TENANT_ID" || true)
+        result=$(echo "$response" | jq '.' 2>/dev/null || echo "Error or no data")
     else
-        result=$(curl -s "$curl_cmd" | jq '.' 2>/dev/null || echo "Error or no data")
+        response=$(curl -s "$curl_cmd" || true)
+        result=$(echo "$response" | jq '.' 2>/dev/null || echo "Error or no data")
     fi
     
     echo "$result" | head -50
@@ -75,7 +88,7 @@ echo -e "${GREEN}Checking system health...${NC}"
 echo ""
 
 # Check services
-docker compose ps --format "table {{.Service}}\t{{.State}}\t{{.Status}}" | grep -E "(Service|gateway|cql|quality|postgres)" || true
+docker compose -f "$COMPOSE_FILE" ps --format "table {{.Service}}\t{{.State}}\t{{.Status}}" | grep -E "(Service|gateway|cql|quality|postgres)" || true
 
 echo ""
 echo -e "${GREEN}✓ All services running${NC}"
@@ -93,8 +106,8 @@ echo -e "${MAGENTA}════════════════════�
 echo ""
 
 echo -e "${CYAN}Demo Account: Dr. Sarah Chen (Clinical Evaluator)${NC}"
-echo -e "${CYAN}Username:     demo.doctor${NC}"
-echo -e "${CYAN}Password:     demo123${NC}"
+echo -e "${CYAN}Username:     ${AUTH_USERNAME}${NC}"
+echo -e "${CYAN}Password:     ${AUTH_PASSWORD}${NC}"
 echo ""
 
 echo -e "${BLUE}Authenticating with JWT...${NC}"
@@ -103,10 +116,16 @@ echo ""
 # Login
 AUTH_RESPONSE=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"username":"demo.doctor","password":"demo123"}')
+    -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
 
 # Extract token
 TOKEN=$(echo "$AUTH_RESPONSE" | jq -r '.accessToken')
+AUTH_TENANTS=$(echo "$AUTH_RESPONSE" | jq -r '.tenantIds[]?' || true)
+if echo "$AUTH_TENANTS" | grep -qx "acme-health"; then
+    TENANT_ID="acme-health"
+elif [ -n "$AUTH_TENANTS" ]; then
+    TENANT_ID=$(echo "$AUTH_TENANTS" | head -n 1)
+fi
 
 if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
     echo -e "${GREEN}✓ Authentication successful!${NC}"
@@ -121,6 +140,7 @@ if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
     }'
     echo ""
     echo -e "${GREEN}JWT Token received (15-minute access token + 7-day refresh token)${NC}"
+    echo -e "${CYAN}Using tenant: ${TENANT_ID}${NC}"
 else
     echo -e "${RED}✗ Authentication failed${NC}"
     exit 1
@@ -139,7 +159,7 @@ echo -e "${MAGENTA}════════════════════�
 echo ""
 
 api_demo "📊 Viewing Quality Measure Results" \
-    "${GATEWAY_URL}/api/quality/quality-measure/results" \
+    "${GATEWAY_URL}/api/quality/results" \
     "$TOKEN"
 
 echo -e "${CYAN}Key Insights:${NC}"
@@ -162,8 +182,14 @@ echo -e "${MAGENTA}PART 4: AGGREGATE QUALITY SCORE${NC}"
 echo -e "${MAGENTA}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
+REPORT_YEAR=$(docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$QUALITY_DB_NAME" -t -A -c \
+    "SELECT MAX(measure_year) FROM quality_measure_results WHERE tenant_id = '${TENANT_ID}';" 2>/dev/null || echo "")
+if ! [[ "$REPORT_YEAR" =~ ^[0-9]{4}$ ]]; then
+    REPORT_YEAR=$(date +%Y)
+fi
+
 api_demo "📈 Overall Quality Score for Clinic" \
-    "${GATEWAY_URL}/api/quality/quality-measure/score" \
+    "${GATEWAY_URL}/api/quality/report/population?year=${REPORT_YEAR}" \
     "$TOKEN"
 
 echo -e "${CYAN}Performance Metrics:${NC}"
@@ -191,15 +217,18 @@ echo ""
 # But it demonstrates the routing capability
 CARE_GAPS=$(curl -s "${GATEWAY_URL}/api/care-gaps/" \
     -H "Authorization: Bearer $TOKEN" \
-    -H "X-Tenant-ID: demo-clinic" 2>/dev/null || echo "{}")
+    -H "X-Tenant-ID: $TENANT_ID" 2>/dev/null || echo "{}")
 
-if echo "$CARE_GAPS" | jq -e . >/dev/null 2>&1; then
-    echo "$CARE_GAPS" | jq '.' | head -30
-else
+care_gap_status=$(echo "$CARE_GAPS" | jq -r '.status // empty' 2>/dev/null)
+if ! echo "$CARE_GAPS" | jq -e . >/dev/null 2>&1; then
+    care_gap_status="invalid"
+fi
+
+if [ -n "$care_gap_status" ] && [ "$care_gap_status" != "invalid" ] && [ "$care_gap_status" -ge 400 ]; then
     echo -e "${YELLOW}Care gap service routing in progress...${NC}"
     echo ""
     echo -e "${CYAN}Known care gaps from database:${NC}"
-    docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
+    docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$CAREGAP_DB_NAME" -c \
         "SELECT 
             patient_id,
             title,
@@ -207,14 +236,36 @@ else
             status,
             category
         FROM care_gaps 
-        WHERE tenant_id = 'demo-clinic' 
+        WHERE tenant_id = '${TENANT_ID}' 
         ORDER BY 
             CASE priority 
                 WHEN 'high' THEN 1 
                 WHEN 'medium' THEN 2 
                 WHEN 'low' THEN 3 
             END 
-        LIMIT 5;" 2>/dev/null | head -20
+        LIMIT 5;" 2>/dev/null | head -20 || true
+elif [ "$care_gap_status" = "invalid" ]; then
+    echo -e "${YELLOW}Care gap response unavailable...${NC}"
+    echo ""
+    echo -e "${CYAN}Known care gaps from database:${NC}"
+    docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$CAREGAP_DB_NAME" -c \
+        "SELECT 
+            patient_id,
+            title,
+            priority,
+            status,
+            category
+        FROM care_gaps 
+        WHERE tenant_id = '${TENANT_ID}' 
+        ORDER BY 
+            CASE priority 
+                WHEN 'high' THEN 1 
+                WHEN 'medium' THEN 2 
+                WHEN 'low' THEN 3 
+            END 
+        LIMIT 5;" 2>/dev/null | head -20 || true
+else
+    echo "$CARE_GAPS" | jq '.' | head -30
 fi
 
 echo ""
@@ -237,9 +288,47 @@ echo -e "${MAGENTA}PART 6: CQL ENGINE - CLINICAL QUALITY LANGUAGE${NC}"
 echo -e "${MAGENTA}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-api_demo "📚 Available CQL Libraries" \
-    "${GATEWAY_URL}/api/cql/libraries" \
-    "$TOKEN"
+CQL_TENANT_ID=$(docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$CQL_DB_NAME" -t -A -c \
+    "SELECT tenant_id FROM cql_libraries ORDER BY tenant_id LIMIT 1;" 2>/dev/null || echo "")
+if [ -z "$CQL_TENANT_ID" ]; then
+    CQL_TENANT_ID="$TENANT_ID"
+fi
+
+echo -e "${BLUE}📚 Available CQL Libraries${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+CQL_RESPONSE=$(curl -s "${GATEWAY_URL}/api/cql/libraries" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-Tenant-ID: $TENANT_ID" || true)
+
+if ! echo "$CQL_RESPONSE" | jq -e . >/dev/null 2>&1; then
+    CQL_RESPONSE=""
+fi
+
+CQL_STATUS=$(echo "$CQL_RESPONSE" | jq -r '.status // empty' 2>/dev/null)
+if [ -n "$CQL_STATUS" ] && [ "$CQL_STATUS" -ge 400 ]; then
+    ADMIN_TOKEN=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"username\":\"${ADMIN_USERNAME}\",\"password\":\"${ADMIN_PASSWORD}\"}" | jq -r '.accessToken // empty')
+    if [ -n "$ADMIN_TOKEN" ]; then
+        CQL_RESPONSE=$(curl -s "${GATEWAY_URL}/api/cql/libraries" \
+            -H "Authorization: Bearer $ADMIN_TOKEN" \
+            -H "X-Tenant-ID: $TENANT_ID" || true)
+        CQL_STATUS=$(echo "$CQL_RESPONSE" | jq -r '.status // empty' 2>/dev/null)
+    fi
+fi
+
+if [ -z "$CQL_RESPONSE" ] || { [ -n "$CQL_STATUS" ] && [ "$CQL_STATUS" -ge 400 ]; }; then
+    echo -e "${YELLOW}CQL gateway access limited; showing database libraries...${NC}"
+    docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$CQL_DB_NAME" -c \
+        "SELECT name, version, status, publisher
+         FROM cql_libraries
+         WHERE tenant_id = '${CQL_TENANT_ID}'
+         ORDER BY name
+         LIMIT 10;" 2>/dev/null | head -20 || true
+else
+    echo "$CQL_RESPONSE" | jq '.' | head -50
+fi
 
 echo -e "${CYAN}CQL Engine Features:${NC}"
 echo -e "  • FHIR-compliant clinical logic"
@@ -263,7 +352,7 @@ echo -e "${CYAN}User Roles in the System:${NC}"
 echo ""
 
 # Show all demo users
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$GATEWAY_DB_NAME" -c \
     "SELECT 
         u.username,
         u.first_name || ' ' || u.last_name as full_name,
@@ -273,7 +362,7 @@ docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
     JOIN user_roles r ON u.id = r.user_id
     JOIN user_tenants t ON u.id = t.user_id
     WHERE u.username LIKE 'demo.%'
-    ORDER BY r.role, u.username;" 2>/dev/null
+    ORDER BY r.role, u.username;" 2>/dev/null || true
 
 echo ""
 echo -e "${CYAN}Role Capabilities:${NC}"
@@ -297,7 +386,7 @@ echo ""
 echo -e "${CYAN}Microservices Architecture:${NC}"
 echo ""
 echo -e "┌─────────────────────────────────────────────────────────────┐"
-echo -e "│  ${GREEN}Gateway Service${NC} (Port 9000)                             │"
+echo -e "│  ${GREEN}Gateway Service${NC} (Port 18080)                            │"
 echo -e "│  • JWT Authentication                                       │"
 echo -e "│  • API Routing                                              │"
 echo -e "│  • Security Layer                                           │"
@@ -309,7 +398,7 @@ echo -e "              ▼             ▼             ▼             ▼"
 echo -e "   ┌──────────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐"
 echo -e "   │ ${BLUE}CQL Engine${NC}  │  │ ${BLUE}Quality${NC}  │  │  ${BLUE}FHIR${NC}    │  │ ${BLUE}Patient${NC}  │"
 echo -e "   │   (8081)     │  │ Measure  │  │ Service  │  │ Service  │"
-echo -e "   │              │  │  (8087)  │  │  (8083)  │  │  (8084)  │"
+echo -e "   │              │  │  (8087)  │  │  (8085)  │  │  (8084)  │"
 echo -e "   └──────────────┘  └──────────┘  └──────────┘  └──────────┘"
 echo -e "              │             │             │             │"
 echo -e "              └─────────────┴─────────────┴─────────────┘"
@@ -341,12 +430,17 @@ echo -e "${MAGENTA}════════════════════�
 echo ""
 
 echo -e "${CYAN}Database Statistics:${NC}"
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c \
-    "SELECT 
-        (SELECT COUNT(*) FROM quality_measure_results) as quality_results,
-        (SELECT COUNT(*) FROM care_gaps) as care_gaps,
-        (SELECT COUNT(*) FROM users WHERE active = true) as active_users,
-        (SELECT COUNT(DISTINCT measure_id) FROM quality_measure_results) as unique_measures;" 2>/dev/null
+quality_results=$(docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$QUALITY_DB_NAME" -t -A -c \
+    "SELECT COUNT(*) FROM quality_measure_results;" 2>/dev/null || echo "0")
+unique_measures=$(docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$QUALITY_DB_NAME" -t -A -c \
+    "SELECT COUNT(DISTINCT measure_id) FROM quality_measure_results;" 2>/dev/null || echo "0")
+care_gaps=$(docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$CAREGAP_DB_NAME" -t -A -c \
+    "SELECT COUNT(*) FROM care_gaps;" 2>/dev/null || echo "0")
+active_users=$(docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d "$GATEWAY_DB_NAME" -t -A -c \
+    "SELECT COUNT(*) FROM users WHERE active = true;" 2>/dev/null || echo "0")
+
+echo " quality_results | care_gaps | active_users | unique_measures"
+echo " ${quality_results} | ${care_gaps} | ${active_users} | ${unique_measures}"
 
 echo ""
 echo -e "${GREEN}╔════════════════════════════════════════════════════════════════╗${NC}"

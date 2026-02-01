@@ -1,4 +1,7 @@
-import { test as base, Page, Locator } from '@playwright/test';
+/* eslint-disable react-hooks/rules-of-hooks */
+// Playwright's 'use' callback is not a React Hook - disable React hooks linting for E2E test fixtures
+
+import { test as base } from '@playwright/test';
 import { SalesApiClient } from '../utils/api-helpers';
 import { SalesPage } from '../pages/sales-page';
 import { LeadsPage } from '../pages/leads-page';

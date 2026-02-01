@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-create-room-assignments-table" author="hdim-platform-team">
+        <comment>Create room_assignments table for tracking room allocation and status</comment>
+
+        <createTable tableName="room_assignments">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_room_assignments"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="appointment_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="encounter_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="room_number" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="location" type="VARCHAR(100)" remarks="e.g., 'Building A, Floor 2'">
+                <constraints nullable="true"/>
+            </column>
+            <column name="room_type" type="VARCHAR(50)" remarks="standard, isolation, trauma, etc.">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" remarks="available, occupied, cleaning, reserved">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_by" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="room_ready_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="discharged_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cleaning_started_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cleaning_completed_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_room_assignments_tenant_id" tableName="room_assignments">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_room_assignments_room_status" tableName="room_assignments">
+            <column name="tenant_id"/>
+            <column name="room_number"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_room_assignments_patient_id" tableName="room_assignments">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_room_assignments_assigned_at" tableName="room_assignments">
+            <column name="tenant_id"/>
+            <column name="assigned_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="room_assignments"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

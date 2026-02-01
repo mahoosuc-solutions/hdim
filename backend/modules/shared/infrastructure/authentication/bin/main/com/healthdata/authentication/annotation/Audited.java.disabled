@@ -1,0 +1,70 @@
+package com.healthdata.authentication.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Annotation to mark methods that should be audited.
+ * When applied to a method, the AuditLoggingAspect will automatically log:
+ * - Method entry and exit
+ * - User context
+ * - Parameters (excluding sensitive data)
+ * - Success/failure
+ * - Execution time
+ *
+ * Example usage:
+ * <pre>
+ * @Audited(eventType = "PATIENT_ACCESS", action = "READ")
+ * public Patient getPatient(UUID patientId) {
+ *     // method implementation
+ * }
+ * </pre>
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Audited {
+
+    /**
+     * Event type for audit logging.
+     * Examples: LOGIN, LOGOUT, PATIENT_ACCESS, DATA_EXPORT, QUALITY_MEASURE_EVALUATION
+     *
+     * @return Event type string
+     */
+    String eventType();
+
+    /**
+     * Action being performed.
+     * Examples: CREATE, READ, UPDATE, DELETE, EVALUATE, EXPORT
+     *
+     * @return Action string
+     */
+    String action();
+
+    /**
+     * Resource type being accessed.
+     * Optional - will be inferred from method parameters if not specified.
+     * Examples: PATIENT, QUALITY_MEASURE, CQL_LIBRARY, CONSENT
+     *
+     * @return Resource type string
+     */
+    String resourceType() default "";
+
+    /**
+     * Whether to log method parameters.
+     * Set to false for methods with sensitive data.
+     * Password and token parameters are always excluded.
+     *
+     * @return Whether to log parameters
+     */
+    boolean logParameters() default true;
+
+    /**
+     * Whether to log return value.
+     * Set to false for methods returning sensitive data.
+     *
+     * @return Whether to log return value
+     */
+    boolean logReturnValue() default false;
+}

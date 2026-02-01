@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-patient-projections-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="patient_projections"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create patient_projections read model table for CQRS pattern.
+
+            This denormalized table maintains an optimized view of patient data
+            for fast queries. It is updated asynchronously via Kafka events
+            from the patient write model.
+
+            Fields:
+            - Tenant isolation (critical for multi-tenancy)
+            - Patient identifiers and demographics
+            - Aggregated status (care gaps, alerts, risk)
+            - Event versioning for eventual consistency
+        </comment>
+
+        <createTable tableName="patient_projections">
+            <!-- Primary Key -->
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Tenant Isolation (CRITICAL) -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Patient Identifiers -->
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fhir_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Demographics -->
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="date_of_birth" type="DATE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="gender" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="phone_number" type="VARCHAR(20)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Address -->
+            <column name="address_street" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="address_city" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="address_state" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="address_zip" type="VARCHAR(10)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Patient Status -->
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Risk Assessment -->
+            <column name="risk_score" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+            <column name="risk_level" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Care Gap Counts -->
+            <column name="open_care_gaps_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="urgent_care_gaps_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Clinical Alerts -->
+            <column name="active_alerts_count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_critical_alert" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Mental Health -->
+            <column name="mental_health_flag" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+            <column name="mental_health_score" type="INTEGER">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for Multi-Tenancy and Query Performance -->
+        <createIndex indexName="idx_pp_tenant_id" tableName="patient_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pp_tenant_patient_id" tableName="patient_projections" unique="true">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pp_tenant_last_name" tableName="patient_projections">
+            <column name="tenant_id"/>
+            <column name="last_name"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pp_tenant_risk_level" tableName="patient_projections">
+            <column name="tenant_id"/>
+            <column name="risk_level"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pp_tenant_urgent_gaps" tableName="patient_projections">
+            <column name="tenant_id"/>
+            <column name="urgent_care_gaps_count"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pp_tenant_has_critical" tableName="patient_projections">
+            <column name="tenant_id"/>
+            <column name="has_critical_alert"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pp_updated_at" tableName="patient_projections">
+            <column name="last_updated_at"/>
+        </createIndex>
+
+        <!-- Rollback SQL -->
+        <rollback>
+            <dropTable tableName="patient_projections"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

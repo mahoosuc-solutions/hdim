@@ -109,6 +109,7 @@ describe('HealthScoringService', () => {
         { provide: MentalHealthService, useValue: mentalHealthMock },
         { provide: SDOHService, useValue: sdohMock },
         { provide: LoggerService, useValue: loggerMock },
+        HttpTestingController,
       ],
     });
 
@@ -346,7 +347,7 @@ describe('HealthScoringService', () => {
         expect(result).toBeDefined();
         expect(result.patientId).toBe('patient-3');
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/health-score/patient-3') || request.url.includes('/patient-3/health-score')
@@ -367,7 +368,7 @@ describe('HealthScoringService', () => {
         expect(result[0].score).toBe(80);
         expect(result[0].trigger).toBe('manual');
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/health-score/patient-1/history') || request.url.includes('/patient-1/health-score/history')
@@ -380,7 +381,7 @@ describe('HealthScoringService', () => {
       service.getHealthScoreHistory('patient-1').subscribe((result) => {
         expect(result).toEqual([]);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/health-score/patient-1/history') || request.url.includes('/patient-1/health-score/history')

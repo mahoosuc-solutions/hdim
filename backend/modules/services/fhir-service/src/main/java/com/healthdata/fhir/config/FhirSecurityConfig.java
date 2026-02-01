@@ -1,9 +1,13 @@
 package com.healthdata.fhir.config;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
+import com.healthdata.fhir.persistence.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Profile;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -25,12 +30,14 @@ import org.springframework.security.web.SecurityFilterChain;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.CorsConfigurationSource;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Arrays;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -65,7 +72,7 @@ public class FhirSecurityConfig {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
 
     /**
@@ -88,6 +95,14 @@ public class FhirSecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistration(
+            @Qualifier("corsConfigurationSource") CorsConfigurationSource source) {
+        FilterRegistrationBean<CorsFilter> registration = new FilterRegistrationBean<>(new CorsFilter(source));
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registration;
     }
 
     /**
@@ -114,6 +129,19 @@ public class FhirSecurityConfig {
     @Profile("!test")
     public TrustedTenantAccessFilter trustedTenantAccessFilter(MeterRegistry meterRegistry) {
         return new TrustedTenantAccessFilter(meterRegistry);
+    }
+
+    /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
     }
 
     /**
@@ -152,6 +180,7 @@ public class FhirSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            ObjectProvider<UserAutoRegistrationFilter> userAutoRegistrationFilterProvider,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -189,9 +218,19 @@ public class FhirSecurityConfig {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
-        // This ensures tenant isolation is enforced for all authenticated FHIR operations
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        UserAutoRegistrationFilter userAutoRegistrationFilter = userAutoRegistrationFilterProvider.getIfAvailable();
+        if (userAutoRegistrationFilter != null) {
+            // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+            // This ensures users are automatically registered in service database on first access
+            http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+
+            // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
+            // This ensures tenant isolation is enforced for all authenticated FHIR operations
+            http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
+        } else {
+            // Fall back to enforcing tenant access after header auth when auto-registration is not available.
+            http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        }
 
         return http.build();
     }

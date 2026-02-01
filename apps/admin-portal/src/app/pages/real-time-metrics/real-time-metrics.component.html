@@ -1,0 +1,201 @@
+<div class="real-time-metrics-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="title-section">
+      <h1>Real-Time Metrics Dashboard</h1>
+      <p class="subtitle">
+        Live performance metrics from Prometheus
+        <span *ngIf="!prometheusAvailable" class="mock-data-badge">Mock Data</span>
+      </p>
+    </div>
+
+    <div class="controls">
+      <!-- Time Range Selector -->
+      <div class="control-group">
+        <label for="time-range">Time Range:</label>
+        <select
+          id="time-range"
+          [(ngModel)]="selectedTimeRange"
+          class="time-range-select"
+          aria-label="Select time range for metrics">
+          <option *ngFor="let range of timeRanges" [value]="range.value">
+            {{ range.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="control-group">
+        <label for="category-filter">Category:</label>
+        <select
+          id="category-filter"
+          [(ngModel)]="selectedCategory"
+          class="category-select"
+          aria-label="Filter services by category">
+          <option value="all">All Services</option>
+          <option *ngFor="let category of getCategories()" [value]="category">
+            {{ category }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Auto-Refresh Toggle -->
+      <button
+        (click)="toggleAutoRefresh()"
+        [class.active]="autoRefresh"
+        class="auto-refresh-btn"
+        [attr.aria-label]="autoRefresh ? 'Disable auto-refresh' : 'Enable auto-refresh'">
+        <span class="icon">{{ autoRefresh ? '⏸' : '▶' }}</span>
+        {{ autoRefresh ? 'Auto-Refresh ON' : 'Auto-Refresh OFF' }}
+      </button>
+
+      <!-- Manual Refresh -->
+      <button
+        (click)="refresh()"
+        class="refresh-btn"
+        [disabled]="loading"
+        aria-label="Manually refresh metrics">
+        <span class="icon">🔄</span>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Last Update Timestamp -->
+  <div *ngIf="lastUpdate" class="last-update">
+    Last updated: {{ lastUpdate | date: 'short' }}
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="error-message" role="alert">
+    <span class="error-icon">⚠️</span>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Loading metrics...</p>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div *ngIf="!loading" class="metrics-grid">
+    <div
+      *ngFor="let service of getFilteredServices()"
+      class="service-card"
+      [class.no-data]="!serviceMetrics.has(service.id)">
+      <!-- Service Header -->
+      <div class="service-header">
+        <h3>{{ service.displayName }}</h3>
+        <span class="service-category">{{ service.category }}</span>
+      </div>
+
+      <!-- No Data Available -->
+      <div *ngIf="!serviceMetrics.has(service.id)" class="no-data-message">
+        <p>No metrics available</p>
+        <small>Service may not be running or not exposing metrics</small>
+      </div>
+
+      <!-- Metrics Display -->
+      <div *ngIf="serviceMetrics.has(service.id)" class="metrics-display">
+        <div class="metric-row">
+          <div
+            class="metric-card cpu"
+            [class.status-healthy]="getMetricStatus('cpu', serviceMetrics.get(service.id)!.cpuUsage) === 'healthy'"
+            [class.status-warning]="getMetricStatus('cpu', serviceMetrics.get(service.id)!.cpuUsage) === 'warning'"
+            [class.status-critical]="getMetricStatus('cpu', serviceMetrics.get(service.id)!.cpuUsage) === 'critical'">
+            <div class="metric-label">CPU</div>
+            <div class="metric-value">
+              {{ formatNumber(serviceMetrics.get(service.id)!.cpuUsage, 1) }}%
+            </div>
+          </div>
+
+          <div
+            class="metric-card memory"
+            [class.status-healthy]="getMetricStatus('memory', serviceMetrics.get(service.id)!.memoryUsageMb) === 'healthy'"
+            [class.status-warning]="getMetricStatus('memory', serviceMetrics.get(service.id)!.memoryUsageMb) === 'warning'"
+            [class.status-critical]="getMetricStatus('memory', serviceMetrics.get(service.id)!.memoryUsageMb) === 'critical'">
+            <div class="metric-label">Memory</div>
+            <div class="metric-value">
+              {{ formatNumber(serviceMetrics.get(service.id)!.memoryUsageMb, 0) }} MB
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-row">
+          <div class="metric-card requests">
+            <div class="metric-label">Requests/s</div>
+            <div class="metric-value">
+              {{ formatNumber(serviceMetrics.get(service.id)!.requestsPerSecond, 2) }}
+            </div>
+          </div>
+
+          <div
+            class="metric-card errors"
+            [class.status-healthy]="getMetricStatus('errors', serviceMetrics.get(service.id)!.errorsPerSecond) === 'healthy'"
+            [class.status-warning]="getMetricStatus('errors', serviceMetrics.get(service.id)!.errorsPerSecond) === 'warning'"
+            [class.status-critical]="getMetricStatus('errors', serviceMetrics.get(service.id)!.errorsPerSecond) === 'critical'">
+            <div class="metric-label">Errors/s</div>
+            <div class="metric-value">
+              {{ formatNumber(serviceMetrics.get(service.id)!.errorsPerSecond, 2) }}
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-row single">
+          <div
+            class="metric-card latency"
+            [class.status-healthy]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p95LatencyMs) === 'healthy'"
+            [class.status-warning]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p95LatencyMs) === 'warning'"
+            [class.status-critical]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p95LatencyMs) === 'critical'">
+            <div class="metric-label">P95 Latency</div>
+            <div class="metric-value">
+              {{ formatNumber(serviceMetrics.get(service.id)!.p95LatencyMs, 0) }} ms
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="quick-links">
+        <a
+          *ngIf="service.grafanaDashboard"
+          [href]="service.grafanaDashboard"
+          target="_blank"
+          rel="noopener"
+          class="link-btn"
+          [attr.aria-label]="'View Grafana dashboard for ' + service.displayName">
+          📊 Dashboard
+        </a>
+        <a
+          *ngIf="service.metricsEndpoint"
+          [href]="service.metricsEndpoint"
+          target="_blank"
+          rel="noopener"
+          class="link-btn"
+          [attr.aria-label]="'View raw metrics for ' + service.displayName">
+          📈 Metrics
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <h3>Status Indicators</h3>
+    <div class="legend-items">
+      <div class="legend-item">
+        <span class="color-box status-healthy"></span>
+        <span>Healthy</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-box status-warning"></span>
+        <span>Warning</span>
+      </div>
+      <div class="legend-item">
+        <span class="color-box status-critical"></span>
+        <span>Critical</span>
+      </div>
+    </div>
+  </div>
+</div>

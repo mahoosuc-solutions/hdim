@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <!--
+        Migration: Align users table with User entity definition
+
+        PROBLEM: User entity uses @ElementCollection for tenantIds and roles,
+        which creates junction tables (user_tenants, user_roles).
+        However, a previous migration incorrectly created VARCHAR columns.
+
+        FIX: Remove VARCHAR columns, rely on junction tables created by Hibernate.
+
+        CRITICAL: This must run AFTER:
+        - 0000-create-authentication-tables.xml (creates users table)
+        - 0031-add-missing-user-columns.xml (adds tenant_ids/roles VARCHAR columns)
+
+        WHY: User entity expects junction tables, not VARCHAR columns.
+        Using junction tables provides:
+        - Normalized data model (no arbitrary string length limits)
+        - Efficient EXISTS queries for tenant validation
+        - Scalable multi-tenant architecture
+
+        RELATED SERVICES:
+        - CQL Engine: 0016-align-users-table-with-entity.xml
+        - Patient: 0015-align-users-table-with-entity.xml
+        - FHIR: THIS FILE (0032)
+
+        TESTING: After migration, verify:
+        1. user_tenants table exists
+        2. user_roles table exists
+        3. NO tenant_ids column in users table
+        4. NO roles column in users table
+    -->
+
+    <changeSet id="0032-align-users-table-with-entity" author="fhir-service">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="users"/>
+            <or>
+                <columnExists tableName="users" columnName="tenant_ids"/>
+                <columnExists tableName="users" columnName="roles"/>
+            </or>
+        </preConditions>
+
+        <comment>
+            Remove incorrect VARCHAR columns (tenant_ids, roles) from users table.
+            User entity uses @ElementCollection which creates junction tables instead.
+        </comment>
+
+        <!-- Drop tenant_ids VARCHAR column if exists -->
+        <dropColumn tableName="users">
+            <column name="tenant_ids"/>
+        </dropColumn>
+
+        <!-- Drop roles VARCHAR column if exists -->
+        <dropColumn tableName="users">
+            <column name="roles"/>
+        </dropColumn>
+
+        <!-- Junction tables (user_tenants, user_roles) will be created by Hibernate on startup -->
+
+        <rollback>
+            <comment>Rollback: Restore VARCHAR columns (NOT RECOMMENDED - use junction tables)</comment>
+            <addColumn tableName="users">
+                <column name="tenant_ids" type="varchar(500)">
+                    <constraints nullable="true"/>
+                </column>
+            </addColumn>
+            <addColumn tableName="users">
+                <column name="roles" type="varchar(500)">
+                    <constraints nullable="true"/>
+                </column>
+            </addColumn>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -75,7 +75,7 @@ class ApprovalEventPublisherTest {
             eventPublisher.publishCreated(request);
 
             // Wait a bit for async execution
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), anyString(), anyString());
@@ -90,7 +90,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishCreated(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
@@ -109,7 +109,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishCreated(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), eq(CORRELATION_ID), anyString());
@@ -128,7 +128,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishCreated(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), eq(request.getId().toString()), anyString());
@@ -153,7 +153,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishAssigned(request, "admin-456");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), anyString(), anyString());
@@ -177,7 +177,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishApproved(request, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), anyString(), anyString());
@@ -196,7 +196,7 @@ class ApprovalEventPublisherTest {
             // When/Then
             assertThatCode(() -> {
                 eventPublisher.publishApproved(request, "reviewer-123");
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
 
             verify(kafkaTemplate, never()).send(anyString(), anyString(), anyString());
@@ -220,7 +220,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishRejected(request, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), anyString(), anyString());
@@ -244,7 +244,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishEscalated(request, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), anyString(), anyString());
@@ -268,7 +268,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishExpired(request);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(kafkaTemplate).send(eq("approval-events"), anyString(), anyString());
@@ -293,7 +293,7 @@ class ApprovalEventPublisherTest {
             // When/Then
             assertThatCode(() -> {
                 eventPublisher.publishCreated(request);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
         }
 
@@ -303,7 +303,7 @@ class ApprovalEventPublisherTest {
             // When/Then - Should handle NPE gracefully
             assertThatCode(() -> {
                 eventPublisher.publishCreated(null);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
         }
     }
@@ -331,7 +331,7 @@ class ApprovalEventPublisherTest {
 
             // When
             eventPublisher.publishApproved(request, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             ApprovalEventPublisher.ApprovalEvent event = eventCaptor.getValue();
@@ -372,7 +372,7 @@ class ApprovalEventPublisherTest {
             // When/Then
             assertThatCode(() -> {
                 eventPublisher.publishCreated(request);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
         }
     }

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { LoggerService } from './logger.service';
 
 /**
  * FilterPersistenceService - Manages filter state persistence
@@ -12,6 +13,8 @@ import { Injectable } from '@angular/core';
 export class FilterPersistenceService {
   private readonly STORAGE_PREFIX = 'clinical-portal-filters';
 
+  constructor(private readonly logger: LoggerService) {}
+
   /**
    * Save filters for a specific page
    */
@@ -24,7 +27,7 @@ export class FilterPersistenceService {
       };
       localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
-      console.warn('Failed to save filters to localStorage:', error);
+      this.logger.warn('Failed to save filters to localStorage:', error);
     }
   }
 
@@ -54,7 +57,7 @@ export class FilterPersistenceService {
 
       return data.filters;
     } catch (error) {
-      console.warn('Failed to load filters from localStorage:', error);
+      this.logger.warn('Failed to load filters from localStorage:', error);
       return null;
     }
   }
@@ -67,7 +70,7 @@ export class FilterPersistenceService {
       const key = this.getStorageKey(pageKey);
       localStorage.removeItem(key);
     } catch (error) {
-      console.warn('Failed to clear filters from localStorage:', error);
+      this.logger.warn('Failed to clear filters from localStorage:', error);
     }
   }
 
@@ -83,7 +86,7 @@ export class FilterPersistenceService {
         }
       });
     } catch (error) {
-      console.warn('Failed to clear all filters from localStorage:', error);
+      this.logger.warn('Failed to clear all filters from localStorage:', error);
     }
   }
 

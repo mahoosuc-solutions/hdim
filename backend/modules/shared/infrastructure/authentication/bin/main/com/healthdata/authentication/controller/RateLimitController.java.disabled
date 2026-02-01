@@ -1,0 +1,227 @@
+package com.healthdata.authentication.controller;
+
+import com.healthdata.authentication.dto.RateLimitInfo;
+import com.healthdata.authentication.service.RateLimitStatsService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Admin controller for managing rate limits.
+ * All endpoints require SUPER_ADMIN role.
+ *
+ * SECURITY CRITICAL:
+ * - Only SUPER_ADMIN can view and manage rate limits
+ * - Resetting rate limits can enable attackers to bypass protection
+ * - All operations are logged for audit purposes
+ *
+ * ENDPOINTS:
+ * - GET /api/v1/admin/rate-limits - List all active rate limits
+ * - GET /api/v1/admin/rate-limits/{ip} - Get rate limits for specific IP
+ * - DELETE /api/v1/admin/rate-limits/{ip} - Reset rate limits for specific IP
+ * - GET /api/v1/admin/rate-limits/blocked - List currently blocked IPs
+ * - GET /api/v1/admin/rate-limits/stats - Get aggregated statistics
+ * - DELETE /api/v1/admin/rate-limits - Reset ALL rate limits (dangerous!)
+ */
+@RestController
+@RequestMapping("/api/v1/admin/rate-limits")
+@RequiredArgsConstructor
+@Slf4j
+@ConditionalOnProperty(prefix = "rate-limiting.redis", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RateLimitController {
+
+    private final RateLimitStatsService statsService;
+
+    /**
+     * Gets aggregated rate limit statistics.
+     * Includes total buckets, blocked IP count, etc.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @return Aggregated statistics
+     */
+    @GetMapping("/stats")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        log.info("Admin requested rate limit statistics");
+
+        Map<String, Object> stats = statsService.getAggregatedStats();
+
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Gets list of currently blocked IPs.
+     * These are IPs that have exhausted their rate limits.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @return List of blocked IP addresses
+     */
+    @GetMapping("/blocked")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<String>> getBlockedIPs() {
+        log.info("Admin requested list of blocked IPs");
+
+        List<String> blockedIPs = statsService.getBlockedIPs();
+
+        log.info("Returning {} blocked IPs", blockedIPs.size());
+
+        return ResponseEntity.ok(blockedIPs);
+    }
+
+    /**
+     * Gets all rate limits for a specific IP address.
+     * Shows rate limit status across all endpoints this IP has accessed.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @param ip Client IP address
+     * @return List of rate limit info for this IP
+     */
+    @GetMapping("/{ip}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<RateLimitInfo>> getRateLimitsByIp(@PathVariable String ip) {
+        log.info("Admin requested rate limits for IP: {}", ip);
+
+        List<RateLimitInfo> rateLimits = statsService.getRateLimitsByIp(ip);
+
+        log.info("Returning {} rate limits for IP: {}", rateLimits.size(), ip);
+
+        return ResponseEntity.ok(rateLimits);
+    }
+
+    /**
+     * Resets all rate limits for a specific IP address.
+     * This allows the IP to start fresh with full token capacity.
+     *
+     * USE WITH CAUTION: This can enable attackers to bypass rate limiting.
+     * Only use when you're certain the IP is legitimate.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @param ip Client IP address to reset
+     * @return Number of rate limits reset
+     */
+    @DeleteMapping("/{ip}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> resetRateLimitsForIp(@PathVariable String ip) {
+        log.warn("Admin requested reset of all rate limits for IP: {}", ip);
+
+        int count = statsService.resetRateLimitsForIp(ip);
+
+        log.warn("Reset {} rate limits for IP: {}", count, ip);
+
+        return ResponseEntity.ok(Map.of(
+                "ip", ip,
+                "rateLimitsReset", count,
+                "message", "Rate limits reset successfully"
+        ));
+    }
+
+    /**
+     * Resets a specific rate limit for an IP and endpoint combination.
+     * More surgical than resetting all limits for an IP.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @param ip Client IP address
+     * @param endpoint API endpoint (URL encoded)
+     * @return Success status
+     */
+    @DeleteMapping("/{ip}/endpoint")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> resetRateLimit(
+            @PathVariable String ip,
+            @RequestParam String endpoint) {
+
+        log.warn("Admin requested reset of rate limit for IP: {}, endpoint: {}", ip, endpoint);
+
+        boolean reset = statsService.resetRateLimit(ip, endpoint);
+
+        if (reset) {
+            log.warn("Successfully reset rate limit for IP: {}, endpoint: {}", ip, endpoint);
+            return ResponseEntity.ok(Map.of(
+                    "ip", ip,
+                    "endpoint", endpoint,
+                    "reset", true,
+                    "message", "Rate limit reset successfully"
+            ));
+        } else {
+            log.info("No rate limit found for IP: {}, endpoint: {}", ip, endpoint);
+            return ResponseEntity.ok(Map.of(
+                    "ip", ip,
+                    "endpoint", endpoint,
+                    "reset", false,
+                    "message", "No rate limit found for this IP/endpoint combination"
+            ));
+        }
+    }
+
+    /**
+     * Gets top N most rate-limited IPs.
+     * Useful for identifying potential attackers or problematic clients.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @param limit Number of top IPs to return (default: 10)
+     * @return Map of IP addresses to block count
+     */
+    @GetMapping("/top-limited")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Long>> getTopRateLimitedIPs(
+            @RequestParam(defaultValue = "10") int limit) {
+
+        log.info("Admin requested top {} rate-limited IPs", limit);
+
+        Map<String, Long> topIPs = statsService.getTopRateLimitedIPs(limit);
+
+        log.info("Returning {} rate-limited IPs", topIPs.size());
+
+        return ResponseEntity.ok(topIPs);
+    }
+
+    /**
+     * Resets ALL rate limits in the system.
+     * EXTREMELY DANGEROUS: This affects all IPs and endpoints across all service instances.
+     *
+     * USE WITH EXTREME CAUTION: Only use in emergency situations or for testing.
+     * This effectively disables rate limiting protection until limits are hit again.
+     *
+     * REQUIRES: SUPER_ADMIN role
+     *
+     * @param confirm Must be "YES_I_AM_SURE" to proceed
+     * @return Number of rate limits reset
+     */
+    @DeleteMapping
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Map<String, Object>> resetAllRateLimits(
+            @RequestParam(required = true) String confirm) {
+
+        if (!"YES_I_AM_SURE".equals(confirm)) {
+            log.warn("Admin attempted to reset all rate limits without proper confirmation");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Confirmation required",
+                    "message", "To reset all rate limits, provide confirm=YES_I_AM_SURE query parameter"
+            ));
+        }
+
+        log.error("ADMIN RESET ALL RATE LIMITS - This affects all IPs and endpoints!");
+
+        int count = statsService.resetAllRateLimits();
+
+        log.error("RESET {} TOTAL RATE LIMITS", count);
+
+        return ResponseEntity.ok(Map.of(
+                "rateLimitsReset", count,
+                "message", "ALL rate limits have been reset",
+                "warning", "Rate limiting protection is now reset for all IPs"
+        ));
+    }
+}

@@ -1,0 +1,208 @@
+{
+  "dashboard": {
+    "title": "Prometheus Alerting Dashboard",
+    "tags": ["hdim", "alerting", "prometheus", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Active Alerts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "count(ALERTS{alertstate=\"firing\"})",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Critical Alerts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 0},
+        "targets": [{
+          "expr": "count(ALERTS{alertstate=\"firing\",severity=\"critical\"})",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Warning Alerts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 0},
+        "targets": [{
+          "expr": "count(ALERTS{alertstate=\"firing\",severity=\"warning\"})",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "Active Alerts (Last 24h)",
+        "type": "table",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 4},
+        "targets": [{
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "refId": "A",
+          "format": "table",
+          "instant": true
+        }],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true, "__name__": true, "alertstate": true},
+              "indexByName": {
+                "alertname": 0,
+                "severity": 1,
+                "component": 2,
+                "job": 3
+              },
+              "renameByName": {
+                "alertname": "Alert Name",
+                "severity": "Severity",
+                "component": "Component",
+                "job": "Service"
+              }
+            }
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"displayName": "Severity", "desc": true}]
+        },
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Severity"},
+              "properties": [
+                {
+                  "id": "mappings",
+                  "value": [
+                    {"type": "value", "value": "critical", "text": "CRITICAL", "color": "red"},
+                    {"type": "value", "value": "warning", "text": "WARNING", "color": "yellow"},
+                    {"type": "value", "value": "info", "text": "INFO", "color": "blue"}
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": 5,
+        "title": "Alert History (Last 24h)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 14},
+        "targets": [{
+          "expr": "sum(ALERTS{alertstate=\"firing\"}) by (alertname)",
+          "legendFormat": "{{alertname}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "short", "label": "Active Alerts"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true, "alignAsTable": true},
+        "bars": false,
+        "lines": true,
+        "steppedLine": true
+      },
+      {
+        "id": 6,
+        "title": "Alerts by Severity (Last 24h)",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 22},
+        "targets": [{
+          "expr": "sum(ALERTS{alertstate=\"firing\"}) by (severity)",
+          "legendFormat": "{{severity}}",
+          "refId": "A",
+          "instant": true
+        }],
+        "options": {
+          "legend": {"displayMode": "list", "placement": "right"},
+          "pieType": "pie",
+          "displayLabels": ["name", "percent"]
+        }
+      },
+      {
+        "id": 7,
+        "title": "Alerts by Component (Last 24h)",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 22},
+        "targets": [{
+          "expr": "sum(ALERTS{alertstate=\"firing\"}) by (component)",
+          "legendFormat": "{{component}}",
+          "refId": "A",
+          "instant": true
+        }],
+        "options": {
+          "legend": {"displayMode": "list", "placement": "right"},
+          "pieType": "pie",
+          "displayLabels": ["name", "percent"]
+        }
+      }
+    ]
+  }
+}

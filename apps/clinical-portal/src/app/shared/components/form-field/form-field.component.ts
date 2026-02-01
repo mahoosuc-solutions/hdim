@@ -21,6 +21,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Validation error definition
@@ -113,13 +114,13 @@ export class FormFieldComponent implements OnInit {
   @Input() control!: FormControl;
 
   /** Field label */
-  @Input() label: string = '';
+  @Input() label = '';
 
   /** Input type */
   @Input() type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'date' = 'text';
 
   /** Placeholder text */
-  @Input() placeholder: string = '';
+  @Input() placeholder = '';
 
   /** Hint text */
   @Input() hint?: string;
@@ -128,13 +129,13 @@ export class FormFieldComponent implements OnInit {
   @Input() icon?: string;
 
   /** Is field required */
-  @Input() required: boolean = false;
+  @Input() required = false;
 
   /** Is field readonly */
-  @Input() readonly: boolean = false;
+  @Input() readonly = false;
 
   /** Autocomplete attribute */
-  @Input() autocomplete: string = 'off';
+  @Input() autocomplete = 'off';
 
   /** Material appearance */
   @Input() appearance: 'fill' | 'outline' = 'outline';
@@ -153,9 +154,15 @@ export class FormFieldComponent implements OnInit {
     pattern: 'Invalid format'
   };
 
+  private get logger() {
+    return this.loggerService.withContext('FormFieldComponent');
+  }
+
+  constructor(private loggerService: LoggerService) {}
+
   ngOnInit(): void {
     if (!this.control) {
-      console.error('FormFieldComponent: control input is required');
+      this.loggerService.error('FormFieldComponent: control input is required');
     }
   }
 

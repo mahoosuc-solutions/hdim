@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0008-fix-value-sets-schema-alignment" author="healthdata-system">
+        <comment>Fix ValueSet entity-schema misalignments identified in Phase 17 audit</comment>
+
+        <!-- Issue 1: Update oid column length from 128 to 255 -->
+        <modifyDataType tableName="value_sets"
+                        columnName="oid"
+                        newDataType="varchar(255)"/>
+
+        <!-- Issue 2: Update name column length from 255 to 512 -->
+        <modifyDataType tableName="value_sets"
+                        columnName="name"
+                        newDataType="varchar(512)"/>
+
+        <!-- Issue 3: Update version column length from 50 to 32 -->
+        <modifyDataType tableName="value_sets"
+                        columnName="version"
+                        newDataType="varchar(32)"/>
+
+        <!-- Issue 4: Add missing publisher column -->
+        <addColumn tableName="value_sets">
+            <column name="publisher" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Issue 5: Add missing status column -->
+        <addColumn tableName="value_sets">
+            <column name="status" type="varchar(32)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Issue 6: Add missing fhir_value_set_id column -->
+        <addColumn tableName="value_sets">
+            <column name="fhir_value_set_id" type="uuid">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Issue 7: Add missing active column -->
+        <addColumn tableName="value_sets">
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Issue 8: Add missing index on name -->
+        <createIndex indexName="idx_vs_name" tableName="value_sets">
+            <column name="name"/>
+        </createIndex>
+
+        <!-- Add index on status for filtering -->
+        <createIndex indexName="idx_vs_status" tableName="value_sets">
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Add index on active for filtering -->
+        <createIndex indexName="idx_vs_active" tableName="value_sets">
+            <column name="active"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_vs_active" tableName="value_sets"/>
+            <dropIndex indexName="idx_vs_status" tableName="value_sets"/>
+            <dropIndex indexName="idx_vs_name" tableName="value_sets"/>
+            <dropColumn tableName="value_sets" columnName="active"/>
+            <dropColumn tableName="value_sets" columnName="fhir_value_set_id"/>
+            <dropColumn tableName="value_sets" columnName="status"/>
+            <dropColumn tableName="value_sets" columnName="publisher"/>
+            <modifyDataType tableName="value_sets" columnName="version" newDataType="varchar(50)"/>
+            <modifyDataType tableName="value_sets" columnName="name" newDataType="varchar(255)"/>
+            <modifyDataType tableName="value_sets" columnName="oid" newDataType="varchar(128)"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

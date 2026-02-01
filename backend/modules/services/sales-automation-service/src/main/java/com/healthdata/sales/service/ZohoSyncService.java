@@ -376,26 +376,52 @@ public class ZohoSyncService {
         LocalDateTime syncStart = LocalDateTime.now();
 
         try {
-            // For now, sync a default tenant - in production, iterate over all tenants
-            // This would need a tenant registry or similar
-            UUID defaultTenantId = null; // Would be retrieved from config or registry
+            // Get all unique tenant IDs from leads (covers most active tenants)
+            List<UUID> tenantIds = leadRepository.findDistinctTenantIds();
+            
+            // If no tenants found and default tenant is configured, use it
+            if (tenantIds.isEmpty() && zohoConfig.getSync().getDefaultTenantId() != null) {
+                try {
+                    UUID defaultTenantId = UUID.fromString(zohoConfig.getSync().getDefaultTenantId());
+                    tenantIds = List.of(defaultTenantId);
+                    log.debug("Using configured default tenant ID: {}", defaultTenantId);
+                } catch (IllegalArgumentException e) {
+                    log.warn("Invalid default tenant ID in configuration: {}", 
+                        zohoConfig.getSync().getDefaultTenantId());
+                }
+            }
 
-            if (defaultTenantId != null) {
-                // Push to Zoho
-                syncUnsyncedLeads(defaultTenantId);
-                syncUnsyncedAccounts(defaultTenantId);
-                syncUnsyncedContacts(defaultTenantId);
-                syncUnsyncedOpportunities(defaultTenantId);
+            if (tenantIds.isEmpty()) {
+                log.debug("No tenants found for Zoho sync - skipping");
+                return;
+            }
 
-                // Pull from Zoho
-                pullLeadsFromZoho(defaultTenantId);
-                pullAccountsFromZoho(defaultTenantId);
-                pullContactsFromZoho(defaultTenantId);
-                pullDealsFromZoho(defaultTenantId);
+            log.info("Syncing {} tenant(s) with Zoho", tenantIds.size());
+
+            // Sync each tenant
+            for (UUID tenantId : tenantIds) {
+                try {
+                    log.debug("Syncing tenant: {}", tenantId);
+                    
+                    // Push to Zoho
+                    syncUnsyncedLeads(tenantId);
+                    syncUnsyncedAccounts(tenantId);
+                    syncUnsyncedContacts(tenantId);
+                    syncUnsyncedOpportunities(tenantId);
+
+                    // Pull from Zoho
+                    pullLeadsFromZoho(tenantId);
+                    pullAccountsFromZoho(tenantId);
+                    pullContactsFromZoho(tenantId);
+                    pullDealsFromZoho(tenantId);
+                } catch (Exception e) {
+                    log.error("Error syncing tenant {}: {}", tenantId, e.getMessage(), e);
+                    // Continue with next tenant
+                }
             }
 
             lastSyncTime.set(syncStart);
-            log.info("Scheduled Zoho sync completed");
+            log.info("Scheduled Zoho sync completed for {} tenant(s)", tenantIds.size());
         } catch (Exception e) {
             log.error("Scheduled Zoho sync failed: {}", e.getMessage(), e);
         }

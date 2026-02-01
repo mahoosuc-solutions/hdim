@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0006-create-patient-projections-table" author="team-1-patient-projection">
+        <comment>Create patient projections table for CQRS read model</comment>
+
+        <createTable tableName="patient_projections">
+            <!-- Primary Key -->
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_patient_projections"/>
+            </column>
+
+            <!-- Tenant Isolation -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Patient Identifiers -->
+            <column name="patient_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="mrn" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Patient Demographics -->
+            <column name="first_name" type="VARCHAR(100)"/>
+            <column name="last_name" type="VARCHAR(100)"/>
+            <column name="date_of_birth" type="DATE"/>
+            <column name="gender" type="VARCHAR(50)"/>
+
+            <!-- Insurance -->
+            <column name="insurance_member_id" type="VARCHAR(100)"/>
+
+            <!-- Audit -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE"
+                    defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for Query Performance -->
+
+        <!-- Primary lookup: tenant + MRN (unique within tenant) -->
+        <createIndex indexName="idx_patient_projections_tenant_mrn" tableName="patient_projections" unique="true">
+            <column name="tenant_id"/>
+            <column name="mrn"/>
+        </createIndex>
+
+        <!-- Tenant isolation index -->
+        <createIndex indexName="idx_patient_projections_tenant_id" tableName="patient_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Patient ID lookup (for event correlation) -->
+        <createIndex indexName="idx_patient_projections_patient_id" tableName="patient_projections">
+            <column name="patient_id"/>
+        </createIndex>
+
+        <!-- First name autocomplete search -->
+        <createIndex indexName="idx_patient_projections_first_name" tableName="patient_projections">
+            <column name="first_name"/>
+        </createIndex>
+
+        <!-- Combined first name + tenant for efficient searches -->
+        <createIndex indexName="idx_patient_projections_tenant_first_name" tableName="patient_projections">
+            <column name="tenant_id"/>
+            <column name="first_name"/>
+        </createIndex>
+
+        <!-- Rollback -->
+        <rollback>
+            <dropTable tableName="patient_projections"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

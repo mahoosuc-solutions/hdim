@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, Fragment } from 'react'
 import PortalNav from '../../components/PortalNav'
 import {
   Search,
@@ -303,7 +303,7 @@ export default function ExplorerPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {filteredPatients.map((patient) => (
-                    <>
+                    <Fragment key={patient.id}>
                       <tr key={patient.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900">{patient.name}</div>
@@ -403,7 +403,7 @@ export default function ExplorerPage() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

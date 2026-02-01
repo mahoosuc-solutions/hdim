@@ -53,7 +53,7 @@ export class NotificationService {
    */
   show(
     message: string,
-    panelClass: string = '',
+    panelClass = '',
     duration?: number,
     action?: string
   ): void {

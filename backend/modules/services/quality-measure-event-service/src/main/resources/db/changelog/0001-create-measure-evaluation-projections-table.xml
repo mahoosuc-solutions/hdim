@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-measure-evaluation-projections-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="measure_evaluation_projections"/>
+            </not>
+        </preConditions>
+        <comment>
+            Create measure_evaluation_projections read model table for CQRS pattern.
+
+            This denormalized table maintains an optimized view of quality measure
+            evaluation results for fast queries. It is updated asynchronously via
+            Kafka events from the quality measure write model.
+
+            FIX: Using preConditions to handle if table already exists from
+            previous incomplete run. Allows safe re-runs of migrations.
+        </comment>
+
+        <createTable tableName="measure_evaluation_projections">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Tenant Isolation (CRITICAL) -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Measure & Patient Identifiers -->
+            <column name="measure_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Evaluation Results -->
+            <column name="score" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="compliance_status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="compliance_rate" type="DOUBLE PRECISION">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Numerator/Denominator -->
+            <column name="numerator" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="denominator" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exclusions" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Measure Metadata -->
+            <column name="measure_name" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="measure_version" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="measure_type" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Evaluation Metadata -->
+            <column name="evaluation_period_start" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="evaluation_period_end" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="true"/>
+            </column>
+            <column name="evaluated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Status & Flags -->
+            <column name="is_compliant" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meets_threshold" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Notes & Errors -->
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="error_message" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes for Multi-Tenancy and Query Performance -->
+        <createIndex indexName="idx_mep_tenant_id" tableName="measure_evaluation_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mep_tenant_measure" tableName="measure_evaluation_projections">
+            <column name="tenant_id"/>
+            <column name="measure_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mep_tenant_patient" tableName="measure_evaluation_projections">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mep_tenant_measure_patient" tableName="measure_evaluation_projections" unique="true">
+            <column name="tenant_id"/>
+            <column name="measure_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mep_compliance_status" tableName="measure_evaluation_projections">
+            <column name="tenant_id"/>
+            <column name="compliance_status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mep_is_compliant" tableName="measure_evaluation_projections">
+            <column name="tenant_id"/>
+            <column name="is_compliant"/>
+        </createIndex>
+
+        <createIndex indexName="idx_mep_updated_at" tableName="measure_evaluation_projections">
+            <column name="last_updated_at"/>
+        </createIndex>
+
+        <!-- Rollback SQL -->
+        <rollback>
+            <dropTable tableName="measure_evaluation_projections"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

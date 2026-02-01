@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -68,6 +70,22 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
      */
     private Counter tenantViolationCounter;
     private Counter missingTenantContextCounter;
+    private Counter missingTenantHeaderCounter;
+
+    @Value("${tenant.enforcement.mode:warn}")
+    private String enforcementMode;
+
+    @Value("${tenant.enforcement.missing-tenant-paths:}")
+    private String missingTenantPaths;
+
+    @Value("${tenant.enforcement.health-tenant-enabled:true}")
+    private boolean healthTenantEnabled;
+
+    @Value("${tenant.enforcement.health-tenant-prefix:service-health-}")
+    private String healthTenantPrefix;
+
+    private EnforcementMode resolvedEnforcementMode = EnforcementMode.WARN;
+    private Set<String> missingTenantAllowedPaths = Collections.emptySet();
 
     /**
      * Public endpoints that don't require tenant validation.
@@ -108,6 +126,14 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
             .tag("filter", "trusted_tenant_access")
             .register(meterRegistry);
 
+        missingTenantHeaderCounter = Counter.builder("missing_tenant_header_total")
+            .description("Total number of requests missing the X-Tenant-ID header")
+            .tag("filter", "trusted_tenant_access")
+            .register(meterRegistry);
+
+        resolvedEnforcementMode = EnforcementMode.from(enforcementMode);
+        missingTenantAllowedPaths = parsePathList(missingTenantPaths);
+
         log.info("Metrics initialized for TrustedTenantAccessFilter");
     }
 
@@ -121,8 +147,6 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
         String requestPath = request.getRequestURI();
         String requestedTenantId = request.getHeader("X-Tenant-ID");
 
-        log.debug("Trusted tenant access filter: path={}, tenantId={}", requestPath, requestedTenantId);
-
         // Skip validation for public endpoints
         if (isPublicPath(requestPath)) {
             log.debug("Public path, skipping tenant validation: {}", requestPath);
@@ -130,16 +154,46 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
             return;
         }
 
-        // If no tenant ID in header, allow (controller will handle validation if needed)
-        // This allows endpoints that don't require tenant context
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // If no tenant ID in header, handle based on enforcement mode.
         if (requestedTenantId == null || requestedTenantId.trim().isEmpty()) {
-            log.debug("No tenant ID in request, allowing");
+            if (healthTenantEnabled && isHealthPath(requestPath)) {
+                String serviceTenant = healthTenantPrefix + deriveServiceName(requestPath);
+                log.info("Health request assigned service tenant: tenant={}, path={}", serviceTenant, requestPath);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (isMissingTenantAllowedPath(requestPath)) {
+                log.debug("Missing tenant ID allowed for path: {}", requestPath);
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            missingTenantHeaderCounter.increment();
+
+            if (resolvedEnforcementMode == EnforcementMode.ENFORCE) {
+                log.warn("Missing X-Tenant-ID on protected request (blocked). method={}, path={}",
+                    request.getMethod(), requestPath);
+                sendBadRequestResponse(response, "Missing required X-Tenant-ID header");
+                return;
+            }
+
+            String username = authentication == null ? "anonymous" : authentication.getName();
+            if (resolvedEnforcementMode == EnforcementMode.WARN) {
+                log.warn("Missing X-Tenant-ID on protected request (allowed in warn mode). user={}, method={}, path={}",
+                    username, request.getMethod(), requestPath);
+            } else {
+                log.debug("Missing X-Tenant-ID on protected request (allowed). user={}, method={}, path={}",
+                    username, request.getMethod(), requestPath);
+            }
+
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Get authenticated user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.debug("Trusted tenant access filter: path={}, tenantId={}", requestPath, requestedTenantId);
 
         // If no authentication or anonymous, let Spring Security handle it
         if (authentication == null || !authentication.isAuthenticated() ||
@@ -191,6 +245,36 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
         return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
+    private boolean isMissingTenantAllowedPath(String path) {
+        if (missingTenantAllowedPaths.isEmpty()) {
+            return false;
+        }
+        return missingTenantAllowedPaths.stream().anyMatch(path::startsWith);
+    }
+
+    private boolean isHealthPath(String path) {
+        return path.contains("/actuator");
+    }
+
+    private String deriveServiceName(String path) {
+        String normalized = path.startsWith("/") ? path.substring(1) : path;
+        int actuatorIndex = normalized.indexOf("/actuator");
+        if (actuatorIndex <= 0) {
+            return "root";
+        }
+        return normalized.substring(0, actuatorIndex);
+    }
+
+    private Set<String> parsePathList(String rawPaths) {
+        if (rawPaths == null || rawPaths.trim().isEmpty()) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(rawPaths.split(","))
+            .map(String::trim)
+            .filter(value -> !value.isEmpty())
+            .collect(java.util.stream.Collectors.toSet());
+    }
+
     /**
      * Send 403 Forbidden response with JSON error body.
      */
@@ -216,14 +300,49 @@ public class TrustedTenantAccessFilter extends OncePerRequestFilter {
                     .replace("\t", "\\t");
     }
 
+    /**
+     * Send 400 Bad Request response with JSON error body.
+     */
+    private void sendBadRequestResponse(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        response.setContentType("application/json");
+        response.getWriter().write(String.format(
+            "{\"error\":\"Bad Request\",\"message\":\"%s\",\"status\":400}",
+            escapeJson(message)
+        ));
+        response.getWriter().flush();
+    }
+
+    private enum EnforcementMode {
+        PERMISSIVE,
+        WARN,
+        ENFORCE;
+
+        private static EnforcementMode from(String value) {
+            if (value == null) {
+                return WARN;
+            }
+            String normalized = value.trim().toUpperCase(Locale.ROOT);
+            for (EnforcementMode mode : values()) {
+                if (mode.name().equals(normalized)) {
+                    return mode;
+                }
+            }
+            return WARN;
+        }
+    }
+
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
         String path = request.getRequestURI();
 
         // Skip filter for actuator and swagger endpoints (redundant with isPublicPath but faster)
-        return path.startsWith("/actuator") ||
-               path.startsWith("/swagger-ui") ||
-               path.startsWith("/v3/api-docs") ||
+        // This also covers services mounted under a context path (e.g., /care-gap/actuator/health).
+        if (path.contains("/actuator") && !healthTenantEnabled) {
+            return true;
+        }
+        return path.contains("/swagger-ui") ||
+               path.contains("/v3/api-docs") ||
                path.equals("/favicon.ico");
     }
 }

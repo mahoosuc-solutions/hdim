@@ -63,7 +63,7 @@ log_info "Docker daemon is running"
 # Step 2: Pull required Docker images
 #
 log_info "Pulling Docker images (this may take a while)..."
-docker pull postgres:15-alpine
+docker pull postgres:16-alpine
 docker pull redis:7-alpine
 docker pull confluentinc/cp-zookeeper:7.5.0
 docker pull confluentinc/cp-kafka:7.5.0

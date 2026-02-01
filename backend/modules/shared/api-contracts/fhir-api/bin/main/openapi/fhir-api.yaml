@@ -1,0 +1,311 @@
+openapi: 3.0.3
+info:
+  title: FHIR R4 API
+  description: |
+    FHIR R4 Resource Management API for Health Data In Motion Platform.
+    Provides CRUD operations for FHIR resources with HIPAA compliance.
+  version: 1.0.0
+  contact:
+    name: Health Data In Motion API Support
+    email: api@healthdata.com
+
+servers:
+  - url: http://localhost:8085/fhir
+    description: Development server
+  - url: https://api.healthdata.com/fhir
+    description: Production server
+
+tags:
+  - name: Patient
+    description: Patient resource operations
+  - name: Observation
+    description: Observation resource operations
+  - name: Condition
+    description: Condition resource operations
+  - name: MedicationRequest
+    description: Medication request operations
+  - name: Bundle
+    description: FHIR Bundle operations
+
+paths:
+  /Patient:
+    get:
+      tags:
+        - Patient
+      summary: Search for patients
+      operationId: searchPatients
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          description: Patient name
+        - name: identifier
+          in: query
+          schema:
+            type: string
+          description: Patient identifier
+        - name: _count
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Number of results to return
+      responses:
+        '200':
+          description: Successfully retrieved patients
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Patient
+      summary: Create a new patient
+      operationId: createPatient
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Patient'
+      responses:
+        '201':
+          description: Patient created successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /Patient/{id}:
+    get:
+      tags:
+        - Patient
+      summary: Get patient by ID
+      operationId: getPatientById
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '200':
+          description: Successfully retrieved patient
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Patient
+      summary: Update patient
+      operationId: updatePatient
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      requestBody:
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Patient'
+      responses:
+        '200':
+          description: Patient updated successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+
+    delete:
+      tags:
+        - Patient
+      summary: Delete patient
+      operationId: deletePatient
+      parameters:
+        - $ref: '#/components/parameters/ResourceId'
+      responses:
+        '204':
+          description: Patient deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /Observation:
+    get:
+      tags:
+        - Observation
+      summary: Search for observations
+      operationId: searchObservations
+      parameters:
+        - name: patient
+          in: query
+          schema:
+            type: string
+          description: Patient reference
+        - name: code
+          in: query
+          schema:
+            type: string
+          description: Observation code
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Observation date
+      responses:
+        '200':
+          description: Successfully retrieved observations
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Bundle'
+
+components:
+  parameters:
+    ResourceId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: FHIR resource ID
+
+  schemas:
+    Patient:
+      type: object
+      description: FHIR Patient resource
+      properties:
+        resourceType:
+          type: string
+          example: Patient
+        id:
+          type: string
+        identifier:
+          type: array
+          items:
+            $ref: '#/components/schemas/Identifier'
+        name:
+          type: array
+          items:
+            $ref: '#/components/schemas/HumanName'
+        gender:
+          type: string
+          enum: [male, female, other, unknown]
+        birthDate:
+          type: string
+          format: date
+
+    Identifier:
+      type: object
+      properties:
+        system:
+          type: string
+        value:
+          type: string
+        use:
+          type: string
+
+    HumanName:
+      type: object
+      properties:
+        family:
+          type: string
+        given:
+          type: array
+          items:
+            type: string
+        use:
+          type: string
+
+    Bundle:
+      type: object
+      properties:
+        resourceType:
+          type: string
+          example: Bundle
+        type:
+          type: string
+          enum: [searchset, transaction, batch]
+        total:
+          type: integer
+        entry:
+          type: array
+          items:
+            $ref: '#/components/schemas/BundleEntry'
+
+    BundleEntry:
+      type: object
+      properties:
+        fullUrl:
+          type: string
+        resource:
+          type: object
+
+    OperationOutcome:
+      type: object
+      properties:
+        resourceType:
+          type: string
+          example: OperationOutcome
+        issue:
+          type: array
+          items:
+            $ref: '#/components/schemas/OperationOutcomeIssue'
+
+    OperationOutcomeIssue:
+      type: object
+      properties:
+        severity:
+          type: string
+          enum: [fatal, error, warning, information]
+        code:
+          type: string
+        diagnostics:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/fhir+json:
+          schema:
+            $ref: '#/components/schemas/OperationOutcome'
+
+    Unauthorized:
+      description: Unauthorized - Authentication required
+      content:
+        application/fhir+json:
+          schema:
+            $ref: '#/components/schemas/OperationOutcome'
+
+    Forbidden:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/fhir+json:
+          schema:
+            $ref: '#/components/schemas/OperationOutcome'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/fhir+json:
+          schema:
+            $ref: '#/components/schemas/OperationOutcome'
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

@@ -1,0 +1,16 @@
+{
+  "name": "hdim-screenshot-capture",
+  "version": "1.0.0",
+  "description": "Automated screenshot capture for HDIM documentation",
+  "main": "capture-screenshots.js",
+  "scripts": {
+    "capture": "node capture-screenshots.js",
+    "install-deps": "npm install"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0"
+  },
+  "devDependencies": {},
+  "author": "HDIM Team",
+  "license": "PROPRIETARY"
+}

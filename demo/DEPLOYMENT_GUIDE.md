@@ -195,10 +195,10 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:16-alpine
     environment:
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: demo_password_123
+      POSTGRES_PASSWORD: demo_password_2024
       POSTGRES_DB: healthdata_demo
     volumes:
       - demo_postgres_data:/var/lib/postgresql/data
@@ -295,7 +295,7 @@ metadata:
   namespace: hdim-demo
 type: Opaque
 stringData:
-  POSTGRES_PASSWORD: demo_password_123
+  POSTGRES_PASSWORD: demo_password_2024
   JWT_SECRET: DemoSecretKeyForJWTMustBeAtLeast256BitsLongForHS256Algorithm123456789
 ```
 
@@ -320,7 +320,7 @@ spec:
     spec:
       containers:
       - name: postgres
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
         - name: POSTGRES_USER
           value: healthdata

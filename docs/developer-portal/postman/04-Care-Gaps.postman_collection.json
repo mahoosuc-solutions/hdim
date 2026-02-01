@@ -1,0 +1,158 @@
+{
+	"info": {
+		"_postman_id": "hdim-care-gaps-collection",
+		"name": "HDIM - 04 Care Gaps",
+		"description": "Care gap detection and closure workflows\n\n**Features:**\n- Identify open care gaps for patients\n- View gap details and recommendations\n- Close care gaps with evidence\n- Track gap closure progress",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "List Patient Care Gaps",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"if (pm.response.code === 200) {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.careGaps && jsonData.careGaps.length > 0) {",
+							"        pm.environment.set(\"care_gap_id\", jsonData.careGaps[0].id);",
+							"        console.log(\"✅ Found\", jsonData.totalCount, \"care gap(s)\");",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{care_gap_url}}/api/v1/patients/{{patient_id}}/care-gaps?status=OPEN&priority=HIGH",
+					"host": [
+						"{{care_gap_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}",
+						"care-gaps"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "OPEN"
+						},
+						{
+							"key": "priority",
+							"value": "HIGH"
+						}
+					]
+				},
+				"description": "**Get open care gaps for a patient**\n\n**Response:**\n```json\n{\n  \"careGaps\": [\n    {\n      \"id\": \"GAP-54321\",\n      \"patientId\": \"PAT-12345\",\n      \"measureId\": \"DIA-HBA1C\",\n      \"gapType\": \"MISSING_LAB\",\n      \"status\": \"OPEN\",\n      \"priority\": \"HIGH\",\n      \"dueDate\": \"2026-02-15\",\n      \"recommendation\": \"Schedule HbA1c lab test\"\n    }\n  ]\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Care Gap Details",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{care_gap_url}}/api/v1/care-gaps/{{care_gap_id}}",
+					"host": [
+						"{{care_gap_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"care-gaps",
+						"{{care_gap_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Close Care Gap",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"closureReason\": \"LAB_COMPLETED\",\n  \"closureDate\": \"2026-01-25T00:00:00Z\",\n  \"notes\": \"HbA1c completed on 2026-01-25, value: 6.2%\",\n  \"evidenceResourceId\": \"LAB-12345\"\n}"
+				},
+				"url": {
+					"raw": "{{care_gap_url}}/api/v1/care-gaps/{{care_gap_id}}/close",
+					"host": [
+						"{{care_gap_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"care-gaps",
+						"{{care_gap_id}}",
+						"close"
+					]
+				},
+				"description": "**Close a care gap with evidence**\n\n**Closure Reasons:**\n- `LAB_COMPLETED` - Required lab test completed\n- `PROCEDURE_COMPLETED` - Required procedure completed\n- `MEDICATION_PRESCRIBED` - Medication prescribed\n- `PATIENT_REFUSED` - Patient refused recommended care\n- `NOT_APPLICABLE` - Gap no longer applicable"
+			},
+			"response": []
+		}
+	]
+}

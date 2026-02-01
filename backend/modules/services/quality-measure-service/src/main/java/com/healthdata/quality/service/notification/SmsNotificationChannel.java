@@ -1,6 +1,5 @@
 package com.healthdata.quality.service.notification;
 
-import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -165,121 +163,6 @@ public class SmsNotificationChannel {
                     request.getNotificationType());
         } catch (Exception e) {
             // Log but don't throw - history saving should not prevent notification
-            log.error("Failed to save notification history: {}", e.getMessage());
-        }
-    }
-
-    /**
-     * Send notification for a clinical alert (deprecated - use NotificationRequest).
-     *
-     * @param tenantId The tenant ID
-     * @param alert    The clinical alert DTO
-     * @return true if sent successfully, false otherwise
-     * @deprecated Use {@link #send(NotificationRequest)} instead
-     */
-    @Deprecated
-    public boolean send(String tenantId, ClinicalAlertDTO alert) {
-        String message = null;
-        String status = "FAILED";
-        String errorMessage = null;
-
-        try {
-            Map<String, Object> templateVariables = buildTemplateVariables(alert);
-            templateVariables.put("channel", "SMS");
-            message = templateRenderer.render("critical-alert", templateVariables);
-
-            // SMS is mock mode unless Twilio is configured
-            if (twilioInitialized && fromPhone != null && !fromPhone.isBlank()) {
-                Message twilioMessage = Message.creator(
-                    new PhoneNumber(DEFAULT_PHONE),
-                    new PhoneNumber(fromPhone),
-                    message
-                ).create();
-                log.info("Alert SMS sent via Twilio. SID: {}", twilioMessage.getSid());
-            } else {
-                log.info("Alert SMS sent (MOCK): {}", message);
-            }
-
-            status = "SENT";
-            return true;
-
-        } catch (Exception e) {
-            errorMessage = "Failed to send SMS notification: " + e.getMessage();
-            log.error(errorMessage);
-            return false;
-        } finally {
-            saveAlertNotificationHistory(tenantId, alert, message, status, errorMessage);
-        }
-    }
-
-    private Map<String, Object> buildTemplateVariables(ClinicalAlertDTO alert) {
-        Map<String, Object> variables = new HashMap<>();
-
-        String patientName = "Patient";
-        if (patientNameService != null && alert.getPatientId() != null) {
-            try {
-                patientName = patientNameService.getPatientName(alert.getPatientId());
-            } catch (Exception e) {
-                log.warn("Failed to get patient name: {}", e.getMessage());
-            }
-        }
-
-        variables.put("patientName", patientName);
-        variables.put("severity", alert.getSeverity());
-        variables.put("alertType", formatAlertType(alert.getAlertType()));
-        variables.put("message", alert.getMessage());
-        variables.put("alertId", alert.getId());
-        // Default timestamp to now if not provided
-        variables.put("timestamp", alert.getTriggeredAt() != null ? alert.getTriggeredAt() : Instant.now());
-
-        return variables;
-    }
-
-    /**
-     * Format alert type from ENUM_CASE to Title Case
-     * e.g., "MENTAL_HEALTH_CRISIS" -> "Mental Health Crisis"
-     */
-    private String formatAlertType(String alertType) {
-        if (alertType == null || alertType.isBlank()) {
-            return "Unknown";
-        }
-        String[] words = alertType.toLowerCase().split("_");
-        StringBuilder formatted = new StringBuilder();
-        for (String word : words) {
-            if (!word.isEmpty()) {
-                if (formatted.length() > 0) {
-                    formatted.append(" ");
-                }
-                formatted.append(Character.toUpperCase(word.charAt(0)));
-                if (word.length() > 1) {
-                    formatted.append(word.substring(1));
-                }
-            }
-        }
-        return formatted.toString();
-    }
-
-    private void saveAlertNotificationHistory(String tenantId, ClinicalAlertDTO alert,
-                                              String content, String status, String errorMessage) {
-        try {
-            NotificationHistoryEntity history = NotificationHistoryEntity.builder()
-                .tenantId(tenantId)
-                .notificationType("CLINICAL_ALERT")
-                .channel("SMS")
-                .templateId("critical-alert")
-                .patientId(alert.getPatientId())
-                .recipientId(DEFAULT_PHONE)
-                .subject(null)
-                .content(content)
-                .status(status)
-                .errorMessage(errorMessage)
-                .alertId(alert.getId())
-                .severity(alert.getSeverity())
-                .sentAt(Instant.now())
-                .build();
-
-            notificationHistoryRepository.save(history);
-        } catch (Exception e) {
             log.error("Failed to save notification history: {}", e.getMessage());
         }
     }

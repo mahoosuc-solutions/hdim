@@ -221,7 +221,41 @@ public class AiCqlGenerationService {
         prompt.append("2. Include library declaration with version\n");
         prompt.append("3. Define Initial Population, Denominator, Numerator, and Exclusions\n");
         prompt.append("4. Use standard value sets where possible\n");
-        prompt.append("5. Include comments explaining key logic\n\n");
+        prompt.append("5. Include comments explaining key logic\n");
+        prompt.append("6. Add appropriate exclusion criteria (hospice, advanced illness, etc.)\n");
+        prompt.append("7. Use proper date/time calculations relative to Measurement Period\n");
+        prompt.append("8. Include stratification definitions if applicable\n");
+        prompt.append("9. Follow HEDIS measure structure conventions\n");
+        prompt.append("10. Ensure all resource queries include proper status filters\n\n");
+
+        // Add population-specific guidance
+        if (request.getContext() != null && request.getContext().getPopulation() != null) {
+            CqlGenerationRequest.PopulationCriteria pop = request.getContext().getPopulation();
+            prompt.append("POPULATION GUIDANCE:\n");
+            if (pop.getMinAge() != null || pop.getMaxAge() != null) {
+                prompt.append("- Age eligibility: Use AgeInYearsAt() function with Measurement Period\n");
+            }
+            if (pop.getGender() != null) {
+                prompt.append("- Gender filter: Use Patient.gender = '").append(pop.getGender()).append("'\n");
+            }
+            prompt.append("- Ensure Initial Population includes all eligibility criteria\n");
+            prompt.append("- Denominator should typically equal Initial Population (unless specified otherwise)\n");
+            prompt.append("- Numerator should define the specific clinical criteria indicating compliance\n\n");
+        }
+
+        // Add exclusion criteria guidance
+        prompt.append("EXCLUSION CRITERIA:\n");
+        prompt.append("- Consider hospice care exclusions (use Condition or Procedure resources)\n");
+        prompt.append("- Consider advanced illness exclusions (e.g., cancer, dementia)\n");
+        prompt.append("- Consider institutional settings (SNF, long-term care)\n");
+        prompt.append("- Document exclusion rationale in comments\n\n");
+
+        // Add compliance criteria guidance
+        prompt.append("COMPLIANCE CRITERIA:\n");
+        prompt.append("- Define what constitutes measure compliance clearly\n");
+        prompt.append("- Use appropriate time windows (e.g., 'within 27 months', 'during Measurement Period')\n");
+        prompt.append("- Consider multiple compliance pathways (e.g., colonoscopy OR FIT test)\n");
+        prompt.append("- Include proper status checks (e.g., 'status in {\"final\", \"amended\"}')\n\n");
 
         prompt.append("Return ONLY the CQL code wrapped in ```cql``` code blocks, followed by a brief explanation.");
 
@@ -567,24 +601,40 @@ public class AiCqlGenerationService {
               AgeInYearsAt(start of "Measurement Period")
 
             // Initial Population
-            // TODO: Customize based on your target population
+            // Based on description: %s
             define "Initial Population":
               "Age at Start" >= %d
                 and "Age at Start" <= %d
+              // Add additional population criteria based on measure description
 
             // Denominator: All patients in initial population
             define "Denominator":
               "Initial Population"
 
             // Denominator Exclusions
-            // TODO: Add exclusion criteria
+            // Common exclusions: hospice care, advanced illness, institutional settings
+            // Customize based on measure requirements
+            define "Hospice Care":
+              exists [Condition: "Hospice Care"] H
+                where H.clinicalStatus ~ 'active'
+                  and H.onset during "Measurement Period"
+
             define "Denominator Exclusions":
-              false
+              "Hospice Care"
+              // Add additional exclusion criteria as needed
 
             // Numerator
-            // TODO: Define the criteria that indicates measure compliance
+            // Define the specific clinical criteria indicating measure compliance
+            // This should be customized based on the measure description
+            // Example patterns:
+            // - Existence of a procedure within a time window
+            // - Observation values meeting specific thresholds
+            // - Medication adherence or therapy initiation
             define "Numerator":
-              true // Replace with actual criteria
+              false // Replace with actual compliance criteria based on measure description
+              // Example: exists [Procedure: "Screening Procedure"] P
+              //   where P.status = 'completed'
+              //     and P.performed during "Measurement Period"
 
             // Numerator Exclusions
             define "Numerator Exclusions":

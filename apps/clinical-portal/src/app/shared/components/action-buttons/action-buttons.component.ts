@@ -143,7 +143,7 @@ export class ActionButtonsComponent {
   @Input() layout: 'row' | 'column' = 'row';
 
   /** Maximum inline buttons before overflow menu */
-  @Input() maxInline: number = 5;
+  @Input() maxInline = 5;
 
   /** Action clicked event */
   @Output() actionClicked = new EventEmitter<ActionButton>();

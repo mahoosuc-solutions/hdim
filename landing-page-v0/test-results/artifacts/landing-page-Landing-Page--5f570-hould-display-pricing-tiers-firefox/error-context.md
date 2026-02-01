@@ -1,0 +1,362 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "HDIM" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img [ref=e8]
+          - generic [ref=e11]: HDIM
+        - generic [ref=e12]:
+          - link "Home" [ref=e13] [cursor=pointer]:
+            - /url: /
+          - link "Try Demo" [ref=e14] [cursor=pointer]:
+            - /url: /demo
+    - generic [ref=e16]:
+      - heading "Flexible Pricing for Healthcare Quality" [level=1] [ref=e17]
+      - paragraph [ref=e18]: Enterprise-grade quality automation with pricing tailored to your deployment and program goals. Clear scope, clear deliverables, and a rollout plan that fits your organization.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - img [ref=e21]
+          - generic [ref=e23]: BAA Available
+        - generic [ref=e24]:
+          - img [ref=e25]
+          - generic [ref=e27]: HIPAA-aligned controls
+        - generic [ref=e28]:
+          - img [ref=e29]
+          - generic [ref=e31]: Guided implementation
+        - generic [ref=e32]:
+          - img [ref=e33]
+          - generic [ref=e35]: Flexible terms
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e40]:
+          - heading "Developer" [level=3] [ref=e41]
+          - generic [ref=e42]: Contact us
+          - paragraph [ref=e43]: For sandbox evaluation and technical validation
+          - link "Request Access" [ref=e44] [cursor=pointer]:
+            - /url: /schedule
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - img [ref=e47]
+              - generic [ref=e49]: Core platform access
+            - listitem [ref=e50]:
+              - img [ref=e51]
+              - generic [ref=e53]: Limited patient volume
+            - listitem [ref=e54]:
+              - img [ref=e55]
+              - generic [ref=e57]: Docker deployment
+            - listitem [ref=e58]:
+              - img [ref=e59]
+              - generic [ref=e61]: Community support
+            - listitem [ref=e62]:
+              - img [ref=e63]
+              - generic [ref=e65]: Documentation access
+            - listitem [ref=e66]:
+              - img [ref=e67]
+              - generic [ref=e69]: Single-tenant sandbox
+            - listitem [ref=e70]:
+              - img [ref=e71]
+              - generic [ref=e74]: Priority support
+            - listitem [ref=e75]:
+              - img [ref=e76]
+              - generic [ref=e79]: Custom measures
+          - generic [ref=e80]:
+            - paragraph [ref=e81]: "Ideal for:"
+            - generic [ref=e82]:
+              - generic [ref=e83]: Developers
+              - generic [ref=e84]: Proof of concept
+              - generic [ref=e85]: Small clinics
+              - generic [ref=e86]: Technical evaluation
+        - generic [ref=e88]:
+          - heading "Professional" [level=3] [ref=e89]
+          - generic [ref=e90]: Contact us
+          - paragraph [ref=e91]: For smaller organizations and pilot deployments
+          - link "Talk to Sales" [ref=e92] [cursor=pointer]:
+            - /url: /schedule
+          - list [ref=e93]:
+            - listitem [ref=e94]:
+              - img [ref=e95]
+              - generic [ref=e97]: Scaled patient volume
+            - listitem [ref=e98]:
+              - img [ref=e99]
+              - generic [ref=e101]: Admin user access
+            - listitem [ref=e102]:
+              - img [ref=e103]
+              - generic [ref=e105]: Email support
+            - listitem [ref=e106]:
+              - img [ref=e107]
+              - generic [ref=e109]: Platform updates
+            - listitem [ref=e110]:
+              - img [ref=e111]
+              - generic [ref=e113]: Basic analytics dashboards
+            - listitem [ref=e114]:
+              - img [ref=e115]
+              - generic [ref=e117]: UDS/HEDIS automation
+            - listitem [ref=e118]:
+              - img [ref=e119]
+              - generic [ref=e122]: Priority support
+            - listitem [ref=e123]:
+              - img [ref=e124]
+              - generic [ref=e127]: Custom measures
+          - generic [ref=e128]:
+            - paragraph [ref=e129]: "Ideal for:"
+            - generic [ref=e130]:
+              - generic [ref=e131]: FQHCs
+              - generic [ref=e132]: Small ACOs
+              - generic [ref=e133]: Independent practices
+              - generic [ref=e134]: Rural health networks
+        - generic [ref=e136]:
+          - heading "Business" [level=3] [ref=e137]
+          - generic [ref=e138]: Contact us
+          - paragraph [ref=e139]: For mid-size organizations with advanced needs
+          - link "Contact Sales" [ref=e140] [cursor=pointer]:
+            - /url: /schedule
+          - list [ref=e141]:
+            - listitem [ref=e142]:
+              - img [ref=e143]
+              - generic [ref=e145]: Scaled patient volume
+            - listitem [ref=e146]:
+              - img [ref=e147]
+              - generic [ref=e149]: Admin user access
+            - listitem [ref=e150]:
+              - img [ref=e151]
+              - generic [ref=e153]: Priority support
+            - listitem [ref=e154]:
+              - img [ref=e155]
+              - generic [ref=e157]: Platform updates
+            - listitem [ref=e158]:
+              - img [ref=e159]
+              - generic [ref=e161]: Advanced analytics
+            - listitem [ref=e162]:
+              - img [ref=e163]
+              - generic [ref=e165]: Custom measures
+            - listitem [ref=e166]:
+              - img [ref=e167]
+              - generic [ref=e169]: Multi-tenant option
+            - listitem [ref=e170]:
+              - img [ref=e171]
+              - generic [ref=e173]: Quarterly business reviews
+          - generic [ref=e174]:
+            - paragraph [ref=e175]: "Ideal for:"
+            - generic [ref=e176]:
+              - generic [ref=e177]: Mid-size ACOs
+              - generic [ref=e178]: Regional health systems
+              - generic [ref=e179]: Community health centers
+              - generic [ref=e180]: HIEs
+        - generic [ref=e182]:
+          - heading "Enterprise" [level=3] [ref=e183]
+          - generic [ref=e184]: Contact us
+          - paragraph [ref=e185]: For large organizations with complex requirements
+          - link "Talk to Sales" [ref=e186] [cursor=pointer]:
+            - /url: /schedule
+          - list [ref=e187]:
+            - listitem [ref=e188]:
+              - img [ref=e189]
+              - generic [ref=e191]: Scaled patient volume
+            - listitem [ref=e192]:
+              - img [ref=e193]
+              - generic [ref=e195]: Unlimited users
+            - listitem [ref=e196]:
+              - img [ref=e197]
+              - generic [ref=e199]: Dedicated support
+            - listitem [ref=e200]:
+              - img [ref=e201]
+              - generic [ref=e203]: On-premise or private cloud
+            - listitem [ref=e204]:
+              - img [ref=e205]
+              - generic [ref=e207]: Custom integrations
+            - listitem [ref=e208]:
+              - img [ref=e209]
+              - generic [ref=e211]: Unlimited custom measures
+            - listitem [ref=e212]:
+              - img [ref=e213]
+              - generic [ref=e215]: Dedicated success manager
+            - listitem [ref=e216]:
+              - img [ref=e217]
+              - generic [ref=e219]: Security audit support
+          - generic [ref=e220]:
+            - paragraph [ref=e221]: "Ideal for:"
+            - generic [ref=e222]:
+              - generic [ref=e223]: Large ACOs
+              - generic [ref=e224]: Health systems
+              - generic [ref=e225]: Payer organizations
+              - generic [ref=e226]: State HIEs
+      - paragraph [ref=e228]:
+        - strong [ref=e229]: "Volume discounts:"
+        - text: 10% off 2-year, 20% off 3-year commitments. Multi-site discounts available.
+    - generic [ref=e231]:
+      - generic [ref=e232]:
+        - heading "Add-On Modules" [level=2] [ref=e233]
+        - paragraph [ref=e234]: Extend your platform with specialized capabilities
+      - generic [ref=e235]:
+        - generic [ref=e236]:
+          - generic [ref=e237]:
+            - heading "Mental Health Screening" [level=3] [ref=e238]
+            - generic [ref=e239]: Custom
+          - paragraph [ref=e240]: PHQ-9, GAD-7, PHQ-2 with auto-gap creation
+        - generic [ref=e241]:
+          - generic [ref=e242]:
+            - heading "Risk Stratification" [level=3] [ref=e243]
+            - generic [ref=e244]: Custom
+          - paragraph [ref=e245]: Predictive models and readmission risk
+        - generic [ref=e246]:
+          - generic [ref=e247]:
+            - heading "Prior Authorization" [level=3] [ref=e248]
+            - generic [ref=e249]: Custom
+          - paragraph [ref=e250]: CMS-0057-F aligned workflow automation
+        - generic [ref=e251]:
+          - generic [ref=e252]:
+            - heading "SDOH Integration" [level=3] [ref=e253]
+            - generic [ref=e254]: Custom
+          - paragraph [ref=e255]: Gravity Project and community resource directory
+        - generic [ref=e256]:
+          - generic [ref=e257]:
+            - heading "AI Assistant" [level=3] [ref=e258]
+            - generic [ref=e259]: Custom
+          - paragraph [ref=e260]: Natural language queries and automated insights
+        - generic [ref=e261]:
+          - generic [ref=e262]:
+            - heading "White Label" [level=3] [ref=e263]
+            - generic [ref=e264]: Custom
+          - paragraph [ref=e265]: Custom branding and subdomain
+    - generic [ref=e267]:
+      - generic [ref=e268]:
+        - heading "How We Compare" [level=2] [ref=e269]
+        - paragraph [ref=e270]: 50,000 member ACO example - Year 1 and 3-Year TCO
+      - table [ref=e272]:
+        - rowgroup [ref=e273]:
+          - row "Vendor Year 1 3-Year TCO" [ref=e274]:
+            - columnheader "Vendor" [ref=e275]
+            - columnheader "Year 1" [ref=e276]
+            - columnheader "3-Year TCO" [ref=e277]
+        - rowgroup [ref=e278]:
+          - row "HDIMYou Custom Scope-based" [ref=e279]:
+            - cell "HDIMYou" [ref=e280]
+            - cell "Custom" [ref=e281]
+            - cell "Scope-based" [ref=e282]
+          - row "Salesforce Health Cloud Varies Varies" [ref=e283]:
+            - cell "Salesforce Health Cloud" [ref=e284]
+            - cell "Varies" [ref=e285]
+            - cell "Varies" [ref=e286]
+          - row "Optum Analytics Varies Varies" [ref=e287]:
+            - cell "Optum Analytics" [ref=e288]
+            - cell "Varies" [ref=e289]
+            - cell "Varies" [ref=e290]
+          - row "Epic Healthy Planet Varies Varies" [ref=e291]:
+            - cell "Epic Healthy Planet" [ref=e292]
+            - cell "Varies" [ref=e293]
+            - cell "Varies" [ref=e294]
+          - row "Innovaccer Varies Varies" [ref=e295]:
+            - cell "Innovaccer" [ref=e296]
+            - cell "Varies" [ref=e297]
+            - cell "Varies" [ref=e298]
+      - paragraph [ref=e299]: Total cost of ownership varies by scope. Request a tailored comparison based on your requirements.
+    - generic [ref=e301]:
+      - heading "Pricing by Organization Type" [level=2] [ref=e303]
+      - generic [ref=e304]:
+        - generic [ref=e305]:
+          - img [ref=e306]
+          - heading "Health Plans" [level=3] [ref=e312]
+          - paragraph [ref=e313]: Large populations with Stars and quality incentives
+          - generic [ref=e314]: Enterprise
+          - paragraph [ref=e315]: Custom pricing based on scope
+          - link "Get Quote" [ref=e316] [cursor=pointer]:
+            - /url: /schedule
+            - text: Get Quote
+            - img [ref=e317]
+        - generic [ref=e320]:
+          - img [ref=e321]
+          - heading "ACOs" [level=3] [ref=e326]
+          - paragraph [ref=e327]: MSSP, ACO REACH, shared savings
+          - generic [ref=e328]: Business
+          - paragraph [ref=e329]: Scope-based pricing
+          - link "Get Started" [ref=e330] [cursor=pointer]:
+            - /url: /schedule
+            - text: Get Started
+            - img [ref=e331]
+        - generic [ref=e334]:
+          - img [ref=e335]
+          - heading "FQHCs" [level=3] [ref=e337]
+          - paragraph [ref=e338]: UDS reporting, 330 grant protection
+          - generic [ref=e339]: Professional
+          - paragraph [ref=e340]: Scope-based pricing
+          - link "Get Started" [ref=e341] [cursor=pointer]:
+            - /url: /schedule
+            - text: Get Started
+            - img [ref=e342]
+        - generic [ref=e345]:
+          - img [ref=e346]
+          - heading "Health Systems" [level=3] [ref=e352]
+          - paragraph [ref=e353]: Multi-EHR, enterprise scale
+          - generic [ref=e354]: Enterprise
+          - paragraph [ref=e355]: Custom pricing based on scope
+          - link "Get Quote" [ref=e356] [cursor=pointer]:
+            - /url: /schedule
+            - text: Get Quote
+            - img [ref=e357]
+    - generic [ref=e361]:
+      - heading "Frequently Asked Questions" [level=2] [ref=e363]
+      - generic [ref=e364]:
+        - generic [ref=e365]:
+          - heading "How is pricing determined?" [level=3] [ref=e366]:
+            - img [ref=e367]
+            - text: How is pricing determined?
+          - paragraph [ref=e371]: Pricing is based on deployment scope, measure mix, data sources, and support requirements. We map these inputs to a clear implementation plan and an agreed delivery timeline.
+        - generic [ref=e372]:
+          - heading "Do you offer a trial or sandbox?" [level=3] [ref=e373]:
+            - img [ref=e374]
+            - text: Do you offer a trial or sandbox?
+          - paragraph [ref=e378]: We offer guided demos and sandbox environments for qualified evaluations. Contact our team and we'll set up access based on your use case.
+        - generic [ref=e379]:
+          - heading "How do you handle large populations?" [level=3] [ref=e380]:
+            - img [ref=e381]
+            - text: How do you handle large populations?
+          - paragraph [ref=e385]: We scale deployments based on patient volume and concurrency. Enterprise plans are sized to your population and performance targets.
+        - generic [ref=e386]:
+          - heading "Can we start small and scale up?" [level=3] [ref=e387]:
+            - img [ref=e388]
+            - text: Can we start small and scale up?
+          - paragraph [ref=e392]: Absolutely. Many customers start with a focused scope, then expand coverage as they prove value and operational readiness.
+        - generic [ref=e393]:
+          - heading "Do you sign BAAs?" [level=3] [ref=e394]:
+            - img [ref=e395]
+            - text: Do you sign BAAs?
+          - paragraph [ref=e399]: Yes. Business Associate Agreements are available for all customer engagements.
+        - generic [ref=e400]:
+          - heading "What's included in implementation?" [level=3] [ref=e401]:
+            - img [ref=e402]
+            - text: What's included in implementation?
+          - paragraph [ref=e406]: Implementation includes onboarding, integration planning, measure configuration, and training. The scope is tailored to your data sources and deployment model.
+    - generic [ref=e408]:
+      - heading "Ready to Transform Your Quality Program?" [level=2] [ref=e409]
+      - paragraph [ref=e410]: Build a scoped plan for measure coverage, gap closure, and reporting outcomes.
+      - generic [ref=e411]:
+        - link "Try Interactive Demo" [ref=e412] [cursor=pointer]:
+          - /url: /demo
+          - img [ref=e413]
+          - text: Try Interactive Demo
+        - link "Schedule Consultation" [ref=e415] [cursor=pointer]:
+          - /url: /schedule
+          - text: Schedule Consultation
+          - img [ref=e416]
+    - contentinfo [ref=e419]:
+      - generic [ref=e420]:
+        - generic [ref=e421]:
+          - generic [ref=e422]:
+            - img [ref=e424]
+            - generic [ref=e427]: HDIM
+          - generic [ref=e428]:
+            - img [ref=e429]
+            - generic [ref=e431]: HIPAA-aligned
+            - generic [ref=e432]: "|"
+            - generic [ref=e433]: BAA Available
+            - generic [ref=e434]: "|"
+            - generic [ref=e435]: SOC 2-aligned controls
+        - generic [ref=e436]: © 2026 HealthData-in-Motion. All rights reserved.
+  - button "Open Next.js Dev Tools" [ref=e442] [cursor=pointer]:
+    - img [ref=e443]
+  - alert [ref=e447]
+```

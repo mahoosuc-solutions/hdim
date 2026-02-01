@@ -281,16 +281,16 @@ import { StatusIndicatorComponent } from '../status-indicator/status-indicator.c
 })
 export class SystemActivitySectionComponent implements OnInit, OnDestroy {
   /** Whether the section starts collapsed */
-  @Input() collapsed: boolean = false;
+  @Input() collapsed = false;
 
-  isCollapsed: boolean = false;
-  isSimulating: boolean = false;
+  isCollapsed = false;
+  isSimulating = false;
   connectionStatus: 'connected' | 'disconnected' | 'simulating' = 'disconnected';
 
   // Preview stats for collapsed state
-  eventsCount: number = 0;
-  throughput: string = '0';
-  complianceRate: string = '0';
+  eventsCount = 0;
+  throughput = '0';
+  complianceRate = '0';
 
   private readonly STORAGE_KEY = 'hdim-system-activity-collapsed';
   private destroy$ = new Subject<void>();

@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
 /**
  * CDR (Clinical Data Repository) Processor Service Application.
@@ -30,6 +31,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     "com.healthdata.messaging",
     "com.healthdata.persistence"
 })
+@EntityScan(basePackages = {
+    "com.healthdata.cdr",
+    "com.healthdata.audit.entity.shared",     // Shared AuditEventEntity
+    "com.healthdata.audit.entity.ai",         // AI Agent Decision Events
+    "com.healthdata.audit.entity.clinical",   // Clinical Decision Events
+    "com.healthdata.audit.entity",            // MPIMergeEntity, QAReviewEntity, DataQualityIssueEntity (top-level)
+    "com.healthdata.authentication.domain"
+})
+// Repository scanning provided by AuditAutoConfiguration - do NOT add @EnableJpaRepositories here
+// to avoid duplicate bean registration when AuditAutoConfiguration is included
 @EnableConfigurationProperties
 @EnableCaching
 @EnableAsync

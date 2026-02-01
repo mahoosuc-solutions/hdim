@@ -90,7 +90,7 @@ echo ""
 echo -e "${BLUE}4. Services via Kong${NC}"
 echo "--------------------"
 check_service "CQL Engine (Kong)" "http://localhost:8000/api/cql/api/v1/cql/evaluations?page=0&size=1" "200"
-check_service "Quality Measure (Kong)" "http://localhost:8000/api/quality/quality-measure/results?page=0&size=1" "200"
+check_service "Quality Measure (Kong)" "http://localhost:8000/api/quality/results?page=0&size=1" "200"
 check_service "FHIR Server (Kong)" "http://localhost:8000/api/fhir/Patient?_count=1" "200"
 echo ""
 
@@ -112,7 +112,7 @@ echo ""
 echo -e "${BLUE}6. Data Verification${NC}"
 echo "-------------------"
 cql_count=$(curl -s -H "X-Tenant-ID: default" "http://localhost:8000/api/cql/api/v1/cql/evaluations?page=0&size=1" | grep -o '"totalElements":[0-9]*' | grep -o '[0-9]*' || echo "0")
-quality_count=$(curl -s -H "X-Tenant-ID: default" "http://localhost:8000/api/quality/quality-measure/results" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
+quality_count=$(curl -s -H "X-Tenant-ID: default" "http://localhost:8000/api/quality/results" | python3 -c "import sys, json; data=json.load(sys.stdin); print(len(data))" 2>/dev/null || echo "0")
 fhir_count=$(curl -s "http://localhost:8000/api/fhir/Patient?_count=100" | grep -o '"total":[0-9]*' | grep -o '[0-9]*' | head -1 || echo "0")
 
 echo "CQL Evaluations:     $cql_count records"

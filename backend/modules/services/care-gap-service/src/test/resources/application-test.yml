@@ -10,18 +10,23 @@ spring:
   application:
     name: care-gap-service
 
-  # Database Configuration - H2 in-memory for tests
+  # Disable Spring Boot auto-configurations for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+  # Database Configuration - H2 in-memory for tests (no Docker required)
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    url: jdbc:h2:mem:caregap_test_db;MODE=PostgreSQL;TRACE_LEVEL_SYSTEM_OUT=0
+    driver-class-name: org.h2.Driver
     username: sa
     password:
-
   # JPA Configuration
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create-drop  # Use create-drop for tests
     properties:
       hibernate:
         format_sql: true
@@ -31,20 +36,25 @@ spring:
         order_updates: true
     show-sql: false
 
+  liquibase:
+    enabled: false  # Disable Liquibase in tests - use JPA schema generation instead
   # Redis - Embedded for tests
   data:
     redis:
       host: localhost
       port: 6379
 
-  # Kafka - Disabled for tests
+  # Kafka Configuration for Tests
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: 127.0.0.1:9092  # Local kafka or mock
     consumer:
       auto-offset-reset: earliest
+      group-id: test-consumer-group
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 0
 
 # Logging
 logging:

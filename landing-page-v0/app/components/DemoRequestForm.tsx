@@ -292,13 +292,13 @@ export default function DemoRequestForm({ onClose }: DemoRequestFormProps) {
               </button>
             </div>
 
-            <p className="text-xs text-gray-500 mt-4 text-center">
-              By submitting this form, you agree to our{' '}
-              <a href="#" className="text-[#0D4F8B] hover:underline">
-                Privacy Policy
-              </a>
-              .
-            </p>
+              <p className="text-xs text-gray-500 mt-4 text-center">
+                By submitting this form, you agree to our{' '}
+                <a href="/privacy" className="text-[#0D4F8B] hover:underline">
+                  Privacy Policy
+                </a>
+                .
+              </p>
           </form>
         )}
       </div>

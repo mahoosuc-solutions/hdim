@@ -6,6 +6,7 @@ import {
   BatchCalculationJob,
   BatchJobStatus
 } from '../../../services/batch-calculation.service';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Batch Calculation Component
@@ -28,6 +29,9 @@ import {
 })
 export class BatchCalculationComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private get logger() {
+    return this.loggerService.withContext('BatchCalculationComponent');
+  }
 
   // Current active job
   activeJob: BatchCalculationJob | null = null;
@@ -46,7 +50,10 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
   // Expose enum to template
   BatchJobStatus = BatchJobStatus;
 
-  constructor(private batchCalculationService: BatchCalculationService) {}
+  constructor(
+    private batchCalculationService: BatchCalculationService,
+    private loggerService: LoggerService
+  ) {}
 
   ngOnInit(): void {
     this.loadJobHistory();
@@ -80,7 +87,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.pollJobStatus(response.jobId);
         },
         error: (err) => {
-          console.error('Failed to start batch calculation:', err);
+          this.loggerService.error('Failed to start batch calculation', err);
           this.error = err.error?.message || 'Failed to start batch calculation';
           this.isLoading = false;
         }
@@ -107,7 +114,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Error polling job status:', err);
+          this.loggerService.error('Error polling job status', err);
           this.error = 'Failed to get job status';
           this.isCalculating = false;
         },
@@ -134,7 +141,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.loadJobHistory();
         },
         error: (err) => {
-          console.error('Failed to cancel job:', err);
+          this.loggerService.error('Failed to cancel job', err);
           this.error = err.error?.message || 'Failed to cancel job';
         }
       });
@@ -167,7 +174,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          console.error('Failed to load job history:', err);
+          this.loggerService.error('Failed to load job history', err);
         }
       });
   }

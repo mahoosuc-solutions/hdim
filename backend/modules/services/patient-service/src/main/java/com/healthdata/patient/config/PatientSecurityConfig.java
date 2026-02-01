@@ -1,9 +1,12 @@
 package com.healthdata.patient.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.patient.persistence.UserRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -53,7 +56,7 @@ public class PatientSecurityConfig {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
 
     /**
@@ -110,6 +113,19 @@ public class PatientSecurityConfig {
     }
 
     /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -123,6 +139,22 @@ public class PatientSecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             );
+
+        return http.build();
+    }
+
+    /**
+     * Actuator security chain for non-test profiles.
+     * Keeps observability endpoints available for Prometheus/Grafana scraping.
+     */
+    @Bean
+    @Profile("!test")
+    @Order(1)
+    public SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .securityMatcher(EndpointRequest.toAnyEndpoint())
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
         return http.build();
     }
@@ -143,6 +175,7 @@ public class PatientSecurityConfig {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            UserAutoRegistrationFilter userAutoRegistrationFilter,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -152,6 +185,8 @@ public class PatientSecurityConfig {
                     "/_health",  // Patient service health endpoint
                     "/actuator/health",
                     "/actuator/health/**",
+                    "/actuator/prometheus",
+                    "/patient/actuator/prometheus",
                     "/actuator/info",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
@@ -168,10 +203,14 @@ public class PatientSecurityConfig {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
+        // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+        // This ensures users are automatically registered in service database on first access
+        http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated requests
         // Uses request attributes (no database lookup)
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
 
         return http.build();
     }

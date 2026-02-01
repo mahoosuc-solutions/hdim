@@ -1,0 +1,21 @@
+# Test Results
+test-results/
+test-results/**
+playwright-report/
+screenshots/
+
+# Playwright
+.playwright/
+
+# Downloaded browsers
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

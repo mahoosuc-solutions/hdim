@@ -1,0 +1,476 @@
+.quality-measure-detail-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+// ============================================================================
+// Header
+// ============================================================================
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .page-title {
+    font-size: 2rem;
+    font-weight: 500;
+    margin: 0;
+    color: #333;
+  }
+}
+
+// ============================================================================
+// Error State
+// ============================================================================
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+
+  mat-icon {
+    font-size: 4rem;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1.125rem;
+    color: rgba(0, 0, 0, 0.6);
+    margin-bottom: 2rem;
+  }
+}
+
+// ============================================================================
+// Overview Card
+// ============================================================================
+
+.overview-card {
+  margin-bottom: 24px;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex: 1;
+
+      .measure-icon {
+        color: #1976d2;
+        font-size: 2.5rem;
+        width: 2.5rem;
+        height: 2.5rem;
+      }
+
+      .title-section {
+        flex: 1;
+
+        mat-card-title {
+          font-size: 1.75rem;
+          font-weight: 500;
+          margin: 0;
+        }
+
+        mat-card-subtitle {
+          font-size: 0.875rem;
+          margin-top: 4px;
+        }
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .star-rating {
+        display: flex;
+        gap: 2px;
+
+        .star-icon {
+          color: #ffa726;
+          font-size: 1.5rem;
+          width: 1.5rem;
+          height: 1.5rem;
+        }
+      }
+    }
+  }
+
+  mat-card-content {
+    .description-section {
+      margin-bottom: 20px;
+
+      .measure-description {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: rgba(0, 0, 0, 0.87);
+      }
+    }
+
+    mat-divider {
+      margin: 20px 0;
+    }
+  }
+}
+
+// ============================================================================
+// Metrics Grid
+// ============================================================================
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+
+  .metric-card {
+    text-align: center;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .metric-label {
+      font-size: 0.875rem;
+      color: rgba(0, 0, 0, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: 2.5rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+
+      &.rate-value {
+        color: #1976d2;
+      }
+
+      &.benchmark-value {
+        color: #388e3c;
+      }
+
+      &.gap-value {
+        &.positive {
+          color: #388e3c;
+        }
+
+        &.negative {
+          color: #d32f2f;
+        }
+      }
+
+      &.care-gaps-value {
+        color: #f57c00;
+      }
+    }
+
+    .metric-sublabel {
+      font-size: 0.75rem;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+}
+
+// ============================================================================
+// Rate Progress
+// ============================================================================
+
+.rate-progress-section {
+  position: relative;
+  margin: 20px 0;
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .progress-label {
+      font-size: 0.875rem;
+      color: rgba(0, 0, 0, 0.6);
+      font-weight: 500;
+    }
+
+    .progress-percentage {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1976d2;
+    }
+  }
+
+  mat-progress-bar {
+    height: 12px;
+    border-radius: 6px;
+  }
+
+  .benchmark-marker {
+    position: absolute;
+    top: 40px;
+
+    .benchmark-line {
+      width: 2px;
+      height: 24px;
+      background-color: #388e3c;
+      margin: 0 auto;
+    }
+
+    .benchmark-label {
+      display: block;
+      font-size: 0.75rem;
+      color: #388e3c;
+      font-weight: 500;
+      white-space: nowrap;
+      transform: translateX(-50%);
+      margin-top: 4px;
+    }
+  }
+}
+
+// ============================================================================
+// Tabs
+// ============================================================================
+
+.detail-tabs {
+  margin-top: 24px;
+}
+
+.tab-content {
+  padding: 24px 0;
+
+  .detail-section {
+    margin-bottom: 24px;
+
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.125rem;
+      font-weight: 500;
+      color: #333;
+      margin-bottom: 12px;
+
+      mat-icon {
+        color: #1976d2;
+        font-size: 1.5rem;
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: rgba(0, 0, 0, 0.87);
+      margin: 0;
+    }
+  }
+
+  mat-divider {
+    margin: 24px 0;
+  }
+}
+
+// ============================================================================
+// Tables
+// ============================================================================
+
+.table-container {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.results-table,
+.care-gaps-table,
+.trends-data-table {
+  width: 100%;
+
+  th {
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.87);
+  }
+
+  .patient-link {
+    color: #1976d2;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+
+    &:hover,
+    &:focus {
+      color: #115293;
+      text-decoration: underline;
+    }
+
+    &:focus {
+      outline: 2px solid #1976d2;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+  }
+
+  .days-overdue {
+    font-weight: 600;
+    color: #d32f2f;
+  }
+}
+
+// ============================================================================
+// Urgency Badges
+// ============================================================================
+
+.urgency-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.urgency-high {
+    background-color: #ffebee;
+    color: #d32f2f;
+  }
+
+  &.urgency-medium {
+    background-color: #fff3e0;
+    color: #f57c00;
+  }
+
+  &.urgency-low {
+    background-color: #e8f5e9;
+    color: #388e3c;
+  }
+}
+
+// ============================================================================
+// No Data State
+// ============================================================================
+
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.38);
+
+  mat-icon {
+    font-size: 4rem;
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+// ============================================================================
+// Trends Visualization
+// ============================================================================
+
+.trends-visualization {
+  .trends-table {
+    margin-bottom: 24px;
+  }
+
+  .trends-note {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background-color: #e3f2fd;
+    border-left: 4px solid #1976d2;
+    border-radius: 4px;
+
+    mat-icon {
+      color: #1976d2;
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    p {
+      font-size: 0.875rem;
+      color: rgba(0, 0, 0, 0.6);
+      margin: 0;
+    }
+  }
+}
+
+// ============================================================================
+// Responsive Design
+// ============================================================================
+
+@media (max-width: 768px) {
+  .quality-measure-detail-container {
+    padding: 16px;
+  }
+
+  .overview-card mat-card-header {
+    flex-direction: column;
+    gap: 16px;
+
+    .header-actions {
+      align-self: flex-start;
+    }
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rate-progress-section .benchmark-marker {
+    display: none; // Hide on mobile for clarity
+  }
+}
+
+// ============================================================================
+// Accessibility
+// ============================================================================
+
+@media (prefers-contrast: high) {
+  .metric-card {
+    border: 2px solid #000;
+  }
+
+  .urgency-badge {
+    border: 2px solid currentColor;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-card {
+    transition: none;
+  }
+
+  .patient-link {
+    transition: none;
+  }
+}

@@ -1,0 +1,70 @@
+<div class="upload-container">
+  <!-- File upload input -->
+  <div class="upload-section">
+    <input
+      #fileInput
+      type="file"
+      [accept]="acceptedFileTypes"
+      (change)="onFileSelected($event)"
+      style="display: none"
+      aria-label="Choose file to upload">
+
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="fileInput.click()"
+      [disabled]="uploading"
+      aria-label="Upload clinical document">
+      <mat-icon>cloud_upload</mat-icon>
+      Upload Document
+    </button>
+
+    <p class="upload-hint">
+      Accepted: PDF, PNG, JPG, JPEG, TIFF (Max 10 MB)
+    </p>
+  </div>
+
+  <!-- Upload progress -->
+  <div *ngIf="uploading" class="upload-progress" role="status" aria-live="polite">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    <span class="sr-only">Uploading {{ selectedFile?.name }}...</span>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="errorMessage" class="error-message" role="alert">
+    <mat-icon color="warn">error</mat-icon>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- OCR status -->
+  <div *ngIf="ocrStatus" class="ocr-status" role="status" aria-live="polite">
+    <mat-chip [color]="getOcrStatusColor(ocrStatus)" selected>
+      {{ getOcrStatusLabel(ocrStatus) }}
+    </mat-chip>
+  </div>
+
+  <!-- Uploaded files list -->
+  <mat-list class="uploaded-files" *ngIf="uploadedFiles.length > 0">
+    <h3 matSubheader>Uploaded Documents</h3>
+    <mat-list-item *ngFor="let file of uploadedFiles">
+      <mat-icon matListItemIcon [attr.aria-hidden]="true">
+        {{ getFileIcon(file.mimeType) }}
+      </mat-icon>
+      <div matListItemTitle>{{ file.fileName }}</div>
+      <div matListItemLine>
+        Uploaded: {{ file.uploadDate | date }}
+        <span class="ocr-status-badge" [class]="file.ocrStatus">
+          {{ file.ocrStatus }}
+        </span>
+      </div>
+      <button
+        mat-icon-button
+        *ngIf="file.ocrStatus === 'FAILED'"
+        (click)="retryOcr(file.attachmentId)"
+        [attr.aria-label]="'Retry OCR for ' + file.fileName"
+        matTooltip="Retry OCR">
+        <mat-icon [attr.aria-hidden]="true">refresh</mat-icon>
+      </button>
+    </mat-list-item>
+  </mat-list>
+</div>

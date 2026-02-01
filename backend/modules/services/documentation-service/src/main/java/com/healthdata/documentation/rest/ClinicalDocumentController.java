@@ -8,12 +8,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -25,14 +28,14 @@ public class ClinicalDocumentController {
     private final ClinicalDocumentService documentService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<ClinicalDocumentDto>> getDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId) {
         return ResponseEntity.ok(documentService.getDocuments(tenantId));
     }
 
     @GetMapping("/paginated")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ClinicalDocumentDto>> getDocumentsPaginated(
             @RequestHeader("X-Tenant-ID") String tenantId,
             Pageable pageable) {
@@ -40,7 +43,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ClinicalDocumentDto> getDocument(
             @PathVariable UUID id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -50,7 +53,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/patient/{patientId}")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<List<ClinicalDocumentDto>> getPatientDocuments(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -58,7 +61,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/patient/{patientId}/paginated")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ClinicalDocumentDto>> getPatientDocumentsPaginated(
             @PathVariable String patientId,
             @RequestHeader("X-Tenant-ID") String tenantId,
@@ -67,7 +70,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Page<ClinicalDocumentDto>> searchDocuments(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam String query,
@@ -76,7 +79,7 @@ public class ClinicalDocumentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ClinicalDocumentDto> createDocument(
             @Valid @RequestBody ClinicalDocumentDto dto,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -85,7 +88,7 @@ public class ClinicalDocumentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<ClinicalDocumentDto> updateDocument(
             @PathVariable UUID id,
             @Valid @RequestBody ClinicalDocumentDto dto,
@@ -96,7 +99,7 @@ public class ClinicalDocumentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Void> deleteDocument(
             @PathVariable UUID id,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -107,7 +110,7 @@ public class ClinicalDocumentController {
     }
 
     @PostMapping("/{id}/attachments")
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<DocumentAttachmentDto> addAttachment(
             @PathVariable UUID id,
             @Valid @RequestBody DocumentAttachmentDto dto,
@@ -117,7 +120,7 @@ public class ClinicalDocumentController {
     }
 
     @GetMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasAnyRole('USER', 'CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<DocumentAttachmentDto> getAttachment(
             @PathVariable UUID attachmentId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -127,7 +130,7 @@ public class ClinicalDocumentController {
     }
 
     @DeleteMapping("/attachments/{attachmentId}")
-    @PreAuthorize("hasAnyRole('CLINICIAN', 'ADMIN')")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable UUID attachmentId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -135,5 +138,72 @@ public class ClinicalDocumentController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    /**
+     * Upload a file and attach to clinical document
+     * Supports PDF and image files (PNG, JPG, JPEG, TIFF)
+     * Automatically triggers OCR processing for supported file types
+     */
+    @PostMapping(value = "/{id}/upload", consumes = "multipart/form-data")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
+    public ResponseEntity<DocumentAttachmentDto> uploadFile(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "title", required = false) String title,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        log.info("Uploading file for document {}: {} ({} bytes)", id, file.getOriginalFilename(), file.getSize());
+
+        DocumentAttachmentDto created = documentService.uploadFile(id, file, title, tenantId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    /**
+     * Get OCR processing status for an attachment
+     */
+    @GetMapping("/attachments/{attachmentId}/ocr-status")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
+    public ResponseEntity<Map<String, Object>> getOcrStatus(
+            @PathVariable UUID attachmentId,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        return documentService.getAttachment(attachmentId, tenantId)
+                .map(attachment -> {
+                    Map<String, Object> status = new java.util.HashMap<>();
+                    status.put("status", attachment.getOcrStatus());
+                    status.put("processedAt", attachment.getOcrProcessedAt());
+                    status.put("errorMessage", attachment.getOcrErrorMessage());
+                    status.put("hasText", attachment.getOcrText() != null && !attachment.getOcrText().isEmpty());
+                    return ResponseEntity.ok(status);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Trigger OCR re-processing for an attachment
+     */
+    @PostMapping("/attachments/{attachmentId}/reprocess-ocr")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
+    public ResponseEntity<Void> reprocessOcr(
+            @PathVariable UUID attachmentId,
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        documentService.triggerOcrReprocessing(attachmentId, tenantId);
+        return ResponseEntity.accepted().build();
+    }
+
+    /**
+     * Search documents by OCR extracted text
+     * Full-text search across all document attachments with OCR'd text
+     */
+    @GetMapping("/search-ocr")
+    @PreAuthorize("hasPermission('CONFIG_READ')")
+    public ResponseEntity<Page<DocumentAttachmentDto>> searchOcrText(
+            @RequestParam String query,
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PageableDefault(size = 20) Pageable pageable) {
+
+        return ResponseEntity.ok(documentService.searchOcrText(tenantId, query, pageable));
     }
 }

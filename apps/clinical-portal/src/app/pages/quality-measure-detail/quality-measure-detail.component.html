@@ -1,0 +1,432 @@
+<div class="quality-measure-detail-container">
+  <!-- Header -->
+  <div class="header">
+    <app-loading-button
+      icon="arrow_back"
+      variant="icon"
+      ariaLabel="Go back to quality measures list"
+      tooltip="Back to Quality Measures"
+      [loading]="backButtonLoading"
+      customClass="back-button"
+      (buttonClick)="goBack()">
+    </app-loading-button>
+    <h1 class="page-title">Quality Measure Detail</h1>
+  </div>
+
+  <!-- Loading Overlay -->
+  <app-loading-overlay
+    [isLoading]="loading"
+    message="Loading quality measure information..."
+    [spinnerSize]="64">
+  </app-loading-overlay>
+
+  <!-- Error State -->
+  @if (error && !loading) {
+    <div class="error-container">
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+      <app-loading-button
+        text="Back to Quality Measures"
+        icon="arrow_back"
+        color="primary"
+        variant="raised"
+        [loading]="backButtonLoading"
+        ariaLabel="Return to quality measures list"
+        (buttonClick)="goBack()">
+      </app-loading-button>
+    </div>
+  }
+
+  <!-- Main Content -->
+  @if (!loading && !error && measure) {
+    <div class="content">
+      <!-- Measure Overview Card -->
+      <mat-card class="overview-card" role="region" aria-labelledby="overview-heading">
+        <mat-card-header>
+          <div class="header-content">
+            <mat-icon class="measure-icon" aria-hidden="true">assessment</mat-icon>
+            <div class="title-section">
+              <mat-card-title id="overview-heading">
+                {{ measure.code }} - {{ measure.name }}
+              </mat-card-title>
+              <mat-card-subtitle>{{ measure.measureType }} | Steward: {{ measure.steward }}</mat-card-subtitle>
+            </div>
+          </div>
+          <div class="header-actions">
+            <mat-chip [color]="getStatusColor()" aria-label="Measure status">
+              {{ measure.status }}
+            </mat-chip>
+            <div class="star-rating" [attr.aria-label]="'Star rating: ' + measure.starRating + ' out of 5'">
+              @for (star of getStarRatingArray(); track $index) {
+                <mat-icon class="star-icon" aria-hidden="true">star</mat-icon>
+              }
+            </div>
+          </div>
+        </mat-card-header>
+
+        <mat-card-content>
+          <div class="description-section">
+            <p class="measure-description">{{ measure.description }}</p>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Key Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-label">Current Rate</div>
+              <div class="metric-value rate-value">{{ getRatePercentage() }}%</div>
+              <div class="metric-sublabel">{{ measure.numerator }}/{{ measure.denominator }} patients</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-label">Benchmark</div>
+              <div class="metric-value benchmark-value">{{ measure.benchmark }}%</div>
+              <div class="metric-sublabel">National average</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-label">Gap to Benchmark</div>
+              <div class="metric-value gap-value" [class.positive]="getGapToBenchmark() <= 0" [class.negative]="getGapToBenchmark() > 0">
+                {{ getGapToBenchmark() }}%
+              </div>
+              <div class="metric-sublabel">
+                {{ getGapToBenchmark() <= 0 ? 'Exceeding' : 'Below' }} benchmark
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-label">Care Gaps</div>
+              <div class="metric-value care-gaps-value">{{ measure.careGaps }}</div>
+              <div class="metric-sublabel">Patients needing intervention</div>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <!-- Rate Progress Bar -->
+          <div class="rate-progress-section">
+            <div class="progress-header">
+              <span class="progress-label">Performance vs Benchmark</span>
+              <span class="progress-percentage">{{ getRatePercentage() }}%</span>
+            </div>
+            <mat-progress-bar
+              mode="determinate"
+              [value]="(measure.rate || 0)"
+              [color]="getGapToBenchmark() <= 0 ? 'primary' : 'accent'"
+              aria-label="Performance rate progress bar">
+            </mat-progress-bar>
+            <div class="benchmark-marker" [style.left.%]="measure.benchmark">
+              <div class="benchmark-line"></div>
+              <span class="benchmark-label">Benchmark {{ measure.benchmark }}%</span>
+            </div>
+          </div>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="viewCareGaps()">
+            <mat-icon>warning</mat-icon>
+            View {{ measure.careGaps }} Care Gaps
+          </button>
+        </mat-card-actions>
+      </mat-card>
+
+      <!-- Tabbed Content -->
+      <mat-tab-group class="detail-tabs" mat-stretch-tabs="false">
+        <!-- Tab 1: Details -->
+        <mat-tab label="Details">
+          <div class="tab-content">
+            <mat-card>
+              <mat-card-content>
+                <div class="detail-section">
+                  <h3>
+                    <mat-icon>info</mat-icon>
+                    Purpose
+                  </h3>
+                  <p>{{ measure.purpose || 'No purpose information available' }}</p>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <div class="detail-section">
+                  <h3>
+                    <mat-icon>trending_up</mat-icon>
+                    Improvement Notation
+                  </h3>
+                  <p>{{ measure.improvementNotation || 'No improvement notation available' }}</p>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <div class="detail-section">
+                  <h3>
+                    <mat-icon>medical_services</mat-icon>
+                    Clinical Recommendation
+                  </h3>
+                  <p>{{ measure.clinicalRecommendation || 'No clinical recommendation available' }}</p>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <div class="detail-section">
+                  <h3>
+                    <mat-icon>description</mat-icon>
+                    Rationale
+                  </h3>
+                  <p>{{ measure.rationale || 'No rationale available' }}</p>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <div class="detail-section">
+                  <h3>
+                    <mat-icon>book</mat-icon>
+                    Definitions
+                  </h3>
+                  <p>{{ measure.definitions || 'No definitions available' }}</p>
+                </div>
+
+                @if (measure.riskAdjustment) {
+                  <mat-divider></mat-divider>
+
+                  <div class="detail-section">
+                    <h3>
+                      <mat-icon>tune</mat-icon>
+                      Risk Adjustment
+                    </h3>
+                    <p>{{ measure.riskAdjustment }}</p>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 2: Evaluation Results -->
+        <mat-tab label="Evaluation Results">
+          <div class="tab-content">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Patient-Level Results</mat-card-title>
+                <mat-card-subtitle>{{ patientResults.length }} patients evaluated</mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                @if (patientResults.length === 0) {
+                  <div class="no-data">
+                    <mat-icon>info</mat-icon>
+                    <p>No evaluation results available</p>
+                  </div>
+                } @else {
+                  <div class="table-container">
+                    <table mat-table [dataSource]="patientResults" class="results-table">
+                      <!-- Patient Name Column -->
+                      <ng-container matColumnDef="patientName">
+                        <th mat-header-cell *matHeaderCellDef>Patient Name</th>
+                        <td mat-cell *matCellDef="let result">
+                          <a class="patient-link" (click)="viewPatientDetail(result.patientId)">
+                            {{ result.patientName }}
+                          </a>
+                        </td>
+                      </ng-container>
+
+                      <!-- MRN Column -->
+                      <ng-container matColumnDef="mrn">
+                        <th mat-header-cell *matHeaderCellDef>MRN</th>
+                        <td mat-cell *matCellDef="let result">{{ result.mrn }}</td>
+                      </ng-container>
+
+                      <!-- Compliant Column -->
+                      <ng-container matColumnDef="compliant">
+                        <th mat-header-cell *matHeaderCellDef>Compliant</th>
+                        <td mat-cell *matCellDef="let result">
+                          <mat-chip [color]="getComplianceColor(result.compliant)">
+                            <mat-icon>{{ result.compliant ? 'check_circle' : 'cancel' }}</mat-icon>
+                            {{ result.compliant ? 'Yes' : 'No' }}
+                          </mat-chip>
+                        </td>
+                      </ng-container>
+
+                      <!-- Evaluation Date Column -->
+                      <ng-container matColumnDef="evaluationDate">
+                        <th mat-header-cell *matHeaderCellDef>Evaluation Date</th>
+                        <td mat-cell *matCellDef="let result">{{ result.evaluationDate }}</td>
+                      </ng-container>
+
+                      <!-- Details Column -->
+                      <ng-container matColumnDef="details">
+                        <th mat-header-cell *matHeaderCellDef>Details</th>
+                        <td mat-cell *matCellDef="let result">{{ result.details || 'N/A' }}</td>
+                      </ng-container>
+
+                      <!-- Actions Column -->
+                      <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                        <td mat-cell *matCellDef="let result">
+                          <button aria-label="View" mat-icon-button (click)="viewPatientDetail(result.patientId)" matTooltip="View patient details">
+                            <mat-icon>visibility</mat-icon>
+                          </button>
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="resultsColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: resultsColumns"></tr>
+                    </table>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 3: Care Gaps -->
+        <mat-tab label="Care Gaps" [matBadge]="careGaps.length.toString()" matBadgeColor="warn">
+          <div class="tab-content">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Care Gaps for This Measure</mat-card-title>
+                <mat-card-subtitle>{{ careGaps.length }} patients with care gaps</mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                @if (careGaps.length === 0) {
+                  <div class="no-data">
+                    <mat-icon>check_circle</mat-icon>
+                    <p>No care gaps identified for this measure</p>
+                  </div>
+                } @else {
+                  <div class="table-container">
+                    <table mat-table [dataSource]="careGaps" class="care-gaps-table">
+                      <!-- Patient Name Column -->
+                      <ng-container matColumnDef="patientName">
+                        <th mat-header-cell *matHeaderCellDef>Patient Name</th>
+                        <td mat-cell *matCellDef="let gap">
+                          <a class="patient-link" (click)="viewPatientDetail(gap.patientId)">
+                            {{ gap.patientName }}
+                          </a>
+                        </td>
+                      </ng-container>
+
+                      <!-- MRN Column -->
+                      <ng-container matColumnDef="mrn">
+                        <th mat-header-cell *matHeaderCellDef>MRN</th>
+                        <td mat-cell *matCellDef="let gap">{{ gap.mrn }}</td>
+                      </ng-container>
+
+                      <!-- Gap Type Column -->
+                      <ng-container matColumnDef="gapType">
+                        <th mat-header-cell *matHeaderCellDef>Gap Type</th>
+                        <td mat-cell *matCellDef="let gap">
+                          <mat-chip>{{ gap.gapType | titlecase }}</mat-chip>
+                        </td>
+                      </ng-container>
+
+                      <!-- Gap Description Column -->
+                      <ng-container matColumnDef="gapDescription">
+                        <th mat-header-cell *matHeaderCellDef>Description</th>
+                        <td mat-cell *matCellDef="let gap">{{ gap.gapDescription }}</td>
+                      </ng-container>
+
+                      <!-- Days Overdue Column -->
+                      <ng-container matColumnDef="daysOverdue">
+                        <th mat-header-cell *matHeaderCellDef>Days Overdue</th>
+                        <td mat-cell *matCellDef="let gap">
+                          <span class="days-overdue">{{ gap.daysOverdue }}</span>
+                        </td>
+                      </ng-container>
+
+                      <!-- Urgency Column -->
+                      <ng-container matColumnDef="urgency">
+                        <th mat-header-cell *matHeaderCellDef>Urgency</th>
+                        <td mat-cell *matCellDef="let gap">
+                          <span [class]="getUrgencyClass(gap.urgency)">
+                            {{ gap.urgency | titlecase }}
+                          </span>
+                        </td>
+                      </ng-container>
+
+                      <!-- Actions Column -->
+                      <ng-container matColumnDef="actions">
+                        <th mat-header-cell *matHeaderCellDef>Actions</th>
+                        <td mat-cell *matCellDef="let gap">
+                          <button aria-label="View" mat-icon-button (click)="viewPatientDetail(gap.patientId)" matTooltip="View patient">
+                            <mat-icon>visibility</mat-icon>
+                          </button>
+                        </td>
+                      </ng-container>
+
+                      <tr mat-header-row *matHeaderRowDef="careGapsColumns"></tr>
+                      <tr mat-row *matRowDef="let row; columns: careGapsColumns"></tr>
+                    </table>
+                  </div>
+                }
+              </mat-card-content>
+
+              <mat-card-actions>
+                <button mat-raised-button color="primary" (click)="viewCareGaps()">
+                  <mat-icon>warning</mat-icon>
+                  View All Care Gaps in Dashboard
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          </div>
+        </mat-tab>
+
+        <!-- Tab 4: Historical Trends -->
+        <mat-tab label="Historical Trends">
+          <div class="tab-content">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Performance Over Time</mat-card-title>
+                <mat-card-subtitle>Last 6 months</mat-card-subtitle>
+              </mat-card-header>
+
+              <mat-card-content>
+                @if (historicalTrends.length === 0) {
+                  <div class="no-data">
+                    <mat-icon>show_chart</mat-icon>
+                    <p>No historical trend data available</p>
+                  </div>
+                } @else {
+                  <div class="trends-visualization">
+                    <div class="trends-table">
+                      <table mat-table [dataSource]="historicalTrends" class="trends-data-table">
+                        <ng-container matColumnDef="date">
+                          <th mat-header-cell *matHeaderCellDef>Month</th>
+                          <td mat-cell *matCellDef="let trend">{{ trend.date | date: 'MMM yyyy' }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="rate">
+                          <th mat-header-cell *matHeaderCellDef>Rate</th>
+                          <td mat-cell *matCellDef="let trend">{{ trend.rate.toFixed(1) }}%</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="numerator">
+                          <th mat-header-cell *matHeaderCellDef>Numerator</th>
+                          <td mat-cell *matCellDef="let trend">{{ trend.numerator }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="denominator">
+                          <th mat-header-cell *matHeaderCellDef>Denominator</th>
+                          <td mat-cell *matCellDef="let trend">{{ trend.denominator }}</td>
+                        </ng-container>
+
+                        <tr mat-header-row *matHeaderRowDef="['date', 'rate', 'numerator', 'denominator']"></tr>
+                        <tr mat-row *matRowDef="let row; columns: ['date', 'rate', 'numerator', 'denominator']"></tr>
+                      </table>
+                    </div>
+
+                    <div class="trends-note">
+                      <mat-icon>info</mat-icon>
+                      <p>Visual chart rendering would integrate with a charting library (Chart.js, D3.js, etc.)</p>
+                    </div>
+                  </div>
+                }
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  }
+</div>

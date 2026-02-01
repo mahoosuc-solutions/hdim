@@ -1,0 +1,15 @@
+# Grafana Dashboard Provisioning Configuration
+# Auto-loads all dashboard JSON files from /etc/grafana/provisioning/dashboards
+
+apiVersion: 1
+
+providers:
+  - name: 'HDIM Dashboards'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

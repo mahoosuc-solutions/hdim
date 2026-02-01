@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!--
+        Fix: Add missing created_by column to patient_measure_assignments table
+
+        Root Cause: Entity (PatientMeasureAssignmentEntity.java) defines created_by column
+        but migration 0034 omitted it during table creation.
+
+        Impact: 389 tests failed due to schema validation error:
+        "Schema-validation: missing column [created_by] in table [patient_measure_assignments]"
+
+        This is an example of entity-migration synchronization drift that would be
+        prevented by milestone-based schema generation approach.
+    -->
+    <changeSet id="0045-add-created-by-column" author="claude-code">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="patient_measure_assignments" columnName="created_by"/>
+            </not>
+        </preConditions>
+
+        <comment>Add missing created_by audit column to patient_measure_assignments table</comment>
+
+        <addColumn tableName="patient_measure_assignments">
+            <column name="created_by" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="patient_measure_assignments" columnName="created_by"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

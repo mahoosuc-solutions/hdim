@@ -18,7 +18,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { SelectionModel } from '@angular/cdk/collections';
-import { NgxChartsModule } from '@swimlane/ngx-charts';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartData, ChartOptions } from 'chart.js';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { injectDestroy } from '../../shared/utils';
@@ -47,6 +48,7 @@ import {
   getSecondaryResultActions,
 } from './result-enhancement.config';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
+import { LoggerService } from '../../services/logger.service';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { ErrorBannerComponent } from '../../shared/components/error-banner/error-banner.component';
@@ -75,7 +77,7 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
     MatCheckboxModule,
     MatMenuModule,
     MatDividerModule,
-    NgxChartsModule,
+    BaseChartDirective,
     LoadingButtonComponent,
     LoadingOverlayComponent,
     StatCardComponent,
@@ -86,9 +88,7 @@ import { TrackInteraction } from '../../utils/ai-tracking.decorator';
   styleUrl: './results.component.scss',
 })
 export class ResultsComponent implements OnInit, AfterViewInit {
-  private destroy$ = injectDestroy();
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  private destroy$ = injectDestroy();  @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   filterForm: FormGroup;
@@ -153,54 +153,63 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     { value: 'not-eligible', label: 'Not Eligible' },
   ];
 
-  // Chart data for ngx-charts
-  outcomeDistributionChartData: any[] = [];
-  categoryComplianceChartData: any[] = [];
-  complianceTrendChartData: any[] = [];
-  measurePerformanceChartData: any[] = [];
-
-  // Pie chart configuration
-  pieChartView: [number, number] = [400, 300];
-  pieChartShowLabels = true;
-  pieChartIsDoughnut = true;
-  pieChartLegend = true;
-  pieChartColorScheme: any = {
-    domain: ['#5AA454', '#E44D25', '#7aa3e5']
+  // Chart data for ng2-charts
+  outcomeDistributionChartData: ChartData<'doughnut'> = {
+    labels: [],
+    datasets: [],
+  };
+  categoryComplianceChartData: ChartData<'bar'> = {
+    labels: [],
+    datasets: [],
+  };
+  complianceTrendChartData: ChartData<'line'> = {
+    labels: [],
+    datasets: [],
+  };
+  measurePerformanceChartData: ChartData<'bar'> = {
+    labels: [],
+    datasets: [],
   };
 
-  // Bar chart configuration
-  barChartView: [number, number] = [500, 300];
-  barChartShowXAxis = true;
-  barChartShowYAxis = true;
-  barChartGradient = false;
-  barChartShowLegend = false;
-  barChartShowXAxisLabel = true;
-  barChartXAxisLabel = 'Category';
-  barChartShowYAxisLabel = true;
-  barChartYAxisLabel = 'Compliance Rate (%)';
-  barChartColorScheme: any = {
-    domain: ['#5AA454', '#A10A28', '#C7B42C']
+  outcomeDistributionChartOptions: ChartOptions<'doughnut'> = {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
   };
 
-  // Line chart configuration (compliance trends)
-  lineChartView: [number, number] = [800, 300];
-  lineChartShowXAxis = true;
-  lineChartShowYAxis = true;
-  lineChartGradient = true;
-  lineChartShowLegend = true;
-  lineChartShowXAxisLabel = true;
-  lineChartXAxisLabel = 'Week';
-  lineChartShowYAxisLabel = true;
-  lineChartYAxisLabel = 'Compliance Rate (%)';
-  lineChartColorScheme: any = {
-    domain: ['#1976d2', '#4caf50', '#ff9800']
+  categoryComplianceChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { title: { display: true, text: 'Category' } },
+      y: {
+        title: { display: true, text: 'Compliance Rate (%)' },
+        min: 0,
+        max: 100,
+      },
+    },
   };
-  lineChartCurve = 'curveMonotoneX';
 
-  // Horizontal bar chart for measure performance
-  horizontalBarView: [number, number] = [400, 350];
-  horizontalBarColorScheme: any = {
-    domain: ['#5AA454', '#E44D25', '#CFC0BB', '#7aa3e5', '#a8385d']
+  complianceTrendChartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    plugins: { legend: { display: true } },
+    scales: {
+      x: { title: { display: true, text: 'Week' } },
+      y: {
+        title: { display: true, text: 'Compliance Rate (%)' },
+        min: 0,
+        max: 100,
+      },
+    },
+  };
+
+  measurePerformanceChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { title: { display: true, text: 'Compliance Rate (%)' }, min: 0, max: 100 },
+      y: { title: { display: false, text: '' } },
+    },
   };
 
   constructor(
@@ -209,7 +218,8 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     private patientService: PatientService,
     private qrdaExportService: QrdaExportService,
     private reportExportService: ReportExportService,
-    public aiAssistant: AIAssistantService
+    public aiAssistant: AIAssistantService,
+    private logger: LoggerService
   ) {
     this.filterForm = this.fb.group({
       dateFrom: [null],
@@ -244,7 +254,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
         takeUntil(this.destroy$),
         catchError((error) => {
           this.error = 'Failed to load results. Please try again.';
-          console.error('Error loading results:', error);
+          this.logger.error('Error loading results', error);
           return of([]);
         }),
         finalize(() => {
@@ -419,7 +429,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           }
         },
         error: (err) => {
-          console.error('Error loading patient:', err);
+          this.logger.error('Error loading patient', err);
         }
       });
     }
@@ -638,15 +648,20 @@ export class ResultsComponent implements OnInit, AfterViewInit {
     const nonCompliant = this.getNonCompliantCount();
     const notEligible = this.getNotEligibleCount();
 
-    this.outcomeDistributionChartData = [
-      { name: 'Compliant', value: compliant },
-      { name: 'Non-Compliant', value: nonCompliant },
-      { name: 'Not Eligible', value: notEligible }
-    ];
+    this.outcomeDistributionChartData = {
+      labels: ['Compliant', 'Non-Compliant', 'Not Eligible'],
+      datasets: [
+        {
+          data: [compliant, nonCompliant, notEligible],
+          backgroundColor: ['#5AA454', '#E44D25', '#7aa3e5'],
+        },
+      ],
+    };
 
     // Update category compliance bar chart
     const categoryMap = this.groupByMeasureType();
-    this.categoryComplianceChartData = Object.keys(categoryMap).map(category => {
+    const categoryLabels = Object.keys(categoryMap);
+    const categoryRates = categoryLabels.map(category => {
       const categoryResults = categoryMap[category];
       const eligibleResults = categoryResults.filter(r => r.denominatorEligible);
       const compliantResults = eligibleResults.filter(r => r.numeratorCompliant);
@@ -655,25 +670,55 @@ export class ResultsComponent implements OnInit, AfterViewInit {
         ? (compliantResults.length / eligibleResults.length) * 100
         : 0;
 
-      return {
-        name: category,
-        value: Math.round(complianceRate * 100) / 100
-      };
+      return Math.round(complianceRate * 100) / 100;
     });
+    this.categoryComplianceChartData = {
+      labels: categoryLabels,
+      datasets: [
+        {
+          label: 'Compliance Rate (%)',
+          data: categoryRates,
+          backgroundColor: ['#5AA454', '#A10A28', '#C7B42C'],
+        },
+      ],
+    };
 
     // Update compliance trend line chart (weekly data)
-    this.complianceTrendChartData = this.calculateWeeklyTrends();
+    const trend = this.calculateWeeklyTrends();
+    this.complianceTrendChartData = {
+      labels: trend.labels,
+      datasets: [
+        {
+          label: 'Compliance Rate',
+          data: trend.data,
+          borderColor: '#1976d2',
+          backgroundColor: 'rgba(25, 118, 210, 0.2)',
+          tension: 0.3,
+          fill: true,
+        },
+      ],
+    };
 
     // Update measure performance chart (top/bottom performers)
-    this.measurePerformanceChartData = this.calculateMeasurePerformance();
+    const performance = this.calculateMeasurePerformance();
+    this.measurePerformanceChartData = {
+      labels: performance.labels,
+      datasets: [
+        {
+          label: 'Compliance Rate (%)',
+          data: performance.data,
+          backgroundColor: '#5AA454',
+        },
+      ],
+    };
   }
 
   /**
    * Calculate weekly compliance trends for line chart
    */
-  private calculateWeeklyTrends(): any[] {
+  private calculateWeeklyTrends(): { labels: string[]; data: number[] } {
     if (this.filteredResults.length === 0) {
-      return [];
+      return { labels: [], data: [] };
     }
 
     // Group results by week
@@ -702,17 +747,20 @@ export class ResultsComponent implements OnInit, AfterViewInit {
       .sort(([a], [b]) => a.localeCompare(b))
       .slice(-12); // Last 12 weeks
 
-    const series = sortedWeeks.map(([week, data]) => {
+    const labels = sortedWeeks.map(([week, data]) => {
       const complianceRate = data.eligible > 0 ? (data.compliant / data.eligible) * 100 : 0;
       const weekDate = new Date(week);
       const weekLabel = `${weekDate.getMonth() + 1}/${weekDate.getDate()}`;
       return {
-        name: weekLabel,
+        label: weekLabel,
         value: Math.round(complianceRate * 10) / 10
       };
     });
 
-    return [{ name: 'Compliance Rate', series }];
+    return {
+      labels: labels.map(item => item.label),
+      data: labels.map(item => item.value),
+    };
   }
 
   /**
@@ -730,7 +778,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
   /**
    * Calculate measure performance for horizontal bar chart
    */
-  private calculateMeasurePerformance(): any[] {
+  private calculateMeasurePerformance(): { labels: string[]; data: number[] } {
     // Group by measure name
     const measureMap = new Map<string, { compliant: number; eligible: number }>();
 
@@ -760,7 +808,10 @@ export class ResultsComponent implements OnInit, AfterViewInit {
       .sort((a, b) => b.value - a.value)
       .slice(0, 10); // Top 10 measures
 
-    return measureRates;
+    return {
+      labels: measureRates.map(rate => rate.name),
+      data: measureRates.map(rate => rate.value),
+    };
   }
 
   // ===== Row Selection Methods =====
@@ -956,7 +1007,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           this.pollQrdaExportJob(job.id);
         },
         error: (err) => {
-          console.error('QRDA export failed:', err);
+          this.logger.error('QRDA export failed', err);
           this.qrdaExportError = err?.error?.message || 'Failed to initiate QRDA export. Please try again.';
           this.exportQrdaLoading = false;
         }
@@ -984,7 +1035,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           }
         },
         error: (err) => {
-          console.error('Error polling QRDA job:', err);
+          this.logger.error('Error polling QRDA job', err);
           this.exportQrdaLoading = false;
           this.qrdaExportError = 'Failed to check export status. Please try again.';
         }
@@ -1010,7 +1061,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           this.qrdaExportService.triggerDownload(blob, filename);
         },
         error: (err) => {
-          console.error('Failed to download QRDA export:', err);
+          this.logger.error('Failed to download QRDA export', err);
           this.qrdaExportError = 'Failed to download the export file.';
         }
       });
@@ -1032,7 +1083,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           this.exportQrdaLoading = false;
         },
         error: (err) => {
-          console.error('Failed to cancel QRDA export:', err);
+          this.logger.error('Failed to cancel QRDA export', err);
         }
       });
   }
@@ -1139,7 +1190,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
    */
   @TrackInteraction('results', 'quick-action')
   executeResultAction(result: EnhancedResult, actionType: ResultActionType): void {
-    console.log(`Executing action ${actionType} on result ${result.id}`);
+    this.logger.info(`Executing action ${actionType} on result ${result.id}`);
 
     // In a real implementation, this would call appropriate services
     switch (actionType) {
@@ -1275,7 +1326,7 @@ export class ResultsComponent implements OnInit, AfterViewInit {
           }
         },
         error: (err) => {
-          console.error('Error loading patient:', err);
+          this.logger.error('Error loading patient', err);
         }
       });
     }

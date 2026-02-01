@@ -5,7 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.context.annotation.Import;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 
 /**
  * FHIR R4 Service Application
@@ -17,6 +20,11 @@ import org.springframework.kafka.annotation.EnableKafka;
  * - Kafka event publishing
  * - PostgreSQL persistence
  * - Authentication-based tenant isolation
+ *
+ * Configuration:
+ * - JSON-only responses (application/fhir+json)
+ * - XML message converter explicitly disabled to prevent Jackson XML dependency conflicts
+ * - FHIR service exclusively uses JSON format for all API responses
  */
 @SpringBootApplication(scanBasePackages = {
     "com.healthdata.fhir",
@@ -25,11 +33,13 @@ import org.springframework.kafka.annotation.EnableKafka;
     "com.healthdata.authentication",  // Include for JWT filter and config
     "com.healthdata.cache"  // Include for CacheEvictionService (lazy init to avoid circular dependency)
 })
+@Import(AIAuditEventPublisher.class)
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.fhir.persistence",
     "com.healthdata.fhir.bulk"  // Include bulk export repository
     // NOTE: authentication.repository excluded - contains ApiKey/RefreshToken repos (Gateway-only)
 })
+@EnableRedisRepositories(basePackages = {})  // Explicitly disable Redis repository scanning (not used for repositories)
 @EntityScan(basePackages = {
     "com.healthdata.fhir.persistence",
     "com.healthdata.fhir.bulk",  // Include BulkExportJob entity

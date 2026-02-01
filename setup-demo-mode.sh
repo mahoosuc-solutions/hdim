@@ -16,10 +16,11 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-DB_CONTAINER="healthdata-postgres"
-DB_NAME="healthdata_cql"
+DB_CONTAINER="${DB_CONTAINER:-hdim-demo-postgres}"
+DB_NAME="gateway_db"
 DB_USER="healthdata"
-SQL_FILE="backend/modules/services/gateway-service/src/main/resources/data-demo.sql"
+SQL_FILE="docker/demo/demo-users.sql"
+TENANT_ID="${TENANT_ID:-acme-health}"
 
 echo -e "${CYAN}╔════════════════════════════════════════════════════════════════╗${NC}"
 echo -e "${CYAN}║           Health Data in Motion - Demo Mode Setup             ║${NC}"
@@ -50,8 +51,11 @@ fi
 
 echo -e "${BLUE}Loading demo accounts into database...${NC}"
 
-# Execute SQL file
-if docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$SQL_FILE" > /dev/null 2>&1; then
+# Execute SQL file with tenant substitution
+TEMP_SQL="/tmp/data-demo-${TENANT_ID}.sql"
+sed "s/acme-health/${TENANT_ID}/g" "$SQL_FILE" > "$TEMP_SQL"
+
+if docker exec -i "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_SQL" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ Demo accounts loaded successfully${NC}"
 else
     echo -e "${RED}✗ Failed to load demo accounts${NC}"
@@ -115,7 +119,7 @@ echo ""
 
 echo -e "${CYAN}Quick Test:${NC}"
 echo ""
-echo -e "${YELLOW}curl -X POST http://localhost:9000/api/v1/auth/login \\${NC}"
+echo -e "${YELLOW}curl -X POST http://localhost:18080/api/v1/auth/login \\${NC}"
 echo -e "${YELLOW}  -H 'Content-Type: application/json' \\${NC}"
 echo -e "${YELLOW}  -d '{\"username\":\"demo.doctor\",\"password\":\"demo123\"}'${NC}"
 echo ""

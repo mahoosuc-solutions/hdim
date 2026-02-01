@@ -40,6 +40,7 @@ import com.healthdata.fhir.persistence.ProcedureRepository;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Procedure Service Tests")
@@ -52,12 +53,15 @@ class ProcedureServiceTest {
     private ProcedureRepository repository;
 
     @Mock
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @Test
     @DisplayName("Should create procedure and publish event")
     void shouldCreateProcedure() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -73,7 +77,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should extract procedure fields")
     void shouldExtractProcedureFields() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -103,7 +107,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should return empty for invalid UUID")
     void shouldReturnEmptyForInvalidUuid() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
 
         Optional<Procedure> result = service.getProcedure(TENANT_ID, "not-a-uuid");
 
@@ -114,7 +118,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should reject missing patient reference")
     void shouldRejectMissingPatientReference() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         Procedure procedure = new Procedure();
         procedure.setStatus(Procedure.ProcedureStatus.COMPLETED);
 
@@ -127,7 +131,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should assign ID when missing")
     void shouldAssignIdWhenMissing() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID patientId = UUID.randomUUID();
         Procedure procedure = new Procedure();
         procedure.setSubject(new Reference("Patient/" + patientId));
@@ -143,7 +147,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should update procedure and publish event")
     void shouldUpdateProcedure() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedureWithPeriod(procedureId, patientId);
@@ -162,7 +166,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should delete procedure and publish event")
     void shouldDeleteProcedure() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -178,7 +182,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should tolerate invalid encounter reference")
     void shouldTolerateInvalidEncounterReference() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -195,7 +199,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should ignore publish failures")
     void shouldIgnorePublishFailures() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -213,7 +217,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should search procedures by patient")
     void shouldSearchProceduresByPatient() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -231,7 +235,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should search procedures by date range")
     void shouldSearchProceduresByDateRange() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID procedureId = UUID.randomUUID();
         UUID patientId = UUID.randomUUID();
         Procedure procedure = buildProcedure(procedureId, patientId);
@@ -249,7 +253,7 @@ class ProcedureServiceTest {
     @Test
     @DisplayName("Should fetch procedure subsets and checks")
     void shouldFetchProcedureSubsetsAndChecks() {
-        ProcedureService service = new ProcedureService(repository, kafkaTemplate);
+        ProcedureService service = new ProcedureService(repository, kafkaTemplate, objectMapper);
         UUID patientId = UUID.randomUUID();
         when(repository.findCompletedProceduresByPatient(TENANT_ID, patientId)).thenReturn(List.of());
         when(repository.findSurgicalProceduresByPatient(TENANT_ID, patientId)).thenReturn(List.of());

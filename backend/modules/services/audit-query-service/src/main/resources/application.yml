@@ -1,0 +1,138 @@
+spring:
+  application:
+    name: audit-query-service
+
+  # Allow bean definition overriding (needed when multiple shared modules define same beans)
+  main:
+    allow-bean-definition-overriding: true
+
+  # Database Configuration
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/audit_db
+    username: ${DB_USER:healthdata}
+    password: ${DB_PASSWORD:healthdata123}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA/Hibernate Configuration
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Strict validation - all entities must match actual database schema
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+        # Explicitly specify packages to scan (exclude authentication entities)
+        packagesToScan: com.healthdata.audit.entity,com.healthdata.auditquery.persistence
+    show-sql: false
+
+  # Liquibase Configuration
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    default-schema: public
+
+  # Redis Cache Configuration (optional - for query result caching)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000  # 5 minutes (HIPAA-compliant for non-PHI audit metadata)
+      cache-null-values: false
+
+  # Kafka Configuration
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: audit-query-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.healthdata.*
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+# Server Configuration
+server:
+  port: ${SERVER_PORT:8088}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/xml,text/plain
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+# OpenTelemetry Tracing
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+# Audit Query Service Configuration
+audit-query:
+  # Retention policy (HIPAA requires 7 years)
+  retention:
+    years: 7
+    cleanup-cron: "0 0 2 * * ?"  # Run at 2 AM daily
+
+  # Export Configuration
+  export:
+    max-records: 100000  # Prevent memory overflow on large exports
+    temp-directory: ${EXPORT_TEMP_DIR:/tmp/audit-exports}
+
+  # Projection Configuration
+  projection:
+    daily-rollup-cron: "0 15 1 * * ?"  # Run at 1:15 AM daily (after retention cleanup)
+    batch-size: 1000  # Process audit events in batches
+
+# Logging Configuration
+logging:
+  level:
+    com.healthdata.auditquery: INFO
+    com.healthdata.audit: INFO
+    com.healthdata.security: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

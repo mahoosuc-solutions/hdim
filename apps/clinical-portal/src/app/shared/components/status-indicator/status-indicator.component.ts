@@ -175,7 +175,7 @@ export class StatusIndicatorComponent {
   @Input() size: 'small' | 'medium' | 'large' = 'medium';
 
   /** Whether to show the text label */
-  @Input() showLabel: boolean = false;
+  @Input() showLabel = false;
 
   /** Custom label text */
   @Input() label?: string;

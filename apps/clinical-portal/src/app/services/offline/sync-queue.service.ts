@@ -8,6 +8,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, from, of, forkJoin, timer } from 'rxjs';
+import { LoggerService } from '../logger.service';
 import {
   catchError,
   concatMap,
@@ -92,6 +93,7 @@ export class SyncQueueService implements OnDestroy {
   readonly hasPendingChanges$ = this.pendingCount$.pipe(map((count) => count > 0));
 
   constructor(
+    private logger: LoggerService,
     private http: HttpClient,
     private storage: OfflineStorageService,
     private networkStatus: NetworkStatusService
@@ -344,7 +346,7 @@ export class SyncQueueService implements OnDestroy {
 
     // 400/422 - validation error, remove from queue (won't succeed on retry)
     if (error.status === 400 || error.status === 422) {
-      console.warn(`Validation error for sync item ${item.id}, removing from queue`);
+      this.logger.warn(`Validation error for sync item ${item.id}, removing from queue`);
       return of(true); // Return true to remove from queue
     }
 
@@ -402,7 +404,7 @@ export class SyncQueueService implements OnDestroy {
     item.lastError = error instanceof Error ? error.message : String(error);
 
     if (item.retryCount >= MAX_RETRY_COUNT) {
-      console.error(`Max retries reached for sync item ${item.id}`, item);
+      this.logger.error(`Max retries reached for sync item ${item.id}`, item);
       // Move to failed items or notify user
     } else {
       // Update item in queue with new retry count
@@ -423,9 +425,9 @@ export class SyncQueueService implements OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe(() => {
-        console.log('Network restored - starting auto-sync');
+        this.logger.info('Network restored - starting auto-sync');
         this.sync().pipe(take(1)).subscribe((result) => {
-          console.log('Auto-sync completed:', result);
+          this.logger.info('Auto-sync completed:', result);
         });
       });
   }

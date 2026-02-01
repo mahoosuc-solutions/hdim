@@ -12,8 +12,21 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-BASE_URL="${BASE_URL:-http://localhost:8000/api/quality/quality-measure}"
-TENANT_ID="${TENANT_ID:-clinic-001}"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.admin}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+BASE_URL="${BASE_URL:-${GATEWAY_URL}/api/quality}"
+FHIR_API_URL="${FHIR_API_URL:-${GATEWAY_URL}/api/fhir}"
+
+AUTH_TOKEN=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | jq -r '.accessToken' 2>/dev/null)
+
+AUTH_HEADER=()
+if [ -n "$AUTH_TOKEN" ] && [ "$AUTH_TOKEN" != "null" ]; then
+  AUTH_HEADER=(-H "Authorization: Bearer $AUTH_TOKEN")
+fi
 
 echo "========================================="
 echo -e "${BLUE}Custom Measures Testing Script${NC}"
@@ -40,7 +53,7 @@ create_measure() {
     echo -e "${YELLOW}Creating measure: ${name}${NC}"
 
     response=$(curl -s -X POST "${BASE_URL}/custom-measures" \
-        -H "X-Tenant-ID: ${TENANT_ID}" \
+        -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" \
         -H "Content-Type: application/json" \
         -d "{
             \"name\": \"${name}\",
@@ -70,7 +83,7 @@ create_measure() {
 list_measures() {
     echo -e "${YELLOW}Listing all custom measures...${NC}"
     curl -s "${BASE_URL}/custom-measures" \
-        -H "X-Tenant-ID: ${TENANT_ID}" | pretty_json
+        -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" | pretty_json
 }
 
 # Function to check FHIR data
@@ -78,7 +91,7 @@ check_fhir_data() {
     echo -e "${YELLOW}Checking FHIR test data...${NC}"
 
     # Check patients
-    patient_count=$(curl -s "http://localhost:8000/api/fhir/Patient?identifier=TEST-" | \
+    patient_count=$(curl -s "${AUTH_HEADER[@]}" "${FHIR_API_URL}/Patient?identifier=TEST-" | \
         grep -o '"resourceType":"Patient"' | wc -l || echo "0")
 
     if [ "$patient_count" -gt 0 ]; then

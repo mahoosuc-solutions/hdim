@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -39,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class PerformanceIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -61,7 +63,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
 
         List<CqlLibrary> libraries = new ArrayList<>();
         for (int i = 0; i < BULK_SIZE; i++) {
-            CqlLibrary library = new CqlLibrary(TENANT_ID, "BulkLib" + i, "1.0.0");
+            CqlLibrary library = buildLibrary(TENANT_ID, "BulkLib" + i, "1.0.0");
             library.setStatus("ACTIVE");
             libraries.add(library);
         }
@@ -79,7 +81,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testLibraryQueryPerformance() {
         // Create test data
         for (int i = 0; i < 50; i++) {
-            CqlLibrary library = new CqlLibrary(TENANT_ID, "QueryTest" + i, "1.0.0");
+            CqlLibrary library = buildLibrary(TENANT_ID, "QueryTest" + i, "1.0.0");
             library.setStatus("ACTIVE");
             libraryRepository.save(library);
         }
@@ -100,7 +102,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testPaginationPerformance() {
         // Create large dataset
         for (int i = 0; i < 200; i++) {
-            libraryRepository.save(new CqlLibrary(TENANT_ID, "PageTest" + i, "1.0.0"));
+            libraryRepository.save(buildLibrary(TENANT_ID, "PageTest" + i, "1.0.0"));
         }
 
         long startTime = System.currentTimeMillis();
@@ -118,7 +120,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     @Order(4)
     @DisplayName("Should handle bulk evaluation creation efficiently")
     void testBulkEvaluationCreation() {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "BulkEvalLib", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "BulkEvalLib", "1.0.0");
         library = libraryRepository.save(library);
 
         long startTime = System.currentTimeMillis();
@@ -142,7 +144,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     @Order(5)
     @DisplayName("Should query evaluations by patient efficiently")
     void testEvaluationQueryByPatient() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "QueryEvalLib", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "QueryEvalLib", "1.0.0"));
 
         UUID patientId = UUID.randomUUID();
         // Create evaluations for same patient
@@ -166,7 +168,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     @Order(6)
     @DisplayName("Should query evaluations by library efficiently")
     void testEvaluationQueryByLibrary() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "LibQueryTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "LibQueryTest", "1.0.0"));
 
         // Create evaluations for library
         for (int i = 0; i < 40; i++) {
@@ -188,7 +190,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     @Order(7)
     @DisplayName("Should handle date range queries efficiently")
     void testDateRangeQueryPerformance() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "DateRangeLib", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "DateRangeLib", "1.0.0"));
 
         Instant now = Instant.now();
         for (int i = 0; i < 60; i++) {
@@ -217,7 +219,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
 
         List<ValueSet> valueSets = new ArrayList<>();
         for (int i = 0; i < BULK_SIZE; i++) {
-            ValueSet vs = new ValueSet(TENANT_ID, "2.16.840.1.bulk." + i, "BulkVS" + i, "SNOMED");
+            ValueSet vs = buildValueSet(TENANT_ID, "2.16.840.1.bulk." + i, "BulkVS" + i, "SNOMED");
             valueSets.add(vs);
         }
 
@@ -234,10 +236,10 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testValueSetCodeSystemQuery() {
         // Create value sets for different code systems
         for (int i = 0; i < 30; i++) {
-            valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.snomed." + i, "SNOMED" + i, "SNOMED"));
+            valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.snomed." + i, "SNOMED" + i, "SNOMED"));
         }
         for (int i = 0; i < 20; i++) {
-            valueSetRepository.save(new ValueSet(TENANT_ID, "2.16.840.1.loinc." + i, "LOINC" + i, "LOINC"));
+            valueSetRepository.save(buildValueSet(TENANT_ID, "2.16.840.1.loinc." + i, "LOINC" + i, "LOINC"));
         }
 
         long startTime = System.currentTimeMillis();
@@ -254,7 +256,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     @Order(10)
     @DisplayName("Should handle concurrent reads efficiently")
     void testConcurrentReads() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "ConcurrentReadTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "ConcurrentReadTest", "1.0.0"));
         UUID libraryId = library.getId();
 
         long startTime = System.currentTimeMillis();
@@ -278,7 +280,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
 
         long startTime = System.currentTimeMillis();
 
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "LargeTextLib", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "LargeTextLib", "1.0.0");
         library.setCqlContent(largeCqlContent);
         library.setElmJson(largeElmJson);
         library = libraryRepository.save(library);
@@ -298,7 +300,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testCountPerformance() {
         // Create test data
         for (int i = 0; i < 100; i++) {
-            libraryRepository.save(new CqlLibrary(TENANT_ID, "CountTest" + i, "1.0.0"));
+            libraryRepository.save(buildLibrary(TENANT_ID, "CountTest" + i, "1.0.0"));
         }
 
         long startTime = System.currentTimeMillis();
@@ -316,7 +318,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testSearchPerformance() {
         // Create libraries with searchable names
         for (int i = 0; i < 50; i++) {
-            libraryRepository.save(new CqlLibrary(TENANT_ID, "SearchableLibrary" + i, "1.0.0"));
+            libraryRepository.save(buildLibrary(TENANT_ID, "SearchableLibrary" + i, "1.0.0"));
         }
 
         long startTime = System.currentTimeMillis();
@@ -334,7 +336,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testBulkUpdatePerformance() {
         List<CqlLibrary> libraries = new ArrayList<>();
         for (int i = 0; i < 50; i++) {
-            libraries.add(libraryRepository.save(new CqlLibrary(TENANT_ID, "UpdateTest" + i, "1.0.0")));
+            libraries.add(libraryRepository.save(buildLibrary(TENANT_ID, "UpdateTest" + i, "1.0.0")));
         }
 
         long startTime = System.currentTimeMillis();
@@ -355,7 +357,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     @Order(15)
     @DisplayName("Should handle complex join queries efficiently")
     void testComplexJoinQueryPerformance() {
-        CqlLibrary library = libraryRepository.save(new CqlLibrary(TENANT_ID, "JoinTest", "1.0.0"));
+        CqlLibrary library = libraryRepository.save(buildLibrary(TENANT_ID, "JoinTest", "1.0.0"));
 
         // Create evaluations (which join with library)
         for (int i = 0; i < 30; i++) {
@@ -383,7 +385,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testSoftDeletePerformance() {
         List<CqlLibrary> libraries = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            libraries.add(libraryRepository.save(new CqlLibrary(TENANT_ID, "DeleteTest" + i, "1.0.0")));
+            libraries.add(libraryRepository.save(buildLibrary(TENANT_ID, "DeleteTest" + i, "1.0.0")));
         }
 
         long startTime = System.currentTimeMillis();
@@ -406,7 +408,7 @@ public class PerformanceIntegrationTest extends CqlTestcontainersBase {
     void testDeepPaginationPerformance() {
         // Create large dataset
         for (int i = 0; i < 150; i++) {
-            libraryRepository.save(new CqlLibrary(TENANT_ID, "DeepPage" + i, "1.0.0"));
+            libraryRepository.save(buildLibrary(TENANT_ID, "DeepPage" + i, "1.0.0"));
         }
 
         long startTime = System.currentTimeMillis();

@@ -130,7 +130,7 @@ export class BatchCalculationService {
    * @param intervalMs Polling interval in milliseconds (default: 2000)
    * @returns Observable that emits job status updates
    */
-  pollJobStatus(jobId: string, intervalMs: number = 2000): Observable<BatchCalculationJob> {
+  pollJobStatus(jobId: string, intervalMs = 2000): Observable<BatchCalculationJob> {
     return new Observable(observer => {
       const poll = () => {
         this.getJobStatus(jobId).subscribe({

@@ -82,6 +82,10 @@ import { MedicationAdherenceService } from './medication-adherence.service';
 import { ProcedureHistoryService } from './procedure-history.service';
 import { LoggerService, ContextualLogger } from './logger.service';
 
+import { ErrorValidationService } from './error-validation.service';
+import { COMPLIANCE_CONFIG } from '../config/compliance.config';
+import { ErrorCode, ErrorSeverity } from '../models/error.model';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -163,16 +167,14 @@ export class PatientHealthService {
     preventive: 0.15,
   } as const;
 
-  private log: ContextualLogger;
 
   constructor(
     private http: HttpClient,
     private medicationAdherenceService: MedicationAdherenceService,
     private procedureHistoryService: ProcedureHistoryService,
-    private logger: LoggerService
-  ) {
-    this.log = this.logger.withContext('PatientHealthService');
-  }
+    private logger: LoggerService,
+    private errorValidationService: ErrorValidationService
+  ) {  }
 
   /**
    * Get HTTP headers with tenant ID
@@ -239,8 +241,25 @@ export class PatientHealthService {
         );
       }),
       catchError((error) => {
-        this.log.error('Error fetching patient health overview:', error);
-        // Fallback to mock data if backend fails
+        this.logger.error('Error fetching patient health overview:', error);
+        
+        // Check if fallbacks are disabled
+        if (COMPLIANCE_CONFIG.disableFallbacks && 
+            !this.errorValidationService.isFallbackAllowed('PatientHealthService')) {
+          // Track error for compliance
+          this.errorValidationService.trackError(error, {
+            service: 'PatientHealthService',
+            endpoint: url,
+            operation: 'getPatientHealthOverview',
+            errorCode: ErrorCode.QUALITY_MEASURE_ERROR,
+            severity: ErrorSeverity.ERROR,
+            additionalData: { patientId },
+          });
+          // Throw error instead of fallback
+          return throwError(() => error);
+        }
+        
+        // Fallback to mock data if backend fails (only if allowed)
         return this.getPatientHealthOverviewMock(patientId);
       })
     );
@@ -496,25 +515,25 @@ export class PatientHealthService {
     return forkJoin({
       vitals: this.getVitalSignsFromFhir(patientId).pipe(
         catchError(err => {
-          this.log.error('Error fetching vitals:', err);
+          this.logger.error('Error fetching vitals:', err);
           return of({});
         })
       ),
       labs: this.getLabResultsFromFhir(patientId).pipe(
         catchError(err => {
-          this.log.error('Error fetching labs:', err);
+          this.logger.error('Error fetching labs:', err);
           return of([]);
         })
       ),
       conditions: this.getConditionsFromFhir(patientId).pipe(
         catchError(err => {
-          this.log.error('Error fetching conditions:', err);
+          this.logger.error('Error fetching conditions:', err);
           return of([]);
         })
       ),
       medications: this.medicationAdherenceService.calculateOverallAdherence(patientId).pipe(
         catchError(err => {
-          this.log.error('Error fetching medication adherence:', err);
+          this.logger.error('Error fetching medication adherence:', err);
           return of({
             overallPDC: 0,
             adherentCount: 0,
@@ -525,13 +544,13 @@ export class PatientHealthService {
       ),
       procedures: this.procedureHistoryService.getRecentProcedures(patientId).pipe(
         catchError(err => {
-          this.log.error('Error fetching procedures:', err);
+          this.logger.error('Error fetching procedures:', err);
           return of([]);
         })
       ),
       functional: this.getFunctionalStatusFromFhir(patientId).pipe(
         catchError(err => {
-          this.log.error('Error fetching functional status:', err);
+          this.logger.error('Error fetching functional status:', err);
           return of({
             adlScore: 6,
             iadlScore: 8,
@@ -552,7 +571,7 @@ export class PatientHealthService {
         return summary;
       }),
       catchError(err => {
-        this.log.error('Error building physical health summary:', err);
+        this.logger.error('Error building physical health summary:', err);
         return of(this.getMockPhysicalHealth(patientId));
       })
     );
@@ -578,7 +597,7 @@ export class PatientHealthService {
         return summary;
       }),
       catchError((error) => {
-        this.log.error('Error fetching mental health summary:', error);
+        this.logger.error('Error fetching mental health summary:', error);
         return this.getMentalHealthFallback(patientId);
       })
     );
@@ -664,7 +683,7 @@ export class PatientHealthService {
         }));
       }),
       catchError((error) => {
-        this.log.error(`Error fetching ${assessmentType} history:`, error);
+        this.logger.error(`Error fetching ${assessmentType} history:`, error);
         return of([]);
       })
     );
@@ -1436,7 +1455,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.error('Error fetching SDOH screening from FHIR:', error);
+        this.logger.error('Error fetching SDOH screening from FHIR:', error);
         return of({
           screeningDate: new Date(),
           questionnaireType: 'custom' as SDOHQuestionnaireType,
@@ -1796,7 +1815,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.error('Error fetching risk stratification:', error);
+        this.logger.error('Error fetching risk stratification:', error);
         return of(this.getMockRiskStratification(patientId));
       })
     );
@@ -1972,7 +1991,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.error('Error fetching hospitalization prediction:', error);
+        this.logger.error('Error fetching hospitalization prediction:', error);
         throw new Error('Hospitalization prediction service unavailable');
       })
     );
@@ -2033,7 +2052,7 @@ export class PatientHealthService {
         });
       }),
       catchError((error) => {
-        this.log.error('Error fetching care recommendations:', error);
+        this.logger.error('Error fetching care recommendations:', error);
         throw new Error('Care recommendations service unavailable');
       })
     );
@@ -2071,7 +2090,7 @@ export class PatientHealthService {
         }));
       }),
       catchError((error) => {
-        this.log.error('Error generating care recommendations:', error);
+        this.logger.error('Error generating care recommendations:', error);
         throw new Error('Care recommendations generation service unavailable');
       })
     );
@@ -2124,7 +2143,7 @@ export class PatientHealthService {
         } : undefined
       })),
       catchError((error) => {
-        this.log.error('Error updating recommendation status:', error);
+        this.logger.error('Error updating recommendation status:', error);
         throw new Error('Recommendation status update service unavailable');
       })
     );
@@ -2140,7 +2159,7 @@ export class PatientHealthService {
 
     return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
       catchError((error) => {
-        this.log.error('Error tracking recommendation outcomes:', error);
+        this.logger.error('Error tracking recommendation outcomes:', error);
         throw new Error('Recommendation outcomes service unavailable');
       })
     );
@@ -2414,7 +2433,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.warn('Failed to fetch risk history, using mock data:', error.message);
+        this.logger.warn('Failed to fetch risk history, using mock data:', error.message);
         // Fallback to mock data if backend unavailable
         const mockDataPoints = [
           { date: new Date(startDate), value: 60 },
@@ -2531,7 +2550,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.error('Error calculating multi-factor risk score:', error);
+        this.logger.error('Error calculating multi-factor risk score:', error);
         // Return a default safe score using centralized weights
         return of({
           patientId,
@@ -2619,7 +2638,7 @@ export class PatientHealthService {
         return gaps;
       }),
       catchError((error) => {
-        this.log.error('Error fetching care gaps:', error);
+        this.logger.error('Error fetching care gaps:', error);
         return of(this.getMockCareGaps(patientId));
       })
     );
@@ -2660,7 +2679,7 @@ export class PatientHealthService {
         updatedDate: new Date(response.updatedDate || new Date())
       })),
       catchError((error) => {
-        this.log.error('Error updating care gap status:', error);
+        this.logger.error('Error updating care gap status:', error);
         return throwError(() => error);
       })
     );
@@ -2697,7 +2716,7 @@ export class PatientHealthService {
         }
       })),
       catchError((error) => {
-        this.log.error('Error fetching care gap metrics:', error);
+        this.logger.error('Error fetching care gap metrics:', error);
         // Return fallback metrics
         return of(this.calculateMockMetrics(patientId));
       })
@@ -2862,7 +2881,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.error('Error fetching quality measure performance:', error);
+        this.logger.error('Error fetching quality measure performance:', error);
         return of(this.getMockQualityPerformance(patientId));
       })
     );
@@ -2977,7 +2996,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.warn(`Failed to fetch FHIR observations for ${metric}, using mock data:`, error.message);
+        this.logger.warn(`Failed to fetch FHIR observations for ${metric}, using mock data:`, error.message);
         return of(this.getMockHealthTrend(metric, startDate, endDate));
       })
     );
@@ -3042,7 +3061,7 @@ export class PatientHealthService {
         };
       }),
       catchError((error) => {
-        this.log.error('Error submitting mental health assessment:', error);
+        this.logger.error('Error submitting mental health assessment:', error);
         // Fallback to client-side scoring
         const assessment = this.scoreMentalHealthAssessment(assessmentType, responses);
         return of(assessment);
@@ -3083,7 +3102,7 @@ export class PatientHealthService {
         return history;
       }),
       catchError((error) => {
-        this.log.error('Error fetching mental health assessment history:', error);
+        this.logger.error('Error fetching mental health assessment history:', error);
         return of([]);
       })
     );
@@ -3199,7 +3218,7 @@ export class PatientHealthService {
         return diagnoses;
       }),
       catchError((error) => {
-        this.log.error('Error fetching mental health diagnoses from FHIR:', error);
+        this.logger.error('Error fetching mental health diagnoses from FHIR:', error);
         return of([]);
       })
     );
@@ -3261,7 +3280,7 @@ export class PatientHealthService {
         };
       }),
       catchError(error => {
-        this.log.error('Error in getMentalHealthSummaryFromFhir:', error);
+        this.logger.error('Error in getMentalHealthSummaryFromFhir:', error);
         // Return minimal valid summary on error
         return of({
           status: 'unknown' as HealthStatus,
@@ -3322,7 +3341,7 @@ export class PatientHealthService {
           );
       }),
       catchError(error => {
-        this.log.error('Error fetching questionnaire responses:', error);
+        this.logger.error('Error fetching questionnaire responses:', error);
         return of([]);
       })
     );
@@ -3353,7 +3372,7 @@ export class PatientHealthService {
           .filter((c): c is MentalHealthCondition => c !== null);
       }),
       catchError(error => {
-        this.log.error('Error fetching mental health conditions:', error);
+        this.logger.error('Error fetching mental health conditions:', error);
         return of([]);
       })
     );
@@ -3384,7 +3403,7 @@ export class PatientHealthService {
           .filter((m): m is Medication => m !== null);
       }),
       catchError(error => {
-        this.log.error('Error fetching medications:', error);
+        this.logger.error('Error fetching medications:', error);
         return of([]);
       })
     );
@@ -4039,7 +4058,7 @@ export class PatientHealthService {
         return vitals;
       }),
       catchError((error) => {
-        this.log.error('Error fetching vital signs from FHIR:', error);
+        this.logger.error('Error fetching vital signs from FHIR:', error);
         return of({});
       })
     );
@@ -4078,7 +4097,7 @@ export class PatientHealthService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab results from FHIR:', error);
+          this.logger.error('Error fetching lab results from FHIR:', error);
           return of([]);
         })
       );
@@ -4097,7 +4116,7 @@ export class PatientHealthService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab results from FHIR:', error);
+          this.logger.error('Error fetching lab results from FHIR:', error);
           return of([]);
         })
       );
@@ -4135,7 +4154,7 @@ export class PatientHealthService {
           }));
       }),
       catchError((error) => {
-        this.log.error('Error fetching diagnostic reports from FHIR:', error);
+        this.logger.error('Error fetching diagnostic reports from FHIR:', error);
         return of([]);
       })
     );
@@ -4374,13 +4393,13 @@ export class PatientHealthService {
    */
   subscribeToVitalSigns(
     patientId: string,
-    intervalMs: number = 30000
+    intervalMs = 30000
   ): Observable<PhysicalHealthSummary['vitals']> {
     return timer(0, intervalMs).pipe(
       switchMap(() => this.getVitalSignsFromFhir(patientId)),
       distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
       catchError((error) => {
-        this.log.error('Error in vital signs subscription:', error);
+        this.logger.error('Error in vital signs subscription:', error);
         // Return empty object but continue polling
         return of({});
       })
@@ -4450,7 +4469,7 @@ export class PatientHealthService {
         return historyPoints;
       }),
       catchError((error) => {
-        this.log.error('Error fetching vital sign history:', error);
+        this.logger.error('Error fetching vital sign history:', error);
         return of([]);
       })
     );
@@ -5021,7 +5040,7 @@ export class PatientHealthService {
         return panels;
       }),
       catchError((error) => {
-        this.log.error('Error grouping lab results by panel:', error);
+        this.logger.error('Error grouping lab results by panel:', error);
         return of([]);
       })
     );
@@ -5055,7 +5074,7 @@ export class PatientHealthService {
         return results;
       }),
       catchError((error) => {
-        this.log.error('Error fetching lab history:', error);
+        this.logger.error('Error fetching lab history:', error);
         return of([]);
       })
     );
@@ -5201,7 +5220,7 @@ export class PatientHealthService {
         return healthScore;
       }),
       catchError((error) => {
-        this.log.error('Error fetching health score from backend, falling back to mock data:', error);
+        this.logger.error('Error fetching health score from backend, falling back to mock data:', error);
         // Fallback to mock data
         return of(this.getMockHealthScore(patientId));
       })
@@ -5256,7 +5275,7 @@ export class PatientHealthService {
         }));
       }),
       catchError((error) => {
-        this.log.error('Error fetching health score history:', error);
+        this.logger.error('Error fetching health score history:', error);
         return of([]);
       })
     );
@@ -5267,7 +5286,7 @@ export class PatientHealthService {
    * @param patientId Patient ID
    * @param months Number of months of history to retrieve (default: 12)
    */
-  getHealthScoreHistoryDetailed(patientId: string, months: number = 12): Observable<HealthScoreHistoryPoint[]> {
+  getHealthScoreHistoryDetailed(patientId: string, months = 12): Observable<HealthScoreHistoryPoint[]> {
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.PATIENT_HEALTH_SCORE_HISTORY(patientId));
 
     const params = new HttpParams().set('months', months.toString());
@@ -5290,7 +5309,7 @@ export class PatientHealthService {
         }));
       }),
       catchError((error) => {
-        this.log.error('Error fetching health score history:', error);
+        this.logger.error('Error fetching health score history:', error);
         return of([]);
       })
     );
@@ -5452,7 +5471,7 @@ export class PatientHealthService {
         return conditions;
       }),
       catchError((error) => {
-        this.log.error('Error fetching conditions from FHIR:', error);
+        this.logger.error('Error fetching conditions from FHIR:', error);
         return of([]);
       })
     );
@@ -5600,7 +5619,7 @@ export class PatientHealthService {
         return functionalStatus;
       }),
       catchError((error) => {
-        this.log.error('Error fetching functional status from FHIR:', error);
+        this.logger.error('Error fetching functional status from FHIR:', error);
         // Return default values
         return of({
           adlScore: 6,
@@ -6326,7 +6345,7 @@ export class PatientHealthService {
         }))
       ),
       catchError((error) => {
-        this.log.error('Error searching community resources:', error);
+        this.logger.error('Error searching community resources:', error);
         return of([]);
       })
     );
@@ -6362,7 +6381,7 @@ export class PatientHealthService {
     return this.http.post<any>(url, body, { headers: this.getHeaders() }).pipe(
       map((response) => this.mapReferralResponse(response)),
       catchError((error) => {
-        this.log.error('Error creating referral:', error);
+        this.logger.error('Error creating referral:', error);
         return throwError(() => new Error('Failed to create referral'));
       })
     );
@@ -6382,7 +6401,7 @@ export class PatientHealthService {
     return this.http.post<any>(url, {}, { headers: this.getHeaders() }).pipe(
       map((response) => this.mapReferralResponse(response)),
       catchError((error) => {
-        this.log.error('Error sending referral:', error);
+        this.logger.error('Error sending referral:', error);
         const errorMessage = error.error || error.statusText || 'Failed to send referral';
         return throwError(() => new Error(errorMessage));
       })
@@ -6421,7 +6440,7 @@ export class PatientHealthService {
     return this.http.put<any>(url, body, { headers: this.getHeaders() }).pipe(
       map((response) => this.mapReferralResponse(response)),
       catchError((error) => {
-        this.log.error('Error updating referral status:', error);
+        this.logger.error('Error updating referral status:', error);
         const errorMessage = error.error || error.statusText || 'Failed to update referral status';
         return throwError(() => new Error(errorMessage));
       })
@@ -6461,7 +6480,7 @@ export class PatientHealthService {
     return this.http.get<any[]>(url, { headers: this.getHeaders(), params }).pipe(
       map((referrals) => referrals.map((ref) => this.mapReferralResponse(ref))),
       catchError((error) => {
-        this.log.error('Error fetching referral history:', error);
+        this.logger.error('Error fetching referral history:', error);
         return of([]);
       })
     );
@@ -6488,7 +6507,7 @@ export class PatientHealthService {
         byCategory: metrics.byCategory || {},
       })),
       catchError((error) => {
-        this.log.error('Error fetching referral metrics:', error);
+        this.logger.error('Error fetching referral metrics:', error);
         return of({
           completionRate: 0,
           averageTimeToCompletion: 0,

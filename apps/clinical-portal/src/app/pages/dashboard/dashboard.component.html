@@ -73,7 +73,7 @@
   <!-- Error State -->
   <div class="error-state" *ngIf="error && !loading">
     <mat-icon color="warn">error</mat-icon>
-    <h3>{{ error }}</h3>
+    <h2>{{ error }}</h2>
     <app-loading-button
       text="Try Again"
       loadingText="Loading..."
@@ -615,7 +615,7 @@
                 </mat-icon>
               </div>
               <div class="activity-details">
-                <h4>{{ activity.patientName }}</h4>
+                <h3>{{ activity.patientName }}</h3>
                 <p class="patient-mrn" *ngIf="activity.patientMrn">
                   MRN: {{ activity.patientMrn }}
                   <span *ngIf="activity.patientMrnAuthority" class="mrn-authority">
@@ -678,7 +678,7 @@
     </div>
 
     <!-- Compliance Trends -->
-    <mat-card class="compliance-trends-card" *ngIf="complianceTrendChartData.length > 0">
+    <mat-card class="compliance-trends-card" *ngIf="(complianceTrendChartData.labels?.length || 0) > 0">
       <mat-card-header>
         <mat-card-title>Compliance Trends</mat-card-title>
         <mat-card-subtitle>
@@ -718,44 +718,30 @@
       </mat-card-header>
       <mat-card-content>
         <div class="chart-container">
-          <ngx-charts-line-chart
-            [view]="lineChartView"
-            [results]="complianceTrendChartData"
-            [xAxis]="lineChartShowXAxis"
-            [yAxis]="lineChartShowYAxis"
-            [legend]="lineChartShowLegend"
-            [showXAxisLabel]="lineChartShowXAxisLabel"
-            [showYAxisLabel]="lineChartShowYAxisLabel"
-            [xAxisLabel]="lineChartXAxisLabel"
-            [yAxisLabel]="lineChartYAxisLabel"
-            [scheme]="lineChartColorScheme"
-            [gradient]="lineChartGradient">
-          </ngx-charts-line-chart>
+          <canvas
+            baseChart
+            [data]="complianceTrendChartData"
+            [options]="lineChartOptions"
+            [type]="'line'">
+          </canvas>
         </div>
       </mat-card-content>
     </mat-card>
 
     <!-- Measure Performance Bar Chart -->
-    <mat-card class="measure-performance-chart-card" *ngIf="measurePerformanceChartData.length > 0">
+    <mat-card class="measure-performance-chart-card" *ngIf="(measurePerformanceChartData.labels?.length || 0) > 0">
       <mat-card-header>
         <mat-card-title>Top Performing Measures</mat-card-title>
         <mat-card-subtitle>Top 10 measures by compliance rate</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div class="chart-container">
-          <ngx-charts-bar-vertical
-            [view]="barChartView"
-            [results]="measurePerformanceChartData"
-            [xAxis]="barChartShowXAxis"
-            [yAxis]="barChartShowYAxis"
-            [legend]="barChartShowLegend"
-            [showXAxisLabel]="barChartShowXAxisLabel"
-            [showYAxisLabel]="barChartShowYAxisLabel"
-            [xAxisLabel]="barChartXAxisLabel"
-            [yAxisLabel]="barChartYAxisLabel"
-            [scheme]="barChartColorScheme"
-            [gradient]="barChartGradient">
-          </ngx-charts-bar-vertical>
+          <canvas
+            baseChart
+            [data]="measurePerformanceChartData"
+            [options]="barChartOptions"
+            [type]="'bar'">
+          </canvas>
         </div>
       </mat-card-content>
     </mat-card>

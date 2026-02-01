@@ -1,0 +1,244 @@
+.document-viewer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Header Card
+.viewer-header {
+  mat-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 500;
+
+    .file-icon {
+      color: var(--primary-color, #1976d2);
+    }
+  }
+
+  mat-card-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(0, 0, 0, 0.6);
+
+    .separator {
+      color: rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  mat-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1rem 0;
+    flex-wrap: wrap;
+  }
+
+  mat-chip-listbox {
+    margin: 0;
+  }
+}
+
+// OCR Text Viewer Card
+.ocr-text-viewer {
+  mat-card-header {
+    margin-bottom: 1rem;
+
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.25rem;
+    }
+  }
+
+  .search-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .ocr-text-content {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #e0e0e0;
+
+    ::ng-deep mark.highlight {
+      background-color: yellow;
+      color: black;
+      font-weight: bold;
+      padding: 0 2px;
+      border-radius: 2px;
+    }
+  }
+}
+
+// Status Cards (Processing, Failed, No OCR)
+.ocr-status-card,
+.ocr-failed-card,
+.no-ocr-card {
+  .status-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    text-align: center;
+    gap: 1rem;
+
+    mat-spinner {
+      margin-bottom: 1rem;
+    }
+
+    .error-icon,
+    .info-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 1rem;
+    }
+
+    .error-icon {
+      color: var(--warn-color, #f44336);
+    }
+
+    .info-icon {
+      color: var(--accent-color, #607d8b);
+    }
+
+    p {
+      margin: 0;
+    }
+
+    strong {
+      font-size: 1.1rem;
+    }
+
+    .status-hint {
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.9rem;
+      max-width: 500px;
+    }
+  }
+}
+
+// OCR Details Card
+.ocr-details-card {
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.1rem;
+    }
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+
+  .detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+
+    .detail-label {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .detail-value {
+      font-size: 1rem;
+      color: rgba(0, 0, 0, 0.87);
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .document-viewer {
+    padding: 0.5rem;
+  }
+
+  .viewer-header {
+    mat-card-title {
+      font-size: 1.25rem;
+    }
+
+    mat-card-actions {
+      flex-direction: column;
+      align-items: stretch;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .ocr-text-content {
+    font-size: 0.85rem;
+    max-height: 400px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Accessibility
+@media (prefers-reduced-motion: reduce) {
+  mat-spinner {
+    animation: none;
+  }
+}
+
+// Dark Mode Support
+@media (prefers-color-scheme: dark) {
+  .ocr-text-content {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    border-color: #424242;
+
+    ::ng-deep mark.highlight {
+      background-color: #ffd54f;
+      color: #000;
+    }
+  }
+
+  .viewer-header mat-card-subtitle {
+    color: rgba(255, 255, 255, 0.7);
+
+    .separator {
+      color: rgba(255, 255, 255, 0.3);
+    }
+  }
+
+  .status-content .status-hint {
+    color: rgba(255, 255, 255, 0.7);
+  }
+}

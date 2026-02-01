@@ -1,5 +1,6 @@
 package com.healthdata.ehr.service;
 
+import com.healthdata.ehr.audit.EhrConnectorAuditIntegration;
 import com.healthdata.ehr.connector.EhrConnector;
 import com.healthdata.ehr.model.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,12 +33,23 @@ class EhrSyncServiceTest {
 
     @Mock
     private EhrConnector mockConnector;
+    
+    @Mock
+    private EhrConnectorAuditIntegration auditIntegration;
 
     private EhrSyncService syncService;
 
     @BeforeEach
     void setUp() {
-        syncService = new EhrSyncService(connectionManager);
+        // Mock audit calls to do nothing
+        doNothing().when(auditIntegration).publishEhrDataSyncEvent(
+                anyString(), anyString(), anyString(), anyString(), any(), any(),
+                anyInt(), anyInt(), anyBoolean(), anyString(), anyLong(), anyString());
+        doNothing().when(auditIntegration).publishEhrPatientFetchEvent(
+                anyString(), anyString(), anyString(), anyString(), anyBoolean(),
+                anyString(), anyLong(), anyString());
+        
+        syncService = new EhrSyncService(connectionManager, auditIntegration);
     }
 
     @Test

@@ -86,7 +86,7 @@ export class EvaluationFactory {
    * Create batch evaluation response (array of CqlEvaluation)
    * Note: Backend returns List<CqlEvaluation> directly, not wrapped object
    */
-  static createBatchResponse(count: number = 3): BatchEvaluationResponse {
+  static createBatchResponse(count = 3): BatchEvaluationResponse {
     return Array.from({ length: count }, () => this.createCqlEvaluation());
   }
 

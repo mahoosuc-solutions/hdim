@@ -7,6 +7,9 @@
 
     <!-- PostgreSQL extensions must come FIRST -->
     <include file="db/changelog/0000-enable-extensions.xml"/>
+    <!-- NOTE: users table doesn't exist yet in patient_db, need to create it -->
+    <include file="db/changelog/0000-create-tenants-table.xml"/>
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
 
     <include file="db/changelog/0001-create-patient-demographics-table.xml"/>
     <include file="db/changelog/0002-create-patient-insurance-table.xml"/>
@@ -14,5 +17,19 @@
     <include file="db/changelog/0004-add-composite-indexes-and-jsonb.xml"/>
     <include file="db/changelog/0005-create-provider-panel-assignment.xml"/>
     <include file="db/changelog/0006-create-audit-events-table.xml"/>
+    
+    <!-- Include audit module migrations for additional audit tables -->
+    <include file="db/changelog/0007-create-qa-reviews-table.xml"/>
+    <include file="db/changelog/0008-create-ai-agent-decision-events-table.xml"/>
+    <include file="db/changelog/0009-add-qa-review-fields-to-ai-agent-decisions.xml"/>
+    <include file="db/changelog/0009-create-configuration-engine-events-table.xml"/>
+    <include file="db/changelog/0010-create-user-configuration-action-events-table.xml"/>
+    <include file="db/changelog/0011-create-data-quality-issues-table.xml"/>
+    <include file="db/changelog/0012-create-clinical-decisions-table.xml"/>
+    <include file="db/changelog/0013-create-mpi-merges-table.xml"/>
+    <!-- Add missing tenant_ids and roles columns for user management alignment -->
+    <include file="db/changelog/0014-add-missing-user-columns.xml"/>
+    <!-- Align users table with User entity (remove incorrect columns, add missing MFA/SMS columns) -->
+    <include file="db/changelog/0015-align-users-table-with-entity.xml"/>
 
 </databaseChangeLog>

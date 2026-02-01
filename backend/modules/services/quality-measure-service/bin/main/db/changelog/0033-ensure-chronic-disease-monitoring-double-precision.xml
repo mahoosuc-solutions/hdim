@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0033-ensure-chronic-disease-monitoring-double-precision" author="healthdata-team">
+        <comment>Ensure chronic_disease_monitoring numeric columns match Double mapping</comment>
+
+        <modifyDataType tableName="chronic_disease_monitoring"
+                        columnName="latest_value"
+                        newDataType="DOUBLE PRECISION"/>
+
+        <modifyDataType tableName="chronic_disease_monitoring"
+                        columnName="previous_value"
+                        newDataType="DOUBLE PRECISION"/>
+
+        <rollback>
+            <modifyDataType tableName="chronic_disease_monitoring"
+                            columnName="latest_value"
+                            newDataType="DECIMAL(10,2)"/>
+            <modifyDataType tableName="chronic_disease_monitoring"
+                            columnName="previous_value"
+                            newDataType="DECIMAL(10,2)"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

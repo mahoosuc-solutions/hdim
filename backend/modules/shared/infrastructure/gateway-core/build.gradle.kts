@@ -15,6 +15,9 @@ dependencies {
     // Redis for rate limiting and caching
     api("org.springframework.boot:spring-boot-starter-data-redis")
 
+    // Spring Session for distributed session management
+    api(libs.spring.session.data.redis)
+
     // Resilience4j for circuit breaker, retry, and rate limiting
     api("io.github.resilience4j:resilience4j-spring-boot3:2.1.0")
     api("io.github.resilience4j:resilience4j-circuitbreaker:2.1.0")

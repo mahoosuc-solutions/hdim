@@ -16,10 +16,27 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # Demo configuration
-GATEWAY_URL="http://localhost:9000"
-FHIR_URL="http://localhost:8083/fhir"
-CQL_URL="http://localhost:8081"
-QUALITY_URL="http://localhost:8087"
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
+CQL_URL="${CQL_URL:-http://localhost:8081}"
+QUALITY_URL="${QUALITY_URL:-http://localhost:8087}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.doctor}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
+AUTH_ROLES="${AUTH_ROLES:-EVALUATOR}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
+
+FHIR_AUTH_HEADER=()
+VALIDATED_TS=$(date +%s)
+FHIR_AUTH_HEADER=(
+    -H "X-Auth-User-Id: $AUTH_USER_ID"
+    -H "X-Auth-Username: $AUTH_USERNAME"
+    -H "X-Auth-Roles: $AUTH_ROLES"
+    -H "X-Auth-Tenant-Ids: $TENANT_ID"
+    -H "X-Auth-Validated: gateway-${VALIDATED_TS}-dev"
+    -H "X-Tenant-ID: $TENANT_ID"
+)
 
 clear
 echo -e "${BOLD}${BLUE}=========================================${NC}"
@@ -50,7 +67,7 @@ echo -e "${CYAN}Checking all system services...${NC}"
 echo ""
 
 services=("Gateway" "CQL Engine" "Quality Measure" "FHIR Server" "PostgreSQL")
-ports=(9000 8081 8087 8083 5432)
+ports=(18080 8081 8087 8085 5432)
 
 for i in "${!services[@]}"; do
     service="${services[$i]}"
@@ -84,15 +101,15 @@ echo -e "${BOLD}${MAGENTA}SECTION 2: Authentication & Security${NC}"
 echo -e "${BOLD}${MAGENTA}═══════════════════════════════════${NC}"
 echo ""
 
-echo -e "${CYAN}Demo User: demo.doctor${NC}"
+echo -e "${CYAN}Demo User: ${AUTH_USERNAME}${NC}"
 echo "  Role: EVALUATOR"
-echo "  Tenant: demo-clinic"
+echo "  Tenant: ${TENANT_ID}"
 echo ""
 
 echo -e "${BLUE}Authenticating...${NC}"
 TOKEN=$(curl -s -X POST "$GATEWAY_URL/api/v1/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"username":"demo.doctor","password":"demo123"}' | jq -r '.accessToken')
+    -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | jq -r '.accessToken')
 
 if [ "$TOKEN" != "null" ] && [ -n "$TOKEN" ]; then
     echo -e "${GREEN}✓ Authentication successful${NC}"
@@ -123,15 +140,15 @@ echo ""
 
 echo -e "${CYAN}FHIR R4 Server Status:${NC}"
 echo "  URL: $FHIR_URL"
-version=$(curl -s "$FHIR_URL/metadata" | jq -r '.fhirVersion')
+version=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/metadata" | jq -r '.fhirVersion')
 echo "  Version: FHIR $version"
 echo ""
 
 echo -e "${BLUE}Current Data Inventory:${NC}"
-patient_count=$(curl -s "$FHIR_URL/Patient?_summary=count" | jq -r '.total')
-condition_count=$(curl -s "$FHIR_URL/Condition?_summary=count" | jq -r '.total')
-obs_count=$(curl -s "$FHIR_URL/Observation?_summary=count" | jq -r '.total')
-med_count=$(curl -s "$FHIR_URL/MedicationRequest?_summary=count" | jq -r '.total')
+patient_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Patient?_summary=count" | jq -r '.total')
+condition_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Condition?_summary=count" | jq -r '.total')
+obs_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Observation?_summary=count" | jq -r '.total')
+med_count=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/MedicationRequest?_summary=count" | jq -r '.total')
 
 echo "  Patients:          $patient_count"
 echo "  Conditions:        $condition_count"
@@ -157,8 +174,13 @@ echo -e "${BOLD}${MAGENTA}SECTION 4: Patient Clinical Data${NC}"
 echo -e "${BOLD}${MAGENTA}════════════════════════════════${NC}"
 echo ""
 
-echo -e "${CYAN}Demo Patient: John Doe (Patient ID: 1)${NC}"
-patient_data=$(curl -s "$FHIR_URL/Patient/1")
+patient_id=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Patient?_count=1" | jq -r '.entry[0].resource.id // empty')
+if [ -z "$patient_id" ]; then
+    echo -e "${RED}✗ No patients available in FHIR server${NC}"
+    exit 1
+fi
+echo -e "${CYAN}Demo Patient: John Doe (Patient ID: ${patient_id})${NC}"
+patient_data=$(curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Patient/${patient_id}")
 name=$(echo "$patient_data" | jq -r '.name[0].given[0] + " " + .name[0].family')
 dob=$(echo "$patient_data" | jq -r '.birthDate')
 gender=$(echo "$patient_data" | jq -r '.gender')
@@ -169,15 +191,15 @@ echo "  Gender: $gender"
 echo ""
 
 echo -e "${BLUE}Active Conditions (SNOMED-CT coded):${NC}"
-curl -s "$FHIR_URL/Condition?patient=1" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + " (Code: " + .code.coding[0].code + ")"' | head -3
+curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Condition?patient=${patient_id}" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + " (Code: " + .code.coding[0].code + ")"' | head -3
 
 echo ""
 echo -e "${BLUE}Recent Laboratory Results (LOINC coded):${NC}"
-curl -s "$FHIR_URL/Observation?patient=1&code=4548-4&_count=2" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + ": " + (.valueQuantity.value | tostring) + .valueQuantity.unit + " (" + .effectiveDateTime[:10] + ")"' | head -2
+curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/Observation?patient=${patient_id}&code=4548-4&_count=2" | jq -r '.entry[]?.resource | "  • " + .code.coding[0].display + ": " + (.valueQuantity.value | tostring) + .valueQuantity.unit + " (" + .effectiveDateTime[:10] + ")"' | head -2
 
 echo ""
 echo -e "${BLUE}Active Medications (RxNorm coded):${NC}"
-curl -s "$FHIR_URL/MedicationRequest?patient=1&status=active&_count=3" | jq -r '.entry[]?.resource | "  • " + .medicationCodeableConcept.coding[0].display' | head -3
+curl -s "${FHIR_AUTH_HEADER[@]}" "$FHIR_URL/MedicationRequest?patient=${patient_id}&status=active&_count=3" | jq -r '.entry[]?.resource | "  • " + .medicationCodeableConcept.coding[0].display' | head -3
 
 echo ""
 echo -e "${CYAN}Clinical Insight:${NC}"
@@ -206,7 +228,7 @@ echo ""
 
 echo -e "${BLUE}Checking Quality Measure Results (via database):${NC}"
 echo ""
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c "
 SELECT 
     measure_id,
     measure_name,
@@ -214,7 +236,7 @@ SELECT
     total_patients,
     ROUND((numerator_compliant::numeric / NULLIF(total_patients, 0) * 100), 1) as compliance_rate
 FROM quality_measure_results 
-WHERE tenant_id = 'demo-clinic' 
+WHERE tenant_id = '${TENANT_ID}' 
 LIMIT 4;" 2>/dev/null | grep -A 6 "measure_id" || echo "  Note: Quality measures populated from demo data"
 
 echo ""
@@ -248,7 +270,7 @@ echo ""
 
 echo -e "${BLUE}Current Care Gaps (from database):${NC}"
 echo ""
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c "
 SELECT 
     patient_id,
     gap_type,
@@ -256,7 +278,7 @@ SELECT
     LEFT(description, 60) as description,
     status
 FROM care_gaps 
-WHERE tenant_id = 'demo-clinic' 
+WHERE tenant_id = '${TENANT_ID}' 
 ORDER BY priority DESC
 LIMIT 5;" 2>/dev/null | grep -A 7 "patient_id" || echo "  Care gaps available in system"
 
@@ -293,7 +315,7 @@ echo "  • Quality measures in healthdata_cql database"
 echo ""
 
 echo -e "${BLUE}Key Tables:${NC}"
-docker exec healthdata-postgres psql -U healthdata -d healthdata_cql -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_cql -c "
 SELECT 
     schemaname,
     tablename,
@@ -324,7 +346,7 @@ echo ""
 
 echo -e "${CYAN}Available User Roles:${NC}"
 echo ""
-docker exec healthdata-postgres psql -U healthdata -d healthdata_users -c "
+docker exec "$POSTGRES_CONTAINER" psql -U healthdata -d healthdata_users -c "
 SELECT 
     username,
     role,
@@ -445,8 +467,8 @@ echo -e "${BOLD}${GREEN}   Demo Complete - Questions?${NC}"
 echo -e "${BOLD}${GREEN}=========================================${NC}"
 echo ""
 echo "Useful URLs for exploration:"
-echo "  • Gateway:         http://localhost:9000"
-echo "  • FHIR Server:     http://localhost:8083/fhir"
+echo "  • Gateway:         ${GATEWAY_URL}"
+echo "  • FHIR Server:     ${FHIR_URL}"
 echo "  • Clinical Portal: http://localhost:4200"
 echo ""
 echo "Demo users (all password: demo123):"

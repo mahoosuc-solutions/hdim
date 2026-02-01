@@ -219,7 +219,7 @@ class FhirServiceIntegrationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:15-alpine");
+        new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Autowired
     private FhirResourceRepository repository;
@@ -591,7 +591,7 @@ void createPatient_withInvalidData_shouldThrowValidationException() {
 class PatientControllerIT {
     @Container
     static PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:15-alpine");
+        new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Test
     void createPatient_shouldPersistToDatabase() {
@@ -1040,7 +1040,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_PASSWORD: test_password
         ports:
@@ -1671,7 +1671,7 @@ test.describe('Platform Dashboard', () => {
 class PatientDataFlowIT {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
@@ -2158,7 +2158,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15-alpine
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: healthdata_test
           POSTGRES_USER: test
@@ -2688,6 +2688,8 @@ Each user story is considered "Done" when:
 ### 9.2 Acceptance Criteria Checklist
 
 #### 9.2.1 Backend Service Acceptance
+
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 **FHIR Service**:
 - [ ] All 150+ FHIR resource types supported

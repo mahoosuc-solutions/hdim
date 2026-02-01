@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { NavigationComponent, NavigationItem } from './navigation.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('NavigationComponent (TDD)', () => {
   let component: NavigationComponent;
@@ -21,9 +23,9 @@ describe('NavigationComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [NavigationComponent, NoopAnimationsModule],
-      providers: [
-        { provide: Router, useValue: mockRouter },
-      ],
+      providers: [{ provide: Router, useValue: mockRouter },
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: Router, useValue: createMockRouter() }],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 

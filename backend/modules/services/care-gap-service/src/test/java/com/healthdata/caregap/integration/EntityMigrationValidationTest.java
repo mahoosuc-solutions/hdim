@@ -2,6 +2,7 @@ package com.healthdata.caregap.integration;
 
 import com.healthdata.testfixtures.validation.EntityMigrationValidator;
 import com.healthdata.testfixtures.validation.ValidationReport;
+import com.healthdata.caregap.config.TestKafkaInitializer;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.metamodel.EntityType;
 import org.junit.jupiter.api.Tag;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -39,7 +41,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
+@ContextConfiguration(initializers = TestKafkaInitializer.class)
 @Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest {
 
     @Container

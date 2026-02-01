@@ -418,7 +418,7 @@ export class ReportTemplatesService {
   /**
    * Get recently used templates
    */
-  getRecentTemplates(limit: number = 5): ReportTemplate[] {
+  getRecentTemplates(limit = 5): ReportTemplate[] {
     return [...this.getTemplates()]
       .filter(t => t.lastUsed)
       .sort((a, b) => {
@@ -432,7 +432,7 @@ export class ReportTemplatesService {
   /**
    * Get most used templates
    */
-  getMostUsedTemplates(limit: number = 5): ReportTemplate[] {
+  getMostUsedTemplates(limit = 5): ReportTemplate[] {
     return [...this.getTemplates()]
       .filter(t => t.usageCount > 0)
       .sort((a, b) => b.usageCount - a.usageCount)

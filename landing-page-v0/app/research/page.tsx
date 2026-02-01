@@ -1,16 +1,10 @@
 'use client'
-
-import { useState } from 'react'
 import PortalNav from '../../components/PortalNav'
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Users,
   Heart,
-  Activity,
-  Award,
-  FileText,
   ExternalLink,
   Calculator
 } from 'lucide-react'
@@ -19,112 +13,57 @@ const hedisOutcomes = [
   {
     measure: 'CDC - HbA1c Control',
     category: 'Diabetes Care',
-    before: 52,
-    after: 75,
-    improvement: '+23%',
-    patients: 18000,
-    description: 'Diabetic patients with HbA1c < 8%'
+    description: 'A1c control and monitoring for members with diabetes'
   },
   {
     measure: 'CBP - Blood Pressure',
     category: 'Cardiovascular',
-    before: 58,
-    after: 79,
-    improvement: '+21%',
-    patients: 38000,
-    description: 'Patients with controlled blood pressure'
+    description: 'Blood pressure control and measurement adherence'
   },
   {
     measure: 'BCS - Breast Cancer Screening',
     category: 'Preventive Care',
-    before: 64,
-    after: 84,
-    improvement: '+20%',
-    patients: 25000,
-    description: 'Women 50-74 with mammography'
+    description: 'Screening completion and outreach readiness'
   },
   {
     measure: 'COL - Colorectal Screening',
     category: 'Preventive Care',
-    before: 52,
-    after: 78,
-    improvement: '+26%',
-    patients: 32000,
-    description: 'Adults 45-75 with colorectal screening'
+    description: 'Screening compliance and gap closure workflows'
   },
   {
     measure: 'TRC - Transitions of Care',
     category: 'Care Coordination',
-    before: 45,
-    after: 78,
-    improvement: '+33%',
-    patients: 8000,
-    description: 'Discharge follow-up within 30 days'
+    description: 'Post-discharge follow-up and care coordination'
   },
   {
     measure: 'FUM - Follow-Up Mental Health',
     category: 'Behavioral Health',
-    before: 38,
-    after: 72,
-    improvement: '+34%',
-    patients: 12000,
-    description: 'Mental health follow-up within 7 days'
+    description: 'Timely follow-up and behavioral health engagement'
   }
 ]
 
 const caseStudies = [
   {
-    title: 'Regional Health Plan Achieves 4.5 Stars',
-    type: 'Medicare Advantage',
-    summary: 'Improved from 3.5 to 4.5 Stars in 18 months using HDIM care gap detection',
-    results: [
-      { metric: 'Stars Rating', value: '3.5 → 4.5' },
-      { metric: 'Quality Bonus', value: '+$12.4M' },
-      { metric: 'Member Retention', value: '+8%' }
-    ]
+    title: 'Medicare Advantage Plan',
+    type: 'Health Plan',
+    summary: 'Built a standardized gap-closure workflow tied to HEDIS, Stars, and member outreach operations.',
+    focus: ['Measure workflow standardization', 'Member outreach orchestration', 'Audit-ready reporting']
   },
   {
-    title: 'Academic Medical Center Reduces Readmissions',
+    title: 'Academic Medical Center',
     type: 'Hospital',
-    summary: 'Cut 30-day readmissions by 39% with predictive risk stratification',
-    results: [
-      { metric: 'Readmission Rate', value: '18% → 11%' },
-      { metric: 'Annual Savings', value: '$8.6M' },
-      { metric: 'CMS Penalty Avoided', value: '$2.1M' }
-    ]
+    summary: 'Integrated inpatient, outpatient, and post-acute data to coordinate transitions of care.',
+    focus: ['Transitions of care gaps', 'Risk stratification signals', 'Care manager prioritization']
   },
   {
-    title: 'Multi-Specialty Group Maximizes MIPS',
+    title: 'Multi-Specialty Group',
     type: 'Provider Practice',
-    summary: 'Achieved 92/100 MIPS score through automated quality tracking',
-    results: [
-      { metric: 'MIPS Score', value: '68 → 92' },
-      { metric: 'AWV Revenue', value: '+$1.2M' },
-      { metric: 'P4P Bonuses', value: '+$340K' }
-    ]
+    summary: 'Unified measure tracking for MIPS, quality contracts, and internal performance targets.',
+    focus: ['Measure inventory governance', 'Provider-level dashboards', 'Quality reporting readiness']
   }
 ]
 
 export default function ResearchPage() {
-  const [patientCount, setPatientCount] = useState(100000)
-  const [customerType, setCustomerType] = useState('health-plan')
-
-  // ROI Calculator logic
-  const calculateROI = () => {
-    const baseMultipliers: Record<string, { savings: number; revenue: number }> = {
-      'health-plan': { savings: 85, revenue: 120 },
-      'hospital': { savings: 95, revenue: 45 },
-      'provider': { savings: 18, revenue: 28 }
-    }
-    const multiplier = baseMultipliers[customerType]
-    const annualSavings = (patientCount / 1000) * multiplier.savings
-    const revenueIncrease = (patientCount / 1000) * multiplier.revenue
-    const totalValue = annualSavings + revenueIncrease
-    return { annualSavings, revenueIncrease, totalValue }
-  }
-
-  const roi = calculateROI()
-
   return (
     <div className="min-h-screen bg-gray-50">
       <PortalNav />
@@ -134,43 +73,43 @@ export default function ResearchPage() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Research & Outcomes
+              Outcomes & Evidence
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Validated results from HDIM implementations across hospitals, providers, and health plans.
-              Real improvements in quality measures and financial outcomes.
+              HDIM provides transparent measure logic, audit-ready reporting, and a clear methodology for outcomes tracking.
+              Client-validated results are available on request.
             </p>
           </div>
 
-          {/* Key Stats */}
+          {/* Outcome Areas */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white">
               <TrendingUp className="w-8 h-8 mb-2 opacity-80" />
-              <div className="text-3xl font-bold">+28%</div>
-              <div className="text-sm opacity-80">Avg Quality Improvement</div>
+              <div className="text-lg font-semibold">Quality Performance</div>
+              <div className="text-sm opacity-80">HEDIS and program readiness</div>
             </div>
             <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white">
               <DollarSign className="w-8 h-8 mb-2 opacity-80" />
-              <div className="text-3xl font-bold">$25.5M</div>
-              <div className="text-sm opacity-80">Annual Value Created</div>
+              <div className="text-lg font-semibold">Financial Impact</div>
+              <div className="text-sm opacity-80">Incentives, penalties, and ROI</div>
             </div>
             <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white">
               <Users className="w-8 h-8 mb-2 opacity-80" />
-              <div className="text-3xl font-bold">300K</div>
-              <div className="text-sm opacity-80">Patients Impacted</div>
+              <div className="text-lg font-semibold">Member Engagement</div>
+              <div className="text-sm opacity-80">Outreach and care management</div>
             </div>
             <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white">
               <Heart className="w-8 h-8 mb-2 opacity-80" />
-              <div className="text-3xl font-bold">96K</div>
-              <div className="text-sm opacity-80">Care Gaps Closed</div>
+              <div className="text-lg font-semibold">Clinical Outcomes</div>
+              <div className="text-sm opacity-80">Preventive and chronic care</div>
             </div>
           </div>
 
           {/* HEDIS Outcomes Table */}
           <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-12">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">HEDIS Measure Improvements</h2>
-              <p className="text-sm text-gray-600">Before/after comparison from demo scenarios</p>
+              <h2 className="text-xl font-bold text-gray-900">HEDIS Measure Coverage</h2>
+              <p className="text-sm text-gray-600">Representative measures with standardized gap definitions</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -178,10 +117,7 @@ export default function ResearchPage() {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Measure</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Before</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">After</th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Change</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Patients</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">What We Track</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -196,20 +132,8 @@ export default function ResearchPage() {
                           {outcome.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-gray-500">{outcome.before}%</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="font-semibold text-gray-900">{outcome.after}%</span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center text-green-600 font-semibold">
-                          <TrendingUp className="w-4 h-4 mr-1" />
-                          {outcome.improvement}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right text-gray-600">
-                        {outcome.patients.toLocaleString()}
+                      <td className="px-6 py-4 text-left text-gray-600">
+                        Standardized gap definition, denominator logic, and outreach readiness
                       </td>
                     </tr>
                   ))}
@@ -218,75 +142,38 @@ export default function ResearchPage() {
             </div>
           </div>
 
-          {/* ROI Calculator */}
-          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-8 mb-12 text-white">
+          {/* ROI Framework */}
+          <div id="calculator" className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-8 mb-12 text-white">
             <div className="flex items-center mb-6">
               <Calculator className="w-8 h-8 mr-3" />
-              <h2 className="text-2xl font-bold">ROI Calculator</h2>
+              <h2 className="text-2xl font-bold">ROI &amp; Business Case</h2>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 opacity-80">
-                    Patient/Member Count
-                  </label>
-                  <input
-                    type="range"
-                    min="10000"
-                    max="500000"
-                    step="10000"
-                    value={patientCount}
-                    onChange={(e) => setPatientCount(parseInt(e.target.value))}
-                    className="w-full h-2 bg-blue-400 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="text-2xl font-bold mt-2">{patientCount.toLocaleString()}</div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 opacity-80">
-                    Customer Type
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: 'health-plan', label: 'Health Plan' },
-                      { id: 'hospital', label: 'Hospital' },
-                      { id: 'provider', label: 'Provider' }
-                    ].map((type) => (
-                      <button
-                        key={type.id}
-                        onClick={() => setCustomerType(type.id)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          customerType === type.id
-                            ? 'bg-white text-blue-600'
-                            : 'bg-blue-500/50 text-white hover:bg-blue-500/70'
-                        }`}
-                      >
-                        {type.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div>
+                <p className="text-white/90 mb-6">
+                  We build a custom ROI model using your baseline performance, measure mix, and member population.
+                  The model highlights the largest value levers and the operational changes required to realize them.
+                </p>
+                <ul className="space-y-3 text-sm text-white/90">
+                  <li>• Reduced manual measure calculation and reconciliation</li>
+                  <li>• Earlier gap detection for preventive and chronic care</li>
+                  <li>• Quality incentive protection and audit readiness</li>
+                  <li>• Care management prioritization with measurable impact</li>
+                </ul>
               </div>
 
               <div className="bg-white/10 rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Estimated Annual Value</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-80">Cost Savings</span>
-                    <span className="text-xl font-bold">${roi.annualSavings.toFixed(0)}K</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="opacity-80">Revenue Increase</span>
-                    <span className="text-xl font-bold">${roi.revenueIncrease.toFixed(0)}K</span>
-                  </div>
-                  <div className="border-t border-white/20 pt-3 flex justify-between items-center">
-                    <span className="font-semibold">Total Annual Value</span>
-                    <span className="text-3xl font-bold text-green-300">
-                      ${(roi.totalValue / 1000).toFixed(1)}M
-                    </span>
-                  </div>
-                </div>
+                <h3 className="text-lg font-semibold mb-4">Get a Customized Model</h3>
+                <p className="text-sm text-white/80 mb-6">
+                  Share your program goals and we&apos;ll deliver a tailored ROI and implementation plan.
+                </p>
+                <a
+                  href="/schedule"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors"
+                >
+                  Request ROI Analysis
+                </a>
               </div>
             </div>
           </div>
@@ -296,9 +183,8 @@ export default function ResearchPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Customer Success Stories</h2>
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-amber-800">
-                <strong>Note:</strong> These case studies are illustrative scenarios based on industry benchmarks
-                and typical outcomes observed in population health implementations. Actual results vary based on
-                patient population, baseline performance, and organizational factors.
+                <strong>Note:</strong> Client-validated outcome briefs are available on request and tailored to your
+                measure mix, baseline performance, and care management model.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
@@ -310,10 +196,9 @@ export default function ResearchPage() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">{study.title}</h3>
                   <p className="text-sm text-gray-600 mb-4">{study.summary}</p>
                   <div className="space-y-2">
-                    {study.results.map((result, j) => (
-                      <div key={j} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-500">{result.metric}</span>
-                        <span className="font-semibold text-green-600">{result.value}</span>
+                    {study.focus.map((item, j) => (
+                      <div key={j} className="text-sm text-gray-600">
+                        • {item}
                       </div>
                     ))}
                   </div>
@@ -386,11 +271,11 @@ export default function ResearchPage() {
                 <ul className="text-sm text-gray-700 space-y-2">
                   <li className="flex items-start">
                     <span className="text-blue-500 mr-2">1.</span>
-                    <span><strong>FHIR R4 Data Ingestion:</strong> Patient data loaded as native FHIR resources (no v2→FHIR translation)</span>
+                    <span><strong>FHIR R4 Data Ingestion:</strong> Patient data loaded as native FHIR resources.</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-blue-500 mr-2">2.</span>
-                    <span><strong>CQL-Native Execution:</strong> NCQA HEDIS CQL definitions executed directly via cql-engine library</span>
+                    <span><strong>CQL-Native Execution:</strong> HEDIS CQL definitions executed using open-source CQL tooling.</span>
                   </li>
                   <li className="flex items-start">
                     <span className="text-blue-500 mr-2">3.</span>
@@ -403,41 +288,36 @@ export default function ResearchPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 mb-3">Performance Benchmarks</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Performance Targets</h3>
                 <div className="bg-white rounded-lg p-4">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
                         <th className="text-left py-2 text-gray-500">Metric</th>
                         <th className="text-right py-2 text-gray-500">Target</th>
-                        <th className="text-right py-2 text-gray-500">Actual</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
                       <tr>
                         <td className="py-2">FHIR Query Latency (p95)</td>
                         <td className="text-right">&lt;200ms</td>
-                        <td className="text-right font-medium text-green-600">180ms</td>
                       </tr>
                       <tr>
                         <td className="py-2">CQL Execution (avg)</td>
                         <td className="text-right">&lt;600ms</td>
-                        <td className="text-right font-medium text-green-600">500ms</td>
                       </tr>
                       <tr>
                         <td className="py-2">Throughput</td>
                         <td className="text-right">150/sec</td>
-                        <td className="text-right font-medium text-green-600">220/sec</td>
                       </tr>
                       <tr>
                         <td className="py-2">Cache Hit Rate</td>
                         <td className="text-right">&gt;80%</td>
-                        <td className="text-right font-medium text-green-600">87%</td>
                       </tr>
                     </tbody>
                   </table>
                   <p className="text-xs text-gray-500 mt-3">
-                    Benchmarks from December 2024 load testing: 10K patients, 56 HEDIS measures, 1K concurrent users
+                    Targets vary by deployment size, data sources, and measure mix.
                   </p>
                 </div>
               </div>

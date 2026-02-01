@@ -200,7 +200,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
 
         CqlEvaluation older = evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
         try {
-            Thread.sleep(100); // Ensure different timestamps
+            Thread.sleep(10); // Ensure different timestamps
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -264,7 +264,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
 
         Instant now = Instant.now();
         evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
-        Thread.sleep(100);
+        Thread.sleep(10);
         evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
 
         Instant start = now.minus(1, ChronoUnit.HOURS);

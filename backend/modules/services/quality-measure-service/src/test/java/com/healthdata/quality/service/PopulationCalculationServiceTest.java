@@ -71,7 +71,7 @@ class PopulationCalculationServiceTest {
             null
         );
         String jobId = (String) response.get("jobId");
-        Thread.sleep(500); // Wait for async execution
+        Thread.sleep(50); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job).isNotNull();
@@ -130,7 +130,7 @@ class PopulationCalculationServiceTest {
             null
         );
         String jobId = (String) response.get("jobId");
-        Thread.sleep(500); // Wait for async execution
+        Thread.sleep(50); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job).isNotNull();
@@ -179,7 +179,7 @@ class PopulationCalculationServiceTest {
             null
         );
         String jobId = (String) response.get("jobId");
-        Thread.sleep(200); // Wait for async execution
+        Thread.sleep(20); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.FAILED);
@@ -224,7 +224,7 @@ class PopulationCalculationServiceTest {
             null
         );
         String jobId = (String) response.get("jobId");
-        Thread.sleep(200); // Wait for async execution
+        Thread.sleep(20); // Wait for async execution
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.COMPLETED);
@@ -289,7 +289,7 @@ class PopulationCalculationServiceTest {
             null
         );
         String jobId = (String) response.get("jobId");
-        Thread.sleep(500); // Wait for async execution (increased for 2 patients)
+        Thread.sleep(50); // Wait for async execution (increased for 2 patients)
 
         PopulationCalculationService.BatchCalculationJob job = service.getJobStatus(jobId);
         assertThat(job.getStatus()).isEqualTo(PopulationCalculationService.JobStatus.COMPLETED);

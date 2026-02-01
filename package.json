@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "nx": "NX_ISOLATE_PLUGINS=false NX_SOCKET_DIR=.nx/socket NX_DAEMON_SOCKET_DIR=.nx/socket NX_DAEMON=false nx",
+    "build:clinical-portal": "NX_ISOLATE_PLUGINS=false NX_SOCKET_DIR=.nx/socket NX_DAEMON_SOCKET_DIR=.nx/socket NX_DAEMON=false npx nx build clinical-portal --configuration=production",
     "e2e:clinical-portal": "nx e2e clinical-portal-e2e",
     "e2e:clinical-portal:cli": "node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts",
     "e2e:clinical-portal:demo": "DEMO_SAFE=1 node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts",

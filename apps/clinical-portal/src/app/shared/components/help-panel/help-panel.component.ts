@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -495,7 +495,7 @@ export interface HelpSection {
     }
   `]
 })
-export class HelpPanelComponent {
+export class HelpPanelComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Input() title = 'Help & Support';
   @Input() sections: HelpSection[] = [];

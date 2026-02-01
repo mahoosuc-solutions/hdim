@@ -1,6 +1,7 @@
 import { Subject } from 'rxjs';
 import { NavigationEnd, ActivatedRoute, Params, Router } from '@angular/router';
 import { BreadcrumbService } from './breadcrumb.service';
+import { createMockRouter } from '../../testing/mocks';
 
 function createRoute(
   path: string,
@@ -44,7 +45,7 @@ describe('BreadcrumbService', () => {
   it('builds breadcrumbs on navigation end', (done) => {
     service.breadcrumbs$.subscribe((crumbs) => {
       if (crumbs.length > 0) {
-        expect(crumbs[0]).toEqual({ label: 'Patients', url: '/patients', icon: undefined, queryParams: undefined });
+        expect(crumbs[0]).toEqual({ label: 'Patients', url: '/patients', icon: undefined, queryParams: undefined };
         done();
       }
     });

@@ -1,4 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
+import { LoggerService } from './logger.service';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, timer, Subscription } from 'rxjs';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
@@ -45,12 +46,12 @@ export class ScheduledEvaluationService implements OnDestroy {
   private checkSubscription?: Subscription;
 
   constructor(
+    private logger: LoggerService,
     private http: HttpClient,
     private authService: AuthService,
     private evaluationService: EvaluationService,
     private auditService: AuditService
-  ) {
-    this.loadSchedules();
+  ) {    this.loadSchedules();
     this.loadExecutionHistory();
     this.startScheduleChecker();
   }
@@ -75,7 +76,7 @@ export class ScheduledEvaluationService implements OnDestroy {
         this.schedulesSubject.next(updated);
       }
     } catch (error) {
-      console.error('Failed to load scheduled evaluations:', error);
+      this.logger.error('Failed to load scheduled evaluations:', { error });
       this.schedulesSubject.next([]);
     }
   }
@@ -87,7 +88,7 @@ export class ScheduledEvaluationService implements OnDestroy {
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.schedulesSubject.value));
     } catch (error) {
-      console.error('Failed to save scheduled evaluations:', error);
+      this.logger.error('Failed to save scheduled evaluations:', { error });
     }
   }
 
@@ -103,7 +104,7 @@ export class ScheduledEvaluationService implements OnDestroy {
         this.executionsSubject.next(executions.slice(-100));
       }
     } catch (error) {
-      console.error('Failed to load execution history:', error);
+      this.logger.error('Failed to load execution history:', { error });
       this.executionsSubject.next([]);
     }
   }
@@ -117,7 +118,7 @@ export class ScheduledEvaluationService implements OnDestroy {
       const executions = this.executionsSubject.value.slice(-100);
       localStorage.setItem(this.HISTORY_KEY, JSON.stringify(executions));
     } catch (error) {
-      console.error('Failed to save execution history:', error);
+      this.logger.error('Failed to save execution history:', { error });
     }
   }
 
@@ -147,7 +148,7 @@ export class ScheduledEvaluationService implements OnDestroy {
 
       // Execute if within 1 minute window
       if (timeDiff <= 0 && timeDiff > -60000) {
-        console.log(`[ScheduledEvaluationService] Executing schedule: ${schedule.name}`);
+        this.logger.info(`[ScheduledEvaluationService] Executing schedule: ${schedule.name}`);
         this.executeSchedule(schedule);
       }
     });
@@ -338,7 +339,7 @@ export class ScheduledEvaluationService implements OnDestroy {
   /**
    * Get recent executions (all schedules)
    */
-  getRecentExecutions(limit: number = 10): Observable<ScheduleExecution[]> {
+  getRecentExecutions(limit = 10): Observable<ScheduleExecution[]> {
     return this.executions$.pipe(
       map((executions) =>
         executions
@@ -484,9 +485,10 @@ export class ScheduledEvaluationService implements OnDestroy {
     const MAX_CONSECUTIVE_FAILURES = 3;
 
     if (schedule.consecutiveFailures >= MAX_CONSECUTIVE_FAILURES - 1) {
-      console.warn(
-        `[ScheduledEvaluationService] Pausing schedule "${schedule.name}" after ${MAX_CONSECUTIVE_FAILURES} consecutive failures`
-      );
+      this.logger.warn('Pausing schedule after consecutive failures', {
+        scheduleName: schedule.name,
+        maxFailures: MAX_CONSECUTIVE_FAILURES
+      });
       this.updateSchedule(schedule.id, {
         status: 'paused',
       }).subscribe();

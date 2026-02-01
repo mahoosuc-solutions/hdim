@@ -277,6 +277,7 @@ export class AdminLayoutComponent {
     { label: 'Users', icon: '👥', route: '/users' },
     { label: 'Tenants', icon: '🏢', route: '/tenants' },
     { label: 'System Health', icon: '💚', route: '/system-health' },
+    { label: 'Config Versions', icon: '🧭', route: '/config-versions' },
     { label: 'Audit Logs', icon: '📋', route: '/audit-logs' },
   ];
 

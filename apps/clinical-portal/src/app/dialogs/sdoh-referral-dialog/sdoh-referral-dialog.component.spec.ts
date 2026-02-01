@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 import { SDOHReferralDialogComponent } from './sdoh-referral-dialog.component';
 import { SDOHReferralService } from '../../services/sdoh-referral.service';
 import { ToastService } from '../../services/toast.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 import {
   SDOHReferralDialogData,
   StaffMember,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ApprovalStats, RiskLevel, ApprovalStatus } from '../types/approval';
+import { ApprovalStats } from '../types/approval';
 import { approvalService } from '../services/approval.service';
 
 interface ApprovalAnalyticsProps {

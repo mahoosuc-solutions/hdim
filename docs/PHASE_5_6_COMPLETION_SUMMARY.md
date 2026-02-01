@@ -325,6 +325,7 @@ docker logs hdim-demo-fhir | grep -i "signature"
 - [ ] Document any issues found
 - [ ] Compare with expected log patterns
 - [ ] Verify no performance degradation
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ### Phase 4: Patient Health Service Refactoring
 
@@ -480,6 +481,7 @@ Each commit is self-contained and can be reviewed independently.
 - ✅ Future work identified
 - ✅ Known limitations documented
 - ✅ Success criteria defined
+- ✅ License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

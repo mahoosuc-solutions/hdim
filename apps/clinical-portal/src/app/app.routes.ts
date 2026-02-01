@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
+import { DevGuard } from './guards/dev.guard';
 
 /**
  * Application Routes Configuration
@@ -21,11 +22,50 @@ export const appRoutes: Route[] = [
       import('./pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'register',
+    loadComponent: () =>
+      import('./pages/tenant-registration/tenant-registration.component').then(
+        (m) => m.TenantRegistrationComponent
+      ),
+  },
+  {
     path: 'unauthorized',
     loadComponent: () =>
       import('./pages/unauthorized/unauthorized.component').then(
         (m) => m.UnauthorizedComponent
       ),
+  },
+  {
+    path: 'compliance',
+    loadComponent: () =>
+      import('./pages/compliance/compliance-dashboard.component').then(
+        (m) => m.ComplianceDashboardComponent
+      ),
+    // Public route - accessible without authentication for testing
+  },
+  {
+    path: 'testing',
+    loadComponent: () =>
+      import('./pages/testing-dashboard/testing-dashboard.component').then(
+        (m) => m.TestingDashboardComponent
+      ),
+    // Public route - accessible without authentication for testing
+  },
+  {
+    path: 'demo-startup',
+    loadComponent: () =>
+      import('@clinical-portal/feature-dashboard').then(
+        (m) => m.DemoStartupMonitorComponent
+      ),
+    // Public route - demo startup monitoring
+  },
+  {
+    path: 'event-processing',
+    loadComponent: () =>
+      import('./components/event-processing-explainer/event-processing-explainer.component').then(
+        (m) => m.EventProcessingExplainerComponent
+      ),
+    // Public route - educational content about event-driven architecture
   },
 
   // ==================== Protected Routes ====================
@@ -65,6 +105,15 @@ export const appRoutes: Route[] = [
     loadComponent: () =>
       import('./pages/quality-measures/quality-measures.component').then(
         (m) => m.QualityMeasuresComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
+  },
+  {
+    path: 'quality-measures/:id',
+    loadComponent: () =>
+      import('./pages/quality-measure-detail/quality-measure-detail.component').then(
+        (m) => m.QualityMeasureDetailComponent
       ),
     canActivate: [AuthGuard],
     data: { permissions: ['VIEW_EVALUATIONS'] },
@@ -290,6 +339,33 @@ export const appRoutes: Route[] = [
       ),
     canActivate: [AuthGuard],
     data: { permissions: ['VIEW_PATIENTS'] },
+  },
+  {
+    path: 'qa-audit-dashboard',
+    loadComponent: () =>
+      import('./pages/qa-audit-dashboard/qa-audit-dashboard.component').then(
+        (m) => m.QaAuditDashboardComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'QA_ANALYST', 'QUALITY_OFFICER', 'AUDITOR'] },
+  },
+  {
+    path: 'clinical-audit-dashboard',
+    loadComponent: () =>
+      import('./pages/clinical-audit-dashboard/clinical-audit-dashboard.component').then(
+        (m) => m.ClinicalAuditDashboardComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'CLINICIAN', 'CLINICAL_ADMIN'] },
+  },
+  {
+    path: 'mpi-audit-dashboard',
+    loadComponent: () =>
+      import('./pages/mpi-audit-dashboard/mpi-audit-dashboard.component').then(
+        (m) => m.MpiAuditDashboardComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'MPI_ANALYST', 'DATA_STEWARD'] },
   },
 
   // ==================== Fallback Route ====================

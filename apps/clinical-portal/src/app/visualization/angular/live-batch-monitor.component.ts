@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -99,6 +100,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
   ];
 
   constructor(
+    private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private wsService: WebSocketVisualizationService,
     private transformService: DataTransformService,
@@ -116,7 +118,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
       .pipe(takeUntil(this.destroy$))
       .subscribe(status => {
         this.wsStatus = status;
-        console.log('WebSocket status:', status);
+        this.logger.info('WebSocket status:', status);
       });
 
     // Subscribe to batch monitor state
@@ -124,7 +126,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
       .pipe(takeUntil(this.destroy$))
       .subscribe(state => {
         this.batchState = state;
-        console.log('Batch monitor state:', state);
+        this.logger.info('Batch monitor state:', state);
 
         // Update monitoring flag
         this.isMonitoring = state.status === 'MONITORING' || state.status === 'LOADING_PATIENTS' || state.status === 'SUBMITTING_BATCH';
@@ -152,7 +154,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
     this.initScene();
 
     // Don't auto-connect - wait for user to start batch evaluation
-    console.log('Visualization ready. Waiting for user to start batch evaluation.');
+    this.logger.info('Visualization ready. Waiting for user to start batch evaluation.');
   }
 
   ngOnDestroy(): void {
@@ -229,7 +231,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
    * Update batch visualization
    */
   private updateBatchVisualization(event: BatchProgressEvent): void {
-    console.log('Batch progress update:', event);
+    this.logger.info('Batch progress update:', event);
 
     // Generate particles for new patients if needed
     const targetParticleCount = event.totalPatients;
@@ -373,16 +375,16 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
    */
   startBatchEvaluation(): void {
     if (!this.selectedLibraryId) {
-      console.error('No library selected');
+      this.logger.error('No library selected');
       return;
     }
 
     if (this.isMonitoring) {
-      console.warn('Batch evaluation already in progress');
+      this.logger.warn('Batch evaluation already in progress');
       return;
     }
 
-    console.log('Starting batch evaluation...', {
+    this.logger.info('Starting batch evaluation', {
       libraryId: this.selectedLibraryId,
       patientCount: this.patientCount
     });
@@ -401,16 +403,16 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
     .pipe(takeUntil(this.destroy$))
     .subscribe({
       next: (progress) => {
-        console.log('Batch progress received:', progress);
+        this.logger.info('Batch progress received:', progress);
         this.batchProgress = progress;
         this.updateBatchVisualization(progress);
       },
       error: (error) => {
-        console.error('Batch evaluation error:', error);
+        this.logger.error('Batch evaluation error:', { error });
         this.isMonitoring = false;
       },
       complete: () => {
-        console.log('Batch evaluation completed');
+        this.logger.info('Batch evaluation completed');
         this.isMonitoring = false;
       }
     });
@@ -420,7 +422,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
    * Stop batch monitoring
    */
   stopBatchMonitoring(): void {
-    console.log('Stopping batch monitoring...');
+    this.logger.info('Stopping batch monitoring...');
     this.batchMonitorService.stopBatchMonitoring();
     this.isMonitoring = false;
   }
@@ -430,7 +432,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
    */
   startSimulation(): void {
     this.useSimulation = true;
-    console.log('Starting simulation...');
+    this.logger.info('Starting simulation...');
 
     // Reset particles
     this.particles = [];

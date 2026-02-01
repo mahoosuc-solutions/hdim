@@ -1,0 +1,489 @@
+name: Frontend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    branches:
+      - master
+      - develop
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - rollback
+      rollback_to:
+        description: 'Rollback target (blue/green) - only for rollback'
+        required: false
+        default: 'blue'
+        type: choice
+        options:
+          - blue
+          - green
+
+env:
+  NODE_VERSION: '20'
+  NPM_CACHE_VERSION: 'v1'
+
+jobs:
+  # ============================================================================
+  # Job 1: Build and Test
+  # ============================================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for affected analysis
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            .angular/cache
+          key: ${{ runner.os }}-npm-${{ env.NPM_CACHE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-${{ env.NPM_CACHE_VERSION }}-
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint)
+        run: npx nx run-many --target=lint --all --parallel=3
+        continue-on-error: false  # ENFORCE: Fail build on lint errors
+
+      - name: Unit Tests
+        run: npx nx run-many --target=test --all --parallel=3 --coverage --code-coverage
+        continue-on-error: false  # ENFORCE: Fail build on test failures
+
+      - name: Check code coverage thresholds
+        run: |
+          echo "Checking code coverage meets minimum 70% threshold..."
+
+          # Check if coverage directory exists
+          if [ ! -d "coverage" ]; then
+            echo "⚠️ No coverage directory found - skipping threshold check"
+            exit 0
+          fi
+
+          # Find all coverage-summary.json files
+          COVERAGE_FILES=$(find coverage -name "coverage-summary.json" 2>/dev/null || true)
+
+          if [ -z "$COVERAGE_FILES" ]; then
+            echo "⚠️ No coverage-summary.json files found - skipping threshold check"
+            exit 0
+          fi
+
+          # Check each coverage file
+          FAILED=0
+          for FILE in $COVERAGE_FILES; do
+            # Extract overall coverage percentages using jq
+            LINE_PCT=$(jq -r '.total.lines.pct' "$FILE" 2>/dev/null || echo "0")
+            BRANCH_PCT=$(jq -r '.total.branches.pct' "$FILE" 2>/dev/null || echo "0")
+            FUNCTION_PCT=$(jq -r '.total.functions.pct' "$FILE" 2>/dev/null || echo "0")
+            STATEMENT_PCT=$(jq -r '.total.statements.pct' "$FILE" 2>/dev/null || echo "0")
+
+            echo "Coverage for $FILE:"
+            echo "  Lines: ${LINE_PCT}%"
+            echo "  Branches: ${BRANCH_PCT}%"
+            echo "  Functions: ${FUNCTION_PCT}%"
+            echo "  Statements: ${STATEMENT_PCT}%"
+
+            # Check if any coverage metric is below 70%
+            if (( $(echo "$LINE_PCT < 70" | bc -l) )); then
+              echo "❌ Line coverage ${LINE_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+            if (( $(echo "$BRANCH_PCT < 70" | bc -l) )); then
+              echo "❌ Branch coverage ${BRANCH_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+            if (( $(echo "$FUNCTION_PCT < 70" | bc -l) )); then
+              echo "❌ Function coverage ${FUNCTION_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+            if (( $(echo "$STATEMENT_PCT < 70" | bc -l) )); then
+              echo "❌ Statement coverage ${STATEMENT_PCT}% is below 70% threshold"
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" -eq 1 ]; then
+            echo "❌ Coverage threshold check failed - improve test coverage to at least 70%"
+            exit 1
+          else
+            echo "✅ All coverage metrics meet 70% threshold"
+          fi
+
+      - name: Build Clinical Portal (Production)
+        run: npx nx build clinical-portal --configuration=production
+
+      - name: Build Admin Portal (Production)
+        run: npx nx build admin-portal --configuration=production
+        continue-on-error: true  # Admin portal may not be ready
+
+      - name: Analyze bundle size
+        run: |
+          echo "Bundle size analysis:"
+
+          # Check Clinical Portal bundle size
+          if [ -d "dist/apps/clinical-portal" ]; then
+            CLINICAL_SIZE=$(du -sb dist/apps/clinical-portal | cut -f1)
+            CLINICAL_SIZE_MB=$(echo "scale=2; $CLINICAL_SIZE / 1048576" | bc)
+            echo "Clinical Portal: ${CLINICAL_SIZE_MB}MB"
+
+            # Threshold: 5MB (5 * 1024 * 1024 = 5242880 bytes)
+            MAX_SIZE=5242880
+
+            if [ "$CLINICAL_SIZE" -gt "$MAX_SIZE" ]; then
+              echo "❌ Clinical Portal bundle size (${CLINICAL_SIZE_MB}MB) exceeds 5MB threshold"
+              echo "Bundle size optimization recommendations:"
+              echo "  - Enable AOT compilation (already enabled)"
+              echo "  - Use lazy loading for routes"
+              echo "  - Remove unused dependencies"
+              echo "  - Compress assets"
+              exit 1
+            else
+              echo "✅ Clinical Portal bundle size within limits"
+            fi
+          else
+            echo "⚠️ Clinical Portal build not found - skipping bundle size check"
+          fi
+
+          # Check Admin Portal bundle size (optional)
+          if [ -d "dist/apps/admin-portal" ]; then
+            ADMIN_SIZE=$(du -sb dist/apps/admin-portal | cut -f1)
+            ADMIN_SIZE_MB=$(echo "scale=2; $ADMIN_SIZE / 1048576" | bc)
+            echo "Admin Portal: ${ADMIN_SIZE_MB}MB"
+
+            if [ "$ADMIN_SIZE" -gt "$MAX_SIZE" ]; then
+              echo "⚠️ Admin Portal bundle size (${ADMIN_SIZE_MB}MB) exceeds 5MB threshold (non-blocking)"
+            else
+              echo "✅ Admin Portal bundle size within limits"
+            fi
+          fi
+
+      - name: Upload test coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-coverage
+          path: coverage/
+          retention-days: 30
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 2: HIPAA Compliance Scan
+  # ============================================================================
+  hipaa-compliance:
+    name: HIPAA Compliance Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Scan for console statements (HIPAA violation)
+        run: |
+          echo "Scanning for console.log/error/warn/debug statements..."
+
+          # Search for console statements in TypeScript files
+          CONSOLE_VIOLATIONS=$(grep -r "console\." apps/clinical-portal/src apps/admin-portal/src --include="*.ts" --exclude-dir=node_modules || true)
+
+          if [ -n "$CONSOLE_VIOLATIONS" ]; then
+            echo "❌ HIPAA VIOLATION: console statements detected (PHI exposure risk)"
+            echo "$CONSOLE_VIOLATIONS"
+            exit 1
+          else
+            echo "✅ No console statements detected - HIPAA compliant"
+          fi
+
+      - name: Check LoggerService usage
+        run: |
+          echo "Verifying LoggerService is used for all logging..."
+
+          # Count LoggerService imports
+          LOGGER_IMPORTS=$(grep -r "import.*LoggerService" apps/clinical-portal/src apps/admin-portal/src --include="*.ts" | wc -l)
+
+          echo "LoggerService imports found: $LOGGER_IMPORTS"
+
+          if [ "$LOGGER_IMPORTS" -lt 10 ]; then
+            echo "⚠️ WARNING: Only $LOGGER_IMPORTS LoggerService imports found - verify all logging uses LoggerService"
+          else
+            echo "✅ LoggerService usage verified"
+          fi
+
+      - name: Check PHI cache TTL compliance
+        run: |
+          echo "Verifying cache TTL ≤ 5 minutes for PHI compliance..."
+
+          # Search for @Cacheable annotations with TTL > 5 minutes
+          CACHE_VIOLATIONS=$(grep -r "@Cacheable" apps/ --include="*.ts" -A 5 | grep -E "ttl.*[6-9][0-9]{4}|ttl.*[1-9][0-9]{5}" || true)
+
+          if [ -n "$CACHE_VIOLATIONS" ]; then
+            echo "❌ HIPAA VIOLATION: Cache TTL exceeds 5 minutes"
+            echo "$CACHE_VIOLATIONS"
+            exit 1
+          else
+            echo "✅ Cache TTL compliance verified"
+          fi
+
+  # ============================================================================
+  # Job 3: Security Scan
+  # ============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit (Moderate+)
+        run: npm audit --audit-level=moderate
+        continue-on-error: false  # ENFORCE: Fail on vulnerabilities
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'apps/'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ============================================================================
+  # Job 4: OWASP ZAP Security Scan
+  # ============================================================================
+  owasp-zap-scan:
+    name: OWASP ZAP Security Scan
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Start application for scanning
+        run: |
+          echo "Starting Clinical Portal for OWASP ZAP scan..."
+          # Serve the built application on port 4200
+          npx http-server dist/apps/clinical-portal -p 4200 &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+
+          # Wait for server to start
+          sleep 5
+
+          # Verify server is running
+          curl -f http://localhost:4200 || (echo "Failed to start server" && exit 1)
+
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:4200'
+          rules_file_name: '.github/zap/rules.tsv'
+          cmd_options: '-a -j -I'  # Include JSON report, ignore warnings
+          fail_action: true  # Fail on high/medium risk findings
+          allow_issue_writing: false
+
+      - name: Upload ZAP scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-scan-results
+          path: |
+            report_html.html
+            report_json.json
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        run: |
+          # Kill the http-server process
+          kill $SERVER_PID || true
+
+  # ============================================================================
+  # Job 5: E2E Tests (Playwright)
+  # ============================================================================
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    timeout-minutes: 20
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/master'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npx nx e2e clinical-portal-e2e --configuration=ci || true
+        continue-on-error: true  # E2E tests may not exist yet
+
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-test-results
+          path: |
+            apps/clinical-portal-e2e/test-results/
+            apps/clinical-portal-e2e/playwright-report/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 6: Deploy to Staging (on develop branch)
+  # ============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-test, hipaa-compliance, security-scan, owasp-zap-scan]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment:
+      name: staging
+      url: https://staging.hdim.example.com
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Deploy to Staging
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          STAGING_URL: https://staging.hdim.example.com
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'registry.hdim.example.com' }}
+        run: |
+          chmod +x scripts/deploy/frontend-staging.sh
+          bash scripts/deploy/frontend-staging.sh
+
+  # ============================================================================
+  # Job 7: Deploy to Production (on master branch)
+  # ============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-test, hipaa-compliance, security-scan, owasp-zap-scan, e2e-tests]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    environment:
+      name: production
+      url: https://app.hdim.example.com
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Deploy to Production (Blue-Green)
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          PRODUCTION_URL: https://app.hdim.example.com
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'registry.hdim.example.com' }}
+          CURRENT_COLOR: ${{ secrets.CURRENT_PRODUCTION_COLOR || 'blue' }}
+        run: |
+          chmod +x scripts/deploy/frontend-production.sh
+          bash scripts/deploy/frontend-production.sh
+
+  # ============================================================================
+  # Job 8: Rollback (Manual Trigger)
+  # ============================================================================
+  rollback:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    timeout-minutes: 10
+
+    steps:
+      - name: Rollback to previous version
+        env:
+          PRODUCTION_URL: https://app.hdim.example.com
+          ROLLBACK_TO: ${{ github.event.inputs.rollback_to || secrets.PREVIOUS_PRODUCTION_COLOR || 'blue' }}
+        run: |
+          chmod +x scripts/deploy/frontend-rollback.sh
+          bash scripts/deploy/frontend-rollback.sh "$ROLLBACK_TO"

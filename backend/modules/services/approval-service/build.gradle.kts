@@ -87,11 +87,13 @@ dependencyManagement {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
-    systemProperty("spring.datasource.username", "test")
-    systemProperty("spring.datasource.password", "test")
-    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    // Testcontainers system properties disabled - using running Docker PostgreSQL
+    // Configuration now managed in src/test/resources/application-test.yml
+    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
+    // systemProperty("spring.datasource.username", "test")
+    // systemProperty("spring.datasource.password", "test")
+    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
 }
 

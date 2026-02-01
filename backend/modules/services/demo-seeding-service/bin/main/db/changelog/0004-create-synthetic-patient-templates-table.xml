@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="0004-create-synthetic-patient-templates-table" author="demo-seeding-service">
+        <comment>Create synthetic_patient_templates table for patient personas</comment>
+
+        <createTable tableName="synthetic_patient_templates">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="persona_name" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="first_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="age" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gender" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hcc_score" type="DECIMAL(4,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fhir_bundle" type="JSONB"/>
+            <column name="conditions" type="JSONB"/>
+            <column name="medications" type="JSONB"/>
+            <column name="care_gaps" type="JSONB"/>
+            <column name="observations" type="JSONB"/>
+            <column name="encounters" type="JSONB"/>
+            <column name="sdoh_factors" type="JSONB"/>
+            <column name="risk_category" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scenario_notes" type="TEXT"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="template_version" type="INTEGER" defaultValueNumeric="1">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <createIndex tableName="synthetic_patient_templates" indexName="idx_patient_templates_persona">
+            <column name="persona_name"/>
+        </createIndex>
+
+        <createIndex tableName="synthetic_patient_templates" indexName="idx_patient_templates_risk">
+            <column name="risk_category"/>
+        </createIndex>
+
+        <createIndex tableName="synthetic_patient_templates" indexName="idx_patient_templates_active">
+            <column name="is_active"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="synthetic_patient_templates"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

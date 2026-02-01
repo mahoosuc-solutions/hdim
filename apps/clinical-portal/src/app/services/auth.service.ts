@@ -51,16 +51,13 @@ export class AuthService {
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
   private tokenRefreshSubscription: any;
-  private log: ContextualLogger;
 
   constructor(
     private http: HttpClient,
     private apiService: ApiService,
     private router: Router,
     private logger: LoggerService
-  ) {
-    this.log = this.logger.withContext('AuthService');
-    // Start token refresh timer if user session exists
+  ) {    // Start token refresh timer if user session exists
     if (this.isAuthenticated()) {
       this.startTokenRefreshTimer();
     }
@@ -85,7 +82,7 @@ export class AuthService {
         this.handleLoginSuccess(response as LoginResponse);
       }),
       catchError((error) => {
-        this.log.error('Login failed', error);
+        this.logger.error('Login failed', error);
         return throwError(() => error);
       })
     );
@@ -103,7 +100,7 @@ export class AuthService {
         this.handleLoginSuccess(response);
       }),
       catchError((error) => {
-        this.log.error('MFA verification failed', error);
+        this.logger.error('MFA verification failed', error);
         return throwError(() => error);
       })
     );
@@ -165,8 +162,8 @@ export class AuthService {
 
     // Call backend to clear HttpOnly cookies
     this.apiService.post('/auth/logout', {}).subscribe({
-      next: () => this.log.info('Logout successful - cookies cleared'),
-      error: (err) => this.log.warn('Logout API call failed', err),
+      next: () => this.logger.info('Logout successful - cookies cleared'),
+      error: (err) => this.logger.warn('Logout API call failed', err),
     });
 
     // Clear local state regardless of API result
@@ -191,10 +188,10 @@ export class AuthService {
         // Tokens are set as HttpOnly cookies by backend
         // Just update auth state based on successful refresh
         this.isAuthenticatedSubject.next(true);
-        this.log.info('Token refreshed successfully');
+        this.logger.info('Token refreshed successfully');
       }),
       catchError((error) => {
-        this.log.error('Token refresh failed', error);
+        this.logger.error('Token refresh failed', error);
         this.logout();
         return throwError(() => error);
       })
@@ -217,7 +214,7 @@ export class AuthService {
         this.currentUserSubject.next(user);
       }),
       catchError((error) => {
-        this.log.error('Failed to get current user', error);
+        this.logger.error('Failed to get current user', error);
         return throwError(() => error);
       })
     );
@@ -413,7 +410,8 @@ export class AuthService {
       firstName: response.username.split('@')[0], // Extract from username as fallback
       lastName: '',
       fullName: response.username,
-      roles: (response.roles || []).map(roleName => ({ id: '', name: roleName } as Role)),
+      // Use roleDetails if provided by backend, otherwise build from role names
+      roles: response.roleDetails || (response.roles || []).map(roleName => ({ id: '', name: roleName } as Role)),
       tenantId: response.tenantIds?.[0] || '', // Use first tenant ID
       tenantIds: response.tenantIds || [],
       active: true,
@@ -424,7 +422,7 @@ export class AuthService {
     this.currentUserSubject.next(user);
     this.isAuthenticatedSubject.next(true);
     this.startTokenRefreshTimer();
-    this.log.info('Login successful', { username: user.username });
+    this.logger.info('Login successful', { username: user.username });
   }
 
   /**
@@ -449,7 +447,7 @@ export class AuthService {
       .pipe(switchMap(() => this.refreshToken()))
       .subscribe({
         error: (error) => {
-          this.log.error('Token refresh timer failed', error);
+          this.logger.error('Token refresh timer failed', error);
           this.logout();
         },
       });
@@ -513,6 +511,7 @@ export interface LoginResponse {
   email: string;
   roles: string[];
   tenantIds: string[];
+  roleDetails?: Role[];
   mfaEnabled?: boolean;
   message?: string;
 }

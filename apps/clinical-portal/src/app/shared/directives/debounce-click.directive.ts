@@ -25,7 +25,7 @@ import { debounceTime } from 'rxjs/operators';
 })
 export class DebounceClickDirective implements OnDestroy {
   /** Debounce time in milliseconds */
-  @Input() debounceTime: number = 500;
+  @Input() debounceTime = 500;
 
   /** Debounced click event */
   @Output() debounceClick = new EventEmitter<MouseEvent>();

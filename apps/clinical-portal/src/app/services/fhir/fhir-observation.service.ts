@@ -43,14 +43,12 @@ import {
   providedIn: 'root',
 })
 export class FhirObservationService extends CacheableService {
-  private log: ContextualLogger;
 
   constructor(
     private http: HttpClient,
     private logger: LoggerService
   ) {
     super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('FhirObservationService');
   }
 
   /**
@@ -90,7 +88,7 @@ export class FhirObservationService extends CacheableService {
           return vitals;
         }),
         catchError((error) => {
-          this.log.error('Error fetching vital signs from FHIR:', error);
+          this.logger.error('Error fetching vital signs from FHIR:', error);
           return of({});
         })
       );
@@ -122,7 +120,7 @@ export class FhirObservationService extends CacheableService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab results from FHIR:', error);
+          this.logger.error('Error fetching lab results from FHIR:', error);
           return of([]);
         })
       );
@@ -143,7 +141,7 @@ export class FhirObservationService extends CacheableService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab results from FHIR:', error);
+          this.logger.error('Error fetching lab results from FHIR:', error);
           return of([]);
         })
       );
@@ -186,7 +184,7 @@ export class FhirObservationService extends CacheableService {
           return reports;
         }),
         catchError((error) => {
-          this.log.error('Error fetching diagnostic reports from FHIR:', error);
+          this.logger.error('Error fetching diagnostic reports from FHIR:', error);
           return of([]);
         })
       );
@@ -198,7 +196,7 @@ export class FhirObservationService extends CacheableService {
   getVitalSignHistory(
     patientId: string,
     loincCode?: string,
-    limit: number = 30
+    limit = 30
   ): Observable<VitalSign<number | string>[]> {
     const cacheKey = `vital-history:${patientId}:${loincCode || 'all'}:${limit}`;
     const cached = this.getCached<VitalSign<number | string>[]>(cacheKey);
@@ -230,7 +228,7 @@ export class FhirObservationService extends CacheableService {
           return vitals;
         }),
         catchError((error) => {
-          this.log.error('Error fetching vital sign history:', error);
+          this.logger.error('Error fetching vital sign history:', error);
           return of([]);
         })
       );
@@ -242,7 +240,7 @@ export class FhirObservationService extends CacheableService {
   getLabHistory(
     patientId: string,
     loincCode: string,
-    limit: number = 10
+    limit = 10
   ): Observable<LabResult[]> {
     const cacheKey = `lab-history:${patientId}:${loincCode}:${limit}`;
     const cached = this.getCached<LabResult[]>(cacheKey);
@@ -270,7 +268,7 @@ export class FhirObservationService extends CacheableService {
           return labs;
         }),
         catchError((error) => {
-          this.log.error('Error fetching lab history:', error);
+          this.logger.error('Error fetching lab history:', error);
           return of([]);
         })
       );

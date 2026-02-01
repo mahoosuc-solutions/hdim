@@ -22,6 +22,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:audit"))
+    implementation(project(":modules:shared:infrastructure:gateway-core"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
@@ -48,6 +49,7 @@ dependencies {
     implementation(libs.bundles.kafka)
 
     // Resilience4j for circuit breaker and rate limiting
+    implementation(libs.resilience4j.spring.boot3)
     implementation(libs.resilience4j.circuitbreaker)
     implementation(libs.resilience4j.ratelimiter)
 
@@ -69,11 +71,11 @@ dependencies {
     implementation(libs.guava)
 
     // Twilio for SMS notifications
-    implementation("com.twilio.sdk:twilio:9.14.0")
+    implementation(libs.twilio)
 
     // Export functionality
-    implementation("org.apache.commons:commons-csv:1.11.0")
-    implementation("org.apache.poi:poi-ooxml:5.2.5")
+    implementation(libs.commons.csv)
+    implementation(libs.poi.ooxml)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
@@ -102,11 +104,8 @@ dependencyManagement {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
-    systemProperty("spring.datasource.username", "test")
-    systemProperty("spring.datasource.password", "test")
-    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    // Testcontainers system properties disabled - using running Docker PostgreSQL
+    // Configuration now managed in src/test/resources/application-test.yml
     systemProperty("spring.profiles.active", "test")
 
     // Enable JaCoCo test coverage

@@ -2,6 +2,7 @@ package com.healthdata.quality.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.quality.audit.QualityMeasureAuditIntegration;
 import com.healthdata.quality.client.CareGapServiceClient;
 import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.quality.client.PatientServiceClient;
@@ -34,6 +35,7 @@ public class MeasureCalculationService {
     private final CareGapServiceClient careGapServiceClient;
     private final CqlEngineServiceClient cqlEngineServiceClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final QualityMeasureAuditIntegration auditIntegration;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -62,6 +64,14 @@ public class MeasureCalculationService {
 
             // Publish event (async - no transaction needed)
             publishCalculationEvent(tenantId, patientId, measureId);
+
+            // Publish audit event
+            boolean measureMet = result.has("measure_met") && result.get("measure_met").asBoolean();
+            Map<String, Object> measureResultMap = objectMapper.convertValue(result, Map.class);
+            auditIntegration.publishMeasureCalculationEvent(
+                    tenantId, patientId, measureId,
+                    measureMet, measureResultMap, 0, createdBy
+            );
 
             return saved;
         } catch (Exception e) {
@@ -105,7 +115,6 @@ public class MeasureCalculationService {
     /**
      * Get measure results for a patient
      */
-    @Cacheable(value = "measureResults", key = "#tenantId + ':' + #patientId")
     public List<QualityMeasureResultEntity> getPatientMeasureResults(
             String tenantId,
             UUID patientId
@@ -116,7 +125,6 @@ public class MeasureCalculationService {
     /**
      * Get all measure results for a tenant with pagination
      */
-    @Cacheable(value = "allMeasureResults", key = "#tenantId + ':' + #page + ':' + #size")
     public List<QualityMeasureResultEntity> getAllMeasureResults(
             String tenantId,
             Integer page,

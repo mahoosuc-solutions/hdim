@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-value-sets-table" author="healthdata-system">
+        <comment>Create table for storing value sets used in CQL expressions</comment>
+
+        <createTable tableName="value_sets">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="oid" type="varchar(128)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="code_system" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="codes" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_value_sets_oid" tableName="value_sets">
+            <column name="oid"/>
+        </createIndex>
+
+        <createIndex indexName="idx_value_sets_code_system" tableName="value_sets">
+            <column name="code_system"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="value_sets"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

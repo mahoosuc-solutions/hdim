@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0005-create-tenant-functions" author="healthdata-system">
+        <sql splitStatements="false" endDelimiter="$$">
+            CREATE OR REPLACE FUNCTION get_current_tenant() RETURNS VARCHAR(64) AS $$
+            BEGIN
+                RETURN current_setting('app.current_tenant', true);
+            END;
+            $$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+        </sql>
+        <sql splitStatements="false" endDelimiter="$$">
+            CREATE OR REPLACE FUNCTION set_current_tenant(tenant_id VARCHAR(64)) RETURNS VOID AS $$
+            BEGIN
+                PERFORM set_config('app.current_tenant', tenant_id, false);
+            END;
+            $$ LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

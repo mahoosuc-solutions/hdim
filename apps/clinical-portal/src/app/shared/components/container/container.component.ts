@@ -67,7 +67,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ContainerComponent {
   /** Maximum width */
-  @Input() maxWidth: string = '1400px';
+  @Input() maxWidth = '1400px';
 
   /** Padding size */
   @Input() padding: 'small' | 'normal' | 'large' = 'normal';

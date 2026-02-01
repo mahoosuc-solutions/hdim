@@ -9,6 +9,13 @@ spring:
   main:
     lazy-initialization: true  # Enable lazy initialization to avoid circular dependencies
 
+  # Jackson Configuration - JSON-only (no XML support)
+  # Prevents ClassCastException from Jackson XML factory detection
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_fhir}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
@@ -125,15 +132,6 @@ rate-limiting:
   api:
     per-minute: 100
 
-# API Documentation
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-
 # Actuator Configuration
 management:
   endpoints:
@@ -148,6 +146,25 @@ management:
     export:
       prometheus:
         enabled: true
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+    show-extensions: true
+    doc-expansion: none
+    default-models-expand-depth: 1
+    default-model-rendering: model
+  show-actuator: false
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 # Logging
 logging:
@@ -164,6 +181,24 @@ logging:
     name: logs/fhir-service.log
     max-size: 10MB
     max-history: 30
+
+---
+# Docker Profile Configuration
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgres:5432/fhir_db
+    username: healthdata
+    password: healthdata_password
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
 
 ---
 # Development Profile - 100% Trace Sampling

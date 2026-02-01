@@ -1006,7 +1006,7 @@ class PredictiveAnalyticsControllerTest {
 class PredictiveAnalyticsMultiTenantTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private ReadmissionRiskPredictor riskPredictor;

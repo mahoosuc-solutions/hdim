@@ -94,13 +94,14 @@ export interface MenuItem {
 
     .sidenav {
       width: 250px;
-      background: white;
-      border-right: 1px solid #e0e0e0;
+      background: var(--sidebar-background);
+      border-right: 1px solid var(--border-color);
+      color: var(--text-primary);
     }
 
     .sidenav-toolbar {
-      background: #1976d2;
-      color: white;
+      background: var(--toolbar-background);
+      color: var(--toolbar-text);
       padding: 0 16px;
       display: flex;
       justify-content: space-between;
@@ -117,22 +118,26 @@ export interface MenuItem {
     }
 
     .menu-list a {
-      color: rgba(0, 0, 0, 0.87);
-      transition: background-color 0.2s;
+      color: var(--text-primary);
+      transition: background-color 0.2s, color 0.2s;
     }
 
     .menu-list a:hover {
-      background-color: #f5f5f5;
+      background-color: var(--sidebar-hover);
     }
 
     .menu-list a.active {
-      background-color: #e3f2fd;
-      color: #1976d2;
+      background-color: var(--sidebar-selected);
+      color: var(--primary-color);
       font-weight: 500;
     }
 
     .menu-list a.active mat-icon {
-      color: #1976d2;
+      color: var(--primary-color);
+    }
+
+    .menu-list a mat-icon {
+      color: var(--text-secondary);
     }
 
     .sidenav-content {
@@ -140,26 +145,6 @@ export interface MenuItem {
       flex-direction: column;
       height: 100%;
       overflow: auto;
-    }
-
-    /* Dark theme */
-    @media (prefers-color-scheme: dark) {
-      .sidenav {
-        background: #424242;
-        border-right-color: #616161;
-      }
-
-      .menu-list a {
-        color: rgba(255, 255, 255, 0.87);
-      }
-
-      .menu-list a:hover {
-        background-color: #616161;
-      }
-
-      .menu-list a.active {
-        background-color: #546e7a;
-      }
     }
 
     /* Responsive */
@@ -185,10 +170,10 @@ export class SidebarComponent {
   @Input() menuItems: MenuItem[] = [];
 
   /** Sidebar title */
-  @Input() title: string = 'Menu';
+  @Input() title = 'Menu';
 
   /** Is sidebar opened */
-  @Input() opened: boolean = true;
+  @Input() opened = true;
 
   /** Sidenav mode */
   @Input() mode: 'over' | 'push' | 'side' = 'side';

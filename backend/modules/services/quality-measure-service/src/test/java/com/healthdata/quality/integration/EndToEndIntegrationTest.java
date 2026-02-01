@@ -21,7 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
@@ -63,7 +63,6 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("test")
 @Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("End-to-End Integration Tests")
-@Disabled("Requires full platform deployment - run manually with artillery or after docker compose up")
 public class EndToEndIntegrationTest {
 
     @Container
@@ -75,7 +74,8 @@ public class EndToEndIntegrationTest {
 
     @Container
     static KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("confluentinc/cp-kafka:7.5.0"));
+            DockerImageName.parse("apache/kafka:3.8.0"))
+            .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
 
     @LocalServerPort
     private int port;
@@ -97,7 +97,10 @@ public class EndToEndIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
         registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+        registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
+        registry.add("spring.kafka.consumer.group-id", () -> "test-group");
     }
 
     @BeforeEach

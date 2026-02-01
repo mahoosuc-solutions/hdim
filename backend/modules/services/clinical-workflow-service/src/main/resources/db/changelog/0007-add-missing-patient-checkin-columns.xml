@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Align patient_check_ins table with entity fields -->
+
+    <changeSet id="0007-add-missing-patient-checkin-columns" author="clinical-workflow-service">
+        <comment>Add missing patient_check_ins columns (verified_by, consent_obtained_by, demographics_updated_by)</comment>
+
+        <addColumn tableName="patient_check_ins">
+            <column name="verified_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="consent_obtained_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="demographics_updated_by" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="patient_check_ins" columnName="verified_by"/>
+            <dropColumn tableName="patient_check_ins" columnName="consent_obtained_by"/>
+            <dropColumn tableName="patient_check_ins" columnName="demographics_updated_by"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -247,30 +247,38 @@ describe('sales.service', () => {
 
   describe('getDashboard', () => {
     it('fetches dashboard metrics', async () => {
-      const mockDashboard = {
-        totalLeads: 100,
-        newLeadsThisMonth: 25,
-        qualifiedLeads: 40,
-        conversionRate: 15.5,
-        totalOpportunities: 50,
-        pipelineValue: 500000,
-        weightedPipelineValue: 250000,
-        avgDealSize: 10000,
-        closedWonThisMonth: 5,
-        closedWonValue: 50000,
-        closedLostThisMonth: 2,
-        winRate: 71.4,
-        avgSalesCycleInDays: 45,
-        activitiesThisWeek: 120,
-        overdueActivities: 8,
-        leadsBySource: { WEBSITE: 40, REFERRAL: 30 },
-        opportunitiesByStage: { DISCOVERY: 20, DEMO: 15 },
-        revenueByMonth: {},
+      // Mock the NESTED API response structure (not the transformed flat DTO)
+      const mockApiResponse = {
+        leads: {
+          totalLeads: 100,
+          newLeadsThisMonth: 25,
+          qualifiedLeads: 40,
+          conversionRate: 15.5,
+          leadsBySource: { WEBSITE: 40, REFERRAL: 30 },
+        },
+        pipeline: {
+          totalOpenOpportunities: 50,
+          totalPipelineValue: 500000,
+          weightedPipelineValue: 250000,
+          averageDealSize: 10000,
+          wonThisMonth: 5,
+          wonValueThisMonth: 50000,
+          lostThisMonth: 2,
+          winRate: 71.4,
+          averageSalesCycleDays: 45,
+          opportunitiesByStage: { DISCOVERY: 20, DEMO: 15 },
+        },
+        activities: {
+          callsThisWeek: 40,
+          emailsThisWeek: 50,
+          meetingsThisWeek: 30,
+          overdueActivities: 8,
+        },
       };
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve(mockDashboard),
+        json: () => Promise.resolve(mockApiResponse),
       });
 
       const result = await salesService.getDashboard(mockApiOptions);
@@ -279,8 +287,11 @@ describe('sales.service', () => {
         'http://localhost:8106/api/sales/dashboard',
         expect.anything()
       );
+      // Verify the service correctly transforms nested API response to flat DTO
       expect(result.totalLeads).toBe(100);
       expect(result.winRate).toBe(71.4);
+      expect(result.activitiesThisWeek).toBe(120); // 40 + 50 + 30
+      expect(result.leadsBySource).toEqual({ WEBSITE: 40, REFERRAL: 30 });
     });
   });
 

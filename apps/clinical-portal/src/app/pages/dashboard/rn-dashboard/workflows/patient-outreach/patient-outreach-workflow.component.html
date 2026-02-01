@@ -1,0 +1,275 @@
+<!-- Patient Outreach Workflow Dialog -->
+<h2 mat-dialog-title>
+  <mat-icon>phone</mat-icon>
+  Patient Outreach - {{ patientName }}
+</h2>
+
+<!-- Progress Bar -->
+<div class="workflow-progress">
+  <mat-progress-bar mode="determinate" [value]="(currentStep / (totalSteps - 1)) * 100"></mat-progress-bar>
+  <div class="progress-text">
+    <span>Step {{ currentStep + 1 }} of {{ totalSteps }}</span>
+  </div>
+</div>
+
+<mat-dialog-content [formGroup]="form">
+  <!-- Step 0: Contact Method Selection -->
+  @if (currentStep === 0) {
+    <div class="workflow-step">
+      <h3>Select Contact Method</h3>
+      <p class="step-description">How will you contact this patient?</p>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Contact Method</mat-label>
+        <mat-select formControlName="contactMethod">
+          <mat-option value="">-- Select Method --</mat-option>
+          @for (method of contactMethods; track method) {
+            <mat-option [value]="method">
+              <mat-icon class="method-icon">{{ getMethodIcon(method) }}</mat-icon>
+              {{ method | uppercase }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.get('contactMethod')?.hasError('required') && form.get('contactMethod')?.touched) {
+          <mat-error>Contact method is required</mat-error>
+        }
+      </mat-form-field>
+
+      @if (form.get('contactMethod')?.value) {
+        <div class="method-info">
+          <mat-icon>info</mat-icon>
+          <span>{{ getMethodDescription(form.get('contactMethod')?.value) }}</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Step 1: Contact Attempt Details -->
+  @if (currentStep === 1) {
+    <div class="workflow-step">
+      <h3>Log Contact Attempt</h3>
+      <p class="step-description">Document the details of your contact attempt</p>
+
+      <div class="form-row">
+        <mat-form-field appearance="fill" class="half-width">
+          <mat-label>Contact Duration (minutes)</mat-label>
+          <input matInput type="number" formControlName="contactDuration" min="0" max="120" />
+          @if (form.get('contactDuration')?.hasError('min')) {
+            <mat-error>Duration must be greater than 0</mat-error>
+          }
+        </mat-form-field>
+
+        @if (form.get('contactMethod')?.value === 'CALL') {
+          <div class="info-box half-width">
+            <mat-icon>phone</mat-icon>
+            <span>Call Duration: {{ form.get('contactDuration')?.value }} minutes</span>
+          </div>
+        }
+      </div>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Contact Notes</mat-label>
+        <textarea matInput formControlName="notes" placeholder="Document any relevant details from the contact attempt..."></textarea>
+      </mat-form-field>
+    </div>
+  }
+
+  <!-- Step 2: Outcome Type -->
+  @if (currentStep === 2) {
+    <div class="workflow-step">
+      <h3>Record Outcome</h3>
+      <p class="step-description">What was the result of the contact attempt?</p>
+
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Outcome Type</mat-label>
+        <mat-select formControlName="outcomeType">
+          <mat-option value="">-- Select Outcome --</mat-option>
+          @for (outcome of outcomeTypes; track outcome) {
+            <mat-option [value]="outcome">
+              <mat-icon class="outcome-icon">{{ getOutcomeIcon(outcome) }}</mat-icon>
+              {{ outcome | titlecase }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.get('outcomeType')?.hasError('required') && form.get('outcomeType')?.touched) {
+          <mat-error>Outcome type is required</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Retry Information (for unsuccessful outcomes) -->
+      @if (shouldShowRetryInfo()) {
+        <div class="retry-info-box">
+          <mat-icon>schedule</mat-icon>
+          <span>
+            {{ getOutcomeDescription(form.get('outcomeType')?.value) }}
+          </span>
+        </div>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Reason for Retry</mat-label>
+          <textarea matInput formControlName="retryReason" placeholder="Why will you need to retry?"></textarea>
+        </mat-form-field>
+      }
+
+      @if (form.get('outcomeType')?.value === 'SUCCESSFUL') {
+        <div class="success-info-box">
+          <mat-icon>check_circle</mat-icon>
+          <span>Great! The patient was successfully contacted.</span>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Step 3: Follow-up Scheduling -->
+  @if (currentStep === 3) {
+    <div class="workflow-step">
+      <h3>Schedule Follow-up (Optional)</h3>
+      <p class="step-description">Do you need to schedule a follow-up contact?</p>
+
+      <mat-checkbox formControlName="scheduleFollowUp" class="full-width">
+        Schedule follow-up contact with this patient
+      </mat-checkbox>
+
+      @if (form.get('scheduleFollowUp')?.value) {
+        <div class="followup-section">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Follow-up Date</mat-label>
+            <input matInput [matDatepicker]="picker" formControlName="followUpDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+            @if (form.get('followUpDate')?.hasError('required')) {
+              <mat-error>Follow-up date is required</mat-error>
+            }
+            @if (form.get('followUpDate')?.hasError('matDatepickerParse')) {
+              <mat-error>Invalid date format</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Reason for Follow-up</mat-label>
+            <textarea matInput formControlName="followUpReason" placeholder="Why is this follow-up needed?"></textarea>
+            @if (form.get('followUpReason')?.hasError('required') && form.get('followUpReason')?.touched) {
+              <mat-error>Follow-up reason is required</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="info-box">
+            <mat-icon>info</mat-icon>
+            <span>Recommended: Schedule within 7 days for better patient engagement</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Step 4: Review & Confirm -->
+  @if (currentStep === 4) {
+    <div class="workflow-step">
+      <h3>Review & Confirm</h3>
+      <p class="step-description">Please review your entries before submitting</p>
+
+      <div class="summary-section">
+        <mat-card class="summary-card">
+          <mat-card-header>
+            <mat-card-title>Contact Information</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="summary-row">
+              <span class="label">Contact Method:</span>
+              <span class="value">{{ form.get('contactMethod')?.value }}</span>
+              @if (canEditStep(0)) {
+                <button aria-label="Edit" mat-icon-button (click)="editStep(0)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
+            </div>
+
+            <div class="summary-row">
+              <span class="label">Outcome:</span>
+              <span class="value">{{ form.get('outcomeType')?.value }}</span>
+              @if (canEditStep(2)) {
+                <button aria-label="Edit" mat-icon-button (click)="editStep(2)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
+            </div>
+
+            <div class="summary-row">
+              <span class="label">Duration:</span>
+              <span class="value">{{ form.get('contactDuration')?.value }} minutes</span>
+            </div>
+
+            @if (form.get('notes')?.value) {
+              <div class="summary-row">
+                <span class="label">Notes:</span>
+                <span class="value">{{ form.get('notes')?.value }}</span>
+              </div>
+            }
+          </mat-card-content>
+        </mat-card>
+
+        @if (form.get('scheduleFollowUp')?.value) {
+          <mat-card class="summary-card">
+            <mat-card-header>
+              <mat-card-title>Follow-up Scheduled</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="summary-row">
+                <span class="label">Date:</span>
+                <span class="value">{{ form.get('followUpDate')?.value | date: 'short' }}</span>
+              </div>
+
+              <div class="summary-row">
+                <span class="label">Reason:</span>
+                <span class="value">{{ form.get('followUpReason')?.value }}</span>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+
+      <div class="info-box">
+        <mat-icon>check</mat-icon>
+        <span>Ready to submit this outreach record?</span>
+      </div>
+    </div>
+  }
+</mat-dialog-content>
+
+<!-- Dialog Actions -->
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelWorkflow()">
+    <mat-icon>close</mat-icon>
+    Cancel
+  </button>
+
+  @if (canGoToPreviousStep()) {
+    <button mat-stroked-button (click)="previousStep()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+  }
+
+  @if (currentStep < totalSteps - 1) {
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="nextStep()"
+      [disabled]="!canProceedToNextStep() || loading">
+      <mat-icon>arrow_forward</mat-icon>
+      Next
+    </button>
+  } @else {
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="completeWorkflow()"
+      [disabled]="!canProceedToNextStep() || loading">
+      @if (loading) {
+        <mat-spinner diameter="20"></mat-spinner>
+      }
+      <mat-icon>save</mat-icon>
+      Complete Outreach
+    </button>
+  }
+</mat-dialog-actions>

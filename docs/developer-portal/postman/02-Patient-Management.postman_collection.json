@@ -1,0 +1,302 @@
+{
+	"info": {
+		"_postman_id": "hdim-patient-collection",
+		"name": "HDIM - 02 Patient Management",
+		"description": "Patient search, creation, and management workflows\n\n**Prerequisites:**\n1. Run \"Authentication > Login\" request first\n2. JWT token is automatically used from environment\n\n**Features:**\n- Search patients by demographics\n- Create new patients\n- Update patient information\n- View patient details\n- HIPAA-compliant PHI access logging",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Search Patients",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save first patient ID to environment for subsequent requests",
+							"if (pm.response.code === 200) {",
+							"    const jsonData = pm.response.json();",
+							"    if (jsonData.patients && jsonData.patients.length > 0) {",
+							"        pm.environment.set(\"patient_id\", jsonData.patients[0].id);",
+							"        console.log(\"✅ Found\", jsonData.totalCount, \"patient(s)\");",
+							"        console.log(\"Patient ID saved:\", jsonData.patients[0].id);",
+							"    }",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{patient_url}}/api/v1/patients?lastName=Smith&dateOfBirth=1980-05-15",
+					"host": [
+						"{{patient_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients"
+					],
+					"query": [
+						{
+							"key": "lastName",
+							"value": "Smith",
+							"description": "Patient last name"
+						},
+						{
+							"key": "dateOfBirth",
+							"value": "1980-05-15",
+							"description": "Patient DOB (YYYY-MM-DD)"
+						},
+						{
+							"key": "firstName",
+							"value": "John",
+							"disabled": true,
+							"description": "Patient first name (optional)"
+						},
+						{
+							"key": "mrn",
+							"value": "",
+							"disabled": true,
+							"description": "Medical Record Number (optional)"
+						},
+						{
+							"key": "page",
+							"value": "0",
+							"disabled": true,
+							"description": "Page number (default: 0)"
+						},
+						{
+							"key": "size",
+							"value": "20",
+							"disabled": true,
+							"description": "Page size (default: 20)"
+						}
+					]
+				},
+				"description": "**Search for patients by demographics**\n\n**Query Parameters:**\n- `lastName` - Patient last name (required)\n- `dateOfBirth` - DOB in YYYY-MM-DD format (required)\n- `firstName` - Patient first name (optional)\n- `mrn` - Medical Record Number (optional)\n- `page` - Page number (default: 0)\n- `size` - Results per page (default: 20, max: 100)\n\n**Response:**\n```json\n{\n  \"patients\": [\n    {\n      \"id\": \"PAT-12345\",\n      \"firstName\": \"John\",\n      \"lastName\": \"Smith\",\n      \"dateOfBirth\": \"1980-05-15\",\n      \"gender\": \"MALE\",\n      \"mrn\": \"MRN-987654\",\n      \"active\": true\n    }\n  ],\n  \"totalCount\": 1\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Patient by ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{patient_url}}/api/v1/patients/{{patient_id}}",
+					"host": [
+						"{{patient_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}"
+					]
+				},
+				"description": "**Get detailed patient information by ID**\n\n**Path Parameters:**\n- `patient_id` - Patient identifier (from search or environment variable)\n\n**Response:**\n```json\n{\n  \"id\": \"PAT-12345\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"dateOfBirth\": \"1980-05-15\",\n  \"gender\": \"MALE\",\n  \"mrn\": \"MRN-987654\",\n  \"active\": true,\n  \"contactInfo\": {\n    \"phone\": \"555-1234\",\n    \"email\": \"john.smith@example.com\",\n    \"address\": {\n      \"street\": \"123 Main St\",\n      \"city\": \"Springfield\",\n      \"state\": \"IL\",\n      \"zip\": \"62701\"\n    }\n  },\n  \"insurance\": {\n    \"payer\": \"Blue Cross Blue Shield\",\n    \"memberId\": \"ABC123456\"\n  }\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Patient",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"// Save created patient ID to environment",
+							"if (pm.response.code === 201) {",
+							"    const jsonData = pm.response.json();",
+							"    pm.environment.set(\"patient_id\", jsonData.id);",
+							"    console.log(\"✅ Patient created:\", jsonData.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": \"1985-03-22\",\n  \"gender\": \"FEMALE\",\n  \"mrn\": \"MRN-123456\",\n  \"contactInfo\": {\n    \"phone\": \"555-9876\",\n    \"email\": \"jane.doe@example.com\",\n    \"address\": {\n      \"street\": \"456 Oak Ave\",\n      \"city\": \"Chicago\",\n      \"state\": \"IL\",\n      \"zip\": \"60601\"\n    }\n  },\n  \"insurance\": {\n    \"payer\": \"Aetna\",\n    \"memberId\": \"XYZ789012\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{patient_url}}/api/v1/patients",
+					"host": [
+						"{{patient_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients"
+					]
+				},
+				"description": "**Create a new patient record**\n\n**Required Fields:**\n- `firstName` - Patient first name\n- `lastName` - Patient last name\n- `dateOfBirth` - DOB in YYYY-MM-DD format\n- `gender` - MALE | FEMALE | OTHER | UNKNOWN\n- `mrn` - Medical Record Number (must be unique)\n\n**Optional Fields:**\n- `contactInfo` - Phone, email, address\n- `insurance` - Payer and member ID\n\n**Response (201 Created):**\n```json\n{\n  \"id\": \"PAT-67890\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"dateOfBirth\": \"1985-03-22\",\n  \"gender\": \"FEMALE\",\n  \"mrn\": \"MRN-123456\",\n  \"active\": true,\n  \"createdAt\": \"2026-01-24T10:30:00Z\"\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Update Patient",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"contactInfo\": {\n    \"phone\": \"555-5555\",\n    \"email\": \"newemail@example.com\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{patient_url}}/api/v1/patients/{{patient_id}}",
+					"host": [
+						"{{patient_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}"
+					]
+				},
+				"description": "**Update patient information**\n\n**Note:** Only include fields you want to update. All other fields remain unchanged.\n\n**Updatable Fields:**\n- `contactInfo` - Phone, email, address\n- `insurance` - Payer and member ID\n- `active` - Patient status\n\n**Non-updatable Fields:**\n- `firstName`, `lastName` (requires admin approval)\n- `dateOfBirth` (immutable)\n- `mrn` (immutable)\n\n**Response (200 OK):**\n```json\n{\n  \"id\": \"PAT-12345\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"contactInfo\": {\n    \"phone\": \"555-5555\",\n    \"email\": \"newemail@example.com\"\n  },\n  \"updatedAt\": \"2026-01-24T10:35:00Z\"\n}\n```"
+			},
+			"response": []
+		},
+		{
+			"name": "Deactivate Patient",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{jwt_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-Tenant-ID",
+						"value": "{{tenant_id}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{patient_url}}/api/v1/patients/{{patient_id}}",
+					"host": [
+						"{{patient_url}}"
+					],
+					"path": [
+						"api",
+						"v1",
+						"patients",
+						"{{patient_id}}"
+					]
+				},
+				"description": "**Deactivate a patient record**\n\n**Note:** Patient records are never permanently deleted (HIPAA compliance). This request marks the patient as `active: false`.\n\n**Response (204 No Content):**\nNo response body. Patient is deactivated.\n\n**To reactivate:**\nUse the \"Update Patient\" request with `{\"active\": true}`."
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

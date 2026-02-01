@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchange"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchange
+    http://www.liquibase.org/xml/ns/dbchange/dbchangelog-4.20.xsd">
+
+    <changeSet id="0014-create-alert-configs-table" author="hdim-system">
+        <comment>Create alert_configs table for storing alert configurations</comment>
+
+        <createTable tableName="alert_configs">
+            <!-- Primary Key -->
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Multi-tenant isolation -->
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Service identification -->
+            <column name="service_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Alert configuration -->
+            <column name="alert_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="threshold" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="duration_minutes" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="severity" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit fields -->
+            <column name="created_by" type="VARCHAR(255)"/>
+
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_triggered" type="TIMESTAMP"/>
+        </createTable>
+
+        <!-- Indexes for performance -->
+        <createIndex indexName="idx_alert_configs_tenant" tableName="alert_configs">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_alert_configs_service" tableName="alert_configs">
+            <column name="service_name"/>
+        </createIndex>
+
+        <createIndex indexName="idx_alert_configs_enabled" tableName="alert_configs">
+            <column name="enabled"/>
+        </createIndex>
+
+        <!-- Composite index for common query pattern -->
+        <createIndex indexName="idx_alert_configs_tenant_enabled" tableName="alert_configs">
+            <column name="tenant_id"/>
+            <column name="enabled"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="alert_configs"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0014-create-alert-notification-channels-table" author="hdim-system">
+        <comment>Create alert_notification_channels table for storing notification channels per alert</comment>
+
+        <createTable tableName="alert_notification_channels">
+            <!-- Foreign key to alert_configs -->
+            <column name="alert_config_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Notification channel -->
+            <column name="channel" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Foreign key constraint -->
+        <addForeignKeyConstraint
+            baseTableName="alert_notification_channels"
+            baseColumnNames="alert_config_id"
+            constraintName="fk_alert_channels_config"
+            referencedTableName="alert_configs"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <!-- Index for foreign key -->
+        <createIndex indexName="idx_alert_channels_config_id" tableName="alert_notification_channels">
+            <column name="alert_config_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="alert_notification_channels"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

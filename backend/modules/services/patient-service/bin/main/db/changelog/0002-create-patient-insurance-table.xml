@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-patient-insurance-table" author="healthdata-system">
+        <comment>Create patient insurance table for coverage information</comment>
+
+        <createTable tableName="patient_insurance">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="uuid">
+                <constraints nullable="false"
+                            foreignKeyName="fk_insurance_patient"
+                            references="patient_demographics(id)"/>
+            </column>
+
+            <!-- Insurance Details -->
+            <column name="coverage_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payer_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payer_id" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="plan_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="member_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_number" type="varchar(128)">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Coverage Period -->
+            <column name="effective_date" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="termination_date" type="date">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- Status -->
+            <column name="is_primary" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit -->
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_patient_ins_patient" tableName="patient_insurance">
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_patient_ins_member" tableName="patient_insurance">
+            <column name="member_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="patient_insurance"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

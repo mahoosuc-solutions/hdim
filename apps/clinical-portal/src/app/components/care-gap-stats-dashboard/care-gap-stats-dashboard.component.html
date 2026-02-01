@@ -1,0 +1,118 @@
+<div class="care-gap-stats-dashboard">
+  <!-- Statistics Cards Grid -->
+  <div class="stats-grid">
+    <!-- Total Gaps Card -->
+    <app-stat-card
+      title="Total Care Gaps"
+      [value]="totalGapsDisplay()"
+      subtitle="Open gaps across all patients"
+      icon="warning"
+      color="warn"
+      [clickable]="true"
+      [primaryAction]="{
+        label: 'View All',
+        icon: 'arrow_forward',
+        ariaLabel: 'View all care gaps'
+      }"
+      (primaryActionClick)="viewAllGaps()"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="'Total care gaps: ' + totalGapsDisplay()">
+    </app-stat-card>
+
+    <!-- High Priority Card -->
+    <app-stat-card
+      title="High Priority"
+      [value]="highPriorityDisplay()"
+      subtitle="Require immediate attention"
+      icon="priority_high"
+      color="warn"
+      trend="up"
+      [clickable]="true"
+      [primaryAction]="{
+        label: 'View',
+        icon: 'visibility',
+        ariaLabel: 'View high priority care gaps'
+      }"
+      (primaryActionClick)="viewHighPriority()"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="'High priority care gaps: ' + highPriorityDisplay()">
+    </app-stat-card>
+
+    <!-- Overdue Card -->
+    <app-stat-card
+      title="Overdue"
+      [value]="overdueDisplay()"
+      subtitle="Past due date"
+      icon="event_busy"
+      color="warn"
+      trend="down"
+      [clickable]="true"
+      [primaryAction]="{
+        label: 'View',
+        icon: 'visibility',
+        ariaLabel: 'View overdue care gaps'
+      }"
+      (primaryActionClick)="viewOverdue()"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="'Overdue care gaps: ' + overdueDisplay()">
+    </app-stat-card>
+
+    <!-- Closed This Month Card -->
+    <app-stat-card
+      title="Closed This Month"
+      [value]="closedDisplay()"
+      subtitle="Successfully addressed"
+      icon="check_circle"
+      color="success"
+      trend="up"
+      [clickable]="true"
+      [primaryAction]="{
+        label: 'View',
+        icon: 'visibility',
+        ariaLabel: 'View closed care gaps'
+      }"
+      (primaryActionClick)="viewClosedThisMonth()"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="'Closed care gaps this month: ' + closedDisplay()">
+    </app-stat-card>
+  </div>
+
+  <!-- Trend Chart Section -->
+  <mat-card class="trend-card" role="region" aria-labelledby="trend-heading">
+    <mat-card-header>
+      <mat-card-title id="trend-heading">
+        <mat-icon aria-hidden="true">show_chart</mat-icon>
+        Care Gap Trends (30 Days)
+      </mat-card-title>
+      <mat-card-subtitle>Open vs Closed gaps over time</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (loading()) {
+        <div class="loading-state">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>Loading trend data...</p>
+        </div>
+      } @else if (loadError()) {
+        <div class="error-state">
+          <mat-icon color="warn">error</mat-icon>
+          <p>{{ loadError() }}</p>
+        </div>
+      } @else if (trendData().length === 0) {
+        <div class="no-data-state">
+          <mat-icon>show_chart</mat-icon>
+          <p>No trend data available</p>
+        </div>
+      } @else {
+        <app-care-gap-trend
+          [data]="trendData()"
+          [height]="200">
+        </app-care-gap-trend>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

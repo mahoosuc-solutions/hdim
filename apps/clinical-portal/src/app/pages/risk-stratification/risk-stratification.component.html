@@ -48,7 +48,7 @@
           <span class="count" [style.color]="level.color">{{ getGroupSummary(level.level)?.count || 0 }}</span>
         </div>
         <div class="card-body">
-          <h3>{{ level.label }}</h3>
+          <h2>{{ level.label }}</h2>
           <p class="description">{{ level.description }}</p>
           <div class="stats">
             <span class="stat">
@@ -339,11 +339,11 @@
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Actions</th>
           <td mat-cell *matCellDef="let patient">
-            <button mat-icon-button color="primary" matTooltip="View Details"
+            <button aria-label="View" mat-icon-button color="primary" matTooltip="View Details"
                     (click)="viewPatientDetails(patient)">
               <mat-icon>visibility</mat-icon>
             </button>
-            <button mat-icon-button matTooltip="Care Gaps"
+            <button aria-label="View" mat-icon-button matTooltip="Care Gaps"
                     (click)="viewCareGaps(patient)"
                     [disabled]="patient.openCareGaps === 0">
               <mat-icon>checklist</mat-icon>

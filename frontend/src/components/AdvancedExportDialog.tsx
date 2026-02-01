@@ -29,7 +29,6 @@ import {
   CircularProgress,
   Divider,
   Stack,
-  Chip,
 } from '@mui/material';
 import { exportToCSV, exportToJSON } from '../services/export.service';
 import type { AnyEvaluationEvent } from '../types/events';

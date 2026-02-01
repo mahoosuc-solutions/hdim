@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM CMS Vision | Complete Healthcare Quality Platform</title>
+    <style>
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-secondary: #111827;
+            --bg-card: #1f2937;
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-pink: #ec4899;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border-color: #374151;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+        }
+
+        .header {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, transparent 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 3px solid var(--accent-green);
+            display: inline-block;
+        }
+
+        /* Component Cards */
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .component-card {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .component-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .component-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+        }
+
+        .component-card.green::before { background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); }
+        .component-card.blue::before { background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+        .component-card.purple::before { background: linear-gradient(90deg, var(--accent-purple), var(--accent-pink)); }
+        .component-card.orange::before { background: linear-gradient(90deg, var(--accent-orange), var(--accent-red)); }
+        .component-card.cyan::before { background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue)); }
+
+        .component-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .component-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .component-port {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .component-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            margin-bottom: 1rem;
+        }
+
+        .component-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* API Table */
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 1rem;
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .api-table th, .api-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .api-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .api-table tr:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .api-code {
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+        }
+
+        /* HEDIS Measures */
+        .measure-category {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .measure-category-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .measure-category-icon {
+            font-size: 2rem;
+        }
+
+        .measure-category-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .measure-category-count {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .measure-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .measure-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(16, 185, 129, 0.05);
+            border-radius: 0.5rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .measure-code {
+            background: var(--accent-green);
+            color: black;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .measure-name {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Data Flow */
+        .data-flow {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .flow-step::before {
+            content: '';
+            position: absolute;
+            left: 24px;
+            top: 100%;
+            width: 2px;
+            height: 0.5rem;
+            background: var(--accent-cyan);
+        }
+
+        .flow-step:last-child::before {
+            display: none;
+        }
+
+        .flow-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .flow-icon.green { background: rgba(16, 185, 129, 0.2); }
+        .flow-icon.blue { background: rgba(59, 130, 246, 0.2); }
+        .flow-icon.purple { background: rgba(139, 92, 246, 0.2); }
+        .flow-icon.orange { background: rgba(245, 158, 11, 0.2); }
+        .flow-icon.cyan { background: rgba(6, 182, 212, 0.2); }
+
+        .flow-content h4 {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-content p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--accent-green);
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+
+        .footer-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 1.5rem; }
+            .measure-list { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+
+    <header class="header">
+        <div class="badge">Complete CMS Integration</div>
+        <h1>HDIM CMS Vision</h1>
+        <p class="subtitle">A comprehensive healthcare quality platform with 52 HEDIS measures, real-time CMS API integration, and complete regulatory compliance</p>
+        <div class="stats-grid" style="max-width: 800px; margin: 2rem auto 0;">
+            <div class="stat-card">
+                <div class="stat-value">52</div>
+                <div class="stat-label">HEDIS Measures</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">CMS APIs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">100%</div>
+                <div class="stat-label">Coverage</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">36</div>
+                <div class="stat-label">Services</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Core Components -->
+        <section class="section">
+            <h2 class="section-title">Core CMS Components</h2>
+            <div class="component-grid">
+                <div class="component-card green">
+                    <div class="component-icon">🔌</div>
+                    <div class="component-title">CMS Connector Service</div>
+                    <div class="component-port">Port 8103</div>
+                    <div class="component-status">Complete</div>
+                    <div class="component-desc">Real-time Medicare data integration via BCDA, DPC, Blue Button 2.0, AB2D, and QPP APIs</div>
+                </div>
+                <div class="component-card blue">
+                    <div class="component-icon">📊</div>
+                    <div class="component-title">Quality Measure Service</div>
+                    <div class="component-port">Port 8087</div>
+                    <div class="component-status">Complete</div>
+                    <div class="component-desc">52 HEDIS measures with CQL evaluation, care gap detection, and clinical insights</div>
+                </div>
+                <div class="component-card purple">
+                    <div class="component-icon">📋</div>
+                    <div class="component-title">QRDA Export Service</div>
+                    <div class="component-port">Port 8104</div>
+                    <div class="component-status">Complete</div>
+                    <div class="component-desc">CMS eCQM submission with Category I (patient) and Category III (aggregate) exports</div>
+                </div>
+                <div class="component-card orange">
+                    <div class="component-icon">💰</div>
+                    <div class="component-title">HCC Service</div>
+                    <div class="component-port">Port 8105</div>
+                    <div class="component-status">Complete</div>
+                    <div class="component-desc">Medicare Advantage risk adjustment with V24/V28 models and RAF scoring</div>
+                </div>
+                <div class="component-card cyan">
+                    <div class="component-icon">📈</div>
+                    <div class="component-title">Analytics Services</div>
+                    <div class="component-port">Ports 8098-8099</div>
+                    <div class="component-status">Complete</div>
+                    <div class="component-desc">Quality reporting dashboards, predictive analytics, and payer workflows</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CMS APIs -->
+        <section class="section">
+            <h2 class="section-title">Supported CMS APIs</h2>
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>API</th>
+                        <th>Purpose</th>
+                        <th>Use Case</th>
+                        <th>Latency</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="api-code">BCDA</span></td>
+                        <td>Beneficiary Claims Data API</td>
+                        <td>Weekly bulk export of Medicare Part A, B, D claims (NDJSON)</td>
+                        <td>5-10 days</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-code">DPC</span></td>
+                        <td>Data at Point of Care</td>
+                        <td>Real-time claim queries during patient encounters</td>
+                        <td>&lt;500ms</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-code">Blue Button 2.0</span></td>
+                        <td>Beneficiary-initiated sharing</td>
+                        <td>SMART apps, research (OAuth2 consent)</td>
+                        <td>Real-time</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-code">AB2D</span></td>
+                        <td>Medicare Part D Claims</td>
+                        <td>Bulk Part D claims for PDP sponsors</td>
+                        <td>5-10 days</td>
+                    </tr>
+                    <tr>
+                        <td><span class="api-code">QPP</span></td>
+                        <td>Quality Performance Reporting</td>
+                        <td>Real-time submissions for MIPS-eligible providers</td>
+                        <td>Real-time</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Healthcare Message Types -->
+        <section class="section">
+            <h2 class="section-title">Healthcare Data Standards & Message Types</h2>
+
+            <!-- Message Type Legend -->
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-bottom: 2rem; padding: 1.5rem; background: var(--bg-card); border-radius: 1rem; border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #ef4444; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">HL7 v2.x</span>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">ADT, ORU, ORM</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">FHIR R4</span>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">Resources, Bundles</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #8b5cf6; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">C-CDA</span>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">CCD, Discharge</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #10b981; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">CQL</span>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">Measure Logic</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #f59e0b; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">QRDA I/III</span>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">CMS Submission</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: #06b6d4; color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">NDJSON</span>
+                    <span style="color: var(--text-secondary); font-size: 0.85rem;">Bulk Data</span>
+                </div>
+            </div>
+
+            <!-- Visual Data Flow with Message Types -->
+            <div style="background: var(--bg-card); border-radius: 1rem; padding: 2rem; border: 1px solid var(--border-color);">
+                <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--accent-cyan);">Data Transformation Pipeline</h3>
+
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem;">
+                    <!-- Source -->
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 120px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🏥</div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">EHR/HIE</div>
+                        <span style="background: #ef4444; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">HL7 v2.x</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 1.5rem;">→</div>
+
+                    <!-- CDR Processor -->
+                    <div style="background: rgba(139, 92, 246, 0.1); border: 2px solid #8b5cf6; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 120px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">⚙️</div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">CDR Processor</div>
+                        <span style="background: #8b5cf6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">C-CDA</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 1.5rem;">→</div>
+
+                    <!-- CMS APIs -->
+                    <div style="background: rgba(6, 182, 212, 0.1); border: 2px solid #06b6d4; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 120px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🔌</div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">CMS APIs</div>
+                        <span style="background: #06b6d4; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">NDJSON</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 1.5rem;">→</div>
+
+                    <!-- FHIR Service -->
+                    <div style="background: rgba(59, 130, 246, 0.1); border: 2px solid #3b82f6; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 120px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📁</div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">FHIR Service</div>
+                        <span style="background: #3b82f6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">FHIR R4</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 1.5rem;">→</div>
+
+                    <!-- CQL Engine -->
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 2px solid #10b981; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 120px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🧮</div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">CQL Engine</div>
+                        <span style="background: #10b981; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">CQL</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 1.5rem;">→</div>
+
+                    <!-- QRDA Export -->
+                    <div style="background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b; border-radius: 0.75rem; padding: 1rem; text-align: center; min-width: 120px;">
+                        <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">📋</div>
+                        <div style="font-weight: 600; font-size: 0.9rem;">QRDA Export</div>
+                        <span style="background: #f59e0b; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">QRDA I/III</span>
+                    </div>
+                </div>
+
+                <!-- Message Type Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                    <div style="padding: 1rem; background: rgba(239, 68, 68, 0.05); border-radius: 0.5rem; border-left: 3px solid #ef4444;">
+                        <strong style="color: #ef4444;">HL7 v2.x</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">ADT (admit/discharge), ORU (lab results), ORM (orders) from EHRs</p>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(59, 130, 246, 0.05); border-radius: 0.5rem; border-left: 3px solid #3b82f6;">
+                        <strong style="color: #3b82f6;">FHIR R4</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Patient, Condition, Observation, MedicationRequest resources</p>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(139, 92, 246, 0.05); border-radius: 0.5rem; border-left: 3px solid #8b5cf6;">
+                        <strong style="color: #8b5cf6;">C-CDA</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Continuity of Care Documents, Discharge Summaries</p>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 0.5rem; border-left: 3px solid #10b981;">
+                        <strong style="color: #10b981;">CQL</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Clinical Quality Language for 52 HEDIS measure definitions</p>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(245, 158, 11, 0.05); border-radius: 0.5rem; border-left: 3px solid #f59e0b;">
+                        <strong style="color: #f59e0b;">QRDA I/III</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Quality Reporting Document Architecture for CMS eCQM submission</p>
+                    </div>
+                    <div style="padding: 1rem; background: rgba(6, 182, 212, 0.05); border-radius: 0.5rem; border-left: 3px solid #06b6d4;">
+                        <strong style="color: #06b6d4;">NDJSON</strong>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Newline-delimited JSON for BCDA/AB2D bulk data exports</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- HEDIS Measures -->
+        <section class="section">
+            <h2 class="section-title">52 HEDIS Measures (100% Coverage)</h2>
+
+            <div class="measure-category">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">🩺</span>
+                    <span class="measure-category-title">Preventive Care & Screening</span>
+                    <span class="measure-category-count">13 Measures</span>
+                </div>
+                <div class="measure-list">
+                    <div class="measure-item"><span class="measure-code">BCS</span><span class="measure-name">Breast Cancer Screening (50-74)</span></div>
+                    <div class="measure-item"><span class="measure-code">COL</span><span class="measure-name">Colorectal Cancer Screening (50-75)</span></div>
+                    <div class="measure-item"><span class="measure-code">CCS</span><span class="measure-name">Cervical Cancer Screening (21-64)</span></div>
+                    <div class="measure-item"><span class="measure-code">IMA</span><span class="measure-name">Immunizations for Adolescents (13)</span></div>
+                    <div class="measure-item"><span class="measure-code">CIS</span><span class="measure-name">Childhood Immunization Status (2)</span></div>
+                    <div class="measure-item"><span class="measure-code">AAP</span><span class="measure-name">Adults' Access to Preventive Care</span></div>
+                    <div class="measure-item"><span class="measure-code">W15</span><span class="measure-name">Well-Child Visits (0-30 mo)</span></div>
+                    <div class="measure-item"><span class="measure-code">WCC</span><span class="measure-name">Weight Assessment (3-17)</span></div>
+                    <div class="measure-item"><span class="measure-code">URI</span><span class="measure-name">Appropriate URI Treatment</span></div>
+                    <div class="measure-item"><span class="measure-code">ABA</span><span class="measure-name">Adult BMI Assessment (18-74)</span></div>
+                    <div class="measure-item"><span class="measure-code">CWP</span><span class="measure-name">Appropriate Testing for Pharyngitis</span></div>
+                    <div class="measure-item"><span class="measure-code">LSC</span><span class="measure-name">Lead Screening in Children (1-6)</span></div>
+                    <div class="measure-item"><span class="measure-code">CHL</span><span class="measure-name">Chlamydia Screening (16-24)</span></div>
+                </div>
+            </div>
+
+            <div class="measure-category" style="border-color: rgba(59, 130, 246, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">💊</span>
+                    <span class="measure-category-title">Chronic Disease Management</span>
+                    <span class="measure-category-count" style="background: rgba(59, 130, 246, 0.2); color: var(--accent-blue);">15 Measures</span>
+                </div>
+                <div class="measure-list">
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">CBP</span><span class="measure-name">Controlling High Blood Pressure</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">CDC</span><span class="measure-name">Comprehensive Diabetes Care</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">HBD</span><span class="measure-name">Hemoglobin A1c Control</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">SPD</span><span class="measure-name">Statin Therapy for CVD</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">OMW</span><span class="measure-name">Osteoporosis Management</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">AMR</span><span class="measure-name">Asthma Medication Ratio</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">KED</span><span class="measure-name">Kidney Health for Diabetes</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">MSC</span><span class="measure-name">Smoking Cessation</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">BPD</span><span class="measure-name">BP Control for Diabetes</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">PBH</span><span class="measure-name">Beta-Blocker After MI</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">PCE</span><span class="measure-name">Pharmacotherapy for OUD</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">EED</span><span class="measure-name">Eye Exam for Diabetes</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">VLS</span><span class="measure-name">Viral Load Suppression HIV</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">MMA</span><span class="measure-name">Medication Management Asthma</span></div>
+                    <div class="measure-item" style="background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);"><span class="measure-code" style="background: var(--accent-blue);">SPR</span><span class="measure-name">Statin Therapy Received</span></div>
+                </div>
+            </div>
+
+            <div class="measure-category" style="border-color: rgba(139, 92, 246, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">🧠</span>
+                    <span class="measure-category-title">Behavioral Health & Substance Use</span>
+                    <span class="measure-category-count" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-purple);">16 Measures</span>
+                </div>
+                <div class="measure-list">
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">AMM</span><span class="measure-name">Antidepressant Medication Mgmt</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">FUH</span><span class="measure-name">Follow-Up MH Hospitalization</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">ADD</span><span class="measure-name">Follow-Up Care for ADHD</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">IET</span><span class="measure-name">Initiation AOD Treatment</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">FUA</span><span class="measure-name">Follow-Up ED Visit AOD</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">SSD</span><span class="measure-name">Diabetes Screen Schizophrenia</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">SMC</span><span class="measure-name">CV Monitoring Schizophrenia</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">PPC</span><span class="measure-name">Prenatal/Postpartum Care</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">FUM</span><span class="measure-name">Follow-Up ED Mental Illness</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">SAA</span><span class="measure-name">Adherence Antipsychotics</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">APM</span><span class="measure-name">Metabolic Monitoring</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">DRR</span><span class="measure-name">Depression Remission</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">PDS</span><span class="measure-name">Postpartum Depression Screen</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">HDO</span><span class="measure-name">High Dosage Opioids</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">SFM</span><span class="measure-name">Safe Opioid Prescribing</span></div>
+                    <div class="measure-item" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);"><span class="measure-code" style="background: var(--accent-purple);">ASF</span><span class="measure-name">Alcohol Use Screening</span></div>
+                </div>
+            </div>
+
+            <div class="measure-category" style="border-color: rgba(245, 158, 11, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">🏥</span>
+                    <span class="measure-category-title">Utilization, Access & Overuse Prevention</span>
+                    <span class="measure-category-count" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-orange);">8 Measures</span>
+                </div>
+                <div class="measure-list">
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">MRP</span><span class="measure-name">Medication Reconciliation</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">PCR</span><span class="measure-name">Plan All-Cause Readmissions</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">TSC</span><span class="measure-name">Transitions of Care</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">NCS</span><span class="measure-name">Non-Recommended Cervical Screen</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">LBP</span><span class="measure-name">Imaging for Low Back Pain</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">COA</span><span class="measure-name">Care for Older Adults</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">CAP</span><span class="measure-name">Children Access to PCP</span></div>
+                    <div class="measure-item" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);"><span class="measure-code" style="background: var(--accent-orange);">FVA</span><span class="measure-name">Influenza Vaccinations</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Flow -->
+        <section class="section">
+            <h2 class="section-title">End-to-End Data Flow</h2>
+            <div class="data-flow">
+                <div class="flow-step">
+                    <div class="flow-icon cyan">🔌</div>
+                    <div class="flow-content">
+                        <h4>CMS APIs (BCDA/DPC) <span style="background: #06b6d4; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.5rem;">NDJSON</span></h4>
+                        <p>OAuth2 authentication, real-time Medicare claims data via bulk FHIR exports</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon green">📁</div>
+                    <div class="flow-content">
+                        <h4>HDIM FHIR Service <span style="background: #3b82f6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.5rem;">FHIR R4</span></h4>
+                        <p>FHIR R4 resources: Patient, ExplanationOfBenefit, Condition, Procedure, MedicationRequest</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon blue">📊</div>
+                    <div class="flow-content">
+                        <h4>Quality Measure Service <span style="background: #10b981; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.5rem;">CQL</span> <span style="background: #3b82f6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.25rem;">MeasureReport</span></h4>
+                        <p>52 HEDIS measures via CQL evaluation, care gap detection, clinical insights</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon orange">💰</div>
+                    <div class="flow-content">
+                        <h4>HCC Service <span style="background: #3b82f6; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.5rem;">FHIR R4</span></h4>
+                        <p>RAF calculation from FHIR Condition resources, V24/V28 HCC mapping, recapture opportunities</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon purple">📋</div>
+                    <div class="flow-content">
+                        <h4>QRDA Export Service <span style="background: #f59e0b; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; margin-left: 0.5rem;">QRDA I/III</span></h4>
+                        <p>HL7 CDA R2 compliant Category I (patient-level) and Category III (aggregate) XML exports</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-icon green">✅</div>
+                    <div class="flow-content">
+                        <h4>CMS Quality Programs</h4>
+                        <p>QPP/MIPS, Hospital Quality, Medicare Advantage Star Ratings, ACO MSSP Reporting</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Verified Metrics -->
+        <section class="section">
+            <h2 class="section-title">Production Metrics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">52</div>
+                    <div class="stat-label">HEDIS Measures</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--accent-blue);">36</div>
+                    <div class="stat-label">Microservices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--accent-purple);">1,037</div>
+                    <div class="stat-label">API Endpoints</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--accent-cyan);">468</div>
+                    <div class="stat-label">Test Classes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--accent-orange);">371</div>
+                    <div class="stat-label">Audited Methods</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" style="color: var(--accent-pink);">719K</div>
+                    <div class="stat-label">Lines of Code</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 36 Microservices Catalog -->
+        <section class="section">
+            <h2 class="section-title">36 Microservices Architecture</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Complete enterprise healthcare platform built with Java 21, Spring Boot 3.x, and HAPI FHIR 7.x</p>
+
+            <!-- Core Clinical Domain -->
+            <div class="measure-category" style="border-color: rgba(16, 185, 129, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">🩺</span>
+                    <span class="measure-category-title">Core Clinical Services</span>
+                    <span class="measure-category-count">7 Services</span>
+                </div>
+                <div class="component-grid">
+                    <div class="component-card green">
+                        <div class="component-title">quality-measure-service</div>
+                        <div class="component-port">Port 8087</div>
+                        <div class="component-desc">52 HEDIS measures, CQL evaluation, care gap detection</div>
+                    </div>
+                    <div class="component-card green">
+                        <div class="component-title">cql-engine-service</div>
+                        <div class="component-port">Port 8081</div>
+                        <div class="component-desc">Clinical Quality Language execution engine</div>
+                    </div>
+                    <div class="component-card green">
+                        <div class="component-title">care-gap-service</div>
+                        <div class="component-port">Port 8086</div>
+                        <div class="component-desc">Real-time care gap identification and alerts</div>
+                    </div>
+                    <div class="component-card green">
+                        <div class="component-title">hcc-service</div>
+                        <div class="component-port">Port 8105</div>
+                        <div class="component-desc">HCC risk adjustment, V24/V28 models, RAF scoring</div>
+                    </div>
+                    <div class="component-card green">
+                        <div class="component-title">prior-auth-service</div>
+                        <div class="component-port">Port 8106</div>
+                        <div class="component-desc">Prior authorization workflow automation</div>
+                    </div>
+                    <div class="component-card green">
+                        <div class="component-title">sdoh-service</div>
+                        <div class="component-port">Port 8107</div>
+                        <div class="component-desc">Social determinants of health tracking</div>
+                    </div>
+                    <div class="component-card green">
+                        <div class="component-title">consent-service</div>
+                        <div class="component-port">Port 8108</div>
+                        <div class="component-desc">Patient consent management and enforcement</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Integration Domain -->
+            <div class="measure-category" style="border-color: rgba(59, 130, 246, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">🔗</span>
+                    <span class="measure-category-title">Integration Services</span>
+                    <span class="measure-category-count" style="background: rgba(59, 130, 246, 0.2); color: var(--accent-blue);">8 Services</span>
+                </div>
+                <div class="component-grid">
+                    <div class="component-card blue">
+                        <div class="component-title">fhir-service</div>
+                        <div class="component-port">Port 8085</div>
+                        <div class="component-desc">FHIR R4 resource server, HAPI FHIR 7.x</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">patient-service</div>
+                        <div class="component-port">Port 8084</div>
+                        <div class="component-desc">Patient demographics and clinical data</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">ehr-connector-service</div>
+                        <div class="component-port">Port 8090</div>
+                        <div class="component-desc">Epic, Cerner, Athena EHR integrations</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">cdr-processor-service</div>
+                        <div class="component-port">Port 8091</div>
+                        <div class="component-desc">Clinical data repository processing</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">ecr-service</div>
+                        <div class="component-port">Port 8092</div>
+                        <div class="component-desc">Electronic case reporting for public health</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">data-enrichment-service</div>
+                        <div class="component-port">Port 8093</div>
+                        <div class="component-desc">Data quality enhancement and normalization</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">event-processing-service</div>
+                        <div class="component-port">Port 8094</div>
+                        <div class="component-desc">Real-time event stream processing</div>
+                    </div>
+                    <div class="component-card blue">
+                        <div class="component-title">event-router-service</div>
+                        <div class="component-port">Port 8095</div>
+                        <div class="component-desc">Event routing and orchestration</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Domain -->
+            <div class="measure-category" style="border-color: rgba(139, 92, 246, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">📊</span>
+                    <span class="measure-category-title">Analytics Services</span>
+                    <span class="measure-category-count" style="background: rgba(139, 92, 246, 0.2); color: var(--accent-purple);">5 Services</span>
+                </div>
+                <div class="component-grid">
+                    <div class="component-card purple">
+                        <div class="component-title">analytics-service</div>
+                        <div class="component-port">Port 8098</div>
+                        <div class="component-desc">Quality reporting dashboards and metrics</div>
+                    </div>
+                    <div class="component-card purple">
+                        <div class="component-title">predictive-analytics-service</div>
+                        <div class="component-port">Port 8099</div>
+                        <div class="component-desc">ML-based risk prediction models</div>
+                    </div>
+                    <div class="component-card purple">
+                        <div class="component-title">qrda-export-service</div>
+                        <div class="component-port">Port 8104</div>
+                        <div class="component-desc">QRDA I/III CMS submission exports</div>
+                    </div>
+                    <div class="component-card purple">
+                        <div class="component-title">payer-workflows-service</div>
+                        <div class="component-port">Port 8100</div>
+                        <div class="component-desc">Payer-specific workflow automation</div>
+                    </div>
+                    <div class="component-card purple">
+                        <div class="component-title">migration-workflow-service</div>
+                        <div class="component-port">Port 8101</div>
+                        <div class="component-desc">Data migration orchestration</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform Domain -->
+            <div class="measure-category" style="border-color: rgba(6, 182, 212, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">⚙️</span>
+                    <span class="measure-category-title">Platform Services</span>
+                    <span class="measure-category-count" style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan);">9 Services</span>
+                </div>
+                <div class="component-grid">
+                    <div class="component-card cyan">
+                        <div class="component-title">gateway-service</div>
+                        <div class="component-port">Port 8001</div>
+                        <div class="component-desc">Primary API gateway, JWT authentication</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">gateway-admin-service</div>
+                        <div class="component-port">Port 8002</div>
+                        <div class="component-desc">Administrative API gateway</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">gateway-clinical-service</div>
+                        <div class="component-port">Port 8003</div>
+                        <div class="component-desc">Clinical workflow gateway</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">gateway-fhir-service</div>
+                        <div class="component-port">Port 8004</div>
+                        <div class="component-desc">FHIR-specific API gateway</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">notification-service</div>
+                        <div class="component-port">Port 8096</div>
+                        <div class="component-desc">Multi-channel notifications (email, SMS, push)</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">approval-service</div>
+                        <div class="component-port">Port 8097</div>
+                        <div class="component-desc">Workflow approval management</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">documentation-service</div>
+                        <div class="component-port">Port 8102</div>
+                        <div class="component-desc">API documentation and developer portal</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">ai-assistant-service</div>
+                        <div class="component-port">Port 8109</div>
+                        <div class="component-desc">AI-powered clinical decision support</div>
+                    </div>
+                    <div class="component-card cyan">
+                        <div class="component-title">cms-connector-service</div>
+                        <div class="component-port">Port 8103</div>
+                        <div class="component-desc">CMS API integration (BCDA, DPC, Blue Button)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Business Domain -->
+            <div class="measure-category" style="border-color: rgba(245, 158, 11, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">💼</span>
+                    <span class="measure-category-title">Business & Agent Services</span>
+                    <span class="measure-category-count" style="background: rgba(245, 158, 11, 0.2); color: var(--accent-orange);">4 Services</span>
+                </div>
+                <div class="component-grid">
+                    <div class="component-card orange">
+                        <div class="component-title">sales-automation-service</div>
+                        <div class="component-port">Port 8110</div>
+                        <div class="component-desc">Sales pipeline and demo automation</div>
+                    </div>
+                    <div class="component-card orange">
+                        <div class="component-title">agent-builder-service</div>
+                        <div class="component-port">Port 8111</div>
+                        <div class="component-desc">AI agent configuration and deployment</div>
+                    </div>
+                    <div class="component-card orange">
+                        <div class="component-title">agent-runtime-service</div>
+                        <div class="component-port">Port 8112</div>
+                        <div class="component-desc">AI agent execution runtime</div>
+                    </div>
+                    <div class="component-card orange">
+                        <div class="component-title">cost-analysis-service</div>
+                        <div class="component-port">Port 8113</div>
+                        <div class="component-desc">Healthcare cost analytics and projections</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DevOps & Demo Domain -->
+            <div class="measure-category" style="border-color: rgba(236, 72, 153, 0.3);">
+                <div class="measure-category-header">
+                    <span class="measure-category-icon">🚀</span>
+                    <span class="measure-category-title">DevOps & Demo Services</span>
+                    <span class="measure-category-count" style="background: rgba(236, 72, 153, 0.2); color: var(--accent-pink);">3 Services</span>
+                </div>
+                <div class="component-grid">
+                    <div class="component-card" style="border-color: rgba(236, 72, 153, 0.3);">
+                        <div class="component-title" style="color: var(--accent-pink);">devops-agent-service</div>
+                        <div class="component-port">Port 8114</div>
+                        <div class="component-desc">Infrastructure automation and monitoring</div>
+                    </div>
+                    <div class="component-card" style="border-color: rgba(236, 72, 153, 0.3);">
+                        <div class="component-title" style="color: var(--accent-pink);">demo-orchestrator-service</div>
+                        <div class="component-port">Port 8115</div>
+                        <div class="component-desc">Demo environment orchestration</div>
+                    </div>
+                    <div class="component-card" style="border-color: rgba(236, 72, 153, 0.3);">
+                        <div class="component-title" style="color: var(--accent-pink);">demo-seeding-service</div>
+                        <div class="component-port">Port 8116</div>
+                        <div class="component-desc">Demo data generation and seeding</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service Summary Table -->
+            <div style="background: var(--bg-card); border-radius: 1rem; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border-color);">
+                <h3 style="margin-bottom: 1.5rem; color: var(--accent-cyan);">Service Domain Summary</h3>
+                <table class="api-table">
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th>Services</th>
+                            <th>Port Range</th>
+                            <th>Primary Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="color: var(--accent-green);">🩺 Core Clinical</span></td>
+                            <td>7</td>
+                            <td>8081-8108</td>
+                            <td>Quality measures, CQL, care gaps, HCC, consent</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: var(--accent-blue);">🔗 Integration</span></td>
+                            <td>8</td>
+                            <td>8084-8095</td>
+                            <td>FHIR, patient data, EHR connectors, events</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: var(--accent-purple);">📊 Analytics</span></td>
+                            <td>5</td>
+                            <td>8098-8104</td>
+                            <td>Reporting, ML predictions, QRDA exports</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: var(--accent-cyan);">⚙️ Platform</span></td>
+                            <td>9</td>
+                            <td>8001-8109</td>
+                            <td>Gateways, notifications, CMS integration</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: var(--accent-orange);">💼 Business</span></td>
+                            <td>4</td>
+                            <td>8110-8113</td>
+                            <td>Sales automation, AI agents, cost analysis</td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: var(--accent-pink);">🚀 DevOps</span></td>
+                            <td>3</td>
+                            <td>8114-8116</td>
+                            <td>Infrastructure, demo orchestration</td>
+                        </tr>
+                        <tr style="background: rgba(16, 185, 129, 0.1);">
+                            <td><strong>Total</strong></td>
+                            <td><strong>36</strong></td>
+                            <td><strong>8001-8116</strong></td>
+                            <td><strong>Complete Healthcare Platform</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>All claims independently verifiable</p>
+        <div style="margin-top: 1rem;">
+            <a href="validation-report.html" class="footer-link">Validation Report</a>
+            <a href="speech-final.html" class="footer-link">Speech Reference</a>
+            <a href="kill-tony-vision-deck.html" class="footer-link">Slide Deck</a>
+        </div>
+        <p style="margin-top: 1rem; font-size: 0.85rem;">Generated: January 16, 2026 | HealthData-in-Motion (HDIM)</p>
+    </footer>
+</body>
+</html>

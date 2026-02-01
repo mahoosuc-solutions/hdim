@@ -9,6 +9,7 @@
  * - User preferences
  */
 import { Injectable } from '@angular/core';
+import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable, from, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
@@ -53,7 +54,8 @@ export class OfflineStorageService {
 
   readonly isReady$ = this.dbReady.asObservable();
 
-  constructor() {
+  constructor(
+    private logger: LoggerService,) {
     this.initDatabase();
   }
 
@@ -62,21 +64,21 @@ export class OfflineStorageService {
    */
   private initDatabase(): void {
     if (!('indexedDB' in window)) {
-      console.warn('IndexedDB not supported - offline mode disabled');
+      this.logger.warn('IndexedDB not supported - offline mode disabled');
       return;
     }
 
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
     request.onerror = (event) => {
-      console.error('IndexedDB error:', event);
+      this.logger.error('IndexedDB error:', event);
       this.dbReady.next(false);
     };
 
     request.onsuccess = (event) => {
       this.db = (event.target as IDBOpenDBRequest).result;
       this.dbReady.next(true);
-      console.log('IndexedDB initialized successfully');
+      this.logger.info('IndexedDB initialized successfully');
     };
 
     request.onupgradeneeded = (event) => {
@@ -153,7 +155,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error getting item from ${storeName}:`, error);
+        this.logger.error(`Error getting item from ${storeName}:`, { error });
         return of(undefined);
       })
     );
@@ -178,7 +180,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error getting all items from ${storeName}:`, error);
+        this.logger.error(`Error getting all items from ${storeName}:`, { error });
         return of([]);
       })
     );
@@ -208,7 +210,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error getting items by index from ${storeName}:`, error);
+        this.logger.error(`Error getting items by index from ${storeName}:`, { error });
         return of([]);
       })
     );
@@ -233,7 +235,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error putting item in ${storeName}:`, error);
+        this.logger.error(`Error putting item in ${storeName}:`, { error });
         return of(false);
       })
     );
@@ -271,7 +273,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error putting items in ${storeName}:`, error);
+        this.logger.error(`Error putting items in ${storeName}:`, { error });
         return of(false);
       })
     );
@@ -296,7 +298,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error deleting item from ${storeName}:`, error);
+        this.logger.error(`Error deleting item from ${storeName}:`, { error });
         return of(false);
       })
     );
@@ -321,7 +323,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error clearing ${storeName}:`, error);
+        this.logger.error(`Error clearing ${storeName}:`, { error });
         return of(false);
       })
     );
@@ -346,7 +348,7 @@ export class OfflineStorageService {
       })
     ).pipe(
       catchError((error) => {
-        console.error(`Error counting items in ${storeName}:`, error);
+        this.logger.error(`Error counting items in ${storeName}:`, { error });
         return of(0);
       })
     );
@@ -425,7 +427,7 @@ export class OfflineStorageService {
         setTimeout(() => this.initDatabase(), 100);
       }),
       catchError((error) => {
-        console.error('Error deleting database:', error);
+        this.logger.error('Error deleting database:', { error });
         return of(false);
       })
     );

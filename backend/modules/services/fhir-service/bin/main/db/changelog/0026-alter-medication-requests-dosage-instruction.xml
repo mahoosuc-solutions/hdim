@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0026-alter-medication-requests-dosage-instruction" author="hdim-platform-team">
+        <comment>
+            Fix dosage_instruction column type mismatch in medication_requests table.
+
+            Schema Drift Issue: MedicationRequestEntity entity declares dosage_instruction as JSONB
+            (@JdbcTypeCode(SqlTypes.JSON), columnDefinition="jsonb") but the Liquibase migration
+            (0004-create-medication-requests-table.xml) created it as TEXT, causing runtime
+            schema validation failure: "wrong column type encountered".
+
+            This migration aligns the actual database schema with the entity definition.
+        </comment>
+
+        <modifyDataType tableName="medication_requests"
+                        columnName="dosage_instruction"
+                        newDataType="jsonb"/>
+
+        <rollback>
+            <modifyDataType tableName="medication_requests"
+                            columnName="dosage_instruction"
+                            newDataType="text"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

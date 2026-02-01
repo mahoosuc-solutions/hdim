@@ -1,12 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "name": "healthdata-in-motion",
-  "buildCommand": "npx nx build clinical-portal --configuration=production",
+  "buildCommand": "npm run build:clinical-portal",
   "outputDirectory": "dist/apps/clinical-portal/browser",
   "framework": null,
   "installCommand": "npm install",
-  "devCommand": "npx nx serve clinical-portal",
+  "devCommand": "npm run dev",
   "rewrites": [
     {
       "source": "/(.*)",

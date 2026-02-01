@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: qrda-export-service-test
+
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    enabled: false
+
+# QRDA Configuration
+qrda:
+  validation:
+    enabled: true
+    category-i-schematron: schematron/qrda-cat-i.sch
+    category-iii-schematron: schematron/qrda-cat-iii.sch
+  export:
+    storage-path: /tmp/qrda-test-exports
+
+# Security - permit all for tests
+security:
+  enabled: false
+
+# Logging
+logging:
+  level:
+    com.healthdata.qrda: DEBUG
+    org.springframework.security: WARN

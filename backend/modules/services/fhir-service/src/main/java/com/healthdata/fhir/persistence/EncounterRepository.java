@@ -77,6 +77,17 @@ public interface EncounterRepository extends JpaRepository<EncounterEntity, UUID
             @Param("endDate") LocalDateTime endDate);
 
     /**
+     * Find encounters by tenant within a date range
+     */
+    @Query("SELECT e FROM EncounterEntity e WHERE e.tenantId = :tenantId " +
+           "AND e.periodStart BETWEEN :startDate AND :endDate " +
+           "ORDER BY e.periodStart DESC")
+    List<EncounterEntity> findByTenantAndDateRange(
+            @Param("tenantId") String tenantId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+
+    /**
      * Find inpatient encounters (encounter class = inpatient)
      */
     @Query("SELECT e FROM EncounterEntity e WHERE e.tenantId = :tenantId " +

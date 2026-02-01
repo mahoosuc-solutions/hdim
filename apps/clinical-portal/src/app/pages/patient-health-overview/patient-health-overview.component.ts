@@ -23,6 +23,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PatientHealthService } from '../../services/patient-health.service';
+import { LoggerService } from '../../services/logger.service';
 import {
   PatientHealthOverview,
   HealthScore,
@@ -60,9 +61,7 @@ import {
 export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
   @Input() patientId!: string;
 
-  private destroy$ = new Subject<void>();
-
-  healthOverview: PatientHealthOverview | null = null;
+  private destroy$ = new Subject<void>();  healthOverview: PatientHealthOverview | null = null;
   loading = true;
   error: string | null = null;
   criticalAlerts: CriticalAlert[] = [];
@@ -74,7 +73,8 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
   constructor(
     private healthService: PatientHealthService,
     private router: Router,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -103,7 +103,7 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (err) => {
-        console.error('Error loading health overview:', err);
+        this.logger.error('Error loading health overview', err);
         this.error = 'Failed to load patient health overview';
         this.loading = false;
       },
@@ -320,7 +320,7 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
     };
 
     // Log dismissal for audit trail
-    console.log('Alert dismissed with audit record:', dismissalRecord);
+    this.logger.info('Alert dismissed with audit record', dismissalRecord);
 
     // Remove from display
     this.criticalAlerts = this.criticalAlerts.filter((a) => a.id !== alert.id);

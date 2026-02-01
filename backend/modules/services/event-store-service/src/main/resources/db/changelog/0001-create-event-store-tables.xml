@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Event Store Tables
+
+        Purpose: Immutable log of ALL domain events for event sourcing architecture
+
+        Tables:
+        1. event_store - Primary event log (immutable, append-only)
+        2. event_snapshots - Performance optimization (aggregate state snapshots)
+        3. event_processing_status - Track event processing across consumers
+
+        HIPAA Compliance: All events include tenant_id for multi-tenant isolation
+        Performance: JSONB for flexible event payloads, indexes for fast queries
+    -->
+
+    <!-- ===== 1. Event Store (Immutable Event Log) ===== -->
+    <changeSet id="0001-create-event-store-table" author="hdim-system">
+        <comment>
+            Create event_store table - immutable log of ALL domain events
+
+            Key Design Decisions:
+            - BIGSERIAL for auto-incrementing global event ID
+            - UUID for aggregate_id (patient, measure, care gap, etc.)
+            - JSONB for flexible event payload storage
+            - Unique constraint on (aggregate_id, aggregate_type, event_version) prevents duplicates
+            - Indexes on aggregate_id, event_type, tenant_id for fast queries
+            - occurred_at vs recorded_at: occurred_at = business time, recorded_at = system time
+        </comment>
+
+        <createTable tableName="event_store">
+            <!-- Primary Key: Auto-incrementing global event ID -->
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Aggregate Information -->
+            <column name="aggregate_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="aggregate_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Event Metadata -->
+            <column name="event_id" type="UUID">
+                <constraints nullable="false" unique="true"/>
+            </column>
+
+            <column name="event_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="event_version" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Event Data (JSONB for flexibility) -->
+            <column name="payload" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Timestamps -->
+            <column name="occurred_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="recorded_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Multi-Tenant Isolation (HIPAA) -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Causation & Correlation (for event tracing) -->
+            <column name="causation_id" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="correlation_id" type="UUID">
+                <constraints nullable="true"/>
+            </column>
+
+            <!-- User Context (for audit trails) -->
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+
+            <column name="user_email" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="event_store"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 2. Event Store Indexes ===== -->
+    <changeSet id="0001-create-event-store-indexes" author="hdim-system">
+        <comment>Create indexes for fast event queries</comment>
+
+        <!-- Prevent duplicate events for same aggregate version -->
+        <addUniqueConstraint
+                tableName="event_store"
+                columnNames="aggregate_id, aggregate_type, event_version"
+                constraintName="uk_event_store_aggregate_version"/>
+
+        <!-- Fast lookup by aggregate (most common query) -->
+        <createIndex tableName="event_store" indexName="idx_event_store_aggregate">
+            <column name="aggregate_id"/>
+            <column name="aggregate_type"/>
+        </createIndex>
+
+        <!-- Fast lookup by event type (for event replays) -->
+        <createIndex tableName="event_store" indexName="idx_event_store_event_type">
+            <column name="event_type"/>
+        </createIndex>
+
+        <!-- Fast lookup by tenant (multi-tenant isolation) -->
+        <createIndex tableName="event_store" indexName="idx_event_store_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Fast temporal queries (time-travel debugging) -->
+        <createIndex tableName="event_store" indexName="idx_event_store_occurred_at">
+            <column name="occurred_at"/>
+        </createIndex>
+
+        <!-- Fast correlation tracking (distributed tracing) -->
+        <createIndex tableName="event_store" indexName="idx_event_store_correlation">
+            <column name="correlation_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="event_store" indexName="idx_event_store_aggregate"/>
+            <dropIndex tableName="event_store" indexName="idx_event_store_event_type"/>
+            <dropIndex tableName="event_store" indexName="idx_event_store_tenant"/>
+            <dropIndex tableName="event_store" indexName="idx_event_store_occurred_at"/>
+            <dropIndex tableName="event_store" indexName="idx_event_store_correlation"/>
+            <dropUniqueConstraint tableName="event_store" constraintName="uk_event_store_aggregate_version"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 3. Event Snapshots (Performance Optimization) ===== -->
+    <changeSet id="0001-create-event-snapshots-table" author="hdim-system">
+        <comment>
+            Create event_snapshots table - performance optimization for event replay
+
+            Problem: Replaying 10,000 events for a single aggregate is slow
+            Solution: Store periodic snapshots of aggregate state
+
+            Strategy: Snapshot every N events (e.g., every 100 events)
+            Benefit: Replay from latest snapshot + recent events (much faster)
+        </comment>
+
+        <createTable tableName="event_snapshots">
+            <!-- Primary Key -->
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Aggregate Information -->
+            <column name="aggregate_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="aggregate_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Snapshot Metadata -->
+            <column name="snapshot_version" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Snapshot Data (JSONB for flexibility) -->
+            <column name="snapshot_data" type="JSONB">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Timestamps -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Multi-Tenant Isolation -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="event_snapshots"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 4. Event Snapshot Indexes ===== -->
+    <changeSet id="0001-create-event-snapshot-indexes" author="hdim-system">
+        <comment>Create indexes for fast snapshot queries</comment>
+
+        <!-- One snapshot per aggregate version -->
+        <addUniqueConstraint
+                tableName="event_snapshots"
+                columnNames="aggregate_id, aggregate_type, snapshot_version"
+                constraintName="uk_event_snapshots_aggregate_version"/>
+
+        <!-- Fast lookup by aggregate -->
+        <createIndex tableName="event_snapshots" indexName="idx_event_snapshots_aggregate">
+            <column name="aggregate_id"/>
+            <column name="aggregate_type"/>
+        </createIndex>
+
+        <!-- Fast lookup by tenant -->
+        <createIndex tableName="event_snapshots" indexName="idx_event_snapshots_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="event_snapshots" indexName="idx_event_snapshots_aggregate"/>
+            <dropIndex tableName="event_snapshots" indexName="idx_event_snapshots_tenant"/>
+            <dropUniqueConstraint tableName="event_snapshots" constraintName="uk_event_snapshots_aggregate_version"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 5. Event Processing Status (Consumer Tracking) ===== -->
+    <changeSet id="0001-create-event-processing-status-table" author="hdim-system">
+        <comment>
+            Create event_processing_status table - track which events have been processed
+
+            Purpose: Track event processing across multiple consumers
+            Use Case: Event replay, idempotency, monitoring
+
+            Example: "care-gap-event-handler has processed events up to ID 12345"
+        </comment>
+
+        <createTable tableName="event_processing_status">
+            <!-- Primary Key -->
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Consumer Identification -->
+            <column name="consumer_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Processing Position -->
+            <column name="last_processed_event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_processed_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Multi-Tenant Isolation -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Status Tracking -->
+            <column name="status" type="VARCHAR(50)" defaultValue="RUNNING">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="error_message" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="event_processing_status"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ===== 6. Event Processing Status Indexes ===== -->
+    <changeSet id="0001-create-event-processing-status-indexes" author="hdim-system">
+        <comment>Create indexes for fast processing status queries</comment>
+
+        <!-- One status per consumer per tenant -->
+        <addUniqueConstraint
+                tableName="event_processing_status"
+                columnNames="consumer_name, tenant_id"
+                constraintName="uk_event_processing_consumer_tenant"/>
+
+        <!-- Fast lookup by consumer -->
+        <createIndex tableName="event_processing_status" indexName="idx_event_processing_consumer">
+            <column name="consumer_name"/>
+        </createIndex>
+
+        <!-- Fast lookup by tenant -->
+        <createIndex tableName="event_processing_status" indexName="idx_event_processing_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="event_processing_status" indexName="idx_event_processing_consumer"/>
+            <dropIndex tableName="event_processing_status" indexName="idx_event_processing_tenant"/>
+            <dropUniqueConstraint tableName="event_processing_status" constraintName="uk_event_processing_consumer_tenant"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

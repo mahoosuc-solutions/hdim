@@ -38,7 +38,7 @@ export class ToastService {
   /**
    * Show success notification (green)
    */
-  success(message: string, duration: number = 3000): void {
+  success(message: string, duration = 3000): void {
     this.snackBar.open(message, 'Close', {
       ...this.defaultConfig,
       duration,
@@ -49,7 +49,7 @@ export class ToastService {
   /**
    * Show error notification (red)
    */
-  error(message: string, duration: number = 5000): void {
+  error(message: string, duration = 5000): void {
     this.snackBar.open(message, 'Close', {
       ...this.defaultConfig,
       duration,
@@ -60,7 +60,7 @@ export class ToastService {
   /**
    * Show info notification (blue)
    */
-  info(message: string, duration: number = 3000): void {
+  info(message: string, duration = 3000): void {
     this.snackBar.open(message, 'Close', {
       ...this.defaultConfig,
       duration,
@@ -71,7 +71,7 @@ export class ToastService {
   /**
    * Show warning notification (orange)
    */
-  warning(message: string, duration: number = 4000): void {
+  warning(message: string, duration = 4000): void {
     this.snackBar.open(message, 'Close', {
       ...this.defaultConfig,
       duration,

@@ -1,5 +1,6 @@
 package com.healthdata.priorauth.service;
 
+import com.healthdata.priorauth.audit.PriorAuthAuditIntegration;
 import com.healthdata.priorauth.client.PayerApiClient;
 import com.healthdata.priorauth.dto.PriorAuthRequestDTO;
 import com.healthdata.priorauth.persistence.PayerEndpointEntity;
@@ -36,6 +37,7 @@ public class PriorAuthService {
     private final PasClaimBuilder claimBuilder;
     private final PayerApiClient payerApiClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final PriorAuthAuditIntegration priorAuthAuditIntegration;
 
     private static final String PA_EVENTS_TOPIC = "prior-auth-events";
 
@@ -84,6 +86,17 @@ public class PriorAuthService {
         entity = requestRepository.save(entity);
 
         log.info("Created PA request {} for patient {}", entity.getPaRequestId(), request.getPatientId());
+
+        // Publish audit event
+        priorAuthAuditIntegration.publishPriorAuthRequestEvent(
+            tenantId,
+            entity.getId(),
+            entity.getPatientId(),
+            entity.getPayerId(),
+            entity.getServiceCode(),
+            entity.getUrgency().name(),
+            requestedBy
+        );
 
         return mapToResponse(entity);
     }
@@ -169,6 +182,19 @@ public class PriorAuthService {
 
             // Publish event
             publishPaEvent(entity, "PA_SUBMITTED");
+
+            // Publish audit event
+            priorAuthAuditIntegration.publishPriorAuthSubmissionEvent(
+                entity.getTenantId(),
+                entity.getId(),
+                entity.getPatientId(),
+                entity.getPayerId(),
+                entity.getStatus() == PriorAuthRequestEntity.Status.SUBMITTED,
+                entity.getLastError(),
+                entity.getSubmittedAt() != null ? 
+                    java.time.Duration.between(entity.getCreatedAt(), entity.getSubmittedAt()).toMillis() : 0,
+                entity.getRequestedBy()
+            );
 
         } catch (Exception e) {
             log.error("Failed to submit PA request to payer: {}", e.getMessage());

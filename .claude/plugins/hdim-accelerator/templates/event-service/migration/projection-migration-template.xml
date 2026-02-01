@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-{{TABLE_NAME}}-table" author="{{AUTHOR}}">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="{{TABLE_NAME}}"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Create {{TABLE_NAME}} read model table for CQRS pattern.
+
+            Purpose: Denormalized projection built from domain events for optimized read queries.
+            Architecture: Event-driven CQRS with eventual consistency (< 500ms SLA).
+
+            Event Sources:
+{{EVENT_SOURCES_COMMENT}}
+
+            Performance: Indexed for multi-tenant queries (< 100ms response time).
+            HIPAA: May contain PHI - ensure proper access controls.
+        </comment>
+
+        <createTable tableName="{{TABLE_NAME}}">
+            <!-- Surrogate Primary Key -->
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_{{TABLE_NAME}}" nullable="false"/>
+            </column>
+
+            <!-- Multi-Tenant Isolation (CRITICAL) -->
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Domain Entity Identifier -->
+            <column name="{{DOMAIN}}_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- ===================================== -->
+            <!-- Domain-Specific Denormalized Fields   -->
+            <!-- ===================================== -->
+            <!-- TODO: Add domain-specific columns here -->
+            <!-- Examples:
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="priority" type="VARCHAR(50)"/>
+
+            <column name="score" type="DECIMAL(5,2)"/>
+
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="count" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            -->
+
+            <!-- Event Version (Optimistic Locking) -->
+            <column name="event_version" type="BIGINT" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Audit Timestamps -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="last_updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- ===================================== -->
+        <!-- Indexes for Multi-Tenancy and Queries  -->
+        <!-- ===================================== -->
+
+        <!-- Index 1: Tenant isolation (CRITICAL for multi-tenant query performance) -->
+        <createIndex indexName="idx_{{TABLE_ABBR}}_tenant_id" tableName="{{TABLE_NAME}}">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Index 2: Unique constraint (one projection per entity per tenant) -->
+        <createIndex indexName="idx_{{TABLE_ABBR}}_tenant_{{DOMAIN}}" tableName="{{TABLE_NAME}}" unique="true">
+            <column name="tenant_id"/>
+            <column name="{{DOMAIN}}_id"/>
+        </createIndex>
+
+        <!-- Index 3: Sort by last updated (for "recently updated" queries) -->
+        <createIndex indexName="idx_{{TABLE_ABBR}}_updated_at" tableName="{{TABLE_NAME}}">
+            <column name="last_updated_at"/>
+        </createIndex>
+
+        <!-- ===================================== -->
+        <!-- Domain-Specific Indexes (Add as needed)-->
+        <!-- ===================================== -->
+        <!-- TODO: Add domain-specific indexes -->
+        <!-- Examples:
+
+        - Index on status for filtering:
+        <createIndex indexName="idx_{{TABLE_ABBR}}_status" tableName="{{TABLE_NAME}}">
+            <column name="status"/>
+        </createIndex>
+
+        - Composite index for complex queries:
+        <createIndex indexName="idx_{{TABLE_ABBR}}_tenant_status" tableName="{{TABLE_NAME}}">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        - Index on boolean flags:
+        <createIndex indexName="idx_{{TABLE_ABBR}}_active" tableName="{{TABLE_NAME}}">
+            <column name="is_active"/>
+        </createIndex>
+
+        - Partial index for specific conditions (PostgreSQL):
+        <sql>
+            CREATE INDEX idx_{{TABLE_ABBR}}_overdue
+            ON {{TABLE_NAME}}(tenant_id, due_date)
+            WHERE status = 'OPEN' AND due_date < CURRENT_DATE;
+        </sql>
+        -->
+
+        <!-- Rollback SQL (REQUIRED - 100% coverage enforced) -->
+        <rollback>
+            <dropTable tableName="{{TABLE_NAME}}"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

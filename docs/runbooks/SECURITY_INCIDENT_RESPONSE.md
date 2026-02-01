@@ -124,6 +124,7 @@ kubectl create secret generic db-credentials --from-literal=password=$(openssl r
 5. [ ] How was the incident detected?
 6. [ ] Who reported it?
 7. [ ] What is the initial scope estimate?
+8. [ ] Did a recent release change licensing or distribution scope?
 ```
 
 ### Step 2: Activate Response Team (< 10 minutes)
@@ -582,6 +583,7 @@ Required if breach affects 500+ residents of a state:
 - [ ] Database audit logs (preserved to: _______)
 - [ ] Network captures (preserved to: _______)
 - [ ] Memory dumps (if applicable)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 - [ ] Disk images (if applicable)
 - [ ] Container images (preserved to: _______)
 

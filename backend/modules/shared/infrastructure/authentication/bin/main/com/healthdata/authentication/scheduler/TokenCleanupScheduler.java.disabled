@@ -1,0 +1,90 @@
+package com.healthdata.authentication.scheduler;
+
+import com.healthdata.authentication.service.RefreshTokenService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+/**
+ * Scheduled task for cleaning up expired and revoked refresh tokens.
+ *
+ * This scheduler runs periodic cleanup operations to:
+ * 1. Delete expired refresh tokens
+ * 2. Delete old revoked tokens (older than 30 days)
+ *
+ * Cleanup Benefits:
+ * - Reduces database size
+ * - Improves query performance
+ * - Removes old audit data
+ * - Maintains database hygiene
+ *
+ * Schedule:
+ * - Runs daily at 2:00 AM (server time)
+ * - Can be configured via cron expression
+ * - Uses @Scheduled annotation from Spring
+ *
+ * Security Considerations:
+ * - Only removes expired and revoked tokens
+ * - Active tokens are never deleted
+ * - Logs cleanup statistics for audit
+ * - Transactional operations ensure data consistency
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class TokenCleanupScheduler {
+
+    private final RefreshTokenService refreshTokenService;
+
+    /**
+     * Clean up expired and revoked refresh tokens.
+     * Runs daily at 2:00 AM.
+     *
+     * Cron expression: "0 0 2 * * ?" = At 02:00:00 AM every day
+     * Format: second minute hour day month weekday
+     *
+     * Can be overridden with property:
+     * spring.task.scheduling.cron.token-cleanup=0 0 2 * * ?
+     */
+    @Scheduled(cron = "${spring.task.scheduling.cron.token-cleanup:0 0 2 * * ?}")
+    public void cleanupTokens() {
+        log.info("Starting scheduled token cleanup...");
+
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // Delete expired tokens
+            int expiredCount = refreshTokenService.deleteExpiredTokens();
+            log.info("Deleted {} expired refresh tokens", expiredCount);
+
+            // Delete revoked tokens older than 30 days
+            int revokedCount = refreshTokenService.deleteOldRevokedTokens(30);
+            log.info("Deleted {} old revoked refresh tokens", revokedCount);
+
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("Token cleanup completed in {}ms. Total deleted: {}",
+                duration, expiredCount + revokedCount);
+
+        } catch (Exception e) {
+            log.error("Error during token cleanup", e);
+            // Don't rethrow - allow scheduler to continue on next run
+        }
+    }
+
+    /**
+     * Log token statistics.
+     * Runs every hour for monitoring.
+     *
+     * Cron expression: "0 0 * * * ?" = At the top of every hour
+     *
+     * This is useful for monitoring token usage patterns and
+     * detecting potential issues (e.g., token buildup, high revocation rate).
+     */
+    @Scheduled(cron = "${spring.task.scheduling.cron.token-stats:0 0 * * * ?}")
+    public void logTokenStatistics() {
+        log.debug("Token statistics logging scheduled task executed");
+        // Statistics logging can be added here if needed
+        // For now, just a placeholder for future enhancements
+    }
+}

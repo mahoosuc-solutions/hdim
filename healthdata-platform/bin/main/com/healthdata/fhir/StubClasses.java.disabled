@@ -1,0 +1,104 @@
+package com.healthdata.fhir;
+
+// This file contains stub classes to make the application compilable
+// These will be replaced with full implementations during migration
+
+import jakarta.persistence.*;
+import lombok.Data;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+// ========== Domain Classes ==========
+
+@Entity
+@Table(name = "conditions", schema = "fhir")
+@Data
+class Condition {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    private String patientId;
+    private String code;
+    private String system;
+    private String display;
+    private String clinicalStatus;
+    private String verificationStatus;
+    private String tenantId;
+}
+
+@Entity
+@Table(name = "medication_requests", schema = "fhir")
+@Data
+class MedicationRequest {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    private String patientId;
+    private String medicationCode;
+    private String medicationDisplay;
+    private String status;
+    private String intent;
+    private LocalDateTime authoredOn;
+    private String tenantId;
+}
+
+@Entity
+@Table(name = "measures", schema = "quality")
+@Data
+class QualityMeasure {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    private String measureId;
+    private String name;
+    private String description;
+    private String category;
+    private String version;
+    private boolean active;
+}
+
+// ========== Repository Interfaces ==========
+
+@Repository
+interface ObservationRepository extends JpaRepository<com.healthdata.fhir.domain.Observation, String> {
+    List<com.healthdata.fhir.domain.Observation> findByPatientIdOrderByEffectiveDateDesc(String patientId);
+
+    List<com.healthdata.fhir.domain.Observation> findByPatientIdAndCode(String patientId, String code);
+
+    Optional<com.healthdata.fhir.domain.Observation> findTopByPatientIdAndCodeOrderByEffectiveDateDesc(String patientId, String code);
+
+    @Query("SELECT COUNT(o) FROM Observation o WHERE o.patientId = :patientId AND o.effectiveDate > :cutoffDate")
+    long countRecentObservations(@Param("patientId") String patientId, @Param("cutoffDate") LocalDateTime cutoffDate);
+}
+
+@Repository
+interface ConditionRepository extends JpaRepository<Condition, String> {
+    List<Condition> findByPatientId(String patientId);
+
+    @Query("SELECT c FROM Condition c WHERE c.patientId = :patientId AND c.clinicalStatus = 'active'")
+    List<Condition> findActiveConditions(@Param("patientId") String patientId);
+}
+
+@Repository
+interface MedicationRequestRepository extends JpaRepository<MedicationRequest, String> {
+    List<MedicationRequest> findByPatientId(String patientId);
+
+    @Query("SELECT m FROM MedicationRequest m WHERE m.patientId = :patientId AND m.status = 'active'")
+    List<MedicationRequest> findActiveMedications(@Param("patientId") String patientId);
+}
+
+// Export the repository interfaces for use in services
+class RepositoryExports {
+    public interface ObservationRepository extends com.healthdata.fhir.ObservationRepository {}
+    public interface ConditionRepository extends com.healthdata.fhir.ConditionRepository {}
+    public interface MedicationRequestRepository extends com.healthdata.fhir.MedicationRequestRepository {}
+}

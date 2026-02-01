@@ -208,6 +208,7 @@ curl -v http://localhost:8080/fhir/Patient \
 ### Post-Testing
 - [ ] Document any issues found
 - [ ] Update CLAUDE.md if behavior changes
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 - [ ] Create migration plan if issues discovered
 - [ ] Prepare for Phase 6 (documentation)
 

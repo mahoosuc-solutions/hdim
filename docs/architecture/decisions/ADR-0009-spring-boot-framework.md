@@ -309,7 +309,7 @@ class PatientControllerTest {
 
     @Container
     static PostgreSQLContainer<?> postgres =
-        new PostgreSQLContainer<>("postgres:15");
+        new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private MockMvc mockMvc;

@@ -56,7 +56,7 @@ public class PopulationInsightsController {
      * - Intervention Opportunities: Similar gaps across similar patients
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER', 'ANALYST') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('report:read') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get population health insights",
                description = "Returns AI-generated insights about the provider's patient panel")
     @Audited(action = AuditAction.READ, resourceType = "PopulationInsights",
@@ -95,7 +95,7 @@ public class PopulationInsightsController {
      * POST endpoint for cases where panel data needs to be provided.
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'PROVIDER', 'ANALYST') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('report:create') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Generate population health insights with panel data",
                description = "Analyzes provided panel data to generate AI-powered insights")
     @Audited(action = AuditAction.READ, resourceType = "PopulationInsights",
@@ -128,7 +128,7 @@ public class PopulationInsightsController {
      * Dismiss an insight with reason tracking.
      */
     @PostMapping(value = "/dismiss", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('report:write') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Dismiss an insight",
                description = "Dismisses an insight with a required reason for tracking")
     @Audited(action = AuditAction.UPDATE, resourceType = "PopulationInsight",
@@ -161,7 +161,7 @@ public class PopulationInsightsController {
      * Restore a dismissed insight.
      */
     @PostMapping(value = "/restore/{insightId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('report:write') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Restore a dismissed insight",
                description = "Restores a previously dismissed insight")
     @Audited(action = AuditAction.UPDATE, resourceType = "PopulationInsight",
@@ -193,7 +193,7 @@ public class PopulationInsightsController {
      * Get dismissed insights for tracking.
      */
     @GetMapping(value = "/dismissed", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROVIDER') or @providerSecurity.isProvider(#providerId)")
+    @PreAuthorize("hasPermission('report:read') or @providerSecurity.isProvider(#providerId)")
     @Operation(summary = "Get dismissed insights",
                description = "Returns list of dismissed insights for the provider")
     public ResponseEntity<List<InsightDismissalEntity>> getDismissedInsights(

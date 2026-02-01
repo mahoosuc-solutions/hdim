@@ -38,7 +38,7 @@ import java.util.*;
 @RequestMapping("/api/v1/api-keys")
 @RequiredArgsConstructor
 @ConditionalOnBean(ApiKeyService.class)
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'API_ADMIN')")
+@PreAuthorize("hasPermission('API_MANAGE_KEYS')")
 public class ApiKeyController {
 
     private final ApiKeyService apiKeyService;

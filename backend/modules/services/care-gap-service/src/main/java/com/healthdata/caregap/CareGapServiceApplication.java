@@ -5,7 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 
 /**
  * Care Gap Service - Quality measure gap identification and closure
@@ -15,6 +18,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * for patient data and CQL Engine for rule evaluation.
  */
 @SpringBootApplication
+@ComponentScan(basePackages = {
+    "com.healthdata.caregap"
+})
+@Import(AIAuditEventPublisher.class)
 @EnableFeignClients
 @EnableCaching
 @EnableJpaRepositories(basePackages = {
@@ -22,7 +29,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 })
 @EntityScan(basePackages = {
     "com.healthdata.caregap.persistence",  // Service entities
-    "com.healthdata.caregap.entity"  // Legacy service entities
+    "com.healthdata.caregap.entity",  // Legacy service entities
+    "com.healthdata.authentication.domain"  // Enable User/Tenant persistence for UserAutoRegistrationFilter
 })
 public class CareGapServiceApplication {
 

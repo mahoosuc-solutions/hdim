@@ -5,8 +5,14 @@ spring:
   application:
     name: cql-engine-service
 
+  main:
+    allow-bean-definition-overriding: true  # Allow authentication module's ObjectMapper to override local config
+
   flyway:
     enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   # Note: This service uses JWT authentication via Gateway service
   # No local UserDetailsService needed - removed spring.security.user
@@ -17,13 +23,12 @@ spring:
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
     password: ${SPRING_DATASOURCE_PASSWORD:dev_password}
     driver-class-name: org.postgresql.Driver
+
+# HealthData Database Configuration (uses database-config module)
+healthdata:
+  database:
     hikari:
-      maximum-pool-size: 50      # Increased for high-throughput evaluations (was 20)
-      minimum-idle: 10           # Keep more idle connections ready (was 5)
-      connection-timeout: 20000  # Fail faster to prevent queuing (was 30000)
-      idle-timeout: 300000       # 5 minutes (was 600000)
-      max-lifetime: 1800000      # 30 minutes (connection refresh)
-      leak-detection-threshold: 60000  # Detect connection leaks
+      traffic-tier: HIGH  # CQL expression evaluation: >100 req/sec, clinical logic engine, powers quality measures
 
   # JPA Configuration
   jpa:

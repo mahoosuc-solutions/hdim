@@ -23,6 +23,7 @@ import { PatientService } from '../../services/patient.service';
 import { PatientSummary } from '../../models/patient.model';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Pre-visit patient summary with care gaps and appointment info
@@ -104,11 +105,10 @@ export class PreVisitPlanningComponent implements OnInit, OnDestroy {
   highUrgencyCount = computed(() =>
     this.patients().reduce((sum, p) =>
       sum + p.careGaps.filter(g => g.urgency === 'high').length, 0)
-  );
-
-  constructor(
+  );  constructor(
     private patientService: PatientService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -156,7 +156,7 @@ export class PreVisitPlanningComponent implements OnInit, OnDestroy {
           this.patients.set(preVisitPatients);
         },
         error: (err) => {
-          console.error('Failed to load patients:', err);
+          this.logger.error('Failed to load patients', err);
           this.error.set('Failed to load scheduled patients. Please try again.');
         }
       });
@@ -293,7 +293,7 @@ export class PreVisitPlanningComponent implements OnInit, OnDestroy {
    */
   exportPdf(): void {
     // In production, this would generate a PDF
-    console.log('Export PDF - would generate PDF with', this.patients().length, 'patients');
+    this.logger.info('Export PDF - would generate PDF with patients', this.patients().length);
     alert('PDF export would be generated here. Feature coming soon!');
   }
 

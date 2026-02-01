@@ -3,15 +3,20 @@ import { App } from './app';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
+import { AuditService } from './services/audit.service';
 import { ThemeService } from './services/theme.service';
+import { LoggerService } from './services/logger.service';
+import { DemoModeService } from './demo-mode/services/demo-mode.service';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { BreadcrumbService } from './shared/services/breadcrumb.service';
 import { BehaviorSubject, of } from 'rxjs';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('App', () => {
   let component: App;
   let fixture: ComponentFixture<App>;
   let authService: jest.Mocked<AuthService>;
+  let auditService: jest.Mocked<AuditService>;
   let router: jest.Mocked<Router>;
   let themeService: jest.Mocked<ThemeService>;
   let globalSearchService: jest.Mocked<GlobalSearchService>;
@@ -25,6 +30,12 @@ describe('App', () => {
       isAuthenticated$: isAuthenticatedSubject.asObservable(),
       isAuthenticated: jest.fn().mockReturnValue(true),
       logout: jest.fn(),
+    };
+
+    const auditServiceMock = {
+      logSessionTimeout: jest.fn(),
+      log: jest.fn(),
+      flush: jest.fn(),
     };
 
     const routerMock = {
@@ -47,13 +58,31 @@ describe('App', () => {
       setBreadcrumbs: jest.fn(),
     };
 
+    const demoModeServiceMock = {
+      isDemoMode: jest.fn().mockReturnValue(false),
+      activeStoryboardStep: jest.fn().mockReturnValue(null),
+      storyboardConnected: jest.fn().mockReturnValue(false),
+    };
+
+    const loggerServiceMock = {
+      withContext: jest.fn().mockReturnValue({
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [
-        provideRouter([]),
+      providers: [provideRouter([,
+        { provide: Router, useValue: createMockRouter() }]),
         { provide: AuthService, useValue: authServiceMock },
+        { provide: AuditService, useValue: auditServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: ThemeService, useValue: themeServiceMock },
+        { provide: LoggerService, useValue: loggerServiceMock },
+        { provide: DemoModeService, useValue: demoModeServiceMock },
         { provide: GlobalSearchService, useValue: globalSearchServiceMock },
         { provide: BreadcrumbService, useValue: breadcrumbServiceMock },
       ],
@@ -63,6 +92,7 @@ describe('App', () => {
     fixture = TestBed.createComponent(App);
     component = fixture.componentInstance;
     authService = TestBed.inject(AuthService) as jest.Mocked<AuthService>;
+    auditService = TestBed.inject(AuditService) as jest.Mocked<AuditService>;
     router = TestBed.inject(Router) as jest.Mocked<Router>;
     themeService = TestBed.inject(ThemeService) as jest.Mocked<ThemeService>;
     globalSearchService = TestBed.inject(GlobalSearchService) as jest.Mocked<GlobalSearchService>;
@@ -341,6 +371,105 @@ describe('App', () => {
     it('should show warning at correct time before timeout', () => {
       const warningTime = component['SESSION_TIMEOUT_MS'] - component['SESSION_WARNING_MS'];
       expect(warningTime).toBe(13 * 60 * 1000); // 13 minutes
+    });
+  });
+
+  describe('HIPAA Audit Logging', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('should log audit event on automatic session timeout', () => {
+      component.ngOnInit();
+      isAuthenticatedSubject.next(true);
+
+      // Fast forward past timeout (15 minutes)
+      jest.advanceTimersByTime(15 * 60 * 1000);
+
+      expect(auditService.logSessionTimeout).toHaveBeenCalledWith({
+        reason: 'IDLE_TIMEOUT',
+        idleDurationMinutes: 15,
+        warningShown: true,
+      });
+    });
+
+    it('should log audit event before logout on timeout', () => {
+      component.ngOnInit();
+      isAuthenticatedSubject.next(true);
+
+      const logOrder: string[] = [];
+      auditService.logSessionTimeout.mockImplementation(() => logOrder.push('audit'));
+      authService.logout.mockImplementation(() => logOrder.push('logout'));
+
+      // Fast forward past timeout
+      jest.advanceTimersByTime(15 * 60 * 1000);
+
+      // Audit should be logged before logout
+      expect(logOrder).toEqual(['audit', 'logout']);
+    });
+
+    it('should log audit event on explicit user logout', () => {
+      component.logout();
+
+      expect(auditService.logSessionTimeout).toHaveBeenCalledWith({
+        reason: 'EXPLICIT_LOGOUT',
+        warningShown: false,
+      });
+    });
+
+    it('should include correct idle duration in audit log', () => {
+      component.ngOnInit();
+      isAuthenticatedSubject.next(true);
+
+      jest.advanceTimersByTime(15 * 60 * 1000);
+
+      expect(auditService.logSessionTimeout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          idleDurationMinutes: 15,
+        })
+      );
+    });
+
+    it('should indicate warning was shown in audit log', () => {
+      component.ngOnInit();
+      isAuthenticatedSubject.next(true);
+
+      jest.advanceTimersByTime(15 * 60 * 1000);
+
+      expect(auditService.logSessionTimeout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          warningShown: true,
+        })
+      );
+    });
+
+    it('should differentiate between automatic and explicit logout in audit', () => {
+      // Test automatic timeout
+      component.ngOnInit();
+      isAuthenticatedSubject.next(true);
+      jest.advanceTimersByTime(15 * 60 * 1000);
+
+      expect(auditService.logSessionTimeout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reason: 'IDLE_TIMEOUT',
+        })
+      );
+
+      // Reset mock
+      auditService.logSessionTimeout.mockClear();
+
+      // Test explicit logout
+      component.logout();
+
+      expect(auditService.logSessionTimeout).toHaveBeenCalledWith(
+        expect.objectContaining({
+          reason: 'EXPLICIT_LOGOUT',
+        })
+      );
     });
   });
 });

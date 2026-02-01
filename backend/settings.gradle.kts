@@ -29,7 +29,11 @@ include(
     "modules:shared:infrastructure:gateway-core",
     "modules:shared:infrastructure:api-docs",
     "modules:shared:infrastructure:tracing",
-    "modules:shared:infrastructure:metrics"
+    "modules:shared:infrastructure:metrics",
+    "modules:shared:infrastructure:event-sourcing",
+    "modules:shared:infrastructure:event-store-client",
+    "modules:shared:infrastructure:feature-flags",
+    "modules:shared:test-infrastructure"
 )
 
 // Shared API Contracts
@@ -47,12 +51,18 @@ include(
     "modules:services:consent-service",
     "modules:services:event-processing-service",
     "modules:services:event-router-service",
+    "modules:services:event-store-service",
     "modules:services:patient-service",
+    "modules:services:patient-event-service",
     "modules:services:quality-measure-service",
+    "modules:services:quality-measure-event-service",
     "modules:services:care-gap-service",
+    "modules:services:care-gap-event-service",
+    "modules:services:clinical-workflow-service",
+    "modules:services:clinical-workflow-event-service",
+    "modules:services:nurse-workflow-service",
     "modules:services:analytics-service",
     "modules:services:documentation-service",
-    "modules:services:gateway-service",
     "modules:services:gateway-admin-service",
     "modules:services:gateway-fhir-service",
     "modules:services:gateway-clinical-service",
@@ -73,8 +83,16 @@ include(
     "modules:services:migration-workflow-service",
     "modules:services:sales-automation-service",
     "modules:services:notification-service",
+    "modules:services:demo-orchestrator-service",
     "modules:services:demo-seeding-service",
-    "modules:services:cms-connector-service"
+    "modules:services:data-ingestion-service",
+    "modules:services:cms-connector-service",
+    "modules:services:audit-query-service",
+    "modules:services:query-api-service",
+    "modules:services:patient-event-handler-service",
+    "modules:services:care-gap-event-handler-service",
+    "modules:services:quality-measure-event-handler-service",
+    "modules:services:clinical-workflow-event-handler-service"
 )
 
 // Applications

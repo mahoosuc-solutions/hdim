@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0016-create-care-team-members-table" author="system">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="care_team_members"/>
+            </not>
+        </preConditions>
+        <comment>Create care_team_members table for patient care team assignments</comment>
+
+        <createTable tableName="care_team_members">
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_primary" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <createIndex tableName="care_team_members" indexName="idx_care_team_patient">
+            <column name="patient_id"/>
+        </createIndex>
+
+        <createIndex tableName="care_team_members" indexName="idx_care_team_user">
+            <column name="user_id"/>
+        </createIndex>
+
+        <createIndex tableName="care_team_members" indexName="idx_care_team_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex tableName="care_team_members" indexName="idx_care_team_active">
+            <column name="active"/>
+        </createIndex>
+
+        <addUniqueConstraint tableName="care_team_members"
+                             columnNames="patient_id, user_id, tenant_id"
+                             constraintName="uk_care_team_patient_user_tenant"/>
+
+        <rollback>
+            <dropTable tableName="care_team_members"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0016-insert-sample-care-team-data" author="system" context="dev,test">
+        <preConditions onFail="MARK_RAN">
+            <!-- Only run if patient_id is NOT UUID type (sample data uses string IDs) -->
+            <!-- If patient_id is UUID (count=1), this check fails (expected 0) and changeset is skipped -->
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_name = 'care_team_members'
+                AND column_name = 'patient_id'
+                AND data_type = 'uuid'
+            </sqlCheck>
+        </preConditions>
+        <comment>Insert sample care team data for testing - skipped if patient_id is UUID type</comment>
+
+        <insert tableName="care_team_members">
+            <column name="id" value="ctm-001"/>
+            <column name="tenant_id" value="tenant-123"/>
+            <column name="patient_id" value="patient-456"/>
+            <column name="user_id" value="user-1"/>
+            <column name="role" value="PRIMARY_CARE_PHYSICIAN"/>
+            <column name="is_primary" valueBoolean="true"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="start_date" valueDate="2024-01-01T00:00:00"/>
+            <column name="created_at" valueDate="2024-01-01T00:00:00"/>
+        </insert>
+
+        <insert tableName="care_team_members">
+            <column name="id" value="ctm-002"/>
+            <column name="tenant_id" value="tenant-123"/>
+            <column name="patient_id" value="patient-456"/>
+            <column name="user_id" value="user-2"/>
+            <column name="role" value="REGISTERED_NURSE"/>
+            <column name="is_primary" valueBoolean="false"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="start_date" valueDate="2024-01-01T00:00:00"/>
+            <column name="created_at" valueDate="2024-01-01T00:00:00"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="care_team_members">
+                <where>id IN ('ctm-001', 'ctm-002')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

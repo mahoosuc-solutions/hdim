@@ -1,0 +1,28 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: devops-agent-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devops_agent_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_dev_password}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+hdim:
+  services:
+    fhir:
+      url: ${FHIR_SERVICE_URL:http://localhost:8085/fhir}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

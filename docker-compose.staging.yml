@@ -23,7 +23,7 @@ services:
       - postgres_staging_data:/var/lib/postgresql/data
       - ./docker/postgres/init-staging.sh:/docker-entrypoint-initdb.d/init.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata"]
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d ${POSTGRES_DB:-healthdata_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -284,6 +284,10 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
       FHIR_SERVER_URL: http://fhir-service:8080/fhir
+      # Measure Builder Backend Configuration
+      MEASURE_BUILDER_VALIDATION_ENABLED: ${MEASURE_BUILDER_VALIDATION_ENABLED:-true}
+      MEASURE_BUILDER_DRAFT_TTL_HOURS: ${MEASURE_BUILDER_DRAFT_TTL_HOURS:-72}
+      MEASURE_BUILDER_AUTO_VERSION: ${MEASURE_BUILDER_AUTO_VERSION:-true}
       JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
@@ -465,17 +469,53 @@ services:
           memory: 1G
 
   # ============================================================================
-  # Gateway Service (Authentication & API Gateway)
+  # Gateway Services (Authentication & API Gateway)
   # ============================================================================
-  gateway-service:
+  gateway-admin-service:
     build:
-      context: ./backend/modules/services/gateway-service
+      context: ./backend/modules/services/gateway-admin-service
       dockerfile: Dockerfile
-    image: healthdata/gateway-service:staging
-    container_name: healthdata-gateway-staging
+    image: healthdata/gateway-admin-service:staging
+    container_name: healthdata-gateway-admin-staging
     restart: unless-stopped
-    ports:
-      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: healthdata_gateway
+      DB_USERNAME: healthdata
+      DB_PASSWORD: staging_password_2025
+      JWT_SECRET: healthdata-gateway-staging-secret-key-minimum-256-bits-required-2025
+      JWT_ACCESS_EXPIRATION: 900000
+      JWT_REFRESH_EXPIRATION: 604800000
+      AUTH_ENFORCED: "true"
+      CORS_ORIGINS: http://localhost:4200,http://localhost:80
+      JAVA_OPTS: -Xms512m -Xmx1024m -XX:+UseG1GC
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - healthdata-staging
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
+
+  gateway-fhir-service:
+    build:
+      context: ./backend/modules/services/gateway-fhir-service
+      dockerfile: Dockerfile
+    image: healthdata/gateway-fhir-service:staging
+    container_name: healthdata-gateway-fhir-staging
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
@@ -485,11 +525,11 @@ services:
         condition: service_started
       patient-service:
         condition: service_started
-      care-gap-service:
+      fhir-service:
         condition: service_started
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SERVER_PORT: 9000
+      SERVER_PORT: 8080
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: healthdata_gateway
@@ -502,13 +542,11 @@ services:
       QUALITY_MEASURE_URL: http://quality-measure-service:8087
       FHIR_SERVICE_URL: http://fhir-service:8080
       PATIENT_SERVICE_URL: http://patient-service:8084
-      CARE_GAP_URL: http://care-gap-service:8085
-      EVENT_ROUTER_URL: http://event-router-service:8089
       AUTH_ENFORCED: "true"
       CORS_ORIGINS: http://localhost:4200,http://localhost:80
       JAVA_OPTS: -Xms512m -Xmx1024m -XX:+UseG1GC
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9000/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -520,6 +558,74 @@ services:
         limits:
           cpus: '1.5'
           memory: 1.5G
+
+  gateway-clinical-service:
+    build:
+      context: ./backend/modules/services/gateway-clinical-service
+      dockerfile: Dockerfile
+    image: healthdata/gateway-clinical-service:staging
+    container_name: healthdata-gateway-clinical-staging
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      care-gap-service:
+        condition: service_started
+      event-router-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SERVER_PORT: 8080
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: healthdata_gateway
+      DB_USERNAME: healthdata
+      DB_PASSWORD: staging_password_2025
+      JWT_SECRET: healthdata-gateway-staging-secret-key-minimum-256-bits-required-2025
+      JWT_ACCESS_EXPIRATION: 900000
+      JWT_REFRESH_EXPIRATION: 604800000
+      CARE_GAP_URL: http://care-gap-service:8085
+      EVENT_ROUTER_URL: http://event-router-service:8089
+      AUTH_ENFORCED: "true"
+      CORS_ORIGINS: http://localhost:4200,http://localhost:80
+      JAVA_OPTS: -Xms512m -Xmx1024m -XX:+UseG1GC
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - healthdata-staging
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1.5G
+
+  gateway-edge:
+    image: nginx:1.27-alpine
+    container_name: healthdata-gateway-edge-staging
+    restart: unless-stopped
+    ports:
+      - "9000:8080"
+    depends_on:
+      gateway-admin-service:
+        condition: service_healthy
+      gateway-fhir-service:
+        condition: service_healthy
+      gateway-clinical-service:
+        condition: service_healthy
+    volumes:
+      - ./docker/gateway-edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - healthdata-staging
 
   # ============================================================================
   # Clinical Portal Frontend
@@ -534,8 +640,16 @@ services:
     ports:
       - "4200:80"
     environment:
+      # Clinical Portal Core Configuration
       - NODE_ENV=production
-      - API_GATEWAY_URL=http://gateway-service:9000
+      - API_GATEWAY_URL=http://gateway-edge:8080
+      # Measure Builder Feature Configuration
+      - ENABLE_MEASURE_BUILDER=${ENABLE_MEASURE_BUILDER:-true}
+      - MEASURE_BUILDER_MAX_COMPLEXITY=${MEASURE_BUILDER_MAX_COMPLEXITY:-10}
+      - MEASURE_BUILDER_ALLOW_CUSTOM_CQL=${MEASURE_BUILDER_ALLOW_CUSTOM_CQL:-false}
+      - MEASURE_BUILDER_DEBOUNCE_MS=${MEASURE_BUILDER_DEBOUNCE_MS:-500}
+      - MEASURE_BUILDER_ALLOW_IMPORTS=${MEASURE_BUILDER_ALLOW_IMPORTS:-true}
+      - MEASURE_BUILDER_MIN_ROLE=${MEASURE_BUILDER_MIN_ROLE:-EVALUATOR}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
@@ -545,7 +659,7 @@ services:
     networks:
       - healthdata-staging
     depends_on:
-      - gateway-service
+      - gateway-edge
     deploy:
       resources:
         limits:
@@ -556,7 +670,7 @@ services:
   # Prometheus Monitoring
   # ============================================================================
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.48.0
     container_name: healthdata-prometheus-staging
     restart: unless-stopped
     ports:
@@ -581,7 +695,7 @@ services:
   # Grafana Dashboards
   # ============================================================================
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.2.3
     container_name: healthdata-grafana-staging
     restart: unless-stopped
     ports:

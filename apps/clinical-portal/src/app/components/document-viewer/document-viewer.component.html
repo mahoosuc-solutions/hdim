@@ -1,0 +1,151 @@
+<div class="document-viewer" *ngIf="document">
+  <!-- Document Header -->
+  <mat-card class="viewer-header">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon class="file-icon">description</mat-icon>
+        {{ document.fileName }}
+      </mat-card-title>
+      <mat-card-subtitle>
+        <span>{{ formatFileSize(document.fileSize) }}</span>
+        <span class="separator">•</span>
+        <span>{{ document.uploadDate | date: 'short' }}</span>
+        <span class="separator">•</span>
+        <span>{{ document.uploadedBy }}</span>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-actions>
+      <!-- OCR Status Chip -->
+      <mat-chip-listbox aria-label="OCR Status">
+        <mat-chip
+          [color]="getOcrStatusColor()"
+          [attr.aria-label]="'OCR status: ' + (document.ocrStatus || 'unknown')">
+          <mat-icon *ngIf="isOcrProcessing()">sync</mat-icon>
+          <mat-icon *ngIf="isOcrCompleted()">check_circle</mat-icon>
+          <mat-icon *ngIf="isOcrFailed()">error</mat-icon>
+          {{ document.ocrStatus || 'Unknown' }}
+        </mat-chip>
+      </mat-chip-listbox>
+
+      <!-- Actions -->
+      <button mat-raised-button color="primary" (click)="downloadDocument()"
+              [attr.aria-label]="'Download ' + document.fileName">
+        <mat-icon>download</mat-icon>
+        Download
+      </button>
+
+      <button mat-raised-button color="warn" *ngIf="isOcrFailed()" (click)="reprocessOcr()"
+              matTooltip="Retry OCR processing"
+              aria-label="Retry OCR processing">
+        <mat-icon>refresh</mat-icon>
+        Reprocess OCR
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- OCR Text Viewer -->
+  <mat-card class="ocr-text-viewer" *ngIf="isOcrCompleted() && document.ocrText">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>text_snippet</mat-icon>
+        Extracted Text (OCR)
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Search Input -->
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search in text</mat-label>
+        <input matInput
+               [(ngModel)]="searchQuery"
+               (ngModelChange)="updateHighlightedText()"
+               placeholder="Type to search..."
+               aria-label="Search OCR text">
+        <mat-icon matSuffix>search</mat-icon>
+        <button mat-icon-button matSuffix *ngIf="searchQuery" (click)="clearSearch()"
+                aria-label="Clear search">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-hint *ngIf="searchQuery">{{ getMatchCount() }} match(es) found</mat-hint>
+      </mat-form-field>
+
+      <!-- OCR Text with Highlighting -->
+      <div class="ocr-text-content" [innerHTML]="highlightedOcrText"
+           role="region"
+           aria-label="Extracted text from document">
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- OCR Processing Status -->
+  <mat-card class="ocr-status-card" *ngIf="isOcrProcessing()">
+    <mat-card-content class="status-content">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>
+        <strong>{{ document.ocrStatus === 'pending' ? 'OCR processing pending...' : 'OCR processing in progress...' }}</strong>
+      </p>
+      <p class="status-hint">
+        This may take a few moments. Text extraction will be available once processing completes.
+      </p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- OCR Failed Status -->
+  <mat-card class="ocr-failed-card" *ngIf="isOcrFailed()">
+    <mat-card-content class="status-content">
+      <mat-icon color="warn" class="error-icon">error_outline</mat-icon>
+      <p>
+        <strong>OCR processing failed</strong>
+      </p>
+      <p class="status-hint" *ngIf="ocrStatusDetails?.errorMessage">
+        {{ ocrStatusDetails.errorMessage }}
+      </p>
+      <button mat-raised-button color="warn" (click)="reprocessOcr()"
+              aria-label="Retry OCR processing">
+        <mat-icon>refresh</mat-icon>
+        Retry OCR Processing
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- No OCR Text Available -->
+  <mat-card class="no-ocr-card" *ngIf="!document.ocrStatus || !document.ocrText && !isOcrProcessing()">
+    <mat-card-content class="status-content">
+      <mat-icon class="info-icon">info</mat-icon>
+      <p>
+        <strong>No OCR text available</strong>
+      </p>
+      <p class="status-hint">
+        This document has not been processed for text extraction.
+      </p>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- OCR Status Details (if available) -->
+  <mat-card class="ocr-details-card" *ngIf="ocrStatusDetails && isLoadingOcrStatus === false">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>info</mat-icon>
+        OCR Processing Details
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="details-grid">
+        <div class="detail-item">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value">{{ ocrStatusDetails.status }}</span>
+        </div>
+        <div class="detail-item" *ngIf="ocrStatusDetails.processedAt">
+          <span class="detail-label">Processed At:</span>
+          <span class="detail-value">{{ ocrStatusDetails.processedAt | date: 'short' }}</span>
+        </div>
+        <div class="detail-item" *ngIf="ocrStatusDetails.hasText !== undefined">
+          <span class="detail-label">Text Extracted:</span>
+          <span class="detail-value">{{ ocrStatusDetails.hasText ? 'Yes' : 'No' }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -16,11 +16,17 @@ echo "Authentication Test"
 echo "========================================"
 echo ""
 
+# Configuration
+GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
+TENANT_ID="${TENANT_ID:-acme-health}"
+AUTH_USERNAME="${AUTH_USERNAME:-demo.doctor}"
+AUTH_PASSWORD="${AUTH_PASSWORD:-demo123}"
+
 # Test 1: Login as admin
-echo -e "${YELLOW}1. Login as test_admin...${NC}"
-RESPONSE=$(curl -s -X POST http://localhost:8087/quality-measure/api/v1/auth/login \
+echo -e "${YELLOW}1. Login as ${AUTH_USERNAME}...${NC}"
+RESPONSE=$(curl -s -X POST "${GATEWAY_URL}/api/v1/auth/login" \
   -H 'Content-Type: application/json' \
-  -d '{"username":"test_admin","password":"password123"}')
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}")
 
 TOKEN=$(echo "$RESPONSE" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('accessToken', 'ERROR'))" 2>/dev/null || echo "ERROR")
 
@@ -31,15 +37,14 @@ if [ "$TOKEN" != "ERROR" ] && [ "$TOKEN" != "null" ] && [ -n "$TOKEN" ]; then
   # Test 2: Access API with token
   echo -e "${YELLOW}2. Access Patient Health API with token...${NC}"
   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-    http://localhost:8087/quality-measure/patient-health/overview/test123 \
+    "${GATEWAY_URL}/api/quality/patient-health/overview/test123" \
     -H "Authorization: Bearer $TOKEN" \
-    -H "X-Tenant-ID: default")
+    -H "X-Tenant-ID: ${TENANT_ID}")
 
   if [ "$HTTP_CODE" = "200" ]; then
     echo -e "${GREEN}✓ Authenticated access successful (HTTP $HTTP_CODE)${NC}"
   else
     echo -e "${YELLOW}⚠ Response: HTTP $HTTP_CODE${NC}"
-    echo -e "${YELLOW}  (Note: Auth currently disabled with .permitAll())${NC}"
   fi
 else
   echo -e "${RED}✗ Login failed${NC}"

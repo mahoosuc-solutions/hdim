@@ -37,7 +37,7 @@ export class PatientService {
    * Get all patients
    * Endpoint: GET /Patient
    */
-  getPatients(count: number = 100): Observable<Patient[]> {
+  getPatients(count = 100): Observable<Patient[]> {
     const url = buildFhirUrl(FHIR_ENDPOINTS.PATIENT, {
       _count: count.toString(),
     });
@@ -166,7 +166,7 @@ export class PatientService {
    * Get all patients with caching (5-minute TTL)
    * Use this for dashboard and lists that don't need real-time data
    */
-  getPatientsCached(count: number = 100): Observable<Patient[]> {
+  getPatientsCached(count = 100): Observable<Patient[]> {
     const now = Date.now();
     if (this.patientsCache$ && (now - this.cacheTimestamp) < this.CACHE_TTL) {
       return this.patientsCache$;
@@ -229,10 +229,10 @@ export class PatientService {
     const firstName = name?.given?.[0];
     const lastName = name?.family;
 
-    // Extract MRN from identifiers - look for "Medical Record Number" in type.text
+    // Extract MRN from identifiers - prefer type.text, fallback to first identifier
     const mrnIdentifier = patient.identifier?.find(
       (id) => id.type?.text === 'Medical Record Number'
-    );
+    ) || patient.identifier?.[0];
     const mrn = mrnIdentifier?.value;
     const mrnAssigningAuthority = mrnIdentifier?.system;
 

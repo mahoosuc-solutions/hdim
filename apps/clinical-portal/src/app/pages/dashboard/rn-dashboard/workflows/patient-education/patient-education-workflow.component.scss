@@ -1,0 +1,511 @@
+/* Patient Education Workflow Styles */
+
+$primary: #3f51b5;
+$accent: #ff4081;
+$success: #4caf50;
+$warn: #ff9800;
+$info: #2196f3;
+
+.workflow-step {
+  animation: slideIn 0.3s ease-out;
+
+  h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    color: #212121;
+  }
+
+  .step-description {
+    color: rgba(0, 0, 0, 0.7);
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+}
+
+.workflow-progress {
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  mat-progress-bar {
+    flex: 1;
+    height: 6px;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  gap: 16px;
+
+  p {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.topic-info {
+  margin-top: 16px;
+  background-color: rgba($info, 0.05);
+
+  mat-card-header {
+    background-color: rgba($info, 0.1);
+    margin: -16px -16px 12px -16px;
+    padding: 12px 16px;
+  }
+
+  mat-card-title {
+    font-size: 16px;
+    color: $info;
+  }
+
+  .material-list {
+    .material-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      font-size: 13px;
+
+      mat-icon {
+        color: $info;
+      }
+
+      .duration {
+        margin-left: auto;
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+.material-types {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+
+  .material-type-card {
+    padding: 16px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: $primary;
+      background-color: rgba($primary, 0.05);
+    }
+
+    &.selected {
+      border-color: $primary;
+      background-color: rgba($primary, 0.1);
+    }
+
+    mat-radio-button {
+      width: 100%;
+    }
+
+    .type-content {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+
+      mat-icon {
+        color: $primary;
+        margin-top: 2px;
+      }
+
+      h4 {
+        margin: 0 0 4px 0;
+        font-size: 14px;
+      }
+
+      p {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .duration {
+        display: inline-block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: $warn;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.material-content {
+  margin: 16px 0;
+
+  .video-container,
+  .handout-container,
+  .interactive-container {
+    padding: 32px 16px;
+    text-align: center;
+    background-color: rgba($info, 0.05);
+    border-radius: 4px;
+    border: 1px solid rgba($info, 0.2);
+
+    mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: $info;
+      margin: 0 auto 16px auto;
+    }
+
+    p {
+      margin: 8px 0;
+      color: #212121;
+
+      &.note {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    button {
+      margin-top: 16px;
+    }
+  }
+
+  .handout-content,
+  .interactive-content {
+    background-color: white;
+    padding: 16px;
+    border-radius: 4px;
+    margin: 16px 0;
+    text-align: left;
+    min-height: 150px;
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 13px;
+  }
+}
+
+.completion-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba($success, 0.1);
+  border-radius: 4px;
+  border-left: 3px solid $success;
+  color: $success;
+  font-weight: 500;
+  margin-top: 16px;
+
+  mat-icon {
+    color: $success;
+  }
+}
+
+.assessment-panel,
+.barriers-panel,
+.followup-panel {
+  margin: 12px 0;
+
+  mat-expansion-panel-header {
+    background-color: rgba($primary, 0.05);
+  }
+
+  mat-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    mat-icon {
+      color: $primary;
+    }
+  }
+}
+
+.assessment-content {
+  padding: 12px;
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13px;
+
+    li {
+      margin: 8px 0;
+    }
+  }
+
+  .score-input {
+    margin: 16px 0;
+  }
+
+  .score-feedback {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-top: 12px;
+
+    mat-icon {
+      flex-shrink: 0;
+    }
+
+    &.level-excellent {
+      background-color: rgba($success, 0.1);
+      color: $success;
+      border-left: 3px solid $success;
+
+      mat-icon {
+        color: $success;
+      }
+    }
+
+    &.level-good {
+      background-color: rgba($info, 0.1);
+      color: $info;
+      border-left: 3px solid $info;
+
+      mat-icon {
+        color: $info;
+      }
+    }
+
+    &.level-fair {
+      background-color: rgba($warn, 0.1);
+      color: $warn;
+      border-left: 3px solid $warn;
+
+      mat-icon {
+        color: $warn;
+      }
+    }
+
+    &.level-poor {
+      background-color: rgba(#f44336, 0.1);
+      color: #f44336;
+      border-left: 3px solid #f44336;
+
+      mat-icon {
+        color: #f44336;
+      }
+    }
+
+    strong {
+      display: block;
+    }
+
+    p {
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  }
+}
+
+.barriers-content {
+  padding: 12px;
+
+  .barrier-item {
+    margin-bottom: 16px;
+    padding: 12px;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+
+    mat-checkbox {
+      display: block;
+
+      strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      p {
+        margin: 4px 0 0 0;
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+  }
+}
+
+.followup-content {
+  padding: 12px;
+
+  mat-checkbox {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .followup-details {
+    padding: 12px;
+    background-color: rgba($accent, 0.05);
+    border-radius: 4px;
+    border-left: 3px solid $accent;
+
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 12px;
+    }
+
+    .info-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background-color: rgba($info, 0.1);
+      border-radius: 4px;
+      font-size: 12px;
+      color: $info;
+
+      mat-icon {
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+.education-summary {
+  margin-top: 16px;
+  background-color: rgba($success, 0.05);
+
+  mat-card-header {
+    background-color: rgba($success, 0.1);
+    margin: -16px -16px 12px -16px;
+    padding: 12px 16px;
+
+    mat-card-title {
+      font-size: 14px;
+      color: $success;
+    }
+  }
+
+  .summary-item {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 13px;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #212121;
+    }
+
+    .barrier-badge {
+      display: inline-block;
+      margin-right: 6px;
+      margin-bottom: 6px;
+      padding: 4px 8px;
+      background-color: rgba($warn, 0.2);
+      border-radius: 12px;
+      font-size: 11px;
+      color: $warn;
+    }
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: rgba($info, 0.1);
+  border-radius: 4px;
+  font-size: 13px;
+  color: $info;
+  border-left: 3px solid $info;
+  margin: 12px 0;
+
+  mat-icon {
+    flex-shrink: 0;
+  }
+}
+
+mat-dialog-content {
+  padding: 16px;
+  min-height: 300px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+mat-dialog-actions {
+  padding: 0 16px 16px 16px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+
+  button {
+    min-width: 100px;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .material-types {
+    .material-type-card .type-content {
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+
+  mat-dialog-content {
+    min-height: 200px;
+    max-height: 70vh;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .workflow-step h3 {
+    color: #f5f5f5;
+  }
+
+  .topic-info {
+    background-color: rgba($info, 0.1);
+  }
+
+  .material-type-card {
+    &.selected {
+      background-color: rgba($primary, 0.2);
+    }
+  }
+
+  .assessment-content ul li {
+    color: rgba(255, 255, 255, 0.9);
+  }
+}

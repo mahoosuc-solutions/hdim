@@ -1,0 +1,224 @@
+{
+  "dashboard": {
+    "title": "HIPAA Compliance Monitoring",
+    "tags": ["hdim", "hipaa", "compliance", "security"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "PHI Cache TTL Violations",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "count(cache_ttl_seconds{cache_type=\"phi\"} > 300)",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "Should always be 0. HIPAA §164.312(b) requires PHI cache TTL ≤ 5 minutes (300 seconds)"
+      },
+      {
+        "id": 2,
+        "title": "Audit Log Failures",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{
+          "expr": "sum(rate(audit_log_failures_total[5m]))",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "decimals": 2,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.01, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "HIPAA §164.312(b) requires audit trail. Any failures are critical."
+      },
+      {
+        "id": 3,
+        "title": "Session Timeout Violations",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [{
+          "expr": "count(session_timeout_seconds > 900)",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"}
+              ]
+            }
+          }
+        },
+        "description": "HIPAA §164.312(a)(2)(iii) recommends session timeout ≤ 15 minutes (900 seconds)"
+      },
+      {
+        "id": 4,
+        "title": "Unauthorized Access Attempts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [{
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"401|403\"}[5m]))",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "decimals": 2
+          }
+        },
+        "description": "401 Unauthorized + 403 Forbidden responses"
+      },
+      {
+        "id": 5,
+        "title": "PHI Cache TTL by Service",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [{
+          "expr": "cache_ttl_seconds{cache_type=\"phi\"}",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "s", "label": "TTL (seconds)"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true},
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {"params": [300], "type": "gt"},
+              "operator": {"type": "and"},
+              "query": {"params": ["A", "5m", "now"]},
+              "reducer": {"params": [], "type": "max"},
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "frequency": "60s",
+          "handler": 1,
+          "name": "PHI Cache TTL > 5 minutes",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+      {
+        "id": 6,
+        "title": "Audit Log Write Rate",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [{
+          "expr": "rate(audit_log_writes_total[5m])",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "ops", "label": "Writes/sec"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 7,
+        "title": "Failed Login Attempts",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "targets": [{
+          "expr": "rate(authentication_failures_total[5m])",
+          "legendFormat": "{{service}}",
+          "refId": "A"
+        }],
+        "yaxes": [
+          {"format": "ops", "label": "Failures/sec"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "legend": {"show": true}
+      },
+      {
+        "id": 8,
+        "title": "Multi-Tenant Isolation Breaches",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [{
+          "expr": "sum(rate(tenant_isolation_violations_total[5m]))",
+          "refId": "A"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops",
+            "decimals": 4,
+            "color": {"mode": "thresholds"},
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.0001, "color": "red"}
+              ]
+            }
+          }
+        },
+        "description": "HIPAA §164.308(a)(4)(ii)(C) requires multi-tenant data isolation. Should always be 0."
+      }
+    ]
+  }
+}

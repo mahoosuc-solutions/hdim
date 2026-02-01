@@ -15,6 +15,7 @@ Spring Boot service handling FHIR R4 REST APIs.
 2. Inspect Grafana dashboards for latency/spikes.
 3. Verify Kafka producer metrics; check DLQ for events.
 4. Review logs (ELK/Loki) for error stack traces.
+5. License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md).
 
 ## Common Tasks
 ### Clear Cache Entry

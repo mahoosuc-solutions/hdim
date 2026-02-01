@@ -17,57 +17,50 @@ import {
   Lock,
   Award
 } from 'lucide-react'
-import { AnimatedCounter } from './components/AnimatedCounter'
 import { CyclingText } from './components/CyclingText'
 import { LandingPageClient } from './components/LandingPageClient'
 import { SegmentSelector } from './components/SegmentSelector'
+import VideoPlayer from '../components/VideoPlayer'
 
 export default function LandingPage() {
   const features = [
     {
       icon: HeartPulse,
       title: 'Care Gap Detection',
-      description: 'Real-time CQL execution identifies care gaps using NCQA-certified HEDIS specifications. Sub-second detection across 56 quality measures.',
+      description: 'CQL execution identifies care gaps using HEDIS specifications and surfaces actionable outreach opportunities.',
     },
     {
       icon: BarChart3,
       title: 'HEDIS Evaluation',
-      description: 'CQL-native measure calculation with <500ms per patient execution. No proprietary interpretation—identical results to NCQA CQL playground.',
+      description: 'CQL-native measure calculation with transparent, auditable logic and consistent results.',
     },
     {
       icon: LineChart,
       title: 'Risk Stratification',
-      description: 'HCC v28 risk adjustment models with validated scoring algorithms. Predict patient risk scores for value-based contracts.',
+      description: 'Configurable risk stratification to support value-based care contracts and care management.',
     },
     {
       icon: Database,
       title: 'FHIR R4 Integration',
-      description: 'HAPI FHIR 7.x native architecture—no v2→FHIR translation layer. Direct FHIR R4 queries with <200ms p95 latency.',
+      description: 'FHIR R4-native data ingestion and query patterns designed for interoperability.',
     },
     {
       icon: Zap,
       title: 'CQL Engine',
-      description: 'Direct CQL execution via open-source cql-engine library. What you test in NCQA playground runs identically in production.',
+      description: 'Direct CQL execution using open standards and open-source libraries.',
     },
     {
       icon: FileCheck,
       title: 'QRDA Export',
-      description: 'Automated QRDA I/III generation for CMS quality reporting. Audit-ready with full measure traceability.',
+      description: 'QRDA I/III export for quality reporting with full measure traceability.',
     },
-  ]
-
-  const stats = [
-    { value: 40, suffix: '%', label: 'Faster Gap Closure' },
-    { value: 12, suffix: ' pts', label: 'Avg. HEDIS Improvement' },
-    { value: 500, suffix: 'K+', label: 'Members Managed' },
-    { value: 82, suffix: '%', label: 'Time Savings' },
   ]
 
   const painPoints = [
     {
       icon: Database,
-      title: 'Data Scattered Across 15+ Systems',
-      description: 'Your patient data lives in silos - EHRs, claims, labs, and more. Integration takes months.',
+      title: 'Data Scattered Across Systems',
+      description: 'Your patient data lives in silos — EHRs, claims, labs, and more. Integration takes time.',
     },
     {
       icon: Activity,
@@ -108,18 +101,18 @@ export default function LandingPage() {
               {/* Badge */}
               <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white/90 text-sm mb-6">
                 <Star className="w-4 h-4 text-yellow-400 mr-2" />
-                Trusted by leading health plans and ACOs
+                Built for quality leaders across plans, ACOs, and health systems
               </div>
 
               {/* Headline */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
                 Close <CyclingText /><br />
-                <span className="text-white">40% Faster</span>
+                <span className="text-white">with confidence</span>
               </h1>
 
               {/* Subheadline */}
               <p className="text-lg md:text-xl text-white/80 mb-8 max-w-xl mx-auto lg:mx-0">
-                The FHIR-native platform for HEDIS excellence. Automate quality measure evaluation, detect care gaps instantly, and boost your Star Ratings.
+                The FHIR-native platform for HEDIS and quality programs. Automate measure evaluation, detect care gaps quickly, and improve performance with audit-ready results.
               </p>
 
               {/* CTAs */}
@@ -144,15 +137,15 @@ export default function LandingPage() {
               <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-6">
                 <div className="flex items-center space-x-2 text-white/70">
                   <Shield className="w-5 h-5" />
-                  <span className="text-sm">HIPAA Compliant</span>
+                  <span className="text-sm">HIPAA-aligned security</span>
                 </div>
                 <div className="flex items-center space-x-2 text-white/70">
                   <Lock className="w-5 h-5" />
-                  <span className="text-sm">SOC 2 Type II</span>
+                  <span className="text-sm">SOC 2-aligned controls</span>
                 </div>
                 <div className="flex items-center space-x-2 text-white/70">
                   <Award className="w-5 h-5" />
-                  <span className="text-sm">HITRUST Certified</span>
+                  <span className="text-sm">HITRUST-aligned program</span>
                 </div>
               </div>
 
@@ -172,15 +165,15 @@ export default function LandingPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Open Gaps</span>
-                      <span className="font-bold text-primary">2,340</span>
+                      <span className="font-bold text-primary">Active</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">Closed This Month</span>
-                      <span className="font-bold text-green-600">+847</span>
+                      <span className="font-bold text-green-600">Trending</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <span className="text-gray-600">HEDIS Score</span>
-                      <span className="font-bold text-primary">78.4%</span>
+                      <span className="font-bold text-primary">Tracking</span>
                     </div>
                     <div className="h-32 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg flex items-end p-4">
                       <div className="flex items-end space-x-2 w-full">
@@ -203,8 +196,8 @@ export default function LandingPage() {
                       <TrendingUp className="w-6 h-6 text-green-600" />
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-gray-900">+12 pts</p>
-                      <p className="text-sm text-gray-500">HEDIS Improvement</p>
+                      <p className="text-2xl font-bold text-gray-900">Quality Lift</p>
+                      <p className="text-sm text-gray-500">Measure performance</p>
                     </div>
                   </div>
                 </div>
@@ -225,41 +218,49 @@ export default function LandingPage() {
       <section className="py-12 bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-gray-500 mb-8">
-            Trusted by leading healthcare organizations
+            Enterprise-ready platform for quality, interoperability, and reporting
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-primary">500K+</div>
-              <p className="text-gray-600 text-sm">Members Managed</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <p className="text-sm font-semibold text-gray-900 mb-1">FHIR-Native Interoperability</p>
+              <p className="text-sm text-gray-600">Connects to EHR, claims, and lab sources using FHIR R4 resources.</p>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-primary">15+</div>
-              <p className="text-gray-600 text-sm">Health Systems</p>
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <p className="text-sm font-semibold text-gray-900 mb-1">CQL-First Measure Logic</p>
+              <p className="text-sm text-gray-600">Executes quality measures natively with transparent, auditable logic.</p>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-primary">56</div>
-              <p className="text-gray-600 text-sm">HEDIS Measures</p>
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <p className="text-sm font-semibold text-gray-900 mb-1">Care Gap Workflows</p>
+              <p className="text-sm text-gray-600">Turns measure results into actionable, role-based interventions.</p>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-primary">99.9%</div>
-              <p className="text-gray-600 text-sm">Uptime SLA</p>
+            <div className="bg-white rounded-xl border border-gray-100 p-5">
+              <p className="text-sm font-semibold text-gray-900 mb-1">Reporting-Ready Outputs</p>
+              <p className="text-sm text-gray-600">Supports QRDA exports and compliance-aligned documentation.</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-white" id="compliance">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
-                  <AnimatedCounter end={stat.value} suffix={stat.suffix} />
-                </div>
-                <p className="text-gray-600">{stat.label}</p>
-              </div>
-            ))}
+          <div className="grid md:grid-cols-4 gap-6 text-left">
+            <div className="bg-gray-50 rounded-xl p-6">
+              <p className="text-sm font-semibold text-gray-900 mb-2">Quality Acceleration</p>
+              <p className="text-sm text-gray-600">Shorten the time from data ingestion to gap closure.</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-6">
+              <p className="text-sm font-semibold text-gray-900 mb-2">Program Readiness</p>
+              <p className="text-sm text-gray-600">Stay current with evolving HEDIS and CMS requirements.</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-6">
+              <p className="text-sm font-semibold text-gray-900 mb-2">Operational Efficiency</p>
+              <p className="text-sm text-gray-600">Reduce manual reconciliations and repetitive measure work.</p>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-6">
+              <p className="text-sm font-semibold text-gray-900 mb-2">Financial Impact</p>
+              <p className="text-sm text-gray-600">Protect quality incentives with defensible, auditable results.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -323,7 +324,7 @@ export default function LandingPage() {
                     <span className="w-3 h-3 bg-red-500 rounded-full"></span>
                     Without Real-Time Gap Detection:
                   </p>
-                  <p className="text-gray-600">Maria&apos;s last A1C was 14 months ago. Her endocrinologist retired. Her new PCP&apos;s system doesn&apos;t flag the gap. Diabetic ketoacidosis. $43,000 hospitalization. Permanent kidney damage.</p>
+                  <p className="text-gray-600">Maria&apos;s last A1C was 14 months ago. Her endocrinologist retired. Her new PCP&apos;s system doesn&apos;t flag the gap. Diabetic ketoacidosis. A high-cost hospitalization. Permanent kidney damage.</p>
                 </div>
 
                 <div>
@@ -331,7 +332,7 @@ export default function LandingPage() {
                     <span className="w-3 h-3 bg-green-500 rounded-full"></span>
                     With HDIM:
                   </p>
-                  <p className="text-gray-600">At 9 months overdue, HDIM flags Maria&apos;s care gap. Her care manager calls. A $45 lab visit. A1C: 7.8% - elevated but manageable. Medication adjusted. Crisis prevented.</p>
+                  <p className="text-gray-600">At 9 months overdue, HDIM flags Maria&apos;s care gap. Her care manager calls. A low-cost lab visit. A1C: 7.8% - elevated but manageable. Medication adjusted. Crisis prevented.</p>
                   <p className="text-gray-900 font-semibold mt-3">Maria is still making tamales for her grandchildren.</p>
                 </div>
               </div>
@@ -347,7 +348,7 @@ export default function LandingPage() {
                   />
                 </div>
                 <p className="text-lg font-semibold text-primary italic">
-                  &quot;The gap between a $45 lab test and a $43,000 hospitalization is 14 months of silence.&quot;
+                  &quot;The gap between a routine lab test and a high-cost hospitalization is months of silence.&quot;
                 </p>
               </div>
             </div>
@@ -413,8 +414,8 @@ export default function LandingPage() {
 
           <div className="relative rounded-2xl overflow-hidden shadow-2xl">
             <Image
-              src="/images/comparison/before-after.png"
-              alt="Before and After: 3 months reactive vs 2 seconds real-time with HDIM"
+              src="/images/technical/architecture.png"
+              alt="HDIM architecture: real-time execution layer connects fragmented systems to actionable insights"
               width={1920}
               height={1080}
               className="w-full h-auto"
@@ -424,12 +425,12 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-8 mt-10">
             <div className="text-center p-6 bg-red-50 rounded-xl">
-              <div className="text-4xl font-bold text-red-600 mb-2">3 months</div>
-              <p className="text-gray-600">Traditional reactive approach - finding care gaps after they&apos;ve impacted quality scores</p>
+              <div className="text-4xl font-bold text-red-600 mb-2">Months</div>
+              <p className="text-gray-600">Traditional reactive approach — gaps surface after they&apos;ve already impacted quality.</p>
             </div>
             <div className="text-center p-6 bg-green-50 rounded-xl">
-              <div className="text-4xl font-bold text-green-600 mb-2">2 seconds</div>
-              <p className="text-gray-600">With HDIM real-time detection - act immediately when data arrives</p>
+              <div className="text-4xl font-bold text-green-600 mb-2">Near Real-Time</div>
+              <p className="text-gray-600">With HDIM detection, act as soon as data arrives and workflows are ready.</p>
             </div>
           </div>
         </div>
@@ -447,15 +448,15 @@ export default function LandingPage() {
                 Built for the Future of Quality Measurement
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                HDIM is a FHIR-native, CQL-powered platform that doesn&apos;t just report on quality - we execute the actual measure logic. When NCQA updates specifications, you&apos;re compliant automatically.
+                HDIM is a FHIR-native, CQL-powered platform that executes measure logic instead of relying on black-box reporting. When specifications change, your measure logic can be updated without rewriting your entire workflow.
               </p>
 
               <div className="space-y-4">
                 {[
-                  '28 specialized microservices for modular deployment',
-                  'HAPI FHIR 7.x with full R4 compliance (<200ms p95 queries)',
-                  'CQL-native execution—identical to NCQA reference implementation',
-                  'Multi-tenant isolation with 5-minute PHI cache TTL (HIPAA)',
+                  'Modular services for flexible deployment and scaling',
+                  'FHIR R4-native ingestion with standards-aligned APIs',
+                  'CQL-native execution using open specifications',
+                  'Tenant isolation with configurable PHI cache controls',
                 ].map((item, index) => (
                   <div key={index} className="flex items-start space-x-3">
                     <CheckCircle2 className="w-6 h-6 text-green-500 flex-shrink-0 mt-0.5" />
@@ -497,7 +498,7 @@ export default function LandingPage() {
               <div className="absolute -right-4 top-1/2 transform -translate-y-1/2 bg-white rounded-lg shadow-lg p-4">
                 <div className="flex items-center space-x-2">
                   <Zap className="w-5 h-5 text-yellow-500" />
-                  <span className="text-sm font-medium">100K patients/min</span>
+                  <span className="text-sm font-medium">High-throughput processing</span>
                 </div>
               </div>
             </div>
@@ -512,23 +513,17 @@ export default function LandingPage() {
             Why We&apos;re Different
           </span>
           <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-8">
-            Why 5 Minutes Matters
+            Privacy Controls That Respect Patients
           </h2>
 
-          <div className="bg-gray-800 rounded-lg p-6 mb-8 font-mono text-left text-sm overflow-x-auto">
-            <span className="text-green-400">commit</span> <span className="text-gray-300">fix(hipaa): Reduce PHI cache TTL to 5min for HIPAA compliance</span><br/>
-            <span className="text-gray-500">December 27, 2025, 10:31 PM</span>
-          </div>
-
           <div className="text-lg text-gray-300 space-y-4 max-w-2xl mx-auto">
-            <p>Most platforms cache patient data for 24 hours. Faster APIs. Better demos. Standard practice.</p>
-            <p className="text-white font-semibold">We cache for 5 minutes maximum.</p>
+            <p>Most platforms optimize for speed first. We start with patient privacy.</p>
+            <p className="text-white font-semibold">HDIM lets you control PHI caching and data retention policies by tenant.</p>
             <p className="text-gray-400">
-              Not because regulators require it -- they don&apos;t specify a number.<br/>
-              Not because customers demand it -- they rarely ask.
+              Because when a patient revokes consent to share sensitive history, your system should honor that change quickly and transparently.
             </p>
             <p className="text-white">
-              Because when a patient revokes consent to share their mental health history, they deserve to know that within 5 minutes, that data stops moving.
+              Our privacy-first defaults and audit trails make it clear how data is used, when it&apos;s refreshed, and who has access.
             </p>
             <p className="text-accent text-xl font-semibold mt-8">That&apos;s not a feature. That&apos;s respect.</p>
           </div>
@@ -589,24 +584,17 @@ export default function LandingPage() {
               Watch HDIM Close Care Gaps in Real-Time
             </h2>
             <p className="text-xl text-gray-600">
-              A 3-minute walkthrough of our care gap detection workflow
+              A short walkthrough of our care gap detection workflow
             </p>
           </div>
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl cursor-pointer group">
-            <Image
-              src="/images/video/eleanor-story-thumb-v2.png"
-              alt="Eleanor's Story - They Caught It Early"
-              width={1408}
-              height={768}
-              loading="lazy"
-              className="w-full"
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Play className="w-8 h-8 text-primary ml-1" />
-              </div>
-            </div>
-          </div>
+          <VideoPlayer
+            videoSrc="/videos/care-gap-closure.mp4"
+            thumbnailSrc="/videos/care-gap-closure-thumb.png"
+            title="Eleanor's Story - They Caught It Early"
+            description="Watch HDIM close a care gap in real-time"
+            youtubeId="cMu61ZzOjMA"
+            preferYouTube={false}
+          />
           <p className="text-center text-gray-500 mt-4 text-sm">
             No registration required - click to watch
           </p>
@@ -624,7 +612,7 @@ export default function LandingPage() {
               See Your Quality Data Come Alive
             </h2>
             <p className="section-subheading">
-              Monitor 47 connected systems, 128K+ patients, and live care gap alerts - all in one unified dashboard.
+              Monitor connected systems, longitudinal patients, and live care gap alerts in one unified dashboard.
             </p>
           </div>
 
@@ -685,22 +673,22 @@ export default function LandingPage() {
 
               <div className="relative z-10">
                 <p className="text-xl md:text-2xl leading-relaxed mb-8">
-                  &ldquo;HDIM transformed our quality program. We improved our HEDIS scores by 12 points in the first year and captured an additional $2.3M in quality bonuses. The care gap detection alone saved our team 20 hours per week.&rdquo;
+                  &ldquo;HDIM transformed our quality program. We moved from reactive reporting to continuous, auditable measurement, and our teams finally had a single place to work the gaps.&rdquo;
                 </p>
 
                 <div className="flex items-center space-x-4">
                   <div className="w-14 h-14 relative rounded-full overflow-hidden border-2 border-white/30">
                     <Image
                       src="/images/portraits/sarah-care-manager-v2.png"
-                      alt="Dr. Sarah Chen"
+                      alt="Quality leader portrait"
                       fill
                       className="object-cover"
                       loading="lazy"
                     />
                   </div>
                   <div>
-                    <p className="font-semibold text-lg">Dr. Sarah Chen</p>
-                    <p className="text-white/70">Chief Medical Officer, Regional Health Network</p>
+                    <p className="font-semibold text-lg">Chief Medical Officer</p>
+                    <p className="text-white/70">Regional Health Network</p>
                   </div>
                 </div>
               </div>
@@ -708,16 +696,16 @@ export default function LandingPage() {
               {/* Stats row */}
               <div className="mt-10 pt-8 border-t border-white/20 grid grid-cols-3 gap-8">
                 <div className="text-center">
-                  <div className="text-3xl font-bold">+12 pts</div>
-                  <div className="text-white/70 text-sm">HEDIS Score</div>
+                  <div className="text-3xl font-bold">Faster</div>
+                  <div className="text-white/70 text-sm">Gap Identification</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold">$2.3M</div>
-                  <div className="text-white/70 text-sm">Additional Bonus</div>
+                  <div className="text-3xl font-bold">Clearer</div>
+                  <div className="text-white/70 text-sm">Audit Trail</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold">20 hrs</div>
-                  <div className="text-white/70 text-sm">Weekly Time Saved</div>
+                  <div className="text-3xl font-bold">Unified</div>
+                  <div className="text-white/70 text-sm">Operations</div>
                 </div>
               </div>
             </div>
@@ -728,7 +716,7 @@ export default function LandingPage() {
                 <div className="relative w-20 h-20 flex-shrink-0">
                   <Image
                     src="/images/portraits/james-recovery-v2.png"
-                    alt="James Richardson"
+                    alt="Operations leader portrait"
                     fill
                     className="object-cover rounded-full"
                     loading="lazy"
@@ -736,10 +724,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <p className="text-gray-700 text-lg mb-4">
-                    &ldquo;Our ACO was leaving $750K in shared savings on the table because we couldn&apos;t close care gaps fast enough. HDIM gave us real-time visibility across 3 different EHRs. In 90 days, we went from 42% to 78% on behavioral health follow-up.&rdquo;
+                    &ldquo;We finally unified data across multiple EHRs and turned that into daily, actionable care gap work. The visibility and prioritization changed how we run quality operations.&rdquo;
                   </p>
-                  <p className="font-semibold text-gray-900">James Richardson</p>
-                  <p className="text-gray-600 text-sm">Chief Information Officer, Mountain West ACO</p>
+                  <p className="font-semibold text-gray-900">Chief Information Officer</p>
+                  <p className="text-gray-600 text-sm">Mountain West ACO</p>
                 </div>
               </div>
             </div>
@@ -773,14 +761,14 @@ export default function LandingPage() {
               <div className="w-16 h-16 relative mb-3">
                 <Image
                   src="/images/icons/badge-hipaa-5min-v2.png"
-                  alt="HIPAA Compliant - 5 Min PHI Cache"
+                  alt="HIPAA-aligned security"
                   fill
                   className="object-contain"
                   loading="lazy"
                 />
               </div>
               <p className="font-semibold text-gray-900 text-sm text-center">HIPAA</p>
-              <p className="text-xs text-gray-500 text-center">5-Min PHI Cache</p>
+              <p className="text-xs text-gray-500 text-center">Aligned controls</p>
             </div>
             <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
               <div className="w-16 h-16 relative mb-3">
@@ -812,40 +800,40 @@ export default function LandingPage() {
               <div className="w-16 h-16 relative mb-3">
                 <Image
                   src="/images/icons/tests.png"
-                  alt="847 Tests Passing"
+                  alt="Quality assurance coverage"
                   fill
                   className="object-contain"
                   loading="lazy"
                 />
               </div>
-              <p className="font-semibold text-gray-900 text-sm text-center">847 Tests</p>
-              <p className="text-xs text-gray-500 text-center">Passing</p>
+              <p className="font-semibold text-gray-900 text-sm text-center">QA &amp; Validation</p>
+              <p className="text-xs text-gray-500 text-center">Automated coverage</p>
             </div>
             <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
               <div className="w-16 h-16 relative mb-3">
                 <Image
                   src="/images/icons/uptime.png"
-                  alt="99.9% Uptime"
+                  alt="Reliability and observability"
                   fill
                   className="object-contain"
                   loading="lazy"
                 />
               </div>
-              <p className="font-semibold text-gray-900 text-sm text-center">99.9%</p>
-              <p className="text-xs text-gray-500 text-center">Uptime</p>
+              <p className="font-semibold text-gray-900 text-sm text-center">Reliability</p>
+              <p className="text-xs text-gray-500 text-center">Observable SLOs</p>
             </div>
             <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl">
               <div className="w-16 h-16 relative mb-3">
                 <Image
                   src="/images/icons/microservices.png"
-                  alt="28 Microservices"
+                  alt="Modular architecture"
                   fill
                   className="object-contain"
                   loading="lazy"
                 />
               </div>
-              <p className="font-semibold text-gray-900 text-sm text-center">28 Services</p>
-              <p className="text-xs text-gray-500 text-center">Modular</p>
+              <p className="font-semibold text-gray-900 text-sm text-center">Modular</p>
+              <p className="text-xs text-gray-500 text-center">Service-based</p>
             </div>
           </div>
           <p className="text-center text-gray-600 mt-8">
@@ -862,7 +850,7 @@ export default function LandingPage() {
             How Many Patients Are Waiting for a Call That Won&apos;t Come?
           </h2>
           <p className="text-xl text-white/80 mb-4 max-w-2xl mx-auto">
-            HEDIS measurement year ends December 31. Every day without real-time gap detection is a day of missed interventions.
+            HEDIS measurement year ends December 31, 2026. Every day without real-time gap detection is a day of missed interventions.
           </p>
           <p className="text-lg text-white/60 mb-10 max-w-2xl mx-auto">
             See how HDIM catches patients falling through the cracks -- before they become your highest-cost cases.
@@ -913,10 +901,10 @@ export default function LandingPage() {
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                   </svg>
                 </a>
-                <a href="https://twitter.com/hdim_health" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
-                  <span className="sr-only">Twitter</span>
+                <a href="https://github.com/hdim" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <span className="sr-only">GitHub</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
                   </svg>
                 </a>
               </div>

@@ -13,6 +13,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Loading spinner configuration interface
@@ -97,7 +98,7 @@ export class LoadingSpinnerComponent implements OnInit {
    * Diameter of the spinner in pixels
    * @default 40
    */
-  @Input() diameter: number = 40;
+  @Input() diameter = 40;
 
   /**
    * Color theme for the spinner
@@ -112,10 +113,16 @@ export class LoadingSpinnerComponent implements OnInit {
     return this.message || 'Loading content, please wait';
   }
 
+  private get logger() {
+    return this.loggerService.withContext('LoadingSpinnerComponent');
+  }
+
+  constructor(private loggerService: LoggerService) {}
+
   ngOnInit(): void {
     // Validate diameter input
     if (this.diameter < 20 || this.diameter > 200) {
-      console.warn('LoadingSpinner: diameter should be between 20 and 200 pixels');
+      this.loggerService.warn('LoadingSpinner: diameter should be between 20 and 200 pixels');
       this.diameter = Math.max(20, Math.min(200, this.diameter));
     }
   }

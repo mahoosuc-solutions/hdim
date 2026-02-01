@@ -48,7 +48,7 @@ public class DataEnrichmentController {
     private final DataQualityService qualityService;
 
     @PostMapping("/extract")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN', 'ANALYST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Extract entities from clinical notes")
     public ResponseEntity<ExtractionResult> extractFromClinicalNote(
             @Valid @RequestBody ExtractionRequest request) {
@@ -78,7 +78,7 @@ public class DataEnrichmentController {
     }
 
     @PostMapping("/validate/icd10")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN', 'CODER')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Validate ICD-10-CM code")
     public ResponseEntity<CodeValidationResult> validateIcd10Code(
             @Valid @RequestBody CodeValidationRequest request) {
@@ -95,7 +95,7 @@ public class DataEnrichmentController {
     }
 
     @PostMapping("/validate/snomed")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Validate SNOMED CT code")
     public ResponseEntity<CodeValidationResult> validateSnomedCode(
             @Valid @RequestBody CodeValidationRequest request) {
@@ -115,7 +115,7 @@ public class DataEnrichmentController {
     }
 
     @PostMapping("/validate/cpt")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN', 'CODER')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Validate CPT code")
     public ResponseEntity<CodeValidationResult> validateCptCode(
             @Valid @RequestBody CodeValidationRequest request) {
@@ -126,7 +126,7 @@ public class DataEnrichmentController {
     }
 
     @PostMapping("/validate/loinc")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Validate LOINC code")
     public ResponseEntity<CodeValidationResult> validateLoincCode(
             @Valid @RequestBody CodeValidationRequest request) {
@@ -137,7 +137,7 @@ public class DataEnrichmentController {
     }
 
     @PostMapping("/suggest-codes")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN', 'CODER')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Suggest codes from text")
     public ResponseEntity<List<CodeSuggestion>> suggestCodes(
             @Valid @RequestBody CodeSuggestionRequest request) {
@@ -177,7 +177,7 @@ public class DataEnrichmentController {
     }
 
     @GetMapping("/completeness/{patientId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'CLINICIAN', 'ANALYST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Analyze data completeness for patient")
     public ResponseEntity<MissingDataReport> getCompletenessAnalysis(
             @PathVariable String patientId) {
@@ -193,7 +193,7 @@ public class DataEnrichmentController {
     }
 
     @GetMapping("/quality/report")
-    @PreAuthorize("hasAnyRole('ADMIN', 'ANALYST')")
+    @PreAuthorize("hasPermission('PATIENT_WRITE')")
     @Operation(summary = "Generate data quality report")
     public ResponseEntity<DataQualityReport> getQualityReport(
             @RequestParam String patientId) {

@@ -121,7 +121,7 @@
       <!-- Saved Filters -->
       @if (savedFilters.length > 0) {
         <div class="saved-filters-section">
-          <h4>Saved Filters</h4>
+          <h3>Saved Filters</h3>
           <mat-chip-set>
             @for (savedFilter of savedFilters; track savedFilter.name) {
               <mat-chip (click)="loadSavedFilter(savedFilter)">

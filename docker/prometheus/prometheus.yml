@@ -217,3 +217,359 @@ scrape_configs:
         labels:
           service: 'messaging'
           messaging: 'kafka'
+
+  # ============================================
+  # GATEWAY SERVICES (Additional)
+  # ============================================
+
+  - job_name: 'gateway-clinical-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['gateway-clinical-service:8002']
+        labels:
+          service: 'gateway-clinical'
+          category: 'gateway'
+
+  - job_name: 'gateway-admin-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['gateway-admin-service:8003']
+        labels:
+          service: 'gateway-admin'
+          category: 'gateway'
+
+  - job_name: 'gateway-fhir-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['gateway-fhir-service:8004']
+        labels:
+          service: 'gateway-fhir'
+          category: 'gateway'
+
+  # ============================================
+  # EVENT SOURCING SERVICES (CQRS)
+  # ============================================
+
+  - job_name: 'event-store-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['event-store-service:8109']
+        labels:
+          service: 'event-store'
+          category: 'event-sourcing'
+
+  - job_name: 'patient-event-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['patient-event-service:8110']
+        labels:
+          service: 'patient-event'
+          category: 'event-sourcing'
+
+  - job_name: 'patient-event-handler-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['patient-event-handler-service:8190']
+        labels:
+          service: 'patient-event-handler'
+          category: 'event-sourcing'
+
+  - job_name: 'care-gap-event-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['care-gap-event-service:8111']
+        labels:
+          service: 'care-gap-event'
+          category: 'event-sourcing'
+
+  - job_name: 'care-gap-event-handler-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['care-gap-event-handler-service:8112']
+        labels:
+          service: 'care-gap-event-handler'
+          category: 'event-sourcing'
+
+  - job_name: 'clinical-workflow-event-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['clinical-workflow-event-service:8193']
+        labels:
+          service: 'clinical-workflow-event'
+          category: 'event-sourcing'
+
+  - job_name: 'clinical-workflow-event-handler-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['clinical-workflow-event-handler-service:8194']
+        labels:
+          service: 'clinical-workflow-event-handler'
+          category: 'event-sourcing'
+
+  - job_name: 'quality-measure-event-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['quality-measure-event-service:8191']
+        labels:
+          service: 'quality-measure-event'
+          category: 'event-sourcing'
+
+  - job_name: 'quality-measure-event-handler-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['quality-measure-event-handler-service:8192']
+        labels:
+          service: 'quality-measure-event-handler'
+          category: 'event-sourcing'
+
+  - job_name: 'event-router-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['event-router-service:8113']
+        labels:
+          service: 'event-router'
+          category: 'event-sourcing'
+
+  - job_name: 'event-replay-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['event-replay-service:8114']
+        labels:
+          service: 'event-replay'
+          category: 'event-sourcing'
+
+  # ============================================
+  # QUERY/AUDIT SERVICES
+  # ============================================
+
+  - job_name: 'audit-query-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['audit-query-service:8115']
+        labels:
+          service: 'audit-query'
+          category: 'query'
+
+  - job_name: 'cqrs-query-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['cqrs-query-service:8116']
+        labels:
+          service: 'cqrs-query'
+          category: 'query'
+
+  - job_name: 'query-api-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['query-api-service:8117']
+        labels:
+          service: 'query-api'
+          category: 'query'
+
+  # ============================================
+  # CONNECTOR SERVICES (Additional)
+  # ============================================
+
+  - job_name: 'fhir-event-bridge-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['fhir-event-bridge-service:8118']
+        labels:
+          service: 'fhir-event-bridge'
+          category: 'connector'
+
+  - job_name: 'cms-connector-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['cms-connector-service:8096']
+        labels:
+          service: 'cms-connector'
+          category: 'connector'
+
+  # ============================================
+  # AI/ANALYTICS SERVICES
+  # ============================================
+
+  - job_name: 'ai-assistant-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['ai-assistant-service:8119']
+        labels:
+          service: 'ai-assistant'
+          category: 'ai'
+
+  - job_name: 'agent-builder-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['agent-builder-service:8120']
+        labels:
+          service: 'agent-builder'
+          category: 'ai'
+
+  - job_name: 'agent-runtime-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['agent-runtime-service:8121']
+        labels:
+          service: 'agent-runtime'
+          category: 'ai'
+
+  - job_name: 'analytics-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['analytics-service:8092']
+        labels:
+          service: 'analytics'
+          category: 'analytics'
+
+  - job_name: 'predictive-analytics-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['predictive-analytics-service:8122']
+        labels:
+          service: 'predictive-analytics'
+          category: 'analytics'
+
+  - job_name: 'cost-analysis-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['cost-analysis-service:8123']
+        labels:
+          service: 'cost-analysis'
+          category: 'analytics'
+
+  # ============================================
+  # WORKFLOW SERVICES (Additional)
+  # ============================================
+
+  - job_name: 'clinical-workflow-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['clinical-workflow-service:8097']
+        labels:
+          service: 'clinical-workflow'
+          category: 'workflow'
+
+  - job_name: 'nurse-workflow-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['nurse-workflow-service:8124']
+        labels:
+          service: 'nurse-workflow'
+          category: 'workflow'
+
+  - job_name: 'payer-workflows-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['payer-workflows-service:8125']
+        labels:
+          service: 'payer-workflows'
+          category: 'workflow'
+
+  - job_name: 'approval-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['approval-service:8126']
+        labels:
+          service: 'approval'
+          category: 'workflow'
+
+  # ============================================
+  # DATA/DEMO SERVICES
+  # ============================================
+
+  - job_name: 'data-ingestion-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['data-ingestion-service:8200']
+        labels:
+          service: 'data-ingestion'
+          category: 'data'
+
+  - job_name: 'data-enrichment-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['data-enrichment-service:8127']
+        labels:
+          service: 'data-enrichment'
+          category: 'data'
+
+  - job_name: 'demo-seeding-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['demo-seeding-service:8098']
+        labels:
+          service: 'demo-seeding'
+          category: 'demo'
+
+  - job_name: 'demo-orchestrator-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['demo-orchestrator-service:8128']
+        labels:
+          service: 'demo-orchestrator'
+          category: 'demo'
+
+  - job_name: 'cdr-processor-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['cdr-processor-service:8129']
+        labels:
+          service: 'cdr-processor'
+          category: 'data'
+
+  # ============================================
+  # SUPPORTING SERVICES (Additional)
+  # ============================================
+
+  - job_name: 'documentation-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['documentation-service:8130']
+        labels:
+          service: 'documentation'
+          category: 'support'
+
+  - job_name: 'devops-agent-service'
+    metrics_path: '/actuator/prometheus'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['devops-agent-service:8131']
+        labels:
+          service: 'devops-agent'
+          category: 'support'

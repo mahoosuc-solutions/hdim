@@ -9,6 +9,8 @@ import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import com.redis.testcontainers.RedisContainer;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * Shared TestContainers configuration for HDIM backend integration tests.
@@ -123,6 +125,23 @@ public class BaseTestContainersConfiguration {
     public KafkaContainer kafkaContainer() {
         ensureStarted(KAFKA_CONTAINER);
         return KAFKA_CONTAINER;
+    }
+
+    /**
+     * Provides a MeterRegistry bean for test metrics collection.
+     * <p>
+     * SimpleMeterRegistry is an in-memory registry suitable for testing.
+     * Services using Micrometer for metrics (e.g., authentication filters,
+     * API endpoints) require a MeterRegistry bean in the test context.
+     * <p>
+     * This bean resolves "No qualifying bean of type 'MeterRegistry'" errors
+     * in integration tests that load security configurations with metrics.
+     *
+     * @return a simple in-memory meter registry for tests
+     */
+    @Bean
+    public MeterRegistry meterRegistry() {
+        return new SimpleMeterRegistry();
     }
 
     // =========================================================================

@@ -38,6 +38,7 @@ import { takeUntil, debounceTime, switchMap, startWith } from 'rxjs/operators';
 import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 import { SDOHReferralService } from '../../services/sdoh-referral.service';
 import { ToastService } from '../../services/toast.service';
+import { LoggerService } from '../../services/logger.service';
 
 import {
   SDOHReferralDialogData,
@@ -124,9 +125,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
 
   // Destroy subject
   private destroy$ = new Subject<void>();
-  private searchSubject = new Subject<string>();
-
-  // Constants for template
+  private searchSubject = new Subject<string>();  // Constants for template
   readonly INTERNAL_DESTINATION_NAMES = INTERNAL_DESTINATION_NAMES;
   readonly INTERNAL_DESTINATION_ICONS = INTERNAL_DESTINATION_ICONS;
   readonly REFERRAL_URGENCY_CONFIG = REFERRAL_URGENCY_CONFIG;
@@ -163,7 +162,8 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: SDOHReferralDialogData,
     private fb: FormBuilder,
     private referralService: SDOHReferralService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private logger: LoggerService
   ) {
     this.initializeForm();
   }
@@ -412,7 +412,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.submitting = false;
           this.toastService.error('Failed to submit referral. Please try again.');
-          console.error('Referral submission error:', error);
+          this.logger.error('Referral submission error', error);
         },
       });
   }
@@ -433,7 +433,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.toastService.error('Failed to save draft');
-          console.error('Draft save error:', error);
+          this.logger.error('Draft save error', error);
         },
       });
   }

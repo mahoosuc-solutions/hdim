@@ -8,6 +8,8 @@ import { ToastService } from '../../services/toast.service';
 import { SavedReport } from '../../models/quality-result.model';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
+import { LoggerService } from '../../services/logger.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('ReportsComponent (TDD)', () => {
   let component: ReportsComponent;
@@ -79,12 +81,13 @@ describe('ReportsComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [ReportsComponent, NoopAnimationsModule],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         provideHttpClient(),
         { provide: MatDialog, useValue: mockDialog },
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: ToastService, useValue: mockToast },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     // Default mock to return empty array
@@ -102,26 +105,26 @@ describe('ReportsComponent (TDD)', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    });
+    };
 
     it('should initialize with default tab (Generate Reports)', () => {
       expect(component.selectedTabIndex).toBe(0);
-    });
+    };
 
     it('should initialize report filter to null (all reports)', () => {
       expect(component.selectedReportType()).toBeNull();
-    });
+    };
 
     it('should initialize with empty reports array', () => {
       // Before ngOnInit, should have initial reports
       expect(component.savedReports().length).toBeGreaterThan(0);
-    });
+    };
 
     it('should initialize loading states to false', () => {
       expect(component.isLoadingReports()).toBe(false);
       expect(component.isGeneratingPatientReport()).toBe(false);
       expect(component.isGeneratingPopulationReport()).toBe(false);
-    });
+    };
 
     it('should load saved reports on init', () => {
       mockEvaluationService.getSavedReports.mockReturnValue(of(mockSavedReports));
@@ -130,8 +133,8 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockEvaluationService.getSavedReports).toHaveBeenCalledWith(undefined);
       expect(component.savedReports()).toEqual(mockSavedReports);
-    });
-  });
+    };
+  };
 
   describe('Loading Saved Reports', () => {
     it('should fetch all reports when no filter applied', () => {
@@ -141,7 +144,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockEvaluationService.getSavedReports).toHaveBeenCalledWith(undefined);
       expect(component.savedReports()).toEqual(mockSavedReports);
-    });
+    };
 
     it('should filter by PATIENT report type', () => {
       const patientReports = mockSavedReports.filter((r) => r.reportType === 'PATIENT');
@@ -151,7 +154,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockEvaluationService.getSavedReports).toHaveBeenCalledWith('PATIENT');
       expect(component.savedReports()).toEqual(patientReports);
-    });
+    };
 
     it('should filter by POPULATION report type', () => {
       const populationReports = mockSavedReports.filter((r) => r.reportType === 'POPULATION');
@@ -161,7 +164,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockEvaluationService.getSavedReports).toHaveBeenCalledWith('POPULATION');
       expect(component.savedReports()).toEqual(populationReports);
-    });
+    };
 
     it('should set loading state while fetching', () => {
       mockEvaluationService.getSavedReports.mockReturnValue(of(mockSavedReports));
@@ -169,7 +172,7 @@ describe('ReportsComponent (TDD)', () => {
       component.loadSavedReports();
 
       expect(component.isLoadingReports()).toBe(false);
-    });
+    };
 
     it('should handle empty results', () => {
       mockEvaluationService.getSavedReports.mockReturnValue(of([]));
@@ -179,7 +182,7 @@ describe('ReportsComponent (TDD)', () => {
       // When empty, component shows INITIAL_SAVED_REPORTS as fallback
       expect(component.savedReports().length).toBeGreaterThan(0);
       expect(component.isLoadingReports()).toBe(false);
-    });
+    };
 
     it('should handle error loading reports', () => {
       mockEvaluationService.getSavedReports.mockReturnValue(
@@ -190,7 +193,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to load reports');
       expect(component.isLoadingReports()).toBe(false);
-    });
+    };
 
     it('should reset loading state on error', () => {
       mockEvaluationService.getSavedReports.mockReturnValue(
@@ -200,25 +203,25 @@ describe('ReportsComponent (TDD)', () => {
       component.loadSavedReports();
 
       expect(component.isLoadingReports()).toBe(false);
-    });
-  });
+    };
+  };
 
   describe('Report Filtering', () => {
     beforeEach(() => {
       mockEvaluationService.getSavedReports.mockReturnValue(of(mockSavedReports));
-    });
+    };
 
     it('should update selected report type when filtering', () => {
       component.filterReports('PATIENT');
 
       expect(component.selectedReportType()).toBe('PATIENT');
-    });
+    };
 
     it('should reload reports with filter applied', () => {
       component.filterReports('PATIENT');
 
       expect(mockEvaluationService.getSavedReports).toHaveBeenCalledWith('PATIENT');
-    });
+    };
 
     it('should clear filter when null passed', () => {
       component.selectedReportType.set('PATIENT');
@@ -227,7 +230,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(component.selectedReportType()).toBeNull();
       expect(mockEvaluationService.getSavedReports).toHaveBeenCalledWith(undefined);
-    });
+    };
 
     it('should switch between filters correctly', () => {
       component.filterReports('PATIENT');
@@ -238,8 +241,8 @@ describe('ReportsComponent (TDD)', () => {
 
       component.filterReports(null);
       expect(component.selectedReportType()).toBeNull();
-    });
-  });
+    };
+  };
 
   describe('Report Actions', () => {
     it('generates patient report after patient selection', async () => {
@@ -255,7 +258,7 @@ describe('ReportsComponent (TDD)', () => {
       expect(mockEvaluationService.savePatientReport).toHaveBeenCalled();
       expect(mockToast.success).toHaveBeenCalledWith('Patient report generated successfully');
       expect(component.selectedTabIndex).toBe(1);
-    });
+    };
 
     it('does nothing when patient selection is cancelled', async () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(null)) };
@@ -265,7 +268,7 @@ describe('ReportsComponent (TDD)', () => {
       await component.onGeneratePatientReport();
 
       expect(mockEvaluationService.savePatientReport).not.toHaveBeenCalled();
-    });
+    };
 
     it('handles patient report generation error', async () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of('patient-123')) };
@@ -279,7 +282,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to generate patient report');
       expect(component.isGeneratingPatientReport()).toBe(false);
-    });
+    };
 
     it('generates population report after year selection', async () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(2024)) };
@@ -294,7 +297,7 @@ describe('ReportsComponent (TDD)', () => {
       expect(mockEvaluationService.savePopulationReport).toHaveBeenCalled();
       expect(mockToast.success).toHaveBeenCalledWith('Population report generated successfully');
       expect(component.selectedTabIndex).toBe(1);
-    });
+    };
 
     it('does nothing when year selection is cancelled', async () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(null)) };
@@ -304,7 +307,7 @@ describe('ReportsComponent (TDD)', () => {
       await component.onGeneratePopulationReport();
 
       expect(mockEvaluationService.savePopulationReport).not.toHaveBeenCalled();
-    });
+    };
 
     it('handles population report generation error', async () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(2024)) };
@@ -318,7 +321,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to generate population report');
       expect(component.isGeneratingPopulationReport()).toBe(false);
-    });
+    };
 
     it('exports report to CSV and Excel', () => {
       mockEvaluationService.exportAndDownloadReport.mockReturnValue(of(void 0));
@@ -328,7 +331,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockToast.success).toHaveBeenCalledWith('Report exported to CSV');
       expect(mockToast.success).toHaveBeenCalledWith('Report exported to Excel');
-    });
+    };
 
     it('handles export errors', () => {
       mockEvaluationService.exportAndDownloadReport.mockReturnValue(
@@ -338,7 +341,7 @@ describe('ReportsComponent (TDD)', () => {
       component.onExportCsv(mockSavedReports[0]);
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to export report to CSV');
-    });
+    };
 
     it('handles Excel export errors', () => {
       mockEvaluationService.exportAndDownloadReport.mockReturnValue(
@@ -348,7 +351,7 @@ describe('ReportsComponent (TDD)', () => {
       component.onExportExcel(mockSavedReports[0]);
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to export report to Excel');
-    });
+    };
 
     it('deletes a report after confirmation', () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
@@ -361,7 +364,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(mockEvaluationService.deleteSavedReport).toHaveBeenCalledWith('report-1');
       expect(mockToast.success).toHaveBeenCalledWith('Report deleted successfully');
-    });
+    };
 
     it('does not delete report when confirmation is cancelled', () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(false)) };
@@ -371,7 +374,7 @@ describe('ReportsComponent (TDD)', () => {
       component.onDeleteReport(mockSavedReports[0]);
 
       expect(mockEvaluationService.deleteSavedReport).not.toHaveBeenCalled();
-    });
+    };
 
     it('handles delete report errors', () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
@@ -384,14 +387,14 @@ describe('ReportsComponent (TDD)', () => {
       component.onDeleteReport(mockSavedReports[0]);
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to delete report');
-    });
-  });
+    };
+  };
 
   describe('Selection helpers', () => {
     beforeEach(() => {
       component.savedReports.set([...mockSavedReports]);
       component.dataSource.data = [...mockSavedReports];
-    });
+    };
 
     it('tracks selection and labels', () => {
       expect(component.isAllSelected()).toBe(false);
@@ -400,7 +403,7 @@ describe('ReportsComponent (TDD)', () => {
       component.selection.select(mockSavedReports[0]);
       expect(component.getSelectionCount()).toBe(1);
       expect(component.checkboxLabel(mockSavedReports[0])).toContain('deselect');
-    });
+    };
 
     it('toggles master selection', () => {
       component.masterToggle();
@@ -408,13 +411,13 @@ describe('ReportsComponent (TDD)', () => {
 
       component.masterToggle();
       expect(component.isAllSelected()).toBe(false);
-    });
+    };
 
     it('clears selection', () => {
       component.selection.select(mockSavedReports[0]);
       component.clearSelection();
       expect(component.getSelectionCount()).toBe(0);
-    });
+    };
 
     it('exports selected reports to CSV', () => {
       const csvSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
@@ -425,7 +428,7 @@ describe('ReportsComponent (TDD)', () => {
 
       expect(csvSpy).toHaveBeenCalled();
       expect(mockToast.success).toHaveBeenCalledWith('Exported 1 reports to CSV');
-    });
+    };
 
     it('does not export when no reports are selected', () => {
       const csvSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
@@ -433,7 +436,7 @@ describe('ReportsComponent (TDD)', () => {
       component.exportSelectedToCSV();
 
       expect(csvSpy).not.toHaveBeenCalled();
-    });
+    };
 
     it('deletes selected reports after confirmation', () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
@@ -445,12 +448,12 @@ describe('ReportsComponent (TDD)', () => {
       component.deleteSelected();
 
       expect(mockEvaluationService.deleteSavedReport).toHaveBeenCalledWith('report-1');
-    });
+    };
 
     it('does not open delete dialog when nothing selected', () => {
       component.deleteSelected();
       expect(mockDialog.open).not.toHaveBeenCalled();
-    });
+    };
 
     it('shows failure toast when all deletes fail', () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
@@ -464,7 +467,7 @@ describe('ReportsComponent (TDD)', () => {
       component.deleteSelected();
 
       expect(mockToast.error).toHaveBeenCalledWith('Failed to delete reports');
-    });
+    };
 
     it('shows partial failure toast when some deletes fail', () => {
       const dialogRef = { afterClosed: jest.fn().mockReturnValue(of(true)) };
@@ -474,7 +477,7 @@ describe('ReportsComponent (TDD)', () => {
           return of(void 0);
         }
         return throwError(() => new Error('fail'));
-      });
+      };
       (component as any).dialog = mockDialog;
 
       component.savedReports.set([...mockSavedReports]);
@@ -483,44 +486,44 @@ describe('ReportsComponent (TDD)', () => {
       component.deleteSelected();
 
       expect(mockToast.error).toHaveBeenCalledWith('Deleted 1 report(s), 1 failed');
-    });
-  });
+    };
+  };
 
   describe('Generate Patient Report', () => {
     it('should have onGeneratePatientReport method', () => {
       expect(typeof component.onGeneratePatientReport).toBe('function');
-    });
+    };
 
     it('should not generate report without user selection', () => {
       // Verify initial state - no reports generated yet
       expect(component.isGeneratingPatientReport()).toBe(false);
       expect(mockEvaluationService.savePatientReport).not.toHaveBeenCalled();
-    });
-  });
+    };
+  };
 
   describe('Generate Population Report', () => {
     it('should have onGeneratePopulationReport method', () => {
       expect(typeof component.onGeneratePopulationReport).toBe('function');
-    });
+    };
 
     it('should not generate report without user selection', () => {
       // Verify initial state - no reports generated yet
       expect(component.isGeneratingPopulationReport()).toBe(false);
       expect(mockEvaluationService.savePopulationReport).not.toHaveBeenCalled();
-    });
-  });
+    };
+  };
 
   describe('View Report Details', () => {
     it('should have onViewReport method', () => {
       expect(typeof component.onViewReport).toBe('function');
-    });
+    };
 
     it('should accept SavedReport as parameter', () => {
       const report = mockSavedReports[0];
       // Verify method signature accepts SavedReport
       expect(() => component.onViewReport(report)).toBeDefined();
-    });
-  });
+    };
+  };
 
   describe('Export to CSV', () => {
     it('should call export service with CSV format', () => {
@@ -534,7 +537,7 @@ describe('ReportsComponent (TDD)', () => {
         report.reportName,
         'csv'
       );
-    });
+    };
 
     it('should show success message on export', (done) => {
       const report = mockSavedReports[0];
@@ -546,7 +549,7 @@ describe('ReportsComponent (TDD)', () => {
         expect(mockToast.success).toHaveBeenCalledWith('Report exported to CSV');
         done();
       }, 0);
-    });
+    };
 
     it('should handle export error', (done) => {
       const report = mockSavedReports[0];
@@ -560,7 +563,7 @@ describe('ReportsComponent (TDD)', () => {
         expect(mockToast.error).toHaveBeenCalledWith('Failed to export report to CSV');
         done();
       }, 0);
-    });
+    };
   });
 
   describe('Export to Excel', () => {
@@ -575,7 +578,7 @@ describe('ReportsComponent (TDD)', () => {
         report.reportName,
         'excel'
       );
-    });
+    };
 
     it('should show success message on export', (done) => {
       const report = mockSavedReports[0];
@@ -587,7 +590,7 @@ describe('ReportsComponent (TDD)', () => {
         expect(mockToast.success).toHaveBeenCalledWith('Report exported to Excel');
         done();
       }, 0);
-    });
+    };
 
     it('should handle export error', (done) => {
       const report = mockSavedReports[0];
@@ -601,7 +604,7 @@ describe('ReportsComponent (TDD)', () => {
         expect(mockToast.error).toHaveBeenCalledWith('Failed to export report to Excel');
         done();
       }, 0);
-    });
+    };
   });
 
   describe('Delete Report', () => {

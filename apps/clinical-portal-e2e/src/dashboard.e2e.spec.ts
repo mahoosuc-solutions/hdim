@@ -437,8 +437,7 @@ test.describe('Compliance Charts', () => {
   });
 
   test('should display compliance trend chart', async ({ page }) => {
-    // Look for ngx-charts elements
-    const chart = page.locator('ngx-charts-line-chart, ngx-charts-area-chart, .ngx-charts, svg.ngx-charts');
+    const chart = page.locator('.compliance-trends-card canvas');
     const count = await chart.count();
 
     if (count > 0) {
@@ -447,7 +446,7 @@ test.describe('Compliance Charts', () => {
   });
 
   test('should display measure performance chart', async ({ page }) => {
-    const barChart = page.locator('ngx-charts-bar-horizontal, ngx-charts-bar-vertical, .bar-chart');
+    const barChart = page.locator('.measure-performance-chart-card canvas');
     const count = await barChart.count();
 
     if (count > 0) {

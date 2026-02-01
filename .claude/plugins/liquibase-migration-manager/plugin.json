@@ -1,0 +1,22 @@
+{
+  "name": "liquibase-migration-manager",
+  "version": "0.2.0-phase2",
+  "description": "Multi-agent system for managing Liquibase migrations across HDIM microservices (Phase 2: 5 core service agents)",
+  "author": "HDIM Platform Team",
+  "agents": [
+    "agents/quality-measure-agent.md",
+    "agents/patient-agent.md",
+    "agents/care-gap-agent.md",
+    "agents/fhir-agent.md",
+    "agents/cql-engine-agent.md"
+  ],
+  "skills": [
+    "skills/migration-review.md"
+  ],
+  "commands": [
+    "commands/review-migration.md"
+  ],
+  "config": {
+    "service_registry": "config/service-registry.json"
+  }
+}

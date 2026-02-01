@@ -24,6 +24,14 @@ public class CdaToFhirConverter {
      * @return FHIR Bundle containing converted resources
      */
     public Bundle convertToFhir(CdaDocument cdaDocument) {
+        if (cdaDocument == null) {
+            log.warn("Cannot convert null CDA document to FHIR");
+            Bundle bundle = new Bundle();
+            bundle.setType(Bundle.BundleType.TRANSACTION);
+            bundle.setTimestamp(new Date());
+            return bundle;
+        }
+
         log.debug("Converting CDA document to FHIR: type={}", cdaDocument.getDocumentType());
 
         Bundle bundle = new Bundle();

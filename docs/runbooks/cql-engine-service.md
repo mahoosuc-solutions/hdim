@@ -14,6 +14,7 @@ Evaluates CQL expressions and HEDIS measures.
 1. Check `/actuator/health`.
 2. Inspect measure logs for failing calculations.
 3. Validate connectivity to FHIR service (internal ping endpoint).
+4. License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md).
 
 ## Common Tasks
 ### Flush Library Cache

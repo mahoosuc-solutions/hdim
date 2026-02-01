@@ -13,6 +13,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,14 +30,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Testcontainers
 @DisplayName("Multi-Tenant Routing Integration Tests")
 class MultiTenantRoutingIntegrationTest {
 
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
+            DockerImageName.parse("postgres:16-alpine"))
+            .withDatabaseName("testdb")
+            .withUsername("test")
+            .withPassword("test");
+
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        // Configure H2 with legacy mode for Hibernate 6.x compatibility
-        registry.add("spring.datasource.url", () ->
-            "jdbc:tc:postgresql:15-alpine:///testdb");
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", () ->
+            "org.postgresql.Driver");
         registry.add("spring.jpa.properties.hibernate.dialect", () ->
             "org.hibernate.dialect.PostgreSQLDialect");
     }

@@ -168,7 +168,84 @@ export interface QueueMetrics {
   processedPerSecond: number;
 }
 
-// Audit Logs
+// Audit Logs - Enhanced for audit-query-service integration
+export enum AuditAction {
+  CREATE = 'CREATE',
+  READ = 'READ',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  EXPORT = 'EXPORT',
+  SEARCH = 'SEARCH',
+  EXECUTE = 'EXECUTE'
+}
+
+export enum AuditOutcome {
+  SUCCESS = 'SUCCESS',
+  FAILURE = 'FAILURE',
+  PARTIAL = 'PARTIAL'
+}
+
+export interface AuditEvent {
+  id: string;
+  timestamp: string;
+  tenantId: string;
+  userId: string;
+  username: string;
+  role: string;
+  ipAddress: string;
+  userAgent: string;
+  action: AuditAction;
+  resourceType: string;
+  resourceId?: string;
+  outcome: AuditOutcome;
+  serviceName: string;
+  requestPayload?: Record<string, unknown>;
+  responsePayload?: Record<string, unknown>;
+  errorMessage?: string;
+  durationMs?: number;
+}
+
+export interface AuditSearchRequest {
+  userId?: string;
+  username?: string;
+  role?: string;
+  resourceType?: string;
+  resourceId?: string;
+  actions?: AuditAction[];
+  outcomes?: AuditOutcome[];
+  serviceName?: string;
+  startTime?: string;
+  endTime?: string;
+  searchText?: string;
+  page: number;
+  size: number;
+  sortBy: string;
+  sortDirection: 'ASC' | 'DESC';
+}
+
+export interface AuditSearchResponse {
+  content: AuditEvent[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
+export interface AuditStatistics {
+  totalEvents: number;
+  actionDistribution: { [action: string]: number };
+  outcomeDistribution: { [outcome: string]: number };
+  topUsers: Array<{ username: string; count: number }>;
+  topResources: Array<{ resourceType: string; count: number }>;
+  timeRange: {
+    startTime: string;
+    endTime: string;
+  };
+}
+
+// Legacy interfaces (kept for backwards compatibility)
 export interface AuditLog {
   id: string;
   userId: string;
@@ -206,6 +283,54 @@ export interface AuditLogFilter {
   endDate?: Date;
   page?: number;
   pageSize?: number;
+}
+
+// Config Versioning
+export type ConfigStatus =
+  | 'DRAFT'
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'ACTIVE'
+  | 'SUPERSEDED';
+
+export interface ConfigVersion {
+  id: string;
+  tenantId: string;
+  serviceName: string;
+  versionNumber: number;
+  status: ConfigStatus;
+  config: Record<string, unknown> | null;
+  configHash: string;
+  changeSummary?: string;
+  sourceVersionId?: string;
+  createdBy: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface ConfigAuditEntry {
+  id: string;
+  tenantId: string;
+  serviceName: string;
+  versionId: string;
+  action: string;
+  actor: string;
+  details?: Record<string, unknown> | null;
+  createdAt?: Date;
+}
+
+export type ConfigApprovalAction = 'REQUESTED' | 'APPROVED' | 'REJECTED';
+
+export interface ConfigApproval {
+  id: string;
+  tenantId: string;
+  serviceName: string;
+  versionId: string;
+  action: ConfigApprovalAction;
+  actor: string;
+  comment?: string | null;
+  createdAt?: Date;
 }
 
 // Service Catalog

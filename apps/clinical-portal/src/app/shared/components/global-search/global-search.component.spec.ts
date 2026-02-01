@@ -3,8 +3,11 @@ import { of, Subject } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { GlobalSearchComponent, SearchResult } from './global-search.component';
+import { LoggerService } from '../../../services/logger.service';
 import { PatientService } from '../../../services/patient.service';
 import { MeasureService } from '../../../services/measure.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
+import { createMockRouter } from '../../testing/mocks';
 
 describe('GlobalSearchComponent', () => {
   let fixture: ComponentFixture<GlobalSearchComponent>;
@@ -22,12 +25,13 @@ describe('GlobalSearchComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [GlobalSearchComponent],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
         { provide: PatientService, useValue: patientService },
         { provide: MeasureService, useValue: measureService },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: Router, useValue: router },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() },
+        { provide: Router, useValue: createMockRouter() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GlobalSearchComponent);

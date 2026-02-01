@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * Response DTO when MFA is required to complete login.
  * Returned instead of JWT tokens when MFA is enabled.
@@ -27,6 +29,17 @@ public class MfaRequiredResponse {
      * Valid for 5 minutes.
      */
     private String mfaToken;
+
+    /**
+     * Available MFA methods for this user (e.g., ["TOTP", "SMS"]).
+     * Client can present options to user.
+     */
+    private List<String> availableMethods;
+
+    /**
+     * Masked phone number if SMS MFA is available (e.g., "****1234").
+     */
+    private String smsPhoneNumber;
 
     /**
      * Message for the client.

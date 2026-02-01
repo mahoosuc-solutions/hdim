@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <!--
+        Issue #19: Population Health Insights Engine
+        Creates the insight_dismissals table for tracking dismissed insights.
+    -->
+    <changeSet id="0001-create-insight-dismissals" author="hdim-team">
+        <createTable tableName="insight_dismissals">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="insight_key" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="insight_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dismissed_by" type="VARCHAR(255)"/>
+            <column name="dismissed_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_insight_dismissals_tenant_provider"
+                     tableName="insight_dismissals">
+            <column name="tenant_id"/>
+            <column name="provider_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_insight_dismissals_insight_key"
+                     tableName="insight_dismissals">
+            <column name="insight_key"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_insight_dismissals_insight_key" tableName="insight_dismissals"/>
+            <dropIndex indexName="idx_insight_dismissals_tenant_provider" tableName="insight_dismissals"/>
+            <dropTable tableName="insight_dismissals"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

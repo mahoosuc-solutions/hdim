@@ -63,7 +63,6 @@ import {
   providedIn: 'root',
 })
 export class PatientHealthFacade {
-  private log: ContextualLogger;
 
   constructor(
     private physicalHealth: PhysicalHealthService,
@@ -72,9 +71,7 @@ export class PatientHealthFacade {
     private riskStratification: RiskStratificationService,
     private healthScoring: HealthScoringService,
     private logger: LoggerService
-  ) {
-    this.log = this.logger.withContext('PatientHealthFacade');
-  }
+  ) {  }
 
   // ===== Aggregated Overview =====
 

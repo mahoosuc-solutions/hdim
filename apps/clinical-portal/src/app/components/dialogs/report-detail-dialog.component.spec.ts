@@ -3,6 +3,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { ReportDetailDialogComponent } from './report-detail-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
+import { LoggerService } from '../services/logger.service';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('ReportDetailDialogComponent', () => {
   let fixture: ComponentFixture<ReportDetailDialogComponent>;
@@ -34,11 +36,12 @@ describe('ReportDetailDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [ReportDetailDialogComponent],
-      providers: [
+      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+        
         { provide: MAT_DIALOG_DATA, useValue: report },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: EvaluationService, useValue: evaluationService },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ReportDetailDialogComponent);

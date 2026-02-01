@@ -1,0 +1,240 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e5]:
+        - link "HDIM" [ref=e6] [cursor=pointer]:
+          - /url: /
+          - img [ref=e8]
+          - generic [ref=e11]: HDIM
+        - button [ref=e12] [cursor=pointer]:
+          - img [ref=e13]
+    - main [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - heading "Live Demo Environment" [level=1] [ref=e17]
+          - paragraph [ref=e18]: Experience HDIM with real synthetic data. Select your customer type and demo scenario to see care gap detection, quality measures, and ROI in action.
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e21]: "1"
+            - heading "Select Your Customer Type" [level=2] [ref=e22]
+          - generic [ref=e23]:
+            - button "Hospital / Health System Enterprise hospital with acute and chronic care mix 100,000 sample patients Readmission prevention Quality reporting Care coordination" [ref=e24] [cursor=pointer]:
+              - img [ref=e27]
+              - heading "Hospital / Health System" [level=3] [ref=e31]
+              - paragraph [ref=e32]: Enterprise hospital with acute and chronic care mix
+              - generic [ref=e33]: 100,000 sample patients
+              - list [ref=e34]:
+                - listitem [ref=e35]:
+                  - img [ref=e36]
+                  - text: Readmission prevention
+                - listitem [ref=e39]:
+                  - img [ref=e40]
+                  - text: Quality reporting
+                - listitem [ref=e43]:
+                  - img [ref=e44]
+                  - text: Care coordination
+            - button "Provider Practice Multi-specialty outpatient practice 100,000 sample patients MIPS optimization AWV scheduling Chronic care management" [ref=e47] [cursor=pointer]:
+              - img [ref=e50]
+              - heading "Provider Practice" [level=3] [ref=e55]
+              - paragraph [ref=e56]: Multi-specialty outpatient practice
+              - generic [ref=e57]: 100,000 sample patients
+              - list [ref=e58]:
+                - listitem [ref=e59]:
+                  - img [ref=e60]
+                  - text: MIPS optimization
+                - listitem [ref=e63]:
+                  - img [ref=e64]
+                  - text: AWV scheduling
+                - listitem [ref=e67]:
+                  - img [ref=e68]
+                  - text: Chronic care management
+            - button "Health Plan Regional health plan with Stars focus 100,000 sample patients Stars improvement Risk adjustment Member engagement" [ref=e71] [cursor=pointer]:
+              - img [ref=e74]
+              - heading "Health Plan" [level=3] [ref=e76]
+              - paragraph [ref=e77]: Regional health plan with Stars focus
+              - generic [ref=e78]: 100,000 sample patients
+              - list [ref=e79]:
+                - listitem [ref=e80]:
+                  - img [ref=e81]
+                  - text: Stars improvement
+                - listitem [ref=e84]:
+                  - img [ref=e85]
+                  - text: Risk adjustment
+                - listitem [ref=e88]:
+                  - img [ref=e89]
+                  - text: Member engagement
+        - generic [ref=e92]:
+          - generic [ref=e93]:
+            - generic [ref=e94]: "2"
+            - heading "Choose a Demo Scenario" [level=2] [ref=e95]
+          - generic:
+            - button "15 min Diabetes Care Management Track HbA1c control, identify gaps in diabetic care, and trigger automated outreach CDC-HBA1C Control Eye Exam Nephropathy Monitoring" [disabled]:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                  - text: 15 min
+              - heading "Diabetes Care Management" [level=3]
+              - paragraph: Track HbA1c control, identify gaps in diabetic care, and trigger automated outreach
+              - generic:
+                - generic: CDC-HBA1C Control
+                - generic: Eye Exam
+                - generic: Nephropathy Monitoring
+            - button "20 min Cardiac Risk Stratification Identify high-risk CHF patients, predict readmissions, and optimize interventions Blood Pressure Control Statin Therapy Readmission Prevention" [disabled]:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                  - text: 20 min
+              - heading "Cardiac Risk Stratification" [level=3]
+              - paragraph: Identify high-risk CHF patients, predict readmissions, and optimize interventions
+              - generic:
+                - generic: Blood Pressure Control
+                - generic: Statin Therapy
+                - generic: Readmission Prevention
+            - button "18 min Behavioral Health Integration Screen for depression, coordinate care transitions, ensure medication adherence PHQ-9 Screening Antidepressant Management Follow-Up After ED" [disabled]:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                  - text: 18 min
+              - heading "Behavioral Health Integration" [level=3]
+              - paragraph: Screen for depression, coordinate care transitions, ensure medication adherence
+              - generic:
+                - generic: PHQ-9 Screening
+                - generic: Antidepressant Management
+                - generic: Follow-Up After ED
+            - button "12 min Preventive Care Optimization Maximize preventive screenings, immunizations, and annual wellness visits Breast Cancer Screening Colorectal Screening Immunizations" [disabled]:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                  - text: 12 min
+              - heading "Preventive Care Optimization" [level=3]
+              - paragraph: Maximize preventive screenings, immunizations, and annual wellness visits
+              - generic:
+                - generic: Breast Cancer Screening
+                - generic: Colorectal Screening
+                - generic: Immunizations
+            - button "22 min Care Transitions & Readmissions Manage post-discharge follow-up, medication reconciliation, and 30-day readmission prevention Transitions of Care Medication Reconciliation 30-Day Readmissions" [disabled]:
+              - generic:
+                - generic:
+                  - img
+                - generic:
+                  - img
+                  - text: 22 min
+              - heading "Care Transitions & Readmissions" [level=3]
+              - paragraph: Manage post-discharge follow-up, medication reconciliation, and 30-day readmission prevention
+              - generic:
+                - generic: Transitions of Care
+                - generic: Medication Reconciliation
+                - generic: 30-Day Readmissions
+        - generic [ref=e96]:
+          - heading "Quick Registration (Optional)" [level=3] [ref=e97]
+          - paragraph [ref=e98]: Provide your info to save demo results and receive a summary report
+          - generic [ref=e99]:
+            - textbox "Your name" [ref=e100]
+            - textbox "Work email" [ref=e101]
+            - textbox "Company" [ref=e102]
+          - button "Launch Demo Environment" [disabled] [ref=e103]:
+            - img [ref=e104]
+            - text: Launch Demo Environment
+        - generic [ref=e106]:
+          - heading "Technical Implementation" [level=2] [ref=e107]
+          - paragraph [ref=e108]: HDIM is built on enterprise-grade open source technologies with compliance-aligned controls and scalable performance.
+          - generic [ref=e109]:
+            - generic [ref=e110]:
+              - heading "Architecture" [level=3] [ref=e111]
+              - list [ref=e112]:
+                - listitem [ref=e113]:
+                  - generic [ref=e114]: "Backend:"
+                  - generic [ref=e115]: Spring Boot 3.x microservices (Java 21 LTS)
+                - listitem [ref=e116]:
+                  - generic [ref=e117]: "Frontend:"
+                  - generic [ref=e118]: Angular 17+ with RxJS state management
+                - listitem [ref=e119]:
+                  - generic [ref=e120]: "FHIR:"
+                  - generic [ref=e121]: HAPI FHIR 7.x (FHIR R4 aligned)
+                - listitem [ref=e122]:
+                  - generic [ref=e123]: "CQL Engine:"
+                  - generic [ref=e124]: Native CQL execution (no proprietary translation)
+                - listitem [ref=e125]:
+                  - generic [ref=e126]: "Database:"
+                  - generic [ref=e127]: PostgreSQL 15 with multi-tenant isolation
+                - listitem [ref=e128]:
+                  - generic [ref=e129]: "Cache:"
+                  - generic [ref=e130]: Redis 7 (configurable PHI cache TTL)
+                - listitem [ref=e131]:
+                  - generic [ref=e132]: "Messaging:"
+                  - generic [ref=e133]: Apache Kafka 3.x for event streaming
+                - listitem [ref=e134]:
+                  - generic [ref=e135]: "Gateway:"
+                  - generic [ref=e136]: Kong API Gateway with JWT validation
+            - generic [ref=e137]:
+              - heading "Performance Targets" [level=3] [ref=e138]
+              - list [ref=e139]:
+                - listitem [ref=e140]:
+                  - generic [ref=e141]: "FHIR Queries:"
+                  - generic [ref=e142]: p95 targets based on deployment
+                - listitem [ref=e143]:
+                  - generic [ref=e144]: "CQL Execution:"
+                  - generic [ref=e145]: optimized per tenant and measure mix
+                - listitem [ref=e146]:
+                  - generic [ref=e147]: "Throughput:"
+                  - generic [ref=e148]: scales with data volume and concurrency
+                - listitem [ref=e149]:
+                  - generic [ref=e150]: "Cache Hit Rate:"
+                  - generic [ref=e151]: tuned per workload
+                - listitem [ref=e152]:
+                  - generic [ref=e153]: "API Gateway:"
+                  - generic [ref=e154]: optimized auth throughput
+                - listitem [ref=e155]:
+                  - generic [ref=e156]: "Uptime SLA:"
+                  - generic [ref=e157]: SLA-based availability (excluding maintenance)
+          - generic [ref=e158]:
+            - heading "Security & Compliance" [level=3] [ref=e159]
+            - generic [ref=e160]:
+              - generic [ref=e161]:
+                - heading "Authentication" [level=4] [ref=e162]
+                - list [ref=e163]:
+                  - listitem [ref=e164]: • Gateway Trust model with HMAC-signed headers
+                  - listitem [ref=e165]: • OAuth 2.0 / JWT token validation
+                  - listitem [ref=e166]: • Role-based access control (RBAC)
+              - generic [ref=e167]:
+                - heading "HIPAA Controls" [level=4] [ref=e168]
+                - list [ref=e169]:
+                  - listitem [ref=e170]: • AES-256 encryption at rest
+                  - listitem [ref=e171]: • TLS 1.3 encryption in transit
+                  - listitem [ref=e172]: • Configurable PHI cache TTL
+              - generic [ref=e173]:
+                - heading "Audit & Isolation" [level=4] [ref=e174]
+                - list [ref=e175]:
+                  - listitem [ref=e176]: • Complete PHI access audit trail
+                  - listitem [ref=e177]: • Multi-tenant row-level isolation
+                  - listitem [ref=e178]: • Tenant-namespaced cache keys
+        - generic [ref=e179]:
+          - heading "Demo FAQ" [level=2] [ref=e180]
+          - generic [ref=e181]:
+            - generic [ref=e182]:
+              - heading "Is this real patient data?" [level=4] [ref=e183]
+              - paragraph [ref=e184]: No. All data is 100% synthetic and HIPAA-safe. It's designed to be realistic for evaluation purposes.
+            - generic [ref=e185]:
+              - heading "How long do demo sessions last?" [level=4] [ref=e186]
+              - paragraph [ref=e187]: Demo sessions are available for 30 minutes. You can request extended access by contacting sales.
+            - generic [ref=e188]:
+              - heading "Can I use my own data?" [level=4] [ref=e189]
+              - paragraph [ref=e190]: For POC with your data, contact our sales team to arrange a secure sandbox environment.
+            - generic [ref=e191]:
+              - heading "What infrastructure is required?" [level=4] [ref=e192]
+              - paragraph [ref=e193]: HDIM is cloud-native and runs on any container platform. On-premise deployments are also available.
+  - button "Open Next.js Dev Tools" [ref=e199] [cursor=pointer]:
+    - img [ref=e200]
+  - alert [ref=e203]
+```

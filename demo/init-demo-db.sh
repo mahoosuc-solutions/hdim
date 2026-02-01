@@ -8,6 +8,9 @@ echo "Creating demo databases..."
 
 # Create databases for each service
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    -- Ensure demo user password is in sync with the container env
+    ALTER USER ${POSTGRES_USER} WITH PASSWORD '${POSTGRES_PASSWORD}';
+
     -- Create service databases
     CREATE DATABASE gateway_db;
     CREATE DATABASE cql_db;

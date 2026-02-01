@@ -222,7 +222,7 @@ export function getRiskTrendClass(trending: 'improving' | 'stable' | 'worsening'
 /**
  * Generate mock patient risk profiles for demo
  */
-export function generateMockPatients(count: number = 50): PatientRiskProfile[] {
+export function generateMockPatients(count = 50): PatientRiskProfile[] {
   const firstNames = ['Maria', 'Robert', 'Angela', 'James', 'Patricia', 'Michael', 'Linda', 'David', 'Susan', 'William'];
   const lastNames = ['Garcia', 'Chen', 'Williams', 'Thompson', 'Davis', 'Johnson', 'Brown', 'Miller', 'Wilson', 'Anderson'];
   const conditions = ['Type 2 Diabetes', 'Heart Failure', 'COPD', 'CKD Stage 3', 'Hypertension', 'Depression', 'Anxiety', 'Obesity'];

@@ -9,15 +9,16 @@ import { test, expect, APIRequestContext } from '@playwright/test';
  * Issue: #90
  */
 
-const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:8001';
+const GATEWAY_URL = process.env['GATEWAY_URL'] || 'http://localhost:18080';
 const GATEWAY_EDGE_URL = process.env['GATEWAY_EDGE_URL'] || 'http://localhost:8080';
 const EXTERNAL_FHIR_URL = process.env['EXTERNAL_FHIR_URL'] || 'http://localhost:8088';
 const JAEGER_URL = process.env['JAEGER_URL'] || 'http://localhost:16686';
+const DEMO_SAFE = process.env['DEMO_SAFE'] === '1' || process.env['DEMO_SAFE'] === 'true';
 
 // All 28 microservices with their configurations
 const ALL_SERVICES = [
   // Core Services (always expected to be running)
-  { name: 'gateway-service', basePath: '', port: 8001, required: true },
+  { name: 'gateway-service', basePath: '', port: 18080, required: true },
   { name: 'quality-measure-service', basePath: '/quality-measure', port: 8087, required: true },
   { name: 'cql-engine-service', basePath: '/cql-engine', port: 8081, required: true },
   { name: 'fhir-service', basePath: '/fhir', port: 8085, required: true },
@@ -227,6 +228,9 @@ test.describe('Service Health Checks', () => {
   });
 
   test.describe('Extended Services Health', () => {
+    if (DEMO_SAFE) {
+      test.skip(true, 'Extended services are not required in demo-safe runs.');
+    }
     const extendedServices = ALL_SERVICES.filter(s => !s.required);
 
     for (const service of extendedServices) {

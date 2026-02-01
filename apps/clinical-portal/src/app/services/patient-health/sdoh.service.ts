@@ -49,7 +49,6 @@ import {
   providedIn: 'root',
 })
 export class SDOHService extends CacheableService {
-  private log: ContextualLogger;
 
   // SDOH Category to Z-Code Mapping (ICD-10)
   private readonly SDOH_CATEGORY_ZCODES: Record<SDOHCategory, string> = {
@@ -75,7 +74,6 @@ export class SDOHService extends CacheableService {
     private logger: LoggerService
   ) {
     super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('SDOHService');
   }
 
   /**
@@ -177,7 +175,7 @@ export class SDOHService extends CacheableService {
         return determinants;
       }),
       catchError((error) => {
-        this.log.error('Error fetching social determinants:', error);
+        this.logger.error('Error fetching social determinants:', error);
         return of(this.getDefaultSocialDeterminants(patientId));
       })
     );
@@ -231,7 +229,7 @@ export class SDOHService extends CacheableService {
         return result;
       }),
       catchError((error) => {
-        this.log.error('Error fetching SDOH screening from FHIR:', error);
+        this.logger.error('Error fetching SDOH screening from FHIR:', error);
         return of(this.getDefaultScreeningResult());
       })
     );

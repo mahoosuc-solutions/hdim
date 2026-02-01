@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { AdvancedFilterDialogComponent, AdvancedFilterDialogData } from './advanced-filter-dialog.component';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('AdvancedFilterDialogComponent', () => {
   let fixture: ComponentFixture<AdvancedFilterDialogComponent>;
@@ -22,10 +23,9 @@ describe('AdvancedFilterDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AdvancedFilterDialogComponent, NoopAnimationsModule],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRef },
+      providers: [{ provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: dialogData },
-      ],
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AdvancedFilterDialogComponent);

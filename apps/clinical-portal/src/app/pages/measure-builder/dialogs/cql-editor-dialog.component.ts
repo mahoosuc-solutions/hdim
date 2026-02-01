@@ -13,10 +13,10 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatBadgeModule } from '@angular/material/badge';
 import { FormsModule } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
-import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import {
   CqlGenerationService,
   CqlGenerationResponse,
@@ -27,13 +27,21 @@ import {
   LivePreviewResponse,
   PatientEvaluationResult,
   PreviewPatient,
+  MatchedCriterion,
 } from '../../../services/live-preview.service';
+import { PatientService } from '../../../services/patient.service';
+import { Patient } from '../../../models/patient.model';
 
+/**
+ * Data passed to the CQL Editor Dialog
+ */
 export interface CqlEditorDialogData {
   measureId: string;
   measureName: string;
   cqlText: string;
   readOnly?: boolean;
+  /** Optional: Patient context passed from external navigation (e.g., patient chart) */
+  contextPatient?: Patient;
 }
 
 @Component({
@@ -59,6 +67,46 @@ export interface CqlEditorDialogData {
   ],
   template: `
     <div class="editor-dialog" [class.ai-panel-open]="showAiPanel" [class.preview-panel-open]="showPreviewPanel">
+      <!-- Patient Context Banner -->
+      @if (data.contextPatient) {
+        <div class="patient-context-banner">
+          <div class="patient-context-info">
+            <mat-icon>person</mat-icon>
+            <span class="patient-name">{{ getPatientDisplayName(data.contextPatient) }}</span>
+            <span class="patient-meta">{{ getPatientMRN(data.contextPatient) }} • {{ getPatientAge(data.contextPatient) }}yo {{ data.contextPatient.gender }}</span>
+          </div>
+          <div class="patient-context-actions">
+            <button
+              mat-flat-button
+              color="primary"
+              (click)="testContextPatient()"
+              [disabled]="!cqlText.trim() || isTestingContextPatient"
+              matTooltip="Evaluate this CQL against the current patient">
+              @if (isTestingContextPatient) {
+                <mat-spinner diameter="16"></mat-spinner>
+              } @else {
+                <mat-icon>play_arrow</mat-icon>
+              }
+              Test This Patient
+            </button>
+            <button mat-icon-button (click)="clearContextPatient()" matTooltip="Use sample patients instead">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (contextPatientResult) {
+        <div class="context-patient-result" [class]="'outcome-' + contextPatientResult.outcome">
+          <mat-icon>{{ getOutcomeIcon(contextPatientResult.outcome) }}</mat-icon>
+          <span class="outcome-label">{{ contextPatientResult.outcome | uppercase }}</span>
+          <span class="outcome-message">{{ contextPatientResult.message }}</span>
+          <button mat-icon-button (click)="clearContextPatientResult()" matTooltip="Dismiss">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      }
+
       <!-- Header -->
       <div class="dialog-header">
         <div class="header-left">
@@ -601,6 +649,88 @@ export interface CqlEditorDialogData {
       flex-direction: column;
       height: 100%;
       max-height: 85vh;
+    }
+
+    /* Patient Context Banner */
+    .patient-context-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 24px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      border-bottom: 2px solid #2196f3;
+
+      .patient-context-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        mat-icon {
+          color: #1976d2;
+        }
+
+        .patient-name {
+          font-weight: 500;
+          color: #1565c0;
+        }
+
+        .patient-meta {
+          color: #546e7a;
+          font-size: 13px;
+        }
+      }
+
+      .patient-context-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        button[mat-flat-button] {
+          gap: 6px;
+
+          mat-spinner {
+            margin-right: 4px;
+          }
+        }
+      }
+    }
+
+    .context-patient-result {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 24px;
+      border-bottom: 1px solid #e0e0e0;
+
+      &.outcome-pass {
+        background-color: #e8f5e9;
+        .outcome-label { color: #2e7d32; font-weight: 500; }
+        mat-icon { color: #4caf50; }
+      }
+
+      &.outcome-fail {
+        background-color: #ffebee;
+        .outcome-label { color: #c62828; font-weight: 500; }
+        mat-icon { color: #f44336; }
+      }
+
+      &.outcome-not-eligible, &.outcome-excluded {
+        background-color: #fff3e0;
+        .outcome-label { color: #ef6c00; font-weight: 500; }
+        mat-icon { color: #ff9800; }
+      }
+
+      &.outcome-error, &.outcome-unknown {
+        background-color: #fce4ec;
+        .outcome-label { color: #ad1457; font-weight: 500; }
+        mat-icon { color: #e91e63; }
+      }
+
+      .outcome-message {
+        flex: 1;
+        color: #616161;
+        font-size: 13px;
+      }
     }
 
     .dialog-header {
@@ -1622,6 +1752,8 @@ export interface CqlEditorDialogData {
 export class CqlEditorDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private cqlChange$ = new Subject<string>();
+  private patientSearch$ = new Subject<string>();
+  isSearchingPatients = false;
 
   // Editor state
   cqlText: string;
@@ -1653,6 +1785,10 @@ export class CqlEditorDialogComponent implements OnInit, OnDestroy {
   isTestingSpecificPatient = false;
   specificPatientResult: LivePreviewResponse | null = null;
 
+  // Context Patient state (patient passed from external navigation)
+  isTestingContextPatient = false;
+  contextPatientResult: { outcome: string; message: string } | null = null;
+
   // Quick prompts for common measure types
   quickPrompts = [
     { label: 'Diabetes HbA1c', text: 'Create a measure for adults 18-75 with diabetes who had an HbA1c test in the measurement period' },
@@ -1681,7 +1817,8 @@ export class CqlEditorDialogComponent implements OnInit, OnDestroy {
     private dialogRef: MatDialogRef<CqlEditorDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CqlEditorDialogData,
     private cqlGenService: CqlGenerationService,
-    private livePreviewService: LivePreviewService
+    private livePreviewService: LivePreviewService,
+    private patientService: PatientService
   ) {
     this.cqlText = data.cqlText || this.getDefaultCqlTemplate();
     this.originalCqlText = this.cqlText;
@@ -1721,6 +1858,33 @@ export class CqlEditorDialogComponent implements OnInit, OnDestroy {
     if (this.showPreviewPanel && this.cqlText.trim()) {
       this.livePreviewService.submitCql(this.cqlText);
     }
+
+    // Set up debounced patient search with real API
+    this.patientSearch$.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((query) => {
+        if (!query || query.length < 2) {
+          return of([]);
+        }
+        this.isSearchingPatients = true;
+        // Try searching by name first, then identifier if looks like MRN
+        const isIdentifier = /^[A-Z]{2,3}-?\d+$/i.test(query);
+        if (isIdentifier) {
+          return this.patientService.searchPatientsByIdentifier(query).pipe(
+            catchError(() => of([] as Patient[]))
+          );
+        }
+        return this.patientService.searchPatientsByName(query).pipe(
+          catchError(() => of([] as Patient[]))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe((patients: Patient[]) => {
+      this.isSearchingPatients = false;
+      // Convert FHIR Patient to PreviewPatient format
+      this.patientSearchResults = patients.map((p) => this.toPreviewPatient(p));
+    });
   }
 
   ngOnDestroy(): void {
@@ -1767,10 +1931,32 @@ export class CqlEditorDialogComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Handle patient search input change
+   * Handle patient search input change - uses real patient API with debouncing
    */
   onPatientSearchChange(query: string): void {
-    this.patientSearchResults = this.livePreviewService.searchPatients(query);
+    this.patientSearch$.next(query);
+  }
+
+  /**
+   * Convert FHIR Patient to PreviewPatient format for display
+   */
+  private toPreviewPatient(patient: Patient): PreviewPatient {
+    const name = this.getPatientDisplayName(patient);
+    const mrn = this.getPatientMRN(patient);
+    const age = this.getPatientAge(patient);
+    const gender = patient.gender || 'unknown';
+
+    return {
+      id: patient.id,
+      name,
+      mrn,
+      age,
+      gender: gender === 'male' || gender === 'female' || gender === 'other' ? gender : 'other',
+      conditions: [], // Would need separate call to get conditions
+      medications: [],
+      recentProcedures: [],
+      recentObservations: [],
+    };
   }
 
   /**
@@ -2006,5 +2192,117 @@ define "Numerator":
     } else {
       this.dialogRef.close();
     }
+  }
+
+  // ==========================================
+  // Context Patient Methods
+  // ==========================================
+
+  /**
+   * Get display name from FHIR Patient resource
+   */
+  getPatientDisplayName(patient: Patient): string {
+    if (!patient?.name?.length) return 'Unknown Patient';
+    const name = patient.name[0];
+    if (name.text) return name.text;
+    const given = name.given?.join(' ') || '';
+    const family = name.family || '';
+    return `${given} ${family}`.trim() || 'Unknown Patient';
+  }
+
+  /**
+   * Get MRN from FHIR Patient resource
+   */
+  getPatientMRN(patient: Patient): string {
+    const mrn = patient?.identifier?.find(
+      (id) => id.type?.coding?.[0]?.code === 'MR' || id.system?.toLowerCase().includes('mrn')
+    );
+    return mrn?.value ?? patient?.identifier?.[0]?.value ?? patient?.id ?? 'No MRN';
+  }
+
+  /**
+   * Calculate patient age from birthDate
+   */
+  getPatientAge(patient: Patient): number {
+    if (!patient?.birthDate) return 0;
+    const birthDate = new Date(patient.birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  }
+
+  /**
+   * Test CQL against the context patient from navigation
+   */
+  testContextPatient(): void {
+    if (!this.data.contextPatient || !this.cqlText.trim()) return;
+
+    this.isTestingContextPatient = true;
+    this.contextPatientResult = null;
+
+    this.livePreviewService.evaluateSpecificPatient(
+      this.cqlText,
+      this.data.contextPatient.id
+    ).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result) => {
+        const patientResult = result.results[0];
+        this.contextPatientResult = {
+          outcome: patientResult?.outcome ?? 'unknown',
+          message: this.getOutcomeMessage(patientResult?.outcome ?? '', patientResult?.matchedCriteria),
+        };
+        this.isTestingContextPatient = false;
+      },
+      error: (err) => {
+        this.contextPatientResult = {
+          outcome: 'error',
+          message: err?.message || 'Failed to evaluate patient',
+        };
+        this.isTestingContextPatient = false;
+      },
+    });
+  }
+
+  /**
+   * Generate outcome message based on result
+   */
+  private getOutcomeMessage(outcome: string, matchedCriteria?: MatchedCriterion[]): string {
+    const matchedCount = matchedCriteria?.filter(c => c.matched).length ?? 0;
+    const totalCount = matchedCriteria?.length ?? 0;
+
+    switch (outcome) {
+      case 'pass':
+        return `Patient meets all ${totalCount} criteria for this measure.`;
+      case 'fail':
+        return `Patient meets ${matchedCount}/${totalCount} criteria. Does not qualify for numerator.`;
+      case 'not-eligible':
+        return `Patient does not meet initial population criteria.`;
+      case 'excluded':
+        return `Patient is excluded from this measure.`;
+      case 'error':
+        return 'Error evaluating CQL against this patient.';
+      default:
+        return 'Unable to determine outcome.';
+    }
+  }
+
+  /**
+   * Clear context patient (switch to sample patients mode)
+   */
+  clearContextPatient(): void {
+    // We can't actually remove the context patient from data,
+    // but we can clear the result and focus on sample patients
+    this.contextPatientResult = null;
+    this.data.contextPatient = undefined;
+  }
+
+  /**
+   * Clear context patient result
+   */
+  clearContextPatientResult(): void {
+    this.contextPatientResult = null;
   }
 }

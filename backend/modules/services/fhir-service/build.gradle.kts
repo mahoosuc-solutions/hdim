@@ -7,9 +7,11 @@ plugins {
 description = "FHIR R4 Service - FHIR Resource Management"
 
 // Exclude Flyway - this service uses Liquibase for migrations
+// Exclude Jackson XML - FHIR Service uses JSON-only format (application/fhir+json)
 configurations.all {
     exclude(group = "org.flywaydb", module = "flyway-core")
     exclude(group = "org.flywaydb", module = "flyway-database-postgresql")
+    exclude(group = "com.fasterxml.jackson.dataformat", module = "jackson-dataformat-xml")
 }
 
 dependencies {
@@ -17,6 +19,7 @@ dependencies {
     implementation(project(":modules:shared:domain:fhir-models"))
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:security"))
+    implementation(project(":modules:shared:infrastructure:gateway-core"))
     implementation(project(":platform:auth"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
@@ -87,10 +90,12 @@ tasks.test {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
-    systemProperty("spring.datasource.username", "test")
-    systemProperty("spring.datasource.password", "test")
-    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    // Testcontainers system properties disabled - using running Docker PostgreSQL
+    // Configuration now managed in src/test/resources/application-test.yml
+    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
+    // systemProperty("spring.datasource.username", "test")
+    // systemProperty("spring.datasource.password", "test")
+    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
 }

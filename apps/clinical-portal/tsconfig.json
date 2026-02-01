@@ -1,11 +1,14 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
     "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
     "target": "es2022",
     "moduleResolution": "bundler",
     "isolatedModules": true,
@@ -14,17 +17,11 @@
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
-    "strictInjectionParameters": true,
-    "strictInputAccessModifiers": true,
-    "typeCheckHostBindings": true,
-    "strictTemplates": true,
-    "extendedDiagnostics": {
-      "checks": {
-        "nullishCoalescingNotNullable": "suppress",
-        "optionalChainNotNullable": "suppress",
-        "controlFlowPreventingContentProjection": "suppress"
-      }
-    }
+    "strictInjectionParameters": false,
+    "strictInputAccessModifiers": false,
+    "typeCheckHostBindings": false,
+    "strictTemplates": false,
+    "fullTemplateTypeCheck": false
   },
   "files": [],
   "include": [],

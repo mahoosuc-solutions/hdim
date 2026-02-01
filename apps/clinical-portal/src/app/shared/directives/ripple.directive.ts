@@ -23,10 +23,10 @@ import {
 })
 export class RippleDirective implements OnInit {
   /** Ripple color */
-  @Input() rippleColor: string = 'rgba(255, 255, 255, 0.5)';
+  @Input() rippleColor = 'rgba(255, 255, 255, 0.5)';
 
   /** Ripple duration in ms */
-  @Input() rippleDuration: number = 600;
+  @Input() rippleDuration = 600;
 
   constructor(
     private el: ElementRef,

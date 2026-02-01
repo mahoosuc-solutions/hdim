@@ -1,9 +1,14 @@
 package com.healthdata.authentication.controller;
 
 import com.healthdata.authentication.config.JwtConfig;
+import com.healthdata.authentication.domain.Tenant;
+import com.healthdata.authentication.domain.TenantStatus;
 import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.dto.*;
 import com.healthdata.authentication.entity.RefreshToken;
+import com.healthdata.authentication.exception.TenantInactiveException;
+import com.healthdata.authentication.exception.TenantNotFoundException;
+import com.healthdata.authentication.repository.TenantRepository;
 import com.healthdata.authentication.repository.UserRepository;
 import com.healthdata.authentication.audit.MfaAuditEvent;
 import com.healthdata.authentication.service.CookieService;
@@ -13,11 +18,16 @@ import com.healthdata.authentication.service.MfaService;
 import com.healthdata.authentication.service.MfaPolicyService;
 import com.healthdata.authentication.service.MfaTokenService;
 import com.healthdata.authentication.service.RefreshTokenService;
+import com.healthdata.audit.models.AuditAction;
+import com.healthdata.audit.models.AuditEvent;
+import com.healthdata.audit.models.AuditOutcome;
+import com.healthdata.audit.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -58,7 +68,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Validated
-@RequiredArgsConstructor
 @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
     prefix = "authentication.controller",
     name = "enabled",
@@ -68,6 +77,7 @@ import java.util.Optional;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenService jwtTokenService;
@@ -78,6 +88,36 @@ public class AuthController {
     private final MfaTokenService mfaTokenService;
     private final CookieService cookieService;
     private final com.healthdata.authentication.service.MfaPolicyService mfaPolicyService;
+    private final AuditService auditService;  // Optional - may be null if audit module not available
+
+    public AuthController(
+            UserRepository userRepository,
+            TenantRepository tenantRepository,
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            JwtTokenService jwtTokenService,
+            RefreshTokenService refreshTokenService,
+            LogoutService logoutService,
+            JwtConfig jwtConfig,
+            MfaService mfaService,
+            MfaTokenService mfaTokenService,
+            CookieService cookieService,
+            com.healthdata.authentication.service.MfaPolicyService mfaPolicyService,
+            @Autowired(required = false) AuditService auditService) {
+        this.userRepository = userRepository;
+        this.tenantRepository = tenantRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenService = jwtTokenService;
+        this.refreshTokenService = refreshTokenService;
+        this.logoutService = logoutService;
+        this.jwtConfig = jwtConfig;
+        this.mfaService = mfaService;
+        this.mfaTokenService = mfaTokenService;
+        this.cookieService = cookieService;
+        this.mfaPolicyService = mfaPolicyService;
+        this.auditService = auditService;
+    }
 
     /**
      * Authenticate user with username/password.
@@ -172,10 +212,28 @@ public class AuthController {
                 // Clear security context (user not fully authenticated yet)
                 SecurityContextHolder.clearContext();
 
+                // Determine available MFA methods
+                List<String> availableMethods = new java.util.ArrayList<>();
+                String smsPhoneNumber = null;
+
+                if (user.getMfaMethod() == User.MfaMethod.TOTP || user.getMfaMethod() == User.MfaMethod.BOTH) {
+                    availableMethods.add("TOTP");
+                }
+                if (user.getMfaMethod() == User.MfaMethod.SMS || user.getMfaMethod() == User.MfaMethod.BOTH) {
+                    availableMethods.add("SMS");
+                    // Mask phone number
+                    String phone = user.getMfaPhoneNumber();
+                    if (phone != null && phone.length() >= 4) {
+                        smsPhoneNumber = "****" + phone.substring(phone.length() - 4);
+                    }
+                }
+
                 MfaRequiredResponse mfaResponse = MfaRequiredResponse.builder()
                     .mfaRequired(true)
                     .mfaToken(mfaToken)
-                    .message("MFA verification required. Please provide your authenticator code.")
+                    .availableMethods(availableMethods)
+                    .smsPhoneNumber(smsPhoneNumber)
+                    .message("MFA verification required. Choose your preferred method.")
                     .build();
 
                 return ResponseEntity.ok(mfaResponse);
@@ -271,7 +329,7 @@ public class AuthController {
      * @throws ResponseStatusException 409 if username or email already exists
      * @throws ResponseStatusException 400 if validation fails
      */
-    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasPermission('USER_WRITE')")
     @PostMapping("/register")
     public ResponseEntity<UserInfoResponse> register(
         @Valid @RequestBody RegisterRequest request,
@@ -293,6 +351,16 @@ public class AuthController {
             log.warn("Email already exists: {}", request.getEmail());
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                 "Email already exists: " + request.getEmail());
+        }
+
+        // Validate all tenant IDs exist and are active
+        for (String tenantId : request.getTenantIds()) {
+            Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new TenantNotFoundException(tenantId));
+
+            if (tenant.getStatus() != TenantStatus.ACTIVE) {
+                throw new TenantInactiveException(tenantId);
+            }
         }
 
         // Hash password with BCrypt
@@ -318,6 +386,36 @@ public class AuthController {
         log.info("User registered successfully: {} (ID: {}) by admin: {}",
             user.getUsername(), user.getId(),
             authentication != null ? authentication.getName() : "SYSTEM");
+
+        // Audit user creation (system-level event, no specific tenant)
+        String adminUserId = null;
+        String adminUsername = null;
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User) {
+                adminUserId = ((User) principal).getId().toString();
+                adminUsername = ((User) principal).getUsername();
+            } else if (principal instanceof String) {
+                adminUsername = (String) principal;
+            }
+        }
+
+        // Audit user registration (if audit service is available)
+        if (auditService != null) {
+            auditService.logAuditEvent(AuditEvent.builder()
+                .tenantId(null)  // System-level event
+                .userId(adminUserId)
+                .username(adminUsername)
+                .action(AuditAction.CREATE)
+                .resourceType("User")
+                .resourceId(user.getId().toString())
+                .outcome(AuditOutcome.SUCCESS)
+                .serviceName("AuthController")
+                .methodName("register")
+                .build());
+        } else {
+            log.debug("Audit service not available - skipping audit log for user registration: {}", user.getUsername());
+        }
 
         // Build response (never include password hash)
         UserInfoResponse response = UserInfoResponse.builder()

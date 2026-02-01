@@ -29,10 +29,10 @@ describe('ApiService', () => {
     const req = httpMock.expectOne('api/test');
     expect(req.request.headers.get('Content-Type')).toBe('application/json');
     expect(req.request.headers.get('API-Version')).toBe('v1');
-    req.flush({ ok: true });
+    req.flush({ ok: true };
 
     expect(logSpy).toHaveBeenCalled();
-  });
+  };
 
   it('supports POST, PUT, PATCH, and DELETE requests', () => {
     service.post('api/post', { name: 'test' }).subscribe();
@@ -40,11 +40,11 @@ describe('ApiService', () => {
     service.patch('api/patch', { name: 'test' }).subscribe();
     service.delete('api/delete').subscribe();
 
-    httpMock.expectOne('api/post').flush({ ok: true });
-    httpMock.expectOne('api/put').flush({ ok: true });
-    httpMock.expectOne('api/patch').flush({ ok: true });
-    httpMock.expectOne('api/delete').flush({ ok: true });
-  });
+    httpMock.expectOne('api/post').flush({ ok: true };
+    httpMock.expectOne('api/put').flush({ ok: true };
+    httpMock.expectOne('api/patch').flush({ ok: true };
+    httpMock.expectOne('api/delete').flush({ ok: true };
+  };
 
   it('handles network errors with a friendly message', (done) => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -55,7 +55,7 @@ describe('ApiService', () => {
         expect(errorSpy).toHaveBeenCalled();
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/error');
     req.error(new ErrorEvent('NetworkError', { message: 'offline' }));
@@ -68,7 +68,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Resource not found.');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/missing');
     req.flush({ message: 'Not found' }, { status: 404, statusText: 'Not Found' });
@@ -81,7 +81,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Already exists');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/conflict');
     req.flush({ message: 'Already exists' }, { status: 409, statusText: 'Conflict' });
@@ -94,7 +94,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Service unavailable. Please try again later.');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/unavailable');
     req.flush({}, { status: 503, statusText: 'Service Unavailable' });
@@ -109,7 +109,7 @@ describe('ApiService', () => {
         );
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/down');
     req.flush({}, { status: 0, statusText: 'Unknown Error' });
@@ -122,7 +122,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Unauthorized. Please log in again.');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/unauthorized');
     req.flush({}, { status: 401, statusText: 'Unauthorized' });
@@ -137,7 +137,7 @@ describe('ApiService', () => {
         );
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/forbidden');
     req.flush({}, { status: 403, statusText: 'Forbidden' });
@@ -150,7 +150,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Validation error. Please check your input.');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/validation');
     req.flush({}, { status: 422, statusText: 'Unprocessable Entity' });
@@ -163,7 +163,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Too many requests. Please try again later.');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/rate');
     req.flush({}, { status: 429, statusText: 'Too Many Requests' });
@@ -176,7 +176,7 @@ describe('ApiService', () => {
       error: (err) => {
         errors.push(err.message);
       },
-    });
+    };
     service.get('api/server-502', undefined, { retry: 0 }).subscribe({
       next: () => done.fail('expected error'),
       error: (err) => {
@@ -208,7 +208,7 @@ describe('ApiService', () => {
         expect(err.message).toBe('Teapot says no');
         done();
       },
-    });
+    };
 
     const req = httpMock.expectOne('api/teapot');
     req.flush({ message: 'Teapot says no' }, { status: 418, statusText: 'Teapot' });

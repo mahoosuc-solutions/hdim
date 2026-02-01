@@ -20,7 +20,11 @@ describe('PatientHealthService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [PatientHealthService],
+      providers: [
+        PatientHealthService,
+        MedicationAdherenceService,
+        ProcedureHistoryService,
+      ],
     });
     service = TestBed.inject(PatientHealthService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -339,7 +343,7 @@ describe('PatientHealthService', () => {
         expect(overview.recommendations).toBeDefined();
         expect(overview.qualityMeasures).toBeTruthy();
         done();
-      });
+      };
       triggerOverviewFallback('test-patient-123');
     });
 
@@ -362,7 +366,7 @@ describe('PatientHealthService', () => {
         expect(score.components.preventive).toBeLessThanOrEqual(100);
 
         done();
-      });
+      };
       triggerOverviewFallback('test-patient-123');
     });
 
@@ -384,7 +388,7 @@ describe('PatientHealthService', () => {
         expect(physical.functionalStatus.iadlScore).toBeLessThanOrEqual(8);
 
         done();
-      });
+      };
       triggerOverviewFallback('test-patient-123');
     });
 
@@ -408,7 +412,7 @@ describe('PatientHealthService', () => {
         expect(mental.suicideRisk.requiresIntervention).toBeDefined();
 
         done();
-      });
+      };
       triggerOverviewFallback('test-patient-123');
     });
 
@@ -423,7 +427,7 @@ describe('PatientHealthService', () => {
         expect(Array.isArray(sdoh.zCodes)).toBe(true);
 
         done();
-      });
+      };
       triggerOverviewFallback('test-patient-123');
     });
 
@@ -445,7 +449,7 @@ describe('PatientHealthService', () => {
         expect(risk.predictions.hospitalizationRisk30Day).toBeLessThanOrEqual(100);
 
         done();
-      });
+      };
       triggerOverviewFallback('test-patient-123');
     });
 
@@ -1363,7 +1367,7 @@ describe('PatientHealthService', () => {
           expect(results.patientId).toBe('test-patient-123');
           expect(results.screeningDate).toBeInstanceOf(Date);
           done();
-        });
+        };
       });
 
       it('should handle multiple SDOH domains in screening', (done) => {
@@ -1372,7 +1376,7 @@ describe('PatientHealthService', () => {
           const categories = results.screeningItems.map((item) => item.category);
           expect(categories.length).toBeGreaterThanOrEqual(0);
           done();
-        });
+        };
       });
 
       it('should use correct LOINC codes for SDOH screening', (done) => {
@@ -1545,7 +1549,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.score).toBeGreaterThanOrEqual(0);
           expect(riskScore.score).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         flushSdohRequests();
       });
@@ -1640,7 +1644,7 @@ describe('PatientHealthService', () => {
             expect(intervention.priority).toMatch(/low|medium|high|urgent/);
             expect(intervention.recommendedActions).toBeDefined();
             expect(Array.isArray(intervention.recommendedActions)).toBe(true);
-          });
+          };
           done();
         });
 
@@ -1711,7 +1715,7 @@ describe('PatientHealthService', () => {
           expect(risk.scores.utilizationRisk).toBeGreaterThanOrEqual(0);
           expect(risk.scores.costRisk).toBeGreaterThanOrEqual(0);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-123');
       });
 
@@ -1721,7 +1725,7 @@ describe('PatientHealthService', () => {
           expect(risk.scores.socialComplexity).toBeGreaterThanOrEqual(0);
           expect(risk.scores.socialComplexity).toBeLessThanOrEqual(100);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-123');
       });
 
@@ -1731,7 +1735,7 @@ describe('PatientHealthService', () => {
         expect(risk.scores.mentalHealthRisk).toBeGreaterThanOrEqual(0);
         expect(risk.scores.mentalHealthRisk).toBeLessThanOrEqual(100);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-123');
       });
     });
@@ -1740,7 +1744,7 @@ describe('PatientHealthService', () => {
       service.getRiskStratification('test-patient-456').subscribe((risk) => {
         expect(risk.scores.clinicalComplexity).toBe(0);
         expect(risk.predictions.hospitalizationRisk30Day).toBe(0);
-        expect(risk.categories).toEqual({});
+        expect(risk.categories).toEqual({};
         done();
       });
 
@@ -1760,7 +1764,7 @@ describe('PatientHealthService', () => {
           expect(score.conditionCount).toBeGreaterThanOrEqual(0);
           expect(score.comorbidityScore).toBeDefined();
           done();
-        });
+        };
         // Flush all FHIR requests triggered by the method
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -1786,7 +1790,7 @@ describe('PatientHealthService', () => {
           expect(score.polypharmacyRisk).toBeDefined();
           expect(score.medicationCount).toBeGreaterThanOrEqual(0);
           done();
-        });
+        };
       });
     });
 
@@ -1798,7 +1802,7 @@ describe('PatientHealthService', () => {
           expect(score.recentHospitalizations).toBeDefined();
           expect(score.edVisits).toBeDefined();
           done();
-        });
+        };
       });
 
       it('should increase risk for multiple recent admissions', (done) => {
@@ -1882,7 +1886,7 @@ describe('PatientHealthService', () => {
           expect(risk.overallRisk).toBeDefined();
           expect(risk.overallRisk).toMatch(/low|moderate|high|critical/);
           done();
-        });
+        };
         // Flush all FHIR requests triggered by the method
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -1907,7 +1911,7 @@ describe('PatientHealthService', () => {
           expect(trend.metric).toBe('overallRisk');
           expect(trend.trend).toMatch(/improving|stable|declining/);
           done();
-        });
+        };
       });
 
       it('should identify improving risk trends', (done) => {
@@ -1960,7 +1964,7 @@ describe('PatientHealthService', () => {
           expect(risk.predictions.hospitalizationRisk30Day).toBeGreaterThanOrEqual(0);
           expect(risk.predictions.hospitalizationRisk30Day).toBeLessThanOrEqual(100);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-123');
       });
 
@@ -1971,7 +1975,7 @@ describe('PatientHealthService', () => {
             risk.predictions.hospitalizationRisk30Day
           );
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-123');
       });
     });
@@ -1982,7 +1986,7 @@ describe('PatientHealthService', () => {
           expect(risk.categories.diabetes).toBeDefined();
           expect(risk.categories.diabetes).toMatch(/low|moderate|high|critical/);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-diabetes');
       });
 
@@ -1991,7 +1995,7 @@ describe('PatientHealthService', () => {
           expect(risk.categories.cardiovascular).toBeDefined();
           expect(risk.categories.cardiovascular).toMatch(/low|moderate|high|critical/);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-cvd');
       });
 
@@ -2000,7 +2004,7 @@ describe('PatientHealthService', () => {
           expect(risk.categories.mentalHealth).toBeDefined();
           expect(risk.categories.mentalHealth).toMatch(/low|moderate|high|critical/);
           done();
-        });
+        };
         mockRiskStratificationResponse('test-patient-mh');
       });
     });
@@ -2082,7 +2086,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.overallRisk).toMatch(/low|moderate|high|critical/);
           expect(riskScore.calculatedAt).toBeInstanceOf(Date);
           done();
-        });
+        };
 
         // Flush all FHIR requests
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -2102,7 +2106,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.overallScore).toBeGreaterThanOrEqual(0);
           expect(riskScore.overallScore).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2122,7 +2126,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.components.clinicalComplexity).toBeGreaterThanOrEqual(0);
           expect(riskScore.components.clinicalComplexity).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2139,7 +2143,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.details.uncontrolledConditionCount).toBeGreaterThanOrEqual(0);
           expect(riskScore.details.conditionCount).toBeGreaterThanOrEqual(0);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2156,7 +2160,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.details.comorbidityScore).toBeDefined();
           expect(riskScore.details.comorbidityScore).toBeGreaterThanOrEqual(0);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2176,7 +2180,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.components.sdohRisk).toBeGreaterThanOrEqual(0);
           expect(riskScore.components.sdohRisk).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2193,7 +2197,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.details.sdohNeedCount).toBeDefined();
           expect(riskScore.details.severeSdohNeedCount).toBeDefined();
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2213,7 +2217,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.components.mentalHealthRisk).toBeGreaterThanOrEqual(0);
           expect(riskScore.components.mentalHealthRisk).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2230,7 +2234,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.details.mentalHealthAssessmentCount).toBeDefined();
           expect(riskScore.details.highRiskMentalHealthConditions).toBeDefined();
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2248,7 +2252,7 @@ describe('PatientHealthService', () => {
         service.calculateMultiFactorRiskScore('test-patient-123').subscribe((riskScore) => {
           expect(riskScore.weights.clinicalComplexity).toBe(0.40);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2264,7 +2268,7 @@ describe('PatientHealthService', () => {
         service.calculateMultiFactorRiskScore('test-patient-123').subscribe((riskScore) => {
           expect(riskScore.weights.sdohRisk).toBe(0.30);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2280,7 +2284,7 @@ describe('PatientHealthService', () => {
         service.calculateMultiFactorRiskScore('test-patient-123').subscribe((riskScore) => {
           expect(riskScore.weights.mentalHealthRisk).toBe(0.30);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2299,7 +2303,7 @@ describe('PatientHealthService', () => {
                               riskScore.weights.mentalHealthRisk;
           expect(totalWeight).toBeCloseTo(1.0, 2);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2317,28 +2321,28 @@ describe('PatientHealthService', () => {
         service.getRiskLevelFromMultiFactorScore(20).subscribe((level) => {
           expect(level).toBe('low');
           done();
-        });
+        };
       });
 
       it('should classify moderate risk (25-49)', (done) => {
         service.getRiskLevelFromMultiFactorScore(35).subscribe((level) => {
           expect(level).toBe('moderate');
           done();
-        });
+        };
       });
 
       it('should classify high risk (50-74)', (done) => {
         service.getRiskLevelFromMultiFactorScore(65).subscribe((level) => {
           expect(level).toBe('high');
           done();
-        });
+        };
       });
 
       it('should classify critical risk (75-100)', (done) => {
         service.getRiskLevelFromMultiFactorScore(85).subscribe((level) => {
           expect(level).toBe('critical');
           done();
-        });
+        };
       });
     });
 
@@ -2352,7 +2356,7 @@ describe('PatientHealthService', () => {
           expect(riskScore.details.sdohNeedCount).toBeGreaterThanOrEqual(0);
           expect(riskScore.details.mentalHealthAssessmentCount).toBeGreaterThanOrEqual(0);
           done();
-        });
+        };
 
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
         fhirReqs.forEach((req) => {
@@ -2449,7 +2453,7 @@ describe('PatientHealthService', () => {
           expect(spy).toHaveBeenCalledWith(testPatientId);
           spy.mockRestore();
           done();
-        });
+        };
 
         // Flush all FHIR requests (getPhysicalHealthSummary makes 6 parallel calls)
         flushAllPhysicalHealthFhirRequests();
@@ -2463,7 +2467,7 @@ describe('PatientHealthService', () => {
           expect(summary.vitals.bloodPressure).toBeDefined();
           expect(summary.vitals.bloodPressure?.value).toBe('128/82');
           done();
-        });
+        };
 
         // Flush all FHIR requests (getPhysicalHealthSummary makes 6 parallel calls)
         flushAllPhysicalHealthFhirRequests();
@@ -2475,7 +2479,7 @@ describe('PatientHealthService', () => {
           expect(vitals.bloodPressure?.value).toBe('128/82');
           expect(vitals.bloodPressure?.unit).toBe('mmHg');
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/fhir/Observation')
@@ -2488,7 +2492,7 @@ describe('PatientHealthService', () => {
           expect(vitals.heartRate?.status).toBe('normal');
           expect(vitals.bloodPressure?.status).toBe('abnormal');
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/fhir/Observation')
@@ -2502,7 +2506,7 @@ describe('PatientHealthService', () => {
           expect(vitals.bloodPressure?.referenceRange?.low).toBe(90);
           expect(vitals.bloodPressure?.referenceRange?.high).toBe(120);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/fhir/Observation')
@@ -2516,7 +2520,7 @@ describe('PatientHealthService', () => {
           expect(summary.vitals).toBeDefined();
           // Should have some vitals data even if from mock
           done();
-        });
+        };
 
         // Flush all FHIR requests with errors to trigger fallback
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -2534,7 +2538,7 @@ describe('PatientHealthService', () => {
           service.getVitalSignsFromFhir(testPatientId).subscribe((cachedVitals) => {
             expect(cachedVitals.heartRate?.value).toBe(72);
             done();
-          });
+          };
         });
 
         // Only one HTTP request should be made
@@ -2560,7 +2564,7 @@ describe('PatientHealthService', () => {
             expect(vitals.heartRate).toBeDefined();
             subscription.unsubscribe();
             done();
-          });
+          };
 
           const req = httpMock.expectOne((request) =>
             request.url.includes('/fhir/Observation')
@@ -2640,7 +2644,7 @@ describe('PatientHealthService', () => {
         setTimeout(() => {
           const subscription = service.subscribeToVitalSigns(testPatientId, 100).subscribe(() => {
             // First emission
-          });
+          };
 
           const req1 = httpMock.expectOne((request) =>
             request.url.includes('/fhir/Observation')
@@ -2708,7 +2712,7 @@ describe('PatientHealthService', () => {
 
         service.getVitalSignHistory(testPatientId, '8867-4', startDate, endDate).subscribe(() => {
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/fhir/Observation') &&
@@ -2782,7 +2786,7 @@ describe('PatientHealthService', () => {
 
         service.getVitalSignHistory(testPatientId, loincCode, new Date('2025-01-01'), new Date('2025-12-01')).subscribe(() => {
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/fhir/Observation') &&
@@ -4216,7 +4220,7 @@ describe('PatientHealthService', () => {
           expect(healthScore.components.social).toBeDefined();
           expect(healthScore.components.preventive).toBeDefined();
           done();
-        });
+        };
 
         // Backend fails
         const req = httpMock.expectOne((request) =>
@@ -5111,7 +5115,7 @@ describe('PatientHealthService', () => {
           expect(risk.recommendations).toBeDefined();
           expect(risk.lastAssessed).toBeInstanceOf(Date);
           done();
-        });
+        };
 
         // Flush all FHIR requests with HbA1c = 6.2%
         flushAllFhirRequests(6.2);
@@ -5127,7 +5131,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors.some((f: string) => f.includes('8'))).toBe(true);
           expect(risk.recommendations.length).toBeGreaterThan(0);
           done();
-        });
+        };
 
         // Use 8.0 to get a clearer moderate risk score of 75
         flushAllFhirRequests(8.0);
@@ -5141,7 +5145,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors.some((f: string) => f.includes('9.8'))).toBe(true);
           expect(risk.recommendations.some((r: string) => r.includes('Urgent'))).toBe(true);
           done();
-        });
+        };
 
         flushAllFhirRequests(9.8);
       });
@@ -5152,7 +5156,7 @@ describe('PatientHealthService', () => {
           expect(risk.riskLevel).toBe('low');
           expect(risk.factors.some((f: string) => f.includes('No recent'))).toBe(true);
           done();
-        });
+        };
 
         // Flush with no HbA1c value - all empty responses
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -5172,7 +5176,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toBeDefined();
           expect(risk.recommendations).toBeDefined();
           done();
-        });
+        };
 
         // Flush all FHIR requests with mock data for low CV risk
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -5193,7 +5197,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors.length).toBeGreaterThan(0);
           expect(risk.recommendations.length).toBeGreaterThan(0);
           done();
-        });
+        };
 
         // Flush all FHIR requests with mock data for high CV risk
         // Score calculation: age >= 65 (30) + high BP (25) + high cholesterol (20) = 75 (high)
@@ -5294,7 +5298,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toBeDefined();
           expect(risk.recommendations).toBeDefined();
           done();
-        });
+        };
 
         flushMentalHealthRequests(3, 2);
       });
@@ -5307,7 +5311,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toContain('Severe depression symptoms (PHQ-9: 22)');
           expect(risk.recommendations).toContain('Immediate psychiatric evaluation recommended');
           done();
-        });
+        };
 
         flushMentalHealthRequests(22, 18);
       });
@@ -5320,7 +5324,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toContain('Suicide ideation present');
           expect(risk.recommendations).toContain('URGENT: Immediate safety assessment required');
           done();
-        });
+        };
 
         flushMentalHealthRequests(18, 15, true);
       });
@@ -5335,7 +5339,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toBeDefined();
           expect(risk.recommendations).toBeDefined();
           done();
-        });
+        };
 
         // Flush all FHIR requests - no respiratory conditions
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -5353,7 +5357,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toContain('Low oxygen saturation (88%)');
           expect(risk.recommendations).toContain('Consider pulmonology referral');
           done();
-        });
+        };
 
         // Flush FHIR requests with COPD condition and low O2 sat
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -5410,7 +5414,7 @@ describe('PatientHealthService', () => {
           expect(risk.factors).toContain('Active asthma diagnosis');
           expect(risk.recommendations).toContain('Ensure asthma action plan is current');
           done();
-        });
+        };
 
         // Flush FHIR requests with asthma condition and normal O2 sat
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -5477,7 +5481,7 @@ describe('PatientHealthService', () => {
             expect(assessment.factors).toBeDefined();
             expect(assessment.recommendations).toBeDefined();
             expect(assessment.lastAssessed).toBeInstanceOf(Date);
-          });
+          };
 
           done();
         });
@@ -5494,7 +5498,7 @@ describe('PatientHealthService', () => {
           expect(assessments).toBeDefined();
           expect(assessments.length).toBe(4); // Should still return all categories with default values
           done();
-        });
+        };
 
         // Simulate some FHIR errors
         const fhirReqs = httpMock.match((req) => req.url.includes('/fhir/'));
@@ -5568,7 +5572,7 @@ describe('PatientHealthService', () => {
           expect(history).toBeDefined();
           expect(history.length).toBe(0);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/risk/${testPatientId}/history`)
@@ -5823,7 +5827,7 @@ describe('PatientHealthService', () => {
         expect(prediction.probability90Day).toBeGreaterThanOrEqual(0);
         expect(prediction.probability90Day).toBeLessThanOrEqual(100);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes(`/patient-health/predictions/${testPatientId}/hospitalization`)
@@ -5860,7 +5864,7 @@ describe('PatientHealthService', () => {
         expect(secondFactor.description).toBeDefined();
 
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes(`/patient-health/predictions/${testPatientId}/hospitalization`)
@@ -5889,7 +5893,7 @@ describe('PatientHealthService', () => {
         expect(prediction.confidence.low).toBeGreaterThanOrEqual(0);
         expect(prediction.confidence.high).toBeLessThanOrEqual(100);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes(`/patient-health/predictions/${testPatientId}/hospitalization`)
@@ -5915,7 +5919,7 @@ describe('PatientHealthService', () => {
         const timeDiff = Math.abs(prediction.calculatedAt.getTime() - now.getTime());
         expect(timeDiff).toBeLessThan(5000);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes(`/patient-health/predictions/${testPatientId}/hospitalization`)
@@ -5974,7 +5978,7 @@ describe('PatientHealthService', () => {
       service.getHospitalizationPrediction(testPatientId).subscribe((prediction) => {
         expect(prediction.probability90Day).toBeGreaterThanOrEqual(prediction.probability30Day);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes(`/patient-health/predictions/${testPatientId}/hospitalization`)
@@ -6001,7 +6005,7 @@ describe('PatientHealthService', () => {
           expect(factor.weight).toBeDefined();
           expect(factor.description).toBeDefined();
           expect(typeof factor.weight).toBe('number');
-        });
+        };
 
         const weights = prediction.factors.map(f => f.weight);
         const sortedWeights = [...weights].sort((a, b) => b - a);
@@ -6157,7 +6161,7 @@ describe('PatientHealthService', () => {
           expect(Array.isArray(gaps)).toBe(true);
           expect(gaps.length).toBe(0);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/care-gaps/${testPatientId}`)
@@ -6432,7 +6436,7 @@ describe('PatientHealthService', () => {
           expect(metrics.categoryCounts).toBeDefined();
           expect(metrics.priorityCounts).toBeDefined();
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/care-gaps/${testPatientId}/metrics`)
@@ -7065,7 +7069,7 @@ describe('PatientHealthService', () => {
           expect(resources[0].category).toBe(category);
           expect(resources[1].category).toBe(category);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/patient-health/sdoh/community-resources/search')
@@ -7102,7 +7106,7 @@ describe('PatientHealthService', () => {
           expect(resources.length).toBe(1);
           expect(resources[0].acceptsReferrals).toBe(true);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/patient-health/sdoh/community-resources/search')
@@ -7128,7 +7132,7 @@ describe('PatientHealthService', () => {
           expect(resources).toBeDefined();
           expect(resources.length).toBeGreaterThan(0);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/patient-health/sdoh/community-resources/search')
@@ -7154,7 +7158,7 @@ describe('PatientHealthService', () => {
           expect(resources).toBeDefined();
           expect(resources.length).toBe(0);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes('/patient-health/sdoh/community-resources/search')
@@ -7343,7 +7347,7 @@ describe('PatientHealthService', () => {
           expect(referral.status).toBe('sent');
           expect(referral.sentDate).toBeDefined();
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/${testReferralId}/send`)
@@ -7368,7 +7372,7 @@ describe('PatientHealthService', () => {
           const timeDiff = Math.abs(referral.sentDate!.getTime() - now.getTime());
           expect(timeDiff).toBeLessThan(5000);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/${testReferralId}/send`)
@@ -7385,7 +7389,7 @@ describe('PatientHealthService', () => {
         service.sendReferral(testReferralId).subscribe((referral) => {
           expect(referral.status).toBe('sent');
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/${testReferralId}/send`)
@@ -7424,7 +7428,7 @@ describe('PatientHealthService', () => {
           expect(referral.status).toBe('accepted');
           expect(referral.acceptedDate).toBeDefined();
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/${testReferralId}/status`)
@@ -7441,7 +7445,7 @@ describe('PatientHealthService', () => {
         service.updateReferralStatus(testReferralId, 'in-progress').subscribe((referral) => {
           expect(referral.status).toBe('in-progress');
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/${testReferralId}/status`)
@@ -7491,7 +7495,7 @@ describe('PatientHealthService', () => {
           expect(referral.cancelledDate).toBeDefined();
           expect(referral.cancelReason).toBe(cancelReason);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/${testReferralId}/status`)
@@ -7532,7 +7536,7 @@ describe('PatientHealthService', () => {
           expect(referrals.length).toBe(3);
           referrals.forEach(referral => {
             expect(referral.patientId).toBe(testPatientId);
-          });
+          };
           done();
         });
 
@@ -7667,7 +7671,7 @@ describe('PatientHealthService', () => {
           expect(metrics.completionRate).toBeGreaterThanOrEqual(0);
           expect(metrics.completionRate).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/patient/${testPatientId}/metrics`)
@@ -7692,7 +7696,7 @@ describe('PatientHealthService', () => {
           expect(metrics.averageTimeToCompletion).toBeDefined();
           expect(metrics.averageTimeToCompletion).toBeGreaterThan(0);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/patient/${testPatientId}/metrics`)
@@ -7713,7 +7717,7 @@ describe('PatientHealthService', () => {
           expect(metrics.byCategory).toBeDefined();
           expect(Object.keys(metrics.byCategory).length).toBeGreaterThan(0);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/patient/${testPatientId}/metrics`)
@@ -7740,7 +7744,7 @@ describe('PatientHealthService', () => {
           expect(metrics.successfulOutcomeRate).toBeGreaterThanOrEqual(0);
           expect(metrics.successfulOutcomeRate).toBeLessThanOrEqual(100);
           done();
-        });
+        };
 
         const req = httpMock.expectOne((request) =>
           request.url.includes(`/patient-health/sdoh/referrals/patient/${testPatientId}/metrics`)
@@ -7764,7 +7768,7 @@ describe('PatientHealthService', () => {
       (service as any).mentalHealthCache.set('patient-1', {
         data: cached,
         timestamp: Date.now(),
-      });
+      };
 
       service.getMentalHealthSummary('patient-1').subscribe((summary) => {
         expect(summary).toEqual(cached);
@@ -7776,7 +7780,7 @@ describe('PatientHealthService', () => {
       service.getMentalHealthSummary('patient-1').subscribe((summary) => {
         expect(summary.assessments.length).toBeGreaterThan(0);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/patient-health/mental-health/patient-1')
@@ -7790,7 +7794,7 @@ describe('PatientHealthService', () => {
         expect(summary.assessments[0].type).toBe('PHQ-9');
         expect((service as any).mentalHealthCache.get('patient-2')).toBeTruthy();
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/patient-health/mental-health/patient-2')
@@ -7835,7 +7839,7 @@ describe('PatientHealthService', () => {
       (service as any).physicalHealthCache.set('patient-1', {
         data: cached,
         timestamp: Date.now(),
-      });
+      };
 
       service.getPhysicalHealthSummary('patient-1').subscribe((summary) => {
         expect(summary).toEqual(cached);
@@ -7853,7 +7857,7 @@ describe('PatientHealthService', () => {
         expect(overview.overallHealthScore).toBeTruthy();
         expect(overview.careGaps.length).toBe(1);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/patient-health/overview/patient-1')
@@ -8267,7 +8271,7 @@ describe('PatientHealthService', () => {
       service.getAssessmentHistory('patient-1', 'PHQ-9').subscribe((history) => {
         expect(history[0].assessedAt).toBeInstanceOf(Date);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/patient-health/assessments/patient-1/PHQ-9/history')
@@ -8815,7 +8819,7 @@ describe('PatientHealthService', () => {
       (service as any).getMentalHealthConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
         expect(conditions.length).toBe(1);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/Condition') && request.params.get('category') === 'mental-health'
@@ -8836,7 +8840,7 @@ describe('PatientHealthService', () => {
       (service as any).getMentalHealthConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
         expect(conditions).toEqual([]);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/Condition') && request.params.get('category') === 'mental-health'
@@ -8848,7 +8852,7 @@ describe('PatientHealthService', () => {
       (service as any).getPsychMedicationsFromFhir('patient-1').subscribe((medications: any[]) => {
         expect(medications.length).toBe(1);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/MedicationStatement') && request.params.get('status') === 'active'
@@ -8869,7 +8873,7 @@ describe('PatientHealthService', () => {
       (service as any).getPsychMedicationsFromFhir('patient-1').subscribe((medications: any[]) => {
         expect(medications).toEqual([]);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/MedicationStatement') && request.params.get('status') === 'active'
@@ -9052,7 +9056,7 @@ describe('PatientHealthService', () => {
       (service as any).getMentalHealthConditionsFromFhir('patient-1').subscribe((conditions: any[]) => {
         expect(conditions).toEqual([]);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/Condition') && request.params.get('category') === 'mental-health'
@@ -9064,7 +9068,7 @@ describe('PatientHealthService', () => {
       (service as any).getPsychMedicationsFromFhir('patient-1').subscribe((medications: any[]) => {
         expect(medications).toEqual([]);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/MedicationStatement') && request.params.get('status') === 'active'
@@ -9126,7 +9130,7 @@ describe('PatientHealthService', () => {
       service.getAssessmentHistory('patient-1', 'PHQ-9').subscribe((history) => {
         expect(history).toEqual([]);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/patient-health/assessments/patient-1/PHQ-9/history')
@@ -9142,7 +9146,7 @@ describe('PatientHealthService', () => {
         expect(summary.needs.length).toBeGreaterThan(0);
         screeningSpy.mockRestore();
         done();
-      });
+      };
     });
 
     it('builds social determinants from FHIR bundles', (done) => {
@@ -9151,7 +9155,7 @@ describe('PatientHealthService', () => {
         expect(sdoh.riskFactors.length).toBe(1);
         expect(sdoh.activeReferrals.length).toBe(1);
         done();
-      });
+      };
 
       const questionnaireReq = httpMock.expectOne((request) =>
         request.url.includes('/fhir/QuestionnaireResponse')
@@ -9223,7 +9227,7 @@ describe('PatientHealthService', () => {
         expect(summary.medicationAdherence.overallRate).toBe(0);
         expect(summary.functionalStatus.adlScore).toBe(6);
         done();
-      });
+      };
     });
 
     it('falls back to mock physical health summary when build fails', (done) => {
@@ -9271,7 +9275,7 @@ describe('PatientHealthService', () => {
         expect(conditions.length).toBe(1);
         expect(conditions[0].controlled).toBe(false);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/fhir/Condition') && request.params.get('patient') === 'patient-1'
@@ -9301,7 +9305,7 @@ describe('PatientHealthService', () => {
         expect(status.adlScore).toBeGreaterThan(0);
         expect(status.iadlScore).toBeGreaterThan(0);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/QuestionnaireResponse') && request.params.get('patient') === 'patient-1'
@@ -9329,7 +9333,7 @@ describe('PatientHealthService', () => {
         expect(status.adlScore).toBe(6);
         expect(status.iadlScore).toBe(8);
         done();
-      });
+      };
 
       const req = httpMock.expectOne((request) =>
         request.url.includes('/QuestionnaireResponse') && request.params.get('patient') === 'patient-1'
@@ -9356,7 +9360,7 @@ describe('PatientHealthService', () => {
         expect(adherence.overallRate).toBe(85);
         expect(adherence.status).toBe('good');
         done();
-      });
+      };
     });
 
     it('falls back to default risks when category calculations fail', (done) => {
@@ -9368,7 +9372,7 @@ describe('PatientHealthService', () => {
       service.getCategoryRiskAssessments('patient-1').subscribe((assessments) => {
         expect(assessments.every((a) => a.score === 0)).toBe(true);
         done();
-      });
+      };
     });
 
     it('returns category risk assessments in order', (done) => {

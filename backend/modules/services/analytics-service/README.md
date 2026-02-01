@@ -558,7 +558,7 @@ class FallbackTests {
 class AnalyticsControllerIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")

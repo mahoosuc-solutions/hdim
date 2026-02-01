@@ -46,29 +46,14 @@ const BatchComparisonView: React.FC<BatchComparisonViewProps> = ({
   batches,
   onClose,
 }) => {
+  // All hooks must be called before any conditional returns
   const [selectedBatchA, setSelectedBatchA] = useState<string>('');
   const [selectedBatchB, setSelectedBatchB] = useState<string>('');
-
-  // Show empty state if fewer than 2 batches
-  if (batches.length < 2) {
-    return (
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Batch Comparison
-          </Typography>
-          <Typography color="textSecondary">
-            At least 2 batches are required for comparison
-          </Typography>
-        </CardContent>
-      </Card>
-    );
-  }
 
   const batchA = batches.find((b) => b.batchId === selectedBatchA);
   const batchB = batches.find((b) => b.batchId === selectedBatchB);
 
-  // Calculate metrics
+  // Calculate metrics - hook always called, returns empty array if no batches
   const metrics: ComparisonMetric[] = useMemo(() => {
     if (!batchA || !batchB) return [];
 
@@ -112,7 +97,7 @@ const BatchComparisonView: React.FC<BatchComparisonViewProps> = ({
     ];
   }, [batchA, batchB]);
 
-  // Chart data
+  // Chart data - hook always called, returns empty array if no batches
   const chartData = useMemo(() => {
     if (!batchA || !batchB) return [];
 
@@ -134,6 +119,22 @@ const BatchComparisonView: React.FC<BatchComparisonViewProps> = ({
       },
     ];
   }, [batchA, batchB]);
+
+  // NOW we can do conditional returns after all hooks are called
+  if (batches.length < 2) {
+    return (
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Batch Comparison
+          </Typography>
+          <Typography color="textSecondary">
+            At least 2 batches are required for comparison
+          </Typography>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleClearA = () => {
     setSelectedBatchA('');

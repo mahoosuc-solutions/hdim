@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import org.junit.jupiter.api.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -32,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CareGapController Integration Tests")
+@Tag("unit")
 class CareGapControllerIntegrationTest {
 
     private MockMvc mockMvc;
@@ -282,6 +285,7 @@ class CareGapControllerIntegrationTest {
             // Given
             CareGapReportService.CareGapSummary summary =
                     new CareGapReportService.CareGapSummary(
+                            PATIENT_ID,
                             10, 5, 3, 2, 1, 85.0,
                             List.of("HEDIS", "CMS"),
                             Map.of("CDC", 3L, "BCS", 2L));
@@ -385,6 +389,235 @@ class CareGapControllerIntegrationTest {
                             .header("X-Tenant-ID", differentTenant)
                             .param("patient", PATIENT_ID.toString()))
                     .andExpect(status().isOk());
+        }
+    }
+
+    @Nested
+    @DisplayName("Bulk Operations Endpoints")
+    class BulkOperationsTests {
+
+        @Test
+        @DisplayName("POST /care-gap/bulk-close should close multiple gaps successfully")
+        void shouldBulkCloseGapsSuccessfully() throws Exception {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+            UUID gap3 = UUID.randomUUID();
+
+            com.healthdata.caregap.dto.BulkClosureRequest request =
+                    com.healthdata.caregap.dto.BulkClosureRequest.builder()
+                            .gapIds(List.of(gap1.toString(), gap2.toString(), gap3.toString()))
+                            .closureReason("completed")
+                            .closedBy("clinician-1")
+                            .notes("All gaps addressed during visit")
+                            .closureAction("Care completed")
+                            .build();
+
+            com.healthdata.caregap.dto.BulkOperationResponse response =
+                    com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                            .totalRequested(3)
+                            .successCount(3)
+                            .failureCount(0)
+                            .successfulGapIds(List.of(gap1.toString(), gap2.toString(), gap3.toString()))
+                            .errors(List.of())
+                            .processingTimeMs(150L)
+                            .build();
+
+            when(identificationService.bulkCloseCareGaps(eq(TENANT_ID), any()))
+                    .thenReturn(response);
+
+            // When/Then
+            mockMvc.perform(post("/care-gap/bulk-close")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": ["%s", "%s", "%s"],
+                                        "closureReason": "completed",
+                                        "closedBy": "clinician-1",
+                                        "notes": "All gaps addressed during visit",
+                                        "closureAction": "Care completed"
+                                    }
+                                    """.formatted(gap1, gap2, gap3)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalRequested").value(3))
+                    .andExpect(jsonPath("$.successCount").value(3))
+                    .andExpect(jsonPath("$.failureCount").value(0))
+                    .andExpect(jsonPath("$.successfulGapIds").isArray())
+                    .andExpect(jsonPath("$.successfulGapIds.length()").value(3));
+        }
+
+        @Test
+        @DisplayName("POST /care-gap/bulk-close should handle partial failures")
+        void shouldHandlePartialBulkCloseFailures() throws Exception {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+            String invalidGapId = "invalid-uuid";
+
+            com.healthdata.caregap.dto.BulkOperationError error =
+                    com.healthdata.caregap.dto.BulkOperationError.builder()
+                            .gapId(invalidGapId)
+                            .errorMessage("Invalid gap ID format")
+                            .errorCode("INVALID_GAP_ID")
+                            .build();
+
+            com.healthdata.caregap.dto.BulkOperationResponse response =
+                    com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                            .totalRequested(3)
+                            .successCount(2)
+                            .failureCount(1)
+                            .successfulGapIds(List.of(gap1.toString(), gap2.toString()))
+                            .errors(List.of(error))
+                            .processingTimeMs(200L)
+                            .build();
+
+            when(identificationService.bulkCloseCareGaps(eq(TENANT_ID), any()))
+                    .thenReturn(response);
+
+            // When/Then
+            mockMvc.perform(post("/care-gap/bulk-close")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": ["%s", "%s", "%s"],
+                                        "closureReason": "completed",
+                                        "closedBy": "clinician-1"
+                                    }
+                                    """.formatted(gap1, gap2, invalidGapId)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.successCount").value(2))
+                    .andExpect(jsonPath("$.failureCount").value(1))
+                    .andExpect(jsonPath("$.errors").isArray())
+                    .andExpect(jsonPath("$.errors[0].gapId").value(invalidGapId))
+                    .andExpect(jsonPath("$.errors[0].errorCode").value("INVALID_GAP_ID"));
+        }
+
+        @Test
+        @DisplayName("POST /care-gap/bulk-assign-intervention should assign interventions successfully")
+        void shouldBulkAssignInterventionsSuccessfully() throws Exception {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+
+            com.healthdata.caregap.dto.BulkOperationResponse response =
+                    com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                            .totalRequested(2)
+                            .successCount(2)
+                            .failureCount(0)
+                            .successfulGapIds(List.of(gap1.toString(), gap2.toString()))
+                            .errors(List.of())
+                            .processingTimeMs(120L)
+                            .build();
+
+            when(identificationService.bulkAssignIntervention(eq(TENANT_ID), any()))
+                    .thenReturn(response);
+
+            // When/Then
+            mockMvc.perform(post("/care-gap/bulk-assign-intervention")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": ["%s", "%s"],
+                                        "interventionType": "OUTREACH",
+                                        "description": "Member outreach letter with nearby providers",
+                                        "scheduledDate": "2026-02-15",
+                                        "assignedTo": "care-coordinator@example.com",
+                                        "notes": "High priority cases"
+                                    }
+                                    """.formatted(gap1, gap2)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalRequested").value(2))
+                    .andExpect(jsonPath("$.successCount").value(2))
+                    .andExpect(jsonPath("$.failureCount").value(0));
+        }
+
+        @Test
+        @DisplayName("PUT /care-gap/bulk-update-priority should update priorities successfully")
+        void shouldBulkUpdatePrioritiesSuccessfully() throws Exception {
+            // Given
+            UUID gap1 = UUID.randomUUID();
+            UUID gap2 = UUID.randomUUID();
+            UUID gap3 = UUID.randomUUID();
+
+            com.healthdata.caregap.dto.BulkOperationResponse response =
+                    com.healthdata.caregap.dto.BulkOperationResponse.builder()
+                            .totalRequested(3)
+                            .successCount(3)
+                            .failureCount(0)
+                            .successfulGapIds(List.of(gap1.toString(), gap2.toString(), gap3.toString()))
+                            .errors(List.of())
+                            .processingTimeMs(90L)
+                            .build();
+
+            when(identificationService.bulkUpdatePriority(eq(TENANT_ID), any()))
+                    .thenReturn(response);
+
+            // When/Then
+            mockMvc.perform(put("/care-gap/bulk-update-priority")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": ["%s", "%s", "%s"],
+                                        "priority": "HIGH"
+                                    }
+                                    """.formatted(gap1, gap2, gap3)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalRequested").value(3))
+                    .andExpect(jsonPath("$.successCount").value(3))
+                    .andExpect(jsonPath("$.failureCount").value(0));
+        }
+
+        @Test
+        @DisplayName("POST /care-gap/bulk-close should validate required fields")
+        void shouldValidateRequiredFieldsForBulkClose() throws Exception {
+            // When/Then - missing closureReason
+            mockMvc.perform(post("/care-gap/bulk-close")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": ["123", "456"],
+                                        "closedBy": "clinician-1"
+                                    }
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("POST /care-gap/bulk-close should validate empty gap IDs list")
+        void shouldValidateEmptyGapIdsList() throws Exception {
+            // When/Then - empty gapIds array
+            mockMvc.perform(post("/care-gap/bulk-close")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": [],
+                                        "closureReason": "completed",
+                                        "closedBy": "clinician-1"
+                                    }
+                                    """))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("PUT /care-gap/bulk-update-priority should validate priority pattern")
+        void shouldValidatePriorityPattern() throws Exception {
+            // When/Then - invalid priority value
+            mockMvc.perform(put("/care-gap/bulk-update-priority")
+                            .header("X-Tenant-ID", TENANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                        "gapIds": ["123", "456"],
+                                        "priority": "INVALID_PRIORITY"
+                                    }
+                                    """))
+                    .andExpect(status().isBadRequest());
         }
     }
 

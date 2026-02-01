@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.junit.jupiter.api.Tag;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @BaseIntegrationTest
 @DisplayName("CareGapClosureRepository Integration Tests")
+@Tag("integration")
 class CareGapClosureRepositoryIntegrationTest {
 
     @Autowired

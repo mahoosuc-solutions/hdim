@@ -4,6 +4,11 @@ plugins {
     java
 }
 
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    }
+}
 
 dependencies {
     // Shared modules
@@ -14,6 +19,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:feature-flags"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
@@ -27,6 +33,14 @@ dependencies {
     // Thymeleaf for email templates
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
 
+    // Twilio SDK for SMS (TODO: Add to version catalog)
+    implementation("com.twilio.sdk:twilio") {
+        version {
+            strictly("[10.0,11.0[")
+            prefer("10.1.5")
+        }
+    }
+
     // OpenAPI/Swagger documentation
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
@@ -39,6 +53,9 @@ dependencies {
 
     // Kafka for notification events
     implementation(libs.bundles.kafka)
+
+    // Spring Cloud OpenFeign for service-to-service communication
+    implementation(libs.spring.cloud.starter.openfeign)
 
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
@@ -71,10 +88,12 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
-    systemProperty("spring.datasource.username", "test")
-    systemProperty("spring.datasource.password", "test")
-    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    // Testcontainers system properties disabled - using running Docker PostgreSQL
+    // Configuration now managed in src/test/resources/application-test.yml
+    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
+    // systemProperty("spring.datasource.username", "test")
+    // systemProperty("spring.datasource.password", "test")
+    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
+    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
 }

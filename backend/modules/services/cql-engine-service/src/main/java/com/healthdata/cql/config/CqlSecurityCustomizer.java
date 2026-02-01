@@ -1,13 +1,19 @@
 package com.healthdata.cql.config;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
+import com.healthdata.cql.repository.UserRepository;
+import com.healthdata.gateway.security.HdimMethodSecurityExpressionHandler;
+import com.healthdata.gateway.security.HdimPermissionEvaluator;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -52,8 +58,28 @@ public class CqlSecurityCustomizer {
     @Value("${gateway.auth.signing-secret:}")
     private String signingSecret;
 
-    @Value("${gateway.auth.dev-mode:true}")
+    @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
+
+    /**
+     * Configure permission evaluator for @PreAuthorize annotations.
+     * This enables role-based permission checks like hasPermission('MEASURE_READ').
+     */
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
+            HdimPermissionEvaluator permissionEvaluator) {
+        DefaultMethodSecurityExpressionHandler handler = new HdimMethodSecurityExpressionHandler();
+        handler.setPermissionEvaluator(permissionEvaluator);
+        return handler;
+    }
+
+    /**
+     * Create the HdimPermissionEvaluator bean for permission checks.
+     */
+    @Bean
+    public HdimPermissionEvaluator hdimPermissionEvaluator() {
+        return new HdimPermissionEvaluator();
+    }
 
     /**
      * CORS configuration for frontend applications.
@@ -63,6 +89,7 @@ public class CqlSecurityCustomizer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
+            "http://localhost:3001",  // React+Vite frontend
             "http://localhost:4200",
             "http://localhost:4201",
             "http://localhost:4202"
@@ -104,6 +131,20 @@ public class CqlSecurityCustomizer {
     }
 
     /**
+     * Creates the UserAutoRegistrationFilter bean.
+     *
+     * Automatically registers users in the service database on first access.
+     * Critical for tracking who triggers CQL measure evaluations (HIPAA §164.312(b) audit compliance).
+     * Extracts user information from gateway-validated headers and creates user records.
+     * Updates last_login_at on subsequent access. Audit logs all user registrations.
+     */
+    @Bean
+    @Profile("!test")
+    public UserAutoRegistrationFilter userAutoRegistrationFilter(UserRepository userRepository) {
+        return new UserAutoRegistrationFilter(userRepository);
+    }
+
+    /**
      * Test profile security filter chain.
      * Permits all HTTP requests without authentication for integration testing.
      */
@@ -139,6 +180,7 @@ public class CqlSecurityCustomizer {
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             TrustedHeaderAuthFilter trustedHeaderAuthFilter,
+            UserAutoRegistrationFilter userAutoRegistrationFilter,
             TrustedTenantAccessFilter trustedTenantAccessFilter) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -166,9 +208,13 @@ public class CqlSecurityCustomizer {
             // TrustedHeaderAuthFilter extracts user context from gateway headers
             .addFilterBefore(trustedHeaderAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        // CRITICAL SECURITY: Add tenant access filter AFTER header authentication
+        // USER MANAGEMENT: Add auto-registration filter AFTER header authentication
+        // CRITICAL for audit compliance - tracks which users trigger CQL evaluations
+        http.addFilterAfter(userAutoRegistrationFilter, TrustedHeaderAuthFilter.class);
+
+        // CRITICAL SECURITY: Add tenant access filter AFTER user auto-registration
         // This ensures tenant isolation is enforced for all authenticated CQL operations
-        http.addFilterAfter(trustedTenantAccessFilter, TrustedHeaderAuthFilter.class);
+        http.addFilterAfter(trustedTenantAccessFilter, UserAutoRegistrationFilter.class);
 
         return http.build();
     }

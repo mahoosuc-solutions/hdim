@@ -43,6 +43,7 @@ Before committing any documentation, verify:
 - [ ] No unsubstantiated buzzwords ("AI-powered", "industry-leading")
 - [ ] Code examples compile/run
 - [ ] Links verified (internal and external)
+- [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

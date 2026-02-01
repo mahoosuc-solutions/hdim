@@ -84,7 +84,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100); // Wait for async execution
+            Thread.sleep(10); // Reduced from 100ms
 
             // Then
             verify(templateEngine).process(eq("email/approval-assignment"), contextCaptor.capture());
@@ -105,7 +105,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender, never()).send(any(MimeMessage.class));
@@ -119,7 +119,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, null, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender, never()).send(any(MimeMessage.class));
@@ -135,7 +135,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, null);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -154,7 +154,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -172,7 +172,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -193,7 +193,7 @@ class EmailNotificationServiceTest {
             // When/Then
             assertThatCode(() -> {
                 emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
 
             verify(mailSender, never()).send(any(MimeMessage.class));
@@ -212,7 +212,7 @@ class EmailNotificationServiceTest {
             // When/Then
             assertThatCode(() -> {
                 emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-                Thread.sleep(100);
+                Thread.sleep(10);
             }).doesNotThrowAnyException();
         }
     }
@@ -232,7 +232,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendStatusChangeNotification(request, REVIEWER_EMAIL, REVIEWER_NAME, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(eq("email/approval-status-change"), contextCaptor.capture());
@@ -255,7 +255,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendStatusChangeNotification(request, REVIEWER_EMAIL, REVIEWER_NAME, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -272,7 +272,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendStatusChangeNotification(request, REVIEWER_EMAIL, REVIEWER_NAME, "actor");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender, never()).send(any(MimeMessage.class));
@@ -293,7 +293,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(eq("email/approval-expiring-soon"), contextCaptor.capture());
@@ -314,7 +314,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -332,7 +332,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -350,7 +350,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -376,7 +376,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendEscalationNotification(request, REVIEWER_EMAIL, REVIEWER_NAME, "reviewer-123");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(eq("email/approval-escalation"), contextCaptor.capture());
@@ -396,7 +396,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendEscalationNotification(request, REVIEWER_EMAIL, REVIEWER_NAME, "actor");
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender, never()).send(any(MimeMessage.class));
@@ -422,7 +422,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender).send(messageCaptor.capture());
@@ -445,7 +445,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender).send(messageCaptor.capture());
@@ -468,7 +468,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendAssignmentNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(mailSender).send(messageCaptor.capture());
@@ -492,7 +492,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -511,7 +511,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());
@@ -530,7 +530,7 @@ class EmailNotificationServiceTest {
 
             // When
             emailService.sendExpirationReminderNotification(request, REVIEWER_EMAIL, REVIEWER_NAME);
-            Thread.sleep(100);
+            Thread.sleep(10);
 
             // Then
             verify(templateEngine).process(anyString(), contextCaptor.capture());

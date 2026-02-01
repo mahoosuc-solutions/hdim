@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDIM Demo Validation Report</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-primary: #0b0d13;
+            --bg-secondary: #121a28;
+            --card: #171f2f;
+            --card-strong: #1f2a40;
+            --accent: #1cc7b8;
+            --accent-2: #ffb347;
+            --accent-3: #5c6cff;
+            --text: #f2f5f8;
+            --muted: #9aa6b6;
+            --border: #273149;
+            --glow: rgba(28, 199, 184, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at top, #1a2a4a 0%, #0b0d13 55%);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(92, 108, 255, 0.25), transparent 45%),
+                radial-gradient(circle at 80% 10%, rgba(28, 199, 184, 0.2), transparent 40%),
+                radial-gradient(circle at 90% 70%, rgba(255, 179, 71, 0.18), transparent 45%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        header {
+            padding: 48px 24px 32px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(28, 199, 184, 0.16), transparent 65%);
+        }
+
+        header h1 {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            margin-bottom: 12px;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            margin-bottom: 16px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #071112;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            box-shadow: 0 12px 30px rgba(28, 199, 184, 0.4);
+        }
+
+        .hero {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 24px 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+            gap: 24px;
+        }
+
+        .hero-card {
+            background: linear-gradient(135deg, rgba(31, 42, 64, 0.9), rgba(23, 31, 47, 0.92));
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 18px 40px rgba(6, 12, 24, 0.4);
+        }
+
+        .hero-card h2 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .hero-card p {
+            color: var(--muted);
+        }
+
+        .hero-stats {
+            display: grid;
+            gap: 14px;
+        }
+
+        .stat {
+            background: var(--card-strong);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 12px 24px rgba(6, 10, 20, 0.35);
+        }
+
+        .stat span {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .stat strong {
+            font-size: 1.6rem;
+            color: var(--text);
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px 24px 64px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(6, 10, 20, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+
+        .card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .card li {
+            margin-bottom: 8px;
+            color: var(--muted);
+        }
+
+        .card li strong {
+            color: var(--text);
+        }
+
+        .card .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(92, 108, 255, 0.2);
+            border: 1px solid rgba(92, 108, 255, 0.3);
+            color: #cdd2ff;
+            font-size: 0.75rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .callout {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(28, 199, 184, 0.2), rgba(255, 179, 71, 0.18));
+            border: 1px solid rgba(255, 179, 71, 0.4);
+            color: #fef4d5;
+        }
+
+        .commands {
+            background: #0f141f;
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 12px;
+            font-family: "Courier New", monospace;
+            color: #c7d2e1;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+
+        .glow {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+            top: -40px;
+            right: -40px;
+            opacity: 0.6;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 36px 18px 24px;
+            }
+
+            main,
+            .hero {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="badge">Demo Ready</div>
+        <h1>HDIM Demo Validation Report</h1>
+        <p>Prepared for customer review | Verified demo readiness</p>
+    </header>
+
+    <section class="hero">
+        <div class="hero-card">
+            <div class="pill">Customer Ready</div>
+            <h2>Demo environment validated with live-ready data</h2>
+            <p>Seeding, processing, and analytics validations confirm data integrity, care gaps, and measures at a glance.</p>
+        </div>
+        <div class="hero-stats">
+            <div class="stat">
+                <span>Patients Seeded</span>
+                <strong>10</strong>
+            </div>
+            <div class="stat">
+                <span>Care Gaps Uncovered</span>
+                <strong>16</strong>
+            </div>
+            <div class="stat">
+                <span>Measures Evaluated</span>
+                <strong>11</strong>
+            </div>
+        </div>
+    </section>
+
+    <main>
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Objective</h2>
+            <p>Confirm the demo loads reliably and validates seeded data end-to-end for a guided walkthrough.</p>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Build and Deploy</h2>
+            <ul>
+                <li><strong>Strategy:</strong> repeatable setup with consistent results</li>
+                <li><strong>Status:</strong> services healthy and responsive</li>
+                <li><strong>Goal:</strong> fast reset for live demos</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Services Healthy</h2>
+            <ul>
+                <li>Gateway, patient, and FHIR services</li>
+                <li>Quality measures and care gaps engine</li>
+                <li>Clinical rules and analytics processing</li>
+                <li>Search, cache, and messaging backplane</li>
+                <li>Data services and supporting infrastructure</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Seeding Summary</h2>
+            <ul>
+                <li><strong>Patients:</strong> 10</li>
+                <li><strong>Care gaps:</strong> 16</li>
+                <li><strong>Measures:</strong> 11 HEDIS</li>
+                <li><strong>Priority:</strong> 10 HIGH, 6 MEDIUM</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Insights Uncovered</h2>
+            <ul>
+                <li><strong>Patients with gaps:</strong> 10 of 10</li>
+                <li><strong>Open gaps identified:</strong> 16</li>
+                <li><strong>Active measures evaluated:</strong> 11</li>
+                <li><strong>Priority distribution:</strong> 62.5% HIGH, 37.5% MEDIUM</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Derived Metrics</h2>
+            <ul>
+                <li><strong>Average gaps per patient:</strong> 1.6</li>
+                <li><strong>Gaps per measure:</strong> 1.45</li>
+                <li><strong>Patients per measure:</strong> 0.91</li>
+                <li><strong>High priority gap rate:</strong> 1.0 per patient</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Validation</h2>
+            <ul>
+                <li><strong>Automated:</strong> end-to-end validation suite (passed)</li>
+                <li><strong>External:</strong> independent verification (passed)</li>
+                <li><strong>Checks:</strong> counts, measures, open gaps per patient</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Demo Access</h2>
+            <ul>
+                <li>Role-based access for admin, analyst, viewer</li>
+                <li>Measure developer workflows supported</li>
+                <li>Credentials provided separately for demos</li>
+            </ul>
+        </section>
+
+        <section class="card">
+            <div class="glow"></div>
+            <h2>Demo Readiness</h2>
+            <div class="commands">Seeding complete
+Validation complete
+External verification complete</div>
+        </section>
+
+        <section class="card callout">
+            <h2>Why It Matters</h2>
+            <p>This platform is built to modernize care gap detection and quality insights by combining reproducible data seeding, real-time validation, and clinically meaningful measures in one experience. It is designed to show results quickly, verify them independently, and support confident clinical and operational decisions.</p>
+        </section>
+
+        <section class="card callout">
+            <h2>Outcome</h2>
+            <p>Demo environment validated with clean, consistent data and role-based access ready for customer walkthroughs.</p>
+        </section>
+    </main>
+
+    <footer>
+        HDIM Demo | Build and Validation Report
+    </footer>
+</body>
+</html>

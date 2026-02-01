@@ -6,6 +6,7 @@
  * Automatically serves cached data when offline and queues updates for sync.
  */
 import { Injectable, inject } from '@angular/core';
+import { LoggerService } from '../logger.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError, from } from 'rxjs';
 import { catchError, map, switchMap, tap, take } from 'rxjs/operators';
@@ -42,6 +43,9 @@ export class OfflineDataCacheService {
   private readonly storage = inject(OfflineStorageService);
   private readonly networkStatus = inject(NetworkStatusService);
   private readonly syncQueue = inject(SyncQueueService);
+  private readonly logger = inject(LoggerService);
+
+  constructor() {}
 
   /**
    * GET request with offline caching
@@ -77,7 +81,7 @@ export class OfflineDataCacheService {
         // If offline, return stale cache or error
         if (!this.networkStatus.isOnline) {
           if (cached) {
-            console.log(`Serving stale cache for ${id} (offline)`);
+            this.logger.info(`Serving stale cache for ${id} (offline)`);
             return of({ ...cached, source: 'cache' as const });
           }
           return throwError(() => new Error('No cached data available offline'));
@@ -156,7 +160,7 @@ export class OfflineDataCacheService {
       catchError((error: HttpErrorResponse) => {
         // If server error, save locally and queue
         if (error.status === 0 || error.status >= 500) {
-          console.log('Server unavailable, saving locally');
+          this.logger.info('Server unavailable, saving locally');
           return this.saveLocallyAndQueue<T & { id: string }>('create', itemWithId, storeName);
         }
         return throwError(() => error);

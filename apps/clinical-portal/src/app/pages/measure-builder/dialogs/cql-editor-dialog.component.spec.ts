@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import { NGX_MONACO_EDITOR_CONFIG } from 'ngx-monaco-editor-v2';
+import { MONACO_PATH } from '@materia-ui/ngx-monaco-editor';
 import { CqlEditorDialogComponent, CqlEditorDialogData } from './cql-editor-dialog.component';
+import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('CqlEditorDialogComponent', () => {
   let fixture: ComponentFixture<CqlEditorDialogComponent>;
@@ -20,11 +21,10 @@ describe('CqlEditorDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [CqlEditorDialogComponent],
-      providers: [
-        { provide: MatDialogRef, useValue: dialogRef },
+      providers: [{ provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: data },
-        { provide: NGX_MONACO_EDITOR_CONFIG, useValue: {} },
-      ],
+        { provide: MONACO_PATH, useValue: 'assets/monaco-editor/min/vs' },
+        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CqlEditorDialogComponent);

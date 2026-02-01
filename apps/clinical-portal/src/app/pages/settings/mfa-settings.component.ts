@@ -19,6 +19,7 @@ import {
   MfaStatusResponse,
   MfaRecoveryCodesResponse
 } from '../../services/auth.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * MFA Settings Component
@@ -473,12 +474,11 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
   disableForm: FormGroup;
   confirmForm: FormGroup;
 
-  private destroy$ = new Subject<void>();
-
-  constructor(
+  private destroy$ = new Subject<void>();  constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private logger: LoggerService
   ) {
     const codeValidators = [Validators.required, Validators.pattern(/^\d{6}$/)];
 
@@ -507,7 +507,7 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
         error: (error) => {
-          console.error('Failed to load MFA status:', error);
+          this.logger.error('Failed to load MFA status', error);
           this.isLoading = false;
           this.snackBar.open('Failed to load MFA settings', 'Close', { duration: 5000 });
         },
@@ -527,7 +527,7 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
           this.isProcessing = false;
         },
         error: (error) => {
-          console.error('Failed to start MFA setup:', error);
+          this.logger.error('Failed to start MFA setup', error);
           this.isProcessing = false;
           this.snackBar.open('Failed to start MFA setup', 'Close', { duration: 5000 });
         },
@@ -555,7 +555,7 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
           });
         },
         error: (error) => {
-          console.error('Failed to confirm MFA setup:', error);
+          this.logger.error('Failed to confirm MFA setup', error);
           this.isProcessing = false;
           this.snackBar.open('Invalid code. Please try again.', 'Close', { duration: 5000 });
         },
@@ -588,7 +588,7 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
           });
         },
         error: (error) => {
-          console.error('Failed to regenerate recovery codes:', error);
+          this.logger.error('Failed to regenerate recovery codes', error);
           this.isProcessing = false;
           this.snackBar.open('Invalid code. Please try again.', 'Close', { duration: 5000 });
         },
@@ -614,7 +614,7 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
           this.snackBar.open('MFA has been disabled', 'Close', { duration: 5000 });
         },
         error: (error) => {
-          console.error('Failed to disable MFA:', error);
+          this.logger.error('Failed to disable MFA', error);
           this.isProcessing = false;
           this.snackBar.open('Invalid code. Please try again.', 'Close', { duration: 5000 });
         },

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -41,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import(TestRedisConfiguration.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Transactional
+@WithMockUser(username = "test-user", authorities = {"ROLE_ADMIN", "MEASURE_READ", "MEASURE_WRITE", "MEASURE_EXECUTE", "MEASURE_PUBLISH", "MEASURE_DELETE"})
 public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
 
     @Autowired
@@ -58,7 +60,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(1)
     @DisplayName("Should create and retrieve library through service")
     void testLibraryServiceCreateAndRetrieve() {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "ServiceTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "ServiceTest", "1.0.0");
         library.setStatus("DRAFT");
         library.setCqlContent("library ServiceTest version '1.0.0'");
 
@@ -74,10 +76,10 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(2)
     @DisplayName("Should enforce unique library name-version constraint")
     void testLibraryUniqueConstraint() {
-        CqlLibrary lib1 = new CqlLibrary(TENANT_ID, "UniqueTest", "1.0.0");
+        CqlLibrary lib1 = buildLibrary(TENANT_ID, "UniqueTest", "1.0.0");
         libraryService.createLibrary(lib1);
 
-        CqlLibrary lib2 = new CqlLibrary(TENANT_ID, "UniqueTest", "1.0.0");
+        CqlLibrary lib2 = buildLibrary(TENANT_ID, "UniqueTest", "1.0.0");
         assertThrows(IllegalArgumentException.class, () -> {
             libraryService.createLibrary(lib2);
         });
@@ -87,7 +89,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(3)
     @DisplayName("Should manage library lifecycle transitions")
     void testLibraryLifecycle() {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "LifecycleTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "LifecycleTest", "1.0.0");
         library.setStatus("DRAFT");
         library = libraryService.createLibrary(library);
 
@@ -109,9 +111,9 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(4)
     @DisplayName("Should get latest library version")
     void testGetLatestLibraryVersion() {
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "VersionTest", "1.0.0"));
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "VersionTest", "1.5.0"));
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "VersionTest", "2.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "VersionTest", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "VersionTest", "1.5.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "VersionTest", "2.0.0"));
 
         Optional<CqlLibrary> latest = libraryService.getLatestLibraryVersion(TENANT_ID, "VersionTest");
         assertTrue(latest.isPresent());
@@ -122,9 +124,9 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(5)
     @DisplayName("Should search libraries by name")
     void testSearchLibraries() {
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "SearchTest1", "1.0.0"));
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "SearchTest2", "1.0.0"));
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "OtherName", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "SearchTest1", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "SearchTest2", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "OtherName", "1.0.0"));
 
         List<CqlLibrary> results = libraryService.searchLibrariesByName(TENANT_ID, "SearchTest");
         assertTrue(results.size() >= 2);
@@ -135,10 +137,10 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(6)
     @DisplayName("Should update library fields")
     void testUpdateLibrary() {
-        CqlLibrary library = new CqlLibrary(TENANT_ID, "UpdateTest", "1.0.0");
+        CqlLibrary library = buildLibrary(TENANT_ID, "UpdateTest", "1.0.0");
         library = libraryService.createLibrary(library);
 
-        CqlLibrary updates = new CqlLibrary(TENANT_ID, "UpdateTest", "1.0.0");
+        CqlLibrary updates = buildLibrary(TENANT_ID, "UpdateTest", "1.0.0");
         updates.setDescription("Updated description");
         updates.setPublisher("Updated publisher");
 
@@ -151,7 +153,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(7)
     @DisplayName("Should create and execute evaluation")
     void testEvaluationServiceCreateAndExecute() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "EvalTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "EvalTest", "1.0.0"));
 
         CqlEvaluation evaluation = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         assertNotNull(evaluation.getId());
@@ -166,7 +168,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(8)
     @DisplayName("Should enforce library-evaluation tenant matching")
     void testEvaluationTenantMatching() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary("tenant-1", "TenantTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary("tenant-1", "TenantTest", "1.0.0"));
 
         assertThrows(IllegalArgumentException.class, () -> {
             evaluationService.createEvaluation("tenant-2", library.getId(), UUID.randomUUID());
@@ -177,7 +179,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(9)
     @DisplayName("Should get evaluations for patient")
     void testGetEvaluationsForPatient() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "PatientEvalTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "PatientEvalTest", "1.0.0"));
         UUID patientId = UUID.randomUUID();
 
         evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
@@ -193,12 +195,12 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(10)
         @DisplayName("Should get latest evaluation for patient and library")
     void testGetLatestEvaluation() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "LatestEvalTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "LatestEvalTest", "1.0.0"));
         UUID patientId = UUID.randomUUID();
 
         CqlEvaluation older = evaluationService.createEvaluation(TENANT_ID, library.getId(), patientId);
         try {
-            Thread.sleep(100); // Ensure different timestamps
+            Thread.sleep(10); // Ensure different timestamps
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -216,7 +218,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(11)
     @DisplayName("Should get evaluations by status")
     void testGetEvaluationsByStatus() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "StatusTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "StatusTest", "1.0.0"));
 
         CqlEvaluation eval1 = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         CqlEvaluation executedEval = evaluationService.executeEvaluation(eval1.getId(), TENANT_ID);
@@ -231,7 +233,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(12)
         @DisplayName("Should batch evaluate multiple patients")
     void testBatchEvaluate() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "BatchTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "BatchTest", "1.0.0"));
 
         List<UUID> patientIds = Arrays.asList(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         List<CqlEvaluation> evaluations = evaluationService.batchEvaluate(TENANT_ID, library.getId(), patientIds);
@@ -244,7 +246,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(13)
         @DisplayName("Should retry failed evaluation")
     void testRetryEvaluation() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "RetryTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "RetryTest", "1.0.0"));
 
         CqlEvaluation evaluation = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         evaluation = evaluationService.updateEvaluationResult(
@@ -258,11 +260,11 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(14)
     @DisplayName("Should get evaluations by date range")
     void testGetEvaluationsByDateRange() throws Exception {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "DateRangeTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "DateRangeTest", "1.0.0"));
 
         Instant now = Instant.now();
         evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
-        Thread.sleep(100);
+        Thread.sleep(10);
         evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
 
         Instant start = now.minus(1, ChronoUnit.HOURS);
@@ -276,7 +278,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(15)
     @DisplayName("Should calculate average evaluation duration")
     void testAverageDuration() {
-        CqlLibrary library = libraryService.createLibrary(new CqlLibrary(TENANT_ID, "DurationTest", "1.0.0"));
+        CqlLibrary library = libraryService.createLibrary(buildLibrary(TENANT_ID, "DurationTest", "1.0.0"));
 
         CqlEvaluation eval1 = evaluationService.createEvaluation(TENANT_ID, library.getId(), UUID.randomUUID());
         evaluationService.updateEvaluationResult(eval1.getId(), TENANT_ID, "{}", "SUCCESS");
@@ -293,7 +295,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(16)
     @DisplayName("Should create and retrieve value set")
     void testValueSetService() {
-        ValueSet valueSet = new ValueSet(TENANT_ID, "2.16.840.1.113883.3.464.test", "TestVS", "SNOMED");
+        ValueSet valueSet = buildValueSet(TENANT_ID, "2.16.840.1.113883.3.464.test", "TestVS", "SNOMED");
         valueSet.setVersion("2023-01");
         valueSet.setCodes("[\"123456\"]");
 
@@ -310,7 +312,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @DisplayName("Should get value set by OID")
     void testGetValueSetByOid() {
         String oid = "2.16.840.1.113883.3.464.oid-test";
-        ValueSet valueSet = new ValueSet(TENANT_ID, oid, "OidTest", "SNOMED");
+        ValueSet valueSet = buildValueSet(TENANT_ID, oid, "OidTest", "SNOMED");
         valueSetService.createValueSet(valueSet);
 
         Optional<ValueSet> retrieved = valueSetService.getValueSetByOid(TENANT_ID, oid);
@@ -322,9 +324,9 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(18)
     @DisplayName("Should filter value sets by code system")
     void testGetValueSetsByCodeSystem() {
-        valueSetService.createValueSet(new ValueSet(TENANT_ID, "2.16.840.1.test.1", "SNOMED1", "SNOMED"));
-        valueSetService.createValueSet(new ValueSet(TENANT_ID, "2.16.840.1.test.2", "LOINC1", "LOINC"));
-        valueSetService.createValueSet(new ValueSet(TENANT_ID, "2.16.840.1.test.3", "SNOMED2", "SNOMED"));
+        valueSetService.createValueSet(buildValueSet(TENANT_ID, "2.16.840.1.test.1", "SNOMED1", "SNOMED"));
+        valueSetService.createValueSet(buildValueSet(TENANT_ID, "2.16.840.1.test.2", "LOINC1", "LOINC"));
+        valueSetService.createValueSet(buildValueSet(TENANT_ID, "2.16.840.1.test.3", "SNOMED2", "SNOMED"));
 
         Page<ValueSet> snomedVS = valueSetService.getValueSetsByCodeSystem(
                 TENANT_ID, "SNOMED", PageRequest.of(0, 10));
@@ -336,11 +338,11 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(19)
     @DisplayName("Should get active value sets")
     void testGetActiveValueSets() {
-        ValueSet active = new ValueSet(TENANT_ID, "2.16.840.1.active.1", "Active", "SNOMED");
+        ValueSet active = buildValueSet(TENANT_ID, "2.16.840.1.active.1", "Active", "SNOMED");
         active.setStatus("ACTIVE");
         valueSetService.createValueSet(active);
 
-        ValueSet retired = new ValueSet(TENANT_ID, "2.16.840.1.retired.1", "Retired", "SNOMED");
+        ValueSet retired = buildValueSet(TENANT_ID, "2.16.840.1.retired.1", "Retired", "SNOMED");
         retired.setStatus("RETIRED");
         valueSetService.createValueSet(retired);
 
@@ -352,7 +354,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(20)
     @DisplayName("Should manage value set lifecycle")
     void testValueSetLifecycle() {
-        ValueSet valueSet = new ValueSet(TENANT_ID, "2.16.840.1.lifecycle.1", "Lifecycle", "SNOMED");
+        ValueSet valueSet = buildValueSet(TENANT_ID, "2.16.840.1.lifecycle.1", "Lifecycle", "SNOMED");
         valueSet.setStatus("DRAFT");
         valueSet = valueSetService.createValueSet(valueSet);
 
@@ -377,8 +379,8 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
         String tenant1 = "tenant-1";
         String tenant2 = "tenant-2";
 
-        CqlLibrary lib1 = libraryService.createLibrary(new CqlLibrary(tenant1, "Isolated1", "1.0.0"));
-        CqlLibrary lib2 = libraryService.createLibrary(new CqlLibrary(tenant2, "Isolated2", "1.0.0"));
+        CqlLibrary lib1 = libraryService.createLibrary(buildLibrary(tenant1, "Isolated1", "1.0.0"));
+        CqlLibrary lib2 = libraryService.createLibrary(buildLibrary(tenant2, "Isolated2", "1.0.0"));
 
         // Verify tenant1 can only see their library
         Optional<CqlLibrary> tenant1View = libraryService.getLibraryByIdAndTenant(lib1.getId(), tenant1);
@@ -395,8 +397,8 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     void testCountOperations() {
         long initialLibraryCount = libraryService.countLibraries(TENANT_ID);
 
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "Count1", "1.0.0"));
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "Count2", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "Count1", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "Count2", "1.0.0"));
 
         long afterCount = libraryService.countLibraries(TENANT_ID);
         assertEquals(initialLibraryCount + 2, afterCount);
@@ -408,7 +410,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     void testPagination() {
         // Create multiple libraries
         for (int i = 0; i < 15; i++) {
-            libraryService.createLibrary(new CqlLibrary(TENANT_ID, "Page" + i, "1.0.0"));
+            libraryService.createLibrary(buildLibrary(TENANT_ID, "Page" + i, "1.0.0"));
         }
 
         Page<CqlLibrary> page1 = libraryService.getAllLibraries(TENANT_ID, PageRequest.of(0, 10));
@@ -426,7 +428,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
         long initialCount = libraryService.countLibraries(TENANT_ID);
 
         // Test that null tenant is properly rejected by validation
-        CqlLibrary library = new CqlLibrary(null, "InvalidTenant", "1.0.0"); // null tenant
+        CqlLibrary library = buildLibrary(null, "InvalidTenant", "1.0.0"); // null tenant
         assertThrows(IllegalArgumentException.class, () -> {
             libraryService.createLibrary(library);
         }, "Should throw IllegalArgumentException for null tenant");
@@ -439,7 +441,7 @@ public class ServiceLayerIntegrationTest extends CqlTestcontainersBase {
     @Order(25)
     @DisplayName("Should validate library existence")
     void testLibraryExists() {
-        libraryService.createLibrary(new CqlLibrary(TENANT_ID, "ExistsTest", "1.0.0"));
+        libraryService.createLibrary(buildLibrary(TENANT_ID, "ExistsTest", "1.0.0"));
 
         assertTrue(libraryService.libraryExists(TENANT_ID, "ExistsTest", "1.0.0"));
         assertFalse(libraryService.libraryExists(TENANT_ID, "ExistsTest", "2.0.0"));

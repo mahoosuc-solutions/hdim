@@ -8,10 +8,16 @@ import { MeasureService } from '../../services/measure.service';
 import { EvaluationService } from '../../services/evaluation.service';
 import { PatientService } from '../../services/patient.service';
 import { DialogService } from '../../services/dialog.service';
+import { ToastService } from '../../services/toast.service';
+import { LoggerService } from '../../services/logger.service';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
+import { createMockStore } from '../../testing/mocks';
+import { Store } from '@ngrx/store';
+
+const mockLoggerService = createMockLoggerService();
 
 describe('EvaluationsComponent', () => {
   let component: EvaluationsComponent;
@@ -20,6 +26,7 @@ describe('EvaluationsComponent', () => {
   let mockEvaluationService: jest.Mocked<EvaluationService>;
   let mockPatientService: jest.Mocked<PatientService>;
   let mockDialogService: jest.Mocked<DialogService>;
+  let mockToastService: jest.Mocked<ToastService>;
 
   beforeEach(async () => {
     // Create mock services
@@ -31,8 +38,14 @@ describe('EvaluationsComponent', () => {
     mockEvaluationService = {
       calculateQualityMeasure: jest.fn(),
       getAllResults: jest.fn(),
+      getDefaultEvaluationPreset: jest.fn(),
+      saveDefaultEvaluationPreset: jest.fn(),
+      clearDefaultEvaluationPreset: jest.fn(),
     } as any;
     mockEvaluationService.getAllResults.mockReturnValue(of([]));
+    mockEvaluationService.getDefaultEvaluationPreset.mockReturnValue(of(null));
+    mockEvaluationService.saveDefaultEvaluationPreset.mockReturnValue(of(null));
+    mockEvaluationService.clearDefaultEvaluationPreset.mockReturnValue(of(null));
 
     mockPatientService = {
       getPatientsSummary: jest.fn(),
@@ -44,6 +57,13 @@ describe('EvaluationsComponent', () => {
     } as any;
     mockDialogService.confirm.mockReturnValue(of(true));
 
+    mockToastService = {
+      success: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      warning: jest.fn(),
+    } as any;
+
     await TestBed.configureTestingModule({
       imports: [EvaluationsComponent, ReactiveFormsModule, NoopAnimationsModule],
       providers: [
@@ -52,7 +72,8 @@ describe('EvaluationsComponent', () => {
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
         { provide: DialogService, useValue: mockDialogService },
-      ],
+        { provide: ToastService, useValue: mockToastService },
+        { provide: LoggerService, useValue: mockLoggerService },
     }).compileComponents();
 
     fixture = TestBed.createComponent(EvaluationsComponent);
@@ -239,7 +260,7 @@ describe('EvaluationsComponent', () => {
         expect(filtered.length).toBeGreaterThan(0);
         expect(filtered[0].fullName).toContain('John');
         done();
-      });
+      };
     });
 
     it('should filter patients by MRN', (done) => {
@@ -249,11 +270,11 @@ describe('EvaluationsComponent', () => {
         expect(filtered.length).toBeGreaterThan(0);
         expect(filtered[0].mrn).toBe('MRN00001');
         done();
-      });
+      };
     });
 
     it('should handle object values in patient search', (done) => {
-      const patient = PatientFactory.createSummary({ fullName: 'Jane Roe', mrn: 'MRN00999' });
+      const patient = PatientFactory.createSummary({ fullName: 'Jane Roe', mrn: 'MRN00999' };
       component.patients = [patient];
       component.setupPatientAutocomplete();
 
@@ -279,7 +300,7 @@ describe('EvaluationsComponent', () => {
       component.filteredPatients.subscribe((filtered) => {
         expect(filtered.length).toBe(10);
         done();
-      });
+      };
     });
 
     it('should be case-insensitive when filtering', (done) => {
@@ -288,7 +309,7 @@ describe('EvaluationsComponent', () => {
       component.filteredPatients.subscribe((filtered) => {
         expect(filtered.length).toBeGreaterThan(0);
         done();
-      });
+      };
     });
 
     it('should limit results to 10 items', (done) => {

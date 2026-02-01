@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
 import { Tenant, CreateTenantRequest } from '../../models/admin.model';
 import { Subject, takeUntil } from 'rxjs';
+import { LoggerService } from '../../services/logger.service';
 
 @Component({
   selector: 'app-tenants',
@@ -677,8 +678,14 @@ export class TenantsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   formData: CreateTenantRequest = this.getEmptyFormData();
+  private logger: ReturnType<LoggerService['withContext']>;
 
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('TenantsComponent');
+  }
 
   ngOnInit(): void {
     this.loadTenants();
@@ -738,7 +745,8 @@ export class TenantsComponent implements OnInit, OnDestroy {
 
   openSettings(tenant: Tenant): void {
     // Navigate to tenant settings page
-    console.log('Open settings for tenant:', tenant.id);
+    this.logger.info('Opening tenant settings', { tenantId: tenant.id });
+    // TODO: Implement navigation to tenant settings page
   }
 
   toggleTenantStatus(tenant: Tenant): void {

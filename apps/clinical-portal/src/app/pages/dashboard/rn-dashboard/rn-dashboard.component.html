@@ -53,23 +53,23 @@
   </mat-card-header>
   <mat-card-content>
     <div class="quick-actions">
-      <button mat-raised-button color="primary" class="action-btn">
+      <button mat-raised-button color="primary" class="action-btn" (click)="quickLaunchWorkflow('care-plan')" matTooltip="Launch Care Plan Workflow">
         <mat-icon>assignment</mat-icon>
         Update Care Plan
       </button>
-      <button mat-raised-button color="accent" class="action-btn">
+      <button mat-raised-button color="accent" class="action-btn" (click)="quickLaunchWorkflow('outreach')" matTooltip="Launch Patient Outreach Workflow">
         <mat-icon>phone</mat-icon>
         Patient Outreach
       </button>
-      <button mat-raised-button class="action-btn">
+      <button mat-raised-button class="action-btn" (click)="quickLaunchWorkflow('medication')" matTooltip="Launch Medication Reconciliation Workflow">
         <mat-icon>medication</mat-icon>
         Med Reconciliation
       </button>
-      <button mat-raised-button class="action-btn">
+      <button mat-raised-button class="action-btn" (click)="quickLaunchWorkflow('education')" matTooltip="Launch Patient Education Workflow">
         <mat-icon>school</mat-icon>
         Patient Education
       </button>
-      <button mat-raised-button class="action-btn">
+      <button mat-raised-button class="action-btn" (click)="quickLaunchWorkflow('referral')" matTooltip="Launch Referral Coordination Workflow">
         <mat-icon>send</mat-icon>
         Coordinate Referral
       </button>
@@ -184,7 +184,7 @@
                     <mat-icon>medication</mat-icon>
                   </button>
                 }
-                <button
+                <button aria-label="View"
                   mat-icon-button
                   (click)="viewPatient(gap.id)"
                   matTooltip="View Patient">
@@ -297,7 +297,7 @@
                     <mat-icon>send</mat-icon>
                   </button>
                 }
-                <button
+                <button aria-label="View"
                   mat-icon-button
                   (click)="viewPatient(task.id)"
                   matTooltip="View Patient">

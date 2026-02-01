@@ -54,6 +54,8 @@
 // Light Theme (Default) - reinforces root defaults with high contrast
 body.light-theme,
 body[data-theme='light'] {
+  color-scheme: light;
+
   // Primary Colors
   --primary-color: #1976d2;
   --primary-light: #42a5f5;
@@ -105,6 +107,8 @@ body[data-theme='light'] {
 // Dark Theme - Improved contrast for readability
 body.dark-theme,
 body[data-theme='dark'] {
+  color-scheme: dark;
+
   // Primary Colors (brighter for dark mode visibility)
   --primary-color: #90caf9;
   --primary-light: #bbdefb;
@@ -158,6 +162,23 @@ body {
   background-color: var(--bg-secondary);
   color: var(--text-primary);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Ensure stat cards always inherit theme colors
+.stat-card {
+  color: var(--text-primary) !important;
+}
+
+.stat-card .stat-title {
+  color: var(--text-secondary) !important;
+}
+
+.stat-card .stat-value {
+  color: var(--stat-value-color, var(--text-primary)) !important;
+}
+
+.stat-card .stat-subtitle {
+  color: var(--text-hint) !important;
 }
 
 // Material overrides for theming

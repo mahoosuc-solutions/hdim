@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-alter-audit-events-request-payload-jsonb" author="healthdata-system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="audit_events"/>
+            <not>
+                <sqlCheck expectedResult="jsonb">
+                    SELECT data_type
+                    FROM information_schema.columns
+                    WHERE table_name = 'audit_events'
+                      AND column_name = 'request_payload';
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE audit_events
+            ALTER COLUMN request_payload
+            TYPE jsonb
+            USING NULLIF(request_payload, '')::jsonb;
+        </sql>
+    </changeSet>
+
+    <changeSet id="0004-alter-audit-events-response-payload-jsonb" author="healthdata-system">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="audit_events"/>
+            <not>
+                <sqlCheck expectedResult="jsonb">
+                    SELECT data_type
+                    FROM information_schema.columns
+                    WHERE table_name = 'audit_events'
+                      AND column_name = 'response_payload';
+                </sqlCheck>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE audit_events
+            ALTER COLUMN response_payload
+            TYPE jsonb
+            USING NULLIF(response_payload, '')::jsonb;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

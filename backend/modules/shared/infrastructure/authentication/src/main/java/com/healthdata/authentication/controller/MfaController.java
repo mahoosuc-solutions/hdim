@@ -8,6 +8,7 @@ import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.authentication.service.MfaService;
 import com.healthdata.authentication.service.MfaTokenService;
 import com.healthdata.authentication.service.RefreshTokenService;
+import com.healthdata.authentication.service.SmsMfaService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -61,6 +62,7 @@ public class MfaController {
 
     private final UserRepository userRepository;
     private final MfaService mfaService;
+    private final SmsMfaService smsMfaService;
     private final MfaTokenService mfaTokenService;
     private final JwtTokenService jwtTokenService;
     private final RefreshTokenService refreshTokenService;
@@ -92,12 +94,26 @@ public class MfaController {
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
-        // Verify code
+        // Verify code based on MFA method
         boolean valid;
         if (request.isUseRecoveryCode()) {
             valid = mfaService.verifyRecoveryCode(userId, request.getCode());
         } else {
-            valid = mfaService.verifyMfaCode(user, request.getCode());
+            // Determine which MFA method to use
+            if (user.getMfaMethod() == User.MfaMethod.SMS) {
+                // SMS MFA only
+                valid = smsMfaService.verifySmsCode(user, request.getCode());
+            } else if (user.getMfaMethod() == User.MfaMethod.TOTP) {
+                // TOTP MFA only
+                valid = mfaService.verifyMfaCode(user, request.getCode());
+            } else if (user.getMfaMethod() == User.MfaMethod.BOTH) {
+                // Try SMS first, then TOTP (user can use either)
+                valid = smsMfaService.verifySmsCode(user, request.getCode()) ||
+                        mfaService.verifyMfaCode(user, request.getCode());
+            } else {
+                // Fallback to TOTP for backward compatibility
+                valid = mfaService.verifyMfaCode(user, request.getCode());
+            }
         }
 
         if (!valid) {
@@ -265,6 +281,131 @@ public class MfaController {
         }
     }
 
+    // --- SMS MFA Endpoints ---
+
+    /**
+     * Enable SMS MFA with phone number.
+     *
+     * @param request SMS MFA setup request with phone number
+     * @param authentication Current authentication
+     * @return Success message
+     */
+    @PostMapping("/sms/setup")
+    public ResponseEntity<MfaSmsSetupResponse> setupSmsMfa(
+        @Valid @RequestBody SmsMfaSetupRequest request,
+        Authentication authentication
+    ) {
+        User user = getAuthenticatedUser(authentication);
+
+        try {
+            String code = smsMfaService.enableSmsMfa(user, request.getPhoneNumber());
+
+            log.info("SMS MFA setup initiated for user: {}", user.getUsername());
+
+            MfaSmsSetupResponse response = MfaSmsSetupResponse.builder()
+                .phoneNumber(maskPhoneNumber(request.getPhoneNumber()))
+                .message("Verification code sent to your phone. Code expires in 5 minutes.")
+                .build();
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    /**
+     * Confirm SMS MFA setup by verifying SMS code.
+     *
+     * @param request SMS code verification request
+     * @param authentication Current authentication
+     * @return Success message
+     */
+    @PostMapping("/sms/confirm")
+    public ResponseEntity<Void> confirmSmsMfa(
+        @Valid @RequestBody SmsCodeVerifyRequest request,
+        Authentication authentication
+    ) {
+        User user = getAuthenticatedUser(authentication);
+
+        boolean valid = smsMfaService.verifySmsCode(user, request.getCode());
+
+        if (!valid) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired SMS code");
+        }
+
+        // Enable SMS MFA for user
+        if (user.getMfaMethod() == User.MfaMethod.TOTP) {
+            // User already has TOTP, enable both
+            user.setMfaMethod(User.MfaMethod.BOTH);
+        } else {
+            // User only has SMS
+            user.setMfaMethod(User.MfaMethod.SMS);
+        }
+        user.setMfaEnabled(true);
+        userRepository.save(user);
+
+        log.info("SMS MFA enabled for user: {}", user.getUsername());
+
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Request SMS code during login.
+     * Called after /login returns mfaRequired=true and user selected SMS method.
+     *
+     * @param request MFA token request
+     * @return Success message
+     */
+    @PostMapping("/sms/send")
+    public ResponseEntity<MfaSmsSendResponse> sendSmsCode(
+        @Valid @RequestBody MfaSmsSendRequest request
+    ) {
+        // Validate MFA token
+        UUID userId = mfaTokenService.validateMfaToken(request.getMfaToken());
+        if (userId == null) {
+            log.warn("Invalid or expired MFA token");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired MFA token");
+        }
+
+        // Load user
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+
+        try {
+            smsMfaService.sendVerificationCode(user);
+
+            log.info("SMS code sent to user: {}", user.getUsername());
+
+            MfaSmsSendResponse response = MfaSmsSendResponse.builder()
+                .phoneNumber(maskPhoneNumber(user.getMfaPhoneNumber()))
+                .message("Verification code sent. Code expires in 5 minutes.")
+                .build();
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalStateException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    /**
+     * Disable SMS MFA for the current user.
+     *
+     * @param authentication Current authentication
+     * @return Empty response with 200 OK
+     */
+    @PostMapping("/sms/disable")
+    public ResponseEntity<Void> disableSmsMfa(Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
+
+        smsMfaService.disableSmsMfa(user);
+
+        log.info("SMS MFA disabled for user: {}", user.getUsername());
+
+        return ResponseEntity.ok().build();
+    }
+
     // --- Helper Methods ---
 
     private User getAuthenticatedUser(Authentication authentication) {
@@ -276,4 +417,12 @@ public class MfaController {
         return userRepository.findByUsername(username)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
+
+    private String maskPhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || phoneNumber.length() < 4) {
+            return "****";
+        }
+        return "****" + phoneNumber.substring(phoneNumber.length() - 4);
+    }
 }
+

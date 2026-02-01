@@ -41,6 +41,9 @@ class ClinicalDocumentServiceTest {
     @Mock
     private DocumentAttachmentRepository attachmentRepository;
 
+    @Mock
+    private OcrService ocrService;
+
     private ClinicalDocumentService service;
 
     private static final String TENANT_ID = "tenant-123";
@@ -50,7 +53,7 @@ class ClinicalDocumentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new ClinicalDocumentService(documentRepository, attachmentRepository);
+        service = new ClinicalDocumentService(documentRepository, attachmentRepository, ocrService);
     }
 
     @Nested

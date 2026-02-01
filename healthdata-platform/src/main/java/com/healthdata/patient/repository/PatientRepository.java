@@ -191,6 +191,33 @@ public interface PatientRepository extends JpaRepository<Patient, String> {
     );
 
     /**
+     * Find patients by age range using birthdate filtering
+     * More efficient than loading all patients and filtering in-memory
+     *
+     * Age ranges are converted to birthdate ranges:
+     * - minAge 18 means birthdate <= (today - 18 years)
+     * - maxAge 65 means birthdate >= (today - 65 years - 1 day)
+     *
+     * @param tenantId Tenant identifier
+     * @param minBirthDate Earliest birthdate (corresponds to maxAge)
+     * @param maxBirthDate Latest birthdate (corresponds to minAge)
+     * @return List of patients within the birthdate range
+     */
+    @Query("""
+        SELECT p FROM Patient p
+        WHERE p.tenantId = :tenantId
+        AND p.active = true
+        AND p.dateOfBirth IS NOT NULL
+        AND p.dateOfBirth BETWEEN :minBirthDate AND :maxBirthDate
+        ORDER BY p.dateOfBirth DESC
+        """)
+    List<Patient> findByTenantIdAndAgeRange(
+        @Param("tenantId") String tenantId,
+        @Param("minBirthDate") java.time.LocalDate minBirthDate,
+        @Param("maxBirthDate") java.time.LocalDate maxBirthDate
+    );
+
+    /**
      * Bulk find patients by IDs
      */
     @Query("SELECT p FROM Patient p WHERE p.id IN :ids")

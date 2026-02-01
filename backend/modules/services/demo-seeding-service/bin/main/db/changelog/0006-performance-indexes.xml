@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="0006-performance-indexes" author="demo-seeding-service">
+        <comment>Add performance optimization indexes for demo queries</comment>
+
+        <!-- Composite index for active sessions by scenario (common query pattern) -->
+        <createIndex tableName="demo_sessions" indexName="idx_demo_sessions_scenario_status">
+            <column name="scenario_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- GIN index on session_state JSONB for fast JSON queries -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_demo_sessions_state_gin
+            ON demo_sessions USING gin (session_state jsonb_path_ops);
+        </sql>
+
+        <!-- GIN index on performance_metrics JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_demo_sessions_metrics_gin
+            ON demo_sessions USING gin (performance_metrics jsonb_path_ops);
+        </sql>
+
+        <!-- GIN index on snapshot metadata JSONB -->
+        <sql>
+            CREATE INDEX IF NOT EXISTS idx_demo_snapshots_metadata_gin
+            ON demo_snapshots USING gin (metadata jsonb_path_ops);
+        </sql>
+
+        <!-- Composite index for snapshots by scenario and status -->
+        <createIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_scenario_status">
+            <column name="scenario_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for frequently restored snapshots -->
+        <createIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_restore_count">
+            <column name="restore_count" descending="true"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="demo_sessions" indexName="idx_demo_sessions_scenario_status"/>
+            <sql>DROP INDEX IF EXISTS idx_demo_sessions_state_gin;</sql>
+            <sql>DROP INDEX IF EXISTS idx_demo_sessions_metrics_gin;</sql>
+            <sql>DROP INDEX IF EXISTS idx_demo_snapshots_metadata_gin;</sql>
+            <dropIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_scenario_status"/>
+            <dropIndex tableName="demo_snapshots" indexName="idx_demo_snapshots_restore_count"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0006-analyze-tables" author="demo-seeding-service" runAlways="true">
+        <comment>Update table statistics for query optimizer</comment>
+        <sql>
+            ANALYZE demo_scenarios;
+            ANALYZE demo_sessions;
+            ANALYZE demo_snapshots;
+            ANALYZE synthetic_patient_templates;
+        </sql>
+
+        <rollback>
+            <!-- ANALYZE only updates statistics, no rollback needed -->
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

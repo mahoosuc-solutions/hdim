@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0003-complete-workflow-projections-schema" author="hdim-platform-team">
+        <comment>Add all missing columns to match WorkflowProjection entity</comment>
+
+        <!-- Add missing identity columns -->
+        <addColumn tableName="workflow_projections">
+            <column name="workflow_id" type="VARCHAR(100)" remarks="Workflow UUID">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Add missing metadata columns -->
+        <addColumn tableName="workflow_projections">
+            <column name="description" type="TEXT" remarks="Workflow description"/>
+            <column name="priority" type="VARCHAR(50)" remarks="LOW, MEDIUM, HIGH, URGENT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_version" type="BIGINT" defaultValue="1">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Add workflow lifecycle columns -->
+        <addColumn tableName="workflow_projections">
+            <column name="started_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="completed_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="assigned_at" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="previous_assignee" type="VARCHAR(255)"/>
+            <column name="days_pending" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_overdue" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Fix due_date column type (was DATE in migration 0002, should be TIMESTAMP WITH TIME ZONE) -->
+        <modifyDataType tableName="workflow_projections" columnName="due_date" newDataType="TIMESTAMP WITH TIME ZONE"/>
+
+        <!-- Add workflow progress columns -->
+        <addColumn tableName="workflow_projections">
+            <column name="progress_percentage" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_steps" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="steps_completed" type="INTEGER" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Add workflow flags -->
+        <addColumn tableName="workflow_projections">
+            <column name="requires_review" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_blocking_issue" type="BOOLEAN" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <!-- Add relationship columns -->
+        <addColumn tableName="workflow_projections">
+            <column name="related_care_gap_id" type="UUID"/>
+            <column name="related_measure_id" type="VARCHAR(100)"/>
+        </addColumn>
+
+        <!-- Remove columns that don't exist in entity -->
+        <dropColumn tableName="workflow_projections" columnName="approval_status"/>
+        <dropColumn tableName="workflow_projections" columnName="current_step"/>
+        <dropColumn tableName="workflow_projections" columnName="last_step_successful"/>
+        <dropColumn tableName="workflow_projections" columnName="initiated_date"/>
+        <dropColumn tableName="workflow_projections" columnName="completed_date"/>
+        <dropColumn tableName="workflow_projections" columnName="last_updated"/>
+        <dropColumn tableName="workflow_projections" columnName="version"/>
+
+        <rollback>
+            <!-- Revert due_date type change -->
+            <modifyDataType tableName="workflow_projections" columnName="due_date" newDataType="DATE"/>
+
+            <dropColumn tableName="workflow_projections" columnName="workflow_id"/>
+            <dropColumn tableName="workflow_projections" columnName="description"/>
+            <dropColumn tableName="workflow_projections" columnName="priority"/>
+            <dropColumn tableName="workflow_projections" columnName="created_at"/>
+            <dropColumn tableName="workflow_projections" columnName="last_updated_at"/>
+            <dropColumn tableName="workflow_projections" columnName="event_version"/>
+            <dropColumn tableName="workflow_projections" columnName="started_at"/>
+            <dropColumn tableName="workflow_projections" columnName="completed_at"/>
+            <dropColumn tableName="workflow_projections" columnName="assigned_at"/>
+            <dropColumn tableName="workflow_projections" columnName="previous_assignee"/>
+            <dropColumn tableName="workflow_projections" columnName="days_pending"/>
+            <dropColumn tableName="workflow_projections" columnName="is_overdue"/>
+            <dropColumn tableName="workflow_projections" columnName="progress_percentage"/>
+            <dropColumn tableName="workflow_projections" columnName="total_steps"/>
+            <dropColumn tableName="workflow_projections" columnName="steps_completed"/>
+            <dropColumn tableName="workflow_projections" columnName="requires_review"/>
+            <dropColumn tableName="workflow_projections" columnName="has_blocking_issue"/>
+            <dropColumn tableName="workflow_projections" columnName="related_care_gap_id"/>
+            <dropColumn tableName="workflow_projections" columnName="related_measure_id"/>
+
+            <addColumn tableName="workflow_projections">
+                <column name="approval_status" type="VARCHAR(50)"/>
+                <column name="current_step" type="VARCHAR(100)"/>
+                <column name="last_step_successful" type="BOOLEAN" defaultValue="false"/>
+                <column name="initiated_date" type="DATE"/>
+                <column name="completed_date" type="DATE"/>
+                <column name="last_updated" type="TIMESTAMP WITH TIME ZONE"/>
+                <column name="version" type="BIGINT" defaultValue="1"/>
+            </addColumn>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0028-add-oauth-columns-to-users" author="fhir-service">
+        <comment>Add OAuth columns to existing users table</comment>
+
+        <!-- OAuth provider name (e.g., "okta", "azure", "auth0") -->
+        <addColumn tableName="users">
+            <column name="oauth_provider" type="varchar(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- OAuth provider's unique user ID -->
+        <addColumn tableName="users">
+            <column name="oauth_provider_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="oauth_provider"/>
+            <dropColumn tableName="users" columnName="oauth_provider_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

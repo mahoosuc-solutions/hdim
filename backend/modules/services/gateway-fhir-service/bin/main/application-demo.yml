@@ -1,0 +1,4 @@
+backend:
+  services:
+    fhir:
+      url: http://hdim-demo-fhir:8085/fhir

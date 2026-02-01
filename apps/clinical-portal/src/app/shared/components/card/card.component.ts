@@ -59,7 +59,7 @@ import { MatCardModule } from '@angular/material/card';
 export class CardComponent {
   @Input() title?: string;
   @Input() subtitle?: string;
-  @Input() bordered: boolean = false;
+  @Input() bordered = false;
   @Input() padding: 'small' | 'normal' | 'large' = 'normal';
 
   get paddingClass(): string {

@@ -716,7 +716,7 @@ Tests for REST API endpoints using MockMvc with gateway trust authentication hea
 class MigrationJobControllerIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("migration_test")
         .withUsername("test")
         .withPassword("test");
@@ -1212,7 +1212,7 @@ class MigrationProgressPublisherTest {
 class MultiTenantIsolationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15");
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16");
 
     @Autowired
     private MigrationJobRepository jobRepository;
@@ -1651,7 +1651,7 @@ class PerformanceTest {
 public abstract class BaseIntegrationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
         .withDatabaseName("migration_test")
         .withUsername("test")
         .withPassword("test");
@@ -1754,7 +1754,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:16
         env:
           POSTGRES_DB: migration_test
           POSTGRES_USER: test

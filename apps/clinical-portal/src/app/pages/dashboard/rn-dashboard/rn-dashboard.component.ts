@@ -19,7 +19,8 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatBadgeModule } from '@angular/material/badge';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { StatCardComponent } from '../../../shared/components/stat-card/stat-card.component';
 import { PageHeaderComponent } from '../../../shared/components/page-header/page-header.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state/empty-state.component';
@@ -29,6 +30,10 @@ import { CareGapService, InterventionType } from '../../../services/care-gap.ser
 import { ToastService } from '../../../services/toast.service';
 import { TrackInteraction } from '../../../utils/ai-tracking.decorator';
 import { LoggerService, ContextualLogger } from '../../../services/logger.service';
+import { NurseWorkflowService } from '../../../services/nurse-workflow/nurse-workflow.service';
+import { MedicationService } from '../../../services/medication/medication.service';
+import { CarePlanService } from '../../../services/care-plan/care-plan.service';
+import { WorkflowLauncherService, type WorkflowType } from '../../../services/workflow/workflow-launcher.service';
 
 export interface CareGapTask {
   id: string;
@@ -87,7 +92,6 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   patientEducationDue = 0;
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private router: Router,
@@ -95,10 +99,12 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private careGapService: CareGapService,
     private toastService: ToastService,
-    private logger: LoggerService
-  ) {
-    this.log = this.logger.withContext('RNDashboardComponent');
-  }
+    private logger: LoggerService,
+    private nurseWorkflowService: NurseWorkflowService,
+    private medicationService: MedicationService,
+    private carePlanService: CarePlanService,
+    private workflowLauncher: WorkflowLauncherService
+  ) {  }
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -110,126 +116,240 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load RN dashboard data
+   * Load RN dashboard data from real services
    */
   private loadDashboardData(): void {
     this.loading = true;
-    this.loadCareGaps();
-    this.loadOutreachTasks();
-    this.loadMetrics();
+
+    // Initialize services with tenant context
+    // In production, get tenant ID from authenticated user context
+    const tenantId = 'TENANT001'; // TODO: Get from AuthService
+    this.nurseWorkflowService.setTenantContext(tenantId);
+    this.medicationService.setTenantContext(tenantId);
+    this.carePlanService.setTenantContext(tenantId);
+
+    // Load all data in parallel using forkJoin
+    forkJoin([
+      // NurseWorkflow service data
+      this.nurseWorkflowService.getPendingOutreachLogs(0, 50).pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load outreach logs:', error);
+          this.toastService.error('Failed to load outreach data');
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getPendingMedicationReconciliations(0, 50).pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load medication reconciliations:', error);
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getEducationSessionsWithPoorUnderstanding().pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load education sessions:', error);
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getReferralsAwaitingScheduling().pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load pending referrals:', error);
+          return of([]);
+        })
+      ),
+      this.nurseWorkflowService.getMedicationReconciliationMetrics().pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load metrics:', error);
+          return of({ totalReconciliations: 0, pendingReconciliations: 0, completionRate: 0 });
+        })
+      ),
+      // MedicationService data
+      this.medicationService.getPendingOrdersAwaitingPharmacy(0, 50).pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load medication orders:', error);
+          return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
+        })
+      ),
+      // CarePlanService data
+      this.carePlanService.getCarePlansDueForReview(0, 50).pipe(
+        catchError((error) => {
+          this.logger.error('Failed to load care plans:', error);
+          return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
+        })
+      ),
+    ]).pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: ([outreachLogs, medReconciliations, educationSessions, referrals, metrics, medicationOrders, carePlans]) => {
+          this.processDashboardData(outreachLogs, medReconciliations, educationSessions, referrals, metrics, medicationOrders, carePlans);
+          this.loading = false;
+        },
+        error: (error) => {
+          this.logger.error('Failed to load dashboard data:', error);
+          this.toastService.error('Failed to load dashboard. Please refresh the page.');
+          this.loading = false;
+        },
+      });
   }
 
   /**
-   * Load care gap tasks
+   * Process loaded dashboard data and transform to UI models
    */
-  private loadCareGaps(): void {
-    // Mock data for demonstration
-    setTimeout(() => {
-      this.careGaps = [
-        {
-          id: '1',
-          patientName: 'Davis, Jennifer',
-          patientMRN: 'MRN-101',
-          gapType: 'Diabetes Education',
-          priority: 'high',
-          category: 'education',
-          dueDate: '2025-12-01',
-          assignedTo: 'RN Davis',
-          status: 'pending'
-        },
-        {
-          id: '2',
-          patientName: 'Miller, Michael',
-          patientMRN: 'MRN-102',
-          gapType: 'Medication Reconciliation',
-          priority: 'high',
-          category: 'medication',
-          dueDate: '2025-11-28',
-          assignedTo: 'RN Davis',
-          status: 'in-progress'
-        },
-        {
-          id: '3',
-          patientName: 'Wilson, Sarah',
-          patientMRN: 'MRN-103',
-          gapType: 'Hypertension Follow-up',
-          priority: 'medium',
-          category: 'coordination',
-          dueDate: '2025-12-05',
-          assignedTo: 'RN Davis',
-          status: 'pending'
-        },
-        {
-          id: '4',
-          patientName: 'Moore, James',
-          patientMRN: 'MRN-104',
-          gapType: 'Depression Screening',
-          priority: 'high',
-          category: 'assessment',
-          dueDate: '2025-11-30',
-          assignedTo: 'RN Davis',
-          status: 'pending'
-        }
-      ];
-      this.loading = false;
-    }, 500);
+  private processDashboardData(
+    outreachLogs: any,
+    medReconciliations: any,
+    educationSessions: any,
+    referrals: any,
+    metrics: any,
+    medicationOrders: any,
+    carePlans: any
+  ): void {
+    // Transform outreach logs to PatientOutreach
+    const outreachContent = outreachLogs?.content || [];
+    this.outreachTasks = outreachContent.map((log: any) => ({
+      id: log.id,
+      patientName: log.patientName || 'Unknown',
+      patientMRN: log.patientMRN || 'N/A',
+      outreachType: log.contactMethod?.toLowerCase() || 'call',
+      reason: log.reason,
+      scheduledDate: new Date(log.contactedAt).toLocaleString(),
+      status: 'scheduled' as const,
+    }));
+
+    // Transform medication reconciliations to care gaps
+    const medRecContent = medReconciliations?.content || [];
+    const medicationGaps = medRecContent.map((rec: any) => ({
+      id: rec.id,
+      patientName: rec.patientName || 'Unknown',
+      patientMRN: rec.patientMRN || 'N/A',
+      gapType: 'Medication Reconciliation',
+      priority: 'high' as const,
+      category: 'medication' as const,
+      dueDate: rec.startDate,
+      assignedTo: 'RN',
+      status: 'pending' as const,
+    }));
+
+    // Transform education sessions to care gaps
+    const educationContent = educationSessions || [];
+    const educationGaps = educationContent.map((session: any) => ({
+      id: session.id,
+      patientName: session.patientName || 'Unknown',
+      patientMRN: session.patientMRN || 'N/A',
+      gapType: 'Patient Education',
+      priority: 'medium' as const,
+      category: 'education' as const,
+      dueDate: session.deliveredAt,
+      assignedTo: 'RN',
+      status: 'pending' as const,
+    }));
+
+    // Transform referrals to care gaps
+    const referralContent = referrals || [];
+    const referralGaps = referralContent.map((ref: any) => ({
+      id: ref.id,
+      patientName: ref.patientName || 'Unknown',
+      patientMRN: ref.patientMRN || 'N/A',
+      gapType: `${ref.specialtyType} Referral`,
+      priority: ref.priority?.toLowerCase() || 'medium' as const,
+      category: 'coordination' as const,
+      dueDate: ref.requestedAt,
+      assignedTo: 'RN',
+      status: 'pending' as const,
+    }));
+
+    // Combine all care gaps
+    this.careGaps = [...medicationGaps, ...educationGaps, ...referralGaps];
+
+    // Update metrics from real data
+    this.medReconciliationsNeeded = metrics?.pendingReconciliations || 0;
+    this.careGapsAssigned = this.careGaps.length;
+    this.patientCallsPending = this.outreachTasks.filter(t => t.outreachType === 'call').length;
+    this.patientEducationDue = educationGaps.length;
+
+    this.logger.debug('Dashboard data loaded', {
+      outreach: this.outreachTasks.length,
+      careGaps: this.careGaps.length,
+      metrics: { medReconciliationsNeeded: this.medReconciliationsNeeded, patientCallsPending: this.patientCallsPending },
+    });
   }
 
   /**
-   * Load patient outreach tasks
-   */
-  private loadOutreachTasks(): void {
-    setTimeout(() => {
-      this.outreachTasks = [
-        {
-          id: '1',
-          patientName: 'Anderson, Lisa',
-          patientMRN: 'MRN-201',
-          outreachType: 'call',
-          reason: 'Pre-visit preparation',
-          scheduledDate: '2025-11-26 10:00',
-          status: 'scheduled'
-        },
-        {
-          id: '2',
-          patientName: 'Taylor, Robert',
-          patientMRN: 'MRN-202',
-          outreachType: 'call',
-          reason: 'Lab results review',
-          scheduledDate: '2025-11-26 14:00',
-          status: 'scheduled'
-        },
-        {
-          id: '3',
-          patientName: 'Thomas, Emily',
-          patientMRN: 'MRN-203',
-          outreachType: 'email',
-          reason: 'Care plan update',
-          scheduledDate: '2025-11-27',
-          status: 'scheduled'
-        }
-      ];
-    }, 500);
-  }
-
-  /**
-   * Load dashboard metrics
-   */
-  private loadMetrics(): void {
-    this.careGapsAssigned = 15;
-    this.patientCallsPending = 8;
-    this.medReconciliationsNeeded = 5;
-    this.patientEducationDue = 7;
-  }
-
-  /**
-   * Address care gap
+   * Address care gap by launching appropriate workflow dialog
    */
   addressCareGap(gap: CareGapTask): void {
-    this.log.debug('Addressing care gap:', gap.gapType);
-    this.router.navigate(['/patients', gap.id], {
-      queryParams: { action: 'address-gap', gapId: gap.id }
-    });
+    this.logger.debug('Addressing care gap:', gap.gapType);
+
+    try {
+      // Map care gap category to workflow type
+      const workflowType: WorkflowType = this.workflowLauncher.mapCategoryToWorkflow(gap.category);
+
+      // Launch workflow with completion callback
+      this.workflowLauncher.launchWorkflow(
+        workflowType,
+        {
+          id: gap.id,
+          patientId: gap.id, // Note: Transform gap.id to patientId as needed by workflows
+          patientName: gap.patientName,
+          patientMRN: gap.patientMRN,
+          category: gap.category,
+          gapType: gap.gapType,
+          priority: gap.priority,
+          dueDate: gap.dueDate,
+          status: gap.status,
+        },
+        (result) => {
+          if (result.success) {
+            // Update care gap status after workflow completion
+            gap.status = 'completed';
+            this.careGapsAssigned = Math.max(0, this.careGapsAssigned - 1);
+            this.logger.info(`Care gap ${gap.id} marked as completed`);
+
+            // Remove from list after brief delay for UI update
+            setTimeout(() => {
+              const index = this.careGaps.indexOf(gap);
+              if (index > -1) {
+                this.careGaps.splice(index, 1);
+              }
+            }, 300);
+          }
+        }
+      );
+    } catch (error) {
+      this.logger.error('Failed to launch workflow:', error);
+      this.toastService.error('Failed to launch workflow. Please try again.');
+    }
+  }
+
+  /**
+   * Quick launch a workflow without a specific care gap task
+   * Used for launching workflows from quick action buttons
+   */
+  quickLaunchWorkflow(workflowType: WorkflowType): void {
+    this.logger.debug('Quick launching workflow:', workflowType);
+
+    try {
+      // Create a dummy task for quick launch
+      const dummyTask = {
+        id: `${workflowType}-${Date.now()}`,
+        patientId: '',
+        patientName: 'Demo Patient',
+        patientMRN: 'N/A',
+        category: workflowType,
+        gapType: this.workflowLauncher.getWorkflowConfig(workflowType).label,
+        priority: 'medium' as const,
+        dueDate: new Date().toISOString(),
+        status: 'pending' as const,
+      };
+
+      // Launch workflow
+      this.workflowLauncher.launchWorkflow(workflowType, dummyTask, (result) => {
+        if (result.success) {
+          this.logger.info(`${workflowType} workflow completed successfully`);
+        }
+      });
+    } catch (error) {
+      this.logger.error('Failed to quick launch workflow:', error);
+      this.toastService.error('Failed to launch workflow. Please try again.');
+    }
   }
 
   /**
@@ -461,7 +581,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Education session scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to schedule education session:', error);
+              this.logger.error('Failed to schedule education session:', error);
               this.toastService.error('Failed to schedule education session. Please try again.');
             }
           });
@@ -496,7 +616,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Education session documented for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to document education session:', error);
+              this.logger.error('Failed to document education session:', error);
               this.toastService.error('Failed to document education session. Please try again.');
             }
           });
@@ -510,7 +630,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'track-education-materials')
   trackEducationMaterials(gap: CareGapTask, materials: string[]): void {
     // In a real implementation, this would save to the backend
-    this.log.debug('Tracking education materials:', { gap, materials });
+    this.logger.debug('Tracking education materials:', { gap, materials });
     this.toastService.success(
       `Education materials tracked for ${gap.patientName}: ${materials.length} items`
     );
@@ -564,7 +684,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'record-comprehension-assessment')
   recordComprehensionAssessment(gap: CareGapTask, assessment: any): void {
     // In a real implementation, this would save assessment to backend
-    this.log.debug('Recording comprehension assessment:', { gap, assessment });
+    this.logger.debug('Recording comprehension assessment:', { gap, assessment });
     this.toastService.success(
       `Comprehension assessment recorded for ${gap.patientName}`
     );
@@ -580,7 +700,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'create-coordination-task')
   createCoordinationTask(task: any): void {
     // In a real implementation, this would save task to backend
-    this.log.debug('Creating care coordination task:', task);
+    this.logger.debug('Creating care coordination task:', task);
     this.toastService.success('Care coordination task created successfully');
   }
 
@@ -624,7 +744,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Specialist referral scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to schedule referral:', error);
+              this.logger.error('Failed to schedule referral:', error);
               this.toastService.error('Failed to schedule specialist referral. Please try again.');
             }
           });
@@ -638,7 +758,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'log-care-team-communication')
   logCareTeamCommunication(communication: any): void {
     // In a real implementation, this would save communication to backend
-    this.log.debug('Logging care team communication:', communication);
+    this.logger.debug('Logging care team communication:', communication);
     this.toastService.success('Communication logged successfully');
   }
 
@@ -716,7 +836,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Follow-up appointment scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to schedule appointment:', error);
+              this.logger.error('Failed to schedule appointment:', error);
               this.toastService.error('Failed to schedule follow-up appointment. Please try again.');
             }
           });
@@ -776,7 +896,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   completeFollowUpTask(outreach: PatientOutreach, outcome: any): void {
     outreach.status = 'completed';
     // In a real implementation, this would save outcome to backend
-    this.log.debug('Follow-up task completed:', { outreach, outcome });
+    this.logger.debug('Follow-up task completed:', { outreach, outcome });
     this.toastService.success(`Follow-up task completed for ${outreach.patientName}`);
   }
 
@@ -796,7 +916,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'create-recurring-follow-up')
   createRecurringFollowUp(gap: CareGapTask, schedule: any): void {
     // In a real implementation, this would create recurring schedule
-    this.log.debug('Creating recurring follow-up:', { gap, schedule });
+    this.logger.debug('Creating recurring follow-up:', { gap, schedule });
     this.toastService.success(
       `Recurring follow-up schedule created for ${gap.patientName} (${schedule.frequency})`
     );
@@ -856,7 +976,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'document-coaching-goals')
   documentCoachingGoals(coachingGoals: any): void {
     // In a real implementation, this would save goals to backend
-    this.log.debug('Documenting coaching goals:', coachingGoals);
+    this.logger.debug('Documenting coaching goals:', coachingGoals);
     this.toastService.success(
       `Coaching goals documented for patient (${coachingGoals.goals.length} goals)`
     );
@@ -868,7 +988,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'update-goal-progress')
   updateGoalProgress(goalProgress: any): void {
     // In a real implementation, this would update progress in backend
-    this.log.debug('Updating goal progress:', goalProgress);
+    this.logger.debug('Updating goal progress:', goalProgress);
     this.toastService.success(
       `Goal progress updated: ${goalProgress.progress}% complete`
     );
@@ -880,7 +1000,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'schedule-coaching-call')
   scheduleCoachingCall(patientId: string, scheduledDate: string): void {
     // In a real implementation, this would schedule call in backend
-    this.log.debug('Scheduling coaching call:', { patientId, scheduledDate });
+    this.logger.debug('Scheduling coaching call:', { patientId, scheduledDate });
     this.toastService.success('Coaching call scheduled successfully');
   }
 
@@ -900,7 +1020,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'record-coaching-milestone')
   recordCoachingMilestone(milestone: any): void {
     // In a real implementation, this would save milestone to backend
-    this.log.debug('Recording coaching milestone:', milestone);
+    this.logger.debug('Recording coaching milestone:', milestone);
     this.toastService.success(
       `Coaching milestone recorded: ${milestone.description}`
     );
@@ -932,7 +1052,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'adjust-coaching-plan')
   adjustCoachingPlan(adjustment: any): void {
     // In a real implementation, this would update plan in backend
-    this.log.debug('Adjusting coaching plan:', adjustment);
+    this.logger.debug('Adjusting coaching plan:', adjustment);
     this.toastService.success(
       'Coaching plan adjusted successfully'
     );

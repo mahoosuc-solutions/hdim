@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0009-add-fhir-resource-gin-indexes" author="data-model-validation">
+        <comment>Add GIN indexes on all FHIR resource_json columns for FHIR search parameter performance</comment>
+
+        <sql dbms="postgresql">
+            -- GIN indexes for FHIR search
+            CREATE INDEX IF NOT EXISTS idx_patients_resource_json_gin ON patients USING GIN (resource_json);
+            CREATE INDEX IF NOT EXISTS idx_observations_resource_json_gin ON observations USING GIN (resource_json);
+            CREATE INDEX IF NOT EXISTS idx_conditions_resource_json_gin ON conditions USING GIN (resource_json);
+            CREATE INDEX IF NOT EXISTS idx_medication_requests_resource_json_gin ON medication_requests USING GIN (resource_json);
+            CREATE INDEX IF NOT EXISTS idx_encounters_resource_json_gin ON encounters USING GIN (resource_json);
+            CREATE INDEX IF NOT EXISTS idx_procedures_resource_json_gin ON procedures USING GIN (resource_json);
+            CREATE INDEX IF NOT EXISTS idx_allergy_intolerances_fhir_resource_gin ON allergy_intolerances USING GIN (fhir_resource);
+            CREATE INDEX IF NOT EXISTS idx_immunizations_fhir_resource_gin ON immunizations USING GIN (fhir_resource);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_patients_resource_json_gin;
+                DROP INDEX IF EXISTS idx_observations_resource_json_gin;
+                DROP INDEX IF EXISTS idx_conditions_resource_json_gin;
+                DROP INDEX IF EXISTS idx_medication_requests_resource_json_gin;
+                DROP INDEX IF EXISTS idx_encounters_resource_json_gin;
+                DROP INDEX IF EXISTS idx_procedures_resource_json_gin;
+                DROP INDEX IF EXISTS idx_allergy_intolerances_fhir_resource_gin;
+                DROP INDEX IF EXISTS idx_immunizations_fhir_resource_gin;
+            </sql>
+        </rollback>
+    </changeSet>
+
+
+</databaseChangeLog>

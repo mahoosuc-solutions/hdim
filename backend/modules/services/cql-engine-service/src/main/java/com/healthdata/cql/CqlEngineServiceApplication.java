@@ -4,7 +4,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 
 /**
  * CQL Engine Service - Clinical Quality Language evaluation service
@@ -30,18 +32,27 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * - Batch evaluation: 200-400 req/s per instance
  * - Horizontal scaling: up to 8,000 req/s (20 pods)
  */
-@SpringBootApplication(scanBasePackages = {
-    // Service code - includes JWT security components
-    "com.healthdata.cql"
-})
+@SpringBootApplication(
+    scanBasePackages = {
+        // Service code - includes JWT security components
+        "com.healthdata.cql"
+    },
+    exclude = {
+        // Exclude authentication auto-configuration to prevent Tenant entity scanning
+        // CQL Engine doesn't need User/Tenant entities - uses gateway-trust authentication
+        com.healthdata.authentication.config.AuthenticationAutoConfiguration.class
+    }
+)
+@Import(AIAuditEventPublisher.class)
 @EnableFeignClients
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.cql.repository"
     // NOTE: Authentication repositories removed - managed by Gateway service
 })
 @EntityScan(basePackages = {
-    "com.healthdata.cql.entity"
-    // NOTE: Authentication entities removed - managed by Gateway service
+    "com.healthdata.cql.entity",
+    // Enable User/Tenant persistence for UserAutoRegistrationFilter
+    "com.healthdata.authentication.domain"
 })
 public class CqlEngineServiceApplication {
 

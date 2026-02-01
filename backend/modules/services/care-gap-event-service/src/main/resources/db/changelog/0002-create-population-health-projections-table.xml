@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-population-health-projections-table" author="care-gap-event-service">
+        <comment>
+            Create population_health_projections table aligned with
+            com.healthdata.caregap.projection.PopulationHealthProjection.
+        </comment>
+
+        <createTable tableName="population_health_projections">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="total_gaps_open" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="critical_gaps" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="high_gaps" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="medium_gaps" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="low_gaps" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="gaps_closed" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="closure_rate" type="FLOAT" defaultValueNumeric="0"/>
+            <column name="version" type="BIGINT" defaultValueNumeric="1"/>
+            <column name="last_updated" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <createIndex indexName="idx_population_health_tenant" tableName="population_health_projections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="population_health_projections"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

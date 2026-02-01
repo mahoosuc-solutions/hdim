@@ -85,7 +85,7 @@ export class ErrorValidationService implements OnDestroy {
   private readonly STORAGE_KEY = 'hdim-error-validation';
   private readonly MAX_STORED_ERRORS = 1000; // Limit stored errors to prevent memory issues
   private trackedErrors: TrackedError[] = [];
-  private readonly logger: ReturnType<LoggerService['withContext']>;
+  private readonly contextualLogger: ReturnType<LoggerService['withContext']>;
   private syncSubscription?: Subscription;
   private retentionCleanupSubscription?: Subscription;
   private errorRateWindow: TrackedError[] = []; // Errors in last hour
@@ -96,7 +96,7 @@ export class ErrorValidationService implements OnDestroy {
     private logger: LoggerService,
     private http: HttpClient
   ) {
-    this.logger = loggerService.withContext('ErrorValidationService');
+    this.contextualLogger = this.logger.withContext('ErrorValidationService');
     this.loadFromStorage();
     this.startRetentionCleanup();
     if (COMPLIANCE_CONFIG.syncToBackend) {

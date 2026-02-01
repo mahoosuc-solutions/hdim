@@ -64,8 +64,6 @@ export interface TourState {
 })
 export class GuidedTourService implements OnDestroy {
   private readonly TOUR_COMPLETED_KEY = 'hdim_completed_tours';
-
-  constructor(private readonly loggerService: LoggerService) {}
   private readonly FIRST_VISIT_KEY = 'hdim_first_visit_complete';
   private readonly destroy$ = new Subject<void>();
   private readonly isBrowser: boolean;  // Tour definitions registry

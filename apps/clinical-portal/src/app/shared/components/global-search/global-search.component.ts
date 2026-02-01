@@ -222,7 +222,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.updateResults(results);
       },
       error: (err) => {
-        this.logger.error('Error searching patients', err);
+        this.loggerService.error('Error searching patients', err);
         this.updateResults(results);
       },
     });
@@ -245,7 +245,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.updateResults(results);
       },
       error: (err) => {
-        this.logger.error('Error searching measures', err);
+        this.loggerService.error('Error searching measures', err);
         this.updateResults(results);
       },
     });
@@ -370,7 +370,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
         this.recentSearches = JSON.parse(stored).slice(0, 5);
       }
     } catch (err) {
-      this.logger.error('Error loading recent searches', err);
+      this.loggerService.error('Error loading recent searches', err);
     }
   }
 
@@ -391,7 +391,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
       // Save to localStorage
       localStorage.setItem('recentSearches', JSON.stringify(this.recentSearches));
     } catch (err) {
-      this.logger.error('Error saving recent search', err);
+      this.loggerService.error('Error saving recent search', err);
     }
   }
 

@@ -59,7 +59,6 @@ export interface ParsedQuestionnaireItem {
   providedIn: 'root',
 })
 export class FhirQuestionnaireService extends CacheableService {
-  private log: ContextualLogger;
 
   // Questionnaire identifiers
   private readonly QUESTIONNAIRE_TYPES = {
@@ -75,9 +74,7 @@ export class FhirQuestionnaireService extends CacheableService {
     private http: HttpClient,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('FhirQuestionnaireService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get HTTP headers with tenant ID
@@ -123,7 +120,7 @@ export class FhirQuestionnaireService extends CacheableService {
           return responses;
         }),
         catchError((error) => {
-          this.log.error('Error fetching questionnaire responses from FHIR:', error);
+          this.logger.error('Error fetching questionnaire responses from FHIR:', error);
           return of([]);
         })
       );

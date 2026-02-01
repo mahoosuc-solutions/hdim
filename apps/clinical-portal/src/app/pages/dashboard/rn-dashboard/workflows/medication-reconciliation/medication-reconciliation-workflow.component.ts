@@ -116,7 +116,6 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
   discrepancyColumns = ['severity', 'type', 'description', 'recommendation', 'actions'];
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -125,9 +124,7 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
     private logger: LoggerService,
     private dialogRef: MatDialogRef<MedicationReconciliationWorkflowComponent>,
     @Inject(MAT_DIALOG_DATA) public data: MedicationReconciliationWorkflowData
-  ) {
-    this.log = this.logger.withContext('MedicationReconciliationWorkflowComponent');
-    this.reconciliationId = data.reconciliationId;
+  ) {    this.reconciliationId = data.reconciliationId;
     this.patientId = data.patientId;
     this.patientName = data.patientName;
     this.initializeForms();
@@ -174,11 +171,11 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
       .subscribe({
         next: (response) => {
           this.systemMedications = response.content || [];
-          this.log.info(`Loaded ${this.systemMedications.length} medications`);
+          this.logger.info(`Loaded ${this.systemMedications.length} medications`);
           this.loading = false;
         },
         error: (error) => {
-          this.log.error('Failed to load medications:', error);
+          this.logger.error('Failed to load medications:', error);
           this.toastService.error('Failed to load medication list');
           this.loading = false;
         },
@@ -444,7 +441,7 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
           }
         },
         error: (error) => {
-          this.log.error('Failed to check interactions:', error);
+          this.logger.error('Failed to check interactions:', error);
           this.toastService.error('Could not check drug interactions');
         },
       });
@@ -515,7 +512,7 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
         next: (result: unknown) => {
           this.loading = false;
           this.toastService.success('Medication reconciliation completed successfully');
-          this.log.info('Workflow completed successfully');
+          this.logger.info('Workflow completed successfully');
 
           const workflowResult: MedicationReconciliationResult = {
             success: true,
@@ -527,7 +524,7 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to complete reconciliation:', error);
+          this.logger.error('Failed to complete reconciliation:', error);
           this.toastService.error('Failed to save medication reconciliation');
         },
       });

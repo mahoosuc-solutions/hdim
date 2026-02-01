@@ -302,13 +302,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     { text: 'Knowledge Base', url: '/knowledge-base' },
     { text: 'Keyboard Shortcuts', url: '#' },
     { text: 'Report a Problem', url: '#' },
-  ];
-
-  private get logger() {
-    return this.loggerService.withContext('ProviderDashboardComponent');
-  }
-
-  constructor(
+  ];  constructor(
     private router: Router,
     private dialog: MatDialog,
     private dialogService: DialogService,
@@ -321,7 +315,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private tourService: GuidedTourService,
     private helpService: HelpService,
     private errorValidationService: ErrorValidationService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

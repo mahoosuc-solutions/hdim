@@ -32,7 +32,6 @@ export class AgentBuilderService {
   private readonly loggerService = inject(LoggerService);
 
   constructor() {
-    this.logger = this.loggerService.withContext('AgentBuilderService');
   }
 
   // ============================================================================

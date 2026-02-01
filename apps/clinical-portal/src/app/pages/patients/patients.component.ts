@@ -150,12 +150,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Search debounce
   private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('PatientsComponent');
-  }
-
-  constructor(
+  private destroy$ = new Subject<void>();  constructor(
     private patientService: PatientService,
     private evaluationService: EvaluationService,
     private dialogService: DialogService,
@@ -165,7 +160,7 @@ export class PatientsComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private fb: FormBuilder,
     public aiAssistant: AIAssistantService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
     this.filterForm = this.fb.group({
       gender: [null],

@@ -92,7 +92,6 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   patientEducationDue = 0;
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private router: Router,
@@ -105,9 +104,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
     private medicationService: MedicationService,
     private carePlanService: CarePlanService,
     private workflowLauncher: WorkflowLauncherService
-  ) {
-    this.log = this.logger.withContext('RNDashboardComponent');
-  }
+  ) {  }
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -136,46 +133,46 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       // NurseWorkflow service data
       this.nurseWorkflowService.getPendingOutreachLogs(0, 50).pipe(
         catchError((error) => {
-          this.log.error('Failed to load outreach logs:', error);
+          this.logger.error('Failed to load outreach logs:', error);
           this.toastService.error('Failed to load outreach data');
           return of([]);
         })
       ),
       this.nurseWorkflowService.getPendingMedicationReconciliations(0, 50).pipe(
         catchError((error) => {
-          this.log.error('Failed to load medication reconciliations:', error);
+          this.logger.error('Failed to load medication reconciliations:', error);
           return of([]);
         })
       ),
       this.nurseWorkflowService.getEducationSessionsWithPoorUnderstanding().pipe(
         catchError((error) => {
-          this.log.error('Failed to load education sessions:', error);
+          this.logger.error('Failed to load education sessions:', error);
           return of([]);
         })
       ),
       this.nurseWorkflowService.getReferralsAwaitingScheduling().pipe(
         catchError((error) => {
-          this.log.error('Failed to load pending referrals:', error);
+          this.logger.error('Failed to load pending referrals:', error);
           return of([]);
         })
       ),
       this.nurseWorkflowService.getMedicationReconciliationMetrics().pipe(
         catchError((error) => {
-          this.log.error('Failed to load metrics:', error);
+          this.logger.error('Failed to load metrics:', error);
           return of({ totalReconciliations: 0, pendingReconciliations: 0, completionRate: 0 });
         })
       ),
       // MedicationService data
       this.medicationService.getPendingOrdersAwaitingPharmacy(0, 50).pipe(
         catchError((error) => {
-          this.log.error('Failed to load medication orders:', error);
+          this.logger.error('Failed to load medication orders:', error);
           return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
         })
       ),
       // CarePlanService data
       this.carePlanService.getCarePlansDueForReview(0, 50).pipe(
         catchError((error) => {
-          this.log.error('Failed to load care plans:', error);
+          this.logger.error('Failed to load care plans:', error);
           return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
         })
       ),
@@ -186,7 +183,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
           this.loading = false;
         },
         error: (error) => {
-          this.log.error('Failed to load dashboard data:', error);
+          this.logger.error('Failed to load dashboard data:', error);
           this.toastService.error('Failed to load dashboard. Please refresh the page.');
           this.loading = false;
         },
@@ -268,7 +265,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
     this.patientCallsPending = this.outreachTasks.filter(t => t.outreachType === 'call').length;
     this.patientEducationDue = educationGaps.length;
 
-    this.log.debug('Dashboard data loaded', {
+    this.logger.debug('Dashboard data loaded', {
       outreach: this.outreachTasks.length,
       careGaps: this.careGaps.length,
       metrics: { medReconciliationsNeeded: this.medReconciliationsNeeded, patientCallsPending: this.patientCallsPending },
@@ -279,7 +276,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
    * Address care gap by launching appropriate workflow dialog
    */
   addressCareGap(gap: CareGapTask): void {
-    this.log.debug('Addressing care gap:', gap.gapType);
+    this.logger.debug('Addressing care gap:', gap.gapType);
 
     try {
       // Map care gap category to workflow type
@@ -304,7 +301,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
             // Update care gap status after workflow completion
             gap.status = 'completed';
             this.careGapsAssigned = Math.max(0, this.careGapsAssigned - 1);
-            this.log.info(`Care gap ${gap.id} marked as completed`);
+            this.logger.info(`Care gap ${gap.id} marked as completed`);
 
             // Remove from list after brief delay for UI update
             setTimeout(() => {
@@ -317,7 +314,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
         }
       );
     } catch (error) {
-      this.log.error('Failed to launch workflow:', error);
+      this.logger.error('Failed to launch workflow:', error);
       this.toastService.error('Failed to launch workflow. Please try again.');
     }
   }
@@ -327,7 +324,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
    * Used for launching workflows from quick action buttons
    */
   quickLaunchWorkflow(workflowType: WorkflowType): void {
-    this.log.debug('Quick launching workflow:', workflowType);
+    this.logger.debug('Quick launching workflow:', workflowType);
 
     try {
       // Create a dummy task for quick launch
@@ -346,11 +343,11 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
       // Launch workflow
       this.workflowLauncher.launchWorkflow(workflowType, dummyTask, (result) => {
         if (result.success) {
-          this.log.info(`${workflowType} workflow completed successfully`);
+          this.logger.info(`${workflowType} workflow completed successfully`);
         }
       });
     } catch (error) {
-      this.log.error('Failed to quick launch workflow:', error);
+      this.logger.error('Failed to quick launch workflow:', error);
       this.toastService.error('Failed to launch workflow. Please try again.');
     }
   }
@@ -584,7 +581,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Education session scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to schedule education session:', error);
+              this.logger.error('Failed to schedule education session:', error);
               this.toastService.error('Failed to schedule education session. Please try again.');
             }
           });
@@ -619,7 +616,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Education session documented for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to document education session:', error);
+              this.logger.error('Failed to document education session:', error);
               this.toastService.error('Failed to document education session. Please try again.');
             }
           });
@@ -633,7 +630,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'track-education-materials')
   trackEducationMaterials(gap: CareGapTask, materials: string[]): void {
     // In a real implementation, this would save to the backend
-    this.log.debug('Tracking education materials:', { gap, materials });
+    this.logger.debug('Tracking education materials:', { gap, materials });
     this.toastService.success(
       `Education materials tracked for ${gap.patientName}: ${materials.length} items`
     );
@@ -687,7 +684,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'record-comprehension-assessment')
   recordComprehensionAssessment(gap: CareGapTask, assessment: any): void {
     // In a real implementation, this would save assessment to backend
-    this.log.debug('Recording comprehension assessment:', { gap, assessment });
+    this.logger.debug('Recording comprehension assessment:', { gap, assessment });
     this.toastService.success(
       `Comprehension assessment recorded for ${gap.patientName}`
     );
@@ -703,7 +700,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'create-coordination-task')
   createCoordinationTask(task: any): void {
     // In a real implementation, this would save task to backend
-    this.log.debug('Creating care coordination task:', task);
+    this.logger.debug('Creating care coordination task:', task);
     this.toastService.success('Care coordination task created successfully');
   }
 
@@ -747,7 +744,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Specialist referral scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to schedule referral:', error);
+              this.logger.error('Failed to schedule referral:', error);
               this.toastService.error('Failed to schedule specialist referral. Please try again.');
             }
           });
@@ -761,7 +758,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'log-care-team-communication')
   logCareTeamCommunication(communication: any): void {
     // In a real implementation, this would save communication to backend
-    this.log.debug('Logging care team communication:', communication);
+    this.logger.debug('Logging care team communication:', communication);
     this.toastService.success('Communication logged successfully');
   }
 
@@ -839,7 +836,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
               this.toastService.success(`Follow-up appointment scheduled for ${gap.patientName}`);
             },
             error: (error) => {
-              this.log.error('Failed to schedule appointment:', error);
+              this.logger.error('Failed to schedule appointment:', error);
               this.toastService.error('Failed to schedule follow-up appointment. Please try again.');
             }
           });
@@ -899,7 +896,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   completeFollowUpTask(outreach: PatientOutreach, outcome: any): void {
     outreach.status = 'completed';
     // In a real implementation, this would save outcome to backend
-    this.log.debug('Follow-up task completed:', { outreach, outcome });
+    this.logger.debug('Follow-up task completed:', { outreach, outcome });
     this.toastService.success(`Follow-up task completed for ${outreach.patientName}`);
   }
 
@@ -919,7 +916,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'create-recurring-follow-up')
   createRecurringFollowUp(gap: CareGapTask, schedule: any): void {
     // In a real implementation, this would create recurring schedule
-    this.log.debug('Creating recurring follow-up:', { gap, schedule });
+    this.logger.debug('Creating recurring follow-up:', { gap, schedule });
     this.toastService.success(
       `Recurring follow-up schedule created for ${gap.patientName} (${schedule.frequency})`
     );
@@ -979,7 +976,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'document-coaching-goals')
   documentCoachingGoals(coachingGoals: any): void {
     // In a real implementation, this would save goals to backend
-    this.log.debug('Documenting coaching goals:', coachingGoals);
+    this.logger.debug('Documenting coaching goals:', coachingGoals);
     this.toastService.success(
       `Coaching goals documented for patient (${coachingGoals.goals.length} goals)`
     );
@@ -991,7 +988,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'update-goal-progress')
   updateGoalProgress(goalProgress: any): void {
     // In a real implementation, this would update progress in backend
-    this.log.debug('Updating goal progress:', goalProgress);
+    this.logger.debug('Updating goal progress:', goalProgress);
     this.toastService.success(
       `Goal progress updated: ${goalProgress.progress}% complete`
     );
@@ -1003,7 +1000,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'schedule-coaching-call')
   scheduleCoachingCall(patientId: string, scheduledDate: string): void {
     // In a real implementation, this would schedule call in backend
-    this.log.debug('Scheduling coaching call:', { patientId, scheduledDate });
+    this.logger.debug('Scheduling coaching call:', { patientId, scheduledDate });
     this.toastService.success('Coaching call scheduled successfully');
   }
 
@@ -1023,7 +1020,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'record-coaching-milestone')
   recordCoachingMilestone(milestone: any): void {
     // In a real implementation, this would save milestone to backend
-    this.log.debug('Recording coaching milestone:', milestone);
+    this.logger.debug('Recording coaching milestone:', milestone);
     this.toastService.success(
       `Coaching milestone recorded: ${milestone.description}`
     );
@@ -1055,7 +1052,7 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   @TrackInteraction('rn-dashboard', 'adjust-coaching-plan')
   adjustCoachingPlan(adjustment: any): void {
     // In a real implementation, this would update plan in backend
-    this.log.debug('Adjusting coaching plan:', adjustment);
+    this.logger.debug('Adjusting coaching plan:', adjustment);
     this.toastService.success(
       'Coaching plan adjusted successfully'
     );

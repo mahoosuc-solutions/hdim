@@ -71,12 +71,11 @@ export class BatchMonitorService {
   private currentBatchId?: string;
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
     private websocketService: WebSocketVisualizationService
   ) {
-    this.logger = this.loggerService.withContext(\'BatchMonitorService');
     // Initialize state
     this.stateSubject.next({ status: 'IDLE' });
   }

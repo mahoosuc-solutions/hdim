@@ -469,16 +469,11 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
   testResults: TestResult[] = [];
   errorMessage: string | null = null;
   totalExecutionTimeMs = 0;
-  private testSubscription?: Subscription;
-  private get logger() {
-    return this.loggerService.withContext('TestPreviewDialogComponent');
-  }
-
-  constructor(
+  private testSubscription?: Subscription;  constructor(
     private dialogRef: MatDialogRef<TestPreviewDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: TestPreviewDialogData,
     private customMeasureService: CustomMeasureService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnDestroy(): void {

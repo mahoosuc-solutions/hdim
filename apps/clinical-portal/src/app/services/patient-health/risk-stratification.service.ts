@@ -37,7 +37,6 @@ import {
   providedIn: 'root',
 })
 export class RiskStratificationService extends CacheableService {
-  private log: ContextualLogger;
 
   // Evidence-based weights for multi-factor risk
   private readonly RISK_WEIGHTS = {
@@ -52,9 +51,7 @@ export class RiskStratificationService extends CacheableService {
     private sdoh: SDOHService,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('RiskStratificationService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get overall risk stratification for a patient
@@ -94,7 +91,7 @@ export class RiskStratificationService extends CacheableService {
         return stratification;
       }),
       catchError((error) => {
-        this.log.error('Error getting risk stratification:', error);
+        this.logger.error('Error getting risk stratification:', error);
         return of(this.getDefaultRiskStratification());
       })
     );
@@ -173,7 +170,7 @@ export class RiskStratificationService extends CacheableService {
         return result;
       }),
       catchError((error) => {
-        this.log.error('Error calculating multi-factor risk score:', error);
+        this.logger.error('Error calculating multi-factor risk score:', error);
         return of(this.getDefaultMultiFactorScore(patientId));
       })
     );
@@ -231,7 +228,7 @@ export class RiskStratificationService extends CacheableService {
         return assessments;
       }),
       catchError((error) => {
-        this.log.error('Error getting category risk assessments:', error);
+        this.logger.error('Error getting category risk assessments:', error);
         return of([]);
       })
     );

@@ -44,7 +44,6 @@ import {
   providedIn: 'root',
 })
 export class HealthScoringService extends CacheableService {
-  private log: ContextualLogger;
 
   // Component weights for overall health score
   private readonly WEIGHTS = {
@@ -61,9 +60,7 @@ export class HealthScoringService extends CacheableService {
     private sdoh: SDOHService,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('HealthScoringService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get HTTP headers with tenant ID
@@ -111,7 +108,7 @@ export class HealthScoringService extends CacheableService {
         return healthScore;
       }),
       catchError((error) => {
-        this.log.error('Error fetching health score from backend:', error);
+        this.logger.error('Error fetching health score from backend:', error);
         return this.calculateHealthScore(patientId);
       })
     );
@@ -164,7 +161,7 @@ export class HealthScoringService extends CacheableService {
         return healthScore;
       }),
       catchError((error) => {
-        this.log.error('Error calculating health score:', error);
+        this.logger.error('Error calculating health score:', error);
         return of(this.getMockHealthScore(patientId));
       })
     );
@@ -191,7 +188,7 @@ export class HealthScoringService extends CacheableService {
           }))
         ),
         catchError((error) => {
-          this.log.error('Error fetching health score history:', error);
+          this.logger.error('Error fetching health score history:', error);
           return of([]);
         })
       );
@@ -230,7 +227,7 @@ export class HealthScoringService extends CacheableService {
           }))
         ),
         catchError((error) => {
-          this.log.error('Error fetching health score history:', error);
+          this.logger.error('Error fetching health score history:', error);
           return of([]);
         })
       );

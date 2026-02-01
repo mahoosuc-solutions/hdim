@@ -86,9 +86,8 @@ export class CareGapStatsDashboardComponent implements OnInit, OnDestroy {
   constructor(
     private careGapService: CareGapService,
     private router: Router,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('CareGapStatsDashboardComponent');
   }
 
   ngOnInit(): void {

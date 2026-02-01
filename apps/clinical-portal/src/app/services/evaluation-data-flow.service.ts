@@ -16,7 +16,6 @@ export class EvaluationDataFlowService {
   private connected = false;
 
   constructor(private readonly loggerService: LoggerService) {
-    this.logger = this.loggerService.withContext('EvaluationDataFlowService');
   }
 
   /**

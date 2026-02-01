@@ -33,11 +33,10 @@ export class AuditService {
   private pendingEvents: AuditEvent[] = [];
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private http: HttpClient,
     private authService: AuthService
   ) {
-    this.logger = this.loggerService.withContext(\'AuditService');
     this.initializeEventBatching();
     this.flushPendingEventsFromStorage();
   }

@@ -107,12 +107,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
   careGaps: CareGap[] = [];
   outreachItems: OutreachItem[] = [];
 
-  private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('MADashboardComponent');
-  }
-
-  constructor(
+  private destroy$ = new Subject<void>();  constructor(
     private router: Router,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
@@ -121,7 +116,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
     private dialogService: DialogService,
     private notificationService: NotificationService,
     private toastService: ToastService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

@@ -162,7 +162,7 @@ export class FormFieldComponent implements OnInit {
 
   ngOnInit(): void {
     if (!this.control) {
-      this.logger.error('FormFieldComponent: control input is required');
+      this.loggerService.error('FormFieldComponent: control input is required');
     }
   }
 

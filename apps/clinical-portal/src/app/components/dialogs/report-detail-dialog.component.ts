@@ -791,7 +791,7 @@ export class ReportDetailDialogComponent implements OnInit {
   parsedData: any = null;
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     @Inject(MAT_DIALOG_DATA) public report: SavedReport,
     private dialogRef: MatDialogRef<ReportDetailDialogComponent>,
     private evaluationService: EvaluationService

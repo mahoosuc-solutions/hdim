@@ -122,7 +122,7 @@ export class LoadingSpinnerComponent implements OnInit {
   ngOnInit(): void {
     // Validate diameter input
     if (this.diameter < 20 || this.diameter > 200) {
-      this.logger.warn('LoadingSpinner: diameter should be between 20 and 200 pixels');
+      this.loggerService.warn('LoadingSpinner: diameter should be between 20 and 200 pixels');
       this.diameter = Math.max(20, Math.min(200, this.diameter));
     }
   }

@@ -42,7 +42,6 @@ export class ReportExportService {
   private readonly logger: any;
 
   constructor(private readonly loggerService: LoggerService) {
-    this.logger = this.loggerService.withContext('ReportExportService');
   }
   /**
    * Generate a PDF report from quality measure results.

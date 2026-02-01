@@ -93,7 +93,7 @@ export class ErrorValidationService implements OnDestroy {
   public alerts$ = this.alertSubject.asObservable();
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private http: HttpClient
   ) {
     this.logger = loggerService.withContext('ErrorValidationService');

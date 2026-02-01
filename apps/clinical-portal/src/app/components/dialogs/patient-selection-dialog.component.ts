@@ -407,7 +407,7 @@ export class PatientSelectionDialogComponent implements OnInit {
   isLoading = signal(false);
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private dialogRef: MatDialogRef<PatientSelectionDialogComponent>,
     private patientService: PatientService
   ) {}

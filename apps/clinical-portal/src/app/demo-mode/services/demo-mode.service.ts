@@ -130,17 +130,11 @@ export class DemoModeService {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  });
-
-  private get logger() {
-    return this.loggerService.withContext('DemoModeService');
-  }
-
-  constructor(
+  });  constructor(
     private http: HttpClient,
     private router: Router,
     private route: ActivatedRoute,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
     // Check URL for demo parameter on init
     this.checkUrlForDemoMode();

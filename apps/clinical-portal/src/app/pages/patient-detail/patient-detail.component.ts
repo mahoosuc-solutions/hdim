@@ -104,9 +104,8 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     private fhirClinicalService: FhirClinicalService,
     private evaluationService: EvaluationService,
     private contextNavService: ContextNavigationService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('PatientDetailComponent');
   }
 
   ngOnInit(): void {

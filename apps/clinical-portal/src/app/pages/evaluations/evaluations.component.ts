@@ -71,12 +71,7 @@ import { EvaluationDataFlowService } from '../../services/evaluation-data-flow.s
   styleUrl: './evaluations.component.scss',
 })
 export class EvaluationsComponent implements OnInit, AfterViewInit {
-  private destroy$ = injectDestroy();
-  private get logger() {
-    return this.loggerService.withContext('EvaluationsComponent');
-  }
-
-  private defaultPresetApplied = false;
+  private destroy$ = injectDestroy();  private defaultPresetApplied = false;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -163,7 +158,7 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
     public measureFavorites: MeasureFavoritesService,
     private dataFlowService: EvaluationDataFlowService,
     private toastService: ToastService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
     this.evaluationForm = this.fb.group({
       measureId: ['', Validators.required],

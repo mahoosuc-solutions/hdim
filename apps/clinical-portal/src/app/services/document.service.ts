@@ -79,9 +79,8 @@ export class DocumentService {
 
   constructor(
     private http: HttpClient,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('DocumentService');
   }
 
   /**

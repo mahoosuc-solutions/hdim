@@ -788,7 +788,7 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
   currentProviderId = 'provider-current'; // Would come from auth service
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private dialogRef: MatDialogRef<ProviderLeaderboardDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ProviderLeaderboardDialogData
   ) {}

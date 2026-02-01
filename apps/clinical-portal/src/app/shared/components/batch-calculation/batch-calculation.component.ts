@@ -87,7 +87,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.pollJobStatus(response.jobId);
         },
         error: (err) => {
-          this.logger.error('Failed to start batch calculation', err);
+          this.loggerService.error('Failed to start batch calculation', err);
           this.error = err.error?.message || 'Failed to start batch calculation';
           this.isLoading = false;
         }
@@ -114,7 +114,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          this.logger.error('Error polling job status', err);
+          this.loggerService.error('Error polling job status', err);
           this.error = 'Failed to get job status';
           this.isCalculating = false;
         },
@@ -141,7 +141,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           this.loadJobHistory();
         },
         error: (err) => {
-          this.logger.error('Failed to cancel job', err);
+          this.loggerService.error('Failed to cancel job', err);
           this.error = err.error?.message || 'Failed to cancel job';
         }
       });
@@ -174,7 +174,7 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
           }
         },
         error: (err) => {
-          this.logger.error('Failed to load job history', err);
+          this.loggerService.error('Failed to load job history', err);
         }
       });
   }

@@ -537,7 +537,7 @@ export class RiskTrendChartComponent
           }
         },
         error: (error) => {
-          this.logger.error('Error loading risk assessment data', error);
+          this.loggerService.error('Error loading risk assessment data', error);
           // Fallback to PatientHealthService on error
           this.loadHealthScoreData();
         },
@@ -558,7 +558,7 @@ export class RiskTrendChartComponent
           this.initializeChart();
         },
         error: (error) => {
-          this.logger.error('Error loading health score data', error);
+          this.loggerService.error('Error loading health score data', error);
           this.loading = false;
           this.dataSeries = [];
         },

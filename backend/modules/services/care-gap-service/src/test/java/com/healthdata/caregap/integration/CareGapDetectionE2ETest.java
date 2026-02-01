@@ -25,6 +25,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
+import org.junit.jupiter.api.Tag;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @DisplayName("Care Gap Detection E2E Functional Tests")
+@Tag("integration")
 class CareGapDetectionE2ETest {
 
     @Container

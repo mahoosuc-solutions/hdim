@@ -6,6 +6,7 @@ import com.healthdata.caregap.persistence.CareGapRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Date-based queries (overdue, due in range)
  * - Analytics queries (counts, aggregations)
  */
+@Tag("integration")
 @BaseIntegrationTest
 @DisplayName("CareGapRepository Integration Tests")
 class CareGapRepositoryIntegrationTest {

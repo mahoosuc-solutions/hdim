@@ -58,3 +58,5 @@ scripts/run-demo-storyboard-core.js
 tools/demo-control/
 
 .angular
+.vercel
+.env*.local

@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.junit.jupiter.api.Tag;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -40,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @WithMockUser(roles = "ADMIN")
 @DisplayName("Care Gap Controller Tests")
+@Tag("integration")
 class CareGapControllerTest {
 
     @Autowired

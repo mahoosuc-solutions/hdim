@@ -616,9 +616,36 @@ docker exec -it hdim-postgres psql -U healthdata -d patient_db -c "\dt"
 
 ## Testing Requirements
 
+### ⚡ Test Classification & Selective Execution (Phase 3)
+
+**NEW:** Run only the tests you need with tagged test categories.
+
+```bash
+# Unit tests only (fast feedback - ~30-60 seconds)
+./gradlew testUnit
+
+# Integration tests only (~3-5 minutes)
+./gradlew testIntegration
+
+# All tests - comprehensive validation (~4-6 minutes)
+./gradlew testAll
+./gradlew test  # Backward compatible
+```
+
+**Why this matters:**
+- ⚡ **30-60 second feedback loop** during development (vs 4-6 minutes for all tests)
+- 🎯 **Selective testing** based on what changed
+- 📚 **Clear organization** - every test is classified
+- 🚀 **Faster commits** - validate logic before pushing
+
+**Complete Guide:** [TEST_CLASSIFICATION_GUIDE.md](./backend/docs/TEST_CLASSIFICATION_GUIDE.md)
+
+---
+
 ### Unit Tests
 
 ```java
+@Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class PatientServiceTest {
     @Mock
@@ -642,6 +669,7 @@ class PatientServiceTest {
 ### Integration Tests
 
 ```java
+@Tag("integration")
 @SpringBootTest
 @AutoConfigureMockMvc
 class PatientControllerIntegrationTest {

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.junit.jupiter.api.Tag;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.when;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Care Gap Report Service Tests")
+@Tag("unit")
 class CareGapReportServiceTest {
 
     @Mock

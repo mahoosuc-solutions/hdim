@@ -51,7 +51,8 @@ export class RiskStratificationService extends CacheableService {
     private sdoh: SDOHService,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
+  }
 
   /**
    * Get overall risk stratification for a patient

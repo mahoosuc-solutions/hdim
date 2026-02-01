@@ -62,7 +62,8 @@ export class CarePlanService {
 
   constructor(
     private logger: LoggerService,
-    private http: HttpClient) {
+    private http: HttpClient
+  ) {}
 
   // ==================== Context Management ====================
 

@@ -40,8 +40,8 @@ export interface MeasureStats {
 })
 export class ReportExportService {
 
-  constructor(private readonly loggerService: LoggerService) {
-  }
+  constructor(private readonly logger: LoggerService) {}
+
   /**
    * Generate a PDF report from quality measure results.
    * Uses native browser print-to-PDF functionality for maximum compatibility.

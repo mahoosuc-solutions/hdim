@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { LoggerService } from './logger.service';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { LoggerService } from './logger.service';
 import { delay, map } from 'rxjs/operators';
-import { LoggerService } from './logger.service';
 
 /**
  * Report Section Types - Available sections for custom reports

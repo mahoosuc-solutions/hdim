@@ -10,7 +10,6 @@ import { AIAssistantService } from '../../services/ai-assistant.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { CSVHelper } from '../../utils/csv-helper';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../testing/mocks';
 import { createMockMatDialog } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 import { provideMockStore } from '@ngrx/store/testing';

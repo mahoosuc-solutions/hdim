@@ -4,7 +4,6 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { AuditService, AuditAction, AuditOutcome, AuditEvent } from './audit.service';
 import { AuthService, User } from './auth.service';
 import { LoggerService } from 'services/logger.service';
-import { createMockLoggerService } from 'testing/mocks';
 import { createMockStore } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 

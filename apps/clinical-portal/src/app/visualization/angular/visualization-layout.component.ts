@@ -1,16 +1,11 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { LoggerService } from '../../../services/logger.service';
 import { CommonModule } from '@angular/common';
-import { LoggerService } from '../../../services/logger.service';
 import { RouterModule } from '@angular/router';
-import { LoggerService } from '../../../services/logger.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { LoggerService } from '../../../services/logger.service';
 
 import { VisualizationNavComponent } from './visualization-nav.component';
-import { LoggerService } from '../../../services/logger.service';
 import { ThreeSceneService } from '../core/three-scene.service';
-import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Visualization Layout Component

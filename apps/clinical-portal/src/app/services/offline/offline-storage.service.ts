@@ -11,9 +11,7 @@
 import { Injectable } from '@angular/core';
 import { LoggerService } from '../logger.service';
 import { BehaviorSubject, Observable, from, of } from 'rxjs';
-import { LoggerService } from '../logger.service';
 import { catchError, map, tap } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
 
 // Database configuration
 const DB_NAME = 'hdim-clinical-portal';

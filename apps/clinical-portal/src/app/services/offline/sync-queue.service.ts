@@ -35,7 +35,6 @@ import {
   SyncQueueItem,
 } from './offline-storage.service';
 import { NetworkStatusService } from './network-status.service';
-import { LoggerService } from '../logger.service';
 
 export interface SyncResult {
   success: boolean;

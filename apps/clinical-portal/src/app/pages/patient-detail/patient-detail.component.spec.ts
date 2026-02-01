@@ -11,7 +11,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 describe('PatientDetailComponent (TDD)', () => {

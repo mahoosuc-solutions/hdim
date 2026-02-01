@@ -18,7 +18,6 @@ import { OfflineIndicatorComponent } from '../offline-indicator/offline-indicato
 import { WhatsNewBannerComponent } from '../whats-new-banner/whats-new-banner.component';
 import { HelpPanelComponent } from '../help-panel/help-panel.component';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../testing/mocks';
 import {
   testAccessibility,
   testKeyboardAccessibility,

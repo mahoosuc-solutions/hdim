@@ -25,7 +25,6 @@ import {
 })
 export class FhirService {
   private readonly baseUrl = API_CONFIG.FHIR_SERVER_URL;
-  private readonly logger: any;
 
   constructor(
     private http: HttpClient,

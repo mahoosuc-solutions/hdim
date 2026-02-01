@@ -64,7 +64,6 @@ export class AiClinicalAssistantComponent implements OnInit, OnDestroy, AfterVie
   context: { patient?: string; careGap?: string; measure?: string } | null = null;
 
   private destroy$ = new Subject<void>();
-  private logger!: ReturnType<LoggerService['withContext']>;
   private shouldScrollToBottom = false;
 
   // Suggested prompts based on context

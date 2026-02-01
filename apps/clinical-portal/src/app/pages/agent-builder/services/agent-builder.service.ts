@@ -26,7 +26,6 @@ import {
   providedIn: 'root',
 })
 export class AgentBuilderService {
-  private readonly logger: any;
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/v1/agent-builder';
   private readonly loggerService = inject(LoggerService);

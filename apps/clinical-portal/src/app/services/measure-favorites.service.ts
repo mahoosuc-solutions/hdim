@@ -34,7 +34,6 @@ export interface RecentMeasure {
   providedIn: 'root',
 })
 export class MeasureFavoritesService {
-  private readonly logger: any;
   // Reactive signals for favorites and recents
   private _favorites = signal<FavoriteMeasure[]>([]);
   private _recentMeasures = signal<RecentMeasure[]>([]);

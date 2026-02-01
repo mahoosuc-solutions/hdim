@@ -95,7 +95,6 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     'documents': 6
   };
 
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private route: ActivatedRoute,

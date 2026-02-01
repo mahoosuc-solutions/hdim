@@ -385,7 +385,6 @@ export class AgentVersionsDialogComponent implements OnInit, OnDestroy, AfterVie
   @ViewChild(MatSort) sort!: MatSort;
 
   private destroy$ = new Subject<void>();
-  private logger = this.logger.withContext('AgentVersionsDialogComponent');
 
   dataSource = new MatTableDataSource<AgentVersion>([]);
   displayedColumns = [

@@ -55,7 +55,6 @@ interface CacheEntry<T> {
   providedIn: 'root',
 })
 export class MedicationService {
-  private readonly logger: any;
   private tenantContext$ = new BehaviorSubject<string | null>(null);
   private cache = new Map<string, CacheEntry<any>>();
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes

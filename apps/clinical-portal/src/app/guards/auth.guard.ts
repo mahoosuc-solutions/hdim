@@ -25,15 +25,10 @@ import { LoggerService } from '../services/logger.service';
 @Injectable({
   providedIn: 'root',
 })
-export class AuthGuard implements CanActivate {
-  private get logger() {
-    return this.loggerService.withContext('AuthGuard');
-  }
-
-  constructor(
+export class AuthGuard implements CanActivate {  constructor(
     private authService: AuthService,
     private router: Router,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   canActivate(

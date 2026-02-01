@@ -61,12 +61,7 @@ import {
 export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
   @Input() patientId!: string;
 
-  private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('PatientHealthOverviewComponent');
-  }
-
-  healthOverview: PatientHealthOverview | null = null;
+  private destroy$ = new Subject<void>();  healthOverview: PatientHealthOverview | null = null;
   loading = true;
   error: string | null = null;
   criticalAlerts: CriticalAlert[] = [];
@@ -79,7 +74,7 @@ export class PatientHealthOverviewComponent implements OnInit, OnDestroy {
     private healthService: PatientHealthService,
     private router: Router,
     private snackBar: MatSnackBar,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

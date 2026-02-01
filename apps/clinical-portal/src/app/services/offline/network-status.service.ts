@@ -50,8 +50,7 @@ export class NetworkStatusService implements OnDestroy {
   );
 
   constructor(
-    private loggerService: LoggerService,private ngZone: NgZone) {
-    this.logger = this.loggerService.withContext(\'NetworkStatusService');
+    private logger: LoggerService,private ngZone: NgZone) {
     this.connectionChangeListener = () => this.updateNetworkState();
     this.initializeListeners();
     this.startPeriodicCheck();

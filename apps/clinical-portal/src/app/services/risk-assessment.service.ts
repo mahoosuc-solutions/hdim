@@ -47,7 +47,7 @@ export class RiskAssessmentService {
     return this.apiService.get<RiskAssessment>(url).pipe(
       map((assessment) => this.transformAssessment(assessment)),
       catchError((error) => {
-        this.logger.error(`Error fetching risk assessment for patient ${patientId}`, error);
+        this.loggerService.error(`Error fetching risk assessment for patient ${patientId}`, error);
         return of(null);
       })
     );
@@ -68,7 +68,7 @@ export class RiskAssessmentService {
     return this.apiService.get<RiskAssessment[]>(url).pipe(
       map((history) => history.map((assessment) => this.transformAssessment(assessment))),
       catchError((error) => {
-        this.logger.error(`Error fetching risk history for patient ${patientId}`, error);
+        this.loggerService.error(`Error fetching risk history for patient ${patientId}`, error);
         return of([]);
       })
     );
@@ -93,7 +93,7 @@ export class RiskAssessmentService {
     return this.apiService.get<RiskAssessment>(url).pipe(
       map((assessment) => this.transformAssessment(assessment)),
       catchError((error) => {
-        this.logger.error(`Error fetching ${category} risk assessment for patient ${patientId}`, error);
+        this.loggerService.error(`Error fetching ${category} risk assessment for patient ${patientId}`, error);
         return of(null);
       })
     );
@@ -114,7 +114,7 @@ export class RiskAssessmentService {
     return this.apiService.post<RiskAssessment>(url, {}).pipe(
       map((assessment) => this.transformAssessment(assessment)),
       catchError((error) => {
-        this.logger.error(`Error recalculating risk for patient ${patientId}`, error);
+        this.loggerService.error(`Error recalculating risk for patient ${patientId}`, error);
         return throwError(() => error);
       })
     );
@@ -129,7 +129,7 @@ export class RiskAssessmentService {
 
     return this.apiService.get<PopulationStats>(url).pipe(
       catchError((error) => {
-        this.logger.error('Error fetching population statistics', error);
+        this.loggerService.error('Error fetching population statistics', error);
         return of(this.getEmptyStats());
       })
     );

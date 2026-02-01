@@ -30,9 +30,8 @@ export class FhirService {
   constructor(
     private http: HttpClient,
     private apiService: ApiService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext(\'FhirService');}
 
   // ==================== Observation Operations ====================
 

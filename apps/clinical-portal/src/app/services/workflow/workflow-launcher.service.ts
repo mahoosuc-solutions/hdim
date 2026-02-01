@@ -71,7 +71,6 @@ export interface WorkflowResult {
   providedIn: 'root',
 })
 export class WorkflowLauncherService {
-  private log: ContextualLogger;
 
   // Component map for type-safe workflow selection
   private readonly componentMap: Record<WorkflowType, any> = {
@@ -99,7 +98,6 @@ export class WorkflowLauncherService {
     private nurseWorkflowService: NurseWorkflowService,
     private medicationService: MedicationService
   ) {
-    this.log = this.logger.withContext('WorkflowLauncherService');
   }
 
   /**
@@ -116,12 +114,12 @@ export class WorkflowLauncherService {
     onComplete?: (result: WorkflowResult) => void
   ): MatDialogRef<any> {
     const config = this.workflowConfig[workflowType];
-    this.log.info(`Launching ${config.label} workflow for task ${task.id}`);
+    this.logger.info(`Launching ${config.label} workflow for task ${task.id}`);
 
     // Get component for this workflow type
     const component = this.componentMap[workflowType];
     if (!component) {
-      this.log.error(`Unknown workflow type: ${workflowType}`);
+      this.logger.error(`Unknown workflow type: ${workflowType}`);
       this.toastService.error(`Unknown workflow type: ${workflowType}`);
       throw new Error(`Unknown workflow type: ${workflowType}`);
     }
@@ -141,7 +139,7 @@ export class WorkflowLauncherService {
     // Handle dialog completion
     dialogRef.afterClosed().subscribe((result) => {
       if (result?.success) {
-        this.log.info(`${config.label} completed successfully`);
+        this.logger.info(`${config.label} completed successfully`);
         this.toastService.success(`${config.label} completed successfully`);
 
         // Prepare result object
@@ -157,7 +155,7 @@ export class WorkflowLauncherService {
           onComplete(workflowResult);
         }
       } else if (result?.success === false) {
-        this.log.info(`${config.label} cancelled by user`);
+        this.logger.info(`${config.label} cancelled by user`);
       }
     });
 

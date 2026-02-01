@@ -59,9 +59,8 @@ export class AiAuditDashboardComponent implements OnInit, OnDestroy {
 
   constructor(
     private aiAuditStream: AiAuditStreamService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('AiAuditDashboardComponent');
   }
 
   ngOnInit(): void {

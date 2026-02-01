@@ -288,12 +288,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
 
   // Search debounce
   private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('CareGapManagerComponent');
-  }
-
-  constructor(
+  private destroy$ = new Subject<void>();  constructor(
     private patientService: PatientService,
     private measureService: MeasureService,
     private careGapService: CareGapService,
@@ -302,7 +297,7 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
     private router: Router,
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
     // Initialize filter form
     this.filterForm = this.fb.group({

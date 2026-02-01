@@ -110,9 +110,8 @@ export class PatientTimelineComponent implements OnInit, OnDestroy {
   constructor(
     private patientService: PatientService,
     private careGapService: CareGapService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {
-    this.logger = this.loggerService.withContext('PatientTimelineComponent');
   }
 
   ngOnInit(): void {

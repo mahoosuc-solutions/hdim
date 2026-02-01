@@ -70,8 +70,7 @@ export class PatientDemographicsCardComponent implements OnInit {
 
   private logger!: ReturnType<LoggerService['withContext']>;
 
-  constructor(private loggerService: LoggerService) {
-    this.logger = this.loggerService.withContext('PatientDemographicsCardComponent');
+  constructor(private logger: LoggerService) {
   }
 
   ngOnInit(): void {

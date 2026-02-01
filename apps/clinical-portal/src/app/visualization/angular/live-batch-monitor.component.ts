@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { LoggerService } from '../../../services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -100,7 +100,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
   ];
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private wsService: WebSocketVisualizationService,
     private transformService: DataTransformService,

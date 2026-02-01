@@ -31,8 +31,7 @@ export class PatientDeduplicationService {
   private masterPatientIds: Set<string> = new Set();
   private readonly logger: any;
 
-  constructor(private loggerService: LoggerService) {
-    this.logger = this.loggerService.withContext('PatientDeduplicationService');
+  constructor(private logger: LoggerService) {
     // Initialize with some sample duplicate relationships for demonstration
     this.initializeSampleDuplicates();
   }

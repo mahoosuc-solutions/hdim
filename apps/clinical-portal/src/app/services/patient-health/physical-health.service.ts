@@ -44,7 +44,6 @@ import {
   providedIn: 'root',
 })
 export class PhysicalHealthService extends CacheableService {
-  private log: ContextualLogger;
 
   constructor(
     private fhirObservation: FhirObservationService,
@@ -54,9 +53,7 @@ export class PhysicalHealthService extends CacheableService {
     private procedureHistory: ProcedureHistoryService,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('PhysicalHealthService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get comprehensive physical health summary
@@ -70,25 +67,25 @@ export class PhysicalHealthService extends CacheableService {
     return forkJoin({
       vitals: this.fhirObservation.getVitalSigns(patientId).pipe(
         catchError((err) => {
-          this.log.error('Error fetching vitals:', err);
+          this.logger.error('Error fetching vitals:', err);
           return of({});
         })
       ),
       labs: this.fhirObservation.getLabResults(patientId).pipe(
         catchError((err) => {
-          this.log.error('Error fetching labs:', err);
+          this.logger.error('Error fetching labs:', err);
           return of([]);
         })
       ),
       conditions: this.fhirCondition.getActiveConditions(patientId).pipe(
         catchError((err) => {
-          this.log.error('Error fetching conditions:', err);
+          this.logger.error('Error fetching conditions:', err);
           return of([]);
         })
       ),
       medications: this.medicationAdherence.calculateOverallAdherence(patientId).pipe(
         catchError((err) => {
-          this.log.error('Error fetching medication adherence:', err);
+          this.logger.error('Error fetching medication adherence:', err);
           return of({
             overallPDC: 0,
             adherentCount: 0,
@@ -99,13 +96,13 @@ export class PhysicalHealthService extends CacheableService {
       ),
       procedures: this.procedureHistory.getRecentProcedures(patientId).pipe(
         catchError((err) => {
-          this.log.error('Error fetching procedures:', err);
+          this.logger.error('Error fetching procedures:', err);
           return of([]);
         })
       ),
       functional: this.getFunctionalStatus(patientId).pipe(
         catchError((err) => {
-          this.log.error('Error fetching functional status:', err);
+          this.logger.error('Error fetching functional status:', err);
           return of(this.getDefaultFunctionalStatus());
         })
       ),
@@ -116,7 +113,7 @@ export class PhysicalHealthService extends CacheableService {
         return summary;
       }),
       catchError((err) => {
-        this.log.error('Error building physical health summary:', err);
+        this.logger.error('Error building physical health summary:', err);
         return of(this.getMockPhysicalHealth());
       })
     );
@@ -137,7 +134,7 @@ export class PhysicalHealthService extends CacheableService {
         return panels;
       }),
       catchError((error) => {
-        this.log.error('Error grouping lab results by panel:', error);
+        this.logger.error('Error grouping lab results by panel:', error);
         return of([]);
       })
     );
@@ -251,7 +248,7 @@ export class PhysicalHealthService extends CacheableService {
         return functional;
       }),
       catchError((error) => {
-        this.log.error('Error fetching functional status:', error);
+        this.logger.error('Error fetching functional status:', error);
         return of(this.getDefaultFunctionalStatus());
       })
     );

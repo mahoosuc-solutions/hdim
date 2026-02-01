@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { LoggerService } from '../../../services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { DataTransformService, Position3D } from '../data/data-transform.service';
 import { QualityMeasureResult, MeasureCategory } from '../../models/quality-result.model';
 import { PatientSummary } from '../../models/patient.model';

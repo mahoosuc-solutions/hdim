@@ -23,14 +23,9 @@ export class ApiService {
   private readonly defaultTimeout = 30000; // 30 seconds
   private readonly maxRetries = 3;
   private readonly retryDelay = 1000; // 1 second
-  private readonly maxRetryDelay = 10000; // 10 seconds
-  private get logger() {
-    return this.loggerService.withContext('ApiService');
-  }
-
-  constructor(
+  private readonly maxRetryDelay = 10000; // 10 seconds  constructor(
     private http: HttpClient,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   /**

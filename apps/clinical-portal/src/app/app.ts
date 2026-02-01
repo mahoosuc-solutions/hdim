@@ -87,19 +87,13 @@ export class App implements OnInit, OnDestroy {
     }
 
     return baseItems;
-  }
-
-  private get logger() {
-    return this.loggerService.withContext('App');
-  }
-
-  constructor(
+  }  constructor(
     private globalSearchService: GlobalSearchService,
     protected themeService: ThemeService,
     private authService: AuthService,
     protected router: Router,
     private demoModeService: DemoModeService,
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private auditService: AuditService
   ) {
     // React to demo mode changes to add/remove body class

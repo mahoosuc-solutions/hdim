@@ -48,9 +48,7 @@ export class AiAuditStreamService implements OnDestroy {
    */
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
 
-  constructor(private loggerService: LoggerService) {
-    this.logger = this.loggerService.withContext(\'AiAuditStreamService');
-    this.logger = this.loggerService.withContext('AiAuditStreamService');
+  constructor(private logger: LoggerService) {
   }
 
   /**

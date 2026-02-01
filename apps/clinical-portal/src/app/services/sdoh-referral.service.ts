@@ -37,14 +37,12 @@ import { SDOHCategory, CommunityResource } from '../models/patient-health.model'
 })
 export class SDOHReferralService {
   private readonly baseUrl = API_CONFIG.QUALITY_MEASURE_URL;
-  private log: ContextualLogger;
 
   constructor(
     private http: HttpClient,
     private apiService: ApiService,
     private logger: LoggerService
   ) {
-    this.log = this.logger.withContext('SDOHReferralService');
   }
 
   // ============================================
@@ -65,7 +63,7 @@ export class SDOHReferralService {
 
     return this.apiService.get<StaffMember[]>(url, params).pipe(
       catchError((error) => {
-        this.log.error('Error fetching available staff:', error);
+        this.logger.error('Error fetching available staff:', error);
         // Return mock data for development
         return of(this.getMockStaffMembers(role));
       })
@@ -86,7 +84,7 @@ export class SDOHReferralService {
       .get<{ available: boolean; currentCaseload: number }>(url)
       .pipe(
         catchError((error) => {
-          this.log.error('Error fetching staff availability:', error);
+          this.logger.error('Error fetching staff availability:', error);
           return of({ available: true, currentCaseload: 0 });
         })
       );
@@ -117,7 +115,7 @@ export class SDOHReferralService {
 
     return this.apiService.get<CommunityResource[]>(url, params).pipe(
       catchError((error) => {
-        this.log.error('Error searching community resources:', error);
+        this.logger.error('Error searching community resources:', error);
         return of([]);
       })
     );
@@ -140,7 +138,7 @@ export class SDOHReferralService {
         results.map((r) => ({ ...r, source: '211' as const }))
       ),
       catchError((error) => {
-        this.log.error('Error searching 211 resources:', error);
+        this.logger.error('Error searching 211 resources:', error);
         return of([]);
       })
     );
@@ -163,7 +161,7 @@ export class SDOHReferralService {
         results.map((r) => ({ ...r, source: 'findhelp' as const }))
       ),
       catchError((error) => {
-        this.log.error('Error searching findhelp resources:', error);
+        this.logger.error('Error searching findhelp resources:', error);
         return of([]);
       })
     );
@@ -181,10 +179,10 @@ export class SDOHReferralService {
 
     return this.apiService.post<SDOHReferralDetail>(url, request).pipe(
       tap((referral) => {
-        this.log.debug('Referral submitted:', referral.id);
+        this.logger.debug('Referral submitted:', referral.id);
       }),
       catchError((error) => {
-        this.log.error('Error submitting referral:', error);
+        this.logger.error('Error submitting referral:', error);
         return throwError(() => error);
       })
     );
@@ -202,7 +200,7 @@ export class SDOHReferralService {
 
     return this.apiService.post<SDOHReferralDetail>(url, request).pipe(
       catchError((error) => {
-        this.log.error('Error saving draft:', error);
+        this.logger.error('Error saving draft:', error);
         return throwError(() => error);
       })
     );
@@ -218,7 +216,7 @@ export class SDOHReferralService {
 
     return this.apiService.get<SDOHReferralDetail>(url).pipe(
       catchError((error) => {
-        this.log.error(`Error fetching referral ${referralId}:`, error);
+        this.logger.error(`Error fetching referral ${referralId}:`, error);
         return throwError(() => error);
       })
     );
@@ -249,7 +247,7 @@ export class SDOHReferralService {
 
     return this.apiService.get<SDOHReferralDetail[]>(url, params).pipe(
       catchError((error) => {
-        this.log.error(
+        this.logger.error(
           `Error fetching referrals for patient ${patientId}:`,
           error
         );
@@ -274,10 +272,10 @@ export class SDOHReferralService {
       .post<SDOHReferralDetail>(url, { status, notes })
       .pipe(
         tap((referral) => {
-          this.log.debug(`Referral ${referralId} status updated to ${status}`);
+          this.logger.debug(`Referral ${referralId} status updated to ${status}`);
         }),
         catchError((error) => {
-          this.log.error(`Error updating referral ${referralId} status:`, error);
+          this.logger.error(`Error updating referral ${referralId} status:`, error);
           return throwError(() => error);
         })
       );
@@ -293,10 +291,10 @@ export class SDOHReferralService {
 
     return this.apiService.post<SDOHReferralDetail>(url, {}).pipe(
       tap((referral) => {
-        this.log.debug(`Referral ${referralId} sent`);
+        this.logger.debug(`Referral ${referralId} sent`);
       }),
       catchError((error) => {
-        this.log.error(`Error sending referral ${referralId}:`, error);
+        this.logger.error(`Error sending referral ${referralId}:`, error);
         return throwError(() => error);
       })
     );
@@ -315,10 +313,10 @@ export class SDOHReferralService {
 
     return this.apiService.post<SDOHReferralDetail>(url, outcome).pipe(
       tap(() => {
-        this.log.debug(`Outcome documented for referral ${referralId}`);
+        this.logger.debug(`Outcome documented for referral ${referralId}`);
       }),
       catchError((error) => {
-        this.log.error(
+        this.logger.error(
           `Error documenting outcome for referral ${referralId}:`,
           error
         );
@@ -351,7 +349,7 @@ export class SDOHReferralService {
       }>(url)
       .pipe(
         catchError((error) => {
-          this.log.error(
+          this.logger.error(
             `Error fetching referral metrics for patient ${patientId}:`,
             error
           );

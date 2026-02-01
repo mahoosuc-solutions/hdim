@@ -53,8 +53,7 @@ export class NurseWorkflowService {
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(
-    private loggerService: LoggerService,private http: HttpClient) {
-    this.logger = this.loggerService.withContext(\'NurseWorkflowService');}
+    private logger: LoggerService,private http: HttpClient) {
 
   /**
    * Set multi-tenant context for all subsequent requests

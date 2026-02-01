@@ -127,7 +127,6 @@ export class PatientEducationWorkflowComponent implements OnInit, OnDestroy {
   educationSummary: any = null;
 
   private destroy$ = new Subject<void>();
-  private log: ContextualLogger;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -136,9 +135,7 @@ export class PatientEducationWorkflowComponent implements OnInit, OnDestroy {
     private logger: LoggerService,
     private dialogRef: MatDialogRef<PatientEducationWorkflowComponent>,
     @Inject(MAT_DIALOG_DATA) public data: PatientEducationWorkflowData
-  ) {
-    this.log = this.logger.withContext('PatientEducationWorkflowComponent');
-    this.educationSessionId = data.educationSessionId;
+  ) {    this.educationSessionId = data.educationSessionId;
     this.patientId = data.patientId;
     this.patientName = data.patientName;
     this.initializeForm();
@@ -223,10 +220,10 @@ export class PatientEducationWorkflowComponent implements OnInit, OnDestroy {
         next: (topics: EducationTopic[]) => {
           this.educationTopics = topics || [];
           this.loading = false;
-          this.log.info(`Loaded ${this.educationTopics.length} education topics`);
+          this.logger.info(`Loaded ${this.educationTopics.length} education topics`);
         },
         error: (error: unknown) => {
-          this.log.error('Failed to load education topics:', error);
+          this.logger.error('Failed to load education topics:', error);
           this.toastService.error('Failed to load education topics');
           this.loading = false;
         },
@@ -595,7 +592,7 @@ export class PatientEducationWorkflowComponent implements OnInit, OnDestroy {
         next: (result: unknown) => {
           this.loading = false;
           this.toastService.success('Patient education recorded successfully');
-          this.log.info('Education workflow completed');
+          this.logger.info('Education workflow completed');
 
           const workflowResult: PatientEducationResult = {
             success: true,
@@ -607,7 +604,7 @@ export class PatientEducationWorkflowComponent implements OnInit, OnDestroy {
         },
         error: (error: unknown) => {
           this.loading = false;
-          this.log.error('Failed to save patient education:', error);
+          this.logger.error('Failed to save patient education:', error);
           this.toastService.error('Failed to save education record');
         },
       });

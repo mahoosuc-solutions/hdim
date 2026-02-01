@@ -110,17 +110,11 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
   // Configuration references for template
   readonly riskLevels = RISK_LEVELS;
   readonly riskFactors = RISK_FACTORS;
-  readonly conditionCategories = CONDITION_CATEGORIES;
-
-  private get logger() {
-    return this.loggerService.withContext('RiskStratificationComponent');
-  }
-
-  constructor(
+  readonly conditionCategories = CONDITION_CATEGORIES;  constructor(
     private router: Router,
     private patientService: PatientService,
     private careGapService: CareGapService,
-    private loggerService: LoggerService
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {

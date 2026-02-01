@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { LoggerService } from '../../../services/logger.service';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -67,7 +67,7 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
   @ViewChild('visualizationContent') visualizationContent!: ElementRef<HTMLDivElement>;
 
   constructor(
-    private loggerService: LoggerService,
+    private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private snackBar: MatSnackBar
   ) {}

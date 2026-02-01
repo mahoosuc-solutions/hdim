@@ -31,7 +31,6 @@ import { ChronicCondition, RiskLevel } from '../../models/patient-health.model';
   providedIn: 'root',
 })
 export class FhirConditionService extends CacheableService {
-  private log: ContextualLogger;
 
   // SNOMED CT codes for condition categories
   private readonly MENTAL_HEALTH_SNOMED_CODES = [
@@ -58,9 +57,7 @@ export class FhirConditionService extends CacheableService {
     private http: HttpClient,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
-    this.log = this.logger.withContext('FhirConditionService');
-  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
 
   /**
    * Get HTTP headers with tenant ID
@@ -99,7 +96,7 @@ export class FhirConditionService extends CacheableService {
           return conditions;
         }),
         catchError((error) => {
-          this.log.error('Error fetching conditions from FHIR:', error);
+          this.logger.error('Error fetching conditions from FHIR:', error);
           return of([]);
         })
       );
@@ -161,7 +158,7 @@ export class FhirConditionService extends CacheableService {
           return conditions;
         }),
         catchError((error) => {
-          this.log.error('Error fetching condition history from FHIR:', error);
+          this.logger.error('Error fetching condition history from FHIR:', error);
           return of([]);
         })
       );

@@ -3,6 +3,7 @@ package com.healthdata.caregap.config;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import org.junit.jupiter.api.Tag;
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
@@ -25,6 +26,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
 @DisplayName("CareGapSecurityConfig")
+@Tag("unit")
 class CareGapSecurityConfigTest {
 
     @Test

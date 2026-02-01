@@ -1,4 +1,5 @@
 package com.healthdata.cdr.audit;
+import org.junit.jupiter.api.Tag;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,6 +56,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Testcontainers
 @DisplayName("CDR Processor Audit Integration - Heavyweight Kafka Tests")
+@Tag("integration")
 class CdrProcessorAuditIntegrationHeavyweightTest {
 
     @Container

@@ -4,7 +4,6 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { EvaluationDetailsDialogComponent } from './evaluation-details-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
 import { LoggerService } from '../services/logger.service';
-import { createMockLoggerService } from '../testing/mocks';
 import { createMockStore } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 

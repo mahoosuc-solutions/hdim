@@ -9,7 +9,6 @@ import { PatientService } from '../../services/patient.service';
 import { MeasureService } from '../../services/measure.service';
 import { DialogService } from '../../services/dialog.service';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 describe('CareGapManagerComponent', () => {

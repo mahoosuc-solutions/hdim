@@ -13,7 +13,6 @@ import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../testing/mocks';
 
 describe('EvaluationsComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   let component: EvaluationsComponent;

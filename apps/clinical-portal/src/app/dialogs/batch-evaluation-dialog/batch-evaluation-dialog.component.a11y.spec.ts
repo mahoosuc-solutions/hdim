@@ -14,7 +14,6 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { LoggerService } from '../services/logger.service';
-import { createMockLoggerService } from '../testing/mocks';
 import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('BatchEvaluationDialogComponent - Accessibility (WCAG 2.1 Level AA)', () => {

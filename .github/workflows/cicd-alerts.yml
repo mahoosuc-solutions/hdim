@@ -1,0 +1,206 @@
+name: CI/CD Performance Alerts
+
+# Monitor CI/CD performance metrics and alert on threshold violations
+on:
+  schedule:
+    # Run every 15 minutes (can adjust for noise)
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check-performance-thresholds:
+    name: Check Performance Thresholds
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check metrics thresholds
+        id: check-thresholds
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          from pathlib import Path
+
+          metrics_file = Path('.github/metrics/aggregated.json')
+
+          if not metrics_file.exists():
+              print("ℹ️  Metrics not available yet")
+              exit(0)
+
+          with open(metrics_file) as f:
+              data = json.load(f)
+
+          summary = data.get('summary_24h', {})
+
+          # Extract current metrics
+          avg_time_min = summary.get('avg_total_duration_min', 0)
+          success_rate = summary.get('success_rate', 100)
+          max_time_min = summary.get('max_total_duration_min', 0)
+          total_runs = summary.get('total_runs', 0)
+
+          print(f"Current Metrics:")
+          print(f"  Avg Time: {avg_time_min:.1f}m")
+          print(f"  Success Rate: {success_rate:.1f}%")
+          print(f"  Max Time: {max_time_min:.1f}m")
+          print(f"  Total Runs: {total_runs}")
+
+          # Define thresholds
+          THRESHOLD_AVG_TIME_WARNING = 30
+          THRESHOLD_AVG_TIME_CRITICAL = 35
+          THRESHOLD_SUCCESS_WARNING = 90
+          THRESHOLD_SUCCESS_CRITICAL = 85
+          THRESHOLD_MAX_TIME_WARNING = 40
+
+          # Check for violations
+          violations = []
+          severity = "info"
+
+          if avg_time_min > THRESHOLD_AVG_TIME_CRITICAL:
+              violations.append(f"CRITICAL: Avg feedback time {avg_time_min:.1f}m exceeds critical threshold {THRESHOLD_AVG_TIME_CRITICAL}m")
+              severity = "critical"
+          elif avg_time_min > THRESHOLD_AVG_TIME_WARNING:
+              violations.append(f"WARNING: Avg feedback time {avg_time_min:.1f}m exceeds warning threshold {THRESHOLD_AVG_TIME_WARNING}m")
+              if severity != "critical":
+                  severity = "warning"
+
+          if success_rate < THRESHOLD_SUCCESS_CRITICAL:
+              violations.append(f"CRITICAL: Success rate {success_rate:.1f}% below critical threshold {THRESHOLD_SUCCESS_CRITICAL}%")
+              severity = "critical"
+          elif success_rate < THRESHOLD_SUCCESS_WARNING:
+              violations.append(f"WARNING: Success rate {success_rate:.1f}% below warning threshold {THRESHOLD_SUCCESS_WARNING}%")
+              if severity != "critical":
+                  severity = "warning"
+
+          if max_time_min > THRESHOLD_MAX_TIME_WARNING:
+              violations.append(f"WARNING: Max job time {max_time_min:.1f}m exceeds threshold {THRESHOLD_MAX_TIME_WARNING}m")
+              if severity != "critical":
+                  severity = "warning"
+
+          # Output results
+          if violations:
+              print(f"\n❌ THRESHOLD VIOLATIONS DETECTED (Severity: {severity}):")
+              for v in violations:
+                  print(f"  • {v}")
+
+              with open('/tmp/violations.txt', 'w') as f:
+                  for v in violations:
+                      f.write(v + '\n')
+
+              with open('/tmp/severity.txt', 'w') as f:
+                  f.write(severity)
+
+              exit(1)
+          else:
+              print(f"\n✅ All thresholds normal - no violations detected")
+              exit(0)
+          PYTHON_SCRIPT
+
+      - name: Read violation details
+        if: failure()
+        id: violations
+        run: |
+          if [ -f "/tmp/violations.txt" ]; then
+              VIOLATIONS=$(cat /tmp/violations.txt | sed 's/^/  /')
+              echo "violations<<EOF" >> $GITHUB_OUTPUT
+              echo "$VIOLATIONS" >> $GITHUB_OUTPUT
+              echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -f "/tmp/severity.txt" ]; then
+              SEVERITY=$(cat /tmp/severity.txt)
+              echo "severity=$SEVERITY" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create critical alert issue
+        if: failure() && steps.violations.outputs.severity == 'critical'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          VIOLATIONS=$(cat /tmp/violations.txt)
+          BODY="Performance Alert: Critical Threshold Exceeded
+
+Automated monitoring detected CI/CD performance metrics exceeding critical thresholds.
+
+Violations:
+$VIOLATIONS
+
+Required Actions:
+1. Immediate Investigation: Review recent changes for performance impact
+2. Check Logs: Examine workflow run logs for bottlenecks
+3. Diagnose: Look for flaky tests, resource contention, caching issues, service startup delays
+
+Dashboard: https://github.com/$REPO/blob/master/backend/docs/dashboards/cicd-performance.md
+
+Links:
+- Latest workflow: https://github.com/$REPO/actions
+- Metrics: https://github.com/$REPO/tree/master/.github/metrics"
+
+          gh issue create \
+            --title "🚨 CRITICAL: CI/CD Performance Threshold Exceeded" \
+            --body "$BODY" \
+            --label "phase-7" \
+            --label "monitoring" \
+            --label "critical"
+
+      - name: Create warning alert issue
+        if: failure() && steps.violations.outputs.severity == 'warning'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          VIOLATIONS=$(cat /tmp/violations.txt)
+          BODY="Performance Alert: Warning Threshold
+
+Automated monitoring detected CI/CD performance metrics approaching warning thresholds.
+
+Violations:
+$VIOLATIONS
+
+Recommended Actions:
+1. Monitor Trend: Watch next 5-10 runs to see if performance recovers
+2. Review Changes: Check recent PRs/pushes for changes impacting performance
+3. Analyze Metrics: View detailed dashboard to identify bottlenecks
+
+Dashboard: https://github.com/$REPO/blob/master/backend/docs/dashboards/cicd-performance.md
+
+Success Criteria:
+- Average feedback time < 30 minutes
+- Success rate > 95%
+- Max job time < 40 minutes"
+
+          gh issue create \
+            --title "⚠️  WARNING: CI/CD Performance Threshold Approaching" \
+            --body "$BODY" \
+            --label "phase-7" \
+            --label "monitoring" \
+            --label "warning"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "🔍 Performance Threshold Check Summary"
+          echo "=========================================="
+
+          if [ -f ".github/metrics/aggregated.json" ]; then
+              python3 << 'PYTHON'
+          import json
+          from pathlib import Path
+          with open('.github/metrics/aggregated.json') as f:
+              data = json.load(f)
+          summary = data.get('summary_24h', {})
+          print(f"✓ Avg Time (24h): {summary.get('avg_total_duration_min', 'N/A'):.1f}m (target: <27m)")
+          print(f"✓ Success Rate: {summary.get('success_rate', 'N/A'):.1f}% (target: >95%)")
+          print(f"✓ Total Runs: {summary.get('total_runs', 0)}")
+          PYTHON
+          else
+              echo "⚠️  Metrics not yet available"
+          fi
+
+          echo "=========================================="

@@ -22,6 +22,9 @@
 # ALL tests - final validation before merge (15-25 min)
 ./gradlew testAll
 
+# ALL tests - Parallel mode (EXPERIMENTAL - 5-8 min on 8+ cores)
+./gradlew testParallel
+
 # Traditional per-service test
 ./gradlew :modules:services:SERVICENAME:test
 ```
@@ -30,24 +33,26 @@
 
 ## When to Use Each
 
-| Mode | When | Speed | Parallelization |
-|------|------|-------|-----------------|
-| **testUnit** | Quick feedback on unit tests | 30-60s | Light (2 forks) |
-| **testFast** | Daily development | 1.5-2min | High (6 forks) ⚡ |
-| **testIntegration** | Integration layer changes | 1.5-2min | High (6 forks) ⚡ |
-| **testSlow** | Rare (heavyweight tests) | 3-5min | None (sequential) |
-| **testAll** | **Before final merge** | 15-25min | **None (sequential, stable)** |
+| Mode | When | Speed | Parallelization | Stability |
+|------|------|-------|-----------------|-----------|
+| **testUnit** | Quick feedback on unit tests | 30-60s | Light (2 forks) | ✅ Stable |
+| **testFast** | Daily development | 1.5-2min | High (6 forks) | ✅ Stable |
+| **testIntegration** | Integration layer changes | 1.5-2min | High (6 forks) | ✅ Stable |
+| **testSlow** | Rare (heavyweight tests) | 3-5min | None (sequential) | ✅ Stable |
+| **testAll** | **Before final merge** | 15-25min | **None (sequential)** | **✅ 100% Stable** |
+| **testParallel** | Quick feedback on 8+ core machines (EXPERIMENTAL) | 5-8min | Aggressive (CPU) | ⚠️ May be flaky |
 
 ---
 
-## Performance Gains (Phase 6 Task 5)
+## Performance Gains (Phase 6 Task 5 + 7)
 
 ```
 testFast:        2-3 min → 1.5-2 min  (25-30% faster) ⚡
 testIntegration: 2-3 min → 1.5-2 min  (25-30% faster) ⚡
 testUnit:        45-60s  → 30-45s     (15-25% faster) ⚡
 testSlow:        3-5 min (unchanged, sequential for stability)
-testAll:         15-25 min (unchanged, sequential for stability)
+testAll:         15-25 min (sequential, 100% stable for merge validation)
+testParallel:    15-25 min → 5-8 min (60-70% faster on 8+ core systems) ⚡⚡⚡ EXPERIMENTAL
 ```
 
 ---
@@ -76,6 +81,18 @@ testAll:         15-25 min (unchanged, sequential for stability)
 
 # If all pass, push to main
 git push origin <branch>
+```
+
+### Parallel Testing on Powerful Machines (EXPERIMENTAL)
+```bash
+# Quick feedback on 8+ core systems (EXPERIMENTAL)
+./gradlew testParallel
+
+# If you get flaky failures, verify with sequential
+./gradlew testAll
+
+# If testAll passes but testParallel fails, it's likely a race condition
+# Use testAll before merging to main
 ```
 
 ---
@@ -125,9 +142,33 @@ void myPerformanceTest() { }
 ## System Configuration
 
 **System:** 12 CPUs
-**Parallel forks:** 6 (CPU / 2)
+**Parallel forks:** 6 (CPU / 2) for testFast/testIntegration
 **Patient service:** Sequential (special case)
 **JVM optimizations:** String deduplication, tiered compilation
+**testParallel:** Full CPU count (12), higher memory (-Xmx2g)
+
+---
+
+## testParallel - Experimental Mode Warnings
+
+**⚠️ testParallel is EXPERIMENTAL and may produce flaky results.**
+
+### When to Use
+- You have a powerful machine with 8+ cores and 16+ GB RAM
+- You want rapid feedback during development (5-8 min for all tests)
+- You're willing to run `testAll` for final merge validation
+
+### When NOT to Use
+- System has fewer than 8 cores (likely OOM or resource starvation)
+- Shared systems or laptops (will cause slowdowns for everyone)
+- Pre-commit hooks or CI/CD (use `testAll` for stability)
+- Final validation before merging to main (use `testAll`)
+
+### Troubleshooting Flaky Tests
+1. **Run sequential version:** `./gradlew testAll`
+2. **If testAll passes but testParallel fails:** It's a race condition
+3. **Solution:** Use `testAll` before pushing
+4. **Report:** Open issue if consistent failure pattern
 
 ---
 
@@ -137,4 +178,4 @@ void myPerformanceTest() { }
 
 ---
 
-_Phase 6 Task 5 - January 2026_
+_Phase 6 Task 5 + 7 - January 2026_

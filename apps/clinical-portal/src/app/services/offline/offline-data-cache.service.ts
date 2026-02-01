@@ -39,7 +39,6 @@ const DEFAULT_TTL = 5 * 60 * 1000;
   providedIn: 'root',
 })
 export class OfflineDataCacheService {
-  private readonly logger: any;
   private readonly http = inject(HttpClient);
   private readonly storage = inject(OfflineStorageService);
   private readonly networkStatus = inject(NetworkStatusService);

@@ -121,6 +121,9 @@ export interface TemplateVariable {
   required: boolean;
 }
 
+// Alias for backward compatibility
+export type PromptVariable = TemplateVariable;
+
 // Prompt Template entity
 export interface PromptTemplate {
   id: string;
@@ -151,10 +154,16 @@ export interface TestMessage {
 // Tool invocation during test
 export interface ToolInvocation {
   name: string;
+  toolName?: string; // Alias for name
   arguments: Record<string, unknown>;
+  input?: Record<string, unknown>; // Alias for arguments
   result?: string;
+  output?: string; // Alias for result
   success: boolean;
+  status?: string; // SUCCESS | FAILED | TIMEOUT
+  error?: string; // Error message if failed
   durationMs: number;
+  timestamp?: number; // When tool was invoked
 }
 
 // Guardrail trigger detail

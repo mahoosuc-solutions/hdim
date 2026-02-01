@@ -48,7 +48,6 @@ interface CoveredPeriod {
   providedIn: 'root',
 })
 export class MedicationAdherenceService {
-  private readonly logger: any;
 
   constructor(
     private http: HttpClient,

@@ -75,7 +75,6 @@ export class DocumentService {
     'image/tiff',
   ];
 
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private http: HttpClient,

@@ -11,7 +11,6 @@ import { LoggerService } from './logger.service';
   providedIn: 'root'
 })
 export class FilterPersistenceService {
-  private readonly logger: any;
   private readonly STORAGE_PREFIX = 'clinical-portal-filters';
 
   constructor(private readonly loggerService: LoggerService) {

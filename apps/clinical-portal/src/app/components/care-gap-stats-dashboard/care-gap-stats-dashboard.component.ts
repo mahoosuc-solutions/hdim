@@ -81,7 +81,6 @@ export class CareGapStatsDashboardComponent implements OnInit, OnDestroy {
   loadError = signal<string | null>(null);
 
   private destroy$ = new Subject<void>();
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private careGapService: CareGapService,

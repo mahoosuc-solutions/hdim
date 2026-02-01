@@ -227,7 +227,6 @@ export interface CreateTemplateDialogData {
 })
 export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.logger.withContext('CreateTemplateDialogComponent');
 
   templateForm!: FormGroup;
   detectedVariables: PromptVariable[] = [];

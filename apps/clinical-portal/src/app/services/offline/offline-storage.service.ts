@@ -49,7 +49,6 @@ export interface OfflineMetadata {
   providedIn: 'root',
 })
 export class OfflineStorageService {
-  private readonly logger: any;
   private db: IDBDatabase | null = null;
   private dbReady = new BehaviorSubject<boolean>(false);
 

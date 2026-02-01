@@ -32,7 +32,6 @@ interface NetworkInformation {
   providedIn: 'root',
 })
 export class NetworkStatusService implements OnDestroy {
-  private readonly logger: any;
   private readonly destroy$ = new Subject<void>();
   private readonly networkState = new BehaviorSubject<NetworkState>(this.getCurrentState());
   private readonly connectionChangeListener: EventListener;

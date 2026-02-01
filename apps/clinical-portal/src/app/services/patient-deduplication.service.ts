@@ -29,7 +29,6 @@ export class PatientDeduplicationService {
   // In-memory storage for patient links (would be backend API in production)
   private patientLinks: Map<string, PatientLink[]> = new Map();
   private masterPatientIds: Set<string> = new Set();
-  private readonly logger: any;
 
   constructor(private logger: LoggerService) {
     // Initialize with some sample duplicate relationships for demonstration

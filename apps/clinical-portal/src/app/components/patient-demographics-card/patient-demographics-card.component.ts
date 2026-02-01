@@ -68,7 +68,6 @@ export class PatientDemographicsCardComponent implements OnInit {
   insuranceMemberId = '';
   insurancePlanName = '';
 
-  private logger!: ReturnType<LoggerService['withContext']>;
 
   constructor(private logger: LoggerService) {
   }

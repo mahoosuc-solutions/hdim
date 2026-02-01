@@ -1,5 +1,4 @@
 package com.healthdata.cdr.audit;
-import org.junit.jupiter.api.Tag;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,7 +14,6 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,17 +44,12 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * Tests HL7v2/CDA clinical data ingestion audit events for HIPAA compliance and interoperability tracking.
  *
- * DISABLED: Requires Docker and Testcontainers Kafka. Phase 1: Disabled for H2 local testing.
- * Phase 2 (future): Will be re-enabled with KRaft-based @EmbeddedKafka or external Kafka broker.
- *
- * @see org.springframework.kafka.test.EmbeddedKafka
+ * This test requires Docker and uses Testcontainers to spin up a real Kafka instance.
  */
-@Disabled("Phase 1: Kafka Docker dependency removed - requires KRaft implementation for Phase 2")
 @SpringBootTest
 @ActiveProfiles("test")
 @Testcontainers
 @DisplayName("CDR Processor Audit Integration - Heavyweight Kafka Tests")
-@Tag("integration")
 class CdrProcessorAuditIntegrationHeavyweightTest {
 
     @Container

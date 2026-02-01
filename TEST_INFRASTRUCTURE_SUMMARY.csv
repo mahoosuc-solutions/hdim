@@ -1,0 +1,11 @@
+Category,Count,Status,Est_Time_Min,Est_Time_Max,Primary_Issue,File_Count,Recommendation
+Disabled Tests - Kafka,3,@Disabled,0,0,KRaft Phase 2 missing,3,Implement KRaft for Kafka Docker
+Disabled Tests - OAuth2,2,@Disabled,0,0,Test/impl mismatch,2,Fix mocks to match implementation
+Disabled Tests - PostgreSQL,1,@Disabled,0,0,Requires PostgreSQL JSONB,1,Run on PostgreSQL CI
+Heavyweight Kafka Tests,11,ACTIVE,2,5,Thread.sleep() anti-pattern,11,Replace with Awaitility
+Thread.sleep() Tests,24,ACTIVE,2,3,Sync anti-pattern,24,Replace with event-based waiting
+@Testcontainers Tests,69,ACTIVE,10,15,Docker startup overhead,69,Reuse container instances
+Large Test Files >500L,10,ACTIVE,3,5,Complex/slow execution,10,Refactor into smaller classes
+High-Volume Loop Tests,22,ACTIVE,5,10,1000+ iteration datasets,22,Reduce dataset size for unit tests
+All Other Tests,480,ACTIVE,10,15,Mixed overhead,480,Baseline execution
+TOTAL,613,,30,45,,613,Estimated CI/CD time: 30-45 minutes

@@ -41,9 +41,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Heavyweight Integration Test for CDR Processor Audit Integration with real Kafka.
- * 
+ *
  * Tests HL7v2/CDA clinical data ingestion audit events for HIPAA compliance and interoperability tracking.
- * 
+ *
  * This test requires Docker and uses Testcontainers to spin up a real Kafka instance.
  */
 @SpringBootTest

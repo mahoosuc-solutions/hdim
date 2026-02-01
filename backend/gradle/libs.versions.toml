@@ -21,7 +21,7 @@ httpclient5 = "5.2.1"
 
 # Caching & Messaging
 redis = "3.5.7"
-kafka = "3.8.0"
+kafka = "3.7.1"  # Aligned with Spring Boot 3.3.6 BOM
 spring-kafka = "3.3.11"
 
 # API & Documentation

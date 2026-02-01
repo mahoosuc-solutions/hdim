@@ -33,8 +33,8 @@ dependencies {
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.validation)
 
-    // Spring Kafka
-    implementation(libs.spring.kafka)
+    // Kafka (Spring Kafka + Kafka Clients)
+    implementation(libs.bundles.kafka)
 
     // Spring Cloud OpenFeign for event store client
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
@@ -70,12 +70,11 @@ dependencies {
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
-    testImplementation(libs.testcontainers)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
-    testImplementation(libs.testcontainers.kafka)
+    // testcontainers.kafka removed - using @EmbeddedKafka instead for faster, Docker-free testing
 
     // Mockito for unit tests
     testImplementation("org.mockito:mockito-core:5.8.0")

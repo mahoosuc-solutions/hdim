@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.models.ai.AIAgentDecisionEvent;
 import com.healthdata.caregap.config.BaseIntegrationTest;
-import org.junit.jupiter.api.Disabled;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -20,7 +19,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
-import org.junit.jupiter.api.Tag;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
@@ -29,21 +27,33 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Disabled: Kafka-dependent integration tests.
- * These tests require a Kafka broker and are currently disabled for local H2-only test execution.
- * To run these tests, configure spring-kafka with an actual broker or use @EmbeddedKafka.
+ * Heavyweight Integration Test for Care Gap Audit Integration with real Kafka.
  *
- * TODO: Implement KRaft-based embedded Kafka support in Phase 2 follow-up.
+ * This test requires Docker and uses Testcontainers to spin up a real Kafka instance.
+ * It verifies end-to-end audit event publishing to Kafka.
+ *
+ * Test Categories:
+ * - Lightweight: CareGapAuditIntegrationTest (uses mocks, no Docker)
+ * - Heavyweight: This class (uses real Kafka via Testcontainers, requires Docker)
+ *
+ * To run:
+ * - Ensure Docker is running
+ * - Run: ./gradlew test --tests CareGapAuditIntegrationHeavyweightTest
  */
 @BaseIntegrationTest
-@Disabled("Kafka-dependent tests disabled for local H2 testing. See class documentation for KRaft implementation plan.")
-@DisplayName("Care Gap Audit Integration - Kafka Tests (Disabled)")
-@Tag("integration")
+@DisplayName("Care Gap Audit Integration - Heavyweight Kafka Tests")
+@org.springframework.context.annotation.ComponentScan(basePackages = {
+    "com.healthdata.caregap",
+    "com.healthdata.audit.service.ai"
+})
 class CareGapAuditIntegrationHeavyweightTest {
 
     @DynamicPropertySource
     static void configureKafka(DynamicPropertyRegistry registry) {
-        // @EmbeddedKafka in BaseIntegrationTest automatically sets up Kafka at localhost:9092
+        String bootstrapServers = System.getProperty("spring.kafka.bootstrap-servers", "localhost:9092");
+        registry.add("spring.kafka.bootstrap-servers", () -> bootstrapServers);
+        registry.add("spring.kafka.producer.bootstrap-servers", () -> bootstrapServers);
+        registry.add("spring.kafka.consumer.bootstrap-servers", () -> bootstrapServers);
         registry.add("spring.kafka.consumer.auto-offset-reset", () -> "earliest");
         registry.add("spring.kafka.consumer.group-id", () -> "test-group");
         registry.add("audit.kafka.enabled", () -> "true");
@@ -73,7 +83,7 @@ class CareGapAuditIntegrationHeavyweightTest {
 
         // Create Kafka consumer to verify published events
         Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092"); // EmbeddedKafka runs at localhost:9092
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getProperty("spring.kafka.bootstrap-servers", "localhost:9092"));
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group-" + UUID.randomUUID());
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());

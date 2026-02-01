@@ -11,48 +11,29 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.kafka.test.context.EmbeddedKafka;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.kafka.KafkaContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * RED Phase: Care Gap Event Service Integration Tests
+ * PHASE 5: Care Gap Event Service Integration Tests
+ *
+ * Migrated from @Testcontainers Docker pattern to @EmbeddedKafka.
+ * Uses embedded Kafka broker + H2 database for fast, reliable testing without Docker.
  *
  * Validates complete flow: REST → Service → EventHandler → Database
  * Tests care gap detection, severity classification, interventions, and population health
  */
-@SpringBootTest(properties = {
-    "spring.jpa.hibernate.ddl-auto=validate",
-    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect",
-    "spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation=true",
-    "spring.liquibase.enabled=true",
-    "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml"
-})
+@SpringBootTest
+@EmbeddedKafka(partitions = 3, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
+@ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
-@Testcontainers
 @DisplayName("CareGapEventService Integration Tests")
 class CareGapEventServiceIntegrationTest {
-
-    @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-        DockerImageName.parse("postgres:16-alpine")
-    ).withDatabaseName("caregap_test_db")
-     .withUsername("test_user")
-     .withPassword("test_password");
-
-    @Container
-    static KafkaContainer kafka = new KafkaContainer(
-        DockerImageName.parse("apache/kafka:3.8.0")
-    ).withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true");
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,20 +46,6 @@ class CareGapEventServiceIntegrationTest {
 
     private static final String TENANT_ID = "TENANT-001";
     private static final String API_BASE_PATH = "/api/v1/gaps/events";
-
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", postgres::getJdbcUrl);
-        registry.add("spring.datasource.username", postgres::getUsername);
-        registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.jpa.properties.hibernate.jdbc.lob.non_contextual_creation", () -> "true");
-        registry.add("spring.liquibase.enabled", () -> "true");
-        registry.add("spring.liquibase.change-log", () -> "classpath:db/changelog/db.changelog-master.xml");
-    }
 
     @BeforeEach
     void setUp() {

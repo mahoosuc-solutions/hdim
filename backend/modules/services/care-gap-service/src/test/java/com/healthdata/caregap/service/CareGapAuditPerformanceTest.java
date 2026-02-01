@@ -36,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Performance and scalability tests for Care Gap Audit Integration.
- * 
+ *
  * Tests concurrent and high-volume event publishing to verify:
  * - Non-blocking audit operations
  * - Concurrent request handling
@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - No data corruption under load
  * - Proper partition distribution
  * - System stability under stress
- * 
+ *
  * These tests ensure the audit system can handle real-world production loads
  * for clinical decision support where sub-second response times are critical.
  */

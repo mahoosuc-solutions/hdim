@@ -1,58 +1,32 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { LoggerService } from '../../../services/logger.service';
 import { CommonModule } from '@angular/common';
-import { LoggerService } from '../../../services/logger.service';
 import { FormsModule } from '@angular/forms';
-import { LoggerService } from '../../../services/logger.service';
 import { MatCardModule } from '@angular/material/card';
-import { LoggerService } from '../../../services/logger.service';
 import { MatButtonModule } from '@angular/material/button';
-import { LoggerService } from '../../../services/logger.service';
 import { MatIconModule } from '@angular/material/icon';
-import { LoggerService } from '../../../services/logger.service';
 import { MatChipsModule } from '@angular/material/chips';
-import { LoggerService } from '../../../services/logger.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LoggerService } from '../../../services/logger.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { LoggerService } from '../../../services/logger.service';
 import { MatInputModule } from '@angular/material/input';
-import { LoggerService } from '../../../services/logger.service';
 import { MatSelectModule } from '@angular/material/select';
-import { LoggerService } from '../../../services/logger.service';
 import { MatSliderModule } from '@angular/material/slider';
-import { LoggerService } from '../../../services/logger.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LoggerService } from '../../../services/logger.service';
 import * as THREE from 'three';
-import { LoggerService } from '../../../services/logger.service';
 import { Subject, takeUntil, forkJoin, of, throwError } from 'rxjs';
-import { LoggerService } from '../../../services/logger.service';
 import { catchError } from 'rxjs/operators';
-import { LoggerService } from '../../../services/logger.service';
 
 import { ThreeSceneService } from '../core/three-scene.service';
-import { LoggerService } from '../../../services/logger.service';
 import { DataTransformService } from '../data/data-transform.service';
-import { LoggerService } from '../../../services/logger.service';
 import { PatientService } from '../../services/patient.service';
-import { LoggerService } from '../../../services/logger.service';
 import { EvaluationService } from '../../services/evaluation.service';
-import { LoggerService } from '../../../services/logger.service';
 import { MeasureService } from '../../services/measure.service';
-import { LoggerService } from '../../../services/logger.service';
 import { QualityConstellationScene, ConstellationFilters, PatientPoint, ConstellationStats } from '../scenes/quality-constellation.scene';
-import { LoggerService } from '../../../services/logger.service';
 import { QualityMeasureResult, MeasureCategory } from '../../models/quality-result.model';
-import { LoggerService } from '../../../services/logger.service';
 import { PatientSummary } from '../../models/patient.model';
-import { LoggerService } from '../../../services/logger.service';
 import { ErrorValidationService } from '../../services/error-validation.service';
-import { LoggerService } from '../../../services/logger.service';
 import { COMPLIANCE_CONFIG } from '../../config/compliance.config';
-import { LoggerService } from '../../../services/logger.service';
 import { ErrorCode, ErrorSeverity } from '../../models/error.model';
-import { LoggerService } from '../../../services/logger.service';
 
 /**
  * Quality Constellation Component

@@ -4,7 +4,6 @@ import { of, throwError } from 'rxjs';
 import { ReportDetailDialogComponent } from './report-detail-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
 import { LoggerService } from '../services/logger.service';
-import { createMockLoggerService } from '../testing/mocks';
 import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('ReportDetailDialogComponent', () => {

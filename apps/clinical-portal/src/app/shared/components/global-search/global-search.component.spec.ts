@@ -6,7 +6,6 @@ import { GlobalSearchComponent, SearchResult } from './global-search.component';
 import { LoggerService } from '../../../services/logger.service';
 import { PatientService } from '../../../services/patient.service';
 import { MeasureService } from '../../../services/measure.service';
-import { createMockLoggerService } from '../../../testing/mocks';
 import { createMockMatDialogRef } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 

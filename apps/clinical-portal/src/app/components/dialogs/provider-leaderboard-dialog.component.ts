@@ -12,44 +12,27 @@
 import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
-import { LoggerService } from '../../services/logger.service';
 import { FormsModule } from '@angular/forms';
-import { LoggerService } from '../../services/logger.service';
 import {
   MatDialogModule,
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
-import { LoggerService } from '../../services/logger.service';
 import { MatIconModule } from '@angular/material/icon';
-import { LoggerService } from '../../services/logger.service';
 import { MatTabsModule } from '@angular/material/tabs';
-import { LoggerService } from '../../services/logger.service';
 import { MatTableModule } from '@angular/material/table';
-import { LoggerService } from '../../services/logger.service';
 import { MatSortModule, Sort } from '@angular/material/sort';
-import { LoggerService } from '../../services/logger.service';
 import { MatChipsModule } from '@angular/material/chips';
-import { LoggerService } from '../../services/logger.service';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { LoggerService } from '../../services/logger.service';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LoggerService } from '../../services/logger.service';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { LoggerService } from '../../services/logger.service';
 import { MatSelectModule } from '@angular/material/select';
-import { LoggerService } from '../../services/logger.service';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { LoggerService } from '../../services/logger.service';
 import { MatMenuModule } from '@angular/material/menu';
-import { LoggerService } from '../../services/logger.service';
 import { MatDividerModule } from '@angular/material/divider';
-import { LoggerService } from '../../services/logger.service';
 import { Subject } from 'rxjs';
-import { LoggerService } from '../../services/logger.service';
 import { takeUntil, finalize } from 'rxjs/operators';
-import { LoggerService } from '../../services/logger.service';
 
 // Provider Performance Interface
 export interface ProviderPerformance {

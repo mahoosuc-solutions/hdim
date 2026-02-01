@@ -4,7 +4,6 @@ import { NavigationComponent, NavigationItem } from './navigation.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 describe('NavigationComponent (TDD)', () => {

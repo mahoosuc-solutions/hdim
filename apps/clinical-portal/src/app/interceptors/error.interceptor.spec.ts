@@ -8,7 +8,6 @@ import { Router } from '@angular/router';
 import { errorInterceptor } from './error.interceptor';
 import { AuthService } from '../services/auth.service';
 import { LoggerService } from 'services/logger.service';
-import { createMockLoggerService } from 'testing/mocks';
 import { createMockRouter } from '../../testing/mocks';
 
 describe('ErrorInterceptor', () => {

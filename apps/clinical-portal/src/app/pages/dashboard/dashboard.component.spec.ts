@@ -15,7 +15,6 @@ import { UserRoleService, UserRole } from '../../shared/services/user-role.servi
 import { MeasureFavoritesService } from '../../services/measure-favorites.service';
 import { ContextNavigationService } from '../../services/context-navigation.service';
 import { LoggerService } from '../../services/logger.service';
-import { createMockLoggerService } from '../../../testing/mocks';
 
 jest.mock('./ma-dashboard/ma-dashboard.component', () => ({
   MADashboardComponent: class {}

@@ -6,6 +6,7 @@ import com.healthdata.audit.models.AuditOutcome;
 import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.auditquery.dto.AuditSearchRequest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * <p>Tests multi-tenant isolation, search functionality, and statistics generation.
  */
+@Tag("integration")
 @SpringBootTest(
     properties = {
         "spring.kafka.enabled=false",

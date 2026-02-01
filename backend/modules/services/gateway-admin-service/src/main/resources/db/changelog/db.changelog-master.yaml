@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0001-create-gateway-admin-schema
+      author: gateway-admin-service
+      comment: Gateway admin service schema initialization
+      changes:
+        - sql:
+            sql: SELECT 1
+            comment: Gateway admin service is initialized (no schema changes required)
+      rollback:
+        - sql:
+            sql: SELECT 1

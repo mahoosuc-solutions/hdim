@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: event-processing-service
+  main:
+    allow-bean-definition-overriding: true
 
   # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
@@ -16,7 +18,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
+      # Liquibase handles all schema management and validation
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect

@@ -43,10 +43,9 @@ export class OfflineDataCacheService {
   private readonly storage = inject(OfflineStorageService);
   private readonly networkStatus = inject(NetworkStatusService);
   private readonly syncQueue = inject(SyncQueueService);
-  private readonly loggerService = inject(LoggerService);
+  private readonly logger = inject(LoggerService);
 
-  constructor() {
-  }
+  constructor() {}
 
   /**
    * GET request with offline caching

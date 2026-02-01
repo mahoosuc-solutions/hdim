@@ -289,6 +289,7 @@ export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
         name: v.name,
         startIndex: 0,
         endIndex: 0,
+        required: v.required || false,
       }));
     }
   }

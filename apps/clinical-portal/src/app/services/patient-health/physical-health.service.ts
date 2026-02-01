@@ -53,7 +53,8 @@ export class PhysicalHealthService extends CacheableService {
     private procedureHistory: ProcedureHistoryService,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
+  }
 
   /**
    * Get comprehensive physical health summary

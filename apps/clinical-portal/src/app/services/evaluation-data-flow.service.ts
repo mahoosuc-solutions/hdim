@@ -14,8 +14,7 @@ export class EvaluationDataFlowService {
   private dataFlowSubject = new Subject<DataFlowStep>();
   private connected = false;
 
-  constructor(private readonly loggerService: LoggerService) {
-  }
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Connect to WebSocket for evaluation data flow

@@ -74,7 +74,8 @@ export class FhirQuestionnaireService extends CacheableService {
     private http: HttpClient,
     private logger: LoggerService
   ) {
-    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache  }
+    super({ ttlMs: 5 * 60 * 1000 }); // 5 minute cache
+  }
 
   /**
    * Get HTTP headers with tenant ID

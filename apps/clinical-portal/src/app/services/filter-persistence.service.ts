@@ -13,8 +13,7 @@ import { LoggerService } from './logger.service';
 export class FilterPersistenceService {
   private readonly STORAGE_PREFIX = 'clinical-portal-filters';
 
-  constructor(private readonly loggerService: LoggerService) {
-  }
+  constructor(private readonly logger: LoggerService) {}
 
   /**
    * Save filters for a specific page

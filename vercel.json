@@ -5,7 +5,7 @@
   "outputDirectory": "dist/apps/clinical-portal/browser",
   "framework": null,
   "installCommand": "npm install",
-  "devCommand": "npx ng serve",
+  "devCommand": "npm run dev",
   "rewrites": [
     {
       "source": "/(.*)",

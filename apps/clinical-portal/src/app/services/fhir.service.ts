@@ -30,7 +30,7 @@ export class FhirService {
     private http: HttpClient,
     private apiService: ApiService,
     private logger: LoggerService
-  ) {
+  ) {}
 
   // ==================== Observation Operations ====================
 

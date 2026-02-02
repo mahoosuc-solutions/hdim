@@ -10,6 +10,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import { parseBody } from '../../lib/parse-body';
 
 const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
 
@@ -144,17 +145,8 @@ async function updateTask(
     return;
   }
 
-  // Manual body parsing
-  const chunks: Buffer[] = [];
-  for await (const chunk of req) {
-    chunks.push(Buffer.from(chunk));
-  }
-  const rawBody = Buffer.concat(chunks).toString('utf-8');
-
-  let data: any;
-  try {
-    data = JSON.parse(rawBody);
-  } catch {
+  const data = await parseBody(req);
+  if (!data) {
     res.status(400).json({ message: 'Invalid request body', code: 'INVALID_BODY' });
     return;
   }
@@ -254,18 +246,9 @@ async function patchTaskStatus(
   let status = req.query.status as string | undefined;
 
   if (!status) {
-    const chunks: Buffer[] = [];
-    for await (const chunk of req) {
-      chunks.push(Buffer.from(chunk));
-    }
-    const rawBody = Buffer.concat(chunks).toString('utf-8');
-    if (rawBody) {
-      try {
-        const data = JSON.parse(rawBody);
-        status = data.status;
-      } catch {
-        // ignore parse errors
-      }
+    const data = await parseBody<{ status?: string }>(req);
+    if (data?.status) {
+      status = data.status;
     }
   }
 

@@ -57,18 +57,24 @@ export default async function handler(
   let pool: Pool | null = null;
 
   try {
-    // Read and parse body manually
-    const chunks: Buffer[] = [];
-    for await (const chunk of req) {
-      chunks.push(Buffer.from(chunk));
-    }
-    const rawBody = Buffer.concat(chunks).toString('utf-8');
-
+    // Vercel auto-parses JSON body when Content-Type is application/json
     let refreshToken: string;
 
     try {
-      const parsed = JSON.parse(rawBody);
-      refreshToken = parsed.refreshToken;
+      if (req.body && typeof req.body === 'object') {
+        refreshToken = req.body.refreshToken;
+      } else if (typeof req.body === 'string') {
+        const parsed = JSON.parse(req.body);
+        refreshToken = parsed.refreshToken;
+      } else {
+        const chunks: Buffer[] = [];
+        for await (const chunk of req) {
+          chunks.push(Buffer.from(chunk));
+        }
+        const rawBody = Buffer.concat(chunks).toString('utf-8');
+        const parsed = JSON.parse(rawBody);
+        refreshToken = parsed.refreshToken;
+      }
     } catch {
       res.status(400).json({
         message: 'Invalid request body',

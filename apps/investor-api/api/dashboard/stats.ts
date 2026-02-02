@@ -5,72 +5,133 @@
  * Returns task counts, contact metrics, activity summaries, and weekly progress.
  */
 
-import type { VercelResponse } from '@vercel/node';
-import prisma from '../../lib/db';
-import {
-  withAuth,
-  withErrorHandler,
-  sendSuccess,
-  sendError,
-} from '../../lib/middleware';
-import type { AuthenticatedRequest, DashboardStats } from '../../lib/types';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
 
-async function handler(
-  req: AuthenticatedRequest,
+const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
+
+const ALLOWED_ORIGINS = [
+  'https://admin-portal-jet-ten.vercel.app',
+  'http://localhost:4200',
+  'http://localhost:3000',
+];
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+  type: 'access' | 'refresh';
+}
+
+export default async function handler(
+  req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {
-  // Only allow GET
-  if (req.method !== 'GET') {
-    sendError(res, 'Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+  // CORS headers
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === 'development') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
     return;
   }
 
-  // Get all stats in parallel for performance
-  const [
-    taskStats,
-    contactStats,
-    activityStats,
-    weeklyProgress,
-    recentResponses,
-  ] = await Promise.all([
-    getTaskStats(),
-    getContactStats(),
-    getActivityStats(),
-    getWeeklyProgress(),
-    getRecentResponses(),
-  ]);
+  if (req.method !== 'GET') {
+    res.status(405).json({ message: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' });
+    return;
+  }
 
-  const stats: DashboardStats = {
-    tasks: taskStats,
-    contacts: contactStats,
-    activities: {
-      ...activityStats,
+  // Verify auth
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ message: 'Authentication required', code: 'UNAUTHORIZED' });
+    return;
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    res.status(401).json({ message: 'Invalid authorization header', code: 'INVALID_AUTH_HEADER' });
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(parts[1], JWT_SECRET) as JwtPayload;
+    if (payload.type !== 'access') {
+      throw new Error('Invalid token type');
+    }
+  } catch {
+    res.status(401).json({ message: 'Invalid token', code: 'INVALID_TOKEN' });
+    return;
+  }
+
+  let pool: Pool | null = null;
+
+  try {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+    });
+
+    // Get all stats in parallel for performance
+    const [
+      taskStats,
+      contactStats,
+      activityStats,
+      weeklyProgress,
       recentResponses,
-    },
-    weeklyProgress,
-  };
+    ] = await Promise.all([
+      getTaskStats(pool),
+      getContactStats(pool),
+      getActivityStats(pool),
+      getWeeklyProgress(pool),
+      getRecentResponses(pool),
+    ]);
 
-  sendSuccess(res, stats);
+    const stats = {
+      tasks: taskStats,
+      contacts: contactStats,
+      activities: {
+        ...activityStats,
+        recentResponses,
+      },
+      weeklyProgress,
+    };
+
+    res.status(200).json(stats);
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    res.status(500).json({ message: 'Internal server error', code: 'INTERNAL_ERROR' });
+  } finally {
+    if (pool) {
+      await pool.end();
+    }
+  }
 }
 
 /**
  * Get task statistics by status.
  */
-async function getTaskStats(): Promise<DashboardStats['tasks']> {
-  const tasks = await prisma.task.groupBy({
-    by: ['status'],
-    _count: { id: true },
-  });
+async function getTaskStats(pool: Pool): Promise<any> {
+  const result = await pool.query(
+    `SELECT status, COUNT(*)::int as count FROM investor_tasks GROUP BY status`
+  );
 
-  const statusCounts = tasks.reduce(
-    (acc, t) => {
-      acc[t.status] = t._count.id;
+  const statusCounts = result.rows.reduce(
+    (acc, row) => {
+      acc[row.status] = row.count;
       return acc;
     },
     {} as Record<string, number>
   );
 
-  const total = tasks.reduce((sum, t) => sum + t._count.id, 0);
+  const total = result.rows.reduce((sum, row) => sum + row.count, 0);
 
   return {
     total,
@@ -84,35 +145,29 @@ async function getTaskStats(): Promise<DashboardStats['tasks']> {
 /**
  * Get contact statistics by tier and status.
  */
-async function getContactStats(): Promise<DashboardStats['contacts']> {
-  const [tierGroups, statusGroups] = await Promise.all([
-    prisma.contact.groupBy({
-      by: ['tier'],
-      _count: { id: true },
-    }),
-    prisma.contact.groupBy({
-      by: ['status'],
-      _count: { id: true },
-    }),
+async function getContactStats(pool: Pool): Promise<any> {
+  const [tierResult, statusResult] = await Promise.all([
+    pool.query(`SELECT tier, COUNT(*)::int as count FROM investor_contacts GROUP BY tier`),
+    pool.query(`SELECT status, COUNT(*)::int as count FROM investor_contacts GROUP BY status`),
   ]);
 
-  const byTier = tierGroups.reduce(
-    (acc, t) => {
-      acc[t.tier] = t._count.id;
+  const byTier = tierResult.rows.reduce(
+    (acc, row) => {
+      acc[row.tier] = row.count;
       return acc;
     },
     {} as Record<string, number>
   );
 
-  const byStatus = statusGroups.reduce(
-    (acc, s) => {
-      acc[s.status] = s._count.id;
+  const byStatus = statusResult.rows.reduce(
+    (acc, row) => {
+      acc[row.status] = row.count;
       return acc;
     },
     {} as Record<string, number>
   );
 
-  const total = tierGroups.reduce((sum, t) => sum + t._count.id, 0);
+  const total = tierResult.rows.reduce((sum, row) => sum + row.count, 0);
 
   return {
     total,
@@ -124,7 +179,7 @@ async function getContactStats(): Promise<DashboardStats['contacts']> {
 /**
  * Get activity statistics.
  */
-async function getActivityStats(): Promise<{
+async function getActivityStats(pool: Pool): Promise<{
   total: number;
   thisWeek: number;
   byType: Record<string, number>;
@@ -137,31 +192,29 @@ async function getActivityStats(): Promise<{
   weekStart.setDate(now.getDate() + mondayOffset);
   weekStart.setHours(0, 0, 0, 0);
 
-  const [typeGroups, thisWeekCount] = await Promise.all([
-    prisma.outreachActivity.groupBy({
-      by: ['activityType'],
-      _count: { id: true },
-    }),
-    prisma.outreachActivity.count({
-      where: {
-        activityDate: { gte: weekStart },
-      },
-    }),
+  const [typeResult, weekCountResult] = await Promise.all([
+    pool.query(
+      `SELECT activity_type, COUNT(*)::int as count FROM outreach_activities GROUP BY activity_type`
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int as count FROM outreach_activities WHERE activity_date >= $1`,
+      [weekStart]
+    ),
   ]);
 
-  const byType = typeGroups.reduce(
-    (acc, t) => {
-      acc[t.activityType] = t._count.id;
+  const byType = typeResult.rows.reduce(
+    (acc, row) => {
+      acc[row.activity_type] = row.count;
       return acc;
     },
     {} as Record<string, number>
   );
 
-  const total = typeGroups.reduce((sum, t) => sum + t._count.id, 0);
+  const total = typeResult.rows.reduce((sum, row) => sum + row.count, 0);
 
   return {
     total,
-    thisWeek: thisWeekCount,
+    thisWeek: weekCountResult.rows[0]?.count || 0,
     byType,
   };
 }
@@ -169,53 +222,49 @@ async function getActivityStats(): Promise<{
 /**
  * Get count of recent responses (last 7 days).
  */
-async function getRecentResponses(): Promise<number> {
+async function getRecentResponses(pool: Pool): Promise<number> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  return prisma.outreachActivity.count({
-    where: {
-      status: 'responded',
-      responseReceived: { gte: sevenDaysAgo },
-    },
-  });
+  const result = await pool.query(
+    `SELECT COUNT(*)::int as count FROM outreach_activities
+     WHERE status = 'responded' AND response_received >= $1`,
+    [sevenDaysAgo]
+  );
+
+  return result.rows[0]?.count || 0;
 }
 
 /**
  * Get weekly progress for tasks and activities.
  */
-async function getWeeklyProgress(): Promise<DashboardStats['weeklyProgress']> {
+async function getWeeklyProgress(pool: Pool): Promise<any[]> {
   const weeks = [1, 2, 3, 4];
 
   const progress = await Promise.all(
     weeks.map(async (week) => {
-      const [taskCounts, activities] = await Promise.all([
-        prisma.task.groupBy({
-          by: ['status'],
-          where: { week },
-          _count: { id: true },
-        }),
-        prisma.outreachActivity.count({
-          // Activities don't have week field, so we'll count all
-          // In a real app, you might filter by date ranges
-        }),
+      const [taskResult, totalActivities, responsesResult] = await Promise.all([
+        pool.query(
+          `SELECT status, COUNT(*)::int as count FROM investor_tasks WHERE week = $1 GROUP BY status`,
+          [week]
+        ),
+        pool.query(`SELECT COUNT(*)::int as count FROM outreach_activities`),
+        pool.query(`SELECT COUNT(*)::int as count FROM outreach_activities WHERE status = 'responded'`),
       ]);
 
       const completed =
-        taskCounts.find((t) => t.status === 'completed')?._count.id || 0;
-      const total = taskCounts.reduce((sum, t) => sum + t._count.id, 0);
+        taskResult.rows.find((r) => r.status === 'completed')?.count || 0;
+      const total = taskResult.rows.reduce((sum, r) => sum + r.count, 0);
 
-      // For activities, we'd calculate based on date ranges in production
-      // For now, return total activities / 4 as approximation
-      const responsesReceived = await prisma.outreachActivity.count({
-        where: { status: 'responded' },
-      });
+      // For activities, we calculate based on approximation
+      const totalActivityCount = totalActivities.rows[0]?.count || 0;
+      const responsesReceived = responsesResult.rows[0]?.count || 0;
 
       return {
         week,
         tasksCompleted: completed,
         tasksTotal: total,
-        outreachSent: Math.floor(activities / 4), // Approximation
+        outreachSent: Math.floor(totalActivityCount / 4), // Approximation
         responsesReceived: Math.floor(responsesReceived / 4), // Approximation
       };
     })
@@ -223,5 +272,3 @@ async function getWeeklyProgress(): Promise<DashboardStats['weeklyProgress']> {
 
   return progress;
 }
-
-export default withErrorHandler(withAuth(handler));

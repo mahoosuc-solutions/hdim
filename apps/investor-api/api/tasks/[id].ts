@@ -7,64 +7,124 @@
  * DELETE - Delete a task
  */
 
-import type { VercelResponse } from '@vercel/node';
-import prisma from '../../lib/db';
-import {
-  withAuth,
-  withErrorHandler,
-  sendSuccess,
-  sendError,
-  getQueryString,
-} from '../../lib/middleware';
-import type {
-  AuthenticatedRequest,
-  UpdateTaskRequest,
-  TaskResponse,
-} from '../../lib/types';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
 
-async function handler(
-  req: AuthenticatedRequest,
+const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
+
+const ALLOWED_ORIGINS = [
+  'https://admin-portal-jet-ten.vercel.app',
+  'http://localhost:4200',
+  'http://localhost:3000',
+];
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+  type: 'access' | 'refresh';
+}
+
+export default async function handler(
+  req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {
-  const id = getQueryString(req.query.id);
+  // CORS headers
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === 'development') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,PATCH,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  if (!id) {
-    sendError(res, 'Task ID is required', 400, 'VALIDATION_ERROR');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
     return;
   }
 
-  switch (req.method) {
-    case 'GET':
-      await getTask(id, res);
-      break;
-    case 'PUT':
-      await updateTask(id, req, res);
-      break;
-    case 'PATCH':
-      await patchTaskStatus(id, req, res);
-      break;
-    case 'DELETE':
-      await deleteTask(id, res);
-      break;
-    default:
-      sendError(res, 'Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+  // Verify auth
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ message: 'Authentication required', code: 'UNAUTHORIZED' });
+    return;
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    res.status(401).json({ message: 'Invalid authorization header', code: 'INVALID_AUTH_HEADER' });
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(parts[1], JWT_SECRET) as JwtPayload;
+    if (payload.type !== 'access') {
+      throw new Error('Invalid token type');
+    }
+  } catch {
+    res.status(401).json({ message: 'Invalid token', code: 'INVALID_TOKEN' });
+    return;
+  }
+
+  const id = req.query.id as string;
+  if (!id) {
+    res.status(400).json({ message: 'Task ID is required', code: 'VALIDATION_ERROR' });
+    return;
+  }
+
+  let pool: Pool | null = null;
+
+  try {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+    });
+
+    switch (req.method) {
+      case 'GET':
+        await getTask(id, res, pool);
+        break;
+      case 'PUT':
+        await updateTask(id, req, res, pool);
+        break;
+      case 'PATCH':
+        await patchTaskStatus(id, req, res, pool);
+        break;
+      case 'DELETE':
+        await deleteTask(id, res, pool);
+        break;
+      default:
+        res.status(405).json({ message: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' });
+    }
+  } catch (error) {
+    console.error('Task endpoint error:', error);
+    res.status(500).json({ message: 'Internal server error', code: 'INTERNAL_ERROR' });
+  } finally {
+    if (pool) {
+      await pool.end();
+    }
   }
 }
 
 /**
  * GET /api/tasks/:id
  */
-async function getTask(id: string, res: VercelResponse): Promise<void> {
-  const task = await prisma.task.findUnique({
-    where: { id },
-  });
+async function getTask(id: string, res: VercelResponse, pool: Pool): Promise<void> {
+  const result = await pool.query(
+    `SELECT id, subject, description, status, category, week, deliverable, owner,
+            due_date, completed_at, notes, sort_order, created_at, updated_at
+     FROM investor_tasks WHERE id = $1`,
+    [id]
+  );
 
-  if (!task) {
-    sendError(res, 'Task not found', 404, 'NOT_FOUND');
+  if (result.rows.length === 0) {
+    res.status(404).json({ message: 'Task not found', code: 'NOT_FOUND' });
     return;
   }
 
-  sendSuccess(res, formatTaskResponse(task));
+  res.status(200).json(formatTaskResponse(result.rows[0]));
 }
 
 /**
@@ -73,121 +133,194 @@ async function getTask(id: string, res: VercelResponse): Promise<void> {
  */
 async function updateTask(
   id: string,
-  req: AuthenticatedRequest,
-  res: VercelResponse
+  req: VercelRequest,
+  res: VercelResponse,
+  pool: Pool
 ): Promise<void> {
-  const data = req.body as UpdateTaskRequest;
-
   // Check if task exists
-  const existing = await prisma.task.findUnique({ where: { id } });
-  if (!existing) {
-    sendError(res, 'Task not found', 404, 'NOT_FOUND');
+  const existing = await pool.query('SELECT * FROM investor_tasks WHERE id = $1', [id]);
+  if (existing.rows.length === 0) {
+    res.status(404).json({ message: 'Task not found', code: 'NOT_FOUND' });
     return;
   }
 
-  // Build update data
-  const updateData: Record<string, unknown> = {};
+  // Manual body parsing
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const rawBody = Buffer.concat(chunks).toString('utf-8');
 
-  if (data.subject !== undefined) updateData.subject = data.subject;
-  if (data.description !== undefined) updateData.description = data.description;
+  let data: any;
+  try {
+    data = JSON.parse(rawBody);
+  } catch {
+    res.status(400).json({ message: 'Invalid request body', code: 'INVALID_BODY' });
+    return;
+  }
+
+  const existingTask = existing.rows[0];
+
+  // Build update dynamically
+  const updates: string[] = [];
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (data.subject !== undefined) {
+    updates.push(`subject = $${paramIndex++}`);
+    params.push(data.subject);
+  }
+  if (data.description !== undefined) {
+    updates.push(`description = $${paramIndex++}`);
+    params.push(data.description);
+  }
   if (data.status !== undefined) {
-    updateData.status = data.status;
+    updates.push(`status = $${paramIndex++}`);
+    params.push(data.status);
     // Set completedAt when marking as completed
-    if (data.status === 'completed' && !existing.completedAt) {
-      updateData.completedAt = new Date();
+    if (data.status === 'completed' && !existingTask.completed_at) {
+      updates.push(`completed_at = $${paramIndex++}`);
+      params.push(new Date());
     } else if (data.status !== 'completed') {
-      updateData.completedAt = null;
+      updates.push(`completed_at = $${paramIndex++}`);
+      params.push(null);
     }
   }
-  if (data.category !== undefined) updateData.category = data.category;
-  if (data.week !== undefined) updateData.week = data.week;
-  if (data.deliverable !== undefined) updateData.deliverable = data.deliverable;
-  if (data.owner !== undefined) updateData.owner = data.owner;
-  if (data.dueDate !== undefined) {
-    updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+  if (data.category !== undefined) {
+    updates.push(`category = $${paramIndex++}`);
+    params.push(data.category);
   }
-  if (data.notes !== undefined) updateData.notes = data.notes;
+  if (data.week !== undefined) {
+    updates.push(`week = $${paramIndex++}`);
+    params.push(data.week);
+  }
+  if (data.deliverable !== undefined) {
+    updates.push(`deliverable = $${paramIndex++}`);
+    params.push(data.deliverable);
+  }
+  if (data.owner !== undefined) {
+    updates.push(`owner = $${paramIndex++}`);
+    params.push(data.owner);
+  }
+  if (data.dueDate !== undefined) {
+    updates.push(`due_date = $${paramIndex++}`);
+    params.push(data.dueDate ? new Date(data.dueDate) : null);
+  }
+  if (data.notes !== undefined) {
+    updates.push(`notes = $${paramIndex++}`);
+    params.push(data.notes);
+  }
 
-  const task = await prisma.task.update({
-    where: { id },
-    data: updateData,
-  });
+  if (updates.length === 0) {
+    res.status(200).json(formatTaskResponse(existingTask));
+    return;
+  }
 
-  sendSuccess(res, formatTaskResponse(task));
+  // Add updated_at
+  updates.push(`updated_at = $${paramIndex++}`);
+  params.push(new Date());
+
+  // Add id as last param
+  params.push(id);
+
+  const result = await pool.query(
+    `UPDATE investor_tasks SET ${updates.join(', ')} WHERE id = $${paramIndex}
+     RETURNING id, subject, description, status, category, week, deliverable, owner,
+               due_date, completed_at, notes, sort_order, created_at, updated_at`,
+    params
+  );
+
+  res.status(200).json(formatTaskResponse(result.rows[0]));
 }
 
 /**
- * PATCH /api/tasks/:id/status
+ * PATCH /api/tasks/:id
  * Update only the status field
- * Query param: status
  */
 async function patchTaskStatus(
   id: string,
-  req: AuthenticatedRequest,
-  res: VercelResponse
+  req: VercelRequest,
+  res: VercelResponse,
+  pool: Pool
 ): Promise<void> {
-  const status = getQueryString(req.query.status) || req.body?.status;
+  // Check if task exists
+  const existing = await pool.query('SELECT * FROM investor_tasks WHERE id = $1', [id]);
+  if (existing.rows.length === 0) {
+    res.status(404).json({ message: 'Task not found', code: 'NOT_FOUND' });
+    return;
+  }
+
+  // Try query param first, then body
+  let status = req.query.status as string | undefined;
 
   if (!status) {
-    sendError(res, 'Status is required', 400, 'VALIDATION_ERROR');
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(Buffer.from(chunk));
+    }
+    const rawBody = Buffer.concat(chunks).toString('utf-8');
+    if (rawBody) {
+      try {
+        const data = JSON.parse(rawBody);
+        status = data.status;
+      } catch {
+        // ignore parse errors
+      }
+    }
+  }
+
+  if (!status) {
+    res.status(400).json({ message: 'Status is required', code: 'VALIDATION_ERROR' });
     return;
   }
 
   const validStatuses = ['pending', 'in_progress', 'completed', 'blocked'];
   if (!validStatuses.includes(status)) {
-    sendError(
-      res,
-      `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
-      400,
-      'VALIDATION_ERROR'
-    );
+    res.status(400).json({
+      message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+      code: 'VALIDATION_ERROR',
+    });
     return;
   }
 
-  // Check if task exists
-  const existing = await prisma.task.findUnique({ where: { id } });
-  if (!existing) {
-    sendError(res, 'Task not found', 404, 'NOT_FOUND');
-    return;
-  }
-
-  const updateData: Record<string, unknown> = { status };
+  const existingTask = existing.rows[0];
+  let completedAt = existingTask.completed_at;
 
   // Set completedAt when marking as completed
-  if (status === 'completed' && !existing.completedAt) {
-    updateData.completedAt = new Date();
+  if (status === 'completed' && !existingTask.completed_at) {
+    completedAt = new Date();
   } else if (status !== 'completed') {
-    updateData.completedAt = null;
+    completedAt = null;
   }
 
-  const task = await prisma.task.update({
-    where: { id },
-    data: updateData,
-  });
+  const result = await pool.query(
+    `UPDATE investor_tasks SET status = $1, completed_at = $2, updated_at = $3 WHERE id = $4
+     RETURNING id, subject, description, status, category, week, deliverable, owner,
+               due_date, completed_at, notes, sort_order, created_at, updated_at`,
+    [status, completedAt, new Date(), id]
+  );
 
-  sendSuccess(res, formatTaskResponse(task));
+  res.status(200).json(formatTaskResponse(result.rows[0]));
 }
 
 /**
  * DELETE /api/tasks/:id
  */
-async function deleteTask(id: string, res: VercelResponse): Promise<void> {
-  // Check if task exists
-  const existing = await prisma.task.findUnique({ where: { id } });
-  if (!existing) {
-    sendError(res, 'Task not found', 404, 'NOT_FOUND');
+async function deleteTask(id: string, res: VercelResponse, pool: Pool): Promise<void> {
+  const existing = await pool.query('SELECT id FROM investor_tasks WHERE id = $1', [id]);
+  if (existing.rows.length === 0) {
+    res.status(404).json({ message: 'Task not found', code: 'NOT_FOUND' });
     return;
   }
 
-  await prisma.task.delete({ where: { id } });
-
+  await pool.query('DELETE FROM investor_tasks WHERE id = $1', [id]);
   res.status(204).end();
 }
 
 /**
- * Format task for API response.
+ * Format task for API response (snake_case → camelCase)
  */
-function formatTaskResponse(task: any): TaskResponse {
+function formatTaskResponse(task: any): any {
   return {
     id: task.id,
     subject: task.subject,
@@ -197,13 +330,11 @@ function formatTaskResponse(task: any): TaskResponse {
     week: task.week,
     deliverable: task.deliverable,
     owner: task.owner,
-    dueDate: task.dueDate?.toISOString() || null,
-    completedAt: task.completedAt?.toISOString() || null,
+    dueDate: task.due_date?.toISOString() || null,
+    completedAt: task.completed_at?.toISOString() || null,
     notes: task.notes,
-    sortOrder: task.sortOrder,
-    createdAt: task.createdAt.toISOString(),
-    updatedAt: task.updatedAt.toISOString(),
+    sortOrder: task.sort_order,
+    createdAt: task.created_at?.toISOString() || new Date().toISOString(),
+    updatedAt: task.updated_at?.toISOString() || new Date().toISOString(),
   };
 }
-
-export default withErrorHandler(withAuth(handler));

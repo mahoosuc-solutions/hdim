@@ -65,6 +65,8 @@ import org.springframework.test.context.ActiveProfiles;
  * @see au.com.dius.pact.provider.junitsupport.State
  */
 @Tag("contract")
+@Tag("integration")
+@Tag("slow")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @PactBroker(

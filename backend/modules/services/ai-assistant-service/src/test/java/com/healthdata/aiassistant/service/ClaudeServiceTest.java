@@ -15,6 +15,7 @@ import com.healthdata.aiassistant.dto.ChatResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -29,6 +30,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @DisplayName("ClaudeService")
+@Tag("slow")
 class ClaudeServiceTest {
 
     @Test

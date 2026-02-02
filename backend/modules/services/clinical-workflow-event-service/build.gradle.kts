@@ -17,11 +17,13 @@ dependencyManagement {
 dependencies {
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:authentication"))
+    implementation(project(":modules:shared:infrastructure:authentication-headers"))
     implementation(project(":modules:shared:infrastructure:security"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:messaging"))
     implementation(project(":modules:shared:infrastructure:event-store-client"))
+    implementation(project(":modules:shared:infrastructure:event-sourcing"))
 
     // Event handler library (Phase 4)
     implementation(project(":modules:services:clinical-workflow-event-handler-service"))

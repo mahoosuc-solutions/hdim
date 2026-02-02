@@ -1,5 +1,6 @@
 package com.healthdata.eventsourcing.event;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,11 @@ import java.util.UUID;
  *
  * Domain events represent immutable facts about state changes in the domain.
  * They form the event store and are the source of truth for reconstructing aggregate state.
+ *
+ * HIPAA Compliance:
+ * - All events include optional userContext for audit trail
+ * - User context captures WHO performed the action and WHY
+ * - Events are immutable and provide complete audit history
  */
 @Data
 @NoArgsConstructor
@@ -52,6 +58,14 @@ public abstract class AbstractDomainEvent implements DomainEvent {
      * Whether this event involves PHI (Protected Health Information)
      */
     protected Boolean hipaaCompliant;
+
+    /**
+     * User context for HIPAA audit trail.
+     * Contains information about WHO performed the action and WHY.
+     * See EventUserContext for full documentation.
+     */
+    @JsonProperty("user_context")
+    protected EventUserContext userContext;
 
     /**
      * Initialize timestamps and generate event ID if not provided

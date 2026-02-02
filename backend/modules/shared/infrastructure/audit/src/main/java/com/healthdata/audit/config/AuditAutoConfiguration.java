@@ -2,10 +2,12 @@ package com.healthdata.audit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.aspects.AuditAspect;
+import com.healthdata.audit.context.AuditContextProvider;
 import com.healthdata.audit.mapper.AuditEventMapper;
 import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditEncryptionService;
 import com.healthdata.audit.service.AuditService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +57,15 @@ public class AuditAutoConfiguration {
     }
 
     @Bean
-    public AuditAspect auditAspect(AuditService auditService, ObjectMapper objectMapper) {
-        return new AuditAspect(auditService, objectMapper);
+    public AuditContextProvider auditContextProvider() {
+        return new AuditContextProvider();
+    }
+
+    @Bean
+    public AuditAspect auditAspect(
+            AuditService auditService,
+            ObjectMapper objectMapper,
+            @Autowired(required = false) AuditContextProvider auditContextProvider) {
+        return new AuditAspect(auditService, objectMapper, auditContextProvider);
     }
 }

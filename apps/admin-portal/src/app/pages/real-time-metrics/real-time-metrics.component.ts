@@ -31,7 +31,7 @@ import { SERVICE_DEFINITIONS, ServiceDefinitionMetadata } from '../../models/ser
 })
 export class RealTimeMetricsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('RealTimeMetricsComponent');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   // State
   serviceMetrics: Map<string, ServiceMetrics> = new Map();
@@ -57,7 +57,9 @@ export class RealTimeMetricsComponent implements OnInit, OnDestroy {
   constructor(
     private prometheusService: PrometheusService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('RealTimeMetricsComponent');
+  }
 
   ngOnInit(): void {
     this.logger.info('Initializing Real-Time Metrics Dashboard');

@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { LoggerService } from '../../services/logger.service';
 import { AdminService } from '../../services/admin.service';
-import { ServiceHealth } from '../../models/admin.model';
+import { ServiceHealth, SystemHealth } from '../../models/admin.model';
 import { SERVICE_DEFINITIONS, ServiceDefinitionMetadata } from '../../models/service-definitions';
 import {
   SERVICE_DEPENDENCIES,
@@ -38,7 +38,7 @@ import {
 })
 export class ServiceGraphComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('ServiceGraphComponent');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   // State
   services: ServiceDefinitionMetadata[] = SERVICE_DEFINITIONS.filter((s) => s.port !== null);
@@ -56,7 +56,9 @@ export class ServiceGraphComponent implements OnInit, OnDestroy {
   constructor(
     private loggerService: LoggerService,
     private adminService: AdminService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('ServiceGraphComponent');
+  }
 
   ngOnInit(): void {
     this.logger.info('Initializing Service Dependency Graph');
@@ -74,17 +76,17 @@ export class ServiceGraphComponent implements OnInit, OnDestroy {
   loadServiceHealth(): void {
     this.loading = true;
     this.adminService
-      .getSystemHealthV2()
+      .getSystemHealth()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (health) => {
-          health.services.forEach((service) => {
+        next: (health: SystemHealth) => {
+          health.services.forEach((service: ServiceHealth) => {
             this.serviceHealth.set(service.name, service);
           });
           this.loading = false;
           this.logger.info('Loaded service health', { count: health.services.length });
         },
-        error: (error) => {
+        error: (error: unknown) => {
           this.logger.error('Failed to load service health', error);
           this.loading = false;
         },

@@ -18,12 +18,14 @@ import { LoggerService } from './logger.service';
 })
 export class PrometheusService {
   private prometheusUrl = 'http://localhost:9090';
-  private logger = this.loggerService.withContext('PrometheusService');
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private http: HttpClient,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('PrometheusService');
+  }
 
   /**
    * Execute an instant PromQL query
@@ -265,11 +267,15 @@ export class PrometheusService {
    */
   private extractScalarValue(result: PrometheusQueryResult): number | null {
     if (result.resultType === 'vector' && result.result.length > 0) {
-      const value = result.result[0].value[1];
-      return typeof value === 'string' ? parseFloat(value) : value;
+      const firstResult = result.result[0];
+      if (firstResult?.value) {
+        const value = firstResult.value[1];
+        return typeof value === 'string' ? parseFloat(value) : value;
+      }
     }
     if (result.resultType === 'matrix' && result.result.length > 0) {
-      const values = result.result[0].values;
+      const firstResult = result.result[0];
+      const values = firstResult?.values;
       if (values && values.length > 0) {
         const lastValue = values[values.length - 1][1];
         return typeof lastValue === 'string' ? parseFloat(lastValue) : lastValue;

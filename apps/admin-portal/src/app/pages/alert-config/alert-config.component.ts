@@ -42,7 +42,7 @@ import { SERVICE_DEFINITIONS, ServiceDefinitionMetadata } from '../../models/ser
 })
 export class AlertConfigComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private logger = this.loggerService.withContext('AlertConfigComponent');
+  private logger!: ReturnType<LoggerService['withContext']>;
 
   // State
   alertConfigs: AlertConfig[] = [];
@@ -74,7 +74,9 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
   constructor(
     private alertService: AlertService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('AlertConfigComponent');
+  }
 
   ngOnInit(): void {
     this.logger.info('Initializing Alert Configuration');

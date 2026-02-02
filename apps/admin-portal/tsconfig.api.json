@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "outDir": "./dist-api",
+    "rootDir": ".",
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts", "lib/**/*.ts", "prisma/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src"]
+}

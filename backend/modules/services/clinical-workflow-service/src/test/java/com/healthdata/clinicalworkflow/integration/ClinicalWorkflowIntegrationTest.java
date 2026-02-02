@@ -33,6 +33,9 @@ import static org.assertj.core.api.Assertions.*;
 @SpringBootTest
 @Testcontainers
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class ClinicalWorkflowIntegrationTest {
 
     @Container

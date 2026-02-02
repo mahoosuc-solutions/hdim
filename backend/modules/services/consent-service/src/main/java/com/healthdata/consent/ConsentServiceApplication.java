@@ -2,8 +2,6 @@ package com.healthdata.consent;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Consent Service - HIPAA-compliant consent management
@@ -22,6 +20,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * consent-service to use its own database schema (healthdata_consent) without
  * requiring a users table.
  *
+ * JPA Configuration:
+ * @EntityScan and @EnableJpaRepositories are configured in JpaConfig.java
+ * with @ConditionalOnProperty to prevent loading during @WebMvcTest slice tests.
+ *
  * Security Flow:
  * 1. Gateway validates JWT and injects X-Auth-* headers
  * 2. TrustedHeaderAuthFilter extracts user context and sets SecurityContext
@@ -29,8 +31,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * 4. Controller receives authenticated request
  */
 @SpringBootApplication
-@EntityScan(basePackages = "com.healthdata.consent.persistence")
-@EnableJpaRepositories(basePackages = "com.healthdata.consent.persistence")
 public class ConsentServiceApplication {
 
     public static void main(String[] args) {

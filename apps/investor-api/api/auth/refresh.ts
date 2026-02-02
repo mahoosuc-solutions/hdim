@@ -13,6 +13,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool } from 'pg';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { checkRateLimit, getClientIp } from '../../lib/rate-limit';
+import { refreshTokenSchema, formatZodError } from '../../lib/validation';
 
 // Rate limit config for refresh (slightly more lenient than login)
 const REFRESH_RATE_LIMIT = {
@@ -95,40 +96,63 @@ export default async function handler(
   let pool: Pool | null = null;
 
   try {
-    // Vercel auto-parses JSON body when Content-Type is application/json
-    let refreshToken: string;
+    // Parse body from stream (most reliable for Vercel serverless)
+    let rawData: unknown;
 
-    try {
-      if (req.body && typeof req.body === 'object') {
-        refreshToken = req.body.refreshToken;
-      } else if (typeof req.body === 'string') {
-        const parsed = JSON.parse(req.body);
-        refreshToken = parsed.refreshToken;
-      } else {
-        const chunks: Buffer[] = [];
-        for await (const chunk of req) {
-          chunks.push(Buffer.from(chunk));
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(Buffer.from(chunk));
+    }
+
+    if (chunks.length > 0) {
+      const rawBody = Buffer.concat(chunks).toString('utf-8');
+      if (rawBody.trim()) {
+        try {
+          rawData = JSON.parse(rawBody);
+        } catch {
+          res.status(400).json({
+            message: 'Invalid JSON in request body',
+            code: 'INVALID_JSON',
+          });
+          return;
         }
-        const rawBody = Buffer.concat(chunks).toString('utf-8');
-        const parsed = JSON.parse(rawBody);
-        refreshToken = parsed.refreshToken;
       }
-    } catch {
+    }
+
+    // Fallback to req.body if stream was empty
+    if (!rawData) {
+      try {
+        const body = req.body;
+        if (body && typeof body === 'object' && !Array.isArray(body)) {
+          rawData = body;
+        } else if (typeof body === 'string' && body.trim()) {
+          rawData = JSON.parse(body);
+        }
+      } catch {
+        // req.body access may throw in Vercel
+      }
+    }
+
+    if (!rawData) {
       res.status(400).json({
-        message: 'Invalid request body',
-        code: 'INVALID_BODY',
+        message: 'Request body is required',
+        code: 'EMPTY_BODY',
       });
       return;
     }
 
-    // Validate input
-    if (!refreshToken) {
+    // Validate input with Zod
+    const validationResult = refreshTokenSchema.safeParse(rawData);
+    if (!validationResult.success) {
       res.status(400).json({
-        message: 'Refresh token is required',
+        message: formatZodError(validationResult.error),
         code: 'VALIDATION_ERROR',
+        details: validationResult.error.issues,
       });
       return;
     }
+
+    const { refreshToken } = validationResult.data;
 
     // Verify refresh token
     let payload: JwtPayload;

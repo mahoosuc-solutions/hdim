@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.postgresql)
 
     // Hibernate JSONB type support for complex aggregates
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation(libs.hypersistence.utils.hibernate.v63)
 
     // Kafka
     api(libs.spring.kafka)
@@ -27,8 +27,14 @@ dependencies {
     implementation("io.projectreactor:reactor-core")
     implementation("io.projectreactor.kafka:reactor-kafka")
 
+    // Spring AOP for Kafka consumer aspect
+    implementation("org.springframework.boot:spring-boot-starter-aop")
+
     // Common models
     api(project(":modules:shared:domain:common"))
+
+    // Authentication core for UserContext (NO Spring dependencies)
+    api(project(":modules:shared:infrastructure:authentication-core"))
 
     // Utilities
     implementation(libs.commons.lang3)

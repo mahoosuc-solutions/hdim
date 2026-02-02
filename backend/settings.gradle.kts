@@ -25,6 +25,8 @@ include(
     "modules:shared:infrastructure:cache",
     "modules:shared:infrastructure:persistence",
     "modules:shared:infrastructure:database-config",
+    "modules:shared:infrastructure:authentication-core",
+    "modules:shared:infrastructure:authentication-headers",
     "modules:shared:infrastructure:authentication",
     "modules:shared:infrastructure:gateway-core",
     "modules:shared:infrastructure:api-docs",

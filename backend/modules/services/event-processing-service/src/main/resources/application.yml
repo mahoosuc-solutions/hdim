@@ -24,6 +24,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Disable Liquibase's SessionFactoryObserver schema validation
+        # that runs even when ddl-auto is 'none'. This prevents validation
+        # of User entity against the wrong database.
+        jakarta.persistence.schema-generation.database.action: none
+        jakarta.persistence.schema-generation.create-source: none
+        jakarta.persistence.schema-generation.drop-source: none
     show-sql: false
 
   liquibase:

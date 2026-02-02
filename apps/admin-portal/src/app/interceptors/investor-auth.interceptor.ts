@@ -13,8 +13,13 @@ export const investorAuthInterceptor: HttpInterceptorFn = (
 ) => {
   const authService = inject(InvestorAuthService);
 
-  // Only intercept requests to the investor API
-  if (!req.url.includes('/investor/api/')) {
+  // Only intercept requests to the investor API (Vercel deployment or localhost dev)
+  const isInvestorApi =
+    req.url.includes('investor-api.vercel.app') ||
+    req.url.includes('localhost:3000/api/') ||
+    req.url.includes('/investor/api/');
+
+  if (!isInvestorApi) {
     return next(req);
   }
 

@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0007-seed-initial-tasks" author="hdim" context="!test">
+        <comment>
+            Seed 23 initial tasks for the investor launch plan.
+            Tasks organized by week (1-4) and category.
+        </comment>
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM investor_tasks
+            </sqlCheck>
+        </preConditions>
+
+        <!-- Week 1 Tasks -->
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Register Delaware C-Corp"/>
+            <column name="description" value="Complete Delaware C-Corp registration with registered agent. Required before any investor discussions."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Legal"/>
+            <column name="week" valueNumeric="1"/>
+            <column name="deliverable" value="Certificate of Incorporation, EIN"/>
+            <column name="sort_order" valueNumeric="1"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Open business bank account"/>
+            <column name="description" value="Open Mercury or SVB account for startup banking. Need EIN first."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Financial"/>
+            <column name="week" valueNumeric="1"/>
+            <column name="deliverable" value="Bank account details, routing number"/>
+            <column name="sort_order" valueNumeric="2"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Draft founder agreements"/>
+            <column name="description" value="IP assignment, vesting schedules, founder roles. Use Clerky or similar."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Legal"/>
+            <column name="week" valueNumeric="1"/>
+            <column name="deliverable" value="Signed founder agreements"/>
+            <column name="sort_order" valueNumeric="3"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Set up cap table"/>
+            <column name="description" value="Initialize cap table in Carta or Pulley. Document founder equity splits."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Financial"/>
+            <column name="week" valueNumeric="1"/>
+            <column name="deliverable" value="Cap table export, equity summary"/>
+            <column name="sort_order" valueNumeric="4"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Complete pitch deck v1"/>
+            <column name="description" value="10-12 slides: problem, solution, market, traction, team, ask. Follow Sequoia format."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="1"/>
+            <column name="deliverable" value="Pitch deck PDF, Figma source"/>
+            <column name="sort_order" valueNumeric="5"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Build investor target list (50+)"/>
+            <column name="description" value="Research healthcare VCs, angels, strategics. Include tier A/B/C ratings."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="1"/>
+            <column name="deliverable" value="Investor spreadsheet with contacts"/>
+            <column name="sort_order" valueNumeric="6"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Week 2 Tasks -->
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Set up data room"/>
+            <column name="description" value="Organize DocSend or Notion data room with all legal, financial, technical docs."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Admin"/>
+            <column name="week" valueNumeric="2"/>
+            <column name="deliverable" value="Data room link with permissions"/>
+            <column name="sort_order" valueNumeric="7"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Create financial model"/>
+            <column name="description" value="3-year projections, unit economics, revenue model. Use standard SaaS metrics."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Financial"/>
+            <column name="week" valueNumeric="2"/>
+            <column name="deliverable" value="Financial model spreadsheet"/>
+            <column name="sort_order" valueNumeric="8"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Prepare technical architecture doc"/>
+            <column name="description" value="System overview for technical due diligence. Include security, compliance, scalability."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Technical"/>
+            <column name="week" valueNumeric="2"/>
+            <column name="deliverable" value="Architecture document with diagrams"/>
+            <column name="sort_order" valueNumeric="9"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Draft SAFE/convertible note terms"/>
+            <column name="description" value="Decide on SAFE vs convertible note. Set valuation cap, discount rate."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Legal"/>
+            <column name="week" valueNumeric="2"/>
+            <column name="deliverable" value="Term sheet template"/>
+            <column name="sort_order" valueNumeric="10"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Begin warm intro outreach"/>
+            <column name="description" value="Reach out to network for warm intros to tier A investors."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="2"/>
+            <column name="deliverable" value="Intro request emails sent"/>
+            <column name="sort_order" valueNumeric="11"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Set up CRM for investor tracking"/>
+            <column name="description" value="Configure Notion, Airtable, or HubSpot for pipeline tracking."/>
+            <column name="status" value="completed"/>
+            <column name="category" value="Admin"/>
+            <column name="week" valueNumeric="2"/>
+            <column name="deliverable" value="CRM configured with investor list"/>
+            <column name="sort_order" valueNumeric="12"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Week 3 Tasks -->
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Schedule first investor meetings"/>
+            <column name="description" value="Book calls with tier B investors first to practice pitch."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="3"/>
+            <column name="deliverable" value="5+ meetings scheduled"/>
+            <column name="sort_order" valueNumeric="13"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Prepare demo environment"/>
+            <column name="description" value="Set up clean demo with sample data. Test all flows."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Technical"/>
+            <column name="week" valueNumeric="3"/>
+            <column name="deliverable" value="Demo URL, login credentials"/>
+            <column name="sort_order" valueNumeric="14"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Refine pitch based on feedback"/>
+            <column name="description" value="Update deck and talking points based on initial meetings."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="3"/>
+            <column name="deliverable" value="Pitch deck v2"/>
+            <column name="sort_order" valueNumeric="15"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Complete HIPAA compliance documentation"/>
+            <column name="description" value="Prepare BAA templates, security policies, SOC 2 roadmap."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Legal"/>
+            <column name="week" valueNumeric="3"/>
+            <column name="deliverable" value="Compliance documentation package"/>
+            <column name="sort_order" valueNumeric="16"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Conduct competitive analysis"/>
+            <column name="description" value="Document competitors, differentiation, market positioning."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="3"/>
+            <column name="deliverable" value="Competitive landscape document"/>
+            <column name="sort_order" valueNumeric="17"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Week 4 Tasks -->
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Intensify tier A outreach"/>
+            <column name="description" value="Focus on top-tier investors with refined pitch and warm intros."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="4"/>
+            <column name="deliverable" value="10+ tier A meetings scheduled"/>
+            <column name="sort_order" valueNumeric="18"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Prepare for due diligence"/>
+            <column name="description" value="Organize all docs, ensure data room is complete, prep team for calls."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Admin"/>
+            <column name="week" valueNumeric="4"/>
+            <column name="deliverable" value="DD checklist complete"/>
+            <column name="sort_order" valueNumeric="19"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Set up advisory board"/>
+            <column name="description" value="Identify and approach potential advisors in healthcare/VC."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Governance"/>
+            <column name="week" valueNumeric="4"/>
+            <column name="deliverable" value="2-3 advisor commitments"/>
+            <column name="sort_order" valueNumeric="20"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Finalize use of funds"/>
+            <column name="description" value="Detailed breakdown of how raise will be deployed over 18 months."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Financial"/>
+            <column name="week" valueNumeric="4"/>
+            <column name="deliverable" value="Use of funds slide"/>
+            <column name="sort_order" valueNumeric="21"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Create investor FAQ"/>
+            <column name="description" value="Document common questions and polished answers from meetings."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="4"/>
+            <column name="deliverable" value="FAQ document"/>
+            <column name="sort_order" valueNumeric="22"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_tasks">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="subject" value="Launch LinkedIn outreach campaign"/>
+            <column name="description" value="Systematic LinkedIn connection requests and messages to investor targets."/>
+            <column name="status" value="pending"/>
+            <column name="category" value="Marketing"/>
+            <column name="week" valueNumeric="4"/>
+            <column name="deliverable" value="50+ connection requests sent"/>
+            <column name="sort_order" valueNumeric="23"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="investor_tasks"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

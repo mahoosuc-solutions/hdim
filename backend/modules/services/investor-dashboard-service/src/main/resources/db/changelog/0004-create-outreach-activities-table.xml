@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0004-create-outreach-activities-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="outreach_activities"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="outreach_activities">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="contact_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activity_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="pending">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="content" type="TEXT"/>
+            <column name="activity_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_time" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="response_received" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="response_content" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="linkedin_message_id" type="VARCHAR(100)"/>
+            <column name="linkedin_connection_status" type="VARCHAR(50)"/>
+            <column name="created_by" type="UUID"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="outreach_activities"
+            baseColumnNames="contact_id"
+            constraintName="fk_outreach_activities_contact"
+            referencedTableName="investor_contacts"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+
+        <createIndex tableName="outreach_activities" indexName="idx_outreach_activities_contact">
+            <column name="contact_id"/>
+        </createIndex>
+
+        <createIndex tableName="outreach_activities" indexName="idx_outreach_activities_type">
+            <column name="activity_type"/>
+        </createIndex>
+
+        <createIndex tableName="outreach_activities" indexName="idx_outreach_activities_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="outreach_activities" indexName="idx_outreach_activities_date">
+            <column name="activity_date"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="outreach_activities" indexName="idx_outreach_activities_date"/>
+            <dropIndex tableName="outreach_activities" indexName="idx_outreach_activities_status"/>
+            <dropIndex tableName="outreach_activities" indexName="idx_outreach_activities_type"/>
+            <dropIndex tableName="outreach_activities" indexName="idx_outreach_activities_contact"/>
+            <dropForeignKeyConstraint baseTableName="outreach_activities" constraintName="fk_outreach_activities_contact"/>
+            <dropTable tableName="outreach_activities"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

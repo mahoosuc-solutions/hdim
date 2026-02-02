@@ -94,7 +94,8 @@ include(
     "modules:services:patient-event-handler-service",
     "modules:services:care-gap-event-handler-service",
     "modules:services:quality-measure-event-handler-service",
-    "modules:services:clinical-workflow-event-handler-service"
+    "modules:services:clinical-workflow-event-handler-service",
+    "modules:services:investor-dashboard-service"
 )
 
 // Applications

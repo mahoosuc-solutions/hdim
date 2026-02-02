@@ -2039,6 +2039,51 @@ services:
       start_period: 60s
 
   # ============================================
+  # ADMIN TOOLS
+  # ============================================
+
+  # Port 8120 - Investor Dashboard Service (admin tool for investor launch tracking)
+  investor-dashboard-service:
+    container_name: healthdata-investor-dashboard-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/investor-dashboard-service/Dockerfile
+    profiles: ["admin", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/investor_dashboard_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SERVER_PORT: 8120
+      # JWT Configuration
+      JWT_SECRET: myInvestorDashboardJWTSecretKeyMustBeAtLeast256BitsLong123456789
+      JWT_EXPIRATION: 86400000
+      JWT_REFRESH_EXPIRATION: 604800000
+      # LinkedIn OAuth (optional)
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+      LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI:-http://localhost:4200/investor-launch/linkedin/callback}
+      # CORS
+      CORS_ALLOWED_ORIGINS: http://localhost:4200,https://admin.hdim.ai,https://*.vercel.app
+      # Database schema management
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+    ports:
+      - "8120:8120"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8120/investor/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ============================================
   # DATA INGESTION SERVICE (LOAD TESTING)
   # ============================================
   # CRITICAL: This is a SEPARATE load testing container

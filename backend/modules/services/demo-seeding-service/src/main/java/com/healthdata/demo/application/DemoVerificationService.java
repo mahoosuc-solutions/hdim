@@ -261,7 +261,8 @@ public class DemoVerificationService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType("application/fhir+json"));
             headers.set("X-Tenant-ID", tenantId);
-            headers.set("X-Auth-User-Id", "demo-verification-service");
+            // User ID must be a valid UUID (required by UserAutoRegistrationFilter)
+            headers.set("X-Auth-User-Id", "00000000-0000-0000-0000-000000000001");
             headers.set("X-Auth-Username", "demo-verifier");
             headers.set("X-Auth-Tenant-Ids", tenantId);
             headers.set("X-Auth-Roles", "ADMIN,SYSTEM");

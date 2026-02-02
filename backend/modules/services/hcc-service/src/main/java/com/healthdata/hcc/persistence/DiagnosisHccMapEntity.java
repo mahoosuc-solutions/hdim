@@ -3,6 +3,8 @@ package com.healthdata.hcc.persistence;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * Entity mapping ICD-10-CM diagnosis codes to HCC codes.
  *
@@ -49,15 +51,17 @@ public class DiagnosisHccMapEntity {
     /**
      * Coefficient for V24 model (community, non-dual, age 65-69, etc.)
      * Actual coefficient depends on demographic factors - this is base coefficient.
+     * Uses BigDecimal to match DECIMAL(8,5) column type in database.
      */
-    @Column(name = "coefficient_v24")
-    private Double coefficientV24;
+    @Column(name = "coefficient_v24", precision = 8, scale = 5)
+    private BigDecimal coefficientV24;
 
     /**
      * Coefficient for V28 model.
+     * Uses BigDecimal to match DECIMAL(8,5) column type in database.
      */
-    @Column(name = "coefficient_v28")
-    private Double coefficientV28;
+    @Column(name = "coefficient_v28", precision = 8, scale = 5)
+    private BigDecimal coefficientV28;
 
     /**
      * Whether the code requires more specificity for V28 mapping.

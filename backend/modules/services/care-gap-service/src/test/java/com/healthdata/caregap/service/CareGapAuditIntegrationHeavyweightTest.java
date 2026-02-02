@@ -13,6 +13,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -41,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Run: ./gradlew test --tests CareGapAuditIntegrationHeavyweightTest
  */
 @BaseIntegrationTest
+@Tag("heavyweight")
 @DisplayName("Care Gap Audit Integration - Heavyweight Kafka Tests")
 @org.springframework.context.annotation.ComponentScan(basePackages = {
     "com.healthdata.caregap",

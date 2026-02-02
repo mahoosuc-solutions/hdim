@@ -15,6 +15,7 @@ import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { checkRateLimit, getClientIp, AUTH_RATE_LIMIT } from '../../lib/rate-limit';
+import { loginSchema, formatZodError } from '../../lib/validation';
 
 // Validate required environment variables
 const JWT_SECRET = process.env.JWT_SECRET?.trim();
@@ -87,8 +88,7 @@ export default async function handler(
 
   try {
     // Parse body from stream (most reliable for Vercel serverless)
-    let email: string | undefined;
-    let password: string | undefined;
+    let rawData: unknown;
 
     const chunks: Buffer[] = [];
     for await (const chunk of req) {
@@ -99,9 +99,7 @@ export default async function handler(
       const rawBody = Buffer.concat(chunks).toString('utf-8');
       if (rawBody.trim()) {
         try {
-          const parsed = JSON.parse(rawBody);
-          email = parsed.email;
-          password = parsed.password;
+          rawData = JSON.parse(rawBody);
         } catch {
           res.status(400).json({
             message: 'Invalid JSON in request body',
@@ -113,29 +111,39 @@ export default async function handler(
     }
 
     // Fallback to req.body if stream was empty
-    if (!email && !password) {
+    if (!rawData) {
       try {
         const body = req.body;
         if (body && typeof body === 'object' && !Array.isArray(body)) {
-          email = body.email;
-          password = body.password;
+          rawData = body;
         } else if (typeof body === 'string' && body.trim()) {
-          const parsed = JSON.parse(body);
-          email = parsed.email;
-          password = parsed.password;
+          rawData = JSON.parse(body);
         }
       } catch {
-        // req.body access may throw in Vercel - continue to check if we have credentials
+        // req.body access may throw in Vercel
       }
     }
 
-    if (!email || !password) {
+    if (!rawData) {
       res.status(400).json({
-        message: 'Email and password are required',
-        code: 'MISSING_FIELDS',
+        message: 'Request body is required',
+        code: 'EMPTY_BODY',
       });
       return;
     }
+
+    // Validate input with Zod
+    const validationResult = loginSchema.safeParse(rawData);
+    if (!validationResult.success) {
+      res.status(400).json({
+        message: formatZodError(validationResult.error),
+        code: 'VALIDATION_ERROR',
+        details: validationResult.error.issues,
+      });
+      return;
+    }
+
+    const { email, password } = validationResult.data;
 
     // Connect to database
     pool = new Pool({
@@ -144,12 +152,12 @@ export default async function handler(
       max: 3, // Limit connections for serverless
     });
 
-    // Find user by email
+    // Find user by email (already lowercased by Zod validation)
     const userResult = await pool.query(
       `SELECT id, email, first_name, last_name, role, password_hash,
               active, failed_login_attempts, locked_until
        FROM investor_users WHERE email = $1`,
-      [email.toLowerCase()]
+      [email]
     );
 
     if (userResult.rows.length === 0) {

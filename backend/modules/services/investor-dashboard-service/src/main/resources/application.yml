@@ -1,0 +1,93 @@
+server:
+  port: 8120
+  servlet:
+    context-path: /investor
+
+spring:
+  application:
+    name: investor-dashboard-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/investor_dashboard_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  flyway:
+    enabled: false
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-for-development-only-change-in-production}
+  expiration: 86400000  # 24 hours in milliseconds
+  refresh-expiration: 604800000  # 7 days in milliseconds
+
+# LinkedIn OAuth Configuration (for automated outreach tracking)
+linkedin:
+  oauth2:
+    client-id: ${LINKEDIN_CLIENT_ID:}
+    client-secret: ${LINKEDIN_CLIENT_SECRET:}
+    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:4200/investor-launch/linkedin/callback}
+    scope: r_liteprofile,r_emailaddress,w_member_social
+  api:
+    base-url: https://api.linkedin.com/v2
+
+# CORS Configuration
+cors:
+  allowed-origins:
+    - http://localhost:4200
+    - https://admin.hdim.ai
+    - https://*.vercel.app
+
+# Security Configuration
+security:
+  login:
+    max-attempts: 5
+    lockout-duration: 900000  # 15 minutes in milliseconds
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# OpenAPI/Swagger Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    display-request-duration: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata.investor: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

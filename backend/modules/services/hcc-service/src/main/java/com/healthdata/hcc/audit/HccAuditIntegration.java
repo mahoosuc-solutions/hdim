@@ -38,10 +38,13 @@ public class HccAuditIntegration {
 
     @Autowired
     public HccAuditIntegration(
-            AIAuditEventPublisher auditEventPublisher,
+            @Autowired(required = false) AIAuditEventPublisher auditEventPublisher,
             ObjectMapper objectMapper) {
         this.auditEventPublisher = auditEventPublisher;
         this.objectMapper = objectMapper;
+        if (auditEventPublisher == null) {
+            log.warn("AIAuditEventPublisher not available - audit events will not be published");
+        }
     }
 
     /**
@@ -54,8 +57,8 @@ public class HccAuditIntegration {
             long inferenceTimeMs,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping RAF calculation event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher unavailable, skipping RAF calculation event");
             return;
         }
 
@@ -123,8 +126,8 @@ public class HccAuditIntegration {
             long processingTimeMs,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping HCC coding event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher unavailable, skipping HCC coding event");
             return;
         }
 
@@ -185,8 +188,8 @@ public class HccAuditIntegration {
             long analysisTimeMs,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping documentation gap event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher unavailable, skipping documentation gap event");
             return;
         }
 
@@ -258,8 +261,8 @@ public class HccAuditIntegration {
             String addressedBy,
             String newIcd10Code) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping gap addressed event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher unavailable, skipping gap addressed event");
             return;
         }
 

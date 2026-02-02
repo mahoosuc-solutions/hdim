@@ -1,7 +1,25 @@
 import { Route } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard';
+import { InvestorAuthGuard } from './guards/investor-auth.guard';
 
 export const appRoutes: Route[] = [
+  // Investor Dashboard (separate auth flow)
+  {
+    path: 'investor-login',
+    loadComponent: () =>
+      import('./pages/investor-login/investor-login.component').then(
+        (m) => m.InvestorLoginComponent
+      ),
+  },
+  {
+    path: 'investor-launch',
+    canActivate: [InvestorAuthGuard],
+    loadComponent: () =>
+      import('./pages/investor-launch/investor-launch.component').then(
+        (m) => m.InvestorLaunchComponent
+      ),
+  },
+  // Main admin portal routes
   {
     path: '',
     canActivate: [AuthGuard],
@@ -49,13 +67,6 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./pages/config-versions/config-versions.component').then(
             (m) => m.ConfigVersionsComponent
-          ),
-      },
-      {
-        path: 'investor-launch',
-        loadComponent: () =>
-          import('./pages/investor-launch/investor-launch.component').then(
-            (m) => m.InvestorLaunchComponent
           ),
       },
     ],

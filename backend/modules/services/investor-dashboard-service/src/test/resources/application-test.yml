@@ -1,0 +1,68 @@
+server:
+  port: 0  # Random port for tests
+  servlet:
+    context-path: /investor
+
+spring:
+  application:
+    name: investor-dashboard-service-test
+
+  datasource:
+    url: jdbc:postgresql://localhost:5435/investor_dashboard_db
+    username: healthdata
+    password: healthdata_dev_password_2024
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+  flyway:
+    enabled: false
+
+# JWT Configuration for tests
+jwt:
+  secret: test-256-bit-secret-key-for-testing-only-not-for-production-use
+  expiration: 3600000  # 1 hour
+  refresh-expiration: 86400000  # 24 hours
+
+# Disable LinkedIn OAuth in tests
+linkedin:
+  oauth2:
+    client-id: test-client-id
+    client-secret: test-client-secret
+    redirect-uri: http://localhost:4200/investor-launch/linkedin/callback
+
+# CORS for tests
+cors:
+  allowed-origins:
+    - http://localhost:4200
+
+# Security
+security:
+  login:
+    max-attempts: 5
+    lockout-duration: 60000  # 1 minute for faster tests
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+# Logging
+logging:
+  level:
+    root: WARN
+    com.healthdata.investor: DEBUG

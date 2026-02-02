@@ -75,6 +75,12 @@ dependencies {
     testImplementation(libs.testcontainers.junit.jupiter)
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
+
+    // Contract testing
+    testImplementation(project(":modules:shared:contract-testing"))
+
+    // OpenAPI validation
+    testImplementation(project(":modules:shared:openapi-validation"))
 }
 
 dependencyManagement {

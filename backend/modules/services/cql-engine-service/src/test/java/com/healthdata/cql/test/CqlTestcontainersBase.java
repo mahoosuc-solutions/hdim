@@ -3,6 +3,7 @@ package com.healthdata.cql.test;
 import com.healthdata.cql.config.CqlTestContainersConfiguration;
 import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.entity.ValueSet;
+import org.junit.jupiter.api.Tag;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -11,6 +12,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Base class for CQL Engine Spring Boot tests that require Kafka Testcontainers.
  */
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 public abstract class CqlTestcontainersBase {
 
     @DynamicPropertySource

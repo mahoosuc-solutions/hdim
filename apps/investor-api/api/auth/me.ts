@@ -3,14 +3,26 @@
  *
  * Get current authenticated user information.
  * Requires valid access token.
+ *
+ * Security:
+ * - Rate limited: 100 requests per minute per IP
+ * - JWT access token required
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool } from 'pg';
 import jwt from 'jsonwebtoken';
+import { checkRateLimit, getClientIp, API_RATE_LIMIT } from '../../lib/rate-limit';
 
-// Environment variables
-const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
+// Validate required environment variables
+const JWT_SECRET = process.env.JWT_SECRET?.trim();
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  console.warn('WARNING: Using insecure default JWT_SECRET for development');
+}
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-insecure-secret-do-not-use-in-production';
 
 // Allowed origins for CORS
 const ALLOWED_ORIGINS = [
@@ -52,6 +64,23 @@ export default async function handler(
     return;
   }
 
+  // Rate limiting
+  const clientIp = getClientIp(req.headers as Record<string, string | string[] | undefined>);
+  const rateLimit = checkRateLimit(clientIp, API_RATE_LIMIT);
+
+  res.setHeader('X-RateLimit-Limit', rateLimit.limit.toString());
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+  res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimit.resetIn / 1000).toString());
+
+  if (!rateLimit.allowed) {
+    res.status(429).json({
+      message: 'Too many requests. Please try again later.',
+      code: 'RATE_LIMITED',
+      retryAfter: Math.ceil(rateLimit.resetIn / 1000),
+    });
+    return;
+  }
+
   let pool: Pool | null = null;
 
   try {
@@ -78,7 +107,7 @@ export default async function handler(
 
     let payload: JwtPayload;
     try {
-      payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+      payload = jwt.verify(token, EFFECTIVE_JWT_SECRET) as JwtPayload;
       if (payload.type !== 'access') {
         throw new Error('Invalid token type');
       }

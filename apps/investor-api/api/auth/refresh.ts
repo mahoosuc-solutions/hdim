@@ -3,14 +3,34 @@
  *
  * Refresh access token using a valid refresh token.
  * Returns new access and refresh tokens.
+ *
+ * Security:
+ * - Rate limited: 10 attempts per 15 minutes per IP
+ * - JWT tokens with configurable expiry
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Pool } from 'pg';
 import jwt, { SignOptions } from 'jsonwebtoken';
+import { checkRateLimit, getClientIp } from '../../lib/rate-limit';
 
-// Environment variables (trimmed to handle trailing newlines from Vercel env)
-const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
+// Rate limit config for refresh (slightly more lenient than login)
+const REFRESH_RATE_LIMIT = {
+  maxRequests: 10,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  keyPrefix: 'refresh',
+};
+
+// Validate required environment variables
+const JWT_SECRET = process.env.JWT_SECRET?.trim();
+if (!JWT_SECRET) {
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production');
+  }
+  console.warn('WARNING: Using insecure default JWT_SECRET for development');
+}
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-insecure-secret-do-not-use-in-production';
+
 const JWT_ACCESS_EXPIRY = (process.env.JWT_ACCESS_EXPIRY || '24h').trim();
 const JWT_REFRESH_EXPIRY = (process.env.JWT_REFRESH_EXPIRY || '7d').trim();
 
@@ -50,6 +70,24 @@ export default async function handler(
     res.status(405).json({
       message: 'Method not allowed',
       code: 'METHOD_NOT_ALLOWED',
+    });
+    return;
+  }
+
+  // Rate limiting - check before any database operations
+  const clientIp = getClientIp(req.headers as Record<string, string | string[] | undefined>);
+  const rateLimit = checkRateLimit(clientIp, REFRESH_RATE_LIMIT);
+
+  // Set rate limit headers
+  res.setHeader('X-RateLimit-Limit', rateLimit.limit.toString());
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+  res.setHeader('X-RateLimit-Reset', Math.ceil(rateLimit.resetIn / 1000).toString());
+
+  if (!rateLimit.allowed) {
+    res.status(429).json({
+      message: 'Too many refresh attempts. Please try again later.',
+      code: 'RATE_LIMITED',
+      retryAfter: Math.ceil(rateLimit.resetIn / 1000),
     });
     return;
   }
@@ -95,7 +133,7 @@ export default async function handler(
     // Verify refresh token
     let payload: JwtPayload;
     try {
-      payload = jwt.verify(refreshToken, JWT_SECRET) as JwtPayload;
+      payload = jwt.verify(refreshToken, EFFECTIVE_JWT_SECRET) as JwtPayload;
 
       if (payload.type !== 'refresh') {
         throw new Error('Invalid token type');
@@ -154,11 +192,11 @@ export default async function handler(
       type: 'refresh',
     };
 
-    const accessToken = jwt.sign(accessPayload, JWT_SECRET, {
+    const accessToken = jwt.sign(accessPayload, EFFECTIVE_JWT_SECRET, {
       expiresIn: JWT_ACCESS_EXPIRY,
     } as SignOptions);
 
-    const newRefreshToken = jwt.sign(refreshPayload, JWT_SECRET, {
+    const newRefreshToken = jwt.sign(refreshPayload, EFFECTIVE_JWT_SECRET, {
       expiresIn: JWT_REFRESH_EXPIRY,
     } as SignOptions);
 

@@ -1,5 +1,6 @@
 package com.healthdata.notification.config;
 
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -33,6 +34,8 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
+@Tag("slow")
 @Import({TestSecurityConfiguration.class})
 public @interface BaseIntegrationTest {
 }

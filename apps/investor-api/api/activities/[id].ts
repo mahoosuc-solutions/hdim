@@ -6,66 +6,125 @@
  * DELETE - Delete an activity
  */
 
-import type { VercelResponse } from '@vercel/node';
-import prisma from '../../lib/db';
-import {
-  withAuth,
-  withErrorHandler,
-  sendSuccess,
-  sendError,
-  getQueryString,
-} from '../../lib/middleware';
-import type {
-  AuthenticatedRequest,
-  UpdateActivityRequest,
-  ActivityResponse,
-} from '../../lib/types';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
 
-async function handler(
-  req: AuthenticatedRequest,
+const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
+
+const ALLOWED_ORIGINS = [
+  'https://admin-portal-jet-ten.vercel.app',
+  'http://localhost:4200',
+  'http://localhost:3000',
+];
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+  type: 'access' | 'refresh';
+}
+
+export default async function handler(
+  req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {
-  const id = getQueryString(req.query.id);
+  // CORS headers
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === 'development') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
-  if (!id) {
-    sendError(res, 'Activity ID is required', 400, 'VALIDATION_ERROR');
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
     return;
   }
 
-  switch (req.method) {
-    case 'GET':
-      await getActivity(id, res);
-      break;
-    case 'PUT':
-      await updateActivity(id, req, res);
-      break;
-    case 'DELETE':
-      await deleteActivity(id, res);
-      break;
-    default:
-      sendError(res, 'Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+  // Verify auth
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ message: 'Authentication required', code: 'UNAUTHORIZED' });
+    return;
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    res.status(401).json({ message: 'Invalid authorization header', code: 'INVALID_AUTH_HEADER' });
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(parts[1], JWT_SECRET) as JwtPayload;
+    if (payload.type !== 'access') {
+      throw new Error('Invalid token type');
+    }
+  } catch {
+    res.status(401).json({ message: 'Invalid token', code: 'INVALID_TOKEN' });
+    return;
+  }
+
+  const id = req.query.id as string;
+  if (!id) {
+    res.status(400).json({ message: 'Activity ID is required', code: 'VALIDATION_ERROR' });
+    return;
+  }
+
+  let pool: Pool | null = null;
+
+  try {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+    });
+
+    switch (req.method) {
+      case 'GET':
+        await getActivity(id, res, pool);
+        break;
+      case 'PUT':
+        await updateActivity(id, req, res, pool);
+        break;
+      case 'DELETE':
+        await deleteActivity(id, res, pool);
+        break;
+      default:
+        res.status(405).json({ message: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' });
+    }
+  } catch (error) {
+    console.error('Activity endpoint error:', error);
+    res.status(500).json({ message: 'Internal server error', code: 'INTERNAL_ERROR' });
+  } finally {
+    if (pool) {
+      await pool.end();
+    }
   }
 }
 
 /**
  * GET /api/activities/:id
  */
-async function getActivity(id: string, res: VercelResponse): Promise<void> {
-  const activity = await prisma.outreachActivity.findUnique({
-    where: { id },
-    include: {
-      contact: {
-        select: { name: true },
-      },
-    },
-  });
+async function getActivity(id: string, res: VercelResponse, pool: Pool): Promise<void> {
+  const result = await pool.query(
+    `SELECT a.id, a.contact_id, a.activity_type, a.status, a.subject, a.content,
+            a.activity_date, a.scheduled_time, a.response_received, a.response_content,
+            a.notes, a.linkedin_message_id, a.linkedin_connection_status, a.created_by,
+            a.created_at, a.updated_at, c.name as contact_name
+     FROM outreach_activities a
+     LEFT JOIN investor_contacts c ON c.id = a.contact_id
+     WHERE a.id = $1`,
+    [id]
+  );
 
-  if (!activity) {
-    sendError(res, 'Activity not found', 404, 'NOT_FOUND');
+  if (result.rows.length === 0) {
+    res.status(404).json({ message: 'Activity not found', code: 'NOT_FOUND' });
     return;
   }
 
-  sendSuccess(res, formatActivityResponse(activity, activity.contact?.name));
+  res.status(200).json(formatActivityResponse(result.rows[0]));
 }
 
 /**
@@ -74,20 +133,41 @@ async function getActivity(id: string, res: VercelResponse): Promise<void> {
  */
 async function updateActivity(
   id: string,
-  req: AuthenticatedRequest,
-  res: VercelResponse
+  req: VercelRequest,
+  res: VercelResponse,
+  pool: Pool
 ): Promise<void> {
-  const data = req.body as UpdateActivityRequest;
-
   // Check if activity exists
-  const existing = await prisma.outreachActivity.findUnique({ where: { id } });
-  if (!existing) {
-    sendError(res, 'Activity not found', 404, 'NOT_FOUND');
+  const existing = await pool.query(
+    'SELECT * FROM outreach_activities WHERE id = $1',
+    [id]
+  );
+  if (existing.rows.length === 0) {
+    res.status(404).json({ message: 'Activity not found', code: 'NOT_FOUND' });
     return;
   }
 
-  // Build update data
-  const updateData: Record<string, unknown> = {};
+  // Manual body parsing
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const rawBody = Buffer.concat(chunks).toString('utf-8');
+
+  let data: any;
+  try {
+    data = JSON.parse(rawBody);
+  } catch {
+    res.status(400).json({ message: 'Invalid request body', code: 'INVALID_BODY' });
+    return;
+  }
+
+  const existingActivity = existing.rows[0];
+
+  // Build update dynamically
+  const updates: string[] = [];
+  const params: any[] = [];
+  let paramIndex = 1;
 
   if (data.activityType !== undefined) {
     const validTypes = [
@@ -99,103 +179,133 @@ async function updateActivity(
       'intro_request',
     ];
     if (!validTypes.includes(data.activityType)) {
-      sendError(
-        res,
-        `Invalid activityType. Must be one of: ${validTypes.join(', ')}`,
-        400,
-        'VALIDATION_ERROR'
-      );
+      res.status(400).json({
+        message: `Invalid activityType. Must be one of: ${validTypes.join(', ')}`,
+        code: 'VALIDATION_ERROR',
+      });
       return;
     }
-    updateData.activityType = data.activityType;
+    updates.push(`activity_type = $${paramIndex++}`);
+    params.push(data.activityType);
   }
 
   if (data.status !== undefined) {
     const validStatuses = ['pending', 'sent', 'responded', 'completed', 'no_response'];
     if (!validStatuses.includes(data.status)) {
-      sendError(
-        res,
-        `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
-        400,
-        'VALIDATION_ERROR'
-      );
+      res.status(400).json({
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+        code: 'VALIDATION_ERROR',
+      });
       return;
     }
-    updateData.status = data.status;
+    updates.push(`status = $${paramIndex++}`);
+    params.push(data.status);
 
     // Set responseReceived when status is 'responded'
-    if (data.status === 'responded' && !existing.responseReceived) {
-      updateData.responseReceived = new Date();
+    if (data.status === 'responded' && !existingActivity.response_received) {
+      updates.push(`response_received = $${paramIndex++}`);
+      params.push(new Date());
     }
   }
 
-  if (data.subject !== undefined) updateData.subject = data.subject;
-  if (data.content !== undefined) updateData.content = data.content;
+  if (data.subject !== undefined) {
+    updates.push(`subject = $${paramIndex++}`);
+    params.push(data.subject);
+  }
+  if (data.content !== undefined) {
+    updates.push(`content = $${paramIndex++}`);
+    params.push(data.content);
+  }
   if (data.activityDate !== undefined) {
-    updateData.activityDate = new Date(data.activityDate);
+    updates.push(`activity_date = $${paramIndex++}`);
+    params.push(new Date(data.activityDate));
   }
   if (data.scheduledTime !== undefined) {
-    updateData.scheduledTime = data.scheduledTime
-      ? new Date(data.scheduledTime)
-      : null;
+    updates.push(`scheduled_time = $${paramIndex++}`);
+    params.push(data.scheduledTime ? new Date(data.scheduledTime) : null);
   }
   if (data.responseContent !== undefined) {
-    updateData.responseContent = data.responseContent;
+    updates.push(`response_content = $${paramIndex++}`);
+    params.push(data.responseContent);
   }
-  if (data.notes !== undefined) updateData.notes = data.notes;
+  if (data.notes !== undefined) {
+    updates.push(`notes = $${paramIndex++}`);
+    params.push(data.notes);
+  }
 
-  const activity = await prisma.outreachActivity.update({
-    where: { id },
-    data: updateData,
-    include: {
-      contact: {
-        select: { name: true },
-      },
-    },
+  if (updates.length === 0) {
+    // Get contact name for response
+    const contactResult = await pool.query(
+      'SELECT name FROM investor_contacts WHERE id = $1',
+      [existingActivity.contact_id]
+    );
+    res.status(200).json({
+      ...formatActivityResponse(existingActivity),
+      contactName: contactResult.rows[0]?.name,
+    });
+    return;
+  }
+
+  // Add updated_at
+  updates.push(`updated_at = $${paramIndex++}`);
+  params.push(new Date());
+
+  // Add id as last param
+  params.push(id);
+
+  const result = await pool.query(
+    `UPDATE outreach_activities SET ${updates.join(', ')} WHERE id = $${paramIndex}
+     RETURNING id, contact_id, activity_type, status, subject, content,
+               activity_date, scheduled_time, response_received, response_content,
+               notes, linkedin_message_id, linkedin_connection_status, created_by,
+               created_at, updated_at`,
+    params
+  );
+
+  // Get contact name
+  const contactResult = await pool.query(
+    'SELECT name FROM investor_contacts WHERE id = $1',
+    [result.rows[0].contact_id]
+  );
+
+  res.status(200).json({
+    ...formatActivityResponse(result.rows[0]),
+    contactName: contactResult.rows[0]?.name,
   });
-
-  sendSuccess(res, formatActivityResponse(activity, activity.contact?.name));
 }
 
 /**
  * DELETE /api/activities/:id
  */
-async function deleteActivity(id: string, res: VercelResponse): Promise<void> {
-  // Check if activity exists
-  const existing = await prisma.outreachActivity.findUnique({ where: { id } });
-  if (!existing) {
-    sendError(res, 'Activity not found', 404, 'NOT_FOUND');
+async function deleteActivity(id: string, res: VercelResponse, pool: Pool): Promise<void> {
+  const existing = await pool.query('SELECT id FROM outreach_activities WHERE id = $1', [id]);
+  if (existing.rows.length === 0) {
+    res.status(404).json({ message: 'Activity not found', code: 'NOT_FOUND' });
     return;
   }
 
-  await prisma.outreachActivity.delete({ where: { id } });
-
+  await pool.query('DELETE FROM outreach_activities WHERE id = $1', [id]);
   res.status(204).end();
 }
 
 /**
- * Format activity for API response.
+ * Format activity for API response (snake_case → camelCase)
  */
-function formatActivityResponse(
-  activity: any,
-  contactName?: string
-): ActivityResponse {
+function formatActivityResponse(activity: any): any {
   return {
     id: activity.id,
-    contactId: activity.contactId,
-    contactName: contactName || undefined,
-    activityType: activity.activityType,
+    contactId: activity.contact_id,
+    contactName: activity.contact_name || undefined,
+    activityType: activity.activity_type,
     status: activity.status,
     subject: activity.subject,
     content: activity.content,
-    activityDate: activity.activityDate.toISOString(),
-    scheduledTime: activity.scheduledTime?.toISOString() || null,
-    responseReceived: activity.responseReceived?.toISOString() || null,
-    responseContent: activity.responseContent,
+    activityDate: activity.activity_date?.toISOString() || null,
+    scheduledTime: activity.scheduled_time?.toISOString() || null,
+    responseReceived: activity.response_received?.toISOString() || null,
+    responseContent: activity.response_content,
     notes: activity.notes,
-    createdAt: activity.createdAt.toISOString(),
-    updatedAt: activity.updatedAt.toISOString(),
+    createdAt: activity.created_at?.toISOString() || new Date().toISOString(),
+    updatedAt: activity.updated_at?.toISOString() || new Date().toISOString(),
   };
 }
-
-export default withErrorHandler(withAuth(handler));

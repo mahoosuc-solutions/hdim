@@ -27,10 +27,11 @@ export class InvestorService {
   private readonly http = inject(HttpClient);
   private readonly STORAGE_KEY = 'hdim_investor_data';
 
-  // API base URL - configurable per environment
+  // API base URL - uses relative path for Vercel deployment (same origin)
+  // Falls back to localhost for local development with separate API server
   private readonly apiBaseUrl = environment.production
-    ? 'https://api.hdim.ai/investor'
-    : 'http://localhost:8120/investor';
+    ? '' // Empty string for same-origin /api/* calls on Vercel
+    : 'http://localhost:3000'; // Vercel dev server
 
   // State signals
   private _tasks = signal<InvestorTask[]>([]);

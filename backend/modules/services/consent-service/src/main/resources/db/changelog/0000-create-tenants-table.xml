@@ -10,6 +10,11 @@
     <!-- validation requires this table to exist -->
 
     <changeSet id="0000-create-tenants-table" author="consent-service">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tenants"/>
+            </not>
+        </preConditions>
         <comment>Create tenants table for multi-tenant organization support</comment>
         <createTable tableName="tenants">
             <column name="id" type="varchar(255)">
@@ -43,6 +48,9 @@
     </changeSet>
 
     <changeSet id="0000-insert-default-tenant" author="consent-service">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM tenants WHERE id = 'tenant-1'</sqlCheck>
+        </preConditions>
         <comment>Insert default tenant for development and testing</comment>
         <insert tableName="tenants">
             <column name="id" value="tenant-1"/>

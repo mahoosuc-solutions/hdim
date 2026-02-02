@@ -99,7 +99,35 @@ subprojects {
     }
 
     tasks.withType<Test> {
-        useJUnitPlatform()
+        // ====================================================================
+        // TAG FILTERING CONFIGURATION (Phase 8 - Test Mode Tag Filtering)
+        // ====================================================================
+        // Tag filtering is applied based on the Gradle task being executed:
+        //   - testUnit: Excludes slow, heavyweight, integration tags (unit tests only)
+        //   - testFast: Excludes slow, heavyweight tags (unit + fast integration)
+        //   - testIntegration: Includes integration, excludes slow, heavyweight
+        //   - testSlow: Includes slow or heavyweight tags only
+        //   - testAll/testParallel: No filtering (runs all tests)
+        // ====================================================================
+        val taskNames = gradle.startParameter.taskNames
+        useJUnitPlatform {
+            when {
+                taskNames.any { it.contains("testUnit") } -> {
+                    excludeTags("slow", "heavyweight", "integration")
+                }
+                taskNames.any { it.contains("testFast") } -> {
+                    excludeTags("slow", "heavyweight")
+                }
+                taskNames.any { it.contains("testIntegration") } -> {
+                    includeTags("integration")
+                    excludeTags("slow", "heavyweight")
+                }
+                taskNames.any { it.contains("testSlow") } -> {
+                    includeTags("slow", "heavyweight")
+                }
+                // testAll and testParallel run all tests (no tag filtering)
+            }
+        }
 
         // ====================================================================
         // PARALLEL EXECUTION CONFIGURATION (Phase 6 Task 5 + 7)

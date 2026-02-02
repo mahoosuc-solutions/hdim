@@ -274,6 +274,7 @@ export class AdminLayoutComponent {
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: '📊', route: '/dashboard' },
+    { label: 'Investor Launch', icon: '🚀', route: '/investor-launch' },
     { label: 'Users', icon: '👥', route: '/users' },
     { label: 'Tenants', icon: '🏢', route: '/tenants' },
     { label: 'System Health', icon: '💚', route: '/system-health' },

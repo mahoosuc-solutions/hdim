@@ -51,6 +51,13 @@ export const appRoutes: Route[] = [
             (m) => m.ConfigVersionsComponent
           ),
       },
+      {
+        path: 'investor-launch',
+        loadComponent: () =>
+          import('./pages/investor-launch/investor-launch.component').then(
+            (m) => m.InvestorLaunchComponent
+          ),
+      },
     ],
   },
   {

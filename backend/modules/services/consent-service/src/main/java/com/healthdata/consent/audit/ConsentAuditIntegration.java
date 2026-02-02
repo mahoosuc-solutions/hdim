@@ -36,10 +36,13 @@ public class ConsentAuditIntegration {
 
     @Autowired
     public ConsentAuditIntegration(
-            AIAuditEventPublisher auditEventPublisher,
+            @Autowired(required = false) AIAuditEventPublisher auditEventPublisher,
             ObjectMapper objectMapper) {
         this.auditEventPublisher = auditEventPublisher;
         this.objectMapper = objectMapper;
+        if (auditEventPublisher == null) {
+            log.warn("AIAuditEventPublisher not available - consent audit events will not be published to Kafka");
+        }
     }
 
     /**
@@ -50,8 +53,8 @@ public class ConsentAuditIntegration {
             ConsentEntity consent,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping consent grant event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher not available, skipping consent grant event");
             return;
         }
 
@@ -110,8 +113,8 @@ public class ConsentAuditIntegration {
             String revocationReason,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping consent revoke event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher not available, skipping consent revoke event");
             return;
         }
 
@@ -166,8 +169,8 @@ public class ConsentAuditIntegration {
             ConsentEntity updatedConsent,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping consent update event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher not available, skipping consent update event");
             return;
         }
 
@@ -231,8 +234,8 @@ public class ConsentAuditIntegration {
             String denialReason,
             String executingUser) {
 
-        if (!auditEnabled) {
-            log.debug("Audit disabled, skipping consent verification event");
+        if (!auditEnabled || auditEventPublisher == null) {
+            log.debug("Audit disabled or publisher not available, skipping consent verification event");
             return;
         }
 

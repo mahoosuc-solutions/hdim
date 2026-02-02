@@ -23,6 +23,9 @@ dependencies {
     // Common models - optional
     compileOnly(project(":modules:shared:domain:common"))
 
+    // Authentication core for UserContext (NO Spring dependencies)
+    api(project(":modules:shared:infrastructure:authentication-core"))
+
     // JSON Processing
     api(libs.jackson.databind)
 

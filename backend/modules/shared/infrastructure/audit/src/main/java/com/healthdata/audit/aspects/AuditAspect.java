@@ -1,6 +1,7 @@
 package com.healthdata.audit.aspects;
 
 import com.healthdata.audit.annotations.Audited;
+import com.healthdata.audit.context.AuditContextProvider;
 import com.healthdata.audit.models.AuditEvent;
 import com.healthdata.audit.models.AuditOutcome;
 import com.healthdata.audit.service.AuditService;
@@ -13,6 +14,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -24,6 +26,11 @@ import java.lang.reflect.Method;
 /**
  * AOP Aspect that intercepts methods annotated with @Audited
  * and automatically logs HIPAA-compliant audit events.
+ *
+ * Uses AuditContextProvider for unified user context extraction from:
+ * - HTTP requests (gateway-trust headers)
+ * - Kafka events (via UserContextKafkaInterceptor)
+ * - Scheduled jobs (system context)
  */
 @Aspect
 @Component
@@ -33,10 +40,14 @@ public class AuditAspect {
 
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
+    private final AuditContextProvider auditContextProvider;
 
-    public AuditAspect(AuditService auditService, ObjectMapper objectMapper) {
+    @Autowired
+    public AuditAspect(AuditService auditService, ObjectMapper objectMapper,
+                       @Autowired(required = false) AuditContextProvider auditContextProvider) {
         this.auditService = auditService;
         this.objectMapper = objectMapper;
+        this.auditContextProvider = auditContextProvider;
     }
 
     /**
@@ -60,11 +71,14 @@ public class AuditAspect {
             .serviceName(joinPoint.getTarget().getClass().getSimpleName())
             .methodName(method.getName());
 
-        // Extract user context from Spring Security
-        extractUserContext(eventBuilder);
-
-        // Extract HTTP request context
-        extractHttpContext(eventBuilder);
+        // Extract user context using unified provider (handles HTTP, Kafka, and scheduled contexts)
+        if (auditContextProvider != null) {
+            auditContextProvider.enrichWithUserContext(eventBuilder);
+        } else {
+            // Fallback to legacy extraction methods
+            extractUserContext(eventBuilder);
+            extractHttpContext(eventBuilder);
+        }
 
         // Extract resource ID from method parameters if available
         extractResourceId(joinPoint, eventBuilder);

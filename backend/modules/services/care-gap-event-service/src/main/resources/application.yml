@@ -36,6 +36,9 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # HIPAA Compliance: Propagate user context via headers for audit trail
+        interceptor.classes: com.healthdata.eventsourcing.kafka.UserContextKafkaInterceptor
 
   # Cache Configuration
   # No caching for event services (projection read model)

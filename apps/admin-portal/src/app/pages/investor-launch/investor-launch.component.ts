@@ -8,6 +8,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { InvestorService } from '../../services/investor.service';
 import { InvestorAuthService } from '../../services/investor-auth.service';
 import { InvestorTask, Contact, OutreachActivity } from '../../models/investor.model';
@@ -30,6 +31,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatTooltipModule,
+    MatDividerModule,
     SearchBarComponent,
     ProgressChartComponent,
   ],

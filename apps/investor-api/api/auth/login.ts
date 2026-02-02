@@ -52,12 +52,20 @@ export default async function handler(
   let pool: Pool | null = null;
 
   try {
-    // Read and parse body manually to avoid Vercel body parser issues
+    // Read body from stream
     const chunks: Buffer[] = [];
     for await (const chunk of req) {
       chunks.push(Buffer.from(chunk));
     }
     const rawBody = Buffer.concat(chunks).toString('utf-8');
+
+    if (!rawBody.trim()) {
+      res.status(400).json({
+        message: 'Request body is required',
+        code: 'EMPTY_BODY',
+      });
+      return;
+    }
 
     let email: string;
     let password: string;
@@ -68,8 +76,16 @@ export default async function handler(
       password = parsed.password;
     } catch {
       res.status(400).json({
-        message: 'Invalid request body - expected JSON with email and password',
-        code: 'INVALID_BODY',
+        message: 'Invalid JSON in request body',
+        code: 'INVALID_JSON',
+      });
+      return;
+    }
+
+    if (!email || !password) {
+      res.status(400).json({
+        message: 'Email and password are required',
+        code: 'MISSING_FIELDS',
       });
       return;
     }

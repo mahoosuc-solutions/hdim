@@ -35,7 +35,9 @@ include(
     "modules:shared:infrastructure:event-sourcing",
     "modules:shared:infrastructure:event-store-client",
     "modules:shared:infrastructure:feature-flags",
-    "modules:shared:test-infrastructure"
+    "modules:shared:test-infrastructure",
+    "modules:shared:contract-testing",
+    "modules:shared:openapi-validation"
 )
 
 // Shared API Contracts

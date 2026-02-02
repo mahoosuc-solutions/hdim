@@ -52,10 +52,10 @@ export class InvestorAuthService {
     USER: 'investor_user',
   };
 
-  // API base URL - uses relative path for Vercel deployment (same origin)
+  // API base URL - points to investor-api Vercel deployment
   // Falls back to localhost for local development with separate API server
   private readonly apiBaseUrl = environment.production
-    ? '' // Empty string for same-origin /api/* calls on Vercel
+    ? 'https://investor-api.vercel.app' // Investor API on Vercel
     : 'http://localhost:3000'; // Vercel dev server
 
   // State signals

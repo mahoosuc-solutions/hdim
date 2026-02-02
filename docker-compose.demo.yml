@@ -613,6 +613,7 @@ services:
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
       OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
@@ -662,6 +663,7 @@ services:
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      GATEWAY_AUTH_DEV_MODE: "true"
       TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: quality-measure-service
@@ -770,6 +772,72 @@ services:
       - "8083:8083"
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8083/events/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # HCC Risk Adjustment Service - for RAF calculation and documentation gaps
+  hcc-service:
+    container_name: hdim-demo-hcc
+    build:
+      context: ./backend
+      dockerfile: modules/services/hcc-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,demo
+      SERVER_PORT: 8105
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hcc_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      TENANT_ENFORCEMENT_MODE: enforce
+      TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: hcc-service
+      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      GATEWAY_AUTH_DEV_MODE: "true"
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+      SPRING_FLYWAY_ENABLED: "false"
+      # Using update mode for demo to handle shared authentication entities
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # FHIR service for patient conditions
+      FHIR_SERVER_URL: http://fhir-service:8085/fhir
+      # Patient service URL
+      PATIENT_SERVICE_URL: http://patient-service:8084/patient
+      # Care Gap service URL
+      CARE_GAP_SERVICE_URL: http://hdim-demo-care-gap:8086/care-gap
+      # HCC model weights (V24/V28 transition blending)
+      HCC_MODEL_V24_WEIGHT: "0.33"
+      HCC_MODEL_V28_WEIGHT: "0.67"
+      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      HEALTH_TENANT_ID: service-health-hcc
+    ports:
+      - "8105:8105"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8105/hcc/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5

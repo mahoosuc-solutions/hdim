@@ -12,8 +12,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -122,8 +120,8 @@ public class CareGapEntity {
     @Column(name = "cql_expression", length = 200)
     private String cqlExpression;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "cql_result", columnDefinition = "JSONB")
+    // Stored as TEXT in database - JSON validation at application layer via Jackson
+    @Column(name = "cql_result", columnDefinition = "TEXT")
     private String cqlResult;
 
     // FHIR references

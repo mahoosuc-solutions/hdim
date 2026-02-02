@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0013-fix-cql-result-column-type" author="healthdata-demo-fix">
+        <preConditions onFail="MARK_RAN" onError="MARK_RAN">
+            <columnExists tableName="care_gaps" columnName="cql_result"/>
+        </preConditions>
+
+        <comment>
+            Fix cql_result column type mismatch - change from JSONB to TEXT.
+            Hibernate 6 with String type sends data as VARCHAR, which is incompatible with JSONB columns.
+            TEXT is compatible and stores JSON strings correctly.
+        </comment>
+
+        <modifyDataType tableName="care_gaps"
+                        columnName="cql_result"
+                        newDataType="text"/>
+
+        <rollback>
+            <modifyDataType tableName="care_gaps"
+                            columnName="cql_result"
+                            newDataType="jsonb"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

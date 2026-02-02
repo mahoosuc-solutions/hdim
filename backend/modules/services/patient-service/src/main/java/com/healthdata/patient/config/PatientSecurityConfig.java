@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -50,7 +49,6 @@ import java.util.Arrays;
  * @see TrustedTenantAccessFilter
  */
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
 public class PatientSecurityConfig {
 
     @Value("${gateway.auth.signing-secret:}")

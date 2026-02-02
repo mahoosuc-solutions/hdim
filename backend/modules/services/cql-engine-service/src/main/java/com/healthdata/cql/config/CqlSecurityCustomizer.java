@@ -4,17 +4,12 @@ import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
 import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import com.healthdata.cql.repository.UserRepository;
-import com.healthdata.gateway.security.HdimMethodSecurityExpressionHandler;
-import com.healthdata.gateway.security.HdimPermissionEvaluator;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -32,6 +27,7 @@ import java.util.Arrays;
  *
  * Provides security configuration for different profiles:
  * - Test: Permits all requests without authentication
+ * - Demo: Permits authenticated requests without RBAC permission checks
  * - Docker/Dev/Prod: Gateway-trust authentication via TrustedHeaderAuthFilter
  *
  * SECURITY ARCHITECTURE:
@@ -45,14 +41,17 @@ import java.util.Arrays;
  * 3. TrustedHeaderAuthFilter validates signature, extracts user context
  * 4. TrustedTenantAccessFilter validates tenant access from attributes
  *
+ * Method security (@PreAuthorize annotations) is configured separately in
+ * CqlEngineMethodSecurityConfig, which is only active in non-demo/non-test profiles.
+ *
  * This prevents CVE-INTERNAL-2025-001 (Complete Bypass of Tenant Isolation)
  *
  * @see TrustedHeaderAuthFilter
  * @see TrustedTenantAccessFilter
+ * @see CqlEngineMethodSecurityConfig
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
 public class CqlSecurityCustomizer {
 
     @Value("${gateway.auth.signing-secret:}")
@@ -60,26 +59,6 @@ public class CqlSecurityCustomizer {
 
     @Value("${gateway.auth.dev-mode:false}")
     private boolean devMode;
-
-    /**
-     * Configure permission evaluator for @PreAuthorize annotations.
-     * This enables role-based permission checks like hasPermission('MEASURE_READ').
-     */
-    @Bean
-    public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-            HdimPermissionEvaluator permissionEvaluator) {
-        DefaultMethodSecurityExpressionHandler handler = new HdimMethodSecurityExpressionHandler();
-        handler.setPermissionEvaluator(permissionEvaluator);
-        return handler;
-    }
-
-    /**
-     * Create the HdimPermissionEvaluator bean for permission checks.
-     */
-    @Bean
-    public HdimPermissionEvaluator hdimPermissionEvaluator() {
-        return new HdimPermissionEvaluator();
-    }
 
     /**
      * CORS configuration for frontend applications.

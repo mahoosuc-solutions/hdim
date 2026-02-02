@@ -170,7 +170,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(1)
         @DisplayName("1.1 Should verify HEDIS evaluation scenario is seeded")
-        void shouldVerifyHedisScenarioSeeded() {
+        void shouldVerifyHedisScenarioSeeded() throws Exception {
             assumeTrue(isServiceHealthy(patientServiceUrl), "Patient Service not available");
 
             try {
@@ -208,7 +208,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(2)
         @DisplayName("1.2 Should have FHIR resources for patients")
-        void shouldHaveFhirResourcesForPatients() {
+        void shouldHaveFhirResourcesForPatients() throws Exception {
             assumeTrue(isServiceHealthy(fhirServiceUrl), "FHIR Service not available");
             assumeTrue(totalPatientCount > 0, "No patients to test");
 
@@ -251,7 +251,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(3)
         @DisplayName("1.3 Should select a sample patient for subsequent tests")
-        void shouldSelectSamplePatient() {
+        void shouldSelectSamplePatient() throws Exception {
             assumeTrue(isServiceHealthy(patientServiceUrl), "Patient Service not available");
 
             try {
@@ -301,7 +301,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(1)
         @DisplayName("2.1 Should list available HEDIS measures")
-        void shouldListAvailableMeasures() {
+        void shouldListAvailableMeasures() throws Exception {
             assumeTrue(isServiceHealthy(qualityMeasureServiceUrl), "Quality Measure Service not available");
 
             try {
@@ -332,7 +332,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(2)
         @DisplayName("2.2 Should evaluate CDC measure for sample patient")
-        void shouldEvaluateCdcMeasure() {
+        void shouldEvaluateCdcMeasure() throws Exception {
             assumeTrue(isServiceHealthy(qualityMeasureServiceUrl), "Quality Measure Service not available");
             assumeTrue(selectedPatientId != null, "No sample patient selected");
 
@@ -376,7 +376,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(1)
         @DisplayName("3.1 Should retrieve care gaps for tenant")
-        void shouldRetrieveCareGapsForTenant() {
+        void shouldRetrieveCareGapsForTenant() throws Exception {
             assumeTrue(isServiceHealthy(careGapServiceUrl), "Care Gap Service not available");
 
             try {
@@ -420,7 +420,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(2)
         @DisplayName("3.2 Should retrieve care gaps for sample patient")
-        void shouldRetrieveCareGapsForPatient() {
+        void shouldRetrieveCareGapsForPatient() throws Exception {
             assumeTrue(isServiceHealthy(careGapServiceUrl), "Care Gap Service not available");
             assumeTrue(selectedPatientId != null, "No sample patient selected");
 
@@ -453,7 +453,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(3)
         @DisplayName("3.3 Should retrieve care gap summary")
-        void shouldRetrieveCareGapSummary() {
+        void shouldRetrieveCareGapSummary() throws Exception {
             assumeTrue(isServiceHealthy(careGapServiceUrl), "Care Gap Service not available");
             assumeTrue(selectedPatientId != null, "No sample patient selected");
 
@@ -489,7 +489,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(1)
         @DisplayName("4.1 Should verify HCC crosswalk API")
-        void shouldVerifyHccCrosswalkApi() {
+        void shouldVerifyHccCrosswalkApi() throws Exception {
             assumeTrue(isServiceHealthy(hccServiceUrl), "HCC Service not available");
 
             try {
@@ -525,7 +525,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(2)
         @DisplayName("4.2 Should calculate RAF score for sample patient")
-        void shouldCalculateRafScore() {
+        void shouldCalculateRafScore() throws Exception {
             assumeTrue(isServiceHealthy(hccServiceUrl), "HCC Service not available");
             assumeTrue(selectedPatientId != null, "No sample patient selected");
 
@@ -578,7 +578,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(3)
         @DisplayName("4.3 Should identify high-value opportunities")
-        void shouldIdentifyHighValueOpportunities() {
+        void shouldIdentifyHighValueOpportunities() throws Exception {
             assumeTrue(isServiceHealthy(hccServiceUrl), "HCC Service not available");
 
             try {
@@ -622,7 +622,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(1)
         @DisplayName("5.1 Should not see patients from other tenants")
-        void shouldNotSeeOtherTenantPatients() {
+        void shouldNotSeeOtherTenantPatients() throws Exception {
             assumeTrue(isServiceHealthy(patientServiceUrl), "Patient Service not available");
             assumeTrue(selectedPatientId != null, "No sample patient selected");
 
@@ -657,7 +657,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(2)
         @DisplayName("5.2 Should not see care gaps from other tenants")
-        void shouldNotSeeOtherTenantCareGaps() {
+        void shouldNotSeeOtherTenantCareGaps() throws Exception {
             assumeTrue(isServiceHealthy(careGapServiceUrl), "Care Gap Service not available");
 
             try {
@@ -733,7 +733,7 @@ class DemoIntegratedE2ETest {
         @Test
         @Order(2)
         @DisplayName("6.2 Should verify patient-to-condition linkage")
-        void shouldVerifyPatientConditionLinkage() {
+        void shouldVerifyPatientConditionLinkage() throws Exception {
             assumeTrue(isServiceHealthy(fhirServiceUrl), "FHIR Service not available");
             assumeTrue(selectedPatientId != null, "No sample patient selected");
 

@@ -840,6 +840,54 @@ export _JAVA_OPTIONS="-Xmx3g"
 
 ---
 
+## Contract Testing
+
+HDIM uses **consumer-driven contract testing** (Pact) and **OpenAPI validation** to ensure API contracts between services remain stable.
+
+### Quick Commands
+
+| Task | Command |
+|------|---------|
+| Run consumer tests | `cd apps/clinical-portal && npm run test:contracts` |
+| Verify Patient Service | `./gradlew :modules:services:patient-service:test --tests "*ProviderTest"` |
+| Verify Care Gap Service | `./gradlew :modules:services:care-gap-service:test --tests "*ProviderTest"` |
+| OpenAPI validation | `./gradlew :modules:services:patient-service:test --tests "*ComplianceTest"` |
+| Start Pact Broker | `docker compose -f docker/pact-broker/docker-compose.pact.yml up -d` |
+| Pact Broker UI | http://localhost:9292 (hdim/hdimcontract) |
+
+### Contract Coverage
+
+| Service | Consumer Tests | Provider Tests | OpenAPI Validation |
+|---------|---------------|----------------|-------------------|
+| Patient Service | Yes | Yes | Yes |
+| Care Gap Service | Yes | Yes | Planned |
+| Quality Measure Service | Planned | Planned | Planned |
+
+### Test Constants (Synchronized)
+
+| Constant | Value |
+|----------|-------|
+| Test Tenant ID | `test-tenant-contracts` |
+| John Doe Patient ID | `f47ac10b-58cc-4372-a567-0e02b2c3d479` |
+| Jane Smith Patient ID | `a1b2c3d4-e5f6-7890-abcd-ef1234567890` |
+| HBA1C Care Gap ID | `550e8400-e29b-41d4-a716-446655440001` |
+| BCS Care Gap ID | `550e8400-e29b-41d4-a716-446655440002` |
+
+### CI/CD Integration
+
+Contract tests run automatically on PRs modifying:
+- `apps/clinical-portal/**`
+- `backend/modules/services/patient-service/**`
+- `backend/modules/services/care-gap-service/**`
+- `backend/modules/shared/contract-testing/**`
+- `backend/modules/shared/openapi-validation/**`
+
+The `contract-gate` job blocks merges if any contract test fails.
+
+**Complete Guide:** [Contract Testing Guide](./docs/development/CONTRACT_TESTING_GUIDE.md)
+
+---
+
 ## API Documentation (OpenAPI/Swagger) ✨ NEW
 
 HDIM provides **interactive API documentation** via OpenAPI 3.0 and Swagger UI for all REST endpoints.

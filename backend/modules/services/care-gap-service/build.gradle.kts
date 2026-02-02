@@ -71,6 +71,7 @@ dependencies {
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
+    testImplementation(project(":modules:shared:contract-testing"))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)

@@ -5,34 +5,92 @@
  * POST - Create a new contact
  */
 
-import type { VercelResponse } from '@vercel/node';
-import prisma from '../../lib/db';
-import {
-  withAuth,
-  withErrorHandler,
-  sendSuccess,
-  sendError,
-  getQueryString,
-} from '../../lib/middleware';
-import type {
-  AuthenticatedRequest,
-  CreateContactRequest,
-  ContactResponse,
-} from '../../lib/types';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { Pool } from 'pg';
+import jwt from 'jsonwebtoken';
 
-async function handler(
-  req: AuthenticatedRequest,
+const JWT_SECRET = (process.env.JWT_SECRET || 'dev-secret-change-in-production').trim();
+
+const ALLOWED_ORIGINS = [
+  'https://admin-portal-jet-ten.vercel.app',
+  'http://localhost:4200',
+  'http://localhost:3000',
+];
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+  type: 'access' | 'refresh';
+}
+
+export default async function handler(
+  req: VercelRequest,
   res: VercelResponse
 ): Promise<void> {
-  switch (req.method) {
-    case 'GET':
-      await listContacts(req, res);
-      break;
-    case 'POST':
-      await createContact(req, res);
-      break;
-    default:
-      sendError(res, 'Method not allowed', 405, 'METHOD_NOT_ALLOWED');
+  // CORS headers
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.includes(origin) || process.env.NODE_ENV === 'development') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+
+  // Verify auth
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).json({ message: 'Authentication required', code: 'UNAUTHORIZED' });
+    return;
+  }
+
+  const parts = authHeader.split(' ');
+  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+    res.status(401).json({ message: 'Invalid authorization header', code: 'INVALID_AUTH_HEADER' });
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(parts[1], JWT_SECRET) as JwtPayload;
+    if (payload.type !== 'access') {
+      throw new Error('Invalid token type');
+    }
+  } catch {
+    res.status(401).json({ message: 'Invalid token', code: 'INVALID_TOKEN' });
+    return;
+  }
+
+  let pool: Pool | null = null;
+
+  try {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+      max: 3,
+    });
+
+    switch (req.method) {
+      case 'GET':
+        await listContacts(req, res, pool);
+        break;
+      case 'POST':
+        await createContact(req, res, pool);
+        break;
+      default:
+        res.status(405).json({ message: 'Method not allowed', code: 'METHOD_NOT_ALLOWED' });
+    }
+  } catch (error) {
+    console.error('Contacts endpoint error:', error);
+    res.status(500).json({ message: 'Internal server error', code: 'INTERNAL_ERROR' });
+  } finally {
+    if (pool) {
+      await pool.end();
+    }
   }
 }
 
@@ -41,37 +99,52 @@ async function handler(
  * Query params: category, status, tier, search
  */
 async function listContacts(
-  req: AuthenticatedRequest,
-  res: VercelResponse
+  req: VercelRequest,
+  res: VercelResponse,
+  pool: Pool
 ): Promise<void> {
-  const category = getQueryString(req.query.category);
-  const status = getQueryString(req.query.status);
-  const tier = getQueryString(req.query.tier);
-  const search = getQueryString(req.query.search);
+  const category = req.query.category as string | undefined;
+  const status = req.query.status as string | undefined;
+  const tier = req.query.tier as string | undefined;
+  const search = req.query.search as string | undefined;
 
-  // Build where clause
-  const where: Record<string, unknown> = {};
-  if (category) where.category = category;
-  if (status) where.status = status;
-  if (tier) where.tier = tier;
+  // Build WHERE clause dynamically
+  const conditions: string[] = [];
+  const params: (string | number)[] = [];
+  let paramIndex = 1;
 
-  // Add search filter
+  if (category) {
+    conditions.push(`category = $${paramIndex++}`);
+    params.push(category);
+  }
+  if (status) {
+    conditions.push(`status = $${paramIndex++}`);
+    params.push(status);
+  }
+  if (tier) {
+    conditions.push(`tier = $${paramIndex++}`);
+    params.push(tier);
+  }
   if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { organization: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
+    conditions.push(`(name ILIKE $${paramIndex} OR organization ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
+    params.push(`%${search}%`);
+    paramIndex++;
   }
 
-  const contacts = await prisma.contact.findMany({
-    where,
-    orderBy: [{ tier: 'asc' }, { name: 'asc' }],
-  });
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
-  const response: ContactResponse[] = contacts.map(formatContactResponse);
+  const result = await pool.query(
+    `SELECT id, name, title, organization, email, phone, linkedin_url, linkedin_profile_id,
+            category, status, tier, investment_thesis, notes, last_contacted, next_follow_up,
+            created_at, updated_at
+     FROM investor_contacts
+     ${whereClause}
+     ORDER BY tier ASC, name ASC`,
+    params
+  );
 
-  sendSuccess(res, response);
+  const contacts = result.rows.map(formatContactResponse);
+  res.status(200).json(contacts);
 }
 
 /**
@@ -79,56 +152,79 @@ async function listContacts(
  * Create a new contact
  */
 async function createContact(
-  req: AuthenticatedRequest,
-  res: VercelResponse
+  req: VercelRequest,
+  res: VercelResponse,
+  pool: Pool
 ): Promise<void> {
-  const data = req.body as CreateContactRequest;
+  // Manual body parsing
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.from(chunk));
+  }
+  const rawBody = Buffer.concat(chunks).toString('utf-8');
+
+  let data: any;
+  try {
+    data = JSON.parse(rawBody);
+  } catch {
+    res.status(400).json({ message: 'Invalid request body', code: 'INVALID_BODY' });
+    return;
+  }
 
   // Validate required fields
   if (!data.name || !data.category) {
-    sendError(res, 'name and category are required', 400, 'VALIDATION_ERROR');
+    res.status(400).json({
+      message: 'name and category are required',
+      code: 'VALIDATION_ERROR',
+    });
     return;
   }
 
   // Validate category
   const validCategories = ['VC', 'Angel', 'Strategic', 'Advisor', 'Partner'];
   if (!validCategories.includes(data.category)) {
-    sendError(
-      res,
-      `Invalid category. Must be one of: ${validCategories.join(', ')}`,
-      400,
-      'VALIDATION_ERROR'
-    );
+    res.status(400).json({
+      message: `Invalid category. Must be one of: ${validCategories.join(', ')}`,
+      code: 'VALIDATION_ERROR',
+    });
     return;
   }
 
   // Validate tier if provided
   if (data.tier && !['A', 'B', 'C'].includes(data.tier)) {
-    sendError(res, 'Invalid tier. Must be A, B, or C', 400, 'VALIDATION_ERROR');
+    res.status(400).json({
+      message: 'Invalid tier. Must be A, B, or C',
+      code: 'VALIDATION_ERROR',
+    });
     return;
   }
 
-  const contact = await prisma.contact.create({
-    data: {
-      name: data.name,
-      title: data.title,
-      organization: data.organization,
-      email: data.email,
-      phone: data.phone,
-      linkedinUrl: data.linkedInUrl,
-      category: data.category,
-      tier: data.tier || 'B',
-      notes: data.notes,
-    },
-  });
+  const result = await pool.query(
+    `INSERT INTO investor_contacts (id, name, title, organization, email, phone, linkedin_url, category, tier, notes, created_at, updated_at)
+     VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+     RETURNING id, name, title, organization, email, phone, linkedin_url, linkedin_profile_id,
+               category, status, tier, investment_thesis, notes, last_contacted, next_follow_up,
+               created_at, updated_at`,
+    [
+      data.name,
+      data.title || null,
+      data.organization || null,
+      data.email || null,
+      data.phone || null,
+      data.linkedInUrl || null,
+      data.category,
+      data.tier || 'B',
+      data.notes || null,
+    ]
+  );
 
-  sendSuccess(res, formatContactResponse(contact), 201);
+  res.status(201).json(formatContactResponse(result.rows[0]));
 }
 
 /**
- * Format contact for API response.
+ * Format contact for API response (snake_case → camelCase)
  */
-function formatContactResponse(contact: any): ContactResponse {
+function formatContactResponse(contact: any): any {
   return {
     id: contact.id,
     name: contact.name,
@@ -136,16 +232,15 @@ function formatContactResponse(contact: any): ContactResponse {
     organization: contact.organization,
     email: contact.email,
     phone: contact.phone,
-    linkedInUrl: contact.linkedinUrl,
+    linkedInUrl: contact.linkedin_url,
     category: contact.category,
     status: contact.status,
     tier: contact.tier,
+    investmentThesis: contact.investment_thesis,
     notes: contact.notes,
-    lastContacted: contact.lastContacted?.toISOString() || null,
-    nextFollowUp: contact.nextFollowUp?.toISOString() || null,
-    createdAt: contact.createdAt.toISOString(),
-    updatedAt: contact.updatedAt.toISOString(),
+    lastContacted: contact.last_contacted?.toISOString() || null,
+    nextFollowUp: contact.next_follow_up?.toISOString() || null,
+    createdAt: contact.created_at?.toISOString() || new Date().toISOString(),
+    updatedAt: contact.updated_at?.toISOString() || new Date().toISOString(),
   };
 }
-
-export default withErrorHandler(withAuth(handler));

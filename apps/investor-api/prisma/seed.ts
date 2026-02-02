@@ -30,10 +30,13 @@ async function main() {
   console.log('Creating users...');
 
   const passwordHash = await bcrypt.hash('investor2026!', 10);
+  console.log('  Generated hash:', passwordHash);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'aaron@mahoosuc.solutions' },
-    update: {},
+    update: {
+      passwordHash, // Update password hash to ensure bcryptjs compatibility
+    },
     create: {
       email: 'aaron@mahoosuc.solutions',
       passwordHash,

@@ -60,6 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Testcontainers
 @Tag("entity-migration-validation")
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 public abstract class AbstractEntityMigrationValidationTest {
 
     /**

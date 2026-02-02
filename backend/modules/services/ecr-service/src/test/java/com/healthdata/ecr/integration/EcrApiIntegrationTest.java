@@ -1,7 +1,7 @@
 package com.healthdata.ecr.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
 import com.healthdata.authentication.repository.UserRepository;
@@ -10,7 +10,11 @@ import com.healthdata.ecr.client.AimsApiClient;
 import com.healthdata.ecr.controller.EcrController;
 import com.healthdata.ecr.persistence.*;
 import com.healthdata.ecr.persistence.ElectronicCaseReportEntity.*;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -61,6 +65,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Import({TestKafkaConfig.class, com.healthdata.ecr.config.TestFhirConfig.class})
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class EcrApiIntegrationTest {
 
     // Testcontainers PostgreSQL - singleton pattern for all tests

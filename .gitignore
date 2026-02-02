@@ -60,3 +60,6 @@ tools/demo-control/
 .angular
 .vercel
 .env*.local
+
+# Git worktrees for isolated development
+.worktrees/

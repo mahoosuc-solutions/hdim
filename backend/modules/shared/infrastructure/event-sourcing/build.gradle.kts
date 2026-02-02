@@ -19,7 +19,7 @@ dependencies {
     implementation(libs.postgresql)
 
     // Hibernate JSONB type support for complex aggregates
-    implementation(libs.hypersistence.utils.hibernate.v63)
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
 
     // Kafka
     api(libs.spring.kafka)

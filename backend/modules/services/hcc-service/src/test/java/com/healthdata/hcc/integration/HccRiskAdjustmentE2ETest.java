@@ -66,7 +66,7 @@ class HccRiskAdjustmentE2ETest {
         .withDatabaseName("hcc_test_db")
         .withUsername("testuser")
         .withPassword("testpass")
-        .withInitScript("db/init-hcc-schema.sql");
+        .withInitScript("db/init-schema.sql");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

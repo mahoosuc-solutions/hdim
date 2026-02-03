@@ -476,7 +476,7 @@ class SmsNotificationChannelTest {
 
         ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
         verify(templateRenderer).render(eq("critical-alert"), captor.capture());
-        assertThat(captor.getValue()).containsEntry("alertType", "Unknown Type"); // Formatted from UNKNOWN_TYPE
+        assertThat(captor.getValue()).containsEntry("alertType", "Unknown type"); // Formatted from UNKNOWN_TYPE
         assertThat(captor.getValue().get("timestamp")).isNotNull();
     }
 

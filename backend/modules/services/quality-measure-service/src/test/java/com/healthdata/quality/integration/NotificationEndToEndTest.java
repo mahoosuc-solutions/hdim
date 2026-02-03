@@ -9,6 +9,7 @@ import com.healthdata.quality.service.ClinicalAlertService;
 import com.healthdata.quality.service.MentalHealthAssessmentService;
 import com.healthdata.quality.service.notification.MockNotificationService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -51,6 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * Uses Testcontainers with PostgreSQL for production-like database behavior.
  */
+@Tag("integration")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.MOCK,
     properties = {

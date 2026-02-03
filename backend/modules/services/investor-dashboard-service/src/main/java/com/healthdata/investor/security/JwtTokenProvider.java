@@ -3,6 +3,7 @@ package com.healthdata.investor.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -86,8 +87,10 @@ public class JwtTokenProvider {
             log.warn("Unsupported JWT token: {}", e.getMessage());
         } catch (MalformedJwtException e) {
             log.warn("Malformed JWT token: {}", e.getMessage());
-        } catch (SecurityException e) {
+        } catch (SignatureException e) {
             log.warn("Invalid JWT signature: {}", e.getMessage());
+        } catch (SecurityException e) {
+            log.warn("Invalid JWT security: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             log.warn("JWT token compact of handler are invalid: {}", e.getMessage());
         }

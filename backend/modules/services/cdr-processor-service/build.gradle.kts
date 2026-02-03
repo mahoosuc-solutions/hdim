@@ -8,14 +8,14 @@ plugins {
 
 dependencies {
     // HAPI HL7 v2 Libraries
-    implementation("ca.uhn.hapi:hapi-base:2.5.1")
-    implementation("ca.uhn.hapi:hapi-structures-v25:2.5.1")
-    implementation("ca.uhn.hapi:hapi-structures-v26:2.5.1")
+    implementation(libs.hapi.hl7.base)
+    implementation(libs.hapi.hl7.structures.v25)
+    implementation(libs.hapi.hl7.structures.v26)
 
     // XML Parsing for CDA documents
-    implementation("xerces:xercesImpl:2.12.2")
-    implementation("xml-apis:xml-apis:1.4.01")
-    implementation("javax.xml.bind:jaxb-api:2.3.1")
+    implementation(libs.xerces.impl)
+    implementation(libs.xml.apis)
+    implementation(libs.jaxb.api)
 
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
@@ -86,12 +86,8 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
     systemProperty("spring.profiles.active", "test")
 }

@@ -45,11 +45,12 @@ dependencies {
 
     // NLP Libraries
     // Apache OpenNLP for NER and text processing
-    implementation("org.apache.opennlp:opennlp-tools:2.3.3")
+    implementation(libs.opennlp.tools)
 
     // Stanford CoreNLP for advanced NLP (optional - can be heavy)
-    implementation("edu.stanford.nlp:stanford-corenlp:4.5.10")
-    implementation("edu.stanford.nlp:stanford-corenlp:4.5.10:models") // Pre-trained models
+    implementation(libs.stanford.corenlp)
+    // Use explicit artifact syntax for models classifier
+    implementation("edu.stanford.nlp:stanford-corenlp:${libs.versions.stanford.corenlp.get()}:models")
 
     // Apache cTAKES-inspired clinical text processing
     // Using simpler regex-based approach for this implementation
@@ -76,7 +77,7 @@ dependencies {
     implementation(libs.guava)
 
     // Regular expression utilities
-    implementation("com.google.re2j:re2j:1.7")
+    implementation(libs.re2j)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
@@ -93,48 +94,14 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
-tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    useJUnitPlatform()
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 // Handle duplicate JAR files from Stanford CoreNLP dependencies
 tasks.withType<org.springframework.boot.gradle.tasks.bundling.BootJar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
-    systemProperty("spring.profiles.active", "test")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
     }
+    systemProperty("spring.profiles.active", "test")
 }

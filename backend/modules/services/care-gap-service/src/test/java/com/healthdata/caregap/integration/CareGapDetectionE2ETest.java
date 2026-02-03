@@ -62,6 +62,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @DisplayName("Care Gap Detection E2E Functional Tests")
 @Tag("integration")
+@Tag("e2e")
+@Tag("heavyweight")
 class CareGapDetectionE2ETest {
 
     @Container

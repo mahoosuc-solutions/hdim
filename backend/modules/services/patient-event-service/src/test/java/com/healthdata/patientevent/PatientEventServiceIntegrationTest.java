@@ -5,6 +5,7 @@ import com.healthdata.patientevent.api.v1.dto.CreatePatientRequest;
 import com.healthdata.patientevent.api.v1.dto.PatientEventResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -34,6 +35,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Testcontainers
 @DisplayName("PatientEventService Integration Tests")
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class PatientEventServiceIntegrationTest {
 
     @Container

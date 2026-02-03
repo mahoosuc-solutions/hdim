@@ -45,8 +45,7 @@ linkedin:
 
 # CORS for tests
 cors:
-  allowed-origins:
-    - http://localhost:4200
+  allowed-origins: http://localhost:4200
 
 # Security
 security:

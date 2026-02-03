@@ -2,6 +2,7 @@ package com.healthdata.gateway.ratelimit;
 
 import com.healthdata.gateway.config.RedisTestConfig;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -41,6 +42,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(RedisTestConfig.class)
 @Testcontainers
 @DisplayName("Tenant Rate Limiting Integration Tests")
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class TenantRateLimitIntegrationTest {
 
     @Autowired

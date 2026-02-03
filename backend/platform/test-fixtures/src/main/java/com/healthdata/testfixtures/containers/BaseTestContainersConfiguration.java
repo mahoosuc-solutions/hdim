@@ -73,8 +73,11 @@ public class BaseTestContainersConfiguration {
      * This allows Gradle time to write XML test results before connections are invalidated.
      * Without this delay, container shutdown can race with XML result writing, causing
      * "Could not write XML test results" errors even when all tests pass.
+     *
+     * Increased from 5000ms to 10000ms to handle services with many nested test classes
+     * (like consent-service) that generate many XML files.
      */
-    private static final long SHUTDOWN_DELAY_MS = 5000;
+    private static final long SHUTDOWN_DELAY_MS = 10000;
 
     private static final AtomicBoolean shutdownInitiated = new AtomicBoolean(false);
     private static volatile boolean shutdownHookRegistered = false;

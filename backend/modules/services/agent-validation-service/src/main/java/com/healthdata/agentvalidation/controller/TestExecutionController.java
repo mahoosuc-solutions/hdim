@@ -6,6 +6,7 @@ import com.healthdata.agentvalidation.domain.enums.EvaluationMetricType;
 import com.healthdata.agentvalidation.domain.enums.TestStatus;
 import com.healthdata.agentvalidation.repository.TestCaseRepository;
 import com.healthdata.agentvalidation.repository.TestExecutionRepository;
+import com.healthdata.agentvalidation.service.EvaluationService;
 import com.healthdata.agentvalidation.service.TestOrchestratorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +38,7 @@ public class TestExecutionController {
     private final TestCaseRepository testCaseRepository;
     private final TestExecutionRepository testExecutionRepository;
     private final TestOrchestratorService testOrchestratorService;
+    private final EvaluationService evaluationService;
 
     // Test Case Endpoints
 
@@ -266,7 +268,55 @@ public class TestExecutionController {
             .orElse(ResponseEntity.notFound().build());
     }
 
+    // Direct Evaluation Endpoint (for testing harness connectivity)
+
+    @Operation(summary = "Directly evaluate a response against metrics (dev/testing)")
+    @PostMapping("/evaluate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QUALITY_OFFICER', 'EVALUATOR')")
+    public ResponseEntity<Map<String, TestExecution.MetricResult>> evaluateResponse(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @Valid @RequestBody DirectEvaluationRequest request) {
+
+        log.info("Direct evaluation request for {} metrics", request.metricTypes().size());
+
+        Map<String, TestExecution.MetricResult> results = evaluationService.evaluateAll(
+            request.metricTypes(),
+            request.userMessage(),
+            request.agentResponse(),
+            request.contextData() != null ? request.contextData() : Map.of()
+        );
+
+        return ResponseEntity.ok(results);
+    }
+
+    @Operation(summary = "Evaluate a single metric (dev/testing)")
+    @PostMapping("/evaluate/{metricType}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QUALITY_OFFICER', 'EVALUATOR')")
+    public ResponseEntity<TestExecution.MetricResult> evaluateSingleMetric(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable EvaluationMetricType metricType,
+            @Valid @RequestBody DirectEvaluationRequest request) {
+
+        log.info("Direct single metric evaluation: {}", metricType);
+
+        TestExecution.MetricResult result = evaluationService.evaluateMetric(
+            metricType,
+            request.userMessage(),
+            request.agentResponse(),
+            request.contextData() != null ? request.contextData() : Map.of()
+        );
+
+        return ResponseEntity.ok(result);
+    }
+
     // DTOs
+    public record DirectEvaluationRequest(
+        String userMessage,
+        String agentResponse,
+        Set<EvaluationMetricType> metricTypes,
+        Map<String, Object> contextData
+    ) {}
+
     public record CreateTestCaseRequest(
         String name,
         String description,

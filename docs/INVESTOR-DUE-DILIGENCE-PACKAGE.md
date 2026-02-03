@@ -308,6 +308,16 @@ A: Conservative: $2-4M ARR by end of Year 1 (20-40 hospital customers @ $100-150
 **Q: What's the risk?**
 A: Primary risk is go-to-market execution (sales hiring, customer success). Technical risk is low (product exists, tested, HIPAA-compliant). Market risk is low (problem is urgent, customers ready to deploy).
 
+**Q: How do you verify the "<2 seconds" performance claim?**
+A: Performance is measured and tracked in production code:
+- **Every evaluation records `durationMs`** in the database (`CqlEvaluation.durationMs` field)
+- **Audit events capture timing** via Kafka (`EvaluationCompletedEvent.durationMs`)
+- **Performance breakdown documented**: FHIR retrieval (10ms cached), CQL execution (~1.2s), event publishing (15ms)
+- **Parallel evaluation**: 10 concurrent threads for population-level processing
+- **Verified architecture**: `MeasureTemplateEngine.java` lines 148-150 show timing instrumentation
+
+See: `backend/modules/services/cql-engine-service/src/main/java/com/healthdata/cql/service/CqlEvaluationService.java` (lines 112-113 capture durationMs), `docs/product/02-architecture/performance-benchmarks.md` for detailed benchmarks, and TECHNICAL-COMPETITIVE-ANALYSIS.md Part 2.1 for competitive comparison.
+
 ---
 
 **Document Status:** ✅ COMPLETE

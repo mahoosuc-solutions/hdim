@@ -444,6 +444,16 @@ Population Evaluation (100 patients, 52 measures):
 
 HDIM's **event-driven architecture** + **direct CQL execution** enables real-time measure evaluation.
 
+**Performance Verification Infrastructure:**
+
+The "<2 seconds" claim is verifiable through production code:
+- `CqlEvaluation.durationMs` field records actual evaluation time for every execution
+- `EvaluationCompletedEvent` Kafka events include `durationMs` for audit trail
+- Repository method `getAverageDurationForLibrary()` provides statistical analysis
+- `MeasureTemplateEngine` captures `System.currentTimeMillis()` at evaluation start/end
+
+Code reference: `CqlEvaluationService.java:112-113` stores duration, `MeasureTemplateEngine.java:148-167` publishes timing in events.
+
 ---
 
 ### 2.2 Care Gap Detection Pipeline (Real-Time)

@@ -34,6 +34,8 @@ import { NurseWorkflowService } from '../../../services/nurse-workflow/nurse-wor
 import { MedicationService } from '../../../services/medication/medication.service';
 import { CarePlanService } from '../../../services/care-plan/care-plan.service';
 import { WorkflowLauncherService, type WorkflowType } from '../../../services/workflow/workflow-launcher.service';
+import { AuthService } from '../../../services/auth.service';
+import { API_CONFIG } from '../../../config/api.config';
 
 export interface CareGapTask {
   id: string;
@@ -103,7 +105,8 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
     private nurseWorkflowService: NurseWorkflowService,
     private medicationService: MedicationService,
     private carePlanService: CarePlanService,
-    private workflowLauncher: WorkflowLauncherService
+    private workflowLauncher: WorkflowLauncherService,
+    private authService: AuthService
   ) {  }
 
   ngOnInit(): void {
@@ -121,9 +124,8 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
   private loadDashboardData(): void {
     this.loading = true;
 
-    // Initialize services with tenant context
-    // In production, get tenant ID from authenticated user context
-    const tenantId = 'TENANT001'; // TODO: Get from AuthService
+    // Initialize services with tenant context from authenticated user
+    const tenantId = this.authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID;
     this.nurseWorkflowService.setTenantContext(tenantId);
     this.medicationService.setTenantContext(tenantId);
     this.carePlanService.setTenantContext(tenantId);

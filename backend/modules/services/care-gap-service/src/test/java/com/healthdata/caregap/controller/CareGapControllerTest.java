@@ -402,7 +402,9 @@ class CareGapControllerTest {
                     100L, 75L, 1.33,
                     Map.of("high", 20L, "medium", 50L, "low", 30L),
                     Map.of("HEDIS", 70L, "CMS", 30L),
-                    Map.of("CDC_A1C", 15L, "BCS", 12L)
+                    Map.of("CDC_A1C", 15L, "BCS", 12L),
+                    15L,  // overdueCount
+                    8L    // closedThisMonth
             );
             when(reportService.getPopulationGapReport(TENANT_ID)).thenReturn(report);
 

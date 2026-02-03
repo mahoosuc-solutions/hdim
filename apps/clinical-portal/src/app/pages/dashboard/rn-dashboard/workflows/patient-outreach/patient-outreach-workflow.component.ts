@@ -32,6 +32,8 @@ import { NurseWorkflowService } from '../../../../../services/nurse-workflow/nur
 import { OutreachLog } from '../../../../../services/nurse-workflow/nurse-workflow.models';
 import { ToastService } from '../../../../../services/toast.service';
 import { LoggerService, ContextualLogger } from '../../../../../services/logger.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { API_CONFIG } from '../../../../../config/api.config';
 
 export interface OutreachWorkflowData {
   outreachLogId: string;
@@ -91,6 +93,7 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private logger: LoggerService,
     private dialogRef: MatDialogRef<PatientOutreachWorkflowComponent>,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: OutreachWorkflowData
   ) {    this.outreachLogId = data.outreachLogId;
     this.patientId = data.patientId;
@@ -186,7 +189,9 @@ export class PatientOutreachWorkflowComponent implements OnInit, OnDestroy {
    */
   private loadOutreachLog(): void {
     this.loading = true;
-    this.nurseWorkflowService.setTenantContext('TENANT001'); // TODO: Get from auth
+    this.nurseWorkflowService.setTenantContext(
+      this.authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID
+    );
 
     this.nurseWorkflowService
       .getOutreachLogById(this.outreachLogId)

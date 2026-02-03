@@ -2,9 +2,7 @@ package com.healthdata.agentvalidation;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -21,27 +19,13 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * - QA integration for human-in-the-loop review
  * - HIPAA-compliant audit logging
  */
-@SpringBootApplication(
-    scanBasePackages = {
-        "com.healthdata.agentvalidation",
-        "com.healthdata.authentication.filter",
-        "com.healthdata.authentication.context",
-        "com.healthdata.authentication.config",
-        "com.healthdata.authentication.service",
-        "com.healthdata.persistence",
-        "com.healthdata.messaging",
-        "com.healthdata.tracing"
-        // Note: com.healthdata.audit is auto-configured via AuditAutoConfiguration
-    },
-    exclude = {
-        com.healthdata.authentication.config.AuthenticationAutoConfiguration.class
-    }
-)
-@EnableJpaRepositories(basePackages = {
-    "com.healthdata.agentvalidation.repository"
-})
-@EntityScan(basePackages = {
-    "com.healthdata.agentvalidation.domain.entity"
+@SpringBootApplication(scanBasePackages = {
+    "com.healthdata.agentvalidation",
+    "com.healthdata.authentication",
+    "com.healthdata.persistence",
+    "com.healthdata.audit",
+    "com.healthdata.messaging",
+    "com.healthdata.tracing"
 })
 @EnableFeignClients(basePackages = "com.healthdata.agentvalidation.client")
 @EnableAsync

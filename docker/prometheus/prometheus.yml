@@ -436,6 +436,22 @@ scrape_configs:
           service: 'agent-runtime'
           category: 'ai'
 
+  - job_name: 'agent-validation-service'
+    metrics_path: '/agent-validation/actuator/prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['agent-validation-service:8114']
+        labels:
+          service: 'agent-validation'
+          category: 'ai'
+          application: 'agent-validation-service'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__address__]
+        regex: '([^:]+)(?::\d+)?'
+        target_label: hostname
+
   - job_name: 'analytics-service'
     metrics_path: '/actuator/prometheus'
     scrape_interval: 30s

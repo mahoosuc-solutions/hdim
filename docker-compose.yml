@@ -1111,6 +1111,64 @@ services:
     networks:
       - healthdata-network
 
+  # Port 8114 - Agent Validation Service (AI Agent Testing & Validation Framework)
+  agent-validation-service:
+    container_name: healthdata-agent-validation-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/agent-validation-service/Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      agent-runtime-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_validation_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8114
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Service URLs
+      AGENT_RUNTIME_URL: http://agent-runtime-service:8088
+      APPROVAL_SERVICE_URL: http://approval-service:8097
+      JAEGER_URL: http://jaeger:16686
+      JAEGER_API_URL: http://jaeger:16686
+      EVALUATION_HARNESS_URL: http://agent-validation-harness:8500
+      # OpenTelemetry - distributed tracing
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: agent-validation-service
+      # Force IPv4 for OTLP connections
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8114:8114"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8114/agent-validation/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
   # ============================================
   # ANALYTICS SERVICES (8092-8094)
   # ============================================

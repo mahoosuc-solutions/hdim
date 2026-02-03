@@ -24,7 +24,6 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Reference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -40,7 +39,6 @@ import ca.uhn.fhir.parser.IParser;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Observation Controller Tests")
-@Tag("integration")
 class ObservationControllerTest {
 
     private static final String TENANT_ID = "tenant-1";
@@ -66,7 +64,7 @@ class ObservationControllerTest {
         when(observationService.createObservation(eq(TENANT_ID), any(Observation.class), eq("user")))
                 .thenReturn(observation);
 
-        mockMvc.perform(post("/fhir/Observation")
+        mockMvc.perform(post("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -79,7 +77,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should return bad request on create invalid JSON")
     void shouldReturnBadRequestOnCreateInvalidJson() throws Exception {
-        mockMvc.perform(post("/fhir/Observation")
+        mockMvc.perform(post("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -93,7 +91,7 @@ class ObservationControllerTest {
         when(observationService.createObservation(eq(TENANT_ID), any(Observation.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("bad"));
 
-        mockMvc.perform(post("/fhir/Observation")
+        mockMvc.perform(post("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -108,7 +106,7 @@ class ObservationControllerTest {
         Observation observation = buildObservation(UUID.randomUUID());
         when(observationService.getObservation(TENANT_ID, observation.getId())).thenReturn(Optional.of(observation));
 
-        mockMvc.perform(get("/fhir/Observation/{id}", observation.getId())
+        mockMvc.perform(get("/Observation/{id}", observation.getId())
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(observation.getId())));
@@ -119,7 +117,7 @@ class ObservationControllerTest {
     void shouldReturnNotFound() throws Exception {
         when(observationService.getObservation(TENANT_ID, "missing")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Observation/{id}", "missing")
+        mockMvc.perform(get("/Observation/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -131,7 +129,7 @@ class ObservationControllerTest {
         when(observationService.updateObservation(eq(TENANT_ID), eq(observation.getId()), any(Observation.class), eq("user")))
                 .thenReturn(observation);
 
-        mockMvc.perform(put("/fhir/Observation/{id}", observation.getId())
+        mockMvc.perform(put("/Observation/{id}", observation.getId())
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -143,7 +141,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should return bad request on update invalid JSON")
     void shouldReturnBadRequestOnUpdateInvalidJson() throws Exception {
-        mockMvc.perform(put("/fhir/Observation/{id}", "id-1")
+        mockMvc.perform(put("/Observation/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -157,7 +155,7 @@ class ObservationControllerTest {
         doThrow(new ObservationService.ObservationNotFoundException("missing"))
                 .when(observationService).updateObservation(eq(TENANT_ID), eq("missing"), any(Observation.class), eq("user"));
 
-        mockMvc.perform(put("/fhir/Observation/{id}", "missing")
+        mockMvc.perform(put("/Observation/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -168,7 +166,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should delete observation")
     void shouldDeleteObservation() throws Exception {
-        mockMvc.perform(delete("/fhir/Observation/{id}", "id-1")
+        mockMvc.perform(delete("/Observation/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -180,7 +178,7 @@ class ObservationControllerTest {
         doThrow(new ObservationService.ObservationNotFoundException("missing"))
                 .when(observationService).deleteObservation(TENANT_ID, "missing", "user");
 
-        mockMvc.perform(delete("/fhir/Observation/{id}", "missing")
+        mockMvc.perform(delete("/Observation/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNotFound());
@@ -192,7 +190,7 @@ class ObservationControllerTest {
         when(observationService.searchObservationsByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                 .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -204,7 +202,7 @@ class ObservationControllerTest {
         when(observationService.searchObservationsByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenThrow(new IllegalStateException("search failed"));
 
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -217,7 +215,7 @@ class ObservationControllerTest {
         when(observationService.searchObservationsByPatientAndCode(eq(TENANT_ID), eq("patient-1"), eq("8480-6")))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "8480-6"))
@@ -230,7 +228,7 @@ class ObservationControllerTest {
         when(observationService.searchObservationsByPatientAndCategory(eq(TENANT_ID), eq("patient-1"), eq("vital-signs")))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("category", "vital-signs"))
@@ -244,7 +242,7 @@ class ObservationControllerTest {
                 eq(TENANT_ID), eq("patient-1"), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date", "2024-01-01T00:00:00/2024-01-02T00:00:00"))
@@ -254,7 +252,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should require patient parameter for search")
     void shouldRequirePatientParameter() throws Exception {
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("patient parameter is required")));
@@ -263,7 +261,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should return bad request for invalid date format")
     void shouldReturnBadRequestForInvalidDateFormat() throws Exception {
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date", "invalid"))
@@ -274,7 +272,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should return bad request for parse errors")
     void shouldReturnBadRequestForParseErrors() throws Exception {
-        mockMvc.perform(get("/fhir/Observation")
+        mockMvc.perform(get("/Observation")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date", "bad/bad"))
@@ -288,7 +286,7 @@ class ObservationControllerTest {
         when(observationService.getLabResultsByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Observation/lab-results")
+        mockMvc.perform(get("/Observation/lab-results")
                         .header("X-Tenant-ID", TENANT_ID)
                 .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -300,7 +298,7 @@ class ObservationControllerTest {
         when(observationService.getLabResultsByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("lab failed"));
 
-        mockMvc.perform(get("/fhir/Observation/lab-results")
+        mockMvc.perform(get("/Observation/lab-results")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -313,7 +311,7 @@ class ObservationControllerTest {
         when(observationService.getVitalSignsByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Observation/vital-signs")
+        mockMvc.perform(get("/Observation/vital-signs")
                         .header("X-Tenant-ID", TENANT_ID)
                 .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -325,7 +323,7 @@ class ObservationControllerTest {
         when(observationService.getVitalSignsByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("vitals failed"));
 
-        mockMvc.perform(get("/fhir/Observation/vital-signs")
+        mockMvc.perform(get("/Observation/vital-signs")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -338,7 +336,7 @@ class ObservationControllerTest {
         when(observationService.getLatestObservationByPatientAndCode(TENANT_ID, "patient-1", "8480-6"))
                 .thenReturn(Optional.of(observation));
 
-        mockMvc.perform(get("/fhir/Observation/latest")
+        mockMvc.perform(get("/Observation/latest")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "8480-6"))
@@ -352,7 +350,7 @@ class ObservationControllerTest {
         when(observationService.getLatestObservationByPatientAndCode(TENANT_ID, "patient-1", "8480-6"))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Observation/latest")
+        mockMvc.perform(get("/Observation/latest")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "8480-6"))
@@ -362,7 +360,7 @@ class ObservationControllerTest {
     @Test
     @DisplayName("Should return health check")
     void shouldReturnHealthCheck() throws Exception {
-        mockMvc.perform(get("/fhir/Observation/_health"))
+        mockMvc.perform(get("/Observation/_health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Observation")));
     }

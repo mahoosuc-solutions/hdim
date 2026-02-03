@@ -22,7 +22,6 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Reference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -38,7 +37,6 @@ import ca.uhn.fhir.parser.IParser;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MedicationAdministration Controller Tests")
-@Tag("integration")
 class MedicationAdministrationControllerTest {
 
     private static final IParser JSON_PARSER = FhirContext.forR4().newJsonParser().setPrettyPrint(false);
@@ -63,7 +61,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.createMedicationAdministration(eq("tenant-1"), any(MedicationAdministration.class), eq("user")))
                 .thenReturn(admin);
 
-        mockMvc.perform(post("/fhir/MedicationAdministration")
+        mockMvc.perform(post("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -80,7 +78,7 @@ class MedicationAdministrationControllerTest {
                 eq("tenant-1"), any(MedicationAdministration.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("create failed"));
 
-        mockMvc.perform(post("/fhir/MedicationAdministration")
+        mockMvc.perform(post("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -96,7 +94,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getMedicationAdministration("tenant-1", admin.getId()))
                 .thenReturn(Optional.of(admin));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/{id}", admin.getId())
+        mockMvc.perform(get("/MedicationAdministration/{id}", admin.getId())
                         .header("X-Tenant-ID", "tenant-1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(admin.getId())));
@@ -108,7 +106,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getMedicationAdministration("tenant-1", "missing"))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/{id}", "missing")
+        mockMvc.perform(get("/MedicationAdministration/{id}", "missing")
                         .header("X-Tenant-ID", "tenant-1"))
                 .andExpect(status().isNotFound());
     }
@@ -120,7 +118,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.updateMedicationAdministration(eq("tenant-1"), eq(admin.getId()), any(MedicationAdministration.class), eq("user")))
                 .thenReturn(admin);
 
-        mockMvc.perform(put("/fhir/MedicationAdministration/{id}", admin.getId())
+        mockMvc.perform(put("/MedicationAdministration/{id}", admin.getId())
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -135,7 +133,7 @@ class MedicationAdministrationControllerTest {
                 eq("tenant-1"), eq("id-1"), any(MedicationAdministration.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("update failed"));
 
-        mockMvc.perform(put("/fhir/MedicationAdministration/{id}", "id-1")
+        mockMvc.perform(put("/MedicationAdministration/{id}", "id-1")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -147,7 +145,7 @@ class MedicationAdministrationControllerTest {
     @Test
     @DisplayName("Should return bad request on invalid JSON")
     void shouldReturnBadRequestOnInvalidJson() throws Exception {
-        mockMvc.perform(post("/fhir/MedicationAdministration")
+        mockMvc.perform(post("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -159,7 +157,7 @@ class MedicationAdministrationControllerTest {
     @Test
     @DisplayName("Should return bad request on update parse failure")
     void shouldReturnBadRequestOnUpdateParseFailure() throws Exception {
-        mockMvc.perform(put("/fhir/MedicationAdministration/{id}", "id-1")
+        mockMvc.perform(put("/MedicationAdministration/{id}", "id-1")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -174,7 +172,7 @@ class MedicationAdministrationControllerTest {
         doThrow(new MedicationAdministrationService.MedicationAdministrationNotFoundException("missing"))
                 .when(medicationAdministrationService).updateMedicationAdministration(eq("tenant-1"), eq("missing"), any(MedicationAdministration.class), eq("user"));
 
-        mockMvc.perform(put("/fhir/MedicationAdministration/{id}", "missing")
+        mockMvc.perform(put("/MedicationAdministration/{id}", "missing")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -185,7 +183,7 @@ class MedicationAdministrationControllerTest {
     @Test
     @DisplayName("Should delete medication administration")
     void shouldDeleteMedicationAdministration() throws Exception {
-        mockMvc.perform(delete("/fhir/MedicationAdministration/{id}", "id-1")
+        mockMvc.perform(delete("/MedicationAdministration/{id}", "id-1")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -197,7 +195,7 @@ class MedicationAdministrationControllerTest {
         doThrow(new MedicationAdministrationService.MedicationAdministrationNotFoundException("missing"))
                 .when(medicationAdministrationService).deleteMedicationAdministration("tenant-1", "missing", "user");
 
-        mockMvc.perform(delete("/fhir/MedicationAdministration/{id}", "missing")
+        mockMvc.perform(delete("/MedicationAdministration/{id}", "missing")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNotFound());
@@ -209,7 +207,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.searchAdministrationsByPatient(eq("tenant-1"), eq("patient-1"), any()))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration")
+        mockMvc.perform(get("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -221,7 +219,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.searchAdministrationsByPatient(eq("tenant-1"), eq("patient-1"), any()))
                 .thenThrow(new IllegalStateException("search failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration")
+        mockMvc.perform(get("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -234,7 +232,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.searchAdministrationsByEncounter(eq("tenant-1"), eq("enc-1")))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration")
+        mockMvc.perform(get("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("encounter", "enc-1"))
                 .andExpect(status().isOk());
@@ -246,7 +244,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.searchAdministrationsByPatientAndCode(eq("tenant-1"), eq("patient-1"), eq("CODE")))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration")
+        mockMvc.perform(get("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("code", "CODE"))
@@ -256,7 +254,7 @@ class MedicationAdministrationControllerTest {
     @Test
     @DisplayName("Should return bad request when search params missing")
     void shouldReturnBadRequestWhenSearchParamsMissing() throws Exception {
-        mockMvc.perform(get("/fhir/MedicationAdministration")
+        mockMvc.perform(get("/MedicationAdministration")
                         .header("X-Tenant-ID", "tenant-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("patient or encounter parameter is required")));
@@ -265,7 +263,7 @@ class MedicationAdministrationControllerTest {
     @Test
     @DisplayName("Should return bad request on invalid date range")
     void shouldReturnBadRequestOnInvalidDateRange() throws Exception {
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-date")
+        mockMvc.perform(get("/MedicationAdministration/by-date")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("start", "bad")
@@ -281,7 +279,7 @@ class MedicationAdministrationControllerTest {
                 eq("tenant-1"), eq("patient-1"), any(), any()))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-date")
+        mockMvc.perform(get("/MedicationAdministration/by-date")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("start", "2025-01-01T00:00:00")
@@ -296,7 +294,7 @@ class MedicationAdministrationControllerTest {
                 eq("tenant-1"), eq("patient-1"), any(), any()))
                 .thenThrow(new IllegalStateException("date range failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-date")
+        mockMvc.perform(get("/MedicationAdministration/by-date")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("start", "2025-01-01T00:00:00")
@@ -311,7 +309,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getCompletedAdministrationsByPatient("tenant-1", "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/completed")
+        mockMvc.perform(get("/MedicationAdministration/completed")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -323,7 +321,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getCompletedAdministrationsByPatient("tenant-1", "patient-1"))
                 .thenThrow(new IllegalStateException("completed failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/completed")
+        mockMvc.perform(get("/MedicationAdministration/completed")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -336,7 +334,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getInProgressAdministrationsByPatient("tenant-1", "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/in-progress")
+        mockMvc.perform(get("/MedicationAdministration/in-progress")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -348,7 +346,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getInProgressAdministrationsByPatient("tenant-1", "patient-1"))
                 .thenThrow(new IllegalStateException("in-progress failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/in-progress")
+        mockMvc.perform(get("/MedicationAdministration/in-progress")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -361,7 +359,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getAdministrationHistoryByRequest("tenant-1", "request-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-request")
+        mockMvc.perform(get("/MedicationAdministration/by-request")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("request", "request-1"))
                 .andExpect(status().isOk());
@@ -373,7 +371,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getAdministrationHistoryByRequest("tenant-1", "request-1"))
                 .thenThrow(new IllegalStateException("request failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-request")
+        mockMvc.perform(get("/MedicationAdministration/by-request")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("request", "request-1"))
                 .andExpect(status().isBadRequest())
@@ -386,7 +384,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getAdministrationsByLotNumber("tenant-1", "lot-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-lot")
+        mockMvc.perform(get("/MedicationAdministration/by-lot")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("lot", "lot-1"))
                 .andExpect(status().isOk());
@@ -398,7 +396,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.getAdministrationsByLotNumber("tenant-1", "lot-1"))
                 .thenThrow(new IllegalStateException("lot failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/by-lot")
+        mockMvc.perform(get("/MedicationAdministration/by-lot")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("lot", "lot-1"))
                 .andExpect(status().isBadRequest())
@@ -411,7 +409,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.hasMedicationBeenAdministeredToday("tenant-1", "patient-1", "CODE"))
                 .thenReturn(true);
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/administered-today")
+        mockMvc.perform(get("/MedicationAdministration/administered-today")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("code", "CODE"))
@@ -428,7 +426,7 @@ class MedicationAdministrationControllerTest {
         when(medicationAdministrationService.hasMedicationBeenAdministeredToday("tenant-1", "patient-1", "CODE"))
                 .thenThrow(new IllegalStateException("administered failed"));
 
-        mockMvc.perform(get("/fhir/MedicationAdministration/administered-today")
+        mockMvc.perform(get("/MedicationAdministration/administered-today")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("code", "CODE"))
@@ -438,7 +436,7 @@ class MedicationAdministrationControllerTest {
     @Test
     @DisplayName("Should return health check")
     void shouldReturnHealthCheck() throws Exception {
-        mockMvc.perform(get("/fhir/MedicationAdministration/_health"))
+        mockMvc.perform(get("/MedicationAdministration/_health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("MedicationAdministration")));
     }

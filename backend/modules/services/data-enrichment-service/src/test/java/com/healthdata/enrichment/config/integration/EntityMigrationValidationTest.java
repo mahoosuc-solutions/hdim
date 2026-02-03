@@ -15,7 +15,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest extends AbstractEntityMigrationValidationTest {
 
     @Override

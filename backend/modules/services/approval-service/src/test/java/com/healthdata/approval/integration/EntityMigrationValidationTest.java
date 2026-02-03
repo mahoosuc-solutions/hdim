@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EntityScan(basePackages = "com.healthdata.approval.domain")
 @Testcontainers
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest {
 
     @Container

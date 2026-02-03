@@ -37,13 +37,13 @@ dependencies {
     implementation(libs.bundles.hapi.fhir.client)
 
     // XML Processing for CDA/QRDA
-    implementation("javax.xml.bind:jaxb-api:2.3.1")
-    implementation("org.glassfish.jaxb:jaxb-runtime:4.0.4")
+    implementation(libs.jaxb.api)
+    implementation(libs.jaxb.runtime)
 
     // Schematron for QRDA validation (using pure Java implementation)
-    implementation("com.helger.schematron:ph-schematron-pure:8.0.3")
-    implementation("com.helger.schematron:ph-schematron-api:8.0.3")
-    implementation("com.helger.commons:ph-commons:11.1.6")
+    implementation(libs.ph.schematron.pure)
+    implementation(libs.ph.schematron.api)
+    implementation(libs.ph.commons)
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
@@ -74,13 +74,13 @@ dependencies {
     implementation(libs.guava)
 
     // File storage (for QRDA document storage)
-    implementation("commons-io:commons-io:2.15.1")
+    implementation(libs.commons.io)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation(libs.spring.security.test)
 
     // Testcontainers for integration tests
     testImplementation(libs.bundles.testcontainers)
@@ -90,31 +90,15 @@ dependencies {
     testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
 
     // Kafka test support
-    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation(libs.spring.kafka.test)
 
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
-    systemProperty("spring.profiles.active", "test")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
     }
+    systemProperty("spring.profiles.active", "test")
 }

@@ -1,7 +1,7 @@
 package com.healthdata.hcc.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
 import com.healthdata.authentication.repository.UserRepository;
@@ -127,8 +127,8 @@ class HccApiIntegrationTest {
                     .hccCodeV24("HCC19")
                     .hccCodeV28("HCC37")
                     .hccNameV24("Diabetes without Complication")
-                    .coefficientV24(0.105)
-                    .coefficientV28(0.118)
+                    .coefficientV24(new BigDecimal("0.105"))
+                    .coefficientV28(new BigDecimal("0.118"))
                     .requiresSpecificity(false)
                     .build(),
                 DiagnosisHccMapEntity.builder()
@@ -145,8 +145,8 @@ class HccApiIntegrationTest {
                     .hccCodeV24("HCC111")
                     .hccCodeV28("HCC280")
                     .hccNameV24("Chronic Obstructive Pulmonary Disease")
-                    .coefficientV24(0.335)
-                    .coefficientV28(0.312)
+                    .coefficientV24(new BigDecimal("0.335"))
+                    .coefficientV28(new BigDecimal("0.312"))
                     .requiresSpecificity(false)
                     .build(),
                 DiagnosisHccMapEntity.builder()
@@ -154,8 +154,8 @@ class HccApiIntegrationTest {
                     .hccCodeV24("HCC96")
                     .hccCodeV28("HCC223")
                     .hccNameV24("Atrial Fibrillation")
-                    .coefficientV24(0.288)
-                    .coefficientV28(0.256)
+                    .coefficientV24(new BigDecimal("0.288"))
+                    .coefficientV28(new BigDecimal("0.256"))
                     .requiresSpecificity(false)
                     .build()
             );

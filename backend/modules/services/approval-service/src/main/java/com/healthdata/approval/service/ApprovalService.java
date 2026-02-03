@@ -91,7 +91,7 @@ public class ApprovalService {
             dto.entityType(),
             dto.entityId(),
             dto.riskLevel().name(),
-            dto.confidenceScore().doubleValue(),
+            dto.confidenceScore() != null ? dto.confidenceScore().doubleValue() : 0.0,
             dto.requestedBy()
         );
 

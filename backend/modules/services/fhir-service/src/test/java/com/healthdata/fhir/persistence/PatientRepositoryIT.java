@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -50,6 +51,7 @@ import com.healthdata.fhir.config.TestContainersConfiguration;
 )
 @Import({TestContainersConfiguration.class, TestCacheConfiguration.class})
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
 class PatientRepositoryIT {
 
     @Autowired

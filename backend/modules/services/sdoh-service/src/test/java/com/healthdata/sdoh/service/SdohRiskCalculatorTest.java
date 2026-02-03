@@ -9,6 +9,7 @@ import com.healthdata.sdoh.repository.SdohRiskScoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.*;
  * Testing SDOH risk scoring, category weighting, risk predictions, and trend analysis.
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 @DisplayName("SDOH Risk Calculator Tests")
 class SdohRiskCalculatorTest {
 

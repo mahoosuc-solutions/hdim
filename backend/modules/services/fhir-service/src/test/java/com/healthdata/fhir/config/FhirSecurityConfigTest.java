@@ -2,6 +2,7 @@ package com.healthdata.fhir.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @SpringBootTest(classes = FhirSecurityConfig.class, webEnvironment = WebEnvironment.MOCK)
 @ImportAutoConfiguration({SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class})
 @ActiveProfiles("test")
+@Tag("integration")
 class FhirSecurityConfigTest {
 
     @Autowired

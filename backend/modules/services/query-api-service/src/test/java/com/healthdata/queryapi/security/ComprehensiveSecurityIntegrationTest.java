@@ -2,6 +2,7 @@ package com.healthdata.queryapi.security;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -59,6 +60,7 @@ import static org.mockito.Mockito.mock;
  * Note: Uses @WebMvcTest for lightweight endpoint testing without database initialization.
  * The test manually sets up security context for each test scenario.
  */
+@Tag("integration")
 @WebMvcTest(controllers = {
     PatientController.class,
     ObservationController.class,

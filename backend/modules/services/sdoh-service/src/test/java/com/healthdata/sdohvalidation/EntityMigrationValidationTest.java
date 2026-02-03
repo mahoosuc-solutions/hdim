@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @ActiveProfiles("test")
+@Tag("integration")
 @Tag("entity-migration-validation")
 class EntityMigrationValidationTest {
 

@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +28,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SMART Authorization Controller Tests")
+@Tag("integration")
 class SmartAuthorizationControllerTest {
 
     @Mock

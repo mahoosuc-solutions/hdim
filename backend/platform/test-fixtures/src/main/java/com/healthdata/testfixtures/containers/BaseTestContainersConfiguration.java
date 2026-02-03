@@ -170,8 +170,17 @@ public class BaseTestContainersConfiguration {
      *   <li>{@code spring.datasource.username}</li>
      *   <li>{@code spring.datasource.password}</li>
      *   <li>{@code spring.datasource.driver-class-name}</li>
+     *   <li>{@code spring.datasource.hikari.max-lifetime}</li>
+     *   <li>{@code spring.datasource.hikari.connection-timeout}</li>
+     *   <li>{@code spring.datasource.hikari.minimum-idle}</li>
+     *   <li>{@code spring.datasource.hikari.maximum-pool-size}</li>
      *   <li>{@code spring.jpa.database-platform}</li>
      * </ul>
+     * <p>
+     * <strong>HikariCP Configuration Note:</strong> The max-lifetime is set to 10 minutes
+     * (600000ms) which is shorter than the default 30 minutes. This prevents the
+     * "maxLifetime is less than the server connection timeout" warning and ensures
+     * connections are recycled before the database terminates them.
      *
      * @param registry the dynamic property registry
      */
@@ -182,6 +191,12 @@ public class BaseTestContainersConfiguration {
         registry.add("spring.datasource.username", POSTGRES_CONTAINER::getUsername);
         registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        // HikariCP connection pool configuration for tests
+        // Set max-lifetime to 10 minutes to prevent "maxLifetime is less than server connection timeout" warnings
+        registry.add("spring.datasource.hikari.max-lifetime", () -> "600000");
+        registry.add("spring.datasource.hikari.connection-timeout", () -> "30000");
+        registry.add("spring.datasource.hikari.minimum-idle", () -> "2");
+        registry.add("spring.datasource.hikari.maximum-pool-size", () -> "5");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 

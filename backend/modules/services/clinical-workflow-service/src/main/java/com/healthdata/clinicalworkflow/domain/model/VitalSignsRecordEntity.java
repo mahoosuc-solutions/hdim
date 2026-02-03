@@ -52,38 +52,38 @@ public class VitalSignsRecordEntity {
     @Column(name = "encounter_id", length = 255)
     private String encounterId;
 
-    @Column(name = "observation_id", length = 255, columnDefinition = "VARCHAR(255) COMMENT 'FHIR Observation resource ID'")
+    @Column(name = "observation_id", length = 255)
     private String observationId;
 
     @Column(name = "recorded_by", nullable = false, length = 255)
     private String recordedBy;
 
     // Vital Signs Measurements
-    @Column(name = "systolic_bp", precision = 5, scale = 1, columnDefinition = "NUMERIC(5,1) COMMENT 'Systolic Blood Pressure in mmHg'")
+    @Column(name = "systolic_bp", precision = 5, scale = 1)
     private BigDecimal systolicBp;
 
-    @Column(name = "diastolic_bp", precision = 5, scale = 1, columnDefinition = "NUMERIC(5,1) COMMENT 'Diastolic Blood Pressure in mmHg'")
+    @Column(name = "diastolic_bp", precision = 5, scale = 1)
     private BigDecimal diastolicBp;
 
-    @Column(name = "heart_rate", precision = 5, scale = 1, columnDefinition = "NUMERIC(5,1) COMMENT 'Heart Rate in beats per minute'")
+    @Column(name = "heart_rate", precision = 5, scale = 1)
     private BigDecimal heartRate;
 
-    @Column(name = "temperature_f", precision = 5, scale = 2, columnDefinition = "NUMERIC(5,2) COMMENT 'Temperature in Fahrenheit'")
+    @Column(name = "temperature_f", precision = 5, scale = 2)
     private BigDecimal temperatureF;
 
-    @Column(name = "respiration_rate", precision = 5, scale = 1, columnDefinition = "NUMERIC(5,1) COMMENT 'Respiration Rate in breaths per minute'")
+    @Column(name = "respiration_rate", precision = 5, scale = 1)
     private BigDecimal respirationRate;
 
-    @Column(name = "oxygen_saturation", precision = 5, scale = 1, columnDefinition = "NUMERIC(5,1) COMMENT 'O2 Saturation in percentage'")
+    @Column(name = "oxygen_saturation", precision = 5, scale = 1)
     private BigDecimal oxygenSaturation;
 
-    @Column(name = "weight_kg", precision = 7, scale = 2, columnDefinition = "NUMERIC(7,2) COMMENT 'Weight in kilograms'")
+    @Column(name = "weight_kg", precision = 7, scale = 2)
     private BigDecimal weightKg;
 
-    @Column(name = "height_cm", precision = 5, scale = 1, columnDefinition = "NUMERIC(5,1) COMMENT 'Height in centimeters'")
+    @Column(name = "height_cm", precision = 5, scale = 1)
     private BigDecimal heightCm;
 
-    @Column(name = "bmi", precision = 5, scale = 2, columnDefinition = "NUMERIC(5,2) COMMENT 'Body Mass Index'")
+    @Column(name = "bmi", precision = 5, scale = 2)
     private BigDecimal bmi;
 
     // Alert Status

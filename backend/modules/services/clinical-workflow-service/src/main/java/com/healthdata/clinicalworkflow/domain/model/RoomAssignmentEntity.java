@@ -57,14 +57,14 @@ public class RoomAssignmentEntity {
     @Column(name = "room_number", nullable = false, length = 50)
     private String roomNumber;
 
-    @Column(name = "location", length = 100, columnDefinition = "VARCHAR(100) COMMENT 'e.g., Building A, Floor 2'")
+    @Column(name = "location", length = 100)
     private String location;
 
-    @Column(name = "room_type", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'standard, isolation, trauma, etc.'")
+    @Column(name = "room_type", nullable = false, length = 50)
     @Builder.Default
     private String roomType = "standard";
 
-    @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'available, occupied, cleaning, reserved, out-of-service'")
+    @Column(name = "status", nullable = false, length = 50)
     private String status;  // available, occupied, cleaning, reserved, out-of-service
 
     @Column(name = "assigned_by", nullable = false, length = 255)

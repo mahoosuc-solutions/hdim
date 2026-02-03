@@ -1,6 +1,7 @@
 package com.healthdata.demo.orchestrator.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.healthdata.demo.orchestrator.model.DevOpsLogMessage;
 import com.healthdata.demo.orchestrator.model.DevOpsStatusUpdate;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -45,6 +47,7 @@ class DevOpsLogWebSocketHandlerTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         handler = new DevOpsLogWebSocketHandler(objectMapper);
     }
 
@@ -313,6 +316,10 @@ class DevOpsLogWebSocketHandlerTest {
         when(session.getUri()).thenReturn(uri);
         when(session.isOpen()).thenReturn(true);
         when(session.getId()).thenReturn("session-" + System.nanoTime());
+
+        // Mock handshake headers to avoid NPE
+        HttpHeaders headers = new HttpHeaders();
+        when(session.getHandshakeHeaders()).thenReturn(headers);
 
         return session;
     }

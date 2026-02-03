@@ -6,18 +6,18 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
 
     <changeSet id="0006-seed-initial-admin-user" author="hdim" context="!test">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM investor_users WHERE email = 'admin@hdim.ai'
+            </sqlCheck>
+        </preConditions>
+
         <comment>
             Seed initial admin user for investor dashboard.
             Default credentials: admin@hdim.ai / admin123
             Password hash is BCrypt with cost factor 12.
             IMPORTANT: Change this password immediately in production!
         </comment>
-
-        <preConditions onFail="MARK_RAN">
-            <sqlCheck expectedResult="0">
-                SELECT COUNT(*) FROM investor_users WHERE email = 'admin@hdim.ai'
-            </sqlCheck>
-        </preConditions>
 
         <insert tableName="investor_users">
             <column name="id" valueComputed="gen_random_uuid()"/>

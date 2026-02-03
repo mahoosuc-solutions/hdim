@@ -7,8 +7,13 @@ import jakarta.persistence.metamodel.EntityType;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -23,6 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Integration test that validates entity-migration synchronization for the sales automation service.
  *
+ * Uses @DataJpaTest with minimal configuration - only JPA entities and repositories.
+ * No service or controller beans are loaded to avoid dependency issues (e.g., JavaMailSender).
+ *
  * This test ensures that all JPA entities representing sales pipeline, opportunities, contacts,
  * and accounts have corresponding database schema definitions via Liquibase migrations.
  *
@@ -36,17 +44,33 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author HDIM Platform Team
  */
-@SpringBootTest
+@DataJpaTest(
+    properties = {
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.liquibase.enabled=false",
+        "spring.flyway.enabled=false",
+        "spring.data.jpa.repositories.enabled=false"
+    }
+)
+@ContextConfiguration(classes = EntityMigrationValidationTest.TestConfig.class)
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("integration")
 class EntityMigrationValidationTest {
 
+    @Configuration
+    @EnableAutoConfiguration
+    @EntityScan(basePackages = {"com.healthdata.sales.entity", "com.healthdata.sales.audit"})
+    static class TestConfig {
+    }
+
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("sales_test")
             .withUsername("testuser")
-            .withPassword("testpass");
+            .withPassword("testpass")
+            .withReuse(true);
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -60,9 +84,6 @@ class EntityMigrationValidationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
-        registry.add("spring.liquibase.enabled", () -> "false");  // Let Hibernate create schema
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");  // Create fresh schema for tests
-        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
     }
 
     /**

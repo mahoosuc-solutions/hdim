@@ -36,6 +36,7 @@
 ### Reference Portals
 - **[Main Documentation Portal](./docs/README.md)** - Central hub for 1,411+ docs with role-based navigation
 - **[Troubleshooting Guide](./docs/troubleshooting/README.md)** - Problem resolution decision trees
+- **[Investor Documentation](https://github.com/webemo-aaron/hdim-investor)** 💼 - Standalone investor package (pitch deck, due diligence, technical analysis)
 
 ---
 

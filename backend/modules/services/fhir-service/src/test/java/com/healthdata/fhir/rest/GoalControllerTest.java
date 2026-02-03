@@ -20,6 +20,7 @@ import java.util.UUID;
 import org.hl7.fhir.r4.model.Goal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -36,6 +37,7 @@ import ca.uhn.fhir.parser.IParser;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Goal Controller Tests")
+@Tag("integration")
 class GoalControllerTest {
 
     private static final String TENANT_ID = "tenant-1";

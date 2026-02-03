@@ -20,6 +20,7 @@ import org.hl7.fhir.r4.model.Patient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -68,6 +69,8 @@ import com.healthdata.fhir.service.PatientService.PatientEvent;
 @Testcontainers(disabledWithoutDocker = true)
 @DirtiesContext
 @ActiveProfiles("kafka-it")
+@Tag("integration")
+@Tag("heavyweight")
 class FhirEventKafkaIT {
 
     private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";

@@ -8,6 +8,7 @@ import com.healthdata.sdoh.repository.SdohDiagnosisRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +28,7 @@ import static org.mockito.Mockito.*;
  * Testing ICD-10-CM Z-code (Z55-Z65) mapping for SDOH findings.
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 @DisplayName("Z-Code Mapper Tests")
 class ZCodeMapperTest {
 

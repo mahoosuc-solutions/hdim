@@ -8,6 +8,11 @@ spring:
     username: healthdata
     password: healthdata_password
 
+  # Disable Kafka for local dev (enable when Kafka is running)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
 # Security - relaxed for local development
 security:
   gateway-trust:
@@ -35,8 +40,20 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
 
+# Override shared persistence defaults
+healthdata:
+  persistence:
+    primary:
+      url: jdbc:postgresql://localhost:5435/agent_validation_db
+      username: healthdata
+      password: healthdata_password
+
 # Local infrastructure
 hdim:
+  validation:
+    evaluation:
+      harness-url: http://localhost:8500  # Python evaluation harness
+      timeout-seconds: 30  # Shorter timeout for local dev
   services:
     agent-runtime:
       url: http://localhost:8088

@@ -10,8 +10,6 @@ dependencyManagement {
     }
 }
 
-
-
 dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
@@ -61,8 +59,8 @@ dependencies {
     implementation(libs.guava)
 
     // Export functionality (Excel, CSV)
-    implementation("org.apache.commons:commons-csv:1.11.0")
-    implementation("org.apache.poi:poi-ooxml:5.2.5")
+    implementation(libs.commons.csv)
+    implementation(libs.poi.ooxml)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
@@ -81,25 +79,9 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
-    systemProperty("spring.profiles.active", "test")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
     }
+    systemProperty("spring.profiles.active", "test")
 }

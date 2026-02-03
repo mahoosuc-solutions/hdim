@@ -40,11 +40,8 @@ dependencies {
     // HAPI FHIR Client (for FHIR resource parsing and integration)
     implementation(libs.bundles.hapi.fhir.client)
 
-    // Apache Commons Math for statistical calculations (replacing Smile ML)
-    // Using commons-math3 for ML algorithms as Smile is not available via standard Maven repos
-
     // Apache Commons Math for statistical calculations
-    implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation(libs.commons.math3)
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
@@ -91,18 +88,8 @@ dependencyManagement {
 }
 
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
-    systemProperty("spring.profiles.active", "test")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
     }
+    systemProperty("spring.profiles.active", "test")
 }

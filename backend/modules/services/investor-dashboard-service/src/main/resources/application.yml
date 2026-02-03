@@ -48,10 +48,7 @@ linkedin:
 
 # CORS Configuration
 cors:
-  allowed-origins:
-    - http://localhost:4200
-    - https://admin.hdim.ai
-    - https://*.vercel.app
+  allowed-origins: http://localhost:4200,https://admin.hdim.ai,https://*.vercel.app
 
 # Security Configuration
 security:

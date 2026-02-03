@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -68,7 +69,7 @@ class ScenarioLoaderServiceTest {
         genResult.setSuccess(true);
         genResult.setPatientCount(5000);
         genResult.setCareGapCount(1400);
-        when(seedingService.generatePatientCohort(eq(5000), anyString(), anyInt())).thenReturn(genResult);
+        when(seedingService.generatePatientCohort(eq(5000), anyString(), anyInt(), any(UUID.class))).thenReturn(genResult);
 
         // When
         ScenarioLoaderService.LoadResult result = service.loadScenario(scenarioName);
@@ -114,7 +115,7 @@ class ScenarioLoaderServiceTest {
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);
         genResult.setPatientCount(5000);
-        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt())).thenReturn(genResult);
+        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt(), any(UUID.class))).thenReturn(genResult);
 
         // When
         service.loadScenario("hedis-evaluation");
@@ -135,6 +136,7 @@ class ScenarioLoaderServiceTest {
         // Given
         DemoScenario scenario = createMockScenario("hedis-evaluation", 5000);
         DemoSession session = new DemoSession(scenario, "Test Session");
+        session.setId(UUID.randomUUID());
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
 
@@ -166,6 +168,7 @@ class ScenarioLoaderServiceTest {
         // Given
         DemoScenario scenario = createMockScenario("hedis-evaluation", 5000);
         DemoSession session = new DemoSession(scenario, "Test Session");
+        session.setId(UUID.randomUUID());
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
         when(scenarioRepository.findByName("hedis-evaluation")).thenReturn(Optional.of(scenario));
@@ -174,7 +177,7 @@ class ScenarioLoaderServiceTest {
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);
         genResult.setPatientCount(5000);
-        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt())).thenReturn(genResult);
+        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt(), any(UUID.class))).thenReturn(genResult);
 
         // When
         ScenarioLoaderService.LoadResult result = service.reloadCurrentScenario();
@@ -204,6 +207,7 @@ class ScenarioLoaderServiceTest {
         // Given
         DemoScenario scenario = createMockScenario("hedis-evaluation", 5000);
         DemoSession session = new DemoSession(scenario, "Test Session");
+        session.setId(UUID.randomUUID());
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
 

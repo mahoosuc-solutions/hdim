@@ -19,8 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -707,8 +707,8 @@ class ConsentControllerTest {
                 .verificationMethod("electronic-signature")
                 .verifiedBy("Test User")
                 .verificationDate(LocalDate.now())
-                .createdAt(LocalDateTime.now())
-                .lastModifiedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .lastModifiedAt(Instant.now())
                 .createdBy("system")
                 .lastModifiedBy("system")
                 .version(0)

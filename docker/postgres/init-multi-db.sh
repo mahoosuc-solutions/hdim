@@ -23,6 +23,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE agent_db;
     CREATE DATABASE agent_runtime_db;
     CREATE DATABASE ai_assistant_db;
+    CREATE DATABASE agent_validation_db;
 
     -- Analytics Services
     CREATE DATABASE analytics_db;
@@ -87,6 +88,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE agent_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE agent_runtime_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ai_assistant_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE agent_validation_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE analytics_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE predictive_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE sdoh_db TO "$POSTGRES_USER";

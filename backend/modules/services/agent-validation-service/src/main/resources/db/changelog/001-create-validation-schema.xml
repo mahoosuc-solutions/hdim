@@ -1,0 +1,451 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Test Suites table -->
+    <changeSet id="001-create-test-suites-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="test_suites"/>
+            </not>
+        </preConditions>
+        <createTable tableName="test_suites">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="user_story_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pass_threshold" type="DECIMAL(3,2)" defaultValue="0.80"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_execution_at" type="TIMESTAMP"/>
+            <column name="last_pass_rate" type="DECIMAL(5,2)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="test_suites" indexName="idx_test_suites_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="test_suites" indexName="idx_test_suites_user_story_type">
+            <column name="user_story_type"/>
+        </createIndex>
+        <createIndex tableName="test_suites" indexName="idx_test_suites_target_role">
+            <column name="target_role"/>
+        </createIndex>
+        <createIndex tableName="test_suites" indexName="idx_test_suites_status">
+            <column name="status"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="test_suites" indexName="idx_test_suites_status"/>
+            <dropIndex tableName="test_suites" indexName="idx_test_suites_target_role"/>
+            <dropIndex tableName="test_suites" indexName="idx_test_suites_user_story_type"/>
+            <dropIndex tableName="test_suites" indexName="idx_test_suites_tenant"/>
+            <dropTable tableName="test_suites"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Test Cases table -->
+    <changeSet id="001-create-test-cases-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="test_cases"/>
+            </not>
+        </preConditions>
+        <createTable tableName="test_cases">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="test_suite_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(2000)"/>
+            <column name="user_message" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="context_data" type="JSONB"/>
+            <column name="expected_behavior" type="JSONB"/>
+            <column name="metric_thresholds" type="JSONB"/>
+            <column name="golden_response_id" type="UUID"/>
+            <column name="clinical_safety_check" type="BOOLEAN" defaultValueBoolean="true"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="execution_priority" type="INTEGER" defaultValue="100"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="test_cases"
+            baseColumnNames="test_suite_id"
+            referencedTableName="test_suites"
+            referencedColumnNames="id"
+            constraintName="fk_test_cases_test_suite"/>
+        <createIndex tableName="test_cases" indexName="idx_test_cases_suite">
+            <column name="test_suite_id"/>
+        </createIndex>
+        <createIndex tableName="test_cases" indexName="idx_test_cases_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="test_cases" indexName="idx_test_cases_golden_response">
+            <column name="golden_response_id"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="test_cases" indexName="idx_test_cases_golden_response"/>
+            <dropIndex tableName="test_cases" indexName="idx_test_cases_status"/>
+            <dropIndex tableName="test_cases" indexName="idx_test_cases_suite"/>
+            <dropForeignKeyConstraint baseTableName="test_cases" constraintName="fk_test_cases_test_suite"/>
+            <dropTable tableName="test_cases"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Test Case Required Metrics (element collection) -->
+    <changeSet id="001-create-test-case-required-metrics-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="test_case_required_metrics"/>
+            </not>
+        </preConditions>
+        <createTable tableName="test_case_required_metrics">
+            <column name="test_case_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metric_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="test_case_required_metrics"
+            baseColumnNames="test_case_id"
+            referencedTableName="test_cases"
+            referencedColumnNames="id"
+            constraintName="fk_test_case_required_metrics_test_case"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="test_case_required_metrics" constraintName="fk_test_case_required_metrics_test_case"/>
+            <dropTable tableName="test_case_required_metrics"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Test Case Tags (element collection) -->
+    <changeSet id="001-create-test-case-tags-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="test_case_tags"/>
+            </not>
+        </preConditions>
+        <createTable tableName="test_case_tags">
+            <column name="test_case_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tag" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="test_case_tags"
+            baseColumnNames="test_case_id"
+            referencedTableName="test_cases"
+            referencedColumnNames="id"
+            constraintName="fk_test_case_tags_test_case"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="test_case_tags" constraintName="fk_test_case_tags_test_case"/>
+            <dropTable tableName="test_case_tags"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Golden Responses table -->
+    <changeSet id="001-create-golden-responses-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="golden_responses"/>
+            </not>
+        </preConditions>
+        <createTable tableName="golden_responses">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="test_case_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="response" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="embedding_vector" type="JSONB"/>
+            <column name="evaluation_score" type="DECIMAL(3,2)"/>
+            <column name="metric_results" type="JSONB"/>
+            <column name="similarity_threshold" type="DECIMAL(3,2)" defaultValue="0.85"/>
+            <column name="approved_by" type="VARCHAR(255)"/>
+            <column name="approved_at" type="TIMESTAMP"/>
+            <column name="approval_notes" type="TEXT"/>
+            <column name="archived" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="archived_at" type="TIMESTAMP"/>
+            <column name="archived_by" type="VARCHAR(255)"/>
+            <column name="archive_reason" type="TEXT"/>
+            <column name="previous_golden_id" type="UUID"/>
+            <column name="llm_provider" type="VARCHAR(100)"/>
+            <column name="model_version" type="VARCHAR(100)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="golden_responses"
+            baseColumnNames="test_case_id"
+            referencedTableName="test_cases"
+            referencedColumnNames="id"
+            constraintName="fk_golden_responses_test_case"/>
+        <createIndex tableName="golden_responses" indexName="idx_golden_responses_test_case">
+            <column name="test_case_id"/>
+        </createIndex>
+        <createIndex tableName="golden_responses" indexName="idx_golden_responses_archived">
+            <column name="archived"/>
+        </createIndex>
+        <createIndex tableName="golden_responses" indexName="idx_golden_responses_created_at">
+            <column name="created_at"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="golden_responses" indexName="idx_golden_responses_created_at"/>
+            <dropIndex tableName="golden_responses" indexName="idx_golden_responses_archived"/>
+            <dropIndex tableName="golden_responses" indexName="idx_golden_responses_test_case"/>
+            <dropForeignKeyConstraint baseTableName="golden_responses" constraintName="fk_golden_responses_test_case"/>
+            <dropTable tableName="golden_responses"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Test Executions table -->
+    <changeSet id="001-create-test-executions-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="test_executions"/>
+            </not>
+        </preConditions>
+        <createTable tableName="test_executions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="test_case_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="agent_response" type="TEXT"/>
+            <column name="trace_id" type="VARCHAR(64)"/>
+            <column name="llm_provider" type="VARCHAR(100)"/>
+            <column name="evaluation_score" type="DECIMAL(3,2)"/>
+            <column name="metric_results" type="JSONB"/>
+            <column name="reflection_result" type="JSONB"/>
+            <column name="regression_result" type="JSONB"/>
+            <column name="passed" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="qa_review_status" type="VARCHAR(50)"/>
+            <column name="qa_review_comments" type="TEXT"/>
+            <column name="qa_reviewer_id" type="VARCHAR(255)"/>
+            <column name="qa_reviewed_at" type="TIMESTAMP"/>
+            <column name="duration_ms" type="BIGINT"/>
+            <column name="input_tokens" type="INTEGER"/>
+            <column name="output_tokens" type="INTEGER"/>
+            <column name="estimated_cost" type="DECIMAL(10,6)"/>
+            <column name="executed_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="TIMESTAMP"/>
+            <column name="error_message" type="TEXT"/>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="test_executions"
+            baseColumnNames="test_case_id"
+            referencedTableName="test_cases"
+            referencedColumnNames="id"
+            constraintName="fk_test_executions_test_case"/>
+        <createIndex tableName="test_executions" indexName="idx_test_executions_test_case">
+            <column name="test_case_id"/>
+        </createIndex>
+        <createIndex tableName="test_executions" indexName="idx_test_executions_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="test_executions" indexName="idx_test_executions_trace">
+            <column name="trace_id"/>
+        </createIndex>
+        <createIndex tableName="test_executions" indexName="idx_test_executions_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="test_executions" indexName="idx_test_executions_executed_at">
+            <column name="executed_at"/>
+        </createIndex>
+        <createIndex tableName="test_executions" indexName="idx_test_executions_provider">
+            <column name="llm_provider"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="test_executions" indexName="idx_test_executions_provider"/>
+            <dropIndex tableName="test_executions" indexName="idx_test_executions_executed_at"/>
+            <dropIndex tableName="test_executions" indexName="idx_test_executions_status"/>
+            <dropIndex tableName="test_executions" indexName="idx_test_executions_trace"/>
+            <dropIndex tableName="test_executions" indexName="idx_test_executions_tenant"/>
+            <dropIndex tableName="test_executions" indexName="idx_test_executions_test_case"/>
+            <dropForeignKeyConstraint baseTableName="test_executions" constraintName="fk_test_executions_test_case"/>
+            <dropTable tableName="test_executions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Trace Outcomes table -->
+    <changeSet id="001-create-trace-outcomes-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="trace_outcomes"/>
+            </not>
+        </preConditions>
+        <createTable tableName="trace_outcomes">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="trace_id" type="VARCHAR(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="test_execution_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_duration_ms" type="BIGINT"/>
+            <column name="error_count" type="INTEGER" defaultValue="0"/>
+            <column name="tool_invocation_count" type="INTEGER" defaultValue="0"/>
+            <column name="llm_call_count" type="INTEGER" defaultValue="0"/>
+            <column name="evaluation_passed" type="BOOLEAN"/>
+            <column name="evaluation_score" type="DECIMAL(3,2)"/>
+            <column name="span_summary" type="JSONB"/>
+            <column name="tool_invocations" type="JSONB"/>
+            <column name="llm_calls" type="JSONB"/>
+            <column name="trace_errors" type="JSONB"/>
+            <column name="jaeger_url" type="VARCHAR(500)"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="trace_outcomes"
+            baseColumnNames="test_execution_id"
+            referencedTableName="test_executions"
+            referencedColumnNames="id"
+            constraintName="fk_trace_outcomes_test_execution"/>
+        <createIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_trace_id">
+            <column name="trace_id"/>
+        </createIndex>
+        <createIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_execution">
+            <column name="test_execution_id"/>
+        </createIndex>
+        <createIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_passed">
+            <column name="evaluation_passed"/>
+        </createIndex>
+        <createIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_created_at">
+            <column name="created_at"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_created_at"/>
+            <dropIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_passed"/>
+            <dropIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_execution"/>
+            <dropIndex tableName="trace_outcomes" indexName="idx_trace_outcomes_trace_id"/>
+            <dropForeignKeyConstraint baseTableName="trace_outcomes" constraintName="fk_trace_outcomes_test_execution"/>
+            <dropTable tableName="trace_outcomes"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Provider Comparisons table -->
+    <changeSet id="001-create-provider-comparisons-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="provider_comparisons"/>
+            </not>
+        </preConditions>
+        <createTable tableName="provider_comparisons">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="test_case_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="execution_results" type="JSONB"/>
+            <column name="best_quality_provider" type="VARCHAR(100)"/>
+            <column name="best_quality_score" type="DECIMAL(3,2)"/>
+            <column name="fastest_provider" type="VARCHAR(100)"/>
+            <column name="fastest_latency_ms" type="BIGINT"/>
+            <column name="cheapest_provider" type="VARCHAR(100)"/>
+            <column name="cheapest_cost" type="DECIMAL(10,6)"/>
+            <column name="cost_estimates" type="JSONB"/>
+            <column name="recommendation" type="TEXT"/>
+            <column name="statistical_analysis" type="JSONB"/>
+            <column name="executed_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="BIGINT"/>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="provider_comparisons"
+            baseColumnNames="test_case_id"
+            referencedTableName="test_cases"
+            referencedColumnNames="id"
+            constraintName="fk_provider_comparisons_test_case"/>
+        <createIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_test_case">
+            <column name="test_case_id"/>
+        </createIndex>
+        <createIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_best_quality">
+            <column name="best_quality_provider"/>
+        </createIndex>
+        <createIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_fastest">
+            <column name="fastest_provider"/>
+        </createIndex>
+        <createIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_executed_at">
+            <column name="executed_at"/>
+        </createIndex>
+        <rollback>
+            <dropIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_executed_at"/>
+            <dropIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_fastest"/>
+            <dropIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_best_quality"/>
+            <dropIndex tableName="provider_comparisons" indexName="idx_provider_comparisons_test_case"/>
+            <dropForeignKeyConstraint baseTableName="provider_comparisons" constraintName="fk_provider_comparisons_test_case"/>
+            <dropTable tableName="provider_comparisons"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

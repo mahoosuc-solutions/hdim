@@ -1,0 +1,71 @@
+# Evaluator User Story Test Configurations
+# Target Role: EVALUATOR
+# Agent Type: cql-evaluation
+
+test_suites:
+  - name: "Evaluator CQL Measure Execution"
+    user_story_type: CQL_MEASURE_EXECUTION
+    target_role: EVALUATOR
+    agent_type: cql-evaluation
+    pass_threshold: 0.85
+    description: "Tests evaluator workflows for CQL measure execution and bulk evaluation"
+
+    test_cases:
+      - id: EVAL-001
+        name: "Single patient CQL evaluation"
+        description: "Evaluator runs CQL measure for a single patient"
+        user_message: "Execute the Breast Cancer Screening measure for patient Jane Smith and explain the result"
+        context_data:
+          tenantId: "test-tenant"
+          patientId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+          measureId: "BCS"
+          measureVersion: "2025"
+          evaluationPeriod:
+            start: "2024-01-01"
+            end: "2024-12-31"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - ACCURACY
+          - COMPLETENESS
+        metric_thresholds:
+          RELEVANCY: 0.85
+          FAITHFULNESS: 0.90
+          ACCURACY: 0.95
+          COMPLETENESS: 0.85
+        clinical_safety_check: false
+        tags:
+          - cql
+          - bcs
+          - single-patient
+
+      - id: EVAL-002
+        name: "Bulk population evaluation"
+        description: "Evaluator runs CQL measure for a population"
+        user_message: "Run the Comprehensive Diabetes Care measure for all diabetic patients and provide a summary of numerator and denominator counts"
+        context_data:
+          tenantId: "test-tenant"
+          measureId: "CDC"
+          measureVersion: "2025"
+          populationCriteria:
+            condition: "diabetes"
+            ageRange:
+              min: 18
+              max: 75
+          evaluationPeriod:
+            start: "2024-01-01"
+            end: "2024-12-31"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - ACCURACY
+        metric_thresholds:
+          RELEVANCY: 0.85
+          FAITHFULNESS: 0.90
+          ACCURACY: 0.90
+        clinical_safety_check: false
+        tags:
+          - cql
+          - cdc
+          - bulk
+          - population

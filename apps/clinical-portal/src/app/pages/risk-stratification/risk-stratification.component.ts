@@ -37,7 +37,9 @@ import {
 } from './risk-model.config';
 import { PatientService } from '../../services/patient.service';
 import { CareGapService, CareGapApiItem, CareGapPageResponse } from '../../services/care-gap.service';
+import { RiskAssessmentService } from '../../services/risk-assessment.service';
 import { Patient } from '../../models/patient.model';
+import { HccRiskAssessment } from '../../models/risk-assessment.model';
 import { LoggerService } from '../../services/logger.service';
 
 /**
@@ -110,10 +112,16 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
   // Configuration references for template
   readonly riskLevels = RISK_LEVELS;
   readonly riskFactors = RISK_FACTORS;
-  readonly conditionCategories = CONDITION_CATEGORIES;  constructor(
+  readonly conditionCategories = CONDITION_CATEGORIES;
+
+  // Cache for HCC risk assessments by patient ID
+  private hccAssessments = new Map<string, HccRiskAssessment>();
+
+  constructor(
     private router: Router,
     private patientService: PatientService,
     private careGapService: CareGapService,
+    private riskAssessmentService: RiskAssessmentService,
     private logger: LoggerService
   ) {}
 
@@ -156,13 +164,141 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ patients, careGaps }) => {
         const gapsByPatient = this.indexCareGaps(careGaps.content || []);
+
+        // First pass: map patients with basic data
         this.allPatients = patients.map((patient) =>
-          this.mapPatientToRiskProfile(patient, gapsByPatient.get(patient.id) || [])
+          this.mapPatientToRiskProfile(patient, gapsByPatient.get(patient.id) || [], null)
         );
+
+        // Then fetch HCC assessments in parallel for all patients
+        this.fetchHccAssessments(patients);
+
         this.calculateRiskGroupSummaries();
         this.applyFilters();
         this.loading = false;
       });
+  }
+
+  /**
+   * Fetch HCC risk assessments for all patients in parallel.
+   * Updates patient risk profiles as assessments arrive.
+   */
+  private fetchHccAssessments(patients: Patient[]): void {
+    // Fetch assessments for each patient (limit to first 50 to avoid overwhelming the API)
+    const patientsToFetch = patients.slice(0, 50);
+
+    patientsToFetch.forEach(patient => {
+      this.riskAssessmentService.getHccRiskAssessment(patient.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(assessment => {
+          if (assessment && assessment.dataAvailability.hccDataAvailable) {
+            this.hccAssessments.set(patient.id, assessment);
+
+            // Update the patient's risk profile with real HCC data
+            const patientIndex = this.allPatients.findIndex(p => p.patientId === patient.id);
+            if (patientIndex !== -1) {
+              this.allPatients[patientIndex] = this.updateRiskProfileWithHcc(
+                this.allPatients[patientIndex],
+                assessment
+              );
+
+              // Recalculate summaries and refresh view
+              this.calculateRiskGroupSummaries();
+              this.applyFilters();
+            }
+          }
+        });
+    });
+  }
+
+  /**
+   * Update a patient risk profile with real HCC assessment data.
+   */
+  private updateRiskProfileWithHcc(
+    profile: PatientRiskProfile,
+    hcc: HccRiskAssessment
+  ): PatientRiskProfile {
+    // Convert backend risk level to frontend format
+    const riskLevelMap: Record<string, RiskLevel> = {
+      'LOW': 'low',
+      'MODERATE': 'moderate',
+      'HIGH': 'high',
+      'VERY_HIGH': 'very-high'
+    };
+
+    const mappedRiskLevel = riskLevelMap[hcc.riskLevel] || 'low';
+
+    return {
+      ...profile,
+      overallRiskScore: hcc.riskScore,
+      riskLevel: mappedRiskLevel,
+      hccScore: hcc.rafScoreBlended ?? 0,
+      openCareGaps: hcc.openCareGaps,
+      primaryConditions: hcc.chronicConditions.length > 0
+        ? hcc.chronicConditions
+        : profile.primaryConditions,
+      riskFactors: this.buildHccRiskFactors(hcc),
+    };
+  }
+
+  /**
+   * Build risk factors from HCC assessment data.
+   */
+  private buildHccRiskFactors(hcc: HccRiskAssessment): PatientRiskProfile['riskFactors'] {
+    const factors: PatientRiskProfile['riskFactors'] = [];
+
+    // RAF score factor
+    if (hcc.rafScoreBlended !== null && hcc.rafScoreBlended > 0) {
+      const rafContribution = Math.min(50, Math.round(hcc.rafScoreBlended * 25));
+      factors.push({
+        factorId: 'raf-score',
+        factorName: `RAF Score: ${hcc.rafScoreBlended.toFixed(3)}`,
+        rawScore: hcc.rafScoreBlended,
+        weightedScore: rafContribution,
+        maxScore: 50,
+        percentContribution: rafContribution
+      });
+    }
+
+    // HCC conditions
+    if (hcc.hccCount > 0) {
+      const hccContribution = Math.min(30, hcc.hccCount * 6);
+      factors.push({
+        factorId: 'hcc-conditions',
+        factorName: `${hcc.hccCount} HCC Conditions`,
+        rawScore: hcc.hccCount,
+        weightedScore: hccContribution,
+        maxScore: 30,
+        percentContribution: hccContribution
+      });
+    }
+
+    // Care gaps
+    if (hcc.openCareGaps > 0) {
+      const gapContribution = Math.min(20, hcc.openCareGaps * 5);
+      factors.push({
+        factorId: 'care-gaps',
+        factorName: `${hcc.openCareGaps} Open Care Gaps`,
+        rawScore: hcc.openCareGaps,
+        weightedScore: gapContribution,
+        maxScore: 20,
+        percentContribution: gapContribution
+      });
+    }
+
+    // If no significant factors, show low risk
+    if (factors.length === 0) {
+      factors.push({
+        factorId: 'low-risk',
+        factorName: 'Low risk profile',
+        rawScore: 0,
+        weightedScore: 10,
+        maxScore: 10,
+        percentContribution: 10
+      });
+    }
+
+    return factors;
   }
 
   private indexCareGaps(gaps: CareGapApiItem[]): Map<string, CareGapApiItem[]> {
@@ -175,14 +311,32 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
     return map;
   }
 
-  private mapPatientToRiskProfile(patient: Patient, gaps: CareGapApiItem[]): PatientRiskProfile {
+  private mapPatientToRiskProfile(
+    patient: Patient,
+    gaps: CareGapApiItem[],
+    hccAssessment: HccRiskAssessment | null
+  ): PatientRiskProfile {
     const summary = this.patientService.toPatientSummary(patient);
     const age = summary.age ?? 0;
     const gapCount = gaps.length;
-    const riskScore = this.calculateRiskScore(age, gapCount);
-    const riskLevel = getRiskLevel(riskScore).level;
-    const primaryConditions = this.mapGapConditions(gaps);
-    const riskFactors = this.buildRiskFactors(age, gapCount);
+
+    // Use HCC-based scoring if available, otherwise fall back to calculated score
+    const riskScore = hccAssessment?.riskScore ?? this.calculateRiskScore(age, gapCount);
+    const riskLevel = hccAssessment
+      ? this.mapHccRiskLevel(hccAssessment.riskLevel)
+      : getRiskLevel(riskScore).level;
+
+    // Use HCC conditions if available, otherwise derive from care gaps
+    const primaryConditions = hccAssessment?.chronicConditions?.length
+      ? hccAssessment.chronicConditions
+      : (this.mapGapConditions(gaps).length ? this.mapGapConditions(gaps) : ['General Wellness']);
+
+    const riskFactors = hccAssessment
+      ? this.buildHccRiskFactors(hccAssessment)
+      : this.buildRiskFactors(age, gapCount);
+
+    // Use real RAF score if available
+    const hccScore = hccAssessment?.rafScoreBlended ?? Math.round((riskScore / 100) * 3.5 * 100) / 100;
 
     return {
       patientId: patient.id,
@@ -194,15 +348,28 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
       overallRiskScore: riskScore,
       riskLevel,
       riskFactors,
-      primaryConditions: primaryConditions.length ? primaryConditions : ['General Wellness'],
-      openCareGaps: gapCount,
+      primaryConditions,
+      openCareGaps: hccAssessment?.openCareGaps ?? gapCount,
       lastVisit: this.formatLastUpdated(patient),
       nextScheduledVisit: undefined,
       recentEdVisits: 0,
-      hccScore: Math.round((riskScore / 100) * 3.5 * 100) / 100,
+      hccScore,
       sdohRiskFactors: undefined,
-      trending: this.getTrending(gapCount)
+      trending: this.getTrending(hccAssessment?.openCareGaps ?? gapCount)
     };
+  }
+
+  /**
+   * Map backend risk level to frontend format.
+   */
+  private mapHccRiskLevel(backendLevel: string): RiskLevel {
+    const map: Record<string, RiskLevel> = {
+      'LOW': 'low',
+      'MODERATE': 'moderate',
+      'HIGH': 'high',
+      'VERY_HIGH': 'very-high'
+    };
+    return map[backendLevel] || 'low';
   }
 
   private calculateRiskScore(age: number, gapCount: number): number {

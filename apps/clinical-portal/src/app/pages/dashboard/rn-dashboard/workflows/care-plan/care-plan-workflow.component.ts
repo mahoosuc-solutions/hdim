@@ -27,6 +27,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { CarePlanService } from '../../../../../services/care-plan/care-plan.service';
 import { ToastService } from '../../../../../services/toast.service';
 import { LoggerService, ContextualLogger } from '../../../../../services/logger.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { API_CONFIG } from '../../../../../config/api.config';
 
 export interface Problem {
   id?: string;
@@ -141,6 +143,7 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private logger: LoggerService,
     private dialogRef: MatDialogRef<CarePlanWorkflowComponent>,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: CarePlanWorkflowData
   ) {    this.initializeForm();
   }
@@ -210,7 +213,9 @@ export class CarePlanWorkflowComponent implements OnInit, OnDestroy {
   private loadCarePlanTemplates(): void {
     this.loading = true;
 
-    this.carePlanService.setTenantContext('TENANT001'); // TODO: Get from auth
+    this.carePlanService.setTenantContext(
+      this.authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID
+    );
 
     this.carePlanService
       .getCarePlanTemplates()

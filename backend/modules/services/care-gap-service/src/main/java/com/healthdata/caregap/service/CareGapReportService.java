@@ -187,13 +187,23 @@ public class CareGapReportService {
                         LinkedHashMap::new
                 ));
 
+        // Count overdue gaps
+        long overdueCount = careGapRepository.countTenantOverdueGaps(tenantId, LocalDate.now());
+
+        // Count gaps closed this month
+        LocalDate firstOfMonth = LocalDate.now().withDayOfMonth(1);
+        LocalDate today = LocalDate.now();
+        long closedThisMonth = careGapRepository.countGapsClosedInRange(tenantId, firstOfMonth, today);
+
         return new PopulationGapReport(
                 allOpenGaps.size(),
                 uniquePatients,
                 avgGapsPerPatient,
                 gapsByPriority,
                 gapsByCategory,
-                topMeasures
+                topMeasures,
+                overdueCount,
+                closedThisMonth
         );
     }
 
@@ -248,6 +258,8 @@ public class CareGapReportService {
             double avgGapsPerPatient,
             Map<String, Long> gapsByPriority,
             Map<String, Long> gapsByCategory,
-            Map<String, Long> topMeasures
+            Map<String, Long> topMeasures,
+            long overdueCount,
+            long closedThisMonth
     ) {}
 }

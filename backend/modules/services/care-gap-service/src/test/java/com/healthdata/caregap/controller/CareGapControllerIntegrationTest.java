@@ -344,7 +344,9 @@ class CareGapControllerIntegrationTest {
                             350L, 1000L, 1.5,
                             Map.of("high", 50L, "medium", 200L, "low", 100L),
                             Map.of("HEDIS", 250L, "CMS", 100L),
-                            Map.of("HEDIS_CDC", 100L, "HEDIS_BCS", 75L));
+                            Map.of("HEDIS_CDC", 100L, "HEDIS_BCS", 75L),
+                            25L,   // overdueCount
+                            12L);  // closedThisMonth
             when(reportService.getPopulationGapReport(TENANT_ID))
                     .thenReturn(report);
 

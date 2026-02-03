@@ -2,8 +2,8 @@ package com.healthdata.consent.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,11 +29,12 @@ class ConsentEntityTest {
     @DisplayName("Should update lastModifiedAt on update")
     void shouldUpdateLastModifiedAt() {
         ConsentEntity entity = new ConsentEntity();
-        entity.setLastModifiedAt(LocalDateTime.of(2020, 1, 1, 0, 0));
+        Instant pastInstant = Instant.parse("2020-01-01T00:00:00Z");
+        entity.setLastModifiedAt(pastInstant);
 
         ReflectionTestUtils.invokeMethod(entity, "onUpdate");
 
-        assertThat(entity.getLastModifiedAt()).isAfter(LocalDateTime.of(2020, 1, 1, 0, 0));
+        assertThat(entity.getLastModifiedAt()).isAfter(pastInstant);
     }
 
     @Test
@@ -105,8 +106,8 @@ class ConsentEntityTest {
             .provisionType("permit")
             .validFrom(LocalDate.now().minusDays(1))
             .consentDate(LocalDate.now())
-            .createdAt(LocalDateTime.now())
-            .lastModifiedAt(LocalDateTime.now())
+            .createdAt(Instant.now())
+            .lastModifiedAt(Instant.now())
             .createdBy("tester")
             .lastModifiedBy("tester")
             .build();

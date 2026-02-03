@@ -23,8 +23,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -107,8 +107,8 @@ class PatientConsentWorkflowE2ETest {
             .verificationMethod("electronic-signature")
             .verifiedBy(USER_ID)
             .verificationDate(LocalDate.now())
-            .createdAt(LocalDateTime.now())
-            .lastModifiedAt(LocalDateTime.now())
+            .createdAt(Instant.now())
+            .lastModifiedAt(Instant.now())
             .createdBy(USER_ID)
             .lastModifiedBy(USER_ID)
             .version(0)

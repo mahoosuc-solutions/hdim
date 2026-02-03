@@ -179,6 +179,15 @@ subprojects {
             }
         }
 
+        // Force sequential execution for testAll task (Phase 6 stability mode)
+        // When testAll is invoked, use single fork for maximum stability
+        // This prevents XML write conflicts and ensures reproducible results
+        doFirst {
+            if (gradle.startParameter.taskNames.contains("testAll")) {
+                maxParallelForks = 1
+            }
+        }
+
         // JVM optimization for parallel test execution
         // These flags improve performance when running multiple parallel JVM processes:
         // - UseStringDeduplication: Reduces memory overhead in parallel JVMs

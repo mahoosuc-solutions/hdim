@@ -98,6 +98,8 @@ include(
     "modules:services:quality-measure-event-handler-service",
     "modules:services:clinical-workflow-event-handler-service",
     "modules:services:investor-dashboard-service"
+    // agent-validation-service temporarily disabled - has unfinished code with compilation errors
+    // "modules:services:agent-validation-service"
 )
 
 // Applications

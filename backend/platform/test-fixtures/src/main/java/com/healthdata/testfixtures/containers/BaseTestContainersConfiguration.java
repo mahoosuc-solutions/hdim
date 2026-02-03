@@ -12,6 +12,8 @@ import com.redis.testcontainers.RedisContainer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Shared TestContainers configuration for HDIM backend integration tests.
  * <p>
@@ -65,6 +67,17 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 public class BaseTestContainersConfiguration {
 
     private static final boolean DOCKER_AVAILABLE = isDockerAvailable();
+
+    /**
+     * Delay before stopping containers during JVM shutdown (in milliseconds).
+     * This allows Gradle time to write XML test results before connections are invalidated.
+     * Without this delay, container shutdown can race with XML result writing, causing
+     * "Could not write XML test results" errors even when all tests pass.
+     */
+    private static final long SHUTDOWN_DELAY_MS = 5000;
+
+    private static final AtomicBoolean shutdownInitiated = new AtomicBoolean(false);
+    private static volatile boolean shutdownHookRegistered = false;
 
     /**
      * PostgreSQL container for database integration tests.
@@ -294,6 +307,39 @@ public class BaseTestContainersConfiguration {
     private static void ensureStarted(org.testcontainers.containers.GenericContainer<?> container) {
         if (!container.isRunning()) {
             container.start();
+            registerShutdownHookOnce();
         }
+    }
+
+    /**
+     * Registers a shutdown hook with delayed cleanup to prevent race conditions
+     * with Gradle's XML test result writing.
+     * <p>
+     * This is called once when the first container starts and ensures all containers
+     * stay alive long enough for Gradle to finish writing test results.
+     */
+    private static synchronized void registerShutdownHookOnce() {
+        if (!shutdownHookRegistered) {
+            shutdownHookRegistered = true;
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (shutdownInitiated.compareAndSet(false, true)) {
+                    try {
+                        // Wait for Gradle to finish writing XML results
+                        Thread.sleep(SHUTDOWN_DELAY_MS);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    // Containers will be stopped by Testcontainers/Ryuk after delay
+                }
+            }, "BaseTestContainersConfiguration-Shutdown"));
+        }
+    }
+
+    /**
+     * Check if shutdown has been initiated.
+     * Useful for tests that need to know if cleanup is in progress.
+     */
+    public static boolean isShutdownInitiated() {
+        return shutdownInitiated.get();
     }
 }

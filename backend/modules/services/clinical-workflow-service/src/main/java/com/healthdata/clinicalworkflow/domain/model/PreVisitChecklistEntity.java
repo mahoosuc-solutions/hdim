@@ -55,7 +55,7 @@ public class PreVisitChecklistEntity {
     @Column(name = "appointment_id", length = 255)
     private String appointmentId;
 
-    @Column(name = "appointment_type", nullable = false, length = 100, columnDefinition = "VARCHAR(100) COMMENT 'new-patient, follow-up, procedure-pre, etc.'")
+    @Column(name = "appointment_type", nullable = false, length = 100)
     private String appointmentType;
 
     // Standard Checklist Items
@@ -101,7 +101,7 @@ public class PreVisitChecklistEntity {
     @Builder.Default
     private BigDecimal completionPercentage = BigDecimal.ZERO;
 
-    @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'pending, in-progress, completed'")
+    @Column(name = "status", nullable = false, length = 50)
     @Builder.Default
     private String status = "pending";
 

@@ -12,9 +12,15 @@ spring-dependency-management = "1.1.7"
 hapi-fhir = "7.6.0"
 hapi-hl7 = "2.5.1"
 cql-engine = "3.3.1"
+cql-framework = "3.29.0"
 
 # Legacy/Integration Libraries
 jsch = "0.1.55"
+
+# XML Processing
+xerces = "2.12.2"
+xml-apis = "1.4.01"
+jaxb-api = "2.3.1"
 
 # Databases & Persistence
 postgresql = "42.7.7"
@@ -50,6 +56,11 @@ testcontainers-redis = "2.2.2"
 
 # Math/ML Libraries
 commons-math3 = "3.6.1"
+
+# NLP Libraries
+opennlp = "2.3.3"
+stanford-corenlp = "4.5.10"
+re2j = "1.7"
 
 # Utilities
 lombok = "1.18.34"
@@ -133,9 +144,23 @@ hapi-fhir-jpaserver-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base
 cql-engine = { module = "org.opencds.cqf.cql:engine", version.ref = "cql-engine" }
 cql-engine-fhir = { module = "org.opencds.cqf.cql:engine.fhir", version.ref = "cql-engine" }
 
+# CQL Framework (cql-to-elm translation)
+cql-to-elm = { module = "info.cqframework:cql-to-elm", version.ref = "cql-framework" }
+cql-cql = { module = "info.cqframework:cql", version.ref = "cql-framework" }
+cql-elm = { module = "info.cqframework:elm", version.ref = "cql-framework" }
+cql-model = { module = "info.cqframework:model", version.ref = "cql-framework" }
+cql-model-jackson = { module = "info.cqframework:model-jackson", version.ref = "cql-framework" }
+cql-elm-jackson = { module = "info.cqframework:elm-jackson", version.ref = "cql-framework" }
+
 # HAPI HL7 v2 (for MLLP/HL7 integration)
 hapi-hl7-base = { module = "ca.uhn.hapi:hapi-base", version.ref = "hapi-hl7" }
 hapi-hl7-structures-v25 = { module = "ca.uhn.hapi:hapi-structures-v25", version.ref = "hapi-hl7" }
+hapi-hl7-structures-v26 = { module = "ca.uhn.hapi:hapi-structures-v26", version.ref = "hapi-hl7" }
+
+# XML Processing
+xerces-impl = { module = "xerces:xercesImpl", version.ref = "xerces" }
+xml-apis = { module = "xml-apis:xml-apis", version.ref = "xml-apis" }
+jaxb-api = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb-api" }
 
 # Legacy/Integration Libraries
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
@@ -199,6 +224,12 @@ rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-as
 
 # Math/ML Libraries
 commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math3" }
+
+# NLP Libraries
+opennlp-tools = { module = "org.apache.opennlp:opennlp-tools", version.ref = "opennlp" }
+stanford-corenlp = { module = "edu.stanford.nlp:stanford-corenlp", version.ref = "stanford-corenlp" }
+stanford-corenlp-models = { module = "edu.stanford.nlp:stanford-corenlp", version.ref = "stanford-corenlp" }
+re2j = { module = "com.google.re2j:re2j", version.ref = "re2j" }
 
 # Utilities
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }

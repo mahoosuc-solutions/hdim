@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -53,4 +54,12 @@ public interface AppointmentReminderSentRepository extends JpaRepository<Appoint
     boolean existsByTenantIdAndAppointmentId(
             @Param("tenantId") String tenantId,
             @Param("appointmentId") UUID appointmentId);
+
+    /**
+     * Find all reminders for a tenant
+     *
+     * @param tenantId Tenant ID
+     * @return List of reminders for the tenant
+     */
+    List<AppointmentReminderSent> findByTenantId(String tenantId);
 }

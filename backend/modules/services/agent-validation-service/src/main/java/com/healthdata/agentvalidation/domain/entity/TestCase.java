@@ -1,5 +1,6 @@
 package com.healthdata.agentvalidation.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.healthdata.agentvalidation.domain.enums.EvaluationMetricType;
 import com.healthdata.agentvalidation.domain.enums.TestStatus;
 import jakarta.persistence.*;
@@ -35,6 +36,7 @@ public class TestCase {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "test_suite_id", nullable = false)
+    @JsonIgnore  // Prevent lazy loading issues during serialization
     private TestSuite testSuite;
 
     @Column(nullable = false)
@@ -90,6 +92,7 @@ public class TestCase {
      */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "golden_response_id")
+    @JsonIgnore  // Prevent lazy loading issues during serialization; use dedicated endpoint
     private GoldenResponse goldenResponse;
 
     /**

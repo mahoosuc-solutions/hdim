@@ -1,5 +1,6 @@
 package com.healthdata.agentvalidation.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.healthdata.agentvalidation.domain.enums.TestStatus;
 import com.healthdata.agentvalidation.domain.enums.UserStoryType;
 import jakarta.persistence.*;
@@ -78,6 +79,7 @@ public class TestSuite {
     private String createdBy;
 
     @OneToMany(mappedBy = "testSuite", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore  // Prevent lazy loading issues during serialization; use dedicated endpoints for test cases
     @Builder.Default
     private List<TestCase> testCases = new ArrayList<>();
 

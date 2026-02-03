@@ -7,6 +7,7 @@ import com.healthdata.sdoh.repository.SdohAssessmentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.*;
  * Covers AHC-HRSN and PRAPARE screening instruments.
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 @DisplayName("Gravity Screening Service Tests")
 class GravityScreeningServiceTest {
 

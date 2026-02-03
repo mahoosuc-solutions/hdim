@@ -2,6 +2,7 @@ package com.healthdata.fhir.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import com.healthdata.authentication.security.TenantAccessFilter;
         WebMvcAutoConfiguration.class
 })
 @ActiveProfiles("prod")
+@Tag("integration")
 class FhirSecurityConfigProdTest {
 
     @TestConfiguration

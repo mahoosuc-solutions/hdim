@@ -11,6 +11,7 @@ import com.healthdata.qrda.persistence.QrdaExportJobRepository;
 import com.healthdata.qrda.service.QrdaCategoryIService;
 import com.healthdata.qrda.service.QrdaCategoryIIIService;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,6 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests REST API endpoints for QRDA export operations using standalone MockMvc.
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class QrdaExportControllerTest {
 
     private MockMvc mockMvc;
@@ -112,13 +115,17 @@ class QrdaExportControllerTest {
             }
         };
 
-        mockMvc = MockMvcBuilders.standaloneSetup(controller)
-            .setCustomArgumentResolvers(authPrincipalResolver, pageableResolver)
-            .build();
-
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        MappingJackson2HttpMessageConverter jacksonConverter = new MappingJackson2HttpMessageConverter();
+        jacksonConverter.setObjectMapper(objectMapper);
+
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+            .setCustomArgumentResolvers(authPrincipalResolver, pageableResolver)
+            .setMessageConverters(jacksonConverter)
+            .build();
     }
 
     @Nested

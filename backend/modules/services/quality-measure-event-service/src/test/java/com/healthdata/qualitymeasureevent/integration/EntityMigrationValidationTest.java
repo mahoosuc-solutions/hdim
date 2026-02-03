@@ -23,6 +23,7 @@ import java.util.Set;
  *
  * @author HDIM Platform Team
  */
+@Tag("integration")
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")

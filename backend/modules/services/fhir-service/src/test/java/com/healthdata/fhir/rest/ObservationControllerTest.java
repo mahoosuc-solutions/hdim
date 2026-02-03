@@ -24,6 +24,7 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Reference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -39,6 +40,7 @@ import ca.uhn.fhir.parser.IParser;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Observation Controller Tests")
+@Tag("integration")
 class ObservationControllerTest {
 
     private static final String TENANT_ID = "tenant-1";

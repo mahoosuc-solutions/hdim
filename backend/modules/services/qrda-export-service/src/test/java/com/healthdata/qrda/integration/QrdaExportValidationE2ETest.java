@@ -58,6 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("integration")
 @Tag("e2e")
 @Tag("heavyweight")
 class QrdaExportValidationE2ETest {

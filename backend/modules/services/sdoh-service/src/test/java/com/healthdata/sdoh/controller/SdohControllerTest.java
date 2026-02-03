@@ -8,6 +8,7 @@ import com.healthdata.sdoh.model.*;
 import com.healthdata.sdoh.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -40,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({TestSecurityConfiguration.class, TestCacheConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
+@Tag("integration")
 @DisplayName("SDOH Controller Tests")
 class SdohControllerTest {
 

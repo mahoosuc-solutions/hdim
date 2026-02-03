@@ -3,6 +3,7 @@ package com.healthdata.quality.persistence;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Effective date range queries
  * - Auto-assigned vs manual assignment filtering
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")

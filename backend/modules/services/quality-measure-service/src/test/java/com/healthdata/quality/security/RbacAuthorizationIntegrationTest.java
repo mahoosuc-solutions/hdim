@@ -3,6 +3,7 @@ package com.healthdata.quality.security;
 import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * See: /backend/docs/RBAC_AUTHENTICATION_FIX.md for complete analysis
  */
+@Tag("integration")
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {

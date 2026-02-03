@@ -1,9 +1,9 @@
 package com.healthdata.hcc.persistence;
 
-import com.healthdata.hcc.persistence.converter.DocumentationGapSummaryListConverter;
-import com.healthdata.hcc.persistence.converter.StringListConverter;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -74,22 +74,22 @@ public class PatientHccProfileEntity {
     /**
      * List of HCC codes captured under V24 model.
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "hccs_v24", columnDefinition = "jsonb")
-    @Convert(converter = StringListConverter.class)
     private List<String> hccsV24;
 
     /**
      * List of HCC codes captured under V28 model.
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "hccs_v28", columnDefinition = "jsonb")
-    @Convert(converter = StringListConverter.class)
     private List<String> hccsV28;
 
     /**
      * Diagnosis codes used for HCC calculation.
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "diagnosis_codes", columnDefinition = "jsonb")
-    @Convert(converter = StringListConverter.class)
     private List<String> diagnosisCodes;
 
     // ========================================================================
@@ -99,8 +99,8 @@ public class PatientHccProfileEntity {
     /**
      * List of identified documentation gaps (as JSON).
      */
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "documentation_gaps", columnDefinition = "jsonb")
-    @Convert(converter = DocumentationGapSummaryListConverter.class)
     private List<DocumentationGapSummary> documentationGaps;
 
     /**

@@ -10,6 +10,7 @@ import com.healthdata.priorauth.persistence.PayerEndpointRepository;
 import com.healthdata.priorauth.persistence.PriorAuthRequestEntity;
 import com.healthdata.priorauth.persistence.PriorAuthRequestRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,6 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("integration")
 class PriorAuthIntegrationTest {
 
     @MockBean

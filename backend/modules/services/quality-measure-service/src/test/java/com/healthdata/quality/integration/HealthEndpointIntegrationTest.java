@@ -3,6 +3,7 @@ package com.healthdata.quality.integration;
 import com.healthdata.quality.config.TestMessagingConfiguration;
 import com.healthdata.quality.config.TestWebSocketConfiguration;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for Health Check endpoint
  * Tests the /quality-measure/_health endpoint
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @AutoConfigureMockMvc

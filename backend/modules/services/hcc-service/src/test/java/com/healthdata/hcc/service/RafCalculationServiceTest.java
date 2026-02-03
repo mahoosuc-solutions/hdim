@@ -1,5 +1,6 @@
 package com.healthdata.hcc.service;
 
+import com.healthdata.hcc.audit.HccAuditIntegration;
 import com.healthdata.hcc.persistence.*;
 import com.healthdata.hcc.service.RafCalculationService.DemographicFactors;
 import com.healthdata.hcc.service.RafCalculationService.RafCalculationResult;
@@ -30,6 +31,9 @@ class RafCalculationServiceTest {
 
     @Mock
     private PatientHccProfileRepository profileRepository;
+
+    @Mock
+    private HccAuditIntegration hccAuditIntegration;
 
     @InjectMocks
     private RafCalculationService rafCalculationService;

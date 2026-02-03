@@ -15,7 +15,6 @@ import java.util.UUID;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Enumerations;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -31,7 +30,6 @@ import com.healthdata.fhir.persistence.PatientRepository;
 import com.healthdata.fhir.validation.PatientValidator;
 import com.healthdata.fhir.audit.FhirAuditIntegration;
 
-@Tag("integration")  // TODO: Fix MeterRegistry mock setup - tests need SimpleMeterRegistry
 class PatientServiceTest {
 
     private static final String TENANT = "tenant-1";

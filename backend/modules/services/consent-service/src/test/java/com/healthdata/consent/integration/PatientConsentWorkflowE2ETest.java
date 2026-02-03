@@ -246,7 +246,9 @@ class PatientConsentWorkflowE2ETest {
         @Test
         @DisplayName("should retrieve expired consents")
         void shouldRetrieveExpiredConsents() throws Exception {
-            ConsentEntity expiredConsent = createTestConsent("read", "treatment", "expired");
+            // The /expired endpoint returns consents that are ACTIVE but have validTo in the past
+            // (i.e., they are expired by date but haven't been marked as 'expired' status yet)
+            ConsentEntity expiredConsent = createTestConsent("read", "treatment", "active");
             expiredConsent.setValidTo(LocalDate.now().minusDays(30));
             consentRepository.save(expiredConsent);
 
@@ -254,7 +256,8 @@ class PatientConsentWorkflowE2ETest {
                     .headers(createHeaders(TENANT_ID)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[?(@.status == 'expired')]").exists());
+                .andExpect(jsonPath("$[0].status").value("active"))
+                .andExpect(jsonPath("$[0].validTo").exists());
         }
 
         @Test

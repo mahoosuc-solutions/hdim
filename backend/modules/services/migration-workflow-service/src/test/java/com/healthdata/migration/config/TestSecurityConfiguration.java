@@ -1,7 +1,7 @@
 package com.healthdata.migration.config;
 
 import com.healthdata.audit.mapper.AuditEventMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.authentication.service.JwtTokenService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;

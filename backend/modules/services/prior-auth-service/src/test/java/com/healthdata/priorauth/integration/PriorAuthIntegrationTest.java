@@ -1,7 +1,7 @@
 package com.healthdata.priorauth.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.priorauth.config.TestConfig;
 import com.healthdata.priorauth.dto.PriorAuthRequestDTO;

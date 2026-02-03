@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  evaluation-harness:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hdim/evaluation-harness:latest
+    container_name: hdim-evaluation-harness
+    ports:
+      - "8500:8500"
+    environment:
+      - EVAL_HOST=0.0.0.0
+      - EVAL_PORT=8500
+      - EVAL_WORKERS=4
+      - EVAL_LOG_LEVEL=INFO
+      - EVAL_OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - EVAL_OPENAI_MODEL=gpt-4o-mini
+      - EVAL_HIPAA_STRICT_MODE=true
+      - EVAL_CLINICAL_SAFETY_ZERO_TOLERANCE=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - hdim-network
+
+networks:
+  hdim-network:
+    external: true

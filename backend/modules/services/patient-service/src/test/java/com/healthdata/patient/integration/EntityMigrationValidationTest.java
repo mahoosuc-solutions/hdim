@@ -40,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers
 @ActiveProfiles("test")
 @Tag("integration")
-@Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest {
 
     @Container

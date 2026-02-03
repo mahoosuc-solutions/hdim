@@ -41,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @EntityScan(basePackages = "com.healthdata.cdr.domain")
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
 @Tag("integration")
 class EntityMigrationValidationTest {
 

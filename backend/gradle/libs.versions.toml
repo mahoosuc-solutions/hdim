@@ -21,6 +21,11 @@ jsch = "0.1.55"
 xerces = "2.12.2"
 xml-apis = "1.4.01"
 jaxb-api = "2.3.1"
+jaxb-runtime = "4.0.4"
+
+# Schematron/QRDA Validation
+ph-schematron = "8.0.3"
+ph-commons = "11.1.6"
 
 # Databases & Persistence
 postgresql = "42.7.7"
@@ -67,6 +72,7 @@ lombok = "1.18.34"
 mapstruct = "1.6.2"
 commons-lang3 = "3.17.0"
 commons-csv = "1.11.0"
+commons-io = "2.15.1"
 guava = "33.3.1-jre"
 hypersistence-utils = "3.9.0"
 datafaker = "2.4.2"
@@ -161,6 +167,12 @@ hapi-hl7-structures-v26 = { module = "ca.uhn.hapi:hapi-structures-v26", version.
 xerces-impl = { module = "xerces:xercesImpl", version.ref = "xerces" }
 xml-apis = { module = "xml-apis:xml-apis", version.ref = "xml-apis" }
 jaxb-api = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb-api" }
+jaxb-runtime = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb-runtime" }
+
+# Schematron/QRDA Validation
+ph-schematron-pure = { module = "com.helger.schematron:ph-schematron-pure", version.ref = "ph-schematron" }
+ph-schematron-api = { module = "com.helger.schematron:ph-schematron-api", version.ref = "ph-schematron" }
+ph-commons = { module = "com.helger.commons:ph-commons", version.ref = "ph-commons" }
 
 # Legacy/Integration Libraries
 jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
@@ -237,6 +249,7 @@ mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commons-csv" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hypersistence-utils-hibernate-63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence-utils" }
 datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }

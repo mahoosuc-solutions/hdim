@@ -63,7 +63,14 @@ class ScenarioLoaderServiceTest {
 
         when(scenarioRepository.findByName(scenarioName)).thenReturn(Optional.of(scenario));
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.empty());
-        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> i.getArgument(0));
+        // Set an ID on the session when saved so generatePatientCohort receives a valid UUID
+        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> {
+            DemoSession s = i.getArgument(0);
+            if (s.getId() == null) {
+                s.setId(UUID.randomUUID());
+            }
+            return s;
+        });
 
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);
@@ -172,7 +179,14 @@ class ScenarioLoaderServiceTest {
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
         when(scenarioRepository.findByName("hedis-evaluation")).thenReturn(Optional.of(scenario));
-        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> i.getArgument(0));
+        // Set an ID on the session when saved so generatePatientCohort receives a valid UUID
+        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> {
+            DemoSession s = i.getArgument(0);
+            if (s.getId() == null) {
+                s.setId(UUID.randomUUID());
+            }
+            return s;
+        });
 
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);

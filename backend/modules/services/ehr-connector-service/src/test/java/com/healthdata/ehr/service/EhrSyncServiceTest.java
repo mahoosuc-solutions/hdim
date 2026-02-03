@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,14 +41,15 @@ class EhrSyncServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Mock audit calls to do nothing
-        doNothing().when(auditIntegration).publishEhrDataSyncEvent(
+        // Use lenient stubbing for audit calls since they may receive null for optional error messages
+        // and not all tests trigger all audit methods
+        lenient().doNothing().when(auditIntegration).publishEhrDataSyncEvent(
                 anyString(), anyString(), anyString(), anyString(), any(), any(),
-                anyInt(), anyInt(), anyBoolean(), anyString(), anyLong(), anyString());
-        doNothing().when(auditIntegration).publishEhrPatientFetchEvent(
+                anyInt(), anyInt(), anyBoolean(), any(), anyLong(), anyString());
+        lenient().doNothing().when(auditIntegration).publishEhrPatientFetchEvent(
                 anyString(), anyString(), anyString(), anyString(), anyBoolean(),
-                anyString(), anyLong(), anyString());
-        
+                any(), anyLong(), anyString());
+
         syncService = new EhrSyncService(connectionManager, auditIntegration);
     }
 

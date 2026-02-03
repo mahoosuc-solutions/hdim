@@ -10,6 +10,7 @@ import com.healthdata.ehr.model.EhrVendorType;
 import com.healthdata.ehr.service.EhrConnectionManager;
 import com.healthdata.ehr.service.EhrSyncService;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -44,6 +45,7 @@ import org.springframework.test.web.servlet.MvcResult;
 @AutoConfigureMockMvc(addFilters = false)
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("EHR Connector Controller Tests")
+@Tag("integration")
 class EhrConnectorControllerTest {
 
     @Autowired

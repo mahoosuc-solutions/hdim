@@ -32,11 +32,13 @@ import com.healthdata.migration.dto.SourceConfig;
 import com.healthdata.migration.dto.SourceType;
 import com.healthdata.migration.persistence.MigrationJobEntity;
 import com.healthdata.migration.repository.MigrationJobRepository;
+import org.junit.jupiter.api.Tag;
 
 /**
  * Integration tests for MigrationJobController.
  * Tests the complete migration job lifecycle.
  */
+@Tag("integration")
 @SpringBootTest(
     classes = {
         MigrationWorkflowApplication.class,

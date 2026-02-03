@@ -4,6 +4,7 @@ import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import com.healthdata.quality.service.MeasureCalculationService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
@@ -34,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for CQL Engine Service integration
  * Tests the interaction between Quality Measure Service and CQL Engine Service
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @AutoConfigureMockMvc

@@ -11,6 +11,7 @@ import java.util.*;
 import com.healthdata.quality.config.TestMessagingConfiguration;
 import com.healthdata.quality.config.TestWebSocketConfiguration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
@@ -37,6 +38,7 @@ import com.healthdata.quality.persistence.RiskAssessmentRepository;
  * Integration tests for RiskAssessmentController REST endpoints.
  * Tests HTTP request/response handling and REST API compliance for risk assessment.
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)

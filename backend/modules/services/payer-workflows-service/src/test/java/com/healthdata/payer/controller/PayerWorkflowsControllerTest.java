@@ -6,6 +6,7 @@ import com.healthdata.payer.service.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("Payer Workflows Controller Tests")
+@Tag("integration")
 class PayerWorkflowsControllerTest {
 
     @Autowired

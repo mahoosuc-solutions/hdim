@@ -94,9 +94,8 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
             .nurseId(nurse1)
             .contactMethod(OutreachLogEntity.ContactMethod.PHONE)
             .outcomeType(OutreachLogEntity.OutcomeType.SUCCESSFUL_CONTACT)
-            .reason(OutreachLogEntity.Reason.CARE_GAP)
-            .contactedAt(Instant.now())
-            .createdAt(Instant.now())
+            .reason("care-gap")
+            .attemptedAt(Instant.now())
             .build();
 
         // When
@@ -122,9 +121,8 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
             .nurseId(nurse1)
             .contactMethod(OutreachLogEntity.ContactMethod.PHONE)
             .outcomeType(OutreachLogEntity.OutcomeType.SUCCESSFUL_CONTACT)
-            .reason(OutreachLogEntity.Reason.CARE_GAP)
-            .contactedAt(Instant.now())
-            .createdAt(Instant.now())
+            .reason("care-gap")
+            .attemptedAt(Instant.now())
             .build();
 
         OutreachLogEntity outreach2 = OutreachLogEntity.builder()
@@ -133,9 +131,8 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
             .nurseId(nurse1)
             .contactMethod(OutreachLogEntity.ContactMethod.EMAIL)
             .outcomeType(OutreachLogEntity.OutcomeType.NO_ANSWER)
-            .reason(OutreachLogEntity.Reason.APPOINTMENT)
-            .contactedAt(Instant.now())
-            .createdAt(Instant.now())
+            .reason("appointment")
+            .attemptedAt(Instant.now())
             .build();
 
         // When
@@ -167,9 +164,8 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
                 .nurseId(nurse1)
                 .contactMethod(OutreachLogEntity.ContactMethod.PHONE)
                 .outcomeType(OutreachLogEntity.OutcomeType.SUCCESSFUL_CONTACT)
-                .reason(OutreachLogEntity.Reason.CARE_GAP)
-                .contactedAt(Instant.now())
-                .createdAt(Instant.now())
+                .reason("care-gap")
+                .attemptedAt(Instant.now())
                 .build());
         }
 
@@ -180,9 +176,8 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
                 .nurseId(nurse1)
                 .contactMethod(OutreachLogEntity.ContactMethod.EMAIL)
                 .outcomeType(OutreachLogEntity.OutcomeType.NO_ANSWER)
-                .reason(OutreachLogEntity.Reason.APPOINTMENT)
-                .contactedAt(Instant.now())
-                .createdAt(Instant.now())
+                .reason("appointment")
+                .attemptedAt(Instant.now())
                 .build());
         }
 
@@ -402,7 +397,7 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
             .patientId(patient1)
             .coordinatorId(coordinator1)
             .specialtyType("Cardiology")
-            .priority(ReferralCoordinationEntity.Priority.ROUTINE)
+            .priority(ReferralCoordinationEntity.ReferralPriority.ROUTINE)
             .authorizationStatus(ReferralCoordinationEntity.AuthorizationStatus.APPROVED)
             .requestedAt(Instant.now())
             .createdAt(Instant.now())
@@ -434,7 +429,7 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
             .patientId(patient1)
             .coordinatorId(coordinator1)
             .specialtyType("Cardiology")
-            .priority(ReferralCoordinationEntity.Priority.URGENT)
+            .priority(ReferralCoordinationEntity.ReferralPriority.URGENT)
             .status(ReferralCoordinationEntity.ReferralStatus.AUTHORIZED)
             .authorizationStatus(ReferralCoordinationEntity.AuthorizationStatus.APPROVED)
             .requestedAt(Instant.now())
@@ -446,7 +441,7 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
             .patientId(patient2)
             .coordinatorId(coordinator1)
             .specialtyType("Dermatology")
-            .priority(ReferralCoordinationEntity.Priority.ROUTINE)
+            .priority(ReferralCoordinationEntity.ReferralPriority.ROUTINE)
             .status(ReferralCoordinationEntity.ReferralStatus.AUTHORIZED)
             .authorizationStatus(ReferralCoordinationEntity.AuthorizationStatus.APPROVED)
             .requestedAt(Instant.now())
@@ -463,7 +458,7 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
         // Then
         assertThat(urgentList).hasSize(1);
         assertThat(urgentList.get(0).getPriority())
-            .isEqualTo(ReferralCoordinationEntity.Priority.URGENT);
+            .isEqualTo(ReferralCoordinationEntity.ReferralPriority.URGENT);
     }
 
     @Test
@@ -477,7 +472,7 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
                 .patientId(patient1)
                 .coordinatorId(coordinator1)
                 .specialtyType("Cardiology")
-                .priority(ReferralCoordinationEntity.Priority.ROUTINE)
+                .priority(ReferralCoordinationEntity.ReferralPriority.ROUTINE)
                 .requestedAt(Instant.now())
                 .createdAt(Instant.now())
                 .build());
@@ -509,9 +504,8 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
                 .nurseId(nurse1)
                 .contactMethod(OutreachLogEntity.ContactMethod.PHONE)
                 .outcomeType(OutreachLogEntity.OutcomeType.SUCCESSFUL_CONTACT)
-                .reason(OutreachLogEntity.Reason.CARE_GAP)
-                .contactedAt(Instant.now())
-                .createdAt(Instant.now())
+                .reason("care-gap")
+                .attemptedAt(Instant.now())
                 .build());
 
         // When - Medication reconciliation
@@ -548,7 +542,7 @@ class NurseWorkflowServiceIntegrationTest extends NurseWorkflowIntegrationTestBa
                 .patientId(testPatient)
                 .coordinatorId(coordinator1)
                 .specialtyType("Cardiology")
-                .priority(ReferralCoordinationEntity.Priority.ROUTINE)
+                .priority(ReferralCoordinationEntity.ReferralPriority.ROUTINE)
                 .requestedAt(Instant.now())
                 .createdAt(Instant.now())
                 .build());

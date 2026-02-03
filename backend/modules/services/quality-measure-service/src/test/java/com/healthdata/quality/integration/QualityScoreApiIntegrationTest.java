@@ -5,6 +5,7 @@ import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
@@ -29,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Integration tests for Quality Score API endpoints
  * Tests the /quality-measure/score endpoint
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @AutoConfigureMockMvc

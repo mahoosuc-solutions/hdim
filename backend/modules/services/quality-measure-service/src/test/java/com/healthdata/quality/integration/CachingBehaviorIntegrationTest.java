@@ -8,6 +8,7 @@ import com.healthdata.quality.service.MeasureCalculationService;
 import com.healthdata.quality.service.QualityReportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for Redis caching behavior
  * Tests the caching of measure results and quality reports
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")

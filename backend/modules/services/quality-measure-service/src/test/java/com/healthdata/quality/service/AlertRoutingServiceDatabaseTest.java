@@ -6,6 +6,7 @@ import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.persistence.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * - Business hours vs after-hours routing
  * - Escalation path configuration
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")

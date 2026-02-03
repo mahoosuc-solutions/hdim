@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.healthdata.authentication.filter.TrustedHeaderAuthFilter;
+import com.healthdata.authentication.filter.UserAutoRegistrationFilter;
 import com.healthdata.authentication.security.TrustedTenantAccessFilter;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -55,14 +57,18 @@ class QualityMeasureSecurityConfigTest {
 
     @Test
     @DisplayName("Should build production security filter chain with gateway trust filters")
+    @SuppressWarnings("unchecked")
     void shouldBuildProductionSecurityFilterChainWithGatewayTrustFilters() throws Exception {
         QualityMeasureSecurityConfig config = new QualityMeasureSecurityConfig();
         TrustedHeaderAuthFilter trustedHeaderFilter = mock(TrustedHeaderAuthFilter.class);
         TrustedTenantAccessFilter trustedTenantFilter = mock(TrustedTenantAccessFilter.class);
+        ObjectProvider<UserAutoRegistrationFilter> userAutoRegistrationFilterProvider =
+            mock(ObjectProvider.class);
 
         SecurityFilterChain chain = config.securityFilterChain(
             httpSecurity(),
             trustedHeaderFilter,
+            userAutoRegistrationFilterProvider,
             trustedTenantFilter
         );
 

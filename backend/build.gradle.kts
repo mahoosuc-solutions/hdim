@@ -209,6 +209,25 @@ subprojects {
         // Default timeout prevents a single test from stalling the entire run.
         systemProperty("junit.jupiter.execution.timeout.default", "2m")
         systemProperty("junit.jupiter.execution.timeout.mode", "enabled")
+
+        // ====================================================================
+        // TESTCONTAINERS LIFECYCLE CONFIGURATION (Phase 8 - XML Result Fix)
+        // ====================================================================
+        // These settings prevent the race condition where containers shut down
+        // before Gradle finishes writing XML test results.
+        //
+        // Root cause: JVM shutdown hooks fire immediately when tests complete,
+        // stopping containers before XML result files are fully written.
+        //
+        // Solution: Extend Ryuk timeout and enable container reuse so containers
+        // stay alive long enough for Gradle to complete XML result collection.
+        // ====================================================================
+        systemProperty("testcontainers.ryuk.container.timeout", "120s")
+        systemProperty("testcontainers.reuse.enable", "true")
+        // Disable Ryuk for shared containers (they manage their own lifecycle)
+        // This prevents premature cleanup during parallel test execution
+        systemProperty("testcontainers.ryuk.disabled", "false")
+
         // Match Docker Desktop's API version to avoid Testcontainers 400s.
         systemProperty("api.version", "1.52")
         systemProperty("docker.api.version", "1.52")

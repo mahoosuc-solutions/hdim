@@ -12,7 +12,7 @@
 
 ### Key Competitive Differentiators
 
-- **Real-time HEDIS evaluation**: 52 NCQA-certified quality measures evaluated in <2 seconds via direct CQL execution (not SQL translation)
+- **Real-time HEDIS evaluation**: 52 HEDIS quality measures evaluated in <2 seconds via direct CQL execution (not SQL translation)
 - **51 specialized microservices**: Event-driven architecture allows independent scaling of clinical evaluation vs. data ingestion vs. analytics
 - **29 independent databases**: Database-per-service pattern with strict multi-tenant isolation at schema level—prevents accidental cross-tenant data leakage at database kernel
 - **Event Sourcing backbone**: Complete audit trail for every patient interaction, decision, and score change—native HIPAA §164.312(b) compliance without retrofitting
@@ -339,7 +339,7 @@ define Numerator:
 ```java
 @Service
 public class CqlMeasureEvaluationService {
-    // Pre-implemented: 52 NCQA-certified measures
+    // Pre-implemented: 52 HEDIS measures
     private static final Map<String, String> NCQA_MEASURES = Map.of(
         "BCS", "BCS_1.0.0.cql",      // Breast Cancer Screening
         "CCS", "CCS_1.0.0.cql",      // Cervical Cancer Screening
@@ -695,7 +695,7 @@ public class CareGapDetectionService {
 |------|---------|------------------|------------|
 | **Event Sourcing Architecture** | Requires complete rethink of data model | 18-24 months | High (10+ years) |
 | **FHIR R4 Native (No Translation)** | Requires HAPI FHIR expertise + refactoring | 9-12 months | High (5+ years) |
-| **52 NCQA-Certified CQL Measures** | Must license or build + get NCQA cert | 12-18 months | Medium (5 years, standards evolve) |
+| **52 HEDIS CQL Measures** | Must build per NCQA specs + validate | 12-18 months | Medium (5 years, standards evolve) |
 | **Database-Per-Service Pattern** | Requires distributed systems expertise | 12 months | Medium (10 years for mastery) |
 | **Multi-Tenant Isolation (Schema)** | Row-level security insufficient | 6-12 months | High (10+ years) |
 | **Production HIPAA Compliance** | Regulatory learning curve | 9-12 months | High (ongoing regulatory burden) |
@@ -804,7 +804,7 @@ ROI: 39x (3,900%)
 2. **Technology Moat is Defensible**
    - Event-driven architecture (18-24 month replication)
    - FHIR-native execution (12-18 month replication)
-   - 52 CQL measures pre-built (can't be built faster than NCQA certification)
+   - 52 CQL measures pre-built (12-18 months to implement + validate)
    - **Result: 5+ year head start before credible competitor**
 
 3. **Business Model is Capital-Efficient**
@@ -816,7 +816,7 @@ ROI: 39x (3,900%)
 4. **Execution Proof is Demonstrated**
    - Completed 7-phase infrastructure modernization on schedule
    - 51 services in production
-   - 4,500+ tests, 0 critical regressions
+   - 600+ test classes, 0 critical regressions
    - HIPAA compliance verified
    - **Result: Go-to-market ready (no 18-month engineering lag)**
 
@@ -849,7 +849,7 @@ ROI: 39x (3,900%)
 
 4. **Production-Ready Immediately** (not 18-month ramp):
    - 51 services in production
-   - 4,500+ tests passing
+   - 600+ test classes passing
    - 62 APIs documented
    - HIPAA compliance verified
 

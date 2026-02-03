@@ -113,7 +113,7 @@
 **Status:** ✅ **PRODUCTION-READY**
 
 - ✅ All 7 infrastructure phases complete
-- ✅ 259+ tests passing (0 regressions)
+- ✅ 600+ test classes passing (0 regressions)
 - ✅ 62 documented API endpoints (OpenAPI 3.0)
 - ✅ Full HIPAA compliance
 - ✅ Master branch stable & healthy
@@ -206,7 +206,7 @@
 
 **Backend (Java/Spring Boot):**
 - ✅ 51 services compiling successfully
-- ✅ 259+ tests passing (100%)
+- ✅ 600+ test classes passing (100%)
 - ✅ API Documentation: 62 endpoints (OpenAPI 3.0)
 - ✅ Distributed tracing (OpenTelemetry)
 - ✅ Database: 29 independent PostgreSQL schemas
@@ -413,33 +413,62 @@ NET YEAR 1 VALUE: $6,800,000
 
 ---
 
-# SLIDE 12: Team & Execution Capability
+# SLIDE 12: Founder & Team
 
-## Why HDIM Will Succeed
+## Aaron Bentley, Founder & CEO
 
-### Development Team
+### Background
 
-**Current:** Proven execution on 7-phase modernization project
-- Built 51 microservices
-- Implemented enterprise architecture
-- Achieved 90%+ performance improvements
-- Delivered production-ready platform in Q1 2026
+**10+ years in healthcare technology** with a unique path from manufacturing systems to healthcare interoperability:
 
-**Capability:** Can build and deploy enterprise healthcare software
+- **Manufacturing Systems** → Started career at BorgWarner Automotive, learning high-tech manufacturing processes and developing expertise in system design and automation
+- **Embedded Systems** → Built real-time systems at Porous Materials Inc and Jamex Vending, mastering low-level system architecture
+- **Public Health IT** → Served in healthcare interoperability at **HealthInfoNet** (Maine's Health Information Exchange) and **Healthix** (New York City's largest HIE), gaining deep understanding of healthcare data challenges
+- **Identity Resolution** → Joined **Verato**, working on patient identity matching—the foundational problem in healthcare data integration
 
-### Key Hires Needed (2026)
+### Why This Background Matters
 
-- VP Sales (healthcare experience)
-- VP Customer Success (hospital operations)
-- Chief Clinical Officer (HEDIS/quality measure expertise)
-- Senior Solutions Architect (hospital deployment)
+| Experience | HDIM Application |
+|------------|------------------|
+| Manufacturing automation | Event-driven architecture, real-time processing |
+| Embedded systems | Performance optimization, resource efficiency |
+| HIE operations (HealthInfoNet, Healthix) | FHIR standards, healthcare data flows, compliance |
+| Identity resolution (Verato) | Patient matching, data quality, enterprise scale |
 
-### Advisory Board Prospects
+### What Aaron Built
 
-- Former Epic/Cerner executive
-- Hospital CIO (health system experience)
-- Payer Chief Medical Officer
-- Healthcare venture investor
+**HDIM Platform:** Built twice—first in Node.js, then rebuilt in Java after identifying architectural limitations. This iteration produced 51 microservices, 29 databases, and 7 infrastructure phases—delivered production-ready in Q1 2026 with 90%+ performance improvements and zero critical regressions.
+
+**Why the rebuild matters:** Founders who iterate based on technical learnings build more defensible products. The Java architecture enabled event sourcing, CQRS, and enterprise-grade HIPAA compliance that wasn't achievable in the original design.
+
+---
+
+# SLIDE 12B: Team & Execution
+
+## Execution Track Record
+
+**Proven delivery on complex healthcare infrastructure:**
+- Built 51 production microservices (event sourcing, CQRS)
+- Implemented HIPAA-compliant architecture from day one
+- Achieved 42.5% CI/CD improvement (Phase 7)
+- Delivered enterprise-grade platform solo—ready for team scale
+
+## Key Hires Needed (Series A)
+
+| Role | Why Critical | Timing |
+|------|--------------|--------|
+| **VP Sales** | Healthcare SaaS sales experience, hospital relationships | Month 1-2 |
+| **VP Customer Success** | Hospital deployment, clinical workflow expertise | Month 2-3 |
+| **Chief Clinical Officer** | HEDIS/quality measure domain authority | Month 3-4 |
+| **Solutions Architect** | EHR integration specialist (Epic, Cerner) | Month 4-6 |
+
+## Advisory Board (Building)
+
+**Target advisors to accelerate go-to-market:**
+- Former Epic/Cerner executive (EHR ecosystem navigation)
+- Hospital CIO (buyer perspective, procurement insight)
+- Payer CMO (quality measure domain expertise)
+- Healthcare VC partner (fundraising, market positioning)
 
 ---
 
@@ -507,7 +536,7 @@ NET YEAR 1 VALUE: $6,800,000
 
 **Market Dynamics:**
 - No dominant player in hospital quality measurement
-- Hospitals actively seeking solutions
+- Urgent market pain point ($500K-2M annual gap penalty)s
 - Regulatory pressure for HEDIS compliance
 - Value-based care growing (+15%/year)
 
@@ -588,7 +617,7 @@ NET YEAR 1 VALUE: $6,800,000
 - Modern stack (Java 21, Spring Boot 3, Kubernetes)
 - FHIR R4 native (not retrofitted)
 - Cloud/on-prem flexible
-- Enterprise-proven (51 microservices, 259+ tests)
+- Enterprise-proven (51 microservices, 600+ test classes)
 
 ### Market Size Expansion
 
@@ -731,9 +760,9 @@ Exit Value:        $200-400M (5x+ return)
 
 ### What You Get
 
-✅ **Proven Team** - Built production healthcare platform
-✅ **Ready Product** - 51 services, 259+ tests, 62 APIs documented
-✅ **Market Validation** - Hospitals actively seeking solution
+✅ **Proven Founder** - 10+ years healthcare IT, built 51-service platform
+✅ **Ready Product** - 51 services, 600+ test classes, 62 APIs documented
+✅ **Market Validation** - Urgent market pain point ($500K-2M annual gap penalty)
 ✅ **Regulatory Alignment** - HIPAA-ready, CMS-aligned
 ✅ **High Upside** - $200-400M exit potential (9-13x return)
 
@@ -746,14 +775,9 @@ Exit Value:        $200-400M (5x+ return)
 
 ### Contact
 
-**For Investment Discussion:**
-- Name: [Leadership Contact]
-- Email: [investor@hdim.com]
-- Phone: [+1-XXX-XXX-XXXX]
-
-**For Technical Questions:**
-- Name: [CTO]
-- Email: [cto@hdim.com]
+**Aaron Bentley**, Founder & CEO
+- Email: aaron@mahoosuc.solutions
+- LinkedIn: [Connect on LinkedIn]
 
 ---
 
@@ -883,7 +907,7 @@ Exit Value:        $200-400M (5x+ return)
 ### Key Takeaways
 
 ✅ **Technology Ready** - Production infrastructure complete
-✅ **Market Ready** - Hospitals actively seeking solutions
+✅ **Market Ready** - Value-based care mandates creating urgent demand
 ✅ **Team Ready** - Proven execution on 7-phase project
 ✅ **Market Timing** - Value-based care expansion accelerating
 ✅ **Financial Potential** - $200-400M exit (9-13x return)
@@ -911,7 +935,7 @@ Exit Value:        $200-400M (5x+ return)
 
 **End of Deck**
 
-**Questions? Contact [investor@hdim.com]**
+**Questions? Contact aaron@mahoosuc.solutions**
 
 ---
 

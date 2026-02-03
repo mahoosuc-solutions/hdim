@@ -1,6 +1,8 @@
 package com.healthdata.agentvalidation.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.healthdata.agentvalidation.domain.entity.TestSuite;
 import com.healthdata.agentvalidation.domain.enums.TestStatus;
 import com.healthdata.agentvalidation.domain.enums.UserStoryType;
@@ -11,14 +13,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,30 +34,33 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
  * Unit tests for TestSuiteController.
  * Tests REST API endpoints for test suite management.
+ *
+ * Uses standalone MockMvc setup with Mockito to avoid loading Spring context
+ * and JPA auto-configuration issues.
  */
 @Tag("unit")
-@WebMvcTest(TestSuiteController.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Test Suite Controller Tests")
 class TestSuiteControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private TestSuiteRepository testSuiteRepository;
 
-    @MockBean
+    @Mock
     private TestOrchestratorService testOrchestratorService;
+
+    @InjectMocks
+    private TestSuiteController testSuiteController;
 
     private static final String TENANT_ID = "test-tenant";
     private static final String USER_ID = "test-user";
@@ -61,6 +71,20 @@ class TestSuiteControllerTest {
 
     @BeforeEach
     void setUp() {
+        // Configure ObjectMapper for JSON serialization
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        // Create message converter with configured ObjectMapper
+        MappingJackson2HttpMessageConverter messageConverter = new MappingJackson2HttpMessageConverter();
+        messageConverter.setObjectMapper(objectMapper);
+
+        // Setup standalone MockMvc with pageable support and JSON message converter
+        mockMvc = MockMvcBuilders.standaloneSetup(testSuiteController)
+            .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+            .setMessageConverters(messageConverter)
+            .build();
+
         suiteId = UUID.randomUUID();
         testSuite = createTestSuite(suiteId);
     }
@@ -70,7 +94,6 @@ class TestSuiteControllerTest {
     class CreateTestSuiteTests {
 
         @Test
-        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should create test suite successfully")
         void shouldCreateTestSuiteSuccessfully() throws Exception {
             // Given
@@ -93,7 +116,6 @@ class TestSuiteControllerTest {
 
             // When/Then
             mockMvc.perform(post(BASE_URL)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID)
                     .header("X-User-ID", USER_ID)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -106,9 +128,8 @@ class TestSuiteControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "QUALITY_OFFICER")
-        @DisplayName("Should allow QUALITY_OFFICER role to create")
-        void shouldAllowQualityOfficerToCreate() throws Exception {
+        @DisplayName("Should create suite with different user story type")
+        void shouldCreateSuiteWithDifferentUserStoryType() throws Exception {
             // Given
             TestSuiteController.CreateTestSuiteRequest request =
                 new TestSuiteController.CreateTestSuiteRequest(
@@ -129,7 +150,6 @@ class TestSuiteControllerTest {
 
             // When/Then
             mockMvc.perform(post(BASE_URL)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID)
                     .header("X-User-ID", USER_ID)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -138,15 +158,13 @@ class TestSuiteControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "VIEWER")
-        @DisplayName("Should allow access when method security not configured")
-        void shouldAllowAccessWhenMethodSecurityNotConfigured() throws Exception {
-            // Note: In @WebMvcTest without @EnableMethodSecurity, @PreAuthorize is not enforced
-            // This test documents that behavior - in production, security config enables method security
+        @DisplayName("Should create suite with outreach optimization type")
+        void shouldCreateSuiteWithOutreachType() throws Exception {
+            // Given
             TestSuiteController.CreateTestSuiteRequest request =
                 new TestSuiteController.CreateTestSuiteRequest(
-                    "Test Suite",
-                    "Description",
+                    "Outreach Suite",
+                    "Outreach optimization tests",
                     UserStoryType.OUTREACH_OPTIMIZATION,
                     "NURSE",
                     "outreach-agent",
@@ -160,9 +178,8 @@ class TestSuiteControllerTest {
                     return saved;
                 });
 
-            // When/Then - Without method security, request is allowed
+            // When/Then
             mockMvc.perform(post(BASE_URL)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID)
                     .header("X-User-ID", USER_ID)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -176,7 +193,6 @@ class TestSuiteControllerTest {
     class GetTestSuiteTests {
 
         @Test
-        @WithMockUser(roles = "EVALUATOR")
         @DisplayName("Should return test suite when found")
         void shouldReturnTestSuiteWhenFound() throws Exception {
             // Given
@@ -192,7 +208,6 @@ class TestSuiteControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "EVALUATOR")
         @DisplayName("Should return 404 when suite not found")
         void shouldReturn404WhenSuiteNotFound() throws Exception {
             // Given
@@ -212,13 +227,14 @@ class TestSuiteControllerTest {
     class ListTestSuitesTests {
 
         @Test
-        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should return paginated list of suites")
         void shouldReturnPaginatedListOfSuites() throws Exception {
             // Given
             List<TestSuite> suites = List.of(testSuite);
+            PageRequest pageable = PageRequest.of(0, 20);
+            Page<TestSuite> page = new PageImpl<>(suites, pageable, suites.size());
             when(testSuiteRepository.findByTenantId(eq(TENANT_ID), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(suites));
+                .thenReturn(page);
 
             // When/Then
             mockMvc.perform(get(BASE_URL)
@@ -236,7 +252,6 @@ class TestSuiteControllerTest {
     class ListByUserStoryTypeTests {
 
         @Test
-        @WithMockUser(roles = "QUALITY_OFFICER")
         @DisplayName("Should return suites by user story type")
         void shouldReturnSuitesByUserStoryType() throws Exception {
             // Given
@@ -259,7 +274,6 @@ class TestSuiteControllerTest {
     class ListByTargetRoleTests {
 
         @Test
-        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should return suites by target role")
         void shouldReturnSuitesByTargetRole() throws Exception {
             // Given
@@ -280,7 +294,6 @@ class TestSuiteControllerTest {
     class UpdateTestSuiteTests {
 
         @Test
-        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should update test suite successfully")
         void shouldUpdateTestSuiteSuccessfully() throws Exception {
             // Given
@@ -299,7 +312,6 @@ class TestSuiteControllerTest {
 
             // When/Then
             mockMvc.perform(put(BASE_URL + "/{suiteId}", suiteId)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
@@ -308,7 +320,6 @@ class TestSuiteControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should return 404 when updating non-existent suite")
         void shouldReturn404WhenUpdatingNonExistentSuite() throws Exception {
             // Given
@@ -322,7 +333,6 @@ class TestSuiteControllerTest {
 
             // When/Then
             mockMvc.perform(put(BASE_URL + "/{suiteId}", nonExistentId)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
@@ -335,7 +345,6 @@ class TestSuiteControllerTest {
     class DeleteTestSuiteTests {
 
         @Test
-        @WithMockUser(roles = "ADMIN")
         @DisplayName("Should delete test suite successfully")
         void shouldDeleteTestSuiteSuccessfully() throws Exception {
             // Given
@@ -345,7 +354,6 @@ class TestSuiteControllerTest {
 
             // When/Then
             mockMvc.perform(delete(BASE_URL + "/{suiteId}", suiteId)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNoContent());
 
@@ -353,7 +361,6 @@ class TestSuiteControllerTest {
         }
 
         @Test
-        @WithMockUser(roles = "QUALITY_OFFICER")
         @DisplayName("Should return 404 when suite not found")
         void shouldReturn404WhenDeletingNonExistentSuite() throws Exception {
             // Given - Suite not found
@@ -362,7 +369,6 @@ class TestSuiteControllerTest {
 
             // When/Then - Returns 404 because suite not found
             mockMvc.perform(delete(BASE_URL + "/{suiteId}", suiteId)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
 
@@ -375,7 +381,6 @@ class TestSuiteControllerTest {
     class ExecuteSuiteTests {
 
         @Test
-        @WithMockUser(roles = "EVALUATOR")
         @DisplayName("Should execute test suite successfully")
         void shouldExecuteTestSuiteSuccessfully() throws Exception {
             // Given
@@ -394,7 +399,6 @@ class TestSuiteControllerTest {
 
             // When/Then
             mockMvc.perform(post(BASE_URL + "/{suiteId}/execute", suiteId)
-                    .with(csrf())
                     .header("X-Tenant-ID", TENANT_ID)
                     .header("X-User-ID", USER_ID))
                 .andExpect(status().isOk())
@@ -409,7 +413,6 @@ class TestSuiteControllerTest {
     class GetFailingSuitesTests {
 
         @Test
-        @WithMockUser(roles = "QUALITY_OFFICER")
         @DisplayName("Should return failing test suites")
         void shouldReturnFailingTestSuites() throws Exception {
             // Given

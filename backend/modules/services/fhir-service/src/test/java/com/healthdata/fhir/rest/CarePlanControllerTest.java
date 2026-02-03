@@ -19,7 +19,6 @@ import java.util.UUID;
 import org.hl7.fhir.r4.model.CarePlan;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -36,7 +35,6 @@ import ca.uhn.fhir.parser.IParser;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CarePlan Controller Tests")
-@Tag("integration")
 class CarePlanControllerTest {
 
     private static final String TENANT_ID = "tenant-1";
@@ -61,7 +59,7 @@ class CarePlanControllerTest {
         when(carePlanService.createCarePlan(eq(TENANT_ID), any(CarePlan.class), eq("user")))
                 .thenReturn(carePlan);
 
-        mockMvc.perform(post("/fhir/CarePlan")
+        mockMvc.perform(post("/CarePlan")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -79,7 +77,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlan(TENANT_ID, carePlanId))
                 .thenReturn(java.util.Optional.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/{id}", carePlanId)
+        mockMvc.perform(get("/CarePlan/{id}", carePlanId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -92,7 +90,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlan(TENANT_ID, carePlanId))
                 .thenReturn(java.util.Optional.empty());
 
-        mockMvc.perform(get("/fhir/CarePlan/{id}", carePlanId)
+        mockMvc.perform(get("/CarePlan/{id}", carePlanId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -106,7 +104,7 @@ class CarePlanControllerTest {
         when(carePlanService.updateCarePlan(eq(TENANT_ID), eq(carePlanId), any(CarePlan.class), eq("user")))
                 .thenReturn(carePlan);
 
-        mockMvc.perform(put("/fhir/CarePlan/{id}", carePlanId)
+        mockMvc.perform(put("/CarePlan/{id}", carePlanId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -120,7 +118,7 @@ class CarePlanControllerTest {
     void shouldDeleteCarePlan() throws Exception {
         UUID carePlanId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/fhir/CarePlan/{id}", carePlanId)
+        mockMvc.perform(delete("/CarePlan/{id}", carePlanId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -141,7 +139,7 @@ class CarePlanControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(carePlan)));
 
-        mockMvc.perform(get("/fhir/CarePlan")
+        mockMvc.perform(get("/CarePlan")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/not-a-uuid")
                         .param("encounter", "Encounter/not-a-uuid"))
@@ -176,7 +174,7 @@ class CarePlanControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(carePlan)));
 
-        mockMvc.perform(get("/fhir/CarePlan")
+        mockMvc.perform(get("/CarePlan")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/" + patientId)
                         .param("encounter", "Encounter/" + encounterId)
@@ -198,7 +196,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlansByPatient(TENANT_ID, patientId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/patient/{patientId}", patientId)
+        mockMvc.perform(get("/CarePlan/patient/{patientId}", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -213,7 +211,7 @@ class CarePlanControllerTest {
         when(carePlanService.getActiveCarePlans(TENANT_ID, patientId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/patient/{patientId}/active", patientId)
+        mockMvc.perform(get("/CarePlan/patient/{patientId}/active", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -228,7 +226,7 @@ class CarePlanControllerTest {
         when(carePlanService.getPrimaryCarePlans(TENANT_ID, patientId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/patient/{patientId}/primary", patientId)
+        mockMvc.perform(get("/CarePlan/patient/{patientId}/primary", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -243,7 +241,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlansWithActivities(TENANT_ID, patientId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/patient/{patientId}/with-activities", patientId)
+        mockMvc.perform(get("/CarePlan/patient/{patientId}/with-activities", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -258,7 +256,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlansByEncounter(TENANT_ID, encounterId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/encounter/{encounterId}", encounterId)
+        mockMvc.perform(get("/CarePlan/encounter/{encounterId}", encounterId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -273,7 +271,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlansByCondition(TENANT_ID, conditionId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/condition/{conditionId}", conditionId)
+        mockMvc.perform(get("/CarePlan/condition/{conditionId}", conditionId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -288,7 +286,7 @@ class CarePlanControllerTest {
         when(carePlanService.getCarePlansByGoal(TENANT_ID, goalId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/goal/{goalId}", goalId)
+        mockMvc.perform(get("/CarePlan/goal/{goalId}", goalId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -303,7 +301,7 @@ class CarePlanControllerTest {
         when(carePlanService.getChildCarePlans(TENANT_ID, carePlanId))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/{carePlanId}/children", carePlanId)
+        mockMvc.perform(get("/CarePlan/{carePlanId}/children", carePlanId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(carePlan.getId())));
@@ -317,7 +315,7 @@ class CarePlanControllerTest {
         when(carePlanService.getExpiringCarePlans(eq(TENANT_ID), any(Instant.class), any(Instant.class)))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/expiring")
+        mockMvc.perform(get("/CarePlan/expiring")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("start", "2025-01-01T00:00:00Z")
                         .param("end", "2025-01-02T00:00:00Z"))
@@ -334,7 +332,7 @@ class CarePlanControllerTest {
         when(carePlanService.searchByText(TENANT_ID, patientId, "term"))
                 .thenReturn(List.of(carePlan));
 
-        mockMvc.perform(get("/fhir/CarePlan/patient/{patientId}/search", patientId)
+        mockMvc.perform(get("/CarePlan/patient/{patientId}/search", patientId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("q", "term"))
                 .andExpect(status().isOk())

@@ -63,7 +63,7 @@ public class DeadLetterQueueEntity {
     @Builder.Default
     private Integer retryCount = 0;
 
-    @Column(name = "max_retry_count")
+    @Column(name = "max_retry_count", nullable = false)
     @Builder.Default
     private Integer maxRetryCount = 3;
 

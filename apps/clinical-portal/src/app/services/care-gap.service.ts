@@ -557,6 +557,21 @@ export class CareGapService {
       })
     );
   }
+
+  /**
+   * Get population-level gap report for tenant-wide statistics.
+   * Used by the Care Gap Stats Dashboard for KPI cards.
+   */
+  getPopulationReport(): Observable<PopulationGapReport> {
+    const url = `${this.careGapApiUrl}/care-gap/population-report`;
+
+    return this.apiService.get<PopulationGapReport>(url).pipe(
+      catchError((error) => {
+        this.logger.error('Error fetching population gap report', { error });
+        return throwError(() => error);
+      })
+    );
+  }
 }
 
 // Types and Interfaces
@@ -737,4 +752,19 @@ export interface CareGapStatsResponse {
   overdueCount: number;
   hasOpenGaps: boolean;
   hasHighPriorityGaps: boolean;
+}
+
+/**
+ * Population-level gap report for tenant-wide statistics.
+ * Used by the Care Gap Stats Dashboard for KPI cards.
+ */
+export interface PopulationGapReport {
+  totalOpenGaps: number;
+  uniquePatients: number;
+  avgGapsPerPatient: number;
+  gapsByPriority: Record<string, number>;
+  gapsByCategory: Record<string, number>;
+  topMeasures: Record<string, number>;
+  overdueCount: number;
+  closedThisMonth: number;
 }

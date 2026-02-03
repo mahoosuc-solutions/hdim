@@ -8,21 +8,8 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { StatCardComponent } from '../../shared/components/stat-card/stat-card.component';
 import { CareGapTrendComponent } from '../../shared/components/care-gap-trend/care-gap-trend.component';
-import { CareGapService, CareGapTrendPoint, CareGapUpdate } from '../../services/care-gap.service';
+import { CareGapService, CareGapTrendPoint, CareGapUpdate, PopulationGapReport } from '../../services/care-gap.service';
 import { LoggerService } from '../../services/logger.service';
-
-/**
- * Care Gap Stats Response from API
- */
-interface CareGapStats {
-  totalGaps: number;
-  highPriorityCount: number;
-  mediumPriorityCount: number;
-  lowPriorityCount: number;
-  overdueCount: number;
-  closedThisMonth: number;
-  byType: Record<string, number>;
-}
 
 /**
  * Care Gap Statistics Dashboard Component
@@ -101,41 +88,31 @@ export class CareGapStatsDashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Load care gap statistics from backend
-   * Note: Using demo data for now - will connect to real API when available
+   * Load care gap statistics from backend population report endpoint
    */
   private loadStatistics(): void {
     this.loading.set(true);
     this.loadError.set(null);
 
-    // TODO: Replace with actual API call when getCareGapStats() is available for tenant-level stats
-    // For now, using mock data based on the service's response structure
-    setTimeout(() => {
-      // Simulate API response
-      const stats: CareGapStats = {
-        totalGaps: 142,
-        highPriorityCount: 28,
-        mediumPriorityCount: 57,
-        lowPriorityCount: 57,
-        overdueCount: 15,
-        closedThisMonth: 23,
-        byType: {
-          screening: 42,
-          medication: 35,
-          followup: 28,
-          lab: 21,
-          assessment: 16,
+    this.careGapService
+      .getPopulationReport()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (report: PopulationGapReport) => {
+          this.totalGaps.set(report.totalOpenGaps);
+          this.highPriorityCount.set(report.gapsByPriority['HIGH'] || report.gapsByPriority['high'] || 0);
+          this.overdueCount.set(report.overdueCount);
+          this.closedThisMonth.set(report.closedThisMonth);
+
+          this.loading.set(false);
+          this.logger.info('Care gap statistics loaded', { totalGaps: report.totalOpenGaps });
         },
-      };
-
-      this.totalGaps.set(stats.totalGaps);
-      this.highPriorityCount.set(stats.highPriorityCount);
-      this.overdueCount.set(stats.overdueCount);
-      this.closedThisMonth.set(stats.closedThisMonth);
-
-      this.loading.set(false);
-      this.logger.info('Care gap statistics loaded', { totalGaps: stats.totalGaps });
-    }, 300);
+        error: (error) => {
+          this.logger.error('Failed to load care gap statistics', error);
+          this.loadError.set('Failed to load care gap statistics');
+          this.loading.set(false);
+        },
+      });
   }
 
   /**

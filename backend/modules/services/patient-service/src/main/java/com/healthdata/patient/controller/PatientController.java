@@ -2,8 +2,10 @@ package com.healthdata.patient.controller;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.patient.dto.PatientRiskAssessmentResponse;
 import com.healthdata.patient.service.PatientAggregationService;
 import com.healthdata.patient.service.PatientHealthStatusService;
+import com.healthdata.patient.service.PatientRiskAssessmentService;
 import com.healthdata.patient.service.PatientTimelineService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -63,6 +65,7 @@ public class PatientController {
     private final PatientAggregationService aggregationService;
     private final PatientTimelineService timelineService;
     private final PatientHealthStatusService healthStatusService;
+    private final PatientRiskAssessmentService riskAssessmentService;
     private final FhirContext fhirContext = FhirContext.forR4();
     private final IParser jsonParser = fhirContext.newJsonParser();
 
@@ -1352,6 +1355,116 @@ public class PatientController {
                 healthStatusService.getImmunizationSummary(tenantId, patientId);
 
         return ResponseEntity.ok(summary);
+    }
+
+    // ==================== Risk Assessment Endpoints ====================
+
+    /**
+     * Get comprehensive risk assessment for a patient
+     *
+     * @param tenantId Tenant ID (from header)
+     * @param patientId Patient ID (query parameter)
+     * @return Risk assessment including RAF scores, HCC data, and care gaps
+     */
+    @Operation(
+        summary = "Get patient risk assessment",
+        description = """
+            Retrieves comprehensive risk assessment combining HCC-based RAF scores
+            with care gap data for clinical decision support and risk stratification.
+
+            Response includes:
+            - CMS-HCC RAF scores (V24, V28, and blended)
+            - Risk level classification (LOW, MODERATE, HIGH, VERY_HIGH)
+            - Top HCC codes and chronic conditions
+            - Open care gap counts
+            - Documentation gaps and potential RAF uplift opportunities
+
+            Risk level thresholds:
+            - LOW: RAF < 1.0
+            - MODERATE: 1.0 <= RAF < 2.0
+            - HIGH: 2.0 <= RAF < 3.5
+            - VERY_HIGH: RAF >= 3.5
+
+            Use for population health management, risk stratification dashboards,
+            and value-based care reporting.
+
+            Response includes Cache-Control: no-store header for HIPAA compliance.
+            All operations are audited for PHI access tracking.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Risk assessment retrieved successfully",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = PatientRiskAssessmentResponse.class),
+                examples = @ExampleObject(
+                    name = "Risk Assessment Response",
+                    value = """
+                        {
+                          "patientId": "550e8400-e29b-41d4-a716-446655440000",
+                          "rafScoreBlended": 1.892,
+                          "rafScoreV24": 1.756,
+                          "rafScoreV28": 2.028,
+                          "riskLevel": "MODERATE",
+                          "riskScore": 68,
+                          "hccCount": 5,
+                          "topHccs": ["HCC18", "HCC85", "HCC111"],
+                          "chronicConditions": ["Diabetes with Chronic Complications", "Congestive Heart Failure", "Chronic Obstructive Pulmonary Disease"],
+                          "openCareGaps": 3,
+                          "highPriorityCareGaps": 1,
+                          "overdueCareGaps": 1,
+                          "potentialRafUplift": 0.234,
+                          "documentationGapCount": 2,
+                          "recaptureOpportunities": 1,
+                          "calculatedAt": "2026-02-02T15:30:00Z",
+                          "profileYear": 2026,
+                          "dataAvailability": {
+                            "hccDataAvailable": true,
+                            "careGapDataAvailable": true,
+                            "documentationGapDataAvailable": true
+                          }
+                        }
+                        """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Patient not found or no HCC profile available"
+        ),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Access denied - insufficient permissions or wrong tenant"
+        )
+    })
+    @PreAuthorize("hasPermission('PATIENT_READ')")
+    @GetMapping(value = "/risk-assessment", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<PatientRiskAssessmentResponse> getRiskAssessment(
+            @Parameter(
+                description = "Tenant ID for multi-tenant isolation",
+                required = true,
+                example = "tenant-123"
+            )
+            @RequestHeader("X-Tenant-ID") String tenantId,
+
+            @Parameter(
+                description = "Patient ID (UUID format)",
+                required = true,
+                example = "550e8400-e29b-41d4-a716-446655440000"
+            )
+            @RequestParam("patient") String patientId
+    ) {
+        log.info("GET /patient/risk-assessment - tenant: {}, patient: {}", tenantId, patientId);
+
+        PatientRiskAssessmentResponse assessment = riskAssessmentService.getRiskAssessment(tenantId, patientId);
+
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-store, no-cache, must-revalidate")
+                .header("Pragma", "no-cache")
+                .body(assessment);
     }
 
     // ==================== Health Check ====================

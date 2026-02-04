@@ -139,6 +139,13 @@ export const appRoutes: Route[] = [
             (m) => m.ConfigVersionsComponent
           ),
       },
+      {
+        path: 'roadmap',
+        loadComponent: () =>
+          import('./pages/roadmap/roadmap.component').then(
+            (m) => m.RoadmapComponent
+          ),
+      },
     ],
   },
   {

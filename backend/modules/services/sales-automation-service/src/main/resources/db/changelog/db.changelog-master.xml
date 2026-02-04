@@ -476,4 +476,8 @@
     <!-- LinkedIn Campaign Management -->
     <include file="0019-create-linkedin-campaigns-table.xml" relativeToChangelogFile="true"/>
 
+    <!-- GTM Launch Seed Data -->
+    <include file="0020-seed-customer-leads.xml" relativeToChangelogFile="true"/>
+    <include file="0021-seed-email-sequences.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

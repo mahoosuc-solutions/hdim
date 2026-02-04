@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { InvestorAuthService } from '../services/investor-auth.service';
+import { environment } from '../../environments/environment';
 
 /**
  * HTTP interceptor that adds JWT Bearer token to investor API requests.
@@ -13,10 +14,11 @@ export const investorAuthInterceptor: HttpInterceptorFn = (
 ) => {
   const authService = inject(InvestorAuthService);
 
-  // Only intercept requests to the investor API (Vercel deployment or localhost dev)
+  // Only intercept requests to the investor API
+  const investorApiUrl = environment.apiConfig.investorApiUrl;
   const isInvestorApi =
-    req.url.includes('investor-api.vercel.app') ||
-    req.url.includes('localhost:3000/api/') ||
+    req.url.startsWith(investorApiUrl) ||
+    req.url.includes('localhost:8120/investor') ||
     req.url.includes('/investor/api/');
 
   if (!isInvestorApi) {

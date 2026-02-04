@@ -2,6 +2,9 @@ package com.healthdata.sales.controller;
 
 import com.healthdata.sales.service.EmailAutomationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +21,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/sales/email")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Email Tracking", description = "Email open/click tracking and unsubscribe endpoints")
+@Tag(
+    name = "Email Tracking",
+    description = """
+        APIs for tracking email engagement and managing unsubscribes.
+
+        These endpoints support email marketing automation:
+        - Open tracking via invisible pixel
+        - Click tracking with redirect
+        - Unsubscribe handling for compliance
+
+        Note: These are public endpoints (no authentication required)
+        to allow tracking from email clients.
+        """
+)
 public class EmailTrackingController {
 
     private final EmailAutomationService automationService;
@@ -37,8 +53,23 @@ public class EmailTrackingController {
      * Track email open via invisible pixel
      */
     @GetMapping("/track/{trackingId}/open")
-    @Operation(summary = "Track email open", description = "Tracking pixel endpoint for email opens")
-    public ResponseEntity<byte[]> trackOpen(@PathVariable String trackingId) {
+    @Operation(
+        summary = "Track email open",
+        description = """
+            Tracking pixel endpoint for email opens.
+
+            Returns a 1x1 transparent GIF that is embedded in emails.
+            When the email client loads the image, the open is recorded.
+
+            Headers are set to prevent caching to ensure accurate tracking.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Tracking pixel returned, open recorded")
+    })
+    public ResponseEntity<byte[]> trackOpen(
+        @Parameter(description = "Unique tracking ID for the email", required = true)
+        @PathVariable String trackingId) {
         log.debug("Email open tracked: {}", trackingId);
 
         try {
@@ -60,9 +91,23 @@ public class EmailTrackingController {
      * Track link click and redirect
      */
     @GetMapping("/track/{trackingId}/click")
-    @Operation(summary = "Track link click", description = "Track link click and redirect to destination")
+    @Operation(
+        summary = "Track link click",
+        description = """
+            Tracks link clicks and redirects to the destination URL.
+
+            All links in tracked emails are rewritten to pass through this endpoint.
+            The click is recorded and the user is immediately redirected to the
+            original destination URL via HTTP 302 redirect.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "302", description = "Click recorded, redirecting to destination")
+    })
     public ResponseEntity<Void> trackClick(
+        @Parameter(description = "Unique tracking ID for the email", required = true)
         @PathVariable String trackingId,
+        @Parameter(description = "Destination URL to redirect to", required = true, example = "https://example.com/landing")
         @RequestParam String url
     ) {
         log.debug("Email click tracked: {} -> {}", trackingId, url);
@@ -82,8 +127,24 @@ public class EmailTrackingController {
      * Unsubscribe page
      */
     @GetMapping("/unsubscribe/{token}")
-    @Operation(summary = "Unsubscribe", description = "Process unsubscribe request")
-    public ResponseEntity<String> unsubscribe(@PathVariable String token) {
+    @Operation(
+        summary = "Unsubscribe",
+        description = """
+            Processes unsubscribe requests from email recipients.
+
+            Returns an HTML page confirming the unsubscribe action.
+            The recipient is removed from the email sequence and marked
+            as unsubscribed to prevent future emails.
+
+            Required for CAN-SPAM and GDPR compliance.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Unsubscribe processed, confirmation page returned")
+    })
+    public ResponseEntity<String> unsubscribe(
+        @Parameter(description = "Unique unsubscribe token for the recipient", required = true)
+        @PathVariable String token) {
         boolean success = automationService.processUnsubscribe(token);
 
         String html;

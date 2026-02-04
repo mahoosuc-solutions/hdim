@@ -36,6 +36,7 @@ export const environment = {
     enableAnalytics: true,
     enableErrorReporting: true,
     enableDebugMode: false,
+    demoMode: false, // SECURITY: Demo mode disabled in production - requires real authentication
   },
 
   // Error reporting (e.g., Sentry)

@@ -35,6 +35,7 @@ export const environment = {
     enableAnalytics: false,
     enableErrorReporting: false,
     enableDebugMode: true,
+    demoMode: true, // Allow auto-authentication in development only
   },
 
   // Error reporting (disabled in dev)

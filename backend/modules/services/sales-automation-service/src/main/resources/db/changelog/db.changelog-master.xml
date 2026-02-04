@@ -470,4 +470,7 @@
     <include file="0016-add-linkedin-profile-id.xml" relativeToChangelogFile="true"/>
     <include file="0017-add-missing-linkedin-columns.xml" relativeToChangelogFile="true"/>
 
+    <!-- LinkedIn OAuth Token Storage -->
+    <include file="0018-create-linkedin-tokens-table.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

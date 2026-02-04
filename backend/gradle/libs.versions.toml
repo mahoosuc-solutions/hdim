@@ -133,6 +133,7 @@ snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 javafaker = { module = "com.github.javafaker:javafaker", version.ref = "javafaker" }
 
 # Spring Cloud
+spring-cloud-dependencies = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "spring-cloud" }
 spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }
 spring-cloud-starter-netflix-eureka-client = { module = "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client", version.ref = "spring-cloud" }
 spring-cloud-starter-vault-config = { module = "org.springframework.cloud:spring-cloud-starter-vault-config" }

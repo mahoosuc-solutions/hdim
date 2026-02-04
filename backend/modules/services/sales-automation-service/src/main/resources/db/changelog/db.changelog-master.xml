@@ -466,4 +466,8 @@
     <include file="0014-create-sequence-enrollments-table.xml" relativeToChangelogFile="true"/>
     <include file="0015-create-email-send-logs-table.xml" relativeToChangelogFile="true"/>
 
+    <!-- LinkedIn Outreach Schema Fix -->
+    <include file="0016-add-linkedin-profile-id.xml" relativeToChangelogFile="true"/>
+    <include file="0017-add-missing-linkedin-columns.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

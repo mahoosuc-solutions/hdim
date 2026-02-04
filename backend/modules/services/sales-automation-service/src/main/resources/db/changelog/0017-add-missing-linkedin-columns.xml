@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0017-add-missing-linkedin-columns" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="linkedin_outreach" columnName="message_template"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Add missing columns to linkedin_outreach table to match entity definition.
+            Includes: message_template, profile_viewed, profile_viewed_at, notes.
+        </comment>
+
+        <addColumn tableName="linkedin_outreach">
+            <column name="message_template" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="linkedin_outreach">
+            <column name="profile_viewed" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="linkedin_outreach">
+            <column name="profile_viewed_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="linkedin_outreach">
+            <column name="notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="linkedin_outreach" columnName="message_template"/>
+            <dropColumn tableName="linkedin_outreach" columnName="profile_viewed"/>
+            <dropColumn tableName="linkedin_outreach" columnName="profile_viewed_at"/>
+            <dropColumn tableName="linkedin_outreach" columnName="notes"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

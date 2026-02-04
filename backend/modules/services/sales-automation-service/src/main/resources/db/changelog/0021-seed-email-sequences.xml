@@ -1,0 +1,880 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0021-seed-email-sequences" author="hdim" context="!test">
+        <comment>
+            Seed email sequences for GTM launch outreach campaigns.
+            Three sequences: Investor Introduction (5-day), Quality Leader Outreach (7-day), Network Reconnect (3-day).
+            Designed for personalized, high-touch outreach with clear value propositions.
+        </comment>
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM email_sequences WHERE tenant_id = '11111111-1111-1111-1111-111111111111'
+            </sqlCheck>
+        </preConditions>
+
+        <!-- ==================== SEQUENCE 1: Investor Introduction (5-day compressed) ==================== -->
+        <insert tableName="email_sequences">
+            <column name="id" value="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="name" value="Investor Introduction"/>
+            <column name="description" value="5-day compressed sequence for investor outreach. Personal intro with deck, follow-up engagement, content share, and meeting ask."/>
+            <column name="sequence_type" value="NURTURE"/>
+            <column name="target_type" value="LEAD"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="from_name" value="Aaron"/>
+            <column name="from_email" value="aaron@hdim.io"/>
+            <column name="reply_to_email" value="aaron@hdim.io"/>
+            <column name="unsubscribe_link" valueBoolean="true"/>
+            <column name="track_opens" valueBoolean="true"/>
+            <column name="track_clicks" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Investor Step 1: Day 0 - Personal intro + deck link -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/>
+            <column name="step_order" valueNumeric="1"/>
+            <column name="delay_days" valueNumeric="0"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="HDIM - Healthcare Quality Measure Platform"/>
+            <column name="preview_text" value="Building the infrastructure layer for value-based care"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>I'm reaching out because I'm building something I think you'll find interesting - <strong>HDIM (HealthData-in-Motion)</strong>, an enterprise healthcare interoperability platform focused on clinical quality measures and HEDIS reporting.</p>
+
+<p><strong>The problem we're solving:</strong></p>
+<ul>
+    <li>Healthcare organizations spend $2.1B annually on quality measure evaluation</li>
+    <li>Current solutions are fragmented, manual, and error-prone</li>
+    <li>Value-based care contracts require accurate, timely quality reporting</li>
+</ul>
+
+<p><strong>What we've built:</strong></p>
+<ul>
+    <li>FHIR R4 native platform with CQL evaluation engine</li>
+    <li>Real-time care gap detection and risk stratification</li>
+    <li>50+ microservices, production-ready architecture</li>
+    <li>Targeting HIEs, ACOs, and health plans</li>
+</ul>
+
+<p>I've attached our deck with more details on market size, competitive landscape, and our go-to-market strategy.</p>
+
+<p><a href="{{deckLink}}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">View Pitch Deck</a></p>
+
+<p>Would love to share more about what we're building and get your thoughts.</p>
+
+<p>Best,<br/>
+Aaron<br/>
+<em>Founder, HDIM</em></p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a> from future emails
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+I'm reaching out because I'm building something I think you'll find interesting - HDIM (HealthData-in-Motion), an enterprise healthcare interoperability platform focused on clinical quality measures and HEDIS reporting.
+
+The problem we're solving:
+- Healthcare organizations spend $2.1B annually on quality measure evaluation
+- Current solutions are fragmented, manual, and error-prone
+- Value-based care contracts require accurate, timely quality reporting
+
+What we've built:
+- FHIR R4 native platform with CQL evaluation engine
+- Real-time care gap detection and risk stratification
+- 50+ microservices, production-ready architecture
+- Targeting HIEs, ACOs, and health plans
+
+I've attached our deck with more details on market size, competitive landscape, and our go-to-market strategy.
+
+View Pitch Deck: {{deckLink}}
+
+Would love to share more about what we're building and get your thoughts.
+
+Best,
+Aaron
+Founder, HDIM
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Investor Step 2: Day 1 - "Did you see?" follow-up -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/>
+            <column name="step_order" valueNumeric="2"/>
+            <column name="delay_days" valueNumeric="1"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Quick follow-up on HDIM"/>
+            <column name="preview_text" value="Wanted to make sure this didn't get buried"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>Just wanted to follow up on my note yesterday about HDIM.</p>
+
+<p>I know inboxes get crowded, so here's the quick version:</p>
+
+<p><strong>We're building the quality measurement layer for value-based care.</strong></p>
+
+<p>Think of us as the Snowflake for healthcare quality data - aggregating clinical data from multiple EHRs and providing real-time quality measure evaluation.</p>
+
+<p>The deck is here if you'd like to take a look: <a href="{{deckLink}}">HDIM Pitch Deck</a></p>
+
+<p>Happy to jump on a quick call if you have any questions.</p>
+
+<p>Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+Just wanted to follow up on my note yesterday about HDIM.
+
+I know inboxes get crowded, so here's the quick version:
+
+We're building the quality measurement layer for value-based care.
+
+Think of us as the Snowflake for healthcare quality data - aggregating clinical data from multiple EHRs and providing real-time quality measure evaluation.
+
+The deck is here if you'd like to take a look: {{deckLink}}
+
+Happy to jump on a quick call if you have any questions.
+
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="AFTERNOON"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Investor Step 3: Day 3 - Relevant content share -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/>
+            <column name="step_order" valueNumeric="3"/>
+            <column name="delay_days" valueNumeric="3"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Healthcare quality reporting trends"/>
+            <column name="preview_text" value="Some interesting market data I thought you'd appreciate"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>I came across some data I thought you might find interesting given the healthcare focus:</p>
+
+<p><strong>The shift to value-based care is accelerating:</strong></p>
+<ul>
+    <li>CMS aims for 100% of Medicare beneficiaries in accountable care by 2030</li>
+    <li>Medicare Advantage now covers 50%+ of eligible beneficiaries</li>
+    <li>Star ratings directly impact plan revenue ($billions at stake)</li>
+</ul>
+
+<p><strong>Yet quality infrastructure is lagging:</strong></p>
+<ul>
+    <li>Most organizations still rely on annual, retrospective measure calculation</li>
+    <li>Care gaps are identified months after the intervention window closes</li>
+    <li>No real-time visibility into quality performance</li>
+</ul>
+
+<p>This is exactly the gap HDIM is addressing - real-time quality measurement that enables proactive care gap closure.</p>
+
+<p>Would love to discuss how we're approaching this if you're interested.</p>
+
+<p>Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+I came across some data I thought you might find interesting given the healthcare focus:
+
+The shift to value-based care is accelerating:
+- CMS aims for 100% of Medicare beneficiaries in accountable care by 2030
+- Medicare Advantage now covers 50%+ of eligible beneficiaries
+- Star ratings directly impact plan revenue ($billions at stake)
+
+Yet quality infrastructure is lagging:
+- Most organizations still rely on annual, retrospective measure calculation
+- Care gaps are identified months after the intervention window closes
+- No real-time visibility into quality performance
+
+This is exactly the gap HDIM is addressing - real-time quality measurement that enables proactive care gap closure.
+
+Would love to discuss how we're approaching this if you're interested.
+
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Investor Step 4: Day 5 - Direct ask for meeting -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"/>
+            <column name="step_order" valueNumeric="4"/>
+            <column name="delay_days" valueNumeric="5"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="15 minutes to discuss HDIM?"/>
+            <column name="preview_text" value="Would love to walk you through what we're building"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>I'll keep this short - I've shared a lot about HDIM over the past few days, but nothing beats a quick conversation.</p>
+
+<p><strong>15 minutes to walk through:</strong></p>
+<ul>
+    <li>Live demo of the platform</li>
+    <li>Our GTM strategy and early customer conversations</li>
+    <li>The round we're putting together</li>
+</ul>
+
+<p>Are you available this week or next for a quick call?</p>
+
+<p><a href="{{calendarLink}}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">Book a Time</a></p>
+
+<p>If HDIM isn't a fit for your portfolio, I'd also appreciate any introductions to investors who focus on healthcare infrastructure.</p>
+
+<p>Thanks,<br/>
+Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+I'll keep this short - I've shared a lot about HDIM over the past few days, but nothing beats a quick conversation.
+
+15 minutes to walk through:
+- Live demo of the platform
+- Our GTM strategy and early customer conversations
+- The round we're putting together
+
+Are you available this week or next for a quick call?
+
+Book a Time: {{calendarLink}}
+
+If HDIM isn't a fit for your portfolio, I'd also appreciate any introductions to investors who focus on healthcare infrastructure.
+
+Thanks,
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== SEQUENCE 2: Customer Quality Leader Outreach (7-day) ==================== -->
+        <insert tableName="email_sequences">
+            <column name="id" value="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="name" value="Quality Leader Outreach"/>
+            <column name="description" value="7-day sequence for quality leaders at ACOs, HIEs, and health plans. Pain-focused messaging with ROI emphasis."/>
+            <column name="sequence_type" value="NURTURE"/>
+            <column name="target_type" value="LEAD"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="from_name" value="Aaron"/>
+            <column name="from_email" value="aaron@hdim.io"/>
+            <column name="reply_to_email" value="aaron@hdim.io"/>
+            <column name="unsubscribe_link" valueBoolean="true"/>
+            <column name="track_opens" valueBoolean="true"/>
+            <column name="track_clicks" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Quality Leader Step 1: Day 0 - Pain-focused intro + demo link -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/>
+            <column name="step_order" valueNumeric="1"/>
+            <column name="delay_days" valueNumeric="0"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Simplify HEDIS reporting for {{company}}"/>
+            <column name="preview_text" value="Real-time quality measures without the spreadsheet chaos"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>I noticed {{company}} is managing quality reporting across multiple data sources - that's a challenge I hear about constantly from quality leaders.</p>
+
+<p><strong>The common pain points:</strong></p>
+<ul>
+    <li>Annual HEDIS season is a fire drill</li>
+    <li>Care gaps are identified too late for intervention</li>
+    <li>Reconciling data from multiple EHRs is manual and error-prone</li>
+    <li>Star ratings and VBC contracts depend on numbers you can't trust</li>
+</ul>
+
+<p><strong>What if you could:</strong></p>
+<ul>
+    <li>See real-time quality measure performance across all data sources</li>
+    <li>Identify care gaps while there's still time to close them</li>
+    <li>Generate HEDIS-compliant reports automatically</li>
+    <li>Trust your quality data year-round, not just at measurement time</li>
+</ul>
+
+<p>I'm building HDIM specifically for organizations like {{company}}. I'd love to show you a quick demo.</p>
+
+<p><a href="{{demoLink}}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">See a Demo</a></p>
+
+<p>Best,<br/>
+Aaron<br/>
+<em>Founder, HDIM</em></p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a> from future emails
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+I noticed {{company}} is managing quality reporting across multiple data sources - that's a challenge I hear about constantly from quality leaders.
+
+The common pain points:
+- Annual HEDIS season is a fire drill
+- Care gaps are identified too late for intervention
+- Reconciling data from multiple EHRs is manual and error-prone
+- Star ratings and VBC contracts depend on numbers you can't trust
+
+What if you could:
+- See real-time quality measure performance across all data sources
+- Identify care gaps while there's still time to close them
+- Generate HEDIS-compliant reports automatically
+- Trust your quality data year-round, not just at measurement time
+
+I'm building HDIM specifically for organizations like {{company}}. I'd love to show you a quick demo.
+
+See a Demo: {{demoLink}}
+
+Best,
+Aaron
+Founder, HDIM
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Quality Leader Step 2: Day 1 - Specific quality score reference -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/>
+            <column name="step_order" valueNumeric="2"/>
+            <column name="delay_days" valueNumeric="1"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Star ratings and quality gaps"/>
+            <column name="preview_text" value="The hidden cost of delayed quality measurement"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>Following up on my note about HDIM - I wanted to share a specific example of what we're solving.</p>
+
+<p><strong>The Star Rating Math:</strong></p>
+<ul>
+    <li>A 0.5 star improvement can mean $500+ per member per year in bonus payments</li>
+    <li>For a 100K member plan, that's $50M annually</li>
+    <li>Most of that gap comes down to care gap closure rates on HEDIS measures</li>
+</ul>
+
+<p><strong>The Problem:</strong></p>
+<p>By the time you identify a care gap in traditional HEDIS workflows, the measurement year is often over. The patient who needed a diabetic eye exam in Q2 gets flagged in Q4 - too late.</p>
+
+<p><strong>Our Approach:</strong></p>
+<p>HDIM calculates quality measures in real-time against live clinical data. You see the gap when there's still time to close it.</p>
+
+<p>Would you have 15 minutes to see how this could work for {{company}}?</p>
+
+<p>Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+Following up on my note about HDIM - I wanted to share a specific example of what we're solving.
+
+The Star Rating Math:
+- A 0.5 star improvement can mean $500+ per member per year in bonus payments
+- For a 100K member plan, that's $50M annually
+- Most of that gap comes down to care gap closure rates on HEDIS measures
+
+The Problem:
+By the time you identify a care gap in traditional HEDIS workflows, the measurement year is often over. The patient who needed a diabetic eye exam in Q2 gets flagged in Q4 - too late.
+
+Our Approach:
+HDIM calculates quality measures in real-time against live clinical data. You see the gap when there's still time to close it.
+
+Would you have 15 minutes to see how this could work for {{company}}?
+
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="AFTERNOON"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Quality Leader Step 3: Day 3 - "Quick question" engagement -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/>
+            <column name="step_order" valueNumeric="3"/>
+            <column name="delay_days" valueNumeric="3"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Quick question about your quality measures"/>
+            <column name="preview_text" value="Curious how {{company}} handles this challenge"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>Quick question - when you're running quality measure calculations at {{company}}, how do you handle the data reconciliation challenge?</p>
+
+<p>I ask because every quality leader I talk to mentions this as a major pain point:</p>
+<ul>
+    <li>Patient shows up in EHR A with one MRN</li>
+    <li>Same patient in claims data with a different identifier</li>
+    <li>Lab results come from a third system</li>
+    <li>Reconciling these for a single HEDIS measure is a nightmare</li>
+</ul>
+
+<p>We've built HDIM's architecture specifically to solve this - unified patient identity with FHIR R4 data normalization across all sources.</p>
+
+<p>Curious to hear how you're currently approaching this. Even if HDIM isn't a fit, I'd love to learn from your experience.</p>
+
+<p>Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+Quick question - when you're running quality measure calculations at {{company}}, how do you handle the data reconciliation challenge?
+
+I ask because every quality leader I talk to mentions this as a major pain point:
+- Patient shows up in EHR A with one MRN
+- Same patient in claims data with a different identifier
+- Lab results come from a third system
+- Reconciling these for a single HEDIS measure is a nightmare
+
+We've built HDIM's architecture specifically to solve this - unified patient identity with FHIR R4 data normalization across all sources.
+
+Curious to hear how you're currently approaching this. Even if HDIM isn't a fit, I'd love to learn from your experience.
+
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Quality Leader Step 4: Day 5 - ROI hook -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/>
+            <column name="step_order" valueNumeric="4"/>
+            <column name="delay_days" valueNumeric="5"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="How HDIM saves 40% on quality reporting"/>
+            <column name="preview_text" value="Real numbers from organizations like yours"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>I wanted to share some concrete numbers on the ROI we're seeing with HDIM:</p>
+
+<p><strong>Time Savings:</strong></p>
+<ul>
+    <li>40% reduction in HEDIS reporting effort</li>
+    <li>From quarterly batch calculations to real-time continuous measurement</li>
+    <li>Automated data extraction replaces manual chart review</li>
+</ul>
+
+<p><strong>Quality Improvement:</strong></p>
+<ul>
+    <li>15-20% improvement in care gap closure rates</li>
+    <li>Gaps identified 60-90 days earlier in the measurement cycle</li>
+    <li>Actionable worklists for care management teams</li>
+</ul>
+
+<p><strong>Revenue Impact:</strong></p>
+<ul>
+    <li>Star rating improvements translate directly to bonus payments</li>
+    <li>VBC contract performance tied to quality metrics</li>
+    <li>Avoid penalties from missed quality thresholds</li>
+</ul>
+
+<p>Happy to walk through a custom ROI analysis for {{company}} if you're interested.</p>
+
+<p>Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+I wanted to share some concrete numbers on the ROI we're seeing with HDIM:
+
+Time Savings:
+- 40% reduction in HEDIS reporting effort
+- From quarterly batch calculations to real-time continuous measurement
+- Automated data extraction replaces manual chart review
+
+Quality Improvement:
+- 15-20% improvement in care gap closure rates
+- Gaps identified 60-90 days earlier in the measurement cycle
+- Actionable worklists for care management teams
+
+Revenue Impact:
+- Star rating improvements translate directly to bonus payments
+- VBC contract performance tied to quality metrics
+- Avoid penalties from missed quality thresholds
+
+Happy to walk through a custom ROI analysis for {{company}} if you're interested.
+
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Quality Leader Step 5: Day 7 - Direct meeting ask -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"/>
+            <column name="step_order" valueNumeric="5"/>
+            <column name="delay_days" valueNumeric="7"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="15 minutes to see HDIM in action?"/>
+            <column name="preview_text" value="Live demo tailored to {{company}}'s needs"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>I've sent a few notes about HDIM over the past week - rather than keep filling your inbox, I'd love to show you the platform directly.</p>
+
+<p><strong>In 15 minutes, I can walk you through:</strong></p>
+<ul>
+    <li>Real-time HEDIS measure calculation</li>
+    <li>Care gap identification and prioritization</li>
+    <li>Multi-source data integration (EHRs, claims, labs)</li>
+    <li>How this could work for {{company}} specifically</li>
+</ul>
+
+<p><a href="{{calendarLink}}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">Book a Demo</a></p>
+
+<p>If the timing isn't right, no worries - just let me know and I'll check back in a few months.</p>
+
+<p>Thanks,<br/>
+Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+I've sent a few notes about HDIM over the past week - rather than keep filling your inbox, I'd love to show you the platform directly.
+
+In 15 minutes, I can walk you through:
+- Real-time HEDIS measure calculation
+- Care gap identification and prioritization
+- Multi-source data integration (EHRs, claims, labs)
+- How this could work for {{company}} specifically
+
+Book a Demo: {{calendarLink}}
+
+If the timing isn't right, no worries - just let me know and I'll check back in a few months.
+
+Thanks,
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== SEQUENCE 3: Warm Network Reconnect (3-day) ==================== -->
+        <insert tableName="email_sequences">
+            <column name="id" value="cccccccc-cccc-cccc-cccc-cccccccccccc"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="name" value="Network Reconnect"/>
+            <column name="description" value="3-day sequence for reconnecting with professional network. Personal, authentic tone focused on sharing what you've been working on."/>
+            <column name="sequence_type" value="NURTURE"/>
+            <column name="target_type" value="LEAD"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="from_name" value="Aaron"/>
+            <column name="from_email" value="aaron@hdim.io"/>
+            <column name="reply_to_email" value="aaron@hdim.io"/>
+            <column name="unsubscribe_link" valueBoolean="true"/>
+            <column name="track_opens" valueBoolean="true"/>
+            <column name="track_clicks" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Network Reconnect Step 1: Day 0 - Personal reconnect -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="cccccccc-cccc-cccc-cccc-cccccccccccc"/>
+            <column name="step_order" valueNumeric="1"/>
+            <column name="delay_days" valueNumeric="0"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Catching up - and something new"/>
+            <column name="preview_text" value="It's been a while - wanted to share what I've been working on"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>It's been a while since we've connected - I hope you're doing well!</p>
+
+<p>I wanted to reach out because I've been heads-down building something new, and you came to mind as someone who might find it interesting (or know others who would).</p>
+
+<p>I'm building <strong>HDIM</strong> - a healthcare interoperability platform focused on clinical quality measures. Think of it as the infrastructure layer for value-based care.</p>
+
+<p>The short version:</p>
+<ul>
+    <li>Real-time HEDIS measure calculation</li>
+    <li>Care gap detection across multiple EHRs</li>
+    <li>FHIR R4 native architecture</li>
+    <li>Targeting HIEs, ACOs, and health plans</li>
+</ul>
+
+<p>I'd love to catch up and hear what you've been working on too. Coffee (virtual or otherwise) sometime?</p>
+
+<p>Best,<br/>
+Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+It's been a while since we've connected - I hope you're doing well!
+
+I wanted to reach out because I've been heads-down building something new, and you came to mind as someone who might find it interesting (or know others who would).
+
+I'm building HDIM - a healthcare interoperability platform focused on clinical quality measures. Think of it as the infrastructure layer for value-based care.
+
+The short version:
+- Real-time HEDIS measure calculation
+- Care gap detection across multiple EHRs
+- FHIR R4 native architecture
+- Targeting HIEs, ACOs, and health plans
+
+I'd love to catch up and hear what you've been working on too. Coffee (virtual or otherwise) sometime?
+
+Best,
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Network Reconnect Step 2: Day 2 - "Wanted to share what I built" -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="cccccccc-cccc-cccc-cccc-cccccccccccc"/>
+            <column name="step_order" valueNumeric="2"/>
+            <column name="delay_days" valueNumeric="2"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="What I've been working on"/>
+            <column name="preview_text" value="A quick look at HDIM"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>Following up on my note - I realized I was pretty brief about what I'm actually building. Here's a bit more context:</p>
+
+<p><strong>The Problem I'm Solving:</strong></p>
+<p>Healthcare organizations (think HIEs, ACOs, health plans) spend billions on quality measure reporting - HEDIS, Star ratings, CMS requirements. Most of it is still done with manual chart review, spreadsheets, and annual batch calculations.</p>
+
+<p><strong>What HDIM Does:</strong></p>
+<p>We provide real-time clinical quality measure evaluation. Plug in your data sources (EHRs, claims, labs), and we continuously calculate measures and identify care gaps - while there's still time to close them.</p>
+
+<p><strong>Where We Are:</strong></p>
+<ul>
+    <li>50+ microservices in production-ready architecture</li>
+    <li>FHIR R4 native with CQL evaluation engine</li>
+    <li>Starting customer conversations with HIEs from my previous work</li>
+</ul>
+
+<p>If you know anyone in healthcare quality, population health, or health IT who might be interested, I'd really appreciate an introduction.</p>
+
+<p>And genuinely - I'd love to hear what you're up to as well.</p>
+
+<p>Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+Following up on my note - I realized I was pretty brief about what I'm actually building. Here's a bit more context:
+
+The Problem I'm Solving:
+Healthcare organizations (think HIEs, ACOs, health plans) spend billions on quality measure reporting - HEDIS, Star ratings, CMS requirements. Most of it is still done with manual chart review, spreadsheets, and annual batch calculations.
+
+What HDIM Does:
+We provide real-time clinical quality measure evaluation. Plug in your data sources (EHRs, claims, labs), and we continuously calculate measures and identify care gaps - while there's still time to close them.
+
+Where We Are:
+- 50+ microservices in production-ready architecture
+- FHIR R4 native with CQL evaluation engine
+- Starting customer conversations with HIEs from my previous work
+
+If you know anyone in healthcare quality, population health, or health IT who might be interested, I'd really appreciate an introduction.
+
+And genuinely - I'd love to hear what you're up to as well.
+
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="AFTERNOON"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Network Reconnect Step 3: Day 5 - Soft ask -->
+        <insert tableName="email_sequence_steps">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="sequence_id" value="cccccccc-cccc-cccc-cccc-cccccccccccc"/>
+            <column name="step_order" valueNumeric="3"/>
+            <column name="delay_days" valueNumeric="5"/>
+            <column name="delay_hours" valueNumeric="0"/>
+            <column name="subject" value="Would love your thoughts"/>
+            <column name="preview_text" value="A quick ask - and genuine interest in reconnecting"/>
+            <column name="body_html"><![CDATA[<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+<p>Hi {{firstName}},</p>
+
+<p>Last note from me (I promise!) - just wanted to make a direct ask:</p>
+
+<p><strong>Two things that would be super helpful:</strong></p>
+
+<p><strong>1. Introductions</strong><br/>
+If you know anyone at HIEs, ACOs, health plans, or health systems who deals with quality measurement or HEDIS reporting, I'd love an intro. Even a "hey, talk to Aaron about what he's building" would mean a lot.</p>
+
+<p><strong>2. Your perspective</strong><br/>
+If you have 15-20 minutes, I'd genuinely value your thoughts on what I'm building. Sometimes an outside perspective catches things I'm too close to see.</p>
+
+<p><a href="{{calendarLink}}" style="display: inline-block; padding: 12px 24px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 6px;">Grab Time on My Calendar</a></p>
+
+<p>Either way, I hope we can catch up soon. Let me know what you've been working on - always interested to hear.</p>
+
+<p>Thanks,<br/>
+Aaron</p>
+
+<p style="font-size: 12px; color: #666; margin-top: 30px;">
+<a href="{{unsubscribeLink}}">Unsubscribe</a>
+</p>
+</div>]]></column>
+            <column name="body_text"><![CDATA[Hi {{firstName}},
+
+Last note from me (I promise!) - just wanted to make a direct ask:
+
+Two things that would be super helpful:
+
+1. Introductions
+If you know anyone at HIEs, ACOs, health plans, or health systems who deals with quality measurement or HEDIS reporting, I'd love an intro. Even a "hey, talk to Aaron about what he's building" would mean a lot.
+
+2. Your perspective
+If you have 15-20 minutes, I'd genuinely value your thoughts on what I'm building. Sometimes an outside perspective catches things I'm too close to see.
+
+Grab Time on My Calendar: {{calendarLink}}
+
+Either way, I hope we can catch up soon. Let me know what you've been working on - always interested to hear.
+
+Thanks,
+Aaron
+
+---
+Unsubscribe: {{unsubscribeLink}}]]></column>
+            <column name="step_type" value="EMAIL"/>
+            <column name="is_active" valueBoolean="true"/>
+            <column name="send_time_preference" value="MORNING"/>
+            <column name="skip_weekends" valueBoolean="true"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="email_sequence_steps">
+                <where>sequence_id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'cccccccc-cccc-cccc-cccc-cccccccccccc')</where>
+            </delete>
+            <delete tableName="email_sequences">
+                <where>id IN ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'cccccccc-cccc-cccc-cccc-cccccccccccc')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

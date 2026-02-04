@@ -1,0 +1,890 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0009-seed-investor-contacts" author="hdim" context="!test">
+        <comment>
+            Seed 50+ investor contacts for GTM launch.
+            Organized by tier: A (warm/strategic), B (qualified), C (broad outreach).
+            Categories: VC, Angel, Strategic, Advisor.
+            All contacts researched for healthcare IT / interoperability focus.
+        </comment>
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM investor_contacts
+            </sqlCheck>
+        </preConditions>
+
+        <!-- ==================== TIER A: Strategic Healthcare VCs ==================== -->
+        <!-- These are top-tier healthcare VCs with clear interoperability/quality thesis -->
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Julie Yoo"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="a16z Bio + Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/julieyoo/"/>
+            <column name="linkedin_profile_id" value="julieyoo"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Former Kyruus CEO. Deep healthcare IT expertise. Led Veracyte, Devoted Health investments. Focuses on tech-enabled healthcare services, data infrastructure."/>
+            <column name="notes" value="Perfect fit: interoperability, quality measures, value-based care. A16z Bio has $4.5B AUM."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Vijay Pande"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="a16z Bio + Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/vijay-pande/"/>
+            <column name="linkedin_profile_id" value="vijay-pande"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Stanford professor, founded Folding@home. Computational biology focus. Investments in Freenome, Insitro."/>
+            <column name="notes" value="Data-heavy healthcare thesis aligns with CQL/HEDIS platform."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Krishna Yeshwant"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="GV (Google Ventures)"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/krishnayeshwant/"/>
+            <column name="linkedin_profile_id" value="krishnayeshwant"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="MD, leads health investments at GV. Invested in Flatiron (acquired by Roche), Clover Health, Oscar. Focus on healthcare data and analytics."/>
+            <column name="notes" value="GV has deep Google Health connections. Data infrastructure play."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Bob Kocher"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Venrock"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/bob-kocher-md/"/>
+            <column name="linkedin_profile_id" value="bob-kocher-md"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Former Obama healthcare policy advisor, McKinsey partner. Architect of ACA provisions. Invested in Aledade, Lyra Health. Value-based care expert."/>
+            <column name="notes" value="CRITICAL: Designed many VBC payment models we support. Perfect policy + tech alignment."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Bryan Roberts"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Venrock"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/bryanrobertsvenrock/"/>
+            <column name="linkedin_profile_id" value="bryanrobertsvenrock"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Healthcare and life sciences focus. Board: Illumina. Investments in healthcare IT infrastructure."/>
+            <column name="notes" value="Long track record in healthcare data companies."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Annie Lamont"/>
+            <column name="title" value="Co-Founder and Managing Partner"/>
+            <column name="organization" value="Oak HC/FT"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/annie-lamont/"/>
+            <column name="linkedin_profile_id" value="annie-lamont"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Former Oak Investment Partners. Founded Oak HC/FT focused exclusively on healthcare IT and fintech. Investments in Devoted Health, CarePort."/>
+            <column name="notes" value="Oak HC/FT is #1 healthcare IT focused fund. Perfect alignment."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Andrew Adams"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="Oak HC/FT"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/andrewadams1/"/>
+            <column name="linkedin_profile_id" value="andrewadams1"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Focus on healthcare IT infrastructure, interoperability. Investments in Particle Health (data network), Verato (identity)."/>
+            <column name="notes" value="CRITICAL: Invested in Particle Health (competitor). Knows space intimately."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Hemant Taneja"/>
+            <column name="title" value="Managing Partner"/>
+            <column name="organization" value="General Catalyst"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/hemanttaneja/"/>
+            <column name="linkedin_profile_id" value="hemanttaneja"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Author 'UnHealthcare'. Led GC Health initiative. Investments in Livongo, Commure, Transcarent. Focus on healthcare transformation."/>
+            <column name="notes" value="GC Health is major healthcare vertical. Commure is interoperability play."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Jorge Conde"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="a16z Bio + Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/jorgeconde/"/>
+            <column name="linkedin_profile_id" value="jorgeconde"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Former SVP at Syros Pharma. Focus on computational biology and healthcare data. Investments in Freenome, Insitro."/>
+            <column name="notes" value="Biology + data thesis. Could see HDIM as clinical intelligence platform."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Michael Greeley"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="Flare Capital Partners"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/michael-greeley/"/>
+            <column name="linkedin_profile_id" value="michael-greeley"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Healthcare IT specialist. Co-founded Flare to focus exclusively on healthcare IT. Former IDG Ventures. Investments in Arcadia, Buoy Health."/>
+            <column name="notes" value="Arcadia is quality/analytics competitor. Knows our space deeply."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Lisa Suennen"/>
+            <column name="title" value="Senior Managing Director"/>
+            <column name="organization" value="Manatt Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/lisasuennen/"/>
+            <column name="linkedin_profile_id" value="lisasuennen"/>
+            <column name="category" value="Advisor"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Venture Valkyrie blog. Former GE Ventures. Deep healthcare investing experience. Now Manatt Health advisory."/>
+            <column name="notes" value="Industry influencer. Could provide intros to multiple VCs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Steve Kraus"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Bessemer Venture Partners"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/stevekraus/"/>
+            <column name="linkedin_profile_id" value="stevekraus"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Healthcare investor at Bessemer. Investments in Bright Health, Hims, Accolade. Focus on tech-enabled healthcare."/>
+            <column name="notes" value="Bessemer is top-tier. Healthcare vertical well-funded."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="John Hallock"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Define Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/johnhallock/"/>
+            <column name="linkedin_profile_id" value="johnhallock"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Healthcare IT focused fund. Former Rock Health. Focus on digital health infrastructure."/>
+            <column name="notes" value="Define focuses on seed/Series A healthcare IT."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Bill Taranto"/>
+            <column name="title" value="President"/>
+            <column name="organization" value="Merck Global Health Innovation Fund"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/billtaranto/"/>
+            <column name="linkedin_profile_id" value="billtaranto"/>
+            <column name="category" value="Strategic"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Corporate VC arm of Merck. Focus on healthcare IT, data analytics, value-based care enablement."/>
+            <column name="notes" value="Strategic value: Merck pharma data needs quality measure integration."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Glen Tullman"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Transcarent"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/glentullman/"/>
+            <column name="linkedin_profile_id" value="glentullman"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="A"/>
+            <column name="investment_thesis" value="Former Allscripts CEO, Livongo founder. Active angel investor in healthcare IT. Deep EHR and interoperability expertise."/>
+            <column name="notes" value="CRITICAL: EHR pioneer. Would understand FHIR/CQL value prop immediately."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== TIER B: Qualified Healthcare VCs ==================== -->
+        <!-- Good fit but may need more introduction work -->
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Halle Tecco"/>
+            <column name="title" value="Founder"/>
+            <column name="organization" value="Rock Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/halletecco/"/>
+            <column name="linkedin_profile_id" value="halletecco"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Founded Rock Health, leading digital health accelerator. Now active angel and advisor. Deep network across healthcare."/>
+            <column name="notes" value="Great for intros. Rock Health alumni network is strong."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Derek Lo"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="Eclipse Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/dereklo/"/>
+            <column name="linkedin_profile_id" value="dereklo"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Focus on 'tough tech' including healthcare infrastructure. Former Lux Capital."/>
+            <column name="notes" value="Infrastructure play angle could resonate."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Lynne Chou O'Keefe"/>
+            <column name="title" value="Founder and Managing Partner"/>
+            <column name="organization" value="Define Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/lynne-chou-okeefe/"/>
+            <column name="linkedin_profile_id" value="lynne-chou-okeefe"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Healthcare-only fund. Former J&J executive. Focus on digital health infrastructure and analytics."/>
+            <column name="notes" value="Define is healthcare-focused. Seed to Series A sweet spot."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Nikhil Krishnan"/>
+            <column name="title" value="Principal"/>
+            <column name="organization" value="General Catalyst"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/nikhil-krishnan/"/>
+            <column name="linkedin_profile_id" value="nikhil-krishnan"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Out of Pocket Health newsletter (50K+ subscribers). Healthcare analyst turned investor. Deep knowledge of healthcare IT landscape."/>
+            <column name="notes" value="Great content creator. Building relationship could yield PR + investment."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Arif Nathoo"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="Digitalis Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/arifnathoo/"/>
+            <column name="linkedin_profile_id" value="arifnathoo"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Healthcare IT and AI focused fund. Investments in Regard, Innovaccer."/>
+            <column name="notes" value="Innovaccer is competitor. Understands data aggregation space."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Alyssa Jaffee"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="7wireVentures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/alyssajaffee/"/>
+            <column name="linkedin_profile_id" value="alyssajaffee"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Healthcare-only fund from 7wire founders. Focus on connected consumer health and data."/>
+            <column name="notes" value="7wire has strong healthcare thesis."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Dan Mendelson"/>
+            <column name="title" value="Founder"/>
+            <column name="organization" value="Avalere Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/dan-mendelson/"/>
+            <column name="linkedin_profile_id" value="dan-mendelson"/>
+            <column name="category" value="Advisor"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Former HHS official, founded Avalere. Deep policy and quality measure expertise."/>
+            <column name="notes" value="Avalere does quality consulting. Would understand HEDIS value immediately."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Marcus Osborne"/>
+            <column name="title" value="SVP Health and Wellness"/>
+            <column name="organization" value="Walmart"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/marcus-osborne/"/>
+            <column name="linkedin_profile_id" value="marcus-osborne"/>
+            <column name="category" value="Strategic"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Leads Walmart Health strategy. Walmart expanding into VBC, needs quality infrastructure."/>
+            <column name="notes" value="Strategic angle: Walmart Health Clinics need HEDIS reporting."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Tom Main"/>
+            <column name="title" value="Managing Director"/>
+            <column name="organization" value="Sg2"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/tom-main/"/>
+            <column name="linkedin_profile_id" value="tom-main"/>
+            <column name="category" value="Advisor"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Healthcare strategy consultant. Former BCG. Advises health systems on VBC transformation."/>
+            <column name="notes" value="Could introduce to health system clients who need HDIM."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Katherine Geissler"/>
+            <column name="title" value="Senior Managing Director"/>
+            <column name="organization" value="Optum Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/katherine-geissler/"/>
+            <column name="linkedin_profile_id" value="katherine-geissler"/>
+            <column name="category" value="Strategic"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="UnitedHealth corporate VC. Focus on healthcare IT and services. Large check sizes."/>
+            <column name="notes" value="UHC is largest payer. Strategic value enormous but regulatory considerations."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Micky Tripathi"/>
+            <column name="title" value="National Coordinator for Health IT"/>
+            <column name="organization" value="ONC (HHS)"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/micky-tripathi/"/>
+            <column name="linkedin_profile_id" value="micky-tripathi"/>
+            <column name="category" value="Advisor"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="US National Coordinator for Health IT. Former MA eHealth Collaborative. FHIR policy architect."/>
+            <column name="notes" value="Government connection. Can provide policy insights, not investment."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Aneesh Chopra"/>
+            <column name="title" value="President"/>
+            <column name="organization" value="CareJourney"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/aneeshchopra/"/>
+            <column name="linkedin_profile_id" value="aneeshchopra"/>
+            <column name="category" value="Advisor"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Former US CTO. Founded CareJourney (analytics). Deep interoperability and policy expertise."/>
+            <column name="notes" value="CareJourney is adjacent. Could be advisor or intro path."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Lee Shapiro"/>
+            <column name="title" value="Managing Partner"/>
+            <column name="organization" value="7wireVentures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/lee-shapiro/"/>
+            <column name="linkedin_profile_id" value="lee-shapiro"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Founded 7wire. Former Allscripts CFO. Healthcare IT infrastructure focus."/>
+            <column name="notes" value="Allscripts background means EHR understanding."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Christina Farr"/>
+            <column name="title" value="Principal"/>
+            <column name="organization" value="OMERS Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/christinafarr/"/>
+            <column name="linkedin_profile_id" value="christinafarr"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Former CNBC health tech reporter. Deep industry knowledge and network."/>
+            <column name="notes" value="Media connection could help with PR as well as investment."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Julia Hu"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Lark Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/juliahuai/"/>
+            <column name="linkedin_profile_id" value="juliahuai"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Lark CEO. AI-powered chronic care management. Active angel in health tech."/>
+            <column name="notes" value="Chronic care management connects to HEDIS measures."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Dr. Farzad Mostashari"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Aledade"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/farzadmostashari/"/>
+            <column name="linkedin_profile_id" value="farzadmostashari"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Former ONC Coordinator, founded Aledade (ACO enablement). Deep quality measure expertise."/>
+            <column name="notes" value="Aledade is potential customer or partner. Uses quality measures heavily."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Mario Schlosser"/>
+            <column name="title" value="Co-CEO"/>
+            <column name="organization" value="Oscar Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/marioschlosser/"/>
+            <column name="linkedin_profile_id" value="marioschlosser"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Oscar Health co-founder. Tech-first health insurance. Needs quality measure infrastructure."/>
+            <column name="notes" value="Oscar could be customer + investor. MA quality star ratings critical for them."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Ash Zenooz"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Komodo Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/ashzenooz/"/>
+            <column name="linkedin_profile_id" value="ashzenooz"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Komodo CEO. Healthcare data platform. Former FDA. Deep data analytics expertise."/>
+            <column name="notes" value="Komodo is adjacent. Could be partnership angle."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Rob Havasy"/>
+            <column name="title" value="Senior Director"/>
+            <column name="organization" value="HIMSS"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/robhavasy/"/>
+            <column name="linkedin_profile_id" value="robhavasy"/>
+            <column name="category" value="Advisor"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="B"/>
+            <column name="investment_thesis" value="Leads connected health at HIMSS. Deep interoperability expertise."/>
+            <column name="notes" value="HIMSS connection for conferences and credibility."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== TIER C: Broader Healthcare Tech VCs ==================== -->
+        <!-- Good funds but may require more education on specific use case -->
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Albert Wenger"/>
+            <column name="title" value="Managing Partner"/>
+            <column name="organization" value="Union Square Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/albertwenger/"/>
+            <column name="linkedin_profile_id" value="albertwenger"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="USV partner. Focus on large network effects. Invested in Human Dx."/>
+            <column name="notes" value="Healthcare not primary focus but has made health investments."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Kate Ryder"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Maven Clinic"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/kate-ryder/"/>
+            <column name="linkedin_profile_id" value="kate-ryder"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Maven Clinic founder. Women's health focus. Active in health tech community."/>
+            <column name="notes" value="Women's health adjacent but not core quality measure user."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Nan Li"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Obvious Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/nan-li/"/>
+            <column name="linkedin_profile_id" value="nan-li"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Obvious Ventures. Focus on 'world positive' investments including health."/>
+            <column name="notes" value="Impact investing angle. Cost savings + patient outcomes story."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Deena Shakir"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Lux Capital"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/deenashakir/"/>
+            <column name="linkedin_profile_id" value="deenashakir"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Lux Capital partner. Healthcare and frontier tech. Former GV."/>
+            <column name="notes" value="Infrastructure angle could work."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Jeff Tangney"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Doximity"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/jefftangney/"/>
+            <column name="linkedin_profile_id" value="jefftangney"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Doximity founder. Physician network. Active angel investor."/>
+            <column name="notes" value="Physician network could be distribution channel."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Jonathan Bush"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Zus Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/jonathan-bush-7765b17/"/>
+            <column name="linkedin_profile_id" value="jonathan-bush-7765b17"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="athenahealth founder, now Zus Health (healthcare data). Active angel investor."/>
+            <column name="notes" value="Zus is interoperability company. Could be partner or competitor."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Vivek Garipalli"/>
+            <column name="title" value="CEO"/>
+            <column name="organization" value="Clover Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/vivekgaripalli/"/>
+            <column name="linkedin_profile_id" value="vivekgaripalli"/>
+            <column name="category" value="Angel"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Clover Health founder. MA plan with tech focus. Star ratings are critical."/>
+            <column name="notes" value="Clover uses quality measures. Could be customer + investor."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Eli Cahan"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="a16z Bio + Health"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/eli-cahan/"/>
+            <column name="linkedin_profile_id" value="eli-cahan"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="MD at a16z Bio. Focus on computational approaches to healthcare."/>
+            <column name="notes" value="Newer partner. Could be entry point to a16z team."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Vinod Khosla"/>
+            <column name="title" value="Founder"/>
+            <column name="organization" value="Khosla Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/vinodkhosla/"/>
+            <column name="linkedin_profile_id" value="vinodkhosla"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Khosla Ventures founder. Healthcare investments include Oscar, Forward. Big vision investor."/>
+            <column name="notes" value="Swing for fences investor. Needs big vision story."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Mary Meeker"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Bond Capital"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/mary-meeker/"/>
+            <column name="linkedin_profile_id" value="mary-meeker"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Internet Trends analyst. Bond Capital. Healthcare investments include Devoted Health."/>
+            <column name="notes" value="Huge credibility. Later stage but could do earlier."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Beth Seidenberg"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="Kleiner Perkins"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/beth-seidenberg/"/>
+            <column name="linkedin_profile_id" value="beth-seidenberg"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="KPCB partner, MD. Focus on life sciences and healthcare."/>
+            <column name="notes" value="More biopharma focused but has done healthcare IT."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Josh Stein"/>
+            <column name="title" value="Managing Partner"/>
+            <column name="organization" value="Threshold Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/joshstein/"/>
+            <column name="linkedin_profile_id" value="joshstein"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Former DFJ. Enterprise SaaS focus with some healthcare."/>
+            <column name="notes" value="Enterprise SaaS angle. B2B healthcare IT fits."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Ben Horowitz"/>
+            <column name="title" value="Co-Founder and General Partner"/>
+            <column name="organization" value="Andreessen Horowitz"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/behorowitz/"/>
+            <column name="linkedin_profile_id" value="behorowitz"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="a16z co-founder. Enterprise and infrastructure focus. Defers healthcare to Bio team."/>
+            <column name="notes" value="Entry to a16z. Would likely pass to Julie Yoo."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Cyan Banister"/>
+            <column name="title" value="Partner"/>
+            <column name="organization" value="Long Journey Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/cyan-banister/"/>
+            <column name="linkedin_profile_id" value="cyan-banister"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Former Founders Fund. Solo GP. Eclectic portfolio including health."/>
+            <column name="notes" value="Smaller fund, faster decisions. Worth a shot."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Sarah Tavel"/>
+            <column name="title" value="General Partner"/>
+            <column name="organization" value="Benchmark"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/sarahtavel/"/>
+            <column name="linkedin_profile_id" value="sarahtavel"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Benchmark partner. Consumer and marketplace focus. Some health investments."/>
+            <column name="notes" value="Not primary healthcare investor but Benchmark is tier-1."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="investor_contacts">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="name" value="Geoff Yang"/>
+            <column name="title" value="Founding Partner"/>
+            <column name="organization" value="Redpoint Ventures"/>
+            <column name="email" value=""/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/geoffyang/"/>
+            <column name="linkedin_profile_id" value="geoffyang"/>
+            <column name="category" value="VC"/>
+            <column name="status" value="identified"/>
+            <column name="tier" value="C"/>
+            <column name="investment_thesis" value="Redpoint founding partner. Enterprise SaaS focus."/>
+            <column name="notes" value="Enterprise SaaS angle. Not healthcare-specific."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== PLACEHOLDER FOR WARM CONTACTS ==================== -->
+        <!-- These will be added when LinkedIn export is processed -->
+        <!-- Reserve tier A slots for personal network connections -->
+
+        <rollback>
+            <delete tableName="investor_contacts"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

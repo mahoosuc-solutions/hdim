@@ -1882,8 +1882,8 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8106
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_LIQUIBASE_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       # Zoho CRM Integration
       ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID:-}
       ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET:-}
@@ -1891,6 +1891,12 @@ services:
       ZOHO_SYNC_ENABLED: ${ZOHO_SYNC_ENABLED:-false}
       ZOHO_WEBHOOK_ENABLED: ${ZOHO_WEBHOOK_ENABLED:-false}
       ZOHO_WEBHOOK_SECRET: ${ZOHO_WEBHOOK_SECRET:-}
+      # Mail configuration (minimal for local development)
+      SPRING_MAIL_HOST: ${MAIL_HOST:-localhost}
+      SPRING_MAIL_PORT: ${MAIL_PORT:-25}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@localhost}
       # OpenTelemetry configuration for Jaeger
       TRACING_URL: http://jaeger:4318/v1/traces
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers

@@ -15,6 +15,10 @@ export const environment = {
     defaultTenantId: 'TENANT001',
     timeoutMs: 30000,
     retryAttempts: 3,
+    // Investor Dashboard Service API
+    investorApiUrl: 'http://localhost:8120/investor',
+    // Sales Automation Service API
+    salesApiUrl: 'http://localhost:8106/sales',
   },
 
   // Logging Configuration (HIPAA Compliance)

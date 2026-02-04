@@ -1,11 +1,15 @@
 package com.healthdata.sales.controller;
 
+import com.healthdata.sales.dto.LinkedInBulkCampaignResponse;
 import com.healthdata.sales.dto.LinkedInCampaignDTO;
 import com.healthdata.sales.dto.LinkedInOutreachDTO;
+import com.healthdata.sales.entity.LinkedInCampaign.CampaignStatus;
 import com.healthdata.sales.entity.LinkedInOutreach.OutreachStatus;
 import com.healthdata.sales.entity.LinkedInOutreach.OutreachType;
+import com.healthdata.sales.service.LinkedInCampaignService;
 import com.healthdata.sales.service.LinkedInOutreachService;
 import com.healthdata.sales.service.LinkedInOutreachService.LinkedInAnalytics;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,6 +55,7 @@ import java.util.UUID;
 public class LinkedInController {
 
     private final LinkedInOutreachService linkedInService;
+    private final LinkedInCampaignService campaignService;
 
     // ==================== List & Search ====================
 
@@ -216,11 +221,151 @@ public class LinkedInController {
             request.getCampaignName(), request.getScheduledAt(), userId));
     }
 
-    // ==================== Campaigns ====================
+    // ==================== Campaign CRUD ====================
 
-    @PostMapping("/campaign")
+    @GetMapping("/campaigns")
     @Operation(
-        summary = "Create LinkedIn campaign",
+        summary = "List all campaigns",
+        description = "Retrieves a paginated list of all LinkedIn campaigns for the tenant."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved campaigns"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    public ResponseEntity<Page<LinkedInCampaignDTO>> listCampaigns(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "Filter by status")
+            @RequestParam(required = false) CampaignStatus status,
+            @Parameter(description = "Search by name")
+            @RequestParam(required = false) String search,
+            @Parameter(description = "Pagination parameters")
+            Pageable pageable) {
+        if (search != null && !search.isBlank()) {
+            return ResponseEntity.ok(campaignService.searchByName(tenantId, search, pageable));
+        }
+        if (status != null) {
+            return ResponseEntity.ok(campaignService.findByStatus(tenantId, status, pageable));
+        }
+        return ResponseEntity.ok(campaignService.findAll(tenantId, pageable));
+    }
+
+    @GetMapping("/campaigns/{id}")
+    @Operation(
+        summary = "Get campaign by ID",
+        description = "Retrieves details of a specific LinkedIn campaign."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved campaign"),
+        @ApiResponse(responseCode = "404", description = "Campaign not found")
+    })
+    public ResponseEntity<LinkedInCampaignDTO> getCampaign(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "Campaign ID", required = true)
+            @PathVariable UUID id) {
+        return campaignService.findById(tenantId, id)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/campaigns")
+    @Operation(
+        summary = "Create a new campaign",
+        description = "Creates a new LinkedIn campaign for managing outreach activities."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Campaign created successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid request"),
+        @ApiResponse(responseCode = "409", description = "Campaign with this name already exists")
+    })
+    public ResponseEntity<LinkedInCampaignDTO> createCampaignEntity(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "User ID for attribution (optional)")
+            @RequestHeader(value = "X-User-ID", required = false) UUID userId,
+            @Parameter(description = "Campaign details", required = true)
+            @Valid @RequestBody LinkedInCampaignDTO campaign) {
+        return ResponseEntity.ok(campaignService.create(tenantId, campaign, userId));
+    }
+
+    @PutMapping("/campaigns/{id}")
+    @Operation(
+        summary = "Update a campaign",
+        description = "Updates an existing LinkedIn campaign."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Campaign updated successfully"),
+        @ApiResponse(responseCode = "404", description = "Campaign not found"),
+        @ApiResponse(responseCode = "409", description = "Campaign with this name already exists")
+    })
+    public ResponseEntity<LinkedInCampaignDTO> updateCampaign(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "Campaign ID", required = true)
+            @PathVariable UUID id,
+            @Parameter(description = "Campaign details", required = true)
+            @Valid @RequestBody LinkedInCampaignDTO campaign) {
+        return ResponseEntity.ok(campaignService.update(tenantId, id, campaign));
+    }
+
+    @DeleteMapping("/campaigns/{id}")
+    @Operation(
+        summary = "Delete a campaign",
+        description = "Deletes a LinkedIn campaign."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Campaign deleted successfully"),
+        @ApiResponse(responseCode = "404", description = "Campaign not found")
+    })
+    public ResponseEntity<Void> deleteCampaign(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "Campaign ID", required = true)
+            @PathVariable UUID id) {
+        campaignService.delete(tenantId, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/campaigns/{id}/activate")
+    @Operation(
+        summary = "Activate a campaign",
+        description = "Activates a campaign to start processing outreach."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Campaign activated"),
+        @ApiResponse(responseCode = "404", description = "Campaign not found")
+    })
+    public ResponseEntity<LinkedInCampaignDTO> activateCampaign(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "Campaign ID", required = true)
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(campaignService.activate(tenantId, id));
+    }
+
+    @PostMapping("/campaigns/{id}/pause")
+    @Operation(
+        summary = "Pause a campaign",
+        description = "Pauses a campaign to stop processing outreach."
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Campaign paused"),
+        @ApiResponse(responseCode = "404", description = "Campaign not found")
+    })
+    public ResponseEntity<LinkedInCampaignDTO> pauseCampaign(
+            @Parameter(description = "Tenant identifier", required = true)
+            @RequestHeader("X-Tenant-ID") UUID tenantId,
+            @Parameter(description = "Campaign ID", required = true)
+            @PathVariable UUID id) {
+        return ResponseEntity.ok(campaignService.pause(tenantId, id));
+    }
+
+    // ==================== Bulk Campaign with Leads ====================
+
+    @PostMapping("/campaign/bulk")
+    @Operation(
+        summary = "Create bulk campaign with leads",
         description = """
             Creates a campaign and schedules outreach for multiple leads.
 
@@ -233,14 +378,14 @@ public class LinkedInController {
         @ApiResponse(responseCode = "400", description = "Invalid request - no leads or missing template"),
         @ApiResponse(responseCode = "404", description = "One or more leads not found")
     })
-    public ResponseEntity<LinkedInCampaignDTO> createCampaign(
+    public ResponseEntity<LinkedInBulkCampaignResponse> createBulkCampaign(
             @Parameter(description = "Tenant identifier", required = true)
             @RequestHeader("X-Tenant-ID") UUID tenantId,
             @Parameter(description = "User ID for attribution (optional)")
             @RequestHeader(value = "X-User-ID", required = false) UUID userId,
             @Parameter(description = "Campaign configuration", required = true)
-            @RequestBody CampaignRequestDTO request) {
-        return ResponseEntity.ok(linkedInService.createCampaign(
+            @RequestBody BulkCampaignRequestDTO request) {
+        return ResponseEntity.ok(linkedInService.createBulkCampaign(
             tenantId, request.getCampaignName(), request.getLeadIds(),
             request.getOutreachType(), request.getMessageTemplate(),
             request.getStartDate(), request.getDelayMinutesBetween(), userId));
@@ -365,7 +510,7 @@ public class LinkedInController {
     }
 
     @lombok.Data
-    public static class CampaignRequestDTO {
+    public static class BulkCampaignRequestDTO {
         private String campaignName;
         private List<UUID> leadIds;
         private OutreachType outreachType;

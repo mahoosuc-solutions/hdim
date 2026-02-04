@@ -10,6 +10,8 @@ import {
   SequenceEnrollment,
   SequenceAnalytics,
   SequenceStatus,
+  SequenceType,
+  TargetType,
   Lead,
 } from '../../../models/sales.model';
 
@@ -1202,6 +1204,8 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
     this.sequenceForm = {
       name: sequence.name,
       description: sequence.description,
+      sequenceType: (sequence as any).sequenceType || 'NURTURE',
+      targetType: (sequence as any).targetType || 'LEAD',
       steps: sequence.steps.map((step) => ({
         stepNumber: step.stepNumber,
         type: step.type,
@@ -1351,6 +1355,8 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
     return {
       name: '',
       description: '',
+      sequenceType: 'NURTURE',
+      targetType: 'LEAD',
       steps: [],
     };
   }

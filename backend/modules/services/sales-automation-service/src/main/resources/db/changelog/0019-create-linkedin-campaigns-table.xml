@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0019-create-linkedin-campaigns-table" author="hdim">
+        <comment>Create linkedin_campaigns table for managing LinkedIn outreach campaigns</comment>
+
+        <createTable tableName="linkedin_campaigns">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="target_criteria" type="TEXT"/>
+            <column name="daily_limit" type="INTEGER" defaultValueNumeric="25">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_sent" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="total_accepted" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="total_replied" type="INTEGER" defaultValueNumeric="0"/>
+            <column name="acceptance_rate" type="DOUBLE" defaultValueNumeric="0.0"/>
+            <column name="created_by" type="UUID"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="linkedin_campaigns" indexName="idx_linkedin_campaigns_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex tableName="linkedin_campaigns" indexName="idx_linkedin_campaigns_status">
+            <column name="status"/>
+        </createIndex>
+        <createIndex tableName="linkedin_campaigns" indexName="idx_linkedin_campaigns_name">
+            <column name="name"/>
+        </createIndex>
+
+        <addUniqueConstraint
+            tableName="linkedin_campaigns"
+            columnNames="tenant_id, name"
+            constraintName="uk_linkedin_campaigns_tenant_name"/>
+
+        <rollback>
+            <dropTable tableName="linkedin_campaigns"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Add campaign_id foreign key to linkedin_outreach table -->
+    <changeSet id="0019-add-campaign-id-to-linkedin-outreach" author="hdim">
+        <comment>Add campaign_id column to linkedin_outreach for proper campaign relationship</comment>
+
+        <addColumn tableName="linkedin_outreach">
+            <column name="campaign_id" type="UUID"/>
+        </addColumn>
+
+        <createIndex tableName="linkedin_outreach" indexName="idx_linkedin_outreach_campaign_id">
+            <column name="campaign_id"/>
+        </createIndex>
+
+        <addForeignKeyConstraint
+            baseTableName="linkedin_outreach"
+            baseColumnNames="campaign_id"
+            referencedTableName="linkedin_campaigns"
+            referencedColumnNames="id"
+            constraintName="fk_linkedin_outreach_campaign"
+            onDelete="SET NULL"/>
+
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="linkedin_outreach" constraintName="fk_linkedin_outreach_campaign"/>
+            <dropIndex tableName="linkedin_outreach" indexName="idx_linkedin_outreach_campaign_id"/>
+            <dropColumn tableName="linkedin_outreach" columnName="campaign_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

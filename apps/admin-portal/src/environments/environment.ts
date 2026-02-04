@@ -18,7 +18,7 @@ export const environment = {
     // Investor Dashboard Service API
     investorApiUrl: 'http://localhost:8120/investor',
     // Sales Automation Service API
-    salesApiUrl: 'http://localhost:8106/sales',
+    salesApiUrl: 'http://localhost:8106/sales-automation',
   },
 
   // Logging Configuration (HIPAA Compliance)

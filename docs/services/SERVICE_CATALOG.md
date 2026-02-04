@@ -2,8 +2,8 @@
 
 Central index of all 50+ microservices in the HDIM platform. Use this to find a specific service and access its documentation.
 
-**Last Updated**: January 19, 2026
-**Total Services**: 51+ microservices (including 4 Phase 5 Event Sourcing services)
+**Last Updated**: February 4, 2026
+**Total Services**: 52+ microservices (including 4 Phase 5 Event Sourcing services)
 **Coverage**: 100% documented with architecture patterns
 
 ---
@@ -95,6 +95,16 @@ Core platform infrastructure, messaging, routing, authentication.
 | **notification-service** | TBD | Email, SMS, in-app notifications | PostgreSQL, Redis | [README](../../backend/modules/services/notification-service/README.md) |
 | **audit-service** | TBD | Compliance audit logging, user activity tracking | PostgreSQL, Elasticsearch | [README](../../backend/modules/services/audit-service/README.md) |
 | **cdr-processor-service** | TBD | Clinical Data Repository processing | PostgreSQL | [README](../../backend/modules/services/cdr-processor-service/README.md) |
+
+---
+
+## Sales & CRM Services ✨ NEW
+
+Sales automation, lead management, and CRM integrations.
+
+| Service | Port | Purpose | Tech Stack | Documentation |
+|---------|------|---------|-----------|-----------------|
+| **sales-automation-service** | 8106 | CRM, lead capture, email sequences, LinkedIn outreach, Zoho sync | PostgreSQL, Redis, Kafka | [README](../../backend/modules/services/sales-automation-service/README.md) |
 
 ---
 
@@ -191,6 +201,9 @@ Shared code used across multiple services.
 - agent-runtime-service
 - agent-builder-service
 
+### Sales & CRM
+- sales-automation-service
+
 ---
 
 ## Databases Mapping
@@ -206,7 +219,8 @@ Each service has its own database:
 | care-gap-service | care_gap_db | Care gap data |
 | consent-service | consent_db | Patient consent records |
 | gateway-service | gateway_db | User authentication and tokens |
-| [See full list](../architecture/database/) | [29 total](../architecture/database/) | Database architecture reference |
+| sales-automation-service | sales_automation_db | Leads, accounts, opportunities, sequences |
+| [See full list](../architecture/database/) | [30 total](../architecture/database/) | Database architecture reference |
 
 ---
 
@@ -249,6 +263,9 @@ See [Service Dependency Map](DEPENDENCY_MAP.md) for complete interaction graph.
 - "I need FHIR resources" → fhir-service
 - "I need to manage workflows" → payer-workflows-service
 - "I need AI assistance" → ai-assistant-service
+- "I need CRM/sales automation" → sales-automation-service
+- "I need email sequences" → sales-automation-service
+- "I need LinkedIn outreach" → sales-automation-service
 
 ### By Technology
 - "I'm working with PostgreSQL" → See [Database Architecture](../architecture/database/)
@@ -261,12 +278,13 @@ See [Service Dependency Map](DEPENDENCY_MAP.md) for complete interaction graph.
 - "I'm working on analytics" → See Analytics & Reporting Services
 - "I'm working on integrations" → See Integration & Data Services
 - "I'm working on infrastructure" → See Platform & Infrastructure Services
+- "I'm working on sales/CRM" → See Sales & CRM Services
 
 ---
 
 ## Service Status
 
-- ✅ All services compiled and tested (as of January 2026)
+- ✅ All services compiled and tested (as of February 2026)
 - ✅ All services have READMEs
 - ✅ All services use consistent Spring Boot architecture
 - ✅ All services support HIPAA compliance requirements
@@ -309,6 +327,6 @@ Each service README should include:
 
 ---
 
-**Last Updated**: January 19, 2026
+**Last Updated**: February 4, 2026
 **Maintained by**: HDIM Platform Team
-**Status**: Complete Service Catalog - 51+ services (100% coverage including Phase 5 Event Services)
+**Status**: Complete Service Catalog - 52+ services (100% coverage including Phase 5 Event Services and Sales Automation)

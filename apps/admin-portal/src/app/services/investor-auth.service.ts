@@ -52,11 +52,9 @@ export class InvestorAuthService {
     USER: 'investor_user',
   };
 
-  // API base URL - points to investor-api Vercel deployment
-  // Falls back to localhost for local development with separate API server
-  private readonly apiBaseUrl = environment.production
-    ? 'https://investor-api.vercel.app' // Investor API on Vercel
-    : 'http://localhost:3000'; // Vercel dev server
+  // API base URL - points to investor-dashboard-service backend
+  // Uses environment configuration for both dev and production
+  private readonly apiBaseUrl = environment.apiConfig.investorApiUrl;
 
   // State signals
   private _isAuthenticated = signal<boolean>(this.hasValidToken());

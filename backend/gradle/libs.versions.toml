@@ -6,6 +6,7 @@ kotlin = "2.0.21"
 # Spring Framework
 spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x
 spring-cloud = "2023.0.6"  # Updated to align with majority of services
+spring-cloud-openfeign = "4.1.3"  # Explicit version for openfeign starter
 spring-dependency-management = "1.1.7"
 
 # Healthcare Libraries
@@ -135,7 +136,7 @@ javafaker = { module = "com.github.javafaker:javafaker", version.ref = "javafake
 spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }
 spring-cloud-starter-netflix-eureka-client = { module = "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client", version.ref = "spring-cloud" }
 spring-cloud-starter-vault-config = { module = "org.springframework.cloud:spring-cloud-starter-vault-config" }
-spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
+spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign", version.ref = "spring-cloud-openfeign" }
 
 # HAPI FHIR
 hapi-fhir-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-base", version.ref = "hapi-fhir" }

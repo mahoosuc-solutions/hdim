@@ -2122,8 +2122,8 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SERVER_PORT: 8120
-      # JWT Configuration
-      JWT_SECRET: myInvestorDashboardJWTSecretKeyMustBeAtLeast256BitsLong123456789
+      # JWT Configuration (HS512 requires minimum 512-bit key)
+      JWT_SECRET: MLeQ6ppVImMUVKmbBX4gTuSozMIuDlh0HP9LX3cjOOopxgxEVA/zUPSAlcCsyLlhh2dnT4ZArmlAsREjpJm46Q==
       JWT_EXPIRATION: 86400000
       JWT_REFRESH_EXPIRATION: 604800000
       # LinkedIn OAuth (optional)

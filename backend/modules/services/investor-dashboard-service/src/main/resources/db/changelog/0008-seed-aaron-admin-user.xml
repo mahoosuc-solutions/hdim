@@ -22,8 +22,8 @@
         <insert tableName="investor_users">
             <column name="id" valueComputed="gen_random_uuid()"/>
             <column name="email" value="aaron@mahoosuc.solutions"/>
-            <!-- BCrypt hash of 'investor2026!' with cost factor 12 -->
-            <column name="password_hash" value="$2b$12$/wPSdXYXTLbD2131e1iYZu9H599PigxEFmur2RgHVr.HkGHXkNcC2"/>
+            <!-- BCrypt hash of 'investor2026!' with cost factor 12 ($2a$ format for Spring Security) -->
+            <column name="password_hash" value="$2a$12$fCgZN7KOqAqP5KGJtorVcOkCcinoIwp4F3iQw8k/0FwEQWdTKvYkO"/>
             <column name="first_name" value="Aaron"/>
             <column name="last_name" value="Administrator"/>
             <column name="role" value="ADMIN"/>

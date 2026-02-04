@@ -19,5 +19,6 @@
     <include file="db/changelog/0006-seed-initial-admin-user.xml"/>
     <include file="db/changelog/0007-seed-initial-tasks.xml"/>
     <include file="db/changelog/0008-seed-aaron-admin-user.xml"/>
+    <include file="db/changelog/0009-seed-investor-contacts.xml"/>
 
 </databaseChangeLog>

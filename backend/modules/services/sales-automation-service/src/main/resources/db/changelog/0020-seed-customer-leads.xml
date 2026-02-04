@@ -1,0 +1,1079 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0020-seed-customer-leads" author="hdim" context="!test">
+        <comment>
+            Seed 100+ customer leads for GTM launch.
+            Organized by tier: A (warm/known), B (HIEs/ACOs), C (cold qualified).
+            Focus on healthcare organizations that need quality measure/HEDIS solutions.
+            Organization types: ACO, HIE, HEALTH_SYSTEM, PAYER, FQHC, HOSPITAL, CLINIC
+        </comment>
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM leads WHERE source != 'COLD_OUTREACH'
+            </sqlCheck>
+        </preConditions>
+
+        <!-- Default tenant ID for seeded data - will use system tenant -->
+        <!-- Tenant: 11111111-1111-1111-1111-111111111111 (system/demo tenant) -->
+
+        <!-- ==================== TIER A: Warm Contacts - HIE Network ==================== -->
+        <!-- These are contacts from HIE work - known organizations and decision makers -->
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Shaun"/>
+            <column name="last_name" value="Alfreds"/>
+            <column name="email" value="shaun.alfreds@hinfonet.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="HealthInfoNet"/>
+            <column name="title" value="CEO"/>
+            <column name="website" value="https://www.hinfonet.org"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/shaunalfreds/"/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="1400000"/>
+            <column name="ehr_count" valueNumeric="35"/>
+            <column name="state" value="ME"/>
+            <column name="score" valueNumeric="95"/>
+            <column name="notes" value="Maine statewide HIE. CRITICAL: Former work connection. 1.4M patients, 35 EHRs integrated. High-value target for quality reporting across state."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Derek"/>
+            <column name="last_name" value="Dubois"/>
+            <column name="email" value="derek.dubois@hinfonet.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="HealthInfoNet"/>
+            <column name="title" value="CTO"/>
+            <column name="website" value="https://www.hinfonet.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="1400000"/>
+            <column name="ehr_count" valueNumeric="35"/>
+            <column name="state" value="ME"/>
+            <column name="score" valueNumeric="92"/>
+            <column name="notes" value="HealthInfoNet CTO. Technical decision maker. FHIR/interoperability expertise."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Travis"/>
+            <column name="last_name" value="Broome"/>
+            <column name="email" value="tbroome@aledade.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Aledade"/>
+            <column name="title" value="SVP Policy and Economics"/>
+            <column name="website" value="https://www.aledade.com"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/travis-broome/"/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="ACO"/>
+            <column name="patient_count" valueNumeric="2000000"/>
+            <column name="ehr_count" valueNumeric="100"/>
+            <column name="state" value="MD"/>
+            <column name="score" valueNumeric="98"/>
+            <column name="notes" value="Aledade is largest ACO enablement company. 2M+ patients across 1000+ practices. HEDIS/quality measures are CRITICAL to their business model. High-value strategic partner."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Tom"/>
+            <column name="last_name" value="Giannulli"/>
+            <column name="email" value="tom.giannulli@healthix.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Healthix"/>
+            <column name="title" value="Chief Medical Informatics Officer"/>
+            <column name="website" value="https://www.healthix.org"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/tomgiannulli/"/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="16000000"/>
+            <column name="ehr_count" valueNumeric="200"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="96"/>
+            <column name="notes" value="Healthix is largest public HIE in US. 16M patients in NY metro. Quality reporting a major service line. CRITICAL target."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Sam"/>
+            <column name="last_name" value="Reynolds"/>
+            <column name="email" value="sreynolds@civitasnetworks.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Civitas Networks"/>
+            <column name="title" value="CEO"/>
+            <column name="website" value="https://www.civitasnetworks.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="5000000"/>
+            <column name="ehr_count" valueNumeric="50"/>
+            <column name="state" value="NC"/>
+            <column name="score" valueNumeric="90"/>
+            <column name="notes" value="Civitas operates multiple state HIEs. NC and growing. Quality infrastructure for Medicaid programs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="John"/>
+            <column name="last_name" value="Kansky"/>
+            <column name="email" value="jkansky@ihie.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Indiana Health Information Exchange"/>
+            <column name="title" value="President and CEO"/>
+            <column name="website" value="https://www.ihie.org"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/john-kansky/"/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="15000000"/>
+            <column name="ehr_count" valueNumeric="150"/>
+            <column name="state" value="IN"/>
+            <column name="score" valueNumeric="94"/>
+            <column name="notes" value="IHIE is one of oldest, largest HIEs. 15M patient records. Industry leader in quality reporting. Strategic partnership potential."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="David"/>
+            <column name="last_name" value="Kendrick"/>
+            <column name="email" value="dkendrick@myhie.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="MyHealth Access Network"/>
+            <column name="title" value="CEO"/>
+            <column name="website" value="https://www.myhie.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="8000000"/>
+            <column name="ehr_count" valueNumeric="80"/>
+            <column name="state" value="OK"/>
+            <column name="score" valueNumeric="88"/>
+            <column name="notes" value="Oklahoma state HIE. 8M records. Medicaid quality reporting needs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Geeta"/>
+            <column name="last_name" value="Nayyar"/>
+            <column name="email" value="gnayyar@athenahealth.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="athenahealth"/>
+            <column name="title" value="Chief Medical Officer"/>
+            <column name="website" value="https://www.athenahealth.com"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/geetanayyar/"/>
+            <column name="source" value="LINKEDIN"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="100000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="MA"/>
+            <column name="score" valueNumeric="92"/>
+            <column name="notes" value="athenahealth CMO. EHR vendor with 100M+ patient records. Partnership potential for quality module."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Jonathan"/>
+            <column name="last_name" value="Weiner"/>
+            <column name="email" value="jweiner@jhsph.edu"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Johns Hopkins Bloomberg School"/>
+            <column name="title" value="Professor, Health Policy"/>
+            <column name="website" value="https://publichealth.jhu.edu"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="OTHER"/>
+            <column name="patient_count" valueNumeric="0"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="MD"/>
+            <column name="score" valueNumeric="75"/>
+            <column name="notes" value="ACG (Adjusted Clinical Groups) creator. Quality measurement thought leader. Advisor potential."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Micky"/>
+            <column name="last_name" value="Tripathi"/>
+            <column name="email" value="micky.tripathi@hhs.gov"/>
+            <column name="phone" value=""/>
+            <column name="company" value="HHS Office of National Coordinator"/>
+            <column name="title" value="National Coordinator for Health IT"/>
+            <column name="website" value="https://www.healthit.gov"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/micky-tripathi/"/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="OTHER"/>
+            <column name="patient_count" valueNumeric="0"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="DC"/>
+            <column name="score" valueNumeric="80"/>
+            <column name="notes" value="US National Coordinator. Former MA eHealth Collaborative. FHIR policy. Government connection - not customer but advisor potential."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== TIER B: Strategic Healthcare Organizations ==================== -->
+        <!-- ACOs, Health Systems, Payers with clear quality measure needs -->
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@oscarhealthplan.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Oscar Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.hioscar.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="1000000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="88"/>
+            <column name="notes" value="Tech-first MA plan. Star ratings critical for their business. Need to find specific quality leader."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@cloverhealth.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Clover Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.cloverhealth.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="100000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="NJ"/>
+            <column name="score" valueNumeric="85"/>
+            <column name="notes" value="Data-driven MA plan. Clover Assistant is their AI play. Quality infrastructure critical."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@devotedhealth.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Devoted Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.devoted.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="150000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="FL"/>
+            <column name="score" valueNumeric="88"/>
+            <column name="notes" value="a16z and GV backed MA plan. High-tech approach. Quality measures essential for star ratings."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@bright.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Bright Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.brighthealthplan.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="600000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="MN"/>
+            <column name="score" valueNumeric="82"/>
+            <column name="notes" value="Tech-enabled health plan. Had challenges but quality infrastructure still needed."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Mark"/>
+            <column name="last_name" value="McClellan"/>
+            <column name="email" value="mark.mcclellan@duke.edu"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Duke Margolis Center"/>
+            <column name="title" value="Director"/>
+            <column name="website" value="https://healthpolicy.duke.edu"/>
+            <column name="linkedin_url" value="https://www.linkedin.com/in/mark-mcclellan/"/>
+            <column name="source" value="REFERRAL"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="OTHER"/>
+            <column name="patient_count" valueNumeric="0"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="NC"/>
+            <column name="score" valueNumeric="78"/>
+            <column name="notes" value="Former FDA and CMS administrator. Leading VBC policy expert. Advisor potential, connector to health systems."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@iora.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Iora Health (One Medical)"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.onemedical.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="ACO"/>
+            <column name="patient_count" valueNumeric="250000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="MA"/>
+            <column name="score" valueNumeric="86"/>
+            <column name="notes" value="Now part of Amazon/One Medical. Value-based senior care. Quality measures critical."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@chenmed.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="ChenMed"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.chenmed.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="ACO"/>
+            <column name="patient_count" valueNumeric="100000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="FL"/>
+            <column name="score" valueNumeric="84"/>
+            <column name="notes" value="Primary care for seniors. Value-based model. Quality measures essential."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@oakstreet.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Oak Street Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.oakstreethealth.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="ACO"/>
+            <column name="patient_count" valueNumeric="300000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="IL"/>
+            <column name="score" valueNumeric="88"/>
+            <column name="notes" value="Now CVS owned. Medicare-focused primary care. VBC model, quality critical."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@cityblock.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Cityblock Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.cityblock.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="ACO"/>
+            <column name="patient_count" valueNumeric="100000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="85"/>
+            <column name="notes" value="Medicaid-focused VBC. Underserved communities. Quality measures + SDOH critical."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@caremore.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="CareMore"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.caremore.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="ACO"/>
+            <column name="patient_count" valueNumeric="200000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="82"/>
+            <column name="notes" value="Elevance (Anthem) owned. Medicare ACO model. Quality infrastructure in place but may need upgrade."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Regional HIEs -->
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@corhio.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Colorado Regional Health Information Organization"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://www.corhio.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="6000000"/>
+            <column name="ehr_count" valueNumeric="60"/>
+            <column name="state" value="CO"/>
+            <column name="score" valueNumeric="78"/>
+            <column name="notes" value="Colorado statewide HIE. 6M patients. Quality reporting services."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@qualityhealthnetwork.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Quality Health Network"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://www.qualityhealthnetwork.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="2000000"/>
+            <column name="ehr_count" valueNumeric="30"/>
+            <column name="state" value="CO"/>
+            <column name="score" valueNumeric="76"/>
+            <column name="notes" value="Western Colorado HIE. 2M patients. Quality in the name!"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@khin.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Kansas Health Information Network"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://www.khin.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="4000000"/>
+            <column name="ehr_count" valueNumeric="40"/>
+            <column name="state" value="KS"/>
+            <column name="score" valueNumeric="74"/>
+            <column name="notes" value="Kansas statewide HIE. 4M patients. Rural health focus."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@chesapeakeregionalinformationsystem.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="CRISP"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://www.crisphealth.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="7000000"/>
+            <column name="ehr_count" valueNumeric="70"/>
+            <column name="state" value="MD"/>
+            <column name="score" valueNumeric="82"/>
+            <column name="notes" value="Maryland + DC HIE. 7M patients. Strong quality reporting history."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@connie.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Connie (Connecticut HIE)"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://conniect.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HIE"/>
+            <column name="patient_count" valueNumeric="3500000"/>
+            <column name="ehr_count" valueNumeric="40"/>
+            <column name="state" value="CT"/>
+            <column name="score" valueNumeric="76"/>
+            <column name="notes" value="Connecticut state HIE. New England region - potential with HealthInfoNet connection."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- Major Health Systems -->
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@kp.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Kaiser Permanente"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.kp.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="12000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="75"/>
+            <column name="notes" value="Largest integrated system. In-house capability but may have specialty needs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@geisinger.edu"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Geisinger Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.geisinger.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="3000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="PA"/>
+            <column name="score" valueNumeric="80"/>
+            <column name="notes" value="Innovation leader. ProvenCare model. Quality measurement pioneer."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@intermountain.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Intermountain Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://intermountainhealthcare.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="4000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="UT"/>
+            <column name="score" valueNumeric="82"/>
+            <column name="notes" value="Quality leader. Brent James legacy. Clinical decision support pioneers."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- FQHCs -->
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@healthcarela.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Healthcare Network of Southwest Florida"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://www.healthcareswfl.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="FQHC"/>
+            <column name="patient_count" valueNumeric="50000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="FL"/>
+            <column name="score" valueNumeric="72"/>
+            <column name="notes" value="Large FQHC. UDS reporting requirements. Quality measures for HRSA."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Leadership"/>
+            <column name="last_name" value="Team"/>
+            <column name="email" value="info@fenwayhealthorg"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Fenway Health"/>
+            <column name="title" value="Executive Leadership"/>
+            <column name="website" value="https://fenwayhealth.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="WEBSITE"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="FQHC"/>
+            <column name="patient_count" valueNumeric="35000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="MA"/>
+            <column name="score" valueNumeric="70"/>
+            <column name="notes" value="LGBTQ+ focused FQHC. Boston area. UDS reporting."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <!-- ==================== TIER C: Cold But Qualified ==================== -->
+        <!-- Organizations with clear quality measure needs but no connection -->
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@humana.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Humana"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.humana.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="9000000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="KY"/>
+            <column name="score" valueNumeric="70"/>
+            <column name="notes" value="Major MA payer. Star ratings critical. Large enterprise, long sales cycle."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@centene.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Centene"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.centene.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="28000000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="MO"/>
+            <column name="score" valueNumeric="72"/>
+            <column name="notes" value="Largest Medicaid managed care. 28M members. State quality reporting requirements."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@molina.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Molina Healthcare"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.molinahealthcare.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="5000000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="70"/>
+            <column name="notes" value="Medicaid/Medicare dual eligible focus. Quality requirements from states."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@alignment.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Alignment Healthcare"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.alignmenthealthcare.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="100000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="75"/>
+            <column name="notes" value="Tech-forward MA plan. AVA platform. Quality infrastructure needs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@pointhealth.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Point32Health (Harvard Pilgrim + Tufts)"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.point32health.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="2000000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="MA"/>
+            <column name="score" valueNumeric="74"/>
+            <column name="notes" value="New England regional payer. Merged plans may need quality infrastructure consolidation."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@healthfirst.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Healthfirst"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.healthfirst.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="1800000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="72"/>
+            <column name="notes" value="NYC regional. Hospital-sponsored plan. Quality requirements."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@emblemhealth.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="EmblemHealth"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.emblemhealth.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="PAYER"/>
+            <column name="patient_count" valueNumeric="3000000"/>
+            <column name="ehr_count" valueNumeric="0"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="70"/>
+            <column name="notes" value="NYC regional. GHI + HIP merged. Quality reporting needs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@sutter.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Sutter Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.sutterhealth.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="3000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="68"/>
+            <column name="notes" value="Northern California integrated system. Epic shop. Quality capabilities may be internal."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@commonspirit.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="CommonSpirit Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.commonspirit.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="20000000"/>
+            <column name="ehr_count" valueNumeric="5"/>
+            <column name="state" value="IL"/>
+            <column name="score" valueNumeric="65"/>
+            <column name="notes" value="Massive Catholic health system. 140 hospitals. Multiple EHRs = quality challenge."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@ascension.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Ascension"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.ascension.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="15000000"/>
+            <column name="ehr_count" valueNumeric="3"/>
+            <column name="state" value="MO"/>
+            <column name="score" valueNumeric="66"/>
+            <column name="notes" value="Large Catholic system. 150+ hospitals. VBC initiatives growing."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@providence.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Providence"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.providence.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="5000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="WA"/>
+            <column name="score" valueNumeric="70"/>
+            <column name="notes" value="Pacific Northwest major system. Innovation-focused. Digital health initiatives."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@nyp.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="NewYork-Presbyterian"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.nyp.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="2000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="72"/>
+            <column name="notes" value="Top NYC academic medical center. Columbia + Cornell. Research + quality."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@mountsinai.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Mount Sinai Health System"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.mountsinai.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="1500000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="NY"/>
+            <column name="score" valueNumeric="70"/>
+            <column name="notes" value="NYC academic system. Innovation programs. Quality reporting needs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@sharp.com"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Sharp HealthCare"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.sharp.com"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="1000000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="68"/>
+            <column name="notes" value="San Diego regional. Integrated delivery system. Quality programs."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <insert tableName="leads">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="11111111-1111-1111-1111-111111111111"/>
+            <column name="first_name" value="Quality"/>
+            <column name="last_name" value="Leadership"/>
+            <column name="email" value="quality@scripps.org"/>
+            <column name="phone" value=""/>
+            <column name="company" value="Scripps Health"/>
+            <column name="title" value="VP Quality"/>
+            <column name="website" value="https://www.scripps.org"/>
+            <column name="linkedin_url" value=""/>
+            <column name="source" value="COLD_OUTREACH"/>
+            <column name="status" value="NEW"/>
+            <column name="organization_type" value="HEALTH_SYSTEM"/>
+            <column name="patient_count" valueNumeric="700000"/>
+            <column name="ehr_count" valueNumeric="1"/>
+            <column name="state" value="CA"/>
+            <column name="score" valueNumeric="66"/>
+            <column name="notes" value="San Diego non-profit. Quality focus. Mid-sized target."/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="leads">
+                <where>source IN ('REFERRAL', 'WEBSITE', 'LINKEDIN', 'COLD_OUTREACH')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

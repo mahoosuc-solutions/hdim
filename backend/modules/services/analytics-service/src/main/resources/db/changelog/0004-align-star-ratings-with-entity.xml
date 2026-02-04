@@ -19,8 +19,8 @@
         </comment>
 
         <addColumn tableName="star_ratings">
-            <column name="measure_domain" type="varchar(100)">
-                <constraints nullable="true"/>
+            <column name="measure_domain" type="varchar(100)" defaultValue="UNKNOWN">
+                <constraints nullable="false"/>
             </column>
         </addColumn>
 
@@ -39,8 +39,8 @@
         <comment>Add rating_year column (entity uses this instead of measurement_year)</comment>
 
         <addColumn tableName="star_ratings">
-            <column name="rating_year" type="integer">
-                <constraints nullable="true"/>
+            <column name="rating_year" type="integer" defaultValueNumeric="2024">
+                <constraints nullable="false"/>
             </column>
         </addColumn>
 
@@ -59,8 +59,8 @@
         <comment>Add rating_value column for the star rating decimal value</comment>
 
         <addColumn tableName="star_ratings">
-            <column name="rating_value" type="decimal(3,2)">
-                <constraints nullable="true"/>
+            <column name="rating_value" type="decimal(3,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
             </column>
         </addColumn>
 

@@ -25,13 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Entity-migration validation for analytics-service.
  *
- * Uses @DataJpaTest with minimal configuration - only JPA entities and repositories.
- * No service or controller beans are loaded to avoid dependency issues.
+ * Uses @DataJpaTest with Liquibase migrations to properly handle PostgreSQL JSONB types.
+ * The Hypersistence Utils JsonBinaryType requires actual PostgreSQL with JSONB support,
+ * which Liquibase migrations create correctly.
  */
 @DataJpaTest(
     properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.liquibase.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=validate",
+        "spring.liquibase.enabled=true",
+        "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml",
         "spring.flyway.enabled=false",
         "spring.data.jpa.repositories.enabled=false"
     }

@@ -1,8 +1,8 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, throwError, of } from 'rxjs';
+import { catchError, tap, delay } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface SalesLoginRequest {
@@ -75,9 +75,17 @@ export class SalesAuthService {
 
   /**
    * Login with email and password.
+   *
+   * In development mode, uses mock authentication to bypass backend auth endpoint
+   * (which doesn't exist yet). Production uses real JWT authentication.
    */
   login(credentials: SalesLoginRequest): Observable<SalesLoginResponse> {
     this._isLoading.set(true);
+
+    // Development mode: use mock authentication
+    if (!environment.production) {
+      return this.mockLogin(credentials);
+    }
 
     return this.http
       .post<SalesLoginResponse>(`${this.apiBaseUrl}/api/auth/login`, credentials)
@@ -93,6 +101,53 @@ export class SalesAuthService {
           return this.handleError(error);
         })
       );
+  }
+
+  /**
+   * Mock login for development/testing.
+   * Simulates a successful login without backend authentication.
+   */
+  private mockLogin(credentials: SalesLoginRequest): Observable<SalesLoginResponse> {
+    // Validate credentials (simple check for development)
+    if (credentials.email !== 'sales@hdim.health' || credentials.password !== 'sales2026!') {
+      this._isLoading.set(false);
+      return throwError(() => new Error('Invalid credentials'));
+    }
+
+    // Create mock JWT token (not a real JWT, just for development)
+    const mockExpiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+    const mockToken = btoa(JSON.stringify({
+      sub: 'sales-user-001',
+      email: credentials.email,
+      roles: ['ADMIN', 'SALES'],
+      tenantId: '550e8400-e29b-41d4-a716-446655440000',
+      exp: mockExpiry,
+    }));
+
+    const mockResponse: SalesLoginResponse = {
+      accessToken: `dev.${mockToken}.signature`,
+      refreshToken: 'dev-refresh-token',
+      tokenType: 'Bearer',
+      expiresIn: 3600,
+      user: {
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        email: credentials.email,
+        firstName: 'Sales',
+        lastName: 'User',
+        role: 'ADMIN',
+        tenantId: '550e8400-e29b-41d4-a716-446655440000',
+      },
+    };
+
+    return of(mockResponse).pipe(
+      delay(500), // Simulate network delay
+      tap((response) => {
+        this.storeTokens(response);
+        this._currentUser.set(response.user);
+        this._isAuthenticated.set(true);
+        this._isLoading.set(false);
+      })
+    );
   }
 
   /**
@@ -143,13 +198,19 @@ export class SalesAuthService {
 
   /**
    * Check if the user has a valid (non-expired) token.
+   *
+   * Supports both real JWT tokens and mock development tokens.
    */
   hasValidToken(): boolean {
     const token = localStorage.getItem(this.STORAGE_KEYS.ACCESS_TOKEN);
     if (!token) return false;
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Token format: header.payload.signature (JWT) or dev.payload.signature (mock)
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+
+      const payload = JSON.parse(atob(parts[1]));
       const exp = payload.exp * 1000;
       return Date.now() < exp;
     } catch {

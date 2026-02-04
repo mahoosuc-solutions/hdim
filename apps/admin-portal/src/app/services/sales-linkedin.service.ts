@@ -43,11 +43,22 @@ export class SalesLinkedInService {
   // Campaign Management
   // ==========================================
 
-  getCampaigns(page?: PageRequest): Observable<PageResponse<LinkedInCampaign>> {
+  getCampaigns(page?: PageRequest, status?: string, search?: string): Observable<PageResponse<LinkedInCampaign>> {
     this._isLoading.set(true);
-    let url = `${this.apiBaseUrl}/api/sales/linkedin`;
+    let url = `${this.apiBaseUrl}/api/sales/linkedin/campaigns`;
+    const params: string[] = [];
+
     if (page) {
-      url += `?page=${page.page}&size=${page.size}`;
+      params.push(`page=${page.page}&size=${page.size}`);
+    }
+    if (status) {
+      params.push(`status=${status}`);
+    }
+    if (search) {
+      params.push(`search=${encodeURIComponent(search)}`);
+    }
+    if (params.length > 0) {
+      url += '?' + params.join('&');
     }
 
     return this.http.get<PageResponse<LinkedInCampaign>>(url).pipe(
@@ -64,7 +75,7 @@ export class SalesLinkedInService {
   }
 
   getCampaign(id: string): Observable<LinkedInCampaign> {
-    return this.http.get<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaign/${id}`).pipe(
+    return this.http.get<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}`).pipe(
       catchError((error) => {
         this._error.set('Failed to load campaign');
         return throwError(() => error);
@@ -73,7 +84,7 @@ export class SalesLinkedInService {
   }
 
   createCampaign(campaign: Partial<LinkedInCampaign>): Observable<LinkedInCampaign> {
-    return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaign`, campaign).pipe(
+    return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns`, campaign).pipe(
       tap((created) => {
         this._campaigns.update((list) => [...list, created]);
       }),
@@ -85,7 +96,7 @@ export class SalesLinkedInService {
   }
 
   updateCampaign(id: string, campaign: Partial<LinkedInCampaign>): Observable<LinkedInCampaign> {
-    return this.http.put<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaign/${id}`, campaign).pipe(
+    return this.http.put<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}`, campaign).pipe(
       tap((updated) => {
         this._campaigns.update((list) =>
           list.map((c) => (c.id === id ? updated : c))
@@ -99,7 +110,7 @@ export class SalesLinkedInService {
   }
 
   deleteCampaign(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiBaseUrl}/api/sales/linkedin/campaign/${id}`).pipe(
+    return this.http.delete<void>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}`).pipe(
       tap(() => {
         this._campaigns.update((list) => list.filter((c) => c.id !== id));
       }),
@@ -111,7 +122,7 @@ export class SalesLinkedInService {
   }
 
   activateCampaign(id: string): Observable<LinkedInCampaign> {
-    return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaign/${id}/activate`, {}).pipe(
+    return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}/activate`, {}).pipe(
       tap((updated) => {
         this._campaigns.update((list) =>
           list.map((c) => (c.id === id ? { ...c, status: 'ACTIVE' as const } : c))
@@ -125,7 +136,7 @@ export class SalesLinkedInService {
   }
 
   pauseCampaign(id: string): Observable<LinkedInCampaign> {
-    return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaign/${id}/pause`, {}).pipe(
+    return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}/pause`, {}).pipe(
       tap((updated) => {
         this._campaigns.update((list) =>
           list.map((c) => (c.id === id ? { ...c, status: 'PAUSED' as const } : c))

@@ -473,4 +473,7 @@
     <!-- LinkedIn OAuth Token Storage -->
     <include file="0018-create-linkedin-tokens-table.xml" relativeToChangelogFile="true"/>
 
+    <!-- LinkedIn Campaign Management -->
+    <include file="0019-create-linkedin-campaigns-table.xml" relativeToChangelogFile="true"/>
+
 </databaseChangeLog>

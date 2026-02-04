@@ -271,9 +271,14 @@ export interface SequenceStep {
   delayHours: number;
 }
 
+export type SequenceType = 'NURTURE' | 'FOLLOW_UP' | 'ONBOARDING' | 'RE_ENGAGEMENT' | 'PROMOTION';
+export type TargetType = 'LEAD' | 'CONTACT' | 'BOTH';
+
 export interface SequenceCreateRequest {
   name: string;
   description?: string;
+  sequenceType: SequenceType;
+  targetType: TargetType;
   steps: Omit<SequenceStep, 'id' | 'sequenceId'>[];
 }
 

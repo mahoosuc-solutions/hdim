@@ -67,10 +67,21 @@ function addHeadersToRequest(
   token: string,
   tenantId: string
 ): HttpRequest<unknown> {
-  return req.clone({
-    setHeaders: {
-      Authorization: `Bearer ${token}`,
-      'X-Tenant-ID': tenantId,
-    },
-  });
+  // Base headers for all environments
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    'X-Tenant-ID': tenantId,
+  };
+
+  // In development mode, add gateway trust headers for direct backend access
+  // These headers simulate what the API gateway would inject after JWT validation
+  if (!environment.production) {
+    headers['X-Auth-Validated'] = 'gateway-dev-signature';
+    headers['X-Auth-Username'] = 'sales-user';
+    headers['X-Auth-Roles'] = 'ADMIN,SALES';
+    headers['X-Auth-Tenant-IDs'] = tenantId;
+    headers['X-User-ID'] = '550e8400-e29b-41d4-a716-446655440001';
+  }
+
+  return req.clone({ setHeaders: headers });
 }

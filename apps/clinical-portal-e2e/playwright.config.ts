@@ -4,6 +4,9 @@ import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const skipWebServer = ['1', 'true', 'yes'].includes(
+  (process.env['SKIP_WEB_SERVER'] || '').toLowerCase()
+);
 
 // Backend service URLs for API testing
 const gatewayUrl = process.env['GATEWAY_URL'] || 'http://localhost:18080';
@@ -41,13 +44,15 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npx nx run clinical-portal:serve --port=4200',
-    url: 'http://localhost:4200',
-    reuseExistingServer: true,
-    timeout: 180 * 1000,
-    cwd: workspaceRoot,
-  },
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: 'npx nx run clinical-portal:serve --port=4200',
+        url: 'http://localhost:4200',
+        reuseExistingServer: true,
+        timeout: 180 * 1000,
+        cwd: workspaceRoot,
+      },
   projects: [
     {
       name: 'chromium',

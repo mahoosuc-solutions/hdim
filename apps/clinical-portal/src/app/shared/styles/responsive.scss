@@ -4,7 +4,7 @@
  * Mobile-first responsive helper classes.
  */
 
-@import './variables.scss';
+@use './variables' as *;
 
 // Display Utilities
 .d-none { display: none !important; }

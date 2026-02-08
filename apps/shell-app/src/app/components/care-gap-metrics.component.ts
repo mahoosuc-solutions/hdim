@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { WebSocketService, CareGapMessage } from '@health-platform/shared/realtime';
+import { WebSocketService, CareGapNotificationMessage } from '@health-platform/shared/realtime';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -29,12 +29,12 @@ import { takeUntil } from 'rxjs/operators';
       </div>
 
       <div class="metric-content">
-        <div class="gap-count-display" [data-testid]="'care-gap-count'" [ngClass]="countClass">
+        <div class="gap-count-display" [attr.data-testid]="'care-gap-count'" [ngClass]="countClass">
           <div class="count-number">{{ totalGapCount }}</div>
           <div class="count-label">Open Gaps</div>
         </div>
 
-        <div class="gap-urgency-breakdown" [data-testid]="'care-gap-urgency-routine'">
+        <div class="gap-urgency-breakdown" [attr.data-testid]="'care-gap-urgency-routine'">
           <div class="urgency-row">
             <span class="urgency-label routine">Routine</span>
             <span class="urgency-count">{{ urgencyBreakdown.routine }}</span>
@@ -47,20 +47,20 @@ import { takeUntil } from 'rxjs/operators';
             <span class="urgency-label overdue">Overdue</span>
             <span class="urgency-count">{{ urgencyBreakdown.overdue }}</span>
           </div>
-          <div class="urgency-row" [data-testid]="'care-gap-urgency-critical'">
+          <div class="urgency-row" [attr.data-testid]="'care-gap-urgency-critical'">
             <span class="urgency-label critical">Critical</span>
             <span class="urgency-count">{{ urgencyBreakdown.critical }}</span>
           </div>
         </div>
 
-        <div class="top-gaps" [data-testid]="'top-priority-gaps'">
+        <div class="top-gaps" [attr.data-testid]="'top-priority-gaps'">
           <div class="gaps-label">Top Priority Gaps:</div>
           <div class="gaps-list">
             <div
               *ngFor="let gap of topGaps"
               class="gap-item"
               [ngClass]="'gap-urgency-' + gap.urgency"
-              [data-testid]="'gap-priority-item'"
+              [attr.data-testid]="'gap-priority-item'"
             >
               <span class="gap-measure">{{ gap.measureId }}</span>
               <span class="gap-action">{{ gap.action }}</span>
@@ -68,7 +68,7 @@ import { takeUntil } from 'rxjs/operators';
           </div>
         </div>
 
-        <div class="gap-closure-rate" [data-testid]="'care-gap-closure-rate'">
+        <div class="gap-closure-rate" [attr.data-testid]="'care-gap-closure-rate'">
           Closure Rate: {{ closureRate }}%
         </div>
       </div>
@@ -278,7 +278,7 @@ export class CareGapMetricsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Subscribe to care gap notifications
     this.websocket
-      .ofType<CareGapMessage>('CARE_GAP_NOTIFICATION')
+      .ofType<CareGapNotificationMessage>('CARE_GAP_NOTIFICATION')
       .pipe(takeUntil(this.destroy$))
       .subscribe((message) => {
         this.addOrUpdateGap(message.data);
@@ -293,9 +293,12 @@ export class CareGapMetricsComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private addOrUpdateGap(data: any): void {
+  private addOrUpdateGap(data: CareGapNotificationMessage['data']): void {
     // Add or update gap in map
-    this.gaps.set(data.gapId, data);
+    const gapKey = data.gapType
+      ? `${data.patientId}-${data.gapType}`
+      : `${data.patientId}-${data.measureName ?? 'unknown'}`;
+    this.gaps.set(gapKey, data);
 
     // Recalculate metrics
     this.updateMetrics();
@@ -317,10 +320,8 @@ export class CareGapMetricsComponent implements OnInit, OnDestroy {
 
     // Count by urgency
     this.gaps.forEach((gap) => {
-      const urgency = gap.urgency?.toLowerCase() || 'routine';
-      if (urgency in urgencyMap) {
-        urgencyMap[urgency]++;
-      }
+      const urgency = this.normalizeUrgency(gap.urgency);
+      urgencyMap[urgency]++;
     });
 
     this.urgencyBreakdown = urgencyMap;
@@ -330,15 +331,15 @@ export class CareGapMetricsComponent implements OnInit, OnDestroy {
     const sorted = Array.from(this.gaps.values()).sort((a, b) => {
       const urgencyOrder = { critical: 4, overdue: 3, soon: 2, routine: 1 };
       return (
-        (urgencyOrder[b.urgency?.toLowerCase()] || 0) -
-        (urgencyOrder[a.urgency?.toLowerCase()] || 0)
+        urgencyOrder[this.normalizeUrgency(b.urgency)] -
+        urgencyOrder[this.normalizeUrgency(a.urgency)]
       );
     });
 
     this.topGaps = sorted.slice(0, 5).map((gap) => ({
-      gapId: gap.gapId,
-      measureId: gap.measureId || 'Unknown',
-      urgency: gap.urgency?.toLowerCase() || 'routine',
+      gapId: gap.gapType ?? gap.measureName ?? 'Unknown',
+      measureId: gap.measureName ?? 'Unknown',
+      urgency: this.normalizeUrgency(gap.urgency),
       action: gap.recommendedAction || 'Review needed',
     }));
 
@@ -349,5 +350,13 @@ export class CareGapMetricsComponent implements OnInit, OnDestroy {
     this.closureRate = this.totalGapCount > 0
       ? Math.round((closedCount / this.totalGapCount) * 100)
       : 0;
+  }
+
+  private normalizeUrgency(value: unknown): 'routine' | 'soon' | 'overdue' | 'critical' {
+    const normalized = typeof value === 'string' ? value.toLowerCase() : 'routine';
+    if (normalized === 'critical' || normalized === 'overdue' || normalized === 'soon') {
+      return normalized;
+    }
+    return 'routine';
   }
 }

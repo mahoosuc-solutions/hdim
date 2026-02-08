@@ -223,7 +223,7 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
       'LOW': 'low',
       'MODERATE': 'moderate',
       'HIGH': 'high',
-      'VERY_HIGH': 'very-high'
+      'VERY_HIGH': 'critical'
     };
 
     const mappedRiskLevel = riskLevelMap[hcc.riskLevel] || 'low';
@@ -367,7 +367,7 @@ export class RiskStratificationComponent implements OnInit, OnDestroy {
       'LOW': 'low',
       'MODERATE': 'moderate',
       'HIGH': 'high',
-      'VERY_HIGH': 'very-high'
+      'VERY_HIGH': 'critical'
     };
     return map[backendLevel] || 'low';
   }

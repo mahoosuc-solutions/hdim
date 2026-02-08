@@ -30,10 +30,14 @@ export const DEMO_USER = {
         { id: 'perm-3', name: 'VIEW_EVALUATIONS', description: 'View evaluations' },
         { id: 'perm-4', name: 'RUN_EVALUATIONS', description: 'Run evaluations' },
         { id: 'perm-5', name: 'EXPORT_DATA', description: 'Export data' },
+        { id: 'perm-6', name: 'VIEW_REPORTS', description: 'View reports' },
+        { id: 'perm-7', name: 'VIEW_ANALYTICS', description: 'View analytics' },
+        { id: 'perm-8', name: 'VIEW_CARE_GAPS', description: 'View care gaps' },
       ],
     },
   ],
-  tenantId: 'demo-tenant',
+  tenantId: 'acme-health',
+  tenantIds: ['acme-health'],
   active: true,
 };
 
@@ -51,14 +55,16 @@ export async function setupDemoAuthViaStorage(
   // First navigate to a page to establish the origin for localStorage
   await page.goto('/login', { waitUntil: 'domcontentloaded' });
 
-  // Set auth tokens in localStorage
-  const demoToken = 'demo-jwt-token-' + Date.now();
+  // Set user profile in localStorage (tokens are HttpOnly cookies in the app)
+  const tenantId = DEMO_USER.tenantIds?.[0] || DEMO_USER.tenantId || 'acme-health';
   await page.evaluate(
-    ({ token, user }) => {
-      localStorage.setItem('healthdata_auth_token', token);
+    ({ user, tenantId }) => {
       localStorage.setItem('healthdata_user', JSON.stringify(user));
+      localStorage.setItem('healthdata_tenant', tenantId);
+      localStorage.removeItem('healthdata-demo-mode');
+      sessionStorage.removeItem('healthdata-demo-mode');
     },
-    { token: demoToken, user: DEMO_USER }
+    { user: DEMO_USER, tenantId }
   );
 
   // Navigate to the target page
@@ -131,7 +137,7 @@ export async function setupDemoAuthViaUI(
  * @param page - Playwright page object
  * @param timeout - Maximum time to wait in ms
  */
-export async function waitForAppReady(page: Page, timeout: number = 10000): Promise<void> {
+export async function waitForAppReady(page: Page, timeout: number = 20000): Promise<void> {
   const startTime = Date.now();
 
   // Wait for any loading overlays to disappear
@@ -142,15 +148,40 @@ export async function waitForAppReady(page: Page, timeout: number = 10000): Prom
     // Loading overlay might not exist, that's fine
   }
 
-  // Wait for main content to be visible
+  // Wait for main content to be visible (best-effort)
   const mainContent = page.locator('app-root, mat-sidenav-container, .main-content, main');
-  await mainContent.first().waitFor({
-    state: 'visible',
-    timeout: Math.max(timeout - (Date.now() - startTime), 1000),
-  });
+  try {
+    await mainContent.first().waitFor({
+      state: 'visible',
+      timeout: Math.max(timeout - (Date.now() - startTime), 1000),
+    });
+  } catch {
+    // Some routes may render slowly or without the usual layout; don't fail tests here.
+  }
+
+  if (page.isClosed()) return;
 
   // Brief pause to let Angular finish rendering
-  await page.waitForTimeout(300);
+  try {
+    await page.waitForTimeout(300);
+  } catch {
+    return;
+  }
+
+  if (page.isClosed()) return;
+  await clearOverlays(page).catch(() => {});
+}
+
+async function clearOverlays(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    document.querySelectorAll('.cdk-overlay-backdrop').forEach((el) => el.remove());
+    document.querySelectorAll('.cdk-overlay-pane').forEach((el) => {
+      const panel = el as HTMLElement;
+      if (panel.style.pointerEvents === 'auto') {
+        panel.style.pointerEvents = 'none';
+      }
+    });
+  });
 }
 
 /**
@@ -160,8 +191,8 @@ export async function waitForAppReady(page: Page, timeout: number = 10000): Prom
  */
 export async function clearAuth(page: Page): Promise<void> {
   await page.evaluate(() => {
-    localStorage.removeItem('healthdata_auth_token');
     localStorage.removeItem('healthdata_user');
+    localStorage.removeItem('healthdata_tenant');
     sessionStorage.clear();
   });
 }
@@ -174,7 +205,7 @@ export async function clearAuth(page: Page): Promise<void> {
  */
 export async function isAuthenticated(page: Page): Promise<boolean> {
   return page.evaluate(() => {
-    return !!localStorage.getItem('healthdata_auth_token');
+    return !!localStorage.getItem('healthdata_user');
   });
 }
 

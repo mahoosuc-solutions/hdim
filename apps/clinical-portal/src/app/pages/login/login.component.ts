@@ -72,6 +72,7 @@ import { MfaVerifyComponent } from './mfa-verify.component';
                 formControlName="username"
                 placeholder="Enter your username"
                 autocomplete="username"
+                data-test-id="username"
               />
               <mat-icon matPrefix>person</mat-icon>
               @if (loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched) {
@@ -87,6 +88,7 @@ import { MfaVerifyComponent } from './mfa-verify.component';
                 formControlName="password"
                 placeholder="Enter your password"
                 autocomplete="current-password"
+                data-test-id="password"
               />
               <mat-icon matPrefix>lock</mat-icon>
               <button
@@ -114,6 +116,7 @@ import { MfaVerifyComponent } from './mfa-verify.component';
               type="submit"
               class="login-button full-width"
               [disabled]="loginForm.invalid || isLoading"
+              data-test-id="login-button"
             >
               @if (isLoading) {
                 <mat-spinner diameter="20"></mat-spinner>
@@ -140,6 +143,7 @@ import { MfaVerifyComponent } from './mfa-verify.component';
               class="demo-button full-width"
               (click)="demoLogin()"
               [disabled]="isLoading"
+              data-test-id="demo-login-button"
             >
               <mat-icon>science</mat-icon>
               <span>Demo Login</span>

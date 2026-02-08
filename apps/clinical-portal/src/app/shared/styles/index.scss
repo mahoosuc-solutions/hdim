@@ -6,16 +6,17 @@
  */
 
 // Base Styles
-@import './variables.scss';
-@import './mixins.scss';
+@use 'sass:color';
+@use './variables' as *;
+@use './mixins' as *;
 
 // Theme Styles
-@import './light-theme.scss';
-@import './dark-theme.scss';
+@use './light-theme' as *;
+@use './dark-theme' as *;
 
 // Utility Styles
-@import './responsive.scss';
-@import './animations.scss';
+@use './responsive' as *;
+@use './animations' as *;
 
 // Global Resets and Base Styles
 *,
@@ -67,7 +68,7 @@ a {
   transition: color $transition-base $transition-ease;
 
   &:hover {
-    color: darken($primary, 10%);
+    color: color.adjust($primary, $lightness: -10%);
   }
 }
 

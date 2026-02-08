@@ -70,7 +70,7 @@
     "@nx/web": "22.3.3",
     "@nx/webpack": "22.3.3",
     "@nx/workspace": "22.3.3",
-    "@pact-foundation/pact": "^13.1.0",
+    "@pact-foundation/pact": "^13.2.0",
     "@pact-foundation/pact-node": "^10.18.0",
     "@playwright/test": "^1.36.0",
     "@schematics/angular": "21.0.5",

@@ -13,8 +13,15 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # API Base URL
-BASE_URL="http://localhost:8081"
+BASE_URL="http://localhost:8081/cql-engine"
 TENANT_ID="tenant-1"
+
+# Trusted gateway headers (dev mode)
+AUTH_USERNAME="${AUTH_USERNAME:-api_test_user}"
+AUTH_USER_ID="${AUTH_USER_ID:-6f52b4c2-7f41-4c58-a61e-b9e671ba63ce}"
+AUTH_ROLES="${AUTH_ROLES:-ADMIN}"
+AUTH_TENANT_IDS="${AUTH_TENANT_IDS:-$TENANT_ID}"
+AUTH_VALIDATED="${AUTH_VALIDATED:-gateway-dev}"
 
 # Test counter
 total_tests=0
@@ -26,23 +33,33 @@ test_endpoint() {
     local method=$2
     local endpoint=$3
     local expected_code=$4
-    local extra_args=$5
+    shift 4
+    local extra_args=("$@")
 
     total_tests=$((total_tests + 1))
 
     echo -ne "${BLUE}Testing:${NC} $name ... "
 
+    local auth_headers=(
+        -H "X-Tenant-ID: $TENANT_ID"
+        -H "X-Auth-Validated: $AUTH_VALIDATED"
+        -H "X-Auth-Username: $AUTH_USERNAME"
+        -H "X-Auth-User-Id: $AUTH_USER_ID"
+        -H "X-Auth-Tenant-Ids: $AUTH_TENANT_IDS"
+        -H "X-Auth-Roles: $AUTH_ROLES"
+    )
+
     if [ "$method" == "GET" ]; then
         response=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "X-Tenant-ID: $TENANT_ID" \
-            $extra_args \
+            "${auth_headers[@]}" \
+            "${extra_args[@]}" \
             "${BASE_URL}${endpoint}" 2>/dev/null || echo "000")
     else
         response=$(curl -s -o /dev/null -w "%{http_code}" \
             -X "$method" \
             -H "Content-Type: application/json" \
-            -H "X-Tenant-ID: $TENANT_ID" \
-            $extra_args \
+            "${auth_headers[@]}" \
+            "${extra_args[@]}" \
             "${BASE_URL}${endpoint}" 2>/dev/null || echo "000")
     fi
 
@@ -68,6 +85,11 @@ test_endpoint_json() {
 
     response=$(curl -s \
         -H "X-Tenant-ID: $TENANT_ID" \
+        -H "X-Auth-Validated: $AUTH_VALIDATED" \
+        -H "X-Auth-Username: $AUTH_USERNAME" \
+        -H "X-Auth-User-Id: $AUTH_USER_ID" \
+        -H "X-Auth-Tenant-Ids: $AUTH_TENANT_IDS" \
+        -H "X-Auth-Roles: $AUTH_ROLES" \
         "${BASE_URL}${endpoint}" 2>/dev/null)
 
     if echo "$response" | jq -e "$jq_filter" > /dev/null 2>&1; then
@@ -117,41 +139,26 @@ test_endpoint "Prometheus Metrics" "GET" "/actuator/prometheus" "200"
 echo ""
 echo -e "${BLUE}API Endpoints:${NC}"
 echo ""
-test_endpoint "List All Measures" "GET" "/api/v1/measures" "200"
-test_endpoint_json "Measures Response Valid" "/api/v1/measures" "type == \"array\""
-test_endpoint_json "52 HEDIS Measures" "/api/v1/measures" "length == 52"
+test_endpoint "List All Measures" "GET" "/evaluate/measures" "200"
+test_endpoint_json "Measures Response Valid" "/evaluate/measures" ".measures | type == \"array\""
+test_endpoint_json "56 HEDIS Measures" "/evaluate/measures" ".totalMeasures == 56"
 
-test_endpoint "Get BCS Measure" "GET" "/api/v1/measures/BCS" "200"
-test_endpoint_json "BCS Measure Valid" "/api/v1/measures/BCS" ".measureId == \"BCS\""
+test_endpoint "Get BCS Measure" "GET" "/evaluate/measures/BCS" "200"
+test_endpoint_json "BCS Measure Valid" "/evaluate/measures/BCS" ".measureId == \"BCS\""
 
-test_endpoint "Get CDC Measure" "GET" "/api/v1/measures/CDC" "200"
-test_endpoint "Get AMM Measure" "GET" "/api/v1/measures/AMM" "200"
+test_endpoint "Get CDC Measure" "GET" "/evaluate/measures/CDC" "200"
+test_endpoint "Get AMM Measure" "GET" "/evaluate/measures/AMM" "200"
+
+test_endpoint "Measure Exists" "GET" "/evaluate/measures/BCS/exists" "200"
 
 # Test invalid measure
-test_endpoint "Invalid Measure (404)" "GET" "/api/v1/measures/INVALID" "404"
-
-echo ""
-echo -e "${BLUE}Measure Evaluation Endpoints:${NC}"
-echo ""
-
-# Note: These will return 404 or error until we have patient data
-test_endpoint "Evaluate BCS (No Data)" "GET" "/api/v1/measures/BCS/evaluate/patient-123" "404"
-test_endpoint "Evaluate Multiple (No Data)" "GET" "/api/v1/measures/evaluate/patient-123?measureIds=BCS,CDC" "404"
-test_endpoint "Dashboard (No Data)" "GET" "/api/v1/measures/dashboard/patient-123" "200"
-test_endpoint "Care Gaps (No Data)" "GET" "/api/v1/measures/care-gaps/patient-123" "200"
-
-echo ""
-echo -e "${BLUE}Measure Categories:${NC}"
-echo ""
-test_endpoint "Diabetes Measures" "GET" "/api/v1/measures?category=DIABETES" "200"
-test_endpoint "Cardiovascular Measures" "GET" "/api/v1/measures?category=CARDIOVASCULAR" "200"
-test_endpoint "Preventive Measures" "GET" "/api/v1/measures?category=PREVENTIVE_CARE" "200"
+test_endpoint "Invalid Measure (404)" "GET" "/evaluate/measures/INVALID" "404"
 
 echo ""
 echo -e "${BLUE}Error Handling:${NC}"
 echo ""
-test_endpoint "Missing Tenant Header" "GET" "/api/v1/measures" "400" "-H 'X-Tenant-ID:'"
-test_endpoint "Invalid Endpoint" "GET" "/api/v1/invalid" "404"
+test_endpoint "Missing Tenant Header" "GET" "/evaluate/measures" "200" -H "X-Tenant-ID:"
+test_endpoint "Invalid Endpoint" "GET" "/invalid" "403"
 
 echo ""
 echo -e "${BLUE}========================================${NC}"

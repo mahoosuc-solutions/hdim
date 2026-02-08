@@ -20,7 +20,7 @@
             <column name="appointment_id" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
-            <column name="appointment_type" type="VARCHAR(100)" comment="new-patient, follow-up, procedure-pre, etc.">
+            <column name="appointment_type" type="VARCHAR(100)" remarks="new-patient, follow-up, procedure-pre, etc.">
                 <constraints nullable="false"/>
             </column>
             <!-- Checklist Items -->
@@ -49,14 +49,14 @@
                 <constraints nullable="false"/>
             </column>
             <!-- Custom Items (JSON) -->
-            <column name="custom_items" type="JSONB" comment="Array of {task: string, completed: boolean}">
+            <column name="custom_items" type="JSONB" remarks="Array of {task: string, completed: boolean}">
                 <constraints nullable="true"/>
             </column>
             <!-- Status -->
             <column name="completion_percentage" type="NUMERIC(5,2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="VARCHAR(50)" comment="pending, in-progress, completed">
+            <column name="status" type="VARCHAR(50)" remarks="pending, in-progress, completed">
                 <constraints nullable="false"/>
             </column>
             <column name="completed_by" type="VARCHAR(255)">

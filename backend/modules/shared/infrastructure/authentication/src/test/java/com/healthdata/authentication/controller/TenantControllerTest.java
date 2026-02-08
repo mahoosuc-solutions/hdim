@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -53,12 +54,14 @@ class TenantControllerTest {
 
     @BeforeEach
     void setUp() {
-        // Set up standalone MockMvc with exception handler
-        mockMvc = MockMvcBuilders.standaloneSetup(tenantController)
-            .setControllerAdvice(new HdimGlobalExceptionHandler())
-            .build();
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();  // For Java 8 time support
+
+        // Set up standalone MockMvc with explicit JSON converter and exception handler
+        mockMvc = MockMvcBuilders.standaloneSetup(tenantController)
+            .setControllerAdvice(new HdimGlobalExceptionHandler())
+            .setMessageConverters(new MappingJackson2HttpMessageConverter(objectMapper))
+            .build();
 
         // Valid registration request
         validRequest = TenantRegistrationRequest.builder()

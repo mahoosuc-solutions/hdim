@@ -11,6 +11,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.TestcontainersConfiguration;
 
 /**
  * Redis Test Configuration using Testcontainers.
@@ -32,11 +33,23 @@ public class RedisTestConfig {
      * Reusable across test classes for faster execution.
      */
     @Container
-    public static final RedisContainer REDIS_CONTAINER = new RedisContainer(REDIS_IMAGE)
-            .withExposedPorts(6379)
-            .withReuse(true);
+    public static final RedisContainer REDIS_CONTAINER;
 
     static {
+        RedisContainer container = new RedisContainer(REDIS_IMAGE)
+                .withExposedPorts(6379);
+
+        boolean reuseEnabled = Boolean.parseBoolean(
+            TestcontainersConfiguration.getInstance()
+                .getProperties()
+                .getProperty("testcontainers.reuse.enable", "false"));
+
+        if (reuseEnabled) {
+            // Enable reuse only when the host explicitly opts in via testcontainers configuration.
+            container.withReuse(true);
+        }
+
+        REDIS_CONTAINER = container;
         REDIS_CONTAINER.start();
     }
 

@@ -8,5 +8,6 @@
     <include file="db/changelog/changes/001-create-notifications-table.xml"/>
     <include file="db/changelog/changes/002-create-templates-table.xml"/>
     <include file="db/changelog/changes/003-create-preferences-table.xml"/>
+    <include file="db/changelog/0009-create-appointment-reminders-sent-table.xml"/>
 
 </databaseChangeLog>

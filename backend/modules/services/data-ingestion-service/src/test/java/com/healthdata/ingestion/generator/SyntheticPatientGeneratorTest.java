@@ -417,7 +417,7 @@ class SyntheticPatientGeneratorTest {
                         LocalDate birthDate = patient.getBirthDate().toInstant()
                                 .atZone(ZoneId.systemDefault())
                                 .toLocalDate();
-                        int age = today.getYear() - birthDate.getYear();
+                        int age = java.time.Period.between(birthDate, today).getYears();
 
                         assertThat(age).isBetween(18, 85);
                     });

@@ -181,6 +181,34 @@ a:focus-visible,
       font-size: 16px;
     }
   }
+
+  .tenant-select {
+    margin-right: 16px;
+    min-width: 200px;
+
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      background-color: rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+    }
+
+    ::ng-deep .mat-mdc-form-field-infix {
+      min-height: 36px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    ::ng-deep .mat-mdc-select-value,
+    ::ng-deep .mat-mdc-form-field-label {
+      color: #fff;
+    }
+  }
+
+  .tenant-label {
+    margin-right: 16px;
+    font-size: 12px;
+    opacity: 0.85;
+    letter-spacing: 0.02em;
+  }
 }
 
 .sidenav-container {

@@ -1,18 +1,60 @@
+server:
+  port: 8112
+  servlet:
+    context-path: /quality-measure-event
+
 spring:
   application:
     name: quality-measure-event-service
 
-  # Database Configuration
+  main:
+    allow-bean-definition-overriding: true  # Allow handler lib repos to override event service repos
+
+  # Disable Redis autoconfiguration (event services don't use cache)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
   datasource:
-    url: jdbc:postgresql://localhost:5435/quality_db
-    username: healthdata
-    password: healthdata_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/quality_measure_event_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # Kafka configuration for event production and consumption
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: quality-measure-event-service
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # HIPAA Compliance: Propagate user context via headers for audit trail
+        interceptor.classes: com.healthdata.eventsourcing.kafka.UserContextKafkaInterceptor
+
+  # Cache Configuration
+  # No caching for event services (projection read model)
+  cache:
+    type: none
+
+# Event Store Service Configuration
+event-store:
+  service:
+    url: http://${EVENT_STORE_HOST:localhost}:${EVENT_STORE_PORT:8090}
+
+# HealthData Database Configuration
+healthdata:
+  database:
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 20000
-      idle-timeout: 300000
-      max-lifetime: 1200000
+      traffic-tier: MEDIUM  # CQRS read model: event-driven projections
 
   jpa:
     hibernate:
@@ -21,7 +63,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        use_sql_comments: true
     show-sql: false
 
   liquibase:
@@ -29,101 +70,29 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
 
-  # Kafka Configuration
-  kafka:
-    bootstrap-servers: localhost:9094
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-      retries: 3
-    consumer:
-      bootstrap-servers: localhost:9094
-      group-id: quality-measure-event-service-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "com.healthdata.qualitymeasure.*"
+  flyway:
+    enabled: false
 
-  # JSON Configuration
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-      indent-output: false
-    default-property-inclusion: non_null
-
-# Server Configuration
-server:
-  port: 8091
-  servlet:
-    context-path: /
-  compression:
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
     enabled: true
-    min-response-size: 1024
 
-# Logging Configuration
-logging:
-  level:
-    root: INFO
-    com.healthdata: DEBUG
-    org.springframework.security: DEBUG
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-
-# Management/Actuator Configuration & Distributed Tracing (OpenTelemetry)
+# Actuator
 management:
   endpoints:
     web:
       exposure:
-        include: health,metrics,prometheus
+        include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: always
-  metrics:
-    export:
-      prometheus:
-        enabled: true
-  tracing:
-    sampling:
-      probability: 1.0  # 100% in development, adjust for production
+      show-details: when-authorized
 
-# Custom Application Configuration
-app:
-  name: quality-measure-event-service
-  version: 5.0.0
-  kafka:
-    topic:
-      measure-events: measure.events
-      measure-evaluations: measure.evaluations
-      cohort-metrics: cohort.metrics
-
----
-# Docker Profile Configuration
-spring:
-  config:
-    activate:
-      on-profile: docker
-  application:
-    name: quality-measure-event-service
-  datasource:
-    url: jdbc:postgresql://postgres:5432/quality_db
-    username: healthdata
-    password: healthdata_password
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-      connection-timeout: 20000
-      idle-timeout: 300000
-      max-lifetime: 1200000
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
-    default-schema: public
-  kafka:
-    bootstrap-servers: kafka:29092
-
-server:
-  port: 8091
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

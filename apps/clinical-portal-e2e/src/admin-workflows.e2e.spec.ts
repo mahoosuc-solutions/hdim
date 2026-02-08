@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { setupDemoAuthViaStorage } from './fixtures/auth.fixture';
 
 /**
  * ADMIN Role Workflow E2E Tests
@@ -12,28 +13,14 @@ import { test, expect } from '@playwright/test';
  * @tags @e2e @role-admin @user-management
  */
 
-const ADMIN_USER = {
-  username: 'test_admin',
-  password: 'password123',
-  roles: ['ADMIN'],
-  tenantId: 'tenant-a',
-};
-
 test.describe('ADMIN Role Workflows', () => {
   test.beforeEach(async ({ page }) => {
-    // Login as admin
-    await page.goto('/login');
-    await page.fill('[data-test-id="username"]', ADMIN_USER.username);
-    await page.fill('[data-test-id="password"]', ADMIN_USER.password);
-    await page.click('[data-test-id="login-button"]');
-    await page.waitForURL('/dashboard');
+    await setupDemoAuthViaStorage(page, '/dashboard');
   });
 
   test('should create new user and assign role', async ({ page }) => {
     // Navigate to user management
-    await page.click('[data-test-id="nav-admin"]');
-    await page.click('[data-test-id="nav-users"]');
-    await page.waitForURL('/admin/users');
+    await page.goto('/admin/users');
 
     // Click create user button
     await page.click('[data-test-id="create-user-button"]');
@@ -45,8 +32,7 @@ test.describe('ADMIN Role Workflows', () => {
     await page.fill('[data-test-id="user-last-name"]', 'Smith');
 
     // Assign EVALUATOR role
-    await page.click('[data-test-id="user-role-select"]');
-    await page.click('[data-test-id="role-option-EVALUATOR"]');
+    await page.selectOption('[data-test-id="user-role-select"]', 'EVALUATOR');
 
     // Save user
     await page.click('[data-test-id="save-user-button"]');
@@ -73,8 +59,7 @@ test.describe('ADMIN Role Workflows', () => {
     await userRow.locator('[data-test-id="edit-user-button"]').click();
 
     // Change role from EVALUATOR to ANALYST
-    await page.click('[data-test-id="user-role-select"]');
-    await page.click('[data-test-id="role-option-ANALYST"]');
+    await page.selectOption('[data-test-id="user-role-select"]', 'ANALYST');
 
     // Save changes
     await page.click('[data-test-id="save-user-button"]');
@@ -90,9 +75,7 @@ test.describe('ADMIN Role Workflows', () => {
 
   test('should view audit logs', async ({ page }) => {
     // Navigate to audit logs
-    await page.click('[data-test-id="nav-admin"]');
-    await page.click('[data-test-id="nav-audit-logs"]');
-    await page.waitForURL('/admin/audit-logs');
+    await page.goto('/admin/audit-logs');
 
     // Verify audit log table visible
     await expect(page.locator('[data-test-id="audit-log-table"]')).toBeVisible();
@@ -110,9 +93,7 @@ test.describe('ADMIN Role Workflows', () => {
 
   test('should manage tenant settings', async ({ page }) => {
     // Navigate to tenant settings
-    await page.click('[data-test-id="nav-admin"]');
-    await page.click('[data-test-id="nav-tenant-settings"]');
-    await page.waitForURL('/admin/tenant-settings');
+    await page.goto('/admin/tenant-settings');
 
     // Update tenant display name
     await page.fill('[data-test-id="tenant-name"]', 'Updated Tenant Name');

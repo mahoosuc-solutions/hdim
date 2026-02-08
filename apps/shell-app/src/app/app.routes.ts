@@ -11,4 +11,9 @@ export const appRoutes: Route[] = [
     loadChildren: () =>
       import('mfePatients/Routes').then((m) => m!.remoteRoutes),
   },
+  {
+    path: 'mfeMeasureBuilder',
+    loadChildren: () =>
+      import('mfeMeasureBuilder/Routes').then((m) => m!.remoteRoutes),
+  },
 ];

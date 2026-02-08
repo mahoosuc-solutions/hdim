@@ -1,0 +1,62 @@
+<mat-card class="approval-stats-card" *ngIf="stats">
+  <!-- Header -->
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon>check_circle</mat-icon>
+      Approval Queue
+    </mat-card-title>
+  </mat-card-header>
+
+  <!-- Content -->
+  <mat-card-content>
+    <!-- Alert Banner (Urgent) -->
+    <div class="alert-banner urgent" *ngIf="hasUrgentItems()">
+      <mat-icon>warning</mat-icon>
+      <span><strong>{{ stats.urgent_count }}</strong> urgent item(s) require immediate attention</span>
+    </div>
+
+    <!-- Alert Banner (Old Pending) -->
+    <div class="alert-banner warning" *ngIf="!hasUrgentItems() && hasOldPending()">
+      <mat-icon>schedule</mat-icon>
+      <span>Oldest pending item: <strong>{{ formatHours(stats.oldest_pending_hours) }}</strong></span>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value">{{ stats.pending_count }}</div>
+      </div>
+
+      <div class="stat-tile">
+        <div class="stat-label">Urgent</div>
+        <div class="stat-value urgent">{{ stats.urgent_count }}</div>
+      </div>
+
+      <div class="stat-tile">
+        <div class="stat-label">Approved Today</div>
+        <div class="stat-value">{{ stats.approved_today }}</div>
+      </div>
+
+      <div class="stat-tile">
+        <div class="stat-label">Avg Approval Time</div>
+        <div class="stat-value">{{ formatHours(stats.avg_approval_time_hours) }}</div>
+      </div>
+    </div>
+  </mat-card-content>
+
+  <!-- Actions -->
+  <mat-card-actions>
+    <button mat-raised-button color="primary" (click)="viewQueue()">
+      <mat-icon>list</mat-icon>
+      View Queue
+    </button>
+  </mat-card-actions>
+</mat-card>
+
+<!-- Loading State -->
+<mat-card class="approval-stats-card" *ngIf="loading">
+  <mat-card-content>
+    <div class="loading-state">Loading approval stats...</div>
+  </mat-card-content>
+</mat-card>

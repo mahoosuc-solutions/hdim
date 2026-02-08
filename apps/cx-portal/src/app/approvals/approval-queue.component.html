@@ -1,0 +1,98 @@
+<div class="approval-queue-container">
+  <!-- Header -->
+  <div class="queue-header">
+    <h2>Approval Queue</h2>
+    <p class="subtitle">Review and approve pending actions</p>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <mat-chip-listbox aria-label="Urgency filter" [(ngModel)]="urgencyFilter" (ngModelChange)="applyFilters()">
+      <mat-chip-option value="all">All</mat-chip-option>
+      <mat-chip-option value="urgent">Urgent</mat-chip-option>
+      <mat-chip-option value="normal">Normal</mat-chip-option>
+      <mat-chip-option value="low">Low</mat-chip-option>
+    </mat-chip-listbox>
+
+    <mat-chip-listbox aria-label="Action type filter" [(ngModel)]="actionTypeFilter" (ngModelChange)="applyFilters()">
+      <mat-chip-option value="all">All Actions</mat-chip-option>
+      <mat-chip-option value="email">Email</mat-chip-option>
+      <mat-chip-option value="linkedin_message">LinkedIn</mat-chip-option>
+      <mat-chip-option value="calendar_invite">Calendar</mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="loading" class="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && filteredActions.length === 0" class="empty-state">
+    <mat-icon>check_circle</mat-icon>
+    <h3>No Pending Approvals</h3>
+    <p>All actions have been reviewed</p>
+  </div>
+
+  <!-- Approval List -->
+  <mat-list *ngIf="!loading && filteredActions.length > 0">
+    <mat-list-item *ngFor="let action of filteredActions" class="action-item">
+      <!-- Checkbox -->
+      <mat-checkbox
+        [checked]="isSelected(action.id)"
+        (change)="toggleSelection(action.id)"
+        class="action-checkbox">
+      </mat-checkbox>
+
+      <!-- Action Details -->
+      <div class="action-details" (click)="viewDetails(action)">
+        <!-- Header Row -->
+        <div class="action-header">
+          <mat-icon class="action-icon">{{ getActionIcon(action.action_type) }}</mat-icon>
+          <span class="action-type">{{ formatActionType(action.action_type) }}</span>
+          <mat-chip [color]="getUrgencyColor(action.urgency)">{{ action.urgency | uppercase }}</mat-chip>
+          <span class="created-at">{{ timeAgo(action.created_at) }}</span>
+        </div>
+
+        <!-- Target -->
+        <div class="action-target">
+          <strong>{{ action.target_name }}</strong>
+          <span class="target-type">({{ action.target_type }})</span>
+        </div>
+
+        <!-- Subject -->
+        <div class="action-subject" *ngIf="action.subject">
+          <strong>{{ action.subject }}</strong>
+        </div>
+
+        <!-- Content Preview -->
+        <div class="action-content">
+          {{ action.content.substring(0, 150) }}{{ action.content.length > 150 ? '...' : '' }}
+        </div>
+
+        <!-- Metadata -->
+        <div class="action-metadata" *ngIf="action.bead_id || action.formula_step">
+          <span *ngIf="action.bead_id">Bead: {{ action.bead_id }}</span>
+          <span *ngIf="action.formula_step">Step: {{ action.formula_step }}</span>
+          <span>Created by: {{ action.created_by }}</span>
+        </div>
+      </div>
+
+      <!-- View Button -->
+      <button mat-icon-button (click)="viewDetails(action)" class="view-button">
+        <mat-icon>visibility</mat-icon>
+      </button>
+    </mat-list-item>
+  </mat-list>
+
+  <!-- Batch Actions -->
+  <div *ngIf="selectedActions.size > 0" class="batch-actions">
+    <div class="batch-info">
+      <span>{{ selectedActions.size }} action(s) selected</span>
+    </div>
+    <button mat-raised-button color="primary" (click)="batchApprove()">
+      <mat-icon>check</mat-icon>
+      Batch Approve
+    </button>
+  </div>
+</div>

@@ -378,7 +378,7 @@ services:
     ports:
       - "18080:8080"
     volumes:
-      - ./docker/gateway-edge:/etc/nginx/conf.d:ro
+      - ./docker/gateway-edge/default.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1"]
       interval: 10s
@@ -436,97 +436,15 @@ services:
         limits:
           memory: 512M
 
-  # Customer FHIR Server (HAPI) - simulates provider-managed FHIR endpoint
-  customer-fhir-db:
-    container_name: hdim-demo-customer-fhir-db
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: demo_password_2024
-      POSTGRES_DB: customer_fhir_db
-    ports:
-      - "5440:5432"
-    volumes:
-      - customer_fhir_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_fhir_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-  customer-fhir:
-    container_name: hdim-demo-customer-fhir
-    image: hapiproject/hapi:v7.0.2
-    depends_on:
-      customer-fhir-db:
-        condition: service_healthy
-    environment:
-      hapi.fhir.fhir_version: R4
-      hapi.fhir.allow_external_references: "true"
-      hapi.fhir.allow_multiple_delete: "true"
-      hapi.fhir.allow_contains_searches: "true"
-      hapi.fhir.allow_override_default_search_params: "true"
-      hapi.fhir.reuse_cached_search_results_millis: 60000
-      hapi.fhir.subscription.resthook_enabled: "true"
-      hapi.fhir.cr_enabled: "true"
-      hapi.fhir.expunge_enabled: "true"
-      hapi.fhir.binary_storage_enabled: "true"
-      hapi.fhir.default_page_size: 20
-      hapi.fhir.max_page_size: 200
-      spring.datasource.url: jdbc:postgresql://customer-fhir-db:5432/customer_fhir_db
-      spring.datasource.driverClassName: org.postgresql.Driver
-      spring.datasource.username: healthdata
-      spring.datasource.password: demo_password_2024
-      spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
-      spring.jpa.hibernate.ddl-auto: update
-      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Xms512m -Xmx2g"
-    ports:
-      - "8090:8080"
-    volumes:
-      - customer_fhir_data:/data/hapi
-    healthcheck:
-      test: ["CMD", "java", "-version"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 45s
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 1024M
-
-  # Customer CDR (relational clinical data repository)
-  customer-cdr:
-    container_name: hdim-demo-customer-cdr
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: demo_password_2024
-      POSTGRES_DB: customer_cdr
-    ports:
-      - "5441:5432"
-    volumes:
-      - customer_cdr_data:/var/lib/postgresql/data
-      - ./docker/cdr:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_cdr"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+  # ── Customer Simulation Services ──────────────────────────────────────────────
+  # These simulate a customer's existing EHR infrastructure. They are NOT part of
+  # the HDIM platform — they represent what a customer already has in production.
+  # Moved to docker-compose.customer-sim.yml for clarity.
+  # To include them: docker compose -f docker-compose.demo.yml -f docker-compose.customer-sim.yml up -d
+  #
+  # customer-fhir-db:   (postgres:16-alpine, port 5440, 512M)
+  # customer-fhir:      (hapiproject/hapi:v7.0.2, port 8090, 1024M)
+  # customer-cdr:       (postgres:16-alpine, port 5441, 512M)
 
   cql-engine-service:
     container_name: hdim-demo-cql-engine
@@ -857,8 +775,6 @@ services:
         condition: service_healthy
       fhir-service:
         condition: service_healthy
-      customer-fhir:
-        condition: service_healthy
       care-gap-service:
         condition: service_healthy
       gateway-edge:
@@ -879,7 +795,7 @@ services:
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       # Downstream service URLs - Use direct service URLs to avoid gateway timeout issues
       FHIR_SERVICE_URL: http://fhir-service:8085/fhir
-      FHIR_EXTERNAL_URL: http://customer-fhir:8080/fhir
+      FHIR_EXTERNAL_URL: http://fhir-service:8085/fhir
       FHIR_TARGET: internal
       CARE_GAP_SERVICE_URL: http://hdim-demo-care-gap:8086/care-gap
       GATEWAY_SERVICE_URL: http://gateway-edge:8080
@@ -911,38 +827,43 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6144M
+          memory: 2048M
 
-  clinical-portal:
-    container_name: hdim-demo-clinical-portal
-    build:
-      context: .
-      dockerfile: apps/clinical-portal/Dockerfile
-    depends_on:
-      gateway-edge:
-        condition: service_healthy
-      demo-seeding-service:
-        condition: service_healthy
-    environment:
-      API_URL: http://gateway-edge:8080
-      DEFAULT_TENANT_ID: acme-health
-      DEMO_SEEDING_URL: http://demo-seeding-service:8098
-    volumes:
-      - ./docker/clinical-portal:/etc/nginx/conf.d:ro
-    ports:
-      - "4200:80"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "test -f /usr/share/nginx/html/index.html && exit 0 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 45s
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 256M
+  # ── Clinical Portal ─────────────────────────────────────────────────────────
+  # For development/demo, run via: npx nx serve clinical-portal
+  # This gives hot-reload and faster iteration. The container build is for
+  # production/staging deployments only.
+  #
+  # clinical-portal:
+  #   container_name: hdim-demo-clinical-portal
+  #   build:
+  #     context: .
+  #     dockerfile: apps/clinical-portal/Dockerfile
+  #   depends_on:
+  #     gateway-edge:
+  #       condition: service_healthy
+  #     demo-seeding-service:
+  #       condition: service_healthy
+  #   environment:
+  #     API_URL: http://gateway-edge:8080
+  #     DEFAULT_TENANT_ID: acme-health
+  #     DEMO_SEEDING_URL: http://demo-seeding-service:8098
+  #   volumes:
+  #     - ./docker/clinical-portal:/etc/nginx/conf.d:ro
+  #   ports:
+  #     - "4200:80"
+  #   healthcheck:
+  #     test: ["CMD", "sh", "-c", "test -f /usr/share/nginx/html/index.html && exit 0 || exit 1"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 45s
+  #   networks:
+  #     - hdim-demo-network
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 256M
 
 networks:
   hdim-demo-network:
@@ -954,7 +875,4 @@ volumes:
     driver: local
   demo_snapshots:
     driver: local
-  customer_fhir_data:
-    driver: local
-  customer_cdr_data:
-    driver: local
+  # customer_fhir_data and customer_cdr_data moved to docker-compose.customer-sim.yml

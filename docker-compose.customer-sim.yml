@@ -1,0 +1,113 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# HDIM Customer Simulation — Compose Override
+# ─────────────────────────────────────────────────────────────────────────────
+# Adds simulated customer infrastructure to the demo environment.
+# These services represent what a CUSTOMER already has — they are NOT part of
+# the HDIM platform product.
+#
+# Usage (with demo stack):
+#   docker compose -f docker-compose.demo.yml -f docker-compose.customer-sim.yml up -d
+#
+# Services:
+#   customer-fhir-db    PostgreSQL backing store for customer EHR
+#   customer-fhir       HAPI FHIR R4 (simulates Epic/Cerner/Athena FHIR endpoint)
+#   customer-cdr        PostgreSQL clinical data repository (demographics, encounters, dx, labs)
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+  # ── Customer EHR FHIR Database ──────────────────────────────────────────────
+  customer-fhir-db:
+    container_name: hdim-sim-customer-fhir-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: demo_password_2024
+      POSTGRES_DB: customer_fhir_db
+    ports:
+      - "5440:5432"
+    volumes:
+      - customer_fhir_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_fhir_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ── Customer EHR FHIR Server (HAPI) ────────────────────────────────────────
+  customer-fhir:
+    container_name: hdim-sim-customer-fhir
+    image: hdim/simulation-customer-ehr:latest
+    build:
+      context: ./docker/simulation/customer-ehr
+      dockerfile: Dockerfile
+    depends_on:
+      customer-fhir-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: customer-fhir-db
+      DB_NAME: customer_fhir_db
+      DB_USERNAME: healthdata
+      DB_PASSWORD: demo_password_2024
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Xms512m -Xmx2g"
+    ports:
+      - "8090:8080"
+    healthcheck:
+      test: ["CMD", "java", "-version"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+  # ── Customer CDR (Clinical Data Repository) ────────────────────────────────
+  customer-cdr:
+    container_name: hdim-sim-customer-cdr
+    image: hdim/simulation-customer-cdr:latest
+    build:
+      context: ./docker/simulation/customer-cdr
+      dockerfile: Dockerfile
+    ports:
+      - "5441:5432"
+    volumes:
+      - customer_cdr_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_cdr"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ── Override demo-seeding to point at customer-fhir ─────────────────────────
+  demo-seeding-service:
+    depends_on:
+      customer-fhir:
+        condition: service_healthy
+    environment:
+      FHIR_EXTERNAL_URL: http://customer-fhir:8080/fhir
+
+networks:
+  hdim-demo-network:
+    name: demo_hdim-demo-network
+    external: true
+
+volumes:
+  customer_fhir_data:
+    driver: local
+  customer_cdr_data:
+    driver: local

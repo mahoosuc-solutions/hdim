@@ -6,6 +6,7 @@ import {
 } from '@angular/common/http/testing';
 import { tenantInterceptor } from './tenant.interceptor';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
+import { AuthService } from '../services/auth.service';
 
 describe('TenantInterceptor', () => {
   let httpMock: HttpTestingController;
@@ -17,6 +18,12 @@ describe('TenantInterceptor', () => {
         provideHttpClient(withInterceptors([tenantInterceptor])),
         provideHttpClientTesting(),
         HttpTestingController,
+        {
+          provide: AuthService,
+          useValue: {
+            getTenantId: () => API_CONFIG.DEFAULT_TENANT_ID,
+          },
+        },
       ],
     });
 

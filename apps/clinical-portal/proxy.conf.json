@@ -74,13 +74,13 @@
       "^/care-gap": "/care-gap"
     }
   },
-  "/patient": {
+  "/patient/": {
     "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug",
     "pathRewrite": {
-      "^/patient": "/patient"
+      "^/patient/": "/patient/"
     }
   },
   "/qrda": {

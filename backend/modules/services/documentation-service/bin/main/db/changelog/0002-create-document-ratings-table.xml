@@ -62,36 +62,36 @@
     <changeSet id="0002-create-rating-trigger" author="agent-5">
         <comment>Create trigger to update avg_rating in document_metadata when ratings change</comment>
 
-        <sql>
-            CREATE OR REPLACE FUNCTION update_document_avg_rating()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                UPDATE document_metadata
-                SET avg_rating = (
-                    SELECT AVG(rating)::DECIMAL(2,1)
-                    FROM document_ratings
-                    WHERE document_id = COALESCE(NEW.document_id, OLD.document_id)
-                    AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id)
-                ),
-                feedback_count = (
-                    SELECT COUNT(*)
-                    FROM document_ratings
-                    WHERE document_id = COALESCE(NEW.document_id, OLD.document_id)
-                    AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id)
-                ),
-                updated_at = CURRENT_TIMESTAMP
-                WHERE id = COALESCE(NEW.document_id, OLD.document_id)
-                AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id);
+        <sql splitStatements="false" stripComments="false"><![CDATA[
+CREATE OR REPLACE FUNCTION update_document_avg_rating()
+RETURNS TRIGGER AS $func$
+BEGIN
+    UPDATE document_metadata
+    SET avg_rating = (
+        SELECT AVG(rating)::DECIMAL(2,1)
+        FROM document_ratings
+        WHERE document_id = COALESCE(NEW.document_id, OLD.document_id)
+        AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id)
+    ),
+    feedback_count = (
+        SELECT COUNT(*)
+        FROM document_ratings
+        WHERE document_id = COALESCE(NEW.document_id, OLD.document_id)
+        AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id)
+    ),
+    updated_at = CURRENT_TIMESTAMP
+    WHERE id = COALESCE(NEW.document_id, OLD.document_id)
+    AND tenant_id = COALESCE(NEW.tenant_id, OLD.tenant_id);
 
-                RETURN COALESCE(NEW, OLD);
-            END;
-            $$ LANGUAGE plpgsql;
+    RETURN COALESCE(NEW, OLD);
+END;
+$func$ LANGUAGE plpgsql;
 
-            CREATE TRIGGER trigger_update_avg_rating
-            AFTER INSERT OR UPDATE OR DELETE ON document_ratings
-            FOR EACH ROW
-            EXECUTE FUNCTION update_document_avg_rating();
-        </sql>
+CREATE TRIGGER trigger_update_avg_rating
+AFTER INSERT OR UPDATE OR DELETE ON document_ratings
+FOR EACH ROW
+EXECUTE FUNCTION update_document_avg_rating();
+        ]]></sql>
 
         <rollback>
             <sql>

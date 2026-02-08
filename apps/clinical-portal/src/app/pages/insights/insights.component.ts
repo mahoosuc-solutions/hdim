@@ -27,7 +27,6 @@ import {
 } from '../../services/population-insights.service';
 import { ToastService } from '../../services/toast.service';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
-import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 
 @Component({
   selector: 'app-insights',
@@ -51,7 +50,6 @@ import { LoadingButtonComponent } from '../../shared/components/loading-button/l
     MatFormFieldModule,
     MatDialogModule,
     LoadingOverlayComponent,
-    LoadingButtonComponent,
   ],
   template: `
     <div class="page">

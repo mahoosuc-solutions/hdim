@@ -290,7 +290,9 @@ export class ReportBuilderService {
   readonly history$ = this.historySubject.asObservable();
 
   constructor(
-    private logger: LoggerService,) {    this.loadFromStorage();
+    private logger: LoggerService
+  ) {
+    this.loadFromStorage();
   }
 
   /**

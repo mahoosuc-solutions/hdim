@@ -20,42 +20,42 @@
             <column name="encounter_id" type="VARCHAR(255)">
                 <constraints nullable="true"/>
             </column>
-            <column name="observation_id" type="VARCHAR(255)" comment="FHIR Observation resource ID">
+            <column name="observation_id" type="VARCHAR(255)" remarks="FHIR Observation resource ID">
                 <constraints nullable="true"/>
             </column>
             <column name="recorded_by" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
             <!-- Vital Signs -->
-            <column name="systolic_bp" type="NUMERIC(5,1)" comment="Systolic Blood Pressure in mmHg">
+            <column name="systolic_bp" type="NUMERIC(5,1)" remarks="Systolic Blood Pressure in mmHg">
                 <constraints nullable="true"/>
             </column>
-            <column name="diastolic_bp" type="NUMERIC(5,1)" comment="Diastolic Blood Pressure in mmHg">
+            <column name="diastolic_bp" type="NUMERIC(5,1)" remarks="Diastolic Blood Pressure in mmHg">
                 <constraints nullable="true"/>
             </column>
-            <column name="heart_rate" type="NUMERIC(5,1)" comment="Heart Rate in beats per minute">
+            <column name="heart_rate" type="NUMERIC(5,1)" remarks="Heart Rate in beats per minute">
                 <constraints nullable="true"/>
             </column>
-            <column name="temperature_f" type="NUMERIC(5,2)" comment="Temperature in Fahrenheit">
+            <column name="temperature_f" type="NUMERIC(5,2)" remarks="Temperature in Fahrenheit">
                 <constraints nullable="true"/>
             </column>
-            <column name="respiration_rate" type="NUMERIC(5,1)" comment="Respiration Rate in breaths per minute">
+            <column name="respiration_rate" type="NUMERIC(5,1)" remarks="Respiration Rate in breaths per minute">
                 <constraints nullable="true"/>
             </column>
-            <column name="oxygen_saturation" type="NUMERIC(5,1)" comment="O2 Saturation in percentage">
+            <column name="oxygen_saturation" type="NUMERIC(5,1)" remarks="O2 Saturation in percentage">
                 <constraints nullable="true"/>
             </column>
-            <column name="weight_kg" type="NUMERIC(7,2)" comment="Weight in kilograms">
+            <column name="weight_kg" type="NUMERIC(7,2)" remarks="Weight in kilograms">
                 <constraints nullable="true"/>
             </column>
-            <column name="height_cm" type="NUMERIC(5,1)" comment="Height in centimeters">
+            <column name="height_cm" type="NUMERIC(5,1)" remarks="Height in centimeters">
                 <constraints nullable="true"/>
             </column>
-            <column name="bmi" type="NUMERIC(5,2)" comment="Body Mass Index">
+            <column name="bmi" type="NUMERIC(5,2)" remarks="Body Mass Index">
                 <constraints nullable="true"/>
             </column>
             <!-- Alert Status -->
-            <column name="alert_status" type="VARCHAR(50)" defaultValue="normal" comment="normal, warning, critical">
+            <column name="alert_status" type="VARCHAR(50)" defaultValue="normal" remarks="normal, warning, critical">
                 <constraints nullable="false"/>
             </column>
             <column name="alert_message" type="TEXT">

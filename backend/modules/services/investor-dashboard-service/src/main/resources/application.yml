@@ -41,10 +41,12 @@ linkedin:
   oauth2:
     client-id: ${LINKEDIN_CLIENT_ID:}
     client-secret: ${LINKEDIN_CLIENT_SECRET:}
-    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:4200/investor-launch/linkedin/callback}
+    redirect-uri: ${LINKEDIN_REDIRECT_URI:http://localhost:8120/investor/api/linkedin/callback}
     scope: r_liteprofile,r_emailaddress,w_member_social
   api:
     base-url: https://api.linkedin.com/v2
+    oauth-url: https://www.linkedin.com/oauth/v2
+    enabled: ${LINKEDIN_API_ENABLED:false}
 
 # CORS Configuration
 cors:

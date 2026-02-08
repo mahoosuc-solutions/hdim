@@ -41,6 +41,7 @@ dependencies {
 
     // Kafka (optional - for audit event streaming)
     compileOnly("org.springframework.kafka:spring-kafka")
+    testImplementation("org.springframework.kafka:spring-kafka")
 
     // Utilities
     implementation(libs.commons.lang3)

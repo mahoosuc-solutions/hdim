@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
+import java.time.Duration;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,8 @@ class EntityMigrationValidationTest {
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
             .withDatabaseName("investor_test")
             .withUsername("testuser")
-            .withPassword("testpass");
+            .withPassword("testpass")
+            .withStartupTimeout(Duration.ofMinutes(3));
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -80,6 +82,13 @@ class EntityMigrationValidationTest {
         registry.add("jwt.refresh-expiration", () -> "86400000");
         registry.add("security.login.max-attempts", () -> "5");
         registry.add("security.login.lockout-duration", () -> "900000");
+
+        // Zoho integration defaults for tests (avoid missing property failures)
+        registry.add("zoho.api.enabled", () -> "false");
+        registry.add("zoho.oauth2.client-id", () -> "test-client-id");
+        registry.add("zoho.oauth2.client-secret", () -> "test-client-secret");
+        registry.add("zoho.oauth2.redirect-uri", () -> "http://localhost/test");
+        registry.add("zoho.oauth2.scope", () -> "ZohoCRM.modules.ALL");
     }
 
     /**

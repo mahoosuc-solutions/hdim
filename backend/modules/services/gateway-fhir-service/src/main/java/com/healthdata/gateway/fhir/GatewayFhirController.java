@@ -55,6 +55,14 @@ public class GatewayFhirController {
         return forwarder.forwardRequest(request, body, qualityMeasureUrl, "/api/quality");
     }
 
+    @RequestMapping(value = "/api/v1/quality-measures/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToQualityMeasureV1(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, qualityMeasureUrl, "/api/v1/quality-measures");
+    }
+
     @RequestMapping(value = "/quality-measure/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToQualityMeasureDirect(
         HttpServletRequest request,

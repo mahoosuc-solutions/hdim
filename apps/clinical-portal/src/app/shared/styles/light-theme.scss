@@ -4,7 +4,8 @@
  * Light color scheme for the HealthData Platform.
  */
 
-@import './variables.scss';
+@use 'sass:color';
+@use './variables' as *;
 
 // Light Theme Variables
 $light-bg-primary: #ffffff;
@@ -160,12 +161,12 @@ a {
   text-decoration: none;
 
   &:hover {
-    color: darken($primary, 10%);
+    color: color.adjust($primary, $lightness: -10%);
     text-decoration: underline;
   }
 
   &:visited {
-    color: darken($primary, 20%);
+    color: color.adjust($primary, $lightness: -20%);
   }
 }
 

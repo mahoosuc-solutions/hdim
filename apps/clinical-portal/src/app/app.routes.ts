@@ -173,6 +173,41 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_REPORTS'] },
   },
   {
+    path: 'admin/users',
+    loadComponent: () =>
+      import('./pages/admin/admin-users.component').then((m) => m.AdminUsersComponent),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN'] },
+  },
+  {
+    path: 'admin/tenant-settings',
+    loadComponent: () =>
+      import('./pages/admin/admin-tenant-settings.component').then(
+        (m) => m.AdminTenantSettingsComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN'] },
+  },
+  {
+    path: 'admin/audit-logs',
+    loadComponent: () =>
+      import('./pages/admin/admin-audit-logs.component').then(
+        (m) => m.AdminAuditLogsComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN'] },
+  },
+  {
+    path: 'admin/demo-seeding',
+    loadComponent: () =>
+      import('./pages/admin/admin-demo-seeding.component').then(
+        (m) => m.AdminDemoSeedingComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN'] },
+  },
+
+  {
     path: 'visualization',
     loadComponent: () =>
       import('./visualization/angular/visualization-layout.component').then(

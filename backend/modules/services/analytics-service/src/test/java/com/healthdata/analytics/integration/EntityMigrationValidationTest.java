@@ -16,8 +16,10 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 import javax.sql.DataSource;
+import java.time.Duration;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -46,11 +48,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class EntityMigrationValidationTest {
 
     @Container
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16-alpine")
+        static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16")
             .withDatabaseName("analytics_test")
             .withUsername("testuser")
             .withPassword("testpass")
-            .withReuse(true);
+            .withReuse(true)
+            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(2)))
+            .withStartupTimeout(Duration.ofMinutes(3));
 
     @Autowired
     private EntityManagerFactory entityManagerFactory;

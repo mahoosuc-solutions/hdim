@@ -22,7 +22,6 @@ import { takeUntil, finalize } from 'rxjs/operators';
 import { PatientService } from '../../services/patient.service';
 import { PatientSummary } from '../../models/patient.model';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
-import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoggerService } from '../../services/logger.service';
 
 /**
@@ -75,7 +74,6 @@ export interface PreVisitCareGap {
     MatBadgeModule,
     MatDividerModule,
     LoadingOverlayComponent,
-    LoadingButtonComponent,
   ],
   templateUrl: './pre-visit-planning.component.html',
   styleUrl: './pre-visit-planning.component.scss',

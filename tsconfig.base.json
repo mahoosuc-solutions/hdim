@@ -36,6 +36,9 @@
       "mfePatients/Routes": [
         "apps/mfe-patients/src/app/remote-entry/entry.routes.ts"
       ],
+      "mfeMeasureBuilder/Routes": [
+        "apps/mfe-measure-builder/src/app/remote-entry/entry.routes.ts"
+      ],
       "@health-platform/shared/state": [
         "libs/shared/state/src/index.ts"
       ],

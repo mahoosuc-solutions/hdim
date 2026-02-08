@@ -2129,7 +2129,8 @@ services:
       # LinkedIn OAuth (optional)
       LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
       LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
-      LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI:-http://localhost:4200/investor-launch/linkedin/callback}
+      LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI:-http://localhost:8120/investor/api/linkedin/callback}
+      LINKEDIN_API_ENABLED: ${LINKEDIN_API_ENABLED:-true}
       # CORS
       CORS_ALLOWED_ORIGINS: http://localhost:4200,https://admin.hdim.ai,https://*.vercel.app
       # Database schema management

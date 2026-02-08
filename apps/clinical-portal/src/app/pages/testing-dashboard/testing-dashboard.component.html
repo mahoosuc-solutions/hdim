@@ -244,11 +244,10 @@
           (click)="checkAllServiceHealth()">
           @if (checkingHealth) {
             <mat-progress-spinner diameter="20" mode="indeterminate" class="button-spinner"></mat-progress-spinner>
-            <span>Checking...</span>
           } @else {
             <mat-icon>refresh</mat-icon>
-            <span>Check All Services</span>
           }
+          <span>{{ checkingHealth ? 'Checking...' : 'Check All Services' }}</span>
         </button>
       </div>
       <div class="services-grid">

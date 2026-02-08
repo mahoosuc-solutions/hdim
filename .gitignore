@@ -32,6 +32,8 @@ build-user/
 .docker-tmp/
 .tmp-*/
 META-INF/
+backend/modules/services/*/bin/
+backend/modules/shared/*/bin/
 
 # Screenshots and test artifacts
 .playwright-mcp/

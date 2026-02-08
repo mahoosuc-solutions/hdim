@@ -21,13 +21,19 @@
     }
   },
   "/api/v1/audit": {
-    "target": "http://localhost:8088",
+    "target": "http://localhost:18080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
+  "/audit": {
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
   },
   "/api/v1/clinical": {
-    "target": "http://localhost:8088",
+    "target": "http://localhost:18080",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"

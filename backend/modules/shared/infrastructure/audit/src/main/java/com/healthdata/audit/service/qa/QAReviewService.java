@@ -237,9 +237,12 @@ public class QAReviewService {
 
         // Get average confidence and review time from events
         List<String> decisionIds = reviews.stream().map(QAReviewEntity::getDecisionId).collect(Collectors.toList());
-        List<AIAgentDecisionEventEntity> events = auditEventRepository.findByDecisionIdIn(decisionIds);
+        List<AIAgentDecisionEventEntity> events = fetchEventsByDecisionIds(decisionIds);
+        Map<String, AIAgentDecisionEventEntity> eventsById = indexEventsByDecisionId(events);
 
-        double averageConfidence = events.stream()
+        Collection<AIAgentDecisionEventEntity> indexedEvents = eventsById.values();
+
+        double averageConfidence = indexedEvents.stream()
                 .mapToDouble(e -> e.getConfidenceScore() != null ? e.getConfidenceScore() : 0.0)
                 .average()
                 .orElse(0.0);
@@ -248,10 +251,7 @@ public class QAReviewService {
                 .filter(r -> r.getReviewedAt() != null)
                 .mapToLong(r -> {
                     // Find corresponding event
-                    AIAgentDecisionEventEntity event = events.stream()
-                            .filter(e -> e.getEventId().toString().equals(r.getDecisionId()))
-                            .findFirst()
-                            .orElse(null);
+                    AIAgentDecisionEventEntity event = eventsById.get(r.getDecisionId());
                     if (event != null) {
                         return ChronoUnit.MINUTES.between(event.getTimestamp(), r.getReviewedAt());
                     }
@@ -261,9 +261,9 @@ public class QAReviewService {
                 .orElse(0.0);
 
         // Confidence distribution
-        long highConf = events.stream().filter(e -> e.getConfidenceScore() >= 0.9).count();
-        long mediumConf = events.stream().filter(e -> e.getConfidenceScore() >= 0.7 && e.getConfidenceScore() < 0.9).count();
-        long lowConf = events.stream().filter(e -> e.getConfidenceScore() < 0.7).count();
+        long highConf = indexedEvents.stream().filter(e -> e.getConfidenceScore() >= 0.9).count();
+        long mediumConf = indexedEvents.stream().filter(e -> e.getConfidenceScore() >= 0.7 && e.getConfidenceScore() < 0.9).count();
+        long lowConf = indexedEvents.stream().filter(e -> e.getConfidenceScore() < 0.7).count();
 
         ConfidenceDistribution distribution = ConfidenceDistribution.builder()
                 .highConfidence(highConf)
@@ -272,8 +272,8 @@ public class QAReviewService {
                 .build();
 
         // Calculate per-agent statistics
-        Map<String, AgentStats> agentPerformance = calculatePerAgentStatistics(
-            events, reviews, agentType);
+                Map<String, AgentStats> agentPerformance = calculatePerAgentStatistics(
+                        new ArrayList<>(indexedEvents), reviews, agentType);
 
         return QAMetrics.builder()
                 .totalDecisions(totalDecisions)
@@ -308,6 +308,12 @@ public class QAReviewService {
                 .collect(Collectors.groupingBy(r -> 
                         r.getReviewedAt().atZone(ZoneId.systemDefault()).toLocalDate()));
 
+        List<String> allDecisionIds = reviews.stream()
+                .map(QAReviewEntity::getDecisionId)
+                .collect(Collectors.toList());
+        List<AIAgentDecisionEventEntity> allEvents = fetchEventsByDecisionIds(allDecisionIds);
+        Map<String, AIAgentDecisionEventEntity> eventsById = indexEventsByDecisionId(allEvents);
+
         // Build daily trend points
         List<DailyTrendPoint> dailyTrends = byDate.entrySet().stream()
                 .map(entry -> {
@@ -323,9 +329,14 @@ public class QAReviewService {
                     double accuracy = total > 0 ? (double) (total - falsePos - falseNeg) / total : 1.0;
 
             // Get average confidence from events
-            List<String> decisionIds = dayReviews.stream().map(QAReviewEntity::getDecisionId).collect(Collectors.toList());
-            List<AIAgentDecisionEventEntity> events = auditEventRepository.findByDecisionIdIn(decisionIds);
-            double avgConfidence = events.stream()
+                    List<String> decisionIds = dayReviews.stream()
+                            .map(QAReviewEntity::getDecisionId)
+                            .collect(Collectors.toList());
+                    List<AIAgentDecisionEventEntity> events = decisionIds.stream()
+                            .map(eventsById::get)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+                    double avgConfidence = events.stream()
                     .mapToDouble(e -> e.getConfidenceScore() != null ? e.getConfidenceScore() : 0.0)
                     .average()
                     .orElse(0.0);                    return DailyTrendPoint.builder()
@@ -341,14 +352,8 @@ public class QAReviewService {
                 .collect(Collectors.toList());
 
         // Calculate per-agent trends
-        // Get events for all reviews to calculate trends
-        List<String> allDecisionIds = reviews.stream()
-                .map(QAReviewEntity::getDecisionId)
-                .collect(Collectors.toList());
-        List<AIAgentDecisionEventEntity> allEvents = auditEventRepository.findByDecisionIdIn(allDecisionIds);
-        
         Map<String, List<DailyTrendPoint>> perAgentTrends = calculatePerAgentTrends(
-            reviews, allEvents, agentType, days);
+            reviews, new ArrayList<>(eventsById.values()), agentType, days);
 
         return QATrendData.builder()
                 .dailyTrends(dailyTrends)
@@ -520,6 +525,50 @@ public class QAReviewService {
         
         return perAgentTrends;
     }
+
+        private List<AIAgentDecisionEventEntity> fetchEventsByDecisionIds(Collection<String> decisionIds) {
+                if (decisionIds == null || decisionIds.isEmpty()) {
+                        return Collections.emptyList();
+                }
+
+                LinkedHashSet<String> validIds = new LinkedHashSet<>();
+                for (String decisionId : decisionIds) {
+                        if (decisionId == null) {
+                                continue;
+                        }
+                        String trimmed = decisionId.trim();
+                        if (trimmed.isEmpty()) {
+                                continue;
+                        }
+                        try {
+                                UUID.fromString(trimmed);
+                                validIds.add(trimmed);
+                        } catch (IllegalArgumentException ex) {
+                                log.warn("Skipping invalid decision ID during QA metrics lookup: {}", trimmed);
+                        }
+                }
+
+                if (validIds.isEmpty()) {
+                        return Collections.emptyList();
+                }
+
+                return auditEventRepository.findByDecisionIdIn(new ArrayList<>(validIds));
+        }
+
+        private Map<String, AIAgentDecisionEventEntity> indexEventsByDecisionId(Collection<AIAgentDecisionEventEntity> events) {
+                if (events == null || events.isEmpty()) {
+                        return Collections.emptyMap();
+                }
+
+                return events.stream()
+                                .filter(event -> event.getEventId() != null)
+                                .collect(Collectors.toMap(
+                                                event -> event.getEventId().toString(),
+                                                event -> event,
+                                                (existing, replacement) -> existing,
+                                                LinkedHashMap::new
+                                ));
+        }
 
     /**
      * Batch approve decisions

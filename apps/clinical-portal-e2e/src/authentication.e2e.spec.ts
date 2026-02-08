@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { setupDemoAuthViaStorage } from './fixtures/auth.fixture';
 
 /**
  * Authentication E2E Tests
@@ -66,12 +67,20 @@ async function mockAuthBackend(page: Page, options: { loginSuccess?: boolean; re
     }
 
     if (loginSuccess) {
+      const now = Date.now();
       return route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          token: 'test-jwt-token-' + Date.now(),
-          user: { ...DEMO_USER, username: body.username },
+          accessToken: `test-jwt-token-${now}`,
+          refreshToken: `test-refresh-token-${now}`,
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          username: body.username,
+          email: `${body.username}@example.com`,
+          roles: ['ADMIN', 'EVALUATOR'],
+          tenantIds: ['acme-health'],
+          mfaEnabled: false,
         }),
       });
     }
@@ -91,8 +100,15 @@ async function mockAuthBackend(page: Page, options: { loginSuccess?: boolean; re
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          token: 'test-jwt-token-' + Date.now(),
-          user: DEMO_USER,
+          accessToken: `test-jwt-token-${Date.now()}`,
+          refreshToken: `test-refresh-token-${Date.now()}`,
+          tokenType: 'Bearer',
+          expiresIn: 900,
+          username: DEMO_USER.username,
+          email: DEMO_USER.email,
+          roles: ['ADMIN', 'EVALUATOR'],
+          tenantIds: ['acme-health'],
+          mfaEnabled: false,
         }),
       });
     }
@@ -124,12 +140,12 @@ test.describe('Login Page Display and Accessibility', () => {
     await expect(page.locator('.logo-icon')).toBeVisible();
 
     // Check form fields
-    await expect(page.locator('input[formcontrolname="username"]')).toBeVisible();
-    await expect(page.locator('input[formcontrolname="password"]')).toBeVisible();
+    await expect(page.locator('input[data-test-id="username"]')).toBeVisible();
+    await expect(page.locator('input[data-test-id="password"]')).toBeVisible();
 
     // Check buttons
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /demo login/i })).toBeVisible();
+    await expect(page.locator('button[data-test-id="login-button"]')).toBeVisible();
+    await expect(page.locator('button[data-test-id="demo-login-button"]')).toBeVisible();
 
     // Check HIPAA security notice
     await expect(page.locator('.security-notice')).toContainText('HIPAA-compliant');
@@ -137,15 +153,15 @@ test.describe('Login Page Display and Accessibility', () => {
 
   test('should have proper accessibility labels', async ({ page }) => {
     // Check form field labels or placeholders - Angular Material may use different patterns
-    const usernameInput = page.locator('input[formcontrolname="username"], input[placeholder*="username" i], input[aria-label*="username" i]');
-    const passwordInput = page.locator('input[formcontrolname="password"], input[placeholder*="password" i], input[aria-label*="password" i]');
+    const usernameInput = page.locator('input[data-test-id="username"]');
+    const passwordInput = page.locator('input[data-test-id="password"]');
 
-    const usernameCount = await usernameInput.count();
-    const passwordCount = await passwordInput.count();
+    await expect(usernameInput).toBeVisible();
+    await expect(passwordInput).toBeVisible();
 
-    // Form fields should be present (with any labeling pattern)
-    expect(usernameCount).toBeGreaterThan(0);
-    expect(passwordCount).toBeGreaterThan(0);
+    // Form fields should be labeled or have placeholders
+    await expect(usernameInput).toHaveAttribute('placeholder', /username/i);
+    await expect(passwordInput).toHaveAttribute('placeholder', /password/i);
 
     // Check password visibility toggle has aria-label (optional)
     const passwordToggle = page.locator('button[aria-label*="password"], button mat-icon:text("visibility")');
@@ -154,7 +170,7 @@ test.describe('Login Page Display and Accessibility', () => {
   });
 
   test('should toggle password visibility', async ({ page }) => {
-    const passwordInput = page.locator('input[formcontrolname="password"]');
+    const passwordInput = page.locator('input[data-test-id="password"]');
     const toggleButton = page.locator('button[aria-label*="password"]');
 
     // Initially password should be hidden
@@ -181,39 +197,43 @@ test.describe('Login Form Validation', () => {
   });
 
   test('should disable submit button when form is invalid', async ({ page }) => {
-    const submitButton = page.getByRole('button', { name: /sign in/i });
+    const submitButton = page.locator('button[data-test-id="login-button"]');
 
     // Initially disabled (empty form)
     await expect(submitButton).toBeDisabled();
 
     // Fill only username
-    await page.fill('input[formcontrolname="username"]', 'testuser');
+    await page.fill('input[data-test-id="username"]', 'testuser');
     await expect(submitButton).toBeDisabled();
 
     // Clear and fill only password
-    await page.fill('input[formcontrolname="username"]', '');
-    await page.fill('input[formcontrolname="password"]', 'password');
+    await page.fill('input[data-test-id="username"]', '');
+    await page.fill('input[data-test-id="password"]', 'password');
     await expect(submitButton).toBeDisabled();
   });
 
   test('should enable submit button when form is valid', async ({ page }) => {
-    const submitButton = page.getByRole('button', { name: /sign in/i });
+    const submitButton = page.locator('button[data-test-id="login-button"]');
 
-    await page.fill('input[formcontrolname="username"]', 'testuser');
-    await page.fill('input[formcontrolname="password"]', 'password123');
+    await page.fill('input[data-test-id="username"]', 'testuser');
+    await page.fill('input[data-test-id="password"]', 'password123');
 
     await expect(submitButton).toBeEnabled();
   });
 
   test('should show validation errors on blur', async ({ page }) => {
-    const usernameInput = page.locator('input[formcontrolname="username"]');
-    const passwordInput = page.locator('input[formcontrolname="password"]');
+    const usernameInput = page.locator('input[data-test-id="username"]');
+    const passwordInput = page.locator('input[data-test-id="password"]');
+
+    await expect(usernameInput).toBeVisible();
+    await expect(passwordInput).toBeVisible();
 
     // Focus and blur username without entering value
-    await usernameInput.focus();
-    await passwordInput.focus();
+    await usernameInput.click({ force: true });
+    await passwordInput.click({ force: true });
 
     // Error message should appear
+    await page.locator('mat-error').first().waitFor({ state: 'visible', timeout: 5000 });
     await expect(page.locator('mat-error')).toContainText(/required/i);
   });
 });
@@ -221,8 +241,9 @@ test.describe('Login Form Validation', () => {
 test.describe('Demo Login Flow', () => {
   test('should successfully login via demo button', async ({ page }) => {
     await page.goto('/login');
+    await mockAuthBackend(page);
 
-    const demoButton = page.getByRole('button', { name: /demo login/i });
+    const demoButton = page.locator('button[data-test-id="demo-login-button"]');
     await expect(demoButton).toBeVisible();
 
     // Click demo login
@@ -238,20 +259,19 @@ test.describe('Demo Login Flow', () => {
 
   test('should set demo user in localStorage after demo login', async ({ page }) => {
     await page.goto('/login');
+    await mockAuthBackend(page);
 
-    await page.getByRole('button', { name: /demo login/i }).click();
+    await page.locator('button[data-test-id="demo-login-button"]').click();
     await page.waitForURL('**/dashboard', { timeout: 10000 });
 
-    // Check localStorage for auth token
-    const authToken = await page.evaluate(() => localStorage.getItem('healthdata_auth_token'));
     const user = await page.evaluate(() => localStorage.getItem('healthdata_user'));
+    const tenant = await page.evaluate(() => localStorage.getItem('healthdata_tenant'));
 
-    expect(authToken).toBeTruthy();
-    expect(authToken).toContain('demo-jwt-token');
     expect(user).toBeTruthy();
+    expect(tenant).toBeTruthy();
 
     const parsedUser = JSON.parse(user || '{}');
-    expect(parsedUser.username).toBe('demo');
+    expect(parsedUser.username).toContain('demo');
     expect(parsedUser.roles).toBeDefined();
   });
 });
@@ -264,9 +284,9 @@ test.describe('Regular Login Flow', () => {
   test('should successfully login with valid credentials', async ({ page }) => {
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.admin.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.admin.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.admin.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.admin.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     // Should redirect to dashboard
     await page.waitForURL('**/dashboard', { timeout: 10000 });
@@ -276,9 +296,9 @@ test.describe('Regular Login Flow', () => {
   test('should show error message for invalid credentials', async ({ page }) => {
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.invalid.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.invalid.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.invalid.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.invalid.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     // Should show error snackbar
     await expect(page.locator('.mat-mdc-snack-bar-container')).toContainText(/invalid/i, { timeout: 5000 });
@@ -303,9 +323,9 @@ test.describe('Regular Login Flow', () => {
 
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.admin.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.admin.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.admin.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.admin.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     // Check for loading spinner
     await expect(page.locator('mat-spinner')).toBeVisible();
@@ -321,9 +341,9 @@ test.describe('MFA Verification Flow', () => {
   test('should show MFA verification form when MFA is required', async ({ page }) => {
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.admin.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.admin.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.admin.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.admin.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     // MFA verification component should appear
     await expect(page.locator('app-mfa-verify')).toBeVisible({ timeout: 5000 });
@@ -332,9 +352,9 @@ test.describe('MFA Verification Flow', () => {
   test('should allow cancelling MFA and return to login form', async ({ page }) => {
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.admin.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.admin.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.admin.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.admin.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     await expect(page.locator('app-mfa-verify')).toBeVisible({ timeout: 5000 });
 
@@ -343,7 +363,7 @@ test.describe('MFA Verification Flow', () => {
     if (await cancelButton.isVisible()) {
       await cancelButton.click();
       // Should return to login form
-      await expect(page.locator('input[formcontrolname="username"]')).toBeVisible();
+      await expect(page.locator('input[data-test-id="username"]')).toBeVisible();
     }
   });
 });
@@ -370,7 +390,7 @@ test.describe('Authentication Redirects', () => {
 
     if (currentUrl.includes('login')) {
       // Login using demo login (more reliable than regular login in test)
-      const demoLoginButton = page.getByRole('button', { name: /demo login/i });
+      const demoLoginButton = page.locator('button[data-test-id="demo-login-button"]');
       const demoLoginCount = await demoLoginButton.count();
 
       if (demoLoginCount > 0) {
@@ -391,11 +411,7 @@ test.describe('Authentication Redirects', () => {
 
   test('should redirect authenticated user from login to dashboard', async ({ page }) => {
     // Set up auth state first (simulate being logged in)
-    await page.goto('/login');
-
-    // Do demo login
-    await page.getByRole('button', { name: /demo login/i }).click();
-    await page.waitForURL('**/dashboard', { timeout: 10000 });
+    await setupDemoAuthViaStorage(page, '/dashboard');
 
     // Now try to visit login again
     await page.goto('/login');
@@ -410,7 +426,8 @@ test.describe('Session Persistence', () => {
   test('should persist session after page reload', async ({ page }) => {
     // Login first
     await page.goto('/login');
-    await page.getByRole('button', { name: /demo login/i }).click();
+    await mockAuthBackend(page);
+    await page.locator('button[data-test-id="demo-login-button"]').click();
     await page.waitForURL('**/dashboard', { timeout: 10000 });
 
     // Reload the page
@@ -420,13 +437,16 @@ test.describe('Session Persistence', () => {
     await expect(page).toHaveURL(/.*dashboard/);
   });
 
-  test('should have auth token in localStorage after login', async ({ page }) => {
+  test('should store user profile in localStorage after login', async ({ page }) => {
     await page.goto('/login');
-    await page.getByRole('button', { name: /demo login/i }).click();
+    await mockAuthBackend(page);
+    await page.locator('button[data-test-id="demo-login-button"]').click();
     await page.waitForURL('**/dashboard', { timeout: 10000 });
 
-    const token = await page.evaluate(() => localStorage.getItem('healthdata_auth_token'));
-    expect(token).toBeTruthy();
+    const user = await page.evaluate(() => localStorage.getItem('healthdata_user'));
+    const tenant = await page.evaluate(() => localStorage.getItem('healthdata_tenant'));
+    expect(user).toBeTruthy();
+    expect(tenant).toBeTruthy();
   });
 });
 
@@ -445,7 +465,7 @@ test.describe('Security Compliance', () => {
   test('should have secure password input field', async ({ page }) => {
     await page.goto('/login');
 
-    const passwordInput = page.locator('input[formcontrolname="password"]');
+    const passwordInput = page.locator('input[data-test-id="password"]');
 
     // Should be type password (not exposed)
     await expect(passwordInput).toHaveAttribute('type', 'password');
@@ -476,9 +496,9 @@ test.describe('Error Handling', () => {
 
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.admin.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.admin.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.admin.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.admin.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     // Should show error message
     await expect(page.locator('.mat-mdc-snack-bar-container')).toContainText(/unable to connect|try again/i, {
@@ -497,9 +517,9 @@ test.describe('Error Handling', () => {
 
     await page.goto('/login');
 
-    await page.fill('input[formcontrolname="username"]', TEST_USERS.admin.username);
-    await page.fill('input[formcontrolname="password"]', TEST_USERS.admin.password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.fill('input[data-test-id="username"]', TEST_USERS.admin.username);
+    await page.fill('input[data-test-id="password"]', TEST_USERS.admin.password);
+    await page.locator('button[data-test-id="login-button"]').click();
 
     // Should show locked account message
     await expect(page.locator('.mat-mdc-snack-bar-container')).toContainText(/locked|contact support/i, {

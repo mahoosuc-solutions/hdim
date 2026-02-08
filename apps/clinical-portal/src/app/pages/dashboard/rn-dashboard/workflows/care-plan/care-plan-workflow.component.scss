@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 // Color Variables
 $primary: #1976d2;
 $accent: #ff4081;
@@ -37,7 +39,7 @@ $breakpoint-desktop: 900px;
 // Header Section
 .workflow-header {
   padding: $spacing-lg;
-  background: linear-gradient(135deg, $primary 0%, darken($primary, 10%) 100%);
+  background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: -10%) 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
@@ -75,7 +77,11 @@ $breakpoint-desktop: 900px;
   }
 
   @media (prefers-color-scheme: dark) {
-    background: linear-gradient(135deg, darken($primary, 15%) 0%, darken($primary, 25%) 100%);
+    background: linear-gradient(
+      135deg,
+      color.adjust($primary, $lightness: -15%) 0%,
+      color.adjust($primary, $lightness: -25%) 100%
+    );
   }
 }
 
@@ -101,7 +107,7 @@ $breakpoint-desktop: 900px;
 
   @media (prefers-color-scheme: dark) {
     h3 {
-      color: lighten($primary, 20%);
+      color: color.adjust($primary, $lightness: 20%);
     }
 
     .step-description {
@@ -189,7 +195,7 @@ mat-error {
       color: $primary;
 
       @media (prefers-color-scheme: dark) {
-        color: lighten($primary, 20%);
+        color: color.adjust($primary, $lightness: 20%);
       }
     }
   }
@@ -287,7 +293,7 @@ mat-chip {
 
   @media (prefers-color-scheme: dark) {
     background-color: #1e1e1e;
-    border-color: lighten($primary, 20%);
+    border-color: color.adjust($primary, $lightness: 20%);
   }
 
   mat-card-content {
@@ -307,7 +313,7 @@ mat-chip {
         color: $primary;
 
         @media (prefers-color-scheme: dark) {
-          color: lighten($primary, 20%);
+          color: color.adjust($primary, $lightness: 20%);
         }
       }
     }
@@ -327,12 +333,16 @@ mat-chip {
 
   mat-card-header {
     padding: $spacing-lg;
-    background: linear-gradient(135deg, $primary 0%, darken($primary, 5%) 100%);
+    background: linear-gradient(135deg, $primary 0%, color.adjust($primary, $lightness: -5%) 100%);
     border-radius: 8px 8px 0 0;
     color: white;
 
     @media (prefers-color-scheme: dark) {
-      background: linear-gradient(135deg, darken($primary, 15%) 0%, darken($primary, 20%) 100%);
+      background: linear-gradient(
+        135deg,
+        color.adjust($primary, $lightness: -15%) 0%,
+        color.adjust($primary, $lightness: -20%) 100%
+      );
     }
 
     mat-card-title {
@@ -361,8 +371,8 @@ mat-chip {
     padding-bottom: $spacing-sm;
 
     @media (prefers-color-scheme: dark) {
-      color: lighten($primary, 20%);
-      border-bottom-color: lighten($primary, 20%);
+      color: color.adjust($primary, $lightness: 20%);
+      border-bottom-color: color.adjust($primary, $lightness: 20%);
     }
   }
 }
@@ -392,7 +402,7 @@ mat-chip {
       font-weight: bold;
 
       @media (prefers-color-scheme: dark) {
-        color: lighten($primary, 20%);
+        color: color.adjust($primary, $lightness: 20%);
       }
     }
   }

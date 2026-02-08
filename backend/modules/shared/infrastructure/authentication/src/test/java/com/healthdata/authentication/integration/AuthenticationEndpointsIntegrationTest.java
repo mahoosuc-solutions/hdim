@@ -2,11 +2,14 @@ package com.healthdata.authentication.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.authentication.config.TestSecurityConfig;
+import com.healthdata.authentication.domain.Tenant;
+import com.healthdata.authentication.domain.TenantStatus;
 import com.healthdata.authentication.domain.User;
 import com.healthdata.authentication.domain.UserRole;
 import com.healthdata.authentication.dto.LoginRequest;
 import com.healthdata.authentication.dto.RegisterRequest;
 import com.healthdata.authentication.repository.UserRepository;
+import com.healthdata.authentication.repository.TenantRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
@@ -56,6 +60,9 @@ class AuthenticationEndpointsIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private TenantRepository tenantRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -74,6 +81,11 @@ class AuthenticationEndpointsIntegrationTest {
     void setUp() {
         // Clean up database
         userRepository.deleteAll();
+        tenantRepository.deleteAll();
+
+        // Seed required tenants for registration flows
+        createTenant(TENANT_1, "Tenant 1");
+        createTenant(TENANT_2, "Tenant 2");
 
         // Create test admin user
         testAdmin = createUser(
@@ -809,6 +821,7 @@ class AuthenticationEndpointsIntegrationTest {
     private User createUser(String username, String email, Set<String> tenantIds,
                            Set<UserRole> roles, boolean active) {
         User user = User.builder()
+            .id(UUID.randomUUID())
             .username(username)
             .email(email)
             .passwordHash(passwordEncoder.encode(PASSWORD))
@@ -822,5 +835,15 @@ class AuthenticationEndpointsIntegrationTest {
             .build();
 
         return userRepository.save(user);
+    }
+
+    private void createTenant(String id, String name) {
+        Tenant tenant = Tenant.builder()
+            .id(id)
+            .name(name)
+            .status(TenantStatus.ACTIVE)
+            .build();
+
+        tenantRepository.save(tenant);
     }
 }

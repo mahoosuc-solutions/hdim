@@ -31,6 +31,9 @@ public class GatewayAdminController {
     @Value("${backend.services.audit.url}")
     private String auditUrl;
 
+    @Value("${backend.services.audit-base.url}")
+    private String auditBaseUrl;
+
     @RequestMapping(value = "/api/v1/agent-builder/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToAgentBuilder(
         HttpServletRequest request,
@@ -85,5 +88,13 @@ public class GatewayAdminController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, auditUrl, "/api/v1/audit");
+    }
+
+    @RequestMapping(value = "/audit/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToAuditDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, auditBaseUrl, "/audit");
     }
 }

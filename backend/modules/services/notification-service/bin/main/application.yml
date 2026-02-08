@@ -25,6 +25,13 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
 
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW  # Notification: <10 req/sec, simple queries
+
+spring:
   data:
     redis:
       host: localhost
@@ -61,12 +68,6 @@ spring:
     type: redis
     redis:
       time-to-live: 300000
-
-# HealthData Database Configuration
-healthdata:
-  database:
-    hikari:
-      traffic-tier: LOW  # Notification: <10 req/sec, simple queries
 
 # Notification configuration
 notification:

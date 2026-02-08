@@ -110,6 +110,13 @@ export class NavigationComponent {
       route: '/agent-builder',
       description: 'Configure AI agents',
     },
+    {
+      label: 'Demo Seeding',
+      icon: 'science',
+      route: '/admin/demo-seeding',
+      description: 'Manage demo data seeding',
+    },
+
   ];
 
   sidenavOpened = true;

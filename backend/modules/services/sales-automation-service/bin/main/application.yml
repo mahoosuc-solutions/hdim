@@ -81,22 +81,82 @@ email:
     enabled: ${EMAIL_TRACKING_ENABLED:true}
     pixel-url: ${EMAIL_TRACKING_URL:${app.base-url}/api/sales/track}
 
-# Zoho CRM Integration
+# Zoho ONE Platform Integration
 zoho:
   api:
     base-url: https://www.zohoapis.com/crm/v3
     accounts-url: https://accounts.zoho.com
+    datacenter: ${ZOHO_DATACENTER:com}  # com, eu, in, com.au, com.cn, jp
   oauth:
     client-id: ${ZOHO_CLIENT_ID:}
     client-secret: ${ZOHO_CLIENT_SECRET:}
     refresh-token: ${ZOHO_REFRESH_TOKEN:}
-    scope: ZohoCRM.modules.ALL,ZohoCRM.settings.ALL
+    scope: ZohoCRM.modules.ALL,ZohoCRM.settings.ALL,ZohoCampaigns.contact.ALL,ZohoCampaigns.campaign.ALL,ZohoBookings.fullaccess.ALL,ZohoAnalytics.data.ALL,ZohoMeeting.fullaccess.ALL
+    redirect-uri: ${ZOHO_REDIRECT_URI:}
   sync:
     enabled: ${ZOHO_SYNC_ENABLED:false}
     interval-minutes: 15
+    bidirectional: ${ZOHO_BIDIRECTIONAL_SYNC:true}
   webhook:
     enabled: ${ZOHO_WEBHOOK_ENABLED:false}
     secret: ${ZOHO_WEBHOOK_SECRET:}
+    callback-url: ${ZOHO_WEBHOOK_CALLBACK_URL:}
+  # Zoho Campaigns (Email Marketing)
+  campaigns:
+    enabled: ${ZOHO_CAMPAIGNS_ENABLED:false}
+    base-url: https://campaigns.zoho.com/api/v1.1
+    organization-id: ${ZOHO_CAMPAIGNS_ORG_ID:}
+    default-list-key: ${ZOHO_CAMPAIGNS_DEFAULT_LIST:}
+    email-defaults:
+      from-name: ${ZOHO_CAMPAIGNS_FROM_NAME:HealthData-in-Motion}
+      from-email: ${ZOHO_CAMPAIGNS_FROM_EMAIL:}
+      reply-to: ${ZOHO_CAMPAIGNS_REPLY_TO:}
+      track-opens: true
+      track-clicks: true
+  # Zoho Bookings (Meeting Scheduler)
+  bookings:
+    enabled: ${ZOHO_BOOKINGS_ENABLED:false}
+    base-url: https://www.zohoapis.com/bookings/v1
+    workspace-id: ${ZOHO_BOOKINGS_WORKSPACE_ID:}
+    default-staff-id: ${ZOHO_BOOKINGS_DEFAULT_STAFF:}
+    meeting-types:
+      discovery-call: ${ZOHO_BOOKINGS_DISCOVERY_CALL_ID:}
+      product-demo: ${ZOHO_BOOKINGS_DEMO_ID:}
+      technical-deep-dive: ${ZOHO_BOOKINGS_TECH_DIVE_ID:}
+      due-diligence: ${ZOHO_BOOKINGS_DUE_DILIGENCE_ID:}
+    notifications:
+      email-reminder: true
+      reminder-hours-before: 24
+      sms-reminder: false
+  # Zoho Analytics (Business Intelligence)
+  analytics:
+    enabled: ${ZOHO_ANALYTICS_ENABLED:false}
+    base-url: https://analyticsapi.zoho.com/api
+    organization-id: ${ZOHO_ANALYTICS_ORG_ID:}
+    workspace-id: ${ZOHO_ANALYTICS_WORKSPACE_ID:}
+    dashboards:
+      investor-pipeline: ${ZOHO_ANALYTICS_PIPELINE_DASHBOARD:}
+      marketing-performance: ${ZOHO_ANALYTICS_MARKETING_DASHBOARD:}
+      sales-performance: ${ZOHO_ANALYTICS_SALES_DASHBOARD:}
+  # Zoho Meeting (Video Conferencing)
+  meeting:
+    enabled: ${ZOHO_MEETING_ENABLED:false}
+    base-url: https://meeting.zoho.com/api/v2
+    default-duration-minutes: 30
+    auto-record: false
+    waiting-room: true
+  # Zoho Flow (Integration Platform)
+  flow:
+    enabled: ${ZOHO_FLOW_ENABLED:false}
+    base-url: https://flow.zoho.com/api
+    webhook-url: ${ZOHO_FLOW_WEBHOOK_URL:}
+  # Zoho Desk (Customer Support)
+  desk:
+    enabled: ${ZOHO_DESK_ENABLED:false}
+    base-url: https://desk.zoho.com/api/v1
+    organization-id: ${ZOHO_DESK_ORG_ID:}
+    default-department-id: ${ZOHO_DESK_DEPARTMENT_ID:}
+
 
 # LinkedIn Integration
 linkedin:

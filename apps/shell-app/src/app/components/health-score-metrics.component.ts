@@ -29,11 +29,11 @@ import { takeUntil } from 'rxjs/operators';
       </div>
 
       <div class="metric-content">
-        <div class="score-display" [data-testid]="'health-score-display'">
-          <div class="score-number" [data-testid]="'health-score-value'">
+        <div class="score-display" [attr.data-testid]="'health-score-display'">
+          <div class="score-number" [attr.data-testid]="'health-score-value'">
             {{ currentScore }}
           </div>
-          <div class="score-category" [data-testid]="'health-score-category'">
+          <div class="score-category" [attr.data-testid]="'health-score-category'">
             {{ scoreCategory }}
           </div>
         </div>
@@ -42,24 +42,24 @@ import { takeUntil } from 'rxjs/operators';
           <div
             class="progress-bar"
             [style.width.%]="currentScore"
-            [data-testid]="'health-score-progress'"
+            [attr.data-testid]="'health-score-progress'"
           ></div>
         </div>
 
-        <div class="score-trend" [data-testid]="'health-score-trend'">
+        <div class="score-trend" [attr.data-testid]="'health-score-trend'">
           <span class="trend-indicator" [ngClass]="trendClass">
             {{ trendText }}
           </span>
           <span class="trend-value">{{ trendValue }}</span>
         </div>
 
-        <div class="score-factors" [data-testid]="'health-score-factors'">
+        <div class="score-factors" [attr.data-testid]="'health-score-factors'">
           <div class="factors-label">Contributing Factors:</div>
           <div class="factors-list">
             <span
               *ngFor="let factor of factors"
               class="factor-badge"
-              [data-testid]="'health-score-factor'"
+              [attr.data-testid]="'health-score-factor'"
             >
               {{ formatFactorName(factor) }}
             </span>

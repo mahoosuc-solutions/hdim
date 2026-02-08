@@ -59,6 +59,9 @@ public class InvestorUser {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "tenant_id", length = 100)
+    private String tenantId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();

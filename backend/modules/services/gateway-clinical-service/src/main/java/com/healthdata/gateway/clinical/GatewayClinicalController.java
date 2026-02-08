@@ -43,12 +43,26 @@ public class GatewayClinicalController {
     @Value("${backend.services.demo-seeding.url}")
     private String demoSeedingUrl;
 
+    @Value("${backend.services.analytics.url}")
+    private String analyticsUrl;
+
+    @Value("${backend.services.notification.url}")
+    private String notificationUrl;
+
     @RequestMapping(value = "/api/care-gaps/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToCareGap(
         HttpServletRequest request,
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, careGapUrl, "/api/care-gaps");
+    }
+
+    @RequestMapping(value = "/api/v1/care-gaps/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToCareGapV1(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, careGapUrl, "/api/v1/care-gaps");
     }
 
     @RequestMapping(value = "/care-gap/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
@@ -137,5 +151,29 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, demoSeedingUrl, "/demo");
+    }
+
+    @RequestMapping(value = "/api/v1/analytics/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToAnalytics(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, analyticsUrl, "/api/v1/analytics");
+    }
+
+    @RequestMapping(value = "/analytics/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToAnalyticsDirect(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, analyticsUrl, "/analytics");
+    }
+
+    @RequestMapping(value = "/notification/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToNotification(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, notificationUrl, "/notification");
     }
 }

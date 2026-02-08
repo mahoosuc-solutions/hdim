@@ -32,16 +32,17 @@ class CernerFhirConnectorTest {
     private CernerConnectionConfig config;
     private CernerAuthProvider authProvider;
     private CernerDataMapper dataMapper;
+    private String baseUrl;
 
     @BeforeEach
     void setUp() {
         // Start WireMock server
-        wireMockServer = new WireMockServer(WireMockConfiguration.options().port(8090));
+        wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
         wireMockServer.start();
-        configureFor("localhost", 8090);
+        configureFor("localhost", wireMockServer.port());
 
         fhirContext = FhirContext.forR4();
-        String baseUrl = "http://localhost:8090/fhir";
+        baseUrl = "http://localhost:" + wireMockServer.port() + "/fhir";
 
         // Create a real FHIR client pointing to WireMock
         // Disable server validation to avoid automatic metadata calls
@@ -488,7 +489,7 @@ class CernerFhirConnectorTest {
         String baseUrl = connector.getBaseUrl();
 
         // Assert
-        assertEquals("http://localhost:8090/fhir", baseUrl);
+        assertEquals(this.baseUrl, baseUrl);
     }
 
     @Test
@@ -539,7 +540,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/Patient/%s",
+                    "fullUrl": "%s/Patient/%s",
                     "resource": {
                         "resourceType": "Patient",
                         "id": "%s",
@@ -552,7 +553,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, familyName, givenName);
+            """, baseUrl, id, id, familyName, givenName);
     }
 
     private String getEncounterJson(String id, String status, String encounterClass) {
@@ -577,7 +578,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/Encounter/%s",
+                    "fullUrl": "%s/Encounter/%s",
                     "resource": {
                         "resourceType": "Encounter",
                         "id": "%s",
@@ -590,7 +591,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, status, encounterClass);
+            """, baseUrl, id, id, status, encounterClass);
     }
 
     private String getObservationBundleJson(String id, String loincCode, String display, String value) {
@@ -600,7 +601,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/Observation/%s",
+                    "fullUrl": "%s/Observation/%s",
                     "resource": {
                         "resourceType": "Observation",
                         "id": "%s",
@@ -619,7 +620,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, loincCode, display, value);
+            """, baseUrl, id, id, loincCode, display, value);
     }
 
     private String getConditionBundleJson(String id, String snomedCode, String display) {
@@ -629,7 +630,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/Condition/%s",
+                    "fullUrl": "%s/Condition/%s",
                     "resource": {
                         "resourceType": "Condition",
                         "id": "%s",
@@ -649,7 +650,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, snomedCode, display);
+            """, baseUrl, id, id, snomedCode, display);
     }
 
     private String getMedicationRequestBundleJson(String id, String medication) {
@@ -659,7 +660,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/MedicationRequest/%s",
+                    "fullUrl": "%s/MedicationRequest/%s",
                     "resource": {
                         "resourceType": "MedicationRequest",
                         "id": "%s",
@@ -671,7 +672,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, medication);
+            """, baseUrl, id, id, medication);
     }
 
     private String getImmunizationBundleJson(String id, String vaccine) {
@@ -681,7 +682,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/Immunization/%s",
+                    "fullUrl": "%s/Immunization/%s",
                     "resource": {
                         "resourceType": "Immunization",
                         "id": "%s",
@@ -696,7 +697,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, vaccine);
+            """, baseUrl, id, id, vaccine);
     }
 
     private String getDiagnosticReportBundleJson(String id, String reportName) {
@@ -706,7 +707,7 @@ class CernerFhirConnectorTest {
                 "type": "searchset",
                 "total": 1,
                 "entry": [{
-                    "fullUrl": "http://localhost:8090/fhir/DiagnosticReport/%s",
+                    "fullUrl": "%s/DiagnosticReport/%s",
                     "resource": {
                         "resourceType": "DiagnosticReport",
                         "id": "%s",
@@ -717,7 +718,7 @@ class CernerFhirConnectorTest {
                     }
                 }]
             }
-            """, id, id, reportName);
+            """, baseUrl, id, id, reportName);
     }
 
     private String getBatchResponseJson() {

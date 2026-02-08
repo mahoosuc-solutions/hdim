@@ -37,7 +37,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests with real PostgreSQL database using Testcontainers.
  * Validates statistical calculations with actual database data.
  */
-@SpringBootTest(classes = {AuditIntegrationTestConfiguration.class})
+@SpringBootTest(
+    classes = {AuditIntegrationTestConfiguration.class},
+    properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(QAReviewService.class)
 @Testcontainers
 @Transactional

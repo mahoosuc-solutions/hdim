@@ -12,8 +12,11 @@ test.describe('Clinical Portal - UI Documentation', () => {
   test.beforeEach(async ({ page }) => {
     // Set up authentication via localStorage before navigation
     await page.addInitScript((demoUser) => {
-      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
       localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+      localStorage.setItem(
+        'healthdata_tenant',
+        demoUser.tenantIds?.[0] || demoUser.tenantId || 'acme-health'
+      );
     }, DEMO_USER);
 
     // Navigate to the app before each test

@@ -5,6 +5,9 @@ spring:
   application:
     name: cql-engine-service
 
+  main:
+    allow-bean-definition-overriding: true  # Allow authentication module's ObjectMapper to override local config
+
   flyway:
     enabled: false  # Explicitly disable Flyway (using Liquibase for migrations)
 

@@ -207,16 +207,17 @@ test.describe('Reports and Results flows', () => {
 
     // Set up authentication via localStorage before navigation
     await page.addInitScript(() => {
-      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
       localStorage.setItem('healthdata_user', JSON.stringify({
         id: 'demo-user-1',
         email: 'demo@healthdata.ai',
         username: 'demo_user',
-        role: 'ADMIN',
-        tenantId: 'TENANT001',
+        roles: [{ id: 'role-admin', name: 'ADMIN', permissions: [] }],
+        tenantId: 'acme-health',
+        tenantIds: ['acme-health'],
         firstName: 'Demo',
         lastName: 'User',
       }));
+      localStorage.setItem('healthdata_tenant', 'acme-health');
     });
   });
 

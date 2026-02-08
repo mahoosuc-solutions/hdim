@@ -1,7 +1,6 @@
 spring:
-  profiles:
-    active: test
-
+  main:
+    allow-bean-definition-overriding: true
   datasource:
     url: jdbc:tc:postgresql:16-alpine:///testdb
     username: test
@@ -9,6 +8,8 @@ spring:
     driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
 
   jpa:
+    hibernate:
+      ddl-auto: create-drop
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -27,3 +28,10 @@ management:
   tracing:
     sampling:
       probability: 1.0
+
+jwt:
+  secret: test-secret-key-32-bytes-minimum!!
+  access-token-expiration: 15m
+  refresh-token-expiration: 7d
+  issuer: healthdata-in-motion
+  audience: healthdata-api

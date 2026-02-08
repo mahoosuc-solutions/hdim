@@ -35,7 +35,9 @@ import static org.mockito.Mockito.*;
  * Tests with real PostgreSQL database using Testcontainers.
  * Validates decision replay functionality with actual database persistence.
  */
-@SpringBootTest(classes = {AuditIntegrationTestConfiguration.class})
+@SpringBootTest(
+    classes = {AuditIntegrationTestConfiguration.class},
+    properties = "spring.main.allow-bean-definition-overriding=true")
 @Import({DecisionReplayService.class, AuditClientConfig.class})
 @Testcontainers
 @Transactional

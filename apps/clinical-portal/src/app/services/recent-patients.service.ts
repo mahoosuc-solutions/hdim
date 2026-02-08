@@ -36,7 +36,9 @@ export class RecentPatientsService {
   readonly recentPatients$ = this.recentPatientsSubject.asObservable();
 
   constructor(
-    private logger: LoggerService,) {    this.loadFromStorage();
+    private logger: LoggerService
+  ) {
+    this.loadFromStorage();
   }
 
   /**

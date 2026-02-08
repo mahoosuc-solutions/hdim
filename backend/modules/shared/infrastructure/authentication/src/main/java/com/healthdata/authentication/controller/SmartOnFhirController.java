@@ -78,7 +78,7 @@ public class SmartOnFhirController {
      * @param launch Launch context token (for EHR launch)
      * @return Redirect to authorization page or error
      */
-    @GetMapping("/oauth2/authorize")
+    @GetMapping(value = "/oauth2/authorize", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> authorize(
         @RequestParam("response_type") String responseType,
         @RequestParam("client_id") String clientId,

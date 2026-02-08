@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { waitForAppReady } from './fixtures/auth.fixture';
 
 /**
  * ANALYST Role Workflow E2E Tests
@@ -12,20 +13,47 @@ import { test, expect } from '@playwright/test';
  */
 
 const ANALYST_USER = {
+  id: 'analyst-user-1',
   username: 'test_analyst',
-  password: 'password123',
-  roles: ['ANALYST'],
-  tenantId: 'tenant-a',
+  email: 'analyst@healthdata.com',
+  firstName: 'Test',
+  lastName: 'Analyst',
+  fullName: 'Test Analyst',
+  roles: [
+    {
+      id: 'role-analyst',
+      name: 'ANALYST',
+      description: 'Analyst',
+      permissions: [
+        { id: 'perm-1', name: 'VIEW_REPORTS', description: 'View reports' },
+        { id: 'perm-2', name: 'EXPORT_DATA', description: 'Export data' },
+      ],
+    },
+  ],
+  tenantId: 'acme-health',
+  tenantIds: ['acme-health'],
+  active: true,
 };
 
+async function setupAnalystAuth(page: any) {
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  await page.evaluate(
+    ({ user }) => {
+      localStorage.setItem('healthdata_user', JSON.stringify(user));
+      localStorage.setItem('healthdata_tenant', user.tenantIds?.[0] || user.tenantId || 'acme-health');
+      localStorage.removeItem('healthdata-demo-mode');
+      sessionStorage.removeItem('healthdata-demo-mode');
+    },
+    { user: ANALYST_USER }
+  );
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+  await waitForAppReady(page);
+}
+
 test.describe('ANALYST Role Workflows', () => {
+  test.setTimeout(60000);
   test.beforeEach(async ({ page }) => {
-    // Login as analyst
-    await page.goto('/login');
-    await page.fill('[data-test-id="username"]', ANALYST_USER.username);
-    await page.fill('[data-test-id="password"]', ANALYST_USER.password);
-    await page.click('[data-test-id="login-button"]');
-    await page.waitForURL('/dashboard');
+    await setupAnalystAuth(page);
   });
 
   test('should generate quality measure report', async ({ page }) => {

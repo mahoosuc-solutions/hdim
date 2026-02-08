@@ -72,6 +72,9 @@ export const API_CONFIG = {
 
   // Logging
   ENABLE_LOGGING: true, // Set to false in production
+
+  // Audit ingest - set true when audit-ingest-service is deployed
+  AUDIT_INGEST_ENABLED: false,
 };
 
 /**

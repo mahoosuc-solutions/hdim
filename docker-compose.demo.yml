@@ -427,10 +427,11 @@ services:
       JAVA_OPTS: "-Xmx512m -Xms256m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
+      HEALTHCHECK_TENANT_ID: acme-health
     ports:
       - "8085:8085"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8085/fhir/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8085/fhir/actuator/health && wget --spider -q --header=\"X-Tenant-ID: $$HEALTHCHECK_TENANT_ID\" --header=\"X-Auth-User-Id: 00000000-0000-0000-0000-000000000001\" --header=\"X-Auth-Username: demo-seeder\" --header=\"X-Auth-Tenant-Ids: $$HEALTHCHECK_TENANT_ID\" --header=\"X-Auth-Roles: ADMIN,SYSTEM\" --header=\"X-Auth-Validated: gateway-healthcheck\" \"http://localhost:8085/fhir/Patient?_count=1\""]
       interval: 30s
       timeout: 30s
       retries: 5

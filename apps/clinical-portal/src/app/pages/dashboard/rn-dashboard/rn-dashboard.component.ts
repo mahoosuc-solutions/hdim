@@ -130,54 +130,66 @@ export class RNDashboardComponent implements OnInit, OnDestroy {
     this.medicationService.setTenantContext(tenantId);
     this.carePlanService.setTenantContext(tenantId);
 
+    // Empty-data fallbacks for services not yet deployed
+    const emptyPage = { content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false };
+    const emptyMetrics = { totalReconciliations: 0, pendingReconciliations: 0, completionRate: 0 };
+
     // Load all data in parallel using forkJoin
     forkJoin([
-      // NurseWorkflow service data
-      this.nurseWorkflowService.getPendingOutreachLogs(0, 50).pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load outreach logs:', error);
-          this.toastService.error('Failed to load outreach data');
-          return of([]);
-        })
-      ),
-      this.nurseWorkflowService.getPendingMedicationReconciliations(0, 50).pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load medication reconciliations:', error);
-          return of([]);
-        })
-      ),
-      this.nurseWorkflowService.getEducationSessionsWithPoorUnderstanding().pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load education sessions:', error);
-          return of([]);
-        })
-      ),
-      this.nurseWorkflowService.getReferralsAwaitingScheduling().pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load pending referrals:', error);
-          return of([]);
-        })
-      ),
-      this.nurseWorkflowService.getMedicationReconciliationMetrics().pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load metrics:', error);
-          return of({ totalReconciliations: 0, pendingReconciliations: 0, completionRate: 0 });
-        })
-      ),
-      // MedicationService data
-      this.medicationService.getPendingOrdersAwaitingPharmacy(0, 50).pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load medication orders:', error);
-          return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
-        })
-      ),
-      // CarePlanService data
-      this.carePlanService.getCarePlansDueForReview(0, 50).pipe(
-        catchError((error) => {
-          this.logger.error('Failed to load care plans:', error);
-          return of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false });
-        })
-      ),
+      // NurseWorkflow service data (requires nurse-workflow-service backend)
+      ...(API_CONFIG.NURSE_WORKFLOW_SERVICE_ENABLED ? [
+        this.nurseWorkflowService.getPendingOutreachLogs(0, 50).pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load outreach logs:', error);
+            this.toastService.error('Failed to load outreach data');
+            return of([]);
+          })
+        ),
+        this.nurseWorkflowService.getPendingMedicationReconciliations(0, 50).pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load medication reconciliations:', error);
+            return of([]);
+          })
+        ),
+        this.nurseWorkflowService.getEducationSessionsWithPoorUnderstanding().pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load education sessions:', error);
+            return of([]);
+          })
+        ),
+        this.nurseWorkflowService.getReferralsAwaitingScheduling().pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load pending referrals:', error);
+            return of([]);
+          })
+        ),
+        this.nurseWorkflowService.getMedicationReconciliationMetrics().pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load metrics:', error);
+            return of(emptyMetrics);
+          })
+        ),
+      ] : [of([]), of([]), of([]), of([]), of(emptyMetrics)]),
+
+      // MedicationService data (requires medication-service backend)
+      ...(API_CONFIG.MEDICATION_SERVICE_ENABLED ? [
+        this.medicationService.getPendingOrdersAwaitingPharmacy(0, 50).pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load medication orders:', error);
+            return of(emptyPage);
+          })
+        ),
+      ] : [of(emptyPage)]),
+
+      // CarePlanService data (requires care-plan-service backend)
+      ...(API_CONFIG.CARE_PLAN_SERVICE_ENABLED ? [
+        this.carePlanService.getCarePlansDueForReview(0, 50).pipe(
+          catchError((error) => {
+            this.logger.error('Failed to load care plans:', error);
+            return of(emptyPage);
+          })
+        ),
+      ] : [of(emptyPage)]),
     ]).pipe(takeUntil(this.destroy$))
       .subscribe({
         next: ([outreachLogs, medReconciliations, educationSessions, referrals, metrics, medicationOrders, carePlans]) => {

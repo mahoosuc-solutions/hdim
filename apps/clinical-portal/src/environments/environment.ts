@@ -57,8 +57,8 @@ export const environment = {
     // Critical error thresholds
     criticalErrorThreshold: 5, // Alert if more than 5 critical errors
     errorRateThreshold: 50, // Alert if more than 50 errors per hour
-    // Backend sync
-    syncToBackend: true, // Send errors to backend service
+    // Backend sync (disabled — no compliance-service in demo stack)
+    syncToBackend: false,
     syncIntervalMs: 30000, // Sync every 30 seconds in dev
   },
 

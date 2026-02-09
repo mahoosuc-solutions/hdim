@@ -154,15 +154,17 @@ services:
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_RATE_LIMIT_ENABLED: "false"
-      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health,blue-shield-demo,united-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_0: "demo-tenant"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_1: "acme-health"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_2: "demo-admin"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_3: "summit-care"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_4: "valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-admin
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -221,15 +223,17 @@ services:
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_RATE_LIMIT_ENABLED: "false"
-      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health,blue-shield-demo,united-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_0: "demo-tenant"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_1: "acme-health"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_2: "demo-admin"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_3: "summit-care"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_4: "valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-fhir
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -287,7 +291,7 @@ services:
     ports:
       - "8088:8088"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8088/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8088/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -345,15 +349,17 @@ services:
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_RATE_LIMIT_ENABLED: "false"
-      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health,blue-shield-demo,united-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_0: "demo-tenant"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_1: "acme-health"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_2: "demo-admin"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_3: "summit-care"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_4: "valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-clinical
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -418,13 +424,14 @@ services:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: DEBUG
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx2g -Xms512m"
+      JAVA_OPTS: "-Xmx512m -Xms256m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
+      HEALTHCHECK_TENANT_ID: acme-health
     ports:
       - "8085:8085"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8085/fhir/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8085/fhir/actuator/health && wget --spider -q --header=\"X-Tenant-ID: $$HEALTHCHECK_TENANT_ID\" --header=\"X-Auth-User-Id: 00000000-0000-0000-0000-000000000001\" --header=\"X-Auth-Username: demo-seeder\" --header=\"X-Auth-Tenant-Ids: $$HEALTHCHECK_TENANT_ID\" --header=\"X-Auth-Roles: ADMIN,SYSTEM\" --header=\"X-Auth-Validated: gateway-healthcheck\" \"http://localhost:8085/fhir/Patient?_count=1\""]
       interval: 30s
       timeout: 30s
       retries: 5
@@ -493,7 +500,7 @@ services:
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8081/cql-engine/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8081/cql-engine/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -541,7 +548,7 @@ services:
     ports:
       - "8084:8084"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8084/patient/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8084/patient/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -591,7 +598,7 @@ services:
     ports:
       - "8087:8087"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8087/quality-measure/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8087/quality-measure/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -641,7 +648,7 @@ services:
     ports:
       - "8086:8086"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://127.0.0.1:8086/care-gap/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8086/care-gap/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -686,7 +693,7 @@ services:
     ports:
       - "8083:8083"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8083/events/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8083/events/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -752,7 +759,7 @@ services:
     ports:
       - "8105:8105"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8105/hcc/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8105/hcc/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -817,7 +824,7 @@ services:
     volumes:
       - demo_snapshots:/app/snapshots
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://127.0.0.1:8098/demo/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8098/demo/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5

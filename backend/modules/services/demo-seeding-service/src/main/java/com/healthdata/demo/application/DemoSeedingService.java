@@ -395,6 +395,10 @@ public class DemoSeedingService {
             userSeedingClient.seedDemoUsers("demo-tenant");
             userSeedingClient.seedDemoUsers("acme-health");
             userSeedingClient.seedDemoUsers("demo-admin");
+            userSeedingClient.seedDemoUsers("summit-care");
+            userSeedingClient.seedDemoUsers("valley-health");
+            userSeedingClient.seedDemoUsers("blue-shield-demo");
+            userSeedingClient.seedDemoUsers("united-demo");
         }
 
         logger.info("Demo scenarios initialized");

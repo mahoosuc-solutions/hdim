@@ -87,7 +87,7 @@ public class DemoResetService {
         long startTime = System.currentTimeMillis();
 
         ResetResult result = new ResetResult();
-        String demoTenantClause = "tenant_id LIKE 'demo-%' OR tenant_id IN ('demo-tenant', 'acme-health', 'summit-care', 'valley-health')";
+        String demoTenantClause = "tenant_id LIKE 'demo-%' OR tenant_id IN ('demo-tenant', 'acme-health', 'summit-care', 'valley-health', 'blue-shield-demo', 'united-demo')";
 
         try {
             // Clear all demo tables (gracefully handle missing tables)

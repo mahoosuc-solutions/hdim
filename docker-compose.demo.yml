@@ -425,7 +425,7 @@ services:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: INFO
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx1536m -Xms768m"
+      JAVA_OPTS: "-Xmx1800m -Xms900m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
       HEALTHCHECK_TENANT_ID: acme-health

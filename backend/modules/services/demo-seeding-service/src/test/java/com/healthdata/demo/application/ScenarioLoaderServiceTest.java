@@ -4,6 +4,7 @@ import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
 import com.healthdata.demo.domain.repository.DemoScenarioRepository;
 import com.healthdata.demo.domain.repository.DemoSessionRepository;
+import com.healthdata.demo.strategy.MultiTenantStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ class ScenarioLoaderServiceTest {
     @Mock
     private DemoProgressService progressService;
 
+    @Mock
+    private MultiTenantStrategy multiTenantStrategy;
+
     @BeforeEach
     void setUp() {
         service = new ScenarioLoaderService(
@@ -50,7 +54,8 @@ class ScenarioLoaderServiceTest {
                 sessionRepository,
                 seedingService,
                 resetService,
-                progressService
+                progressService,
+                multiTenantStrategy
         );
     }
 

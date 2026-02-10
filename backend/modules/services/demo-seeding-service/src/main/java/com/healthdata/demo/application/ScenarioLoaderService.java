@@ -4,11 +4,14 @@ import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
 import com.healthdata.demo.domain.repository.DemoScenarioRepository;
 import com.healthdata.demo.domain.repository.DemoSessionRepository;
+import com.healthdata.demo.strategy.MultiTenantStrategy;
+import com.healthdata.demo.strategy.ScenarioSeedingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -29,18 +32,21 @@ public class ScenarioLoaderService {
     private final DemoSeedingService seedingService;
     private final DemoResetService resetService;
     private final DemoProgressService progressService;
+    private final MultiTenantStrategy multiTenantStrategy;
 
     public ScenarioLoaderService(
             DemoScenarioRepository scenarioRepository,
             DemoSessionRepository sessionRepository,
             DemoSeedingService seedingService,
             DemoResetService resetService,
-            DemoProgressService progressService) {
+            DemoProgressService progressService,
+            MultiTenantStrategy multiTenantStrategy) {
         this.scenarioRepository = scenarioRepository;
         this.sessionRepository = sessionRepository;
         this.seedingService = seedingService;
         this.resetService = resetService;
         this.progressService = progressService;
+        this.multiTenantStrategy = multiTenantStrategy;
     }
 
     /**
@@ -65,7 +71,14 @@ public class ScenarioLoaderService {
             endCurrentSession();
 
             // Reset demo data before loading new scenario
-            resetService.resetDemoData(scenario.getTenantId());
+            if (scenario.getScenarioType() == DemoScenario.ScenarioType.MULTI_TENANT) {
+                List<String> tenantIds = multiTenantStrategy.getTenantIds();
+                for (String tenantId : tenantIds) {
+                    resetService.resetDemoData(tenantId);
+                }
+            } else {
+                resetService.resetDemoData(scenario.getTenantId());
+            }
 
             // Create new session
             DemoSession session = new DemoSession(scenario, "Demo session for " + scenario.getDisplayName());
@@ -75,17 +88,37 @@ public class ScenarioLoaderService {
             // Generate demo data for the scenario
             progressService.updateStage(session.getId(), DemoProgressService.Stage.RESETTING, 10,
                 "Resetting tenant data");
-            DemoSeedingService.GenerationResult genResult = seedingService.generatePatientCohort(
-                scenario.getPatientCount(),
-                scenario.getTenantId(),
-                calculateCareGapPercentage(scenario),
-                session.getId()
-            );
 
-            if (!genResult.isSuccess()) {
-                result.setSuccess(false);
-                result.setErrorMessage(genResult.getErrorMessage());
-                return result;
+            if (scenario.getScenarioType() == DemoScenario.ScenarioType.MULTI_TENANT) {
+                progressService.updateStage(session.getId(), DemoProgressService.Stage.GENERATING_PATIENTS, 25,
+                    "Seeding multi-tenant data");
+                ScenarioSeedingStrategy.SeedingResult seedResult = multiTenantStrategy.seedScenario(scenario.getTenantId());
+
+                if (!seedResult.isSuccess()) {
+                    progressService.markFailed(session.getId(), seedResult.getErrorMessage());
+                    result.setSuccess(false);
+                    result.setErrorMessage(seedResult.getErrorMessage());
+                    return result;
+                }
+
+                result.setPatientCount(seedResult.getPatientsCreated());
+                result.setCareGapCount(seedResult.getCareGapsExpected());
+            } else {
+                DemoSeedingService.GenerationResult genResult = seedingService.generatePatientCohort(
+                    scenario.getPatientCount(),
+                    scenario.getTenantId(),
+                    calculateCareGapPercentage(scenario),
+                    session.getId()
+                );
+
+                if (!genResult.isSuccess()) {
+                    result.setSuccess(false);
+                    result.setErrorMessage(genResult.getErrorMessage());
+                    return result;
+                }
+
+                result.setPatientCount(genResult.getPatientCount());
+                result.setCareGapCount(genResult.getCareGapCount());
             }
 
             // Mark session as ready
@@ -94,9 +127,9 @@ public class ScenarioLoaderService {
 
             result.setSuccess(true);
             result.setSessionId(session.getId().toString());
-            result.setPatientCount(genResult.getPatientCount());
-            result.setCareGapCount(genResult.getCareGapCount());
             result.setLoadTimeMs(System.currentTimeMillis() - startTime);
+            progressService.updateStage(session.getId(), DemoProgressService.Stage.COMPLETE, 100,
+                "Scenario loaded");
 
             logger.info("Scenario loaded successfully: {} ({} patients, {} care gaps) in {}ms",
                 scenarioName, result.getPatientCount(), result.getCareGapCount(), result.getLoadTimeMs());

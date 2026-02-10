@@ -80,6 +80,7 @@ services:
       KAFKA_NUM_PARTITIONS: 1
       CLUSTER_ID: demo-cluster-hdim-2024
       KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
     ports:
       - "9094:9092"
     healthcheck:
@@ -93,7 +94,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
 
   jaeger:
     container_name: hdim-demo-jaeger
@@ -419,12 +420,12 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JACKSON_STREAM_WRITE_CONSTRAINTS_MAX_NESTING_DEPTH: 2000
-      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: DEBUG
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: DEBUG
+      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: INFO
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx512m -Xms256m"
+      JAVA_OPTS: "-Xmx1024m -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
       HEALTHCHECK_TENANT_ID: acme-health
@@ -441,7 +442,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 2048M
 
   # ── Customer Simulation Services ──────────────────────────────────────────────
   # These simulate a customer's existing EHR infrastructure. They are NOT part of
@@ -642,7 +643,7 @@ services:
       GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx1024m -Xms256m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-care-gap
     ports:
@@ -812,10 +813,14 @@ services:
       DEMO_SERVICES_GATEWAY_DB_URL: jdbc:postgresql://postgres:5432/gateway_db
       DEMO_SERVICES_GATEWAY_DB_USERNAME: healthdata
       DEMO_SERVICES_GATEWAY_DB_PASSWORD: demo_password_2024
+      DEMO_SERVICES_FHIR_DB_URL: jdbc:postgresql://postgres:5432/fhir_db
+      DEMO_SERVICES_FHIR_DB_USERNAME: healthdata
+      DEMO_SERVICES_FHIR_DB_PASSWORD: demo_password_2024
       # Snapshot storage
       DEMO_SNAPSHOTS_DIR: /app/snapshots
       DEMO_PERSISTENCE_ENABLED: "true"
       DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "200"
+      DEMO_MULTI_TENANT_PATIENTS_PER_TENANT: "100"
       DEMO_PERFORMANCE_PARALLEL_GENERATION: "false"
       DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "2"
       HEALTH_TENANT_ID: service-health-demo-seeding

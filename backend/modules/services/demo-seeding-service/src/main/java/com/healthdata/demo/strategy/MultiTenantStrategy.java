@@ -72,6 +72,29 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
 
     @Override
     public SeedingResult seedScenario(String tenantId) {
+        return seedScenarioWithOverrides(null, null);
+    }
+
+    public SeedingResult seedScenarioWithOverrides(Integer patientsPerTenantOverride, Integer careGapPercentageOverride) {
+        int resolvedPatientsPerTenant = patientsPerTenantOverride != null ? patientsPerTenantOverride : patientsPerTenant;
+        int resolvedCareGapPercentage = careGapPercentageOverride != null ? careGapPercentageOverride : careGapPercentage;
+
+        if (resolvedPatientsPerTenant <= 0) {
+            return SeedingResult.builder()
+                .scenarioName(SCENARIO_NAME)
+                .success(false)
+                .errorMessage("patientsPerTenant must be greater than zero")
+                .build();
+        }
+
+        if (resolvedCareGapPercentage < 0 || resolvedCareGapPercentage > 100) {
+            return SeedingResult.builder()
+                .scenarioName(SCENARIO_NAME)
+                .success(false)
+                .errorMessage("careGapPercentage must be between 0 and 100")
+                .build();
+        }
+
         // Multi-tenant strategy ignores the passed tenant ID and seeds all configured tenants
         logger.info("Starting Multi-Tenant scenario seeding for {} tenants", TENANT_IDS.size());
         long startTime = System.currentTimeMillis();
@@ -88,12 +111,12 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
 
             // Seed each tenant independently
             for (String tenant : TENANT_IDS) {
-                logger.info("Seeding tenant: {} with {} patients", tenant, patientsPerTenant);
+                logger.info("Seeding tenant: {} with {} patients", tenant, resolvedPatientsPerTenant);
 
                 GenerationResult result = demoSeedingService.generatePatientCohort(
-                    patientsPerTenant,
+                    resolvedPatientsPerTenant,
                     tenant,
-                    careGapPercentage
+                    resolvedCareGapPercentage
                 );
 
                 tenantResults.add(result);

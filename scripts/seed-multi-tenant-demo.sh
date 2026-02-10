@@ -3,7 +3,7 @@
 set -euo pipefail
 
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
-DEMO_SERVICE_URL="${DEMO_SERVICE_URL:-http://localhost:8091}"
+DEMO_SERVICE_URL="${DEMO_SERVICE_URL:-http://localhost:8098/demo}"
 TENANT_ID="${TENANT_ID:-demo-admin}"
 USE_TRUSTED_HEADERS="${USE_TRUSTED_HEADERS:-true}"
 AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
@@ -31,6 +31,10 @@ else
   if [ -n "$API_TOKEN" ]; then
     AUTH_HEADER=(-H "Authorization: Bearer $API_TOKEN")
   fi
+fi
+
+if [[ "$DEMO_SERVICE_URL" != *"/demo"* ]]; then
+  DEMO_SERVICE_URL="${DEMO_SERVICE_URL%/}/demo"
 fi
 
 echo "Seeding multi-tenant demo via $DEMO_SERVICE_URL"

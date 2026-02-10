@@ -97,7 +97,8 @@ class DemoSeedingServiceTest {
                 tenantSeedingClient,
                 userSeedingClient,
                 progressService,
-                false  // persistToServices = false for unit tests
+                false,  // persistToServices = false for unit tests
+                100     // generationBatchSize
         );
     }
 

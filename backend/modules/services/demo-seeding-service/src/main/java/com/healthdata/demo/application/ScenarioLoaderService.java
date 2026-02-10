@@ -56,6 +56,18 @@ public class ScenarioLoaderService {
      * @return LoadResult with session details
      */
     public LoadResult loadScenario(String scenarioName) {
+        return loadScenario(scenarioName, null, null);
+    }
+
+    /**
+     * Load a scenario by name with optional multi-tenant overrides.
+     *
+     * @param scenarioName The scenario name (e.g., "hedis-evaluation")
+     * @param patientsPerTenant Optional override for multi-tenant patient count per tenant
+     * @param careGapPercentage Optional override for multi-tenant care gap percentage
+     * @return LoadResult with session details
+     */
+    public LoadResult loadScenario(String scenarioName, Integer patientsPerTenant, Integer careGapPercentage) {
         logger.info("Loading scenario: {}", scenarioName);
         long startTime = System.currentTimeMillis();
 
@@ -92,7 +104,10 @@ public class ScenarioLoaderService {
             if (scenario.getScenarioType() == DemoScenario.ScenarioType.MULTI_TENANT) {
                 progressService.updateStage(session.getId(), DemoProgressService.Stage.GENERATING_PATIENTS, 25,
                     "Seeding multi-tenant data");
-                ScenarioSeedingStrategy.SeedingResult seedResult = multiTenantStrategy.seedScenario(scenario.getTenantId());
+                ScenarioSeedingStrategy.SeedingResult seedResult = multiTenantStrategy.seedScenarioWithOverrides(
+                    patientsPerTenant,
+                    careGapPercentage
+                );
 
                 if (!seedResult.isSuccess()) {
                     progressService.markFailed(session.getId(), seedResult.getErrorMessage());

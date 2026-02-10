@@ -38,10 +38,25 @@ echo "Scenario: multi-tenant"
 echo "Patients per tenant (config): ${DEMO_MULTI_TENANT_PATIENTS_PER_TENANT:-200}"
 echo "Care gap percentage (config): ${DEMO_MULTI_TENANT_CARE_GAP_PERCENTAGE:-30}"
 
+PAYLOAD="{}"
+if [ -n "${DEMO_MULTI_TENANT_PATIENTS_PER_TENANT:-}" ] || [ -n "${DEMO_MULTI_TENANT_CARE_GAP_PERCENTAGE:-}" ]; then
+  PAYLOAD="{"
+  COMMA=""
+  if [ -n "${DEMO_MULTI_TENANT_PATIENTS_PER_TENANT:-}" ]; then
+    PAYLOAD="${PAYLOAD}\"patientsPerTenant\": ${DEMO_MULTI_TENANT_PATIENTS_PER_TENANT}"
+    COMMA=", "
+  fi
+  if [ -n "${DEMO_MULTI_TENANT_CARE_GAP_PERCENTAGE:-}" ]; then
+    PAYLOAD="${PAYLOAD}${COMMA}\"careGapPercentage\": ${DEMO_MULTI_TENANT_CARE_GAP_PERCENTAGE}"
+  fi
+  PAYLOAD="${PAYLOAD}}"
+fi
+
 curl -s -X POST "$DEMO_SERVICE_URL/api/v1/demo/scenarios/multi-tenant" \
   -H "Content-Type: application/json" \
   -H "X-Tenant-ID: $TENANT_ID" \
   "${AUTH_HEADER[@]}" \
+  -d "$PAYLOAD" \
   | tee /tmp/seed-multi-tenant-demo.json
 
 echo ""

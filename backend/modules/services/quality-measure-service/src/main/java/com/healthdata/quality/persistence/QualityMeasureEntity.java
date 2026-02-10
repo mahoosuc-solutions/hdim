@@ -22,6 +22,11 @@ import java.util.UUID;
 @Schema(hidden = true)
 @Entity
 @Table(name = "quality_measures",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uq_quality_measures_tenant_measure_id",
+            columnNames = {"tenant_id", "measure_id"})
+    },
     indexes = {
         @Index(name = "idx_quality_measures_tenant", columnList = "tenant_id"),
         @Index(name = "idx_quality_measures_set", columnList = "measure_set"),
@@ -44,7 +49,7 @@ public class QualityMeasureEntity implements Serializable {
     private String tenantId;
 
     // Measure Identity
-    @Column(name = "measure_id", nullable = false, unique = true, length = 128)
+    @Column(name = "measure_id", nullable = false, length = 128)
     private String measureId;
 
     @Column(name = "measure_name", nullable = false, length = 255)

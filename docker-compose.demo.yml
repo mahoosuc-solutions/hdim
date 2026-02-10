@@ -80,6 +80,7 @@ services:
       KAFKA_NUM_PARTITIONS: 1
       CLUSTER_ID: demo-cluster-hdim-2024
       KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
     ports:
       - "9094:9092"
     healthcheck:
@@ -93,7 +94,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
 
   jaeger:
     container_name: hdim-demo-jaeger
@@ -143,7 +144,7 @@ services:
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: gateway-admin-service
       BACKEND_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
       BACKEND_SERVICES_AGENT_BUILDER_URL: http://agent-builder-service:8096
@@ -212,7 +213,7 @@ services:
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: gateway-fhir-service
       BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
@@ -280,7 +281,7 @@ services:
       SPRING_CACHE_TYPE: redis
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_SERVICE_NAME: audit-query-service
       GATEWAY_AUTH_DEV_MODE: "true"
@@ -335,7 +336,7 @@ services:
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: gateway-clinical-service
       BACKEND_SERVICES_CARE_GAP_URL: http://hdim-demo-care-gap:8086/care-gap
       BACKEND_SERVICES_EVENTS_URL: http://event-processing-service:8083/events
@@ -414,17 +415,17 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: fhir-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JACKSON_STREAM_WRITE_CONSTRAINTS_MAX_NESTING_DEPTH: 2000
-      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: DEBUG
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: DEBUG
+      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: INFO
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx512m -Xms256m"
+      JAVA_OPTS: "-Xmx1024m -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
       HEALTHCHECK_TENANT_ID: acme-health
@@ -441,7 +442,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 2048M
 
   # ── Customer Simulation Services ──────────────────────────────────────────────
   # These simulate a customer's existing EHR infrastructure. They are NOT part of
@@ -477,11 +478,11 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: cql-engine-service
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
@@ -533,12 +534,12 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: patient-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -586,8 +587,8 @@ services:
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_DEV_MODE: "true"
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: quality-measure-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -635,14 +636,14 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: care-gap-service
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx1024m -Xms256m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-care-gap
     ports:
@@ -677,11 +678,11 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: demo_password_2024
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: event-processing-service
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
@@ -734,9 +735,9 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: hcc-service
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_LIQUIBASE_ENABLED: "true"
@@ -796,7 +797,7 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_CLEAR_CHECKSUMS: "true"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: demo-seeding-service
       JAVA_OPTS: "-Xmx384m -Xms192m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
@@ -812,12 +813,16 @@ services:
       DEMO_SERVICES_GATEWAY_DB_URL: jdbc:postgresql://postgres:5432/gateway_db
       DEMO_SERVICES_GATEWAY_DB_USERNAME: healthdata
       DEMO_SERVICES_GATEWAY_DB_PASSWORD: demo_password_2024
+      DEMO_SERVICES_FHIR_DB_URL: jdbc:postgresql://postgres:5432/fhir_db
+      DEMO_SERVICES_FHIR_DB_USERNAME: healthdata
+      DEMO_SERVICES_FHIR_DB_PASSWORD: demo_password_2024
       # Snapshot storage
       DEMO_SNAPSHOTS_DIR: /app/snapshots
       DEMO_PERSISTENCE_ENABLED: "true"
-      DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "1000"
+      DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "200"
+      DEMO_MULTI_TENANT_PATIENTS_PER_TENANT: "100"
       DEMO_PERFORMANCE_PARALLEL_GENERATION: "false"
-      DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "4"
+      DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "2"
       HEALTH_TENANT_ID: service-health-demo-seeding
     ports:
       - "8098:8098"

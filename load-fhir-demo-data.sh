@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Quick FHIR Population Script
-# Populates essential clinical data for quality measure demonstration
+# Populates essential clinical data for quality measure demonstration.
+# Default tenant is `acme-health`. Use `demo-tenant` for primary demos.
+# `demo-admin` is reserved for super-admin workflows and is not seeded by default.
 
 set -e
 

@@ -102,4 +102,7 @@
     <!-- Fix missing MFA columns in users table -->
     <include file="db/changelog/0047-add-missing-user-mfa-columns.xml"/>
 
+    <!-- Fix quality measure uniqueness to allow per-tenant seeding -->
+    <include file="db/changelog/0048-fix-quality-measure-uniqueness.xml"/>
+
 </databaseChangeLog>

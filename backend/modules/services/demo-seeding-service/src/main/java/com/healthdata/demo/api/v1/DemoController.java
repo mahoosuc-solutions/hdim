@@ -146,10 +146,18 @@ public class DemoController {
      */
     @PostMapping("/scenarios/{scenarioName}")
     public ResponseEntity<LoadScenarioResponse> loadScenario(
-            @PathVariable String scenarioName) {
+            @PathVariable String scenarioName,
+            @Valid @RequestBody(required = false) LoadScenarioRequest request) {
         logger.info("POST /api/v1/demo/scenarios/{}", scenarioName);
 
-        ScenarioLoaderService.LoadResult result = scenarioLoaderService.loadScenario(scenarioName);
+        Integer patientsPerTenant = request != null ? request.getPatientsPerTenant() : null;
+        Integer careGapPercentage = request != null ? request.getCareGapPercentage() : null;
+
+        ScenarioLoaderService.LoadResult result = scenarioLoaderService.loadScenario(
+            scenarioName,
+            patientsPerTenant,
+            careGapPercentage
+        );
 
         LoadScenarioResponse response = new LoadScenarioResponse();
         response.setScenarioName(result.getScenarioName());

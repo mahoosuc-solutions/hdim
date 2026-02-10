@@ -56,7 +56,7 @@ demo:
     name: ${POSTGRES_DB:healthdata_demo}
   generation:
     default-care-gap-percentage: 28
-    default-patient-count: 5000
+    default-patient-count: 200
     batch-size: 100
   # Cache warmup on startup
   cache:
@@ -64,8 +64,8 @@ demo:
       enabled: ${DEMO_CACHE_WARMUP:true}
   # Performance tuning
   performance:
-    parallel-generation: true
-    max-concurrent-requests: 16
+    parallel-generation: false
+    max-concurrent-requests: 2
   # Enable persistence to downstream services (FHIR, Care Gap)
   persistence:
     enabled: ${DEMO_PERSISTENCE_ENABLED:true}

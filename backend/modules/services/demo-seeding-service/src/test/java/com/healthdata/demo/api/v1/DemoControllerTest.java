@@ -5,11 +5,19 @@ import com.healthdata.demo.application.DemoResetService;
 import com.healthdata.demo.application.DemoSeedingService;
 import com.healthdata.demo.application.ScenarioLoaderService;
 import com.healthdata.demo.domain.repository.DemoSessionRepository;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,6 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(DemoController.class)
+@ContextConfiguration(classes = DemoControllerTest.TestConfig.class)
 class DemoControllerTest {
 
     @Autowired
@@ -37,6 +46,19 @@ class DemoControllerTest {
 
     @MockBean
     private DemoSessionRepository sessionRepository;
+
+    @MockBean(name = "entityManagerFactory")
+    private EntityManagerFactory entityManagerFactory;
+
+    @SpringBootConfiguration
+    @EnableAutoConfiguration(exclude = {
+        DataSourceAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class,
+        JpaRepositoriesAutoConfiguration.class
+    })
+    @Import(DemoController.class)
+    static class TestConfig {
+    }
 
     @Test
     void loadScenario_AllowsOverridePayload() throws Exception {

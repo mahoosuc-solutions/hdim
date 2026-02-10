@@ -5,6 +5,7 @@ import com.healthdata.demo.domain.model.DemoSession;
 import com.healthdata.demo.domain.repository.DemoScenarioRepository;
 import com.healthdata.demo.domain.repository.DemoSessionRepository;
 import com.healthdata.demo.strategy.MultiTenantStrategy;
+import com.healthdata.demo.strategy.ScenarioSeedingStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

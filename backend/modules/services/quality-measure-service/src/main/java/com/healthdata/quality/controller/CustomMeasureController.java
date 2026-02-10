@@ -11,6 +11,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class CustomMeasureController {
 
     private final CustomMeasureService customMeasureService;
+    private final ObjectMapper objectMapper;
 
     @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @PostMapping
@@ -208,9 +211,15 @@ public class CustomMeasureController {
             @Valid @RequestBody UpdateValueSetsRequest request
     ) {
         log.info("PUT /quality-measure/custom-measures/{}/value-sets - tenant {}", id, tenantId);
-        // Convert valueSets list to JSON string for storage
-        String valueSetsJson = request.valueSets() != null ? request.valueSets().toString() : null;
-        return ResponseEntity.ok(customMeasureService.updateValueSets(tenantId, id, valueSetsJson));
+        try {
+            String valueSetsJson = request.valueSets() != null
+                    ? objectMapper.writeValueAsString(request.valueSets())
+                    : null;
+            return ResponseEntity.ok(customMeasureService.updateValueSets(tenantId, id, valueSetsJson));
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to serialize value sets for measure {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PreAuthorize("hasAnyRole('MEASURE_DEVELOPER', 'ADMIN', 'SUPER_ADMIN')")

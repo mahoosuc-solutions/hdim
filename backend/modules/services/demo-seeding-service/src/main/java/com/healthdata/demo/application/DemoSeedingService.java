@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.healthdata.demo.client.CareGapServiceClient;
 import com.healthdata.demo.client.FhirServiceClient;
 import com.healthdata.demo.client.QualityMeasureServiceClient;
+import com.healthdata.demo.client.TenantSeedingClient;
 import com.healthdata.demo.client.UserSeedingClient;
 import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
@@ -39,6 +40,15 @@ public class DemoSeedingService {
 
     private static final Logger logger = LoggerFactory.getLogger(DemoSeedingService.class);
     private static final int CANCEL_CHECK_INTERVAL = 25;
+    private static final List<TenantSeedingClient.TenantDefinition> DEMO_TENANTS = List.of(
+        new TenantSeedingClient.TenantDefinition("acme-health", "Acme Health", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("demo-admin", "Demo Admin", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("demo-tenant", "Demo Tenant", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("summit-care", "Summit Care", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("valley-health", "Valley Health", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("blue-shield-demo", "Blue Shield Demo", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("united-demo", "United Demo", "ACTIVE")
+    );
 
     private final SyntheticPatientGenerator patientGenerator;
     private final MedicationGenerator medicationGenerator;
@@ -52,6 +62,7 @@ public class DemoSeedingService {
     private final FhirServiceClient fhirServiceClient;
     private final CareGapServiceClient careGapServiceClient;
     private final QualityMeasureServiceClient qualityMeasureServiceClient;
+    private final TenantSeedingClient tenantSeedingClient;
     private final UserSeedingClient userSeedingClient;
     private final DemoProgressService progressService;
     private final boolean persistToServices;
@@ -69,6 +80,7 @@ public class DemoSeedingService {
             FhirServiceClient fhirServiceClient,
             CareGapServiceClient careGapServiceClient,
             QualityMeasureServiceClient qualityMeasureServiceClient,
+            TenantSeedingClient tenantSeedingClient,
             UserSeedingClient userSeedingClient,
             DemoProgressService progressService,
             @Value("${demo.persistence.enabled:true}") boolean persistToServices) {
@@ -84,6 +96,7 @@ public class DemoSeedingService {
         this.fhirServiceClient = fhirServiceClient;
         this.careGapServiceClient = careGapServiceClient;
         this.qualityMeasureServiceClient = qualityMeasureServiceClient;
+        this.tenantSeedingClient = tenantSeedingClient;
         this.userSeedingClient = userSeedingClient;
         this.progressService = progressService;
         this.persistToServices = persistToServices;
@@ -378,27 +391,33 @@ public class DemoSeedingService {
                 "multi-tenant",
                 "Multi-Tenant Administration",
                 DemoScenario.ScenarioType.MULTI_TENANT,
-                1500,
+                600,
                 "demo-admin"
             );
             multiTenant.setDescription(
                 "Demonstrates secure multi-tenant SaaS architecture. " +
-                "Includes 3 demo tenants: Demo Tenant (5K), Summit Care (12K), Valley Health (8K)."
+                "Includes 3 demo tenants: Acme Health, Blue Shield Demo, United Demo."
             );
             multiTenant.setEstimatedLoadTimeSeconds(60);
             scenarioRepository.save(multiTenant);
         }
 
-        // Seed demo users for authentication
-        if (persistToServices && userSeedingClient.isDatabaseAvailable()) {
-            logger.info("Seeding demo users...");
-            userSeedingClient.seedDemoUsers("demo-tenant");
-            userSeedingClient.seedDemoUsers("acme-health");
-            userSeedingClient.seedDemoUsers("demo-admin");
-            userSeedingClient.seedDemoUsers("summit-care");
-            userSeedingClient.seedDemoUsers("valley-health");
-            userSeedingClient.seedDemoUsers("blue-shield-demo");
-            userSeedingClient.seedDemoUsers("united-demo");
+        if (persistToServices) {
+            if (tenantSeedingClient.areDatabasesAvailable()) {
+                logger.info("Seeding demo tenants...");
+                tenantSeedingClient.seedTenants(DEMO_TENANTS);
+            } else {
+                logger.warn("Tenant databases not available - tenants not seeded");
+            }
+
+            if (userSeedingClient.isDatabaseAvailable()) {
+                logger.info("Seeding demo users...");
+                for (TenantSeedingClient.TenantDefinition tenant : DEMO_TENANTS) {
+                    userSeedingClient.seedDemoUsers(tenant.id());
+                }
+            } else {
+                logger.warn("Gateway database not available - users not seeded");
+            }
         }
 
         logger.info("Demo scenarios initialized");

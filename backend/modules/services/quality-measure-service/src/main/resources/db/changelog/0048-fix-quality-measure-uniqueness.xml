@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0048-fix-quality-measure-uniqueness" author="codex">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="quality_measures"/>
+        </preConditions>
+        <comment>Allow measure_id uniqueness per tenant</comment>
+
+        <dropUniqueConstraint
+            tableName="quality_measures"
+            constraintName="quality_measures_measure_id_key"/>
+
+        <addUniqueConstraint
+            tableName="quality_measures"
+            columnNames="tenant_id,measure_id"
+            constraintName="uq_quality_measures_tenant_measure_id"/>
+    </changeSet>
+</databaseChangeLog>

@@ -90,11 +90,11 @@
         <createIndex indexName="idx_phase2_week" tableName="phase2_execution_tasks">
             <column name="phase2_week"/>
         </createIndex>
-    </changeSet>
 
-    <!-- Rollback -->
-    <changeSet id="0050-rollback-phase2-execution-tasks" author="hdim" context="rollback">
-        <dropTable tableName="phase2_execution_tasks"/>
+        <!-- Rollback instructions for this changeset -->
+        <rollback>
+            <dropTable tableName="phase2_execution_tasks"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

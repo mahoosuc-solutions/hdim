@@ -49,7 +49,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
     "com.healthdata.payer.persistence"
 })
 @EntityScan(basePackages = {
-    "com.healthdata.payer.persistence"
+    "com.healthdata.payer.domain"
 })
 public class PayerWorkflowsServiceApplication {
 

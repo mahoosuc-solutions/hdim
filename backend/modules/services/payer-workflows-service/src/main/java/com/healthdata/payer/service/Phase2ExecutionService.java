@@ -354,6 +354,17 @@ public class Phase2ExecutionService {
     }
 
     /**
+     * Get all tasks for a specific HEDIS measure and tenant
+     *
+     * @param measure The HEDIS measure code (e.g., "BCS", "CDC", "COL", "CWP", "DM")
+     * @param tenantId The tenant ID
+     * @return List of tasks for this measure
+     */
+    public List<Phase2ExecutionTask> getTasksByMeasure(String measure, String tenantId) {
+        return taskRepository.findByHediseMeasureAndTenantId(measure, tenantId);
+    }
+
+    /**
      * Get all unpublished (draft) case studies for a tenant
      *
      * @param tenantId The tenant ID
@@ -361,6 +372,16 @@ public class Phase2ExecutionService {
      */
     public List<Phase2ExecutionTask> getDraftCaseStudies(String tenantId) {
         return taskRepository.findByCaseStudyPublishedAndTenantId(false, tenantId);
+    }
+
+    /**
+     * Get all published case studies for a tenant
+     *
+     * @param tenantId The tenant ID
+     * @return List of published case studies
+     */
+    public List<Phase2ExecutionTask> getPublishedCaseStudies(String tenantId) {
+        return taskRepository.findByCaseStudyPublishedAndTenantId(true, tenantId);
     }
 
     /**

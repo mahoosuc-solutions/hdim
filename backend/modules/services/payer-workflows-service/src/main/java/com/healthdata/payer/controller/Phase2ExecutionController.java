@@ -2,6 +2,8 @@ package com.healthdata.payer.controller;
 
 import com.healthdata.payer.domain.Phase2ExecutionTask;
 import com.healthdata.payer.domain.Phase2ExecutionTask.*;
+import com.healthdata.payer.dto.CaseStudyResponse;
+import com.healthdata.payer.dto.MeasureROIResponse;
 import com.healthdata.payer.service.Phase2ExecutionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,8 +16,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Phase 2 Execution Task Management API
@@ -226,6 +231,107 @@ public class Phase2ExecutionController {
 
         var tasks = executionService.getBlockingTasks(taskId, tenantId);
         return ResponseEntity.ok(tasks);
+    }
+
+    // ===== Financial Dashboard & Case Studies =====
+
+    @GetMapping("/financial/dashboard")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @Operation(summary = "Get financial dashboard with aggregated ROI metrics")
+    public ResponseEntity<Phase2ExecutionService.FinancialSummary> getFinancialDashboard(
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        var summary = executionService.getMonthlyFinancialSummary(tenantId);
+        return ResponseEntity.ok(summary);
+    }
+
+    @GetMapping("/financial/by-measure")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @Operation(summary = "Get ROI analysis broken down by HEDIS measure")
+    public ResponseEntity<List<MeasureROIResponse>> getMeasureROIAnalysis(
+            @RequestHeader("X-Tenant-ID") String tenantId) {
+
+        // Aggregate tasks by measure
+        List<MeasureROIResponse> measures = new ArrayList<>();
+
+        // Iterate through common HEDIS measures
+        for (String measure : List.of("BCS", "CDC", "COL", "CWP", "DM")) {
+            List<Phase2ExecutionTask> tasks = executionService.getTasksByMeasure(measure, tenantId);
+
+            // Only include measures with captured revenue
+            if (tasks.isEmpty()) {
+                continue;
+            }
+
+            BigDecimal totalCaptured = BigDecimal.ZERO;
+            Integer totalGapsClosed = 0;
+
+            for (Phase2ExecutionTask task : tasks) {
+                if (task.getQualityBonusCaptured() != null) {
+                    totalCaptured = totalCaptured.add(task.getQualityBonusCaptured());
+                }
+                if (task.getGapsClosed() != null) {
+                    totalGapsClosed += task.getGapsClosed();
+                }
+            }
+
+            // Only add measure if there's captured revenue
+            if (totalCaptured.compareTo(BigDecimal.ZERO) > 0) {
+                measures.add(MeasureROIResponse.builder()
+                        .measure(measure)
+                        .totalCaptured(totalCaptured)
+                        .totalGapsClosed(totalGapsClosed)
+                        .taskCount(tasks.size())
+                        .build());
+            }
+        }
+
+        return ResponseEntity.ok(measures);
+    }
+
+    @GetMapping("/case-studies")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
+    @Operation(summary = "Get case studies (published or draft)")
+    public ResponseEntity<List<CaseStudyResponse>> getCaseStudies(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestParam(defaultValue = "false") Boolean published) {
+
+        List<Phase2ExecutionTask> caseStudies = published
+                ? executionService.getPublishedCaseStudies(tenantId)
+                : executionService.getDraftCaseStudies(tenantId);
+
+        List<CaseStudyResponse> responses = caseStudies.stream()
+                .map(this::mapToCaseStudyResponse)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(responses);
+    }
+
+    @PostMapping("/case-studies/{caseStudyId}/publish")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    @Operation(summary = "Publish a case study")
+    public ResponseEntity<CaseStudyResponse> publishCaseStudy(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @PathVariable String caseStudyId) {
+
+        Phase2ExecutionTask task = executionService.publishCaseStudy(caseStudyId, tenantId);
+        return ResponseEntity.ok(mapToCaseStudyResponse(task));
+    }
+
+    // ===== Helper Methods =====
+
+    private CaseStudyResponse mapToCaseStudyResponse(Phase2ExecutionTask task) {
+        return CaseStudyResponse.builder()
+                .id(task.getId())
+                .taskName(task.getTaskName())
+                .hediseMeasure(task.getHediseMeasure())
+                .baselinePerformance(task.getBaselinePerformancePercentage())
+                .currentPerformance(task.getCurrentPerformancePercentage())
+                .bonusCaptured(task.getQualityBonusCaptured())
+                .gapsClosed(task.getGapsClosed())
+                .customerQuote(task.getCustomerQuote())
+                .published(task.getCaseStudyPublished())
+                .build();
     }
 
     // ===== Request DTOs =====

@@ -4,9 +4,9 @@ spring:
 
   # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_payer}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -17,6 +17,8 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Disable implicit entity scanning to avoid scanning shared authentication Tenant entity
+        "hibernate.archive.autodetection": ""
 
   liquibase:
     enabled: true

@@ -34,7 +34,7 @@ h2 = "2.2.224"  # In-memory database for unit tests
 hikaricp = "6.3.3"
 hibernate = "6.6.1.Final"
 liquibase = "4.29.2"
-httpclient5 = "5.2.1"
+httpclient5 = "5.6"
 
 # Caching & Messaging
 redis = "3.5.8"

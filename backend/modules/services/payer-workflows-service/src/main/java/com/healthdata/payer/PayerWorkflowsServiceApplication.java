@@ -46,7 +46,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableScheduling
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.payer.persistence"
+    "com.healthdata.payer.repository"
 })
 @EntityScan(basePackages = {
     "com.healthdata.payer.domain"

@@ -89,7 +89,7 @@ itext7 = "8.0.2"
 
 # Monitoring & Observability
 micrometer = "1.13.6"
-prometheus = "1.13.6"
+prometheus = "1.16.1"
 micrometer-tracing = "1.3.5"
 opentelemetry = "1.38.0"
 

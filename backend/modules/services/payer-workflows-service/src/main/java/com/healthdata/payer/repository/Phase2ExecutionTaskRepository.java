@@ -86,4 +86,21 @@ public interface Phase2ExecutionTaskRepository extends JpaRepository<Phase2Execu
     List<Phase2ExecutionTask> findUpcomingTasks(
             @Param("tenantId") String tenantId,
             @Param("dueDate") java.time.Instant dueDate);
+
+    // ===== Financial ROI Tracking Queries =====
+
+    /**
+     * Find all completed tasks for a tenant (used for financial summaries)
+     */
+    List<Phase2ExecutionTask> findByTenantIdAndStatus(String tenantId, TaskStatus status);
+
+    /**
+     * Find published or draft case studies by tenant
+     */
+    List<Phase2ExecutionTask> findByCaseStudyPublishedAndTenantId(Boolean caseStudyPublished, String tenantId);
+
+    /**
+     * Find tasks by HEDIS measure for a tenant
+     */
+    List<Phase2ExecutionTask> findByHediseMeasureAndTenantId(String hediseMeasure, String tenantId);
 }

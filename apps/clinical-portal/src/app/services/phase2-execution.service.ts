@@ -150,4 +150,43 @@ export class Phase2ExecutionService {
       `${this.apiUrl}/tasks/${taskId}/blocking`
     );
   }
+
+  /**
+   * Get financial dashboard metrics
+   */
+  getFinancialDashboard(): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/financial/dashboard`
+    );
+  }
+
+  /**
+   * Get ROI breakdown by HEDIS measure
+   */
+  getMeasureROI(): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/financial/by-measure`
+    );
+  }
+
+  /**
+   * Get case studies (optionally filter by published status)
+   */
+  getCaseStudies(published: boolean = false): Observable<any[]> {
+    const params = new HttpParams().set('published', published.toString());
+    return this.http.get<any[]>(
+      `${this.apiUrl}/case-studies`,
+      { params }
+    );
+  }
+
+  /**
+   * Publish a case study
+   */
+  publishCaseStudy(caseStudyId: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/case-studies/${caseStudyId}/publish`,
+      {}
+    );
+  }
 }

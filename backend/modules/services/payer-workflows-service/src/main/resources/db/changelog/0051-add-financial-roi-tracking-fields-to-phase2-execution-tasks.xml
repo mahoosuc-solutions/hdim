@@ -6,21 +6,22 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
 
     <changeSet id="0051-add-financial-roi-tracking-fields-to-phase2-execution-tasks" author="hdim">
-        <!-- Financial ROI Tracking Fields -->
+        <!-- Financial ROI Tracking Fields for Phase 2 Task Management -->
+        <!-- Supports HEDIS measure tracking, quality bonus monitoring, and ROI analysis -->
 
         <!-- HEDIS Measure Code -->
         <addColumn tableName="phase2_execution_tasks">
-            <column name="hedise_measure" type="VARCHAR(10)"/>
+            <column name="hedis_measure" type="VARCHAR(10)"/>
         </addColumn>
 
         <!-- Baseline Performance Percentage (5,2 precision) -->
         <addColumn tableName="phase2_execution_tasks">
-            <column name="baseline_performance_percentage" type="NUMERIC(5,2)"/>
+            <column name="baseline_performance_pct" type="NUMERIC(5,2)"/>
         </addColumn>
 
         <!-- Current Performance Percentage (5,2 precision) -->
         <addColumn tableName="phase2_execution_tasks">
-            <column name="current_performance_percentage" type="NUMERIC(5,2)"/>
+            <column name="current_performance_pct" type="NUMERIC(5,2)"/>
         </addColumn>
 
         <!-- Quality Bonus At Risk (12,2 precision) -->
@@ -33,12 +34,12 @@
             <column name="quality_bonus_captured" type="NUMERIC(12,2)"/>
         </addColumn>
 
-        <!-- Intervention Type -->
+        <!-- Intervention Type (e.g., outreach, care coordination, patient education) -->
         <addColumn tableName="phase2_execution_tasks">
             <column name="intervention_type" type="VARCHAR(50)"/>
         </addColumn>
 
-        <!-- Gaps Closed -->
+        <!-- Gaps Closed (count of resolved care gaps) -->
         <addColumn tableName="phase2_execution_tasks">
             <column name="gaps_closed" type="INTEGER"/>
         </addColumn>
@@ -53,52 +54,53 @@
             <column name="roi_percentage" type="NUMERIC(8,2)"/>
         </addColumn>
 
-        <!-- Customer Quote (Text) -->
+        <!-- Customer Quote (for case study marketing) -->
         <addColumn tableName="phase2_execution_tasks">
             <column name="customer_quote" type="TEXT"/>
         </addColumn>
 
-        <!-- Case Study Published Flag (Boolean) -->
+        <!-- Case Study Published Flag -->
         <addColumn tableName="phase2_execution_tasks">
-            <column name="case_study_published" type="BOOLEAN"/>
+            <column name="case_study_published" type="BOOLEAN" defaultValue="false"/>
         </addColumn>
 
-        <!-- Create indexes for financial data queries -->
-        <createIndex indexName="idx_phase2_hedise_measure" tableName="phase2_execution_tasks">
-            <column name="hedise_measure"/>
+        <!-- Create indexes for financial data queries with multi-tenant support -->
+        <!-- Index for HEDIS measure filtering by tenant -->
+        <createIndex indexName="idx_phase2_hedis_measure" tableName="phase2_execution_tasks">
+            <column name="tenant_id"/>
+            <column name="hedis_measure"/>
         </createIndex>
 
-        <createIndex indexName="idx_phase2_roi_percentage" tableName="phase2_execution_tasks">
-            <column name="roi_percentage"/>
+        <!-- Index for quality bonus tracking by tenant -->
+        <createIndex indexName="idx_phase2_bonus_captured" tableName="phase2_execution_tasks">
+            <column name="tenant_id"/>
+            <column name="quality_bonus_captured"/>
         </createIndex>
 
-        <createIndex indexName="idx_phase2_gaps_closed" tableName="phase2_execution_tasks">
-            <column name="gaps_closed"/>
-        </createIndex>
-
-        <createIndex indexName="idx_phase2_case_study_published" tableName="phase2_execution_tasks">
+        <!-- Index for case study published status by tenant -->
+        <createIndex indexName="idx_phase2_case_study" tableName="phase2_execution_tasks">
+            <column name="tenant_id"/>
             <column name="case_study_published"/>
         </createIndex>
 
         <!-- Rollback instructions for this changeset -->
         <rollback>
-            <!-- Drop indexes first -->
-            <dropIndex indexName="idx_phase2_case_study_published" tableName="phase2_execution_tasks"/>
-            <dropIndex indexName="idx_phase2_gaps_closed" tableName="phase2_execution_tasks"/>
-            <dropIndex indexName="idx_phase2_roi_percentage" tableName="phase2_execution_tasks"/>
-            <dropIndex indexName="idx_phase2_hedise_measure" tableName="phase2_execution_tasks"/>
-            <!-- Drop columns -->
-            <dropColumn tableName="phase2_execution_tasks" columnName="hedise_measure"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="baseline_performance_percentage"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="current_performance_percentage"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="quality_bonus_at_risk"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="quality_bonus_captured"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="intervention_type"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="gaps_closed"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="cost_per_gap"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="roi_percentage"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="customer_quote"/>
+            <!-- Drop indexes first (reverse order) -->
+            <dropIndex indexName="idx_phase2_case_study" tableName="phase2_execution_tasks"/>
+            <dropIndex indexName="idx_phase2_bonus_captured" tableName="phase2_execution_tasks"/>
+            <dropIndex indexName="idx_phase2_hedis_measure" tableName="phase2_execution_tasks"/>
+            <!-- Drop columns (reverse order) -->
             <dropColumn tableName="phase2_execution_tasks" columnName="case_study_published"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="customer_quote"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="roi_percentage"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="cost_per_gap"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="gaps_closed"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="intervention_type"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="quality_bonus_captured"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="quality_bonus_at_risk"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="current_performance_pct"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="baseline_performance_pct"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="hedis_measure"/>
         </rollback>
     </changeSet>
 

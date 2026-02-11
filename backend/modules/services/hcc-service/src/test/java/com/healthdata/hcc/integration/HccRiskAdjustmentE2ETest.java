@@ -6,6 +6,7 @@ import com.healthdata.hcc.controller.HccController.RafCalculationRequest;
 import com.healthdata.hcc.persistence.*;
 import com.healthdata.hcc.service.RafCalculationService;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -56,6 +57,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("e2e")
+@Tag("heavyweight")
 class HccRiskAdjustmentE2ETest {
 
     @Container
@@ -63,7 +66,7 @@ class HccRiskAdjustmentE2ETest {
         .withDatabaseName("hcc_test_db")
         .withUsername("testuser")
         .withPassword("testpass")
-        .withInitScript("db/init-hcc-schema.sql");
+        .withInitScript("db/init-schema.sql");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

@@ -1,0 +1,5 @@
+# Generated Pact contract files
+# These are created during test runs and should not be committed
+# Use `npm run pact:publish` to publish to Pact Broker
+*.json
+!.gitkeep

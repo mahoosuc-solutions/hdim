@@ -42,8 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Testcontainers
 @ActiveProfiles("test")
 @ContextConfiguration(initializers = TestKafkaInitializer.class)
-@Tag("entity-migration-validation")
 @Tag("integration")
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class EntityMigrationValidationTest {
 
     @Container

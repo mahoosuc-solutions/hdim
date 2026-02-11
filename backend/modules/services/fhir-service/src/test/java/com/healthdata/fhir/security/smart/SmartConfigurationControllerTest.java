@@ -3,10 +3,12 @@ package com.healthdata.fhir.security.smart;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("SMART Configuration Controller Tests")
+@Tag("integration")
 class SmartConfigurationControllerTest {
 
     @Test

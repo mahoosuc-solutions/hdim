@@ -13,6 +13,29 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
+: "${LOG_DIR:=logs/seed-runs}"
+: "${RUN_ID:=$(date +%Y%m%d-%H%M%S)}"
+LOG_FILE="${LOG_DIR}/seed-all-demo-data-${RUN_ID}.log"
+mkdir -p "$LOG_DIR"
+START_TS="$(date +%s)"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+on_exit() {
+    local exit_code=$?
+    local end_ts
+    end_ts="$(date +%s)"
+    local duration=$((end_ts - START_TS))
+    echo ""
+    echo -e "${BLUE}========================================${NC}"
+    echo -e "${BLUE}Seeding Run Summary${NC}"
+    echo -e "${BLUE}========================================${NC}"
+    echo "Run ID: ${RUN_ID}"
+    echo "Log file: ${LOG_FILE}"
+    echo "Exit code: ${exit_code}"
+    echo "Duration: ${duration}s"
+}
+trap on_exit EXIT
+
 DEMO_SEEDING_URL="${DEMO_SEEDING_URL:-http://localhost:8098}"
 TENANT_ID="${TENANT_ID:-acme-health}"
 

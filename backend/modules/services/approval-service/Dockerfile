@@ -28,6 +28,9 @@ LABEL description="Human-in-the-Loop Approval Service for HDIM Healthcare Platfo
 
 WORKDIR /app
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app

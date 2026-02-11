@@ -135,7 +135,6 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
-      - ./docker/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./docker/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
     depends_on:
       prometheus:
@@ -1111,6 +1110,64 @@ services:
     networks:
       - healthdata-network
 
+  # Port 8114 - Agent Validation Service (AI Agent Testing & Validation Framework)
+  agent-validation-service:
+    container_name: healthdata-agent-validation-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/agent-validation-service/Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      jaeger:
+        condition: service_healthy
+      agent-runtime-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_validation_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8114
+      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      # Service URLs
+      AGENT_RUNTIME_URL: http://agent-runtime-service:8088
+      APPROVAL_SERVICE_URL: http://approval-service:8097
+      JAEGER_URL: http://jaeger:16686
+      JAEGER_API_URL: http://jaeger:16686
+      EVALUATION_HARNESS_URL: http://agent-validation-harness:8500
+      # OpenTelemetry - distributed tracing
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: agent-validation-service
+      # Force IPv4 for OTLP connections
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8114:8114"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8114/agent-validation/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
   # ============================================
   # ANALYTICS SERVICES (8092-8094)
   # ============================================
@@ -1825,8 +1882,8 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8106
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      SPRING_LIQUIBASE_ENABLED: "false"
-      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
       # Zoho CRM Integration
       ZOHO_CLIENT_ID: ${ZOHO_CLIENT_ID:-}
       ZOHO_CLIENT_SECRET: ${ZOHO_CLIENT_SECRET:-}
@@ -1834,6 +1891,12 @@ services:
       ZOHO_SYNC_ENABLED: ${ZOHO_SYNC_ENABLED:-false}
       ZOHO_WEBHOOK_ENABLED: ${ZOHO_WEBHOOK_ENABLED:-false}
       ZOHO_WEBHOOK_SECRET: ${ZOHO_WEBHOOK_SECRET:-}
+      # Mail configuration (minimal for local development)
+      SPRING_MAIL_HOST: ${MAIL_HOST:-localhost}
+      SPRING_MAIL_PORT: ${MAIL_PORT:-25}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@localhost}
       # OpenTelemetry configuration for Jaeger
       TRACING_URL: http://jaeger:4318/v1/traces
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -2037,6 +2100,52 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  # ============================================
+  # ADMIN TOOLS
+  # ============================================
+
+  # Port 8120 - Investor Dashboard Service (admin tool for investor launch tracking)
+  investor-dashboard-service:
+    container_name: healthdata-investor-dashboard-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/investor-dashboard-service/Dockerfile
+    profiles: ["admin", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/investor_dashboard_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SERVER_PORT: 8120
+      # JWT Configuration (HS512 requires minimum 512-bit key)
+      JWT_SECRET: MLeQ6ppVImMUVKmbBX4gTuSozMIuDlh0HP9LX3cjOOopxgxEVA/zUPSAlcCsyLlhh2dnT4ZArmlAsREjpJm46Q==
+      JWT_EXPIRATION: 86400000
+      JWT_REFRESH_EXPIRATION: 604800000
+      # LinkedIn OAuth (optional)
+      LINKEDIN_CLIENT_ID: ${LINKEDIN_CLIENT_ID:-}
+      LINKEDIN_CLIENT_SECRET: ${LINKEDIN_CLIENT_SECRET:-}
+      LINKEDIN_REDIRECT_URI: ${LINKEDIN_REDIRECT_URI:-http://localhost:8120/investor/api/linkedin/callback}
+      LINKEDIN_API_ENABLED: ${LINKEDIN_API_ENABLED:-true}
+      # CORS
+      CORS_ALLOWED_ORIGINS: http://localhost:4200,https://admin.hdim.ai,https://*.vercel.app
+      # Database schema management
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+    ports:
+      - "8120:8120"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8120/investor/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
 
   # ============================================
   # DATA INGESTION SERVICE (LOAD TESTING)

@@ -113,4 +113,61 @@
         </rollback>
     </changeSet>
 
+    <changeSet id="0008-adjust-hedis-evaluation-scenario-size" author="healthdata-system">
+        <comment>Reduce HEDIS evaluation scenario size to prevent demo seeding OOM.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="1000"/>
+            <column name="description"
+                    value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution (compact dataset)."/>
+            <where>name='hedis-evaluation'</where>
+        </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="5000"/>
+                <column name="description"
+                        value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution."/>
+                <where>name='hedis-evaluation'</where>
+            </update>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0009-adjust-hedis-evaluation-scenario-size-compact" author="healthdata-system">
+        <comment>Further reduce HEDIS evaluation scenario size for low-memory demo runs.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="500"/>
+            <column name="description"
+                    value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution (low-memory dataset)."/>
+            <where>name='hedis-evaluation'</where>
+        </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="1000"/>
+                <column name="description"
+                        value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution (compact dataset)."/>
+                <where>name='hedis-evaluation'</where>
+            </update>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0010-adjust-hedis-evaluation-scenario-size-mini" author="healthdata-system">
+        <comment>Reduce HEDIS evaluation scenario size to a mini dataset for constrained environments.</comment>
+        <update tableName="demo_scenarios">
+            <column name="patient_count" valueNumeric="200"/>
+            <column name="description"
+                    value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution (mini dataset)."/>
+            <where>name='hedis-evaluation'</where>
+        </update>
+
+        <rollback>
+            <update tableName="demo_scenarios">
+                <column name="patient_count" valueNumeric="500"/>
+                <column name="description"
+                        value="Demonstrates automated HEDIS measure evaluation and care gap identification. Includes BCS, COL, CBP, CDC, EED, and SPC measures with realistic care gap distribution (low-memory dataset)."/>
+                <where>name='hedis-evaluation'</where>
+            </update>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>

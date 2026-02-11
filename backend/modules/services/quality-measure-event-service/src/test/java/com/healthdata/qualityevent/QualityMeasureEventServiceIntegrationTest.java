@@ -5,6 +5,7 @@ import com.healthdata.qualityevent.api.v1.dto.EvaluateMeasureRequest;
 import com.healthdata.qualityevent.api.v1.dto.MeasureEventResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Validates complete flow: REST → Service → EventHandler → Database
  * Tests measure evaluation, scoring, risk stratification, and cohort aggregation
  */
+@Tag("integration")
 @SpringBootTest
 @EmbeddedKafka(partitions = 3, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
 @ActiveProfiles("test")

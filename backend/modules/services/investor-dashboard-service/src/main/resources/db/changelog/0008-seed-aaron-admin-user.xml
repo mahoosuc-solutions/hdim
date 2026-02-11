@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0008-seed-aaron-admin-user" author="hdim" context="!test">
+        <comment>
+            Seed admin user for aaron@mahoosuc.solutions.
+            Default credentials: aaron@mahoosuc.solutions / investor2026!
+            Password hash is BCrypt with cost factor 12.
+            IMPORTANT: Change this password immediately in production!
+        </comment>
+
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(*) FROM investor_users WHERE email = 'aaron@mahoosuc.solutions'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="investor_users">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="email" value="aaron@mahoosuc.solutions"/>
+            <!-- BCrypt hash of 'investor2026!' with cost factor 12 ($2a$ format for Spring Security) -->
+            <column name="password_hash" value="$2a$12$fCgZN7KOqAqP5KGJtorVcOkCcinoIwp4F3iQw8k/0FwEQWdTKvYkO"/>
+            <column name="first_name" value="Aaron"/>
+            <column name="last_name" value="Administrator"/>
+            <column name="role" value="ADMIN"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="failed_login_attempts" valueNumeric="0"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="investor_users">
+                <where>email = 'aaron@mahoosuc.solutions'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -2,6 +2,7 @@ package com.healthdata.notification.infrastructure.providers;
 
 import com.twilio.exception.ApiException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.*;
  * Integration tests with WireMock will be in separate test class.
  */
 @ExtendWith(MockitoExtension.class)
+@Tag("integration")  // Requires Twilio SDK initialization with real/mock credentials
 class TwilioSmsProviderTest {
 
     @Mock

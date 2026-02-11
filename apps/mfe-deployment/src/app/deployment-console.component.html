@@ -1,0 +1,118 @@
+<div class="console">
+  <header class="hero">
+    <div>
+      <p class="eyebrow">HDIM On-Prem Deployment</p>
+      <h1>Deployment & Seeding Console</h1>
+      <p class="subtitle">
+        Configure, deploy, seed, and validate the platform for on‑prem installations.
+      </p>
+    </div>
+    <div class="status-pill" [class.warn]="statusError">
+      <span class="dot"></span>
+      <span>{{ statusError ? 'Ops service unavailable' : 'Ops service connected' }}</span>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Configuration</h2>
+      <div class="field">
+        <label>Deployment Mode</label>
+        <select [(ngModel)]="deploymentMode">
+          <option value="onprem">On‑Prem</option>
+          <option value="cloud">Cloud</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Stack Profile</label>
+        <select [(ngModel)]="stackProfile">
+          <option value="demo">Demo (full)</option>
+          <option value="core">Core (minimal)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Tenant ID</label>
+        <input [(ngModel)]="tenantId" placeholder="acme-health" />
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label>Patient Count</label>
+          <input type="number" [(ngModel)]="patientCount" (change)="refreshOverride()" />
+        </div>
+        <div class="field">
+          <label>Batch Size</label>
+          <input type="number" [(ngModel)]="batchSize" (change)="refreshOverride()" />
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label>Max Concurrent Requests</label>
+          <input type="number" [(ngModel)]="maxConcurrentRequests" (change)="refreshOverride()" />
+        </div>
+        <div class="field">
+          <label>Quality Measures</label>
+          <select [(ngModel)]="enableQualityMeasures" (change)="refreshOverride()">
+            <option [ngValue]="false">Disabled (recommended)</option>
+            <option [ngValue]="true">Enabled</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label>JVM Xmx</label>
+          <input [(ngModel)]="javaXmx" (change)="refreshOverride()" placeholder="2g" />
+        </div>
+        <div class="field">
+          <label>JVM Xms</label>
+          <input [(ngModel)]="javaXms" (change)="refreshOverride()" placeholder="1g" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Deployment Actions</h2>
+      <div class="actions">
+        <button [disabled]="commandBusy" (click)="runAction('start')">Start Stack</button>
+        <button [disabled]="commandBusy" (click)="runAction('seed')">Seed Data</button>
+        <button [disabled]="commandBusy" (click)="runAction('validate')">Validate</button>
+        <button [disabled]="commandBusy" (click)="runAction('capture-logs')">Capture Logs</button>
+        <button class="ghost" [disabled]="commandBusy" (click)="runAction('stop')">Stop Stack</button>
+      </div>
+      <div class="hint">
+        Actions call the local Ops service to run Docker + validation scripts.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Compose Override</h2>
+      <p class="hint">
+        Save as <code>docker-compose.override.yml</code> before running Docker Compose.
+      </p>
+      <textarea [value]="generatedOverride" readonly></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Live Status</h2>
+      <div *ngIf="statusError" class="warning">
+        {{ statusError }}. Start the ops service to enable live status.
+      </div>
+      <div class="status-grid">
+        <div class="status-card" *ngFor="let svc of status?.services">
+          <h3>{{ svc.name }}</h3>
+          <p>State: {{ svc.state }}</p>
+          <p *ngIf="svc.health">Health: {{ svc.health }}</p>
+          <p *ngIf="svc.ports">Ports: {{ svc.ports }}</p>
+        </div>
+      </div>
+      <div class="log">
+        <h3>Seeding Tail</h3>
+        <pre *ngFor="let line of status?.seedingTail">{{ line }}</pre>
+      </div>
+      <div class="log" *ngIf="status.lastCommand as last">
+        <h3>Last Command</h3>
+        <pre>Action: {{ last.action }} | Exit: {{ last.exitCode }} | Duration: {{ last.durationMs }}ms</pre>
+        <pre *ngFor="let line of last.outputTail">{{ line }}</pre>
+      </div>
+    </div>
+  </section>
+</div>

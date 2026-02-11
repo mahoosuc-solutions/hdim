@@ -4,6 +4,7 @@ import ca.uhn.fhir.context.FhirContext;
 import com.healthdata.demo.client.CareGapServiceClient;
 import com.healthdata.demo.client.FhirServiceClient;
 import com.healthdata.demo.client.QualityMeasureServiceClient;
+import com.healthdata.demo.client.TenantSeedingClient;
 import com.healthdata.demo.client.UserSeedingClient;
 import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
@@ -39,6 +40,15 @@ public class DemoSeedingService {
 
     private static final Logger logger = LoggerFactory.getLogger(DemoSeedingService.class);
     private static final int CANCEL_CHECK_INTERVAL = 25;
+    private static final List<TenantSeedingClient.TenantDefinition> DEMO_TENANTS = List.of(
+        new TenantSeedingClient.TenantDefinition("acme-health", "Acme Health", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("demo-admin", "Demo Admin", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("demo-tenant", "Demo Tenant", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("summit-care-2026", "Summit Care", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("valley-health-2026", "Valley Health", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("blue-shield-demo", "Blue Shield Demo", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("united-demo", "United Demo", "ACTIVE")
+    );
 
     private final SyntheticPatientGenerator patientGenerator;
     private final MedicationGenerator medicationGenerator;
@@ -52,9 +62,12 @@ public class DemoSeedingService {
     private final FhirServiceClient fhirServiceClient;
     private final CareGapServiceClient careGapServiceClient;
     private final QualityMeasureServiceClient qualityMeasureServiceClient;
+    private final TenantSeedingClient tenantSeedingClient;
     private final UserSeedingClient userSeedingClient;
     private final DemoProgressService progressService;
     private final boolean persistToServices;
+    private final boolean qualityMeasuresEnabled;
+    private final int generationBatchSize;
 
     public DemoSeedingService(
             SyntheticPatientGenerator patientGenerator,
@@ -69,9 +82,12 @@ public class DemoSeedingService {
             FhirServiceClient fhirServiceClient,
             CareGapServiceClient careGapServiceClient,
             QualityMeasureServiceClient qualityMeasureServiceClient,
+            TenantSeedingClient tenantSeedingClient,
             UserSeedingClient userSeedingClient,
             DemoProgressService progressService,
-            @Value("${demo.persistence.enabled:true}") boolean persistToServices) {
+            @Value("${demo.persistence.enabled:true}") boolean persistToServices,
+            @Value("${demo.quality-measures.enabled:true}") boolean qualityMeasuresEnabled,
+            @Value("${demo.generation.batch-size:100}") int generationBatchSize) {
         this.patientGenerator = patientGenerator;
         this.medicationGenerator = medicationGenerator;
         this.observationGenerator = observationGenerator;
@@ -84,9 +100,12 @@ public class DemoSeedingService {
         this.fhirServiceClient = fhirServiceClient;
         this.careGapServiceClient = careGapServiceClient;
         this.qualityMeasureServiceClient = qualityMeasureServiceClient;
+        this.tenantSeedingClient = tenantSeedingClient;
         this.userSeedingClient = userSeedingClient;
         this.progressService = progressService;
         this.persistToServices = persistToServices;
+        this.qualityMeasuresEnabled = qualityMeasuresEnabled;
+        this.generationBatchSize = Math.max(1, generationBatchSize);
     }
 
     /**
@@ -116,116 +135,149 @@ public class DemoSeedingService {
                 checkCancellation(sessionId, "Cancelled before patient generation");
             }
 
-            // Generate base patients
-            Bundle patientBundle = patientGenerator.generateCohort(count, tenantId);
-            result.setPatientCount((int) countResourceType(patientBundle, "Patient"));
-            if (sessionId != null) {
-                progressService.updateCounts(sessionId, result.getPatientCount(), null, null, null);
+            int totalGeneratedPatients = 0;
+            int totalCareGaps = 0;
+            int totalMedications = 0;
+            int totalObservations = 0;
+            int totalEncounters = 0;
+            int totalProcedures = 0;
+            int totalPersistedPatients = 0;
+            int totalPersistedCareGaps = 0;
+            int totalEvaluationResults = 0;
+            int totalMeasureDefinitions = 0;
+            boolean measuresSeeded = false;
+            Bundle lastGeneratedBundle = null;
+
+            boolean fhirStageSet = false;
+            boolean careGapStageSet = false;
+            boolean measureStageSet = false;
+            boolean measureGenerationLogged = false;
+
+            if (persistToServices) {
+                logger.info("Persisting generated data to downstream services...");
             }
 
-            // Enhance each patient with additional resources
-            // Use a copy to avoid ConcurrentModificationException when generators add entries
-            int careGapCount = 0;
             int entryIndex = 0;
-            for (Bundle.BundleEntryComponent entry : new java.util.ArrayList<>(patientBundle.getEntry())) {
+            for (int offset = 0; offset < count; offset += generationBatchSize) {
+                int batchCount = Math.min(generationBatchSize, count - offset);
+
                 if (sessionId != null && entryIndex % CANCEL_CHECK_INTERVAL == 0) {
                     checkCancellation(sessionId, "Cancelled during patient generation");
                 }
-                entryIndex++;
-                if (entry.getResource() instanceof Patient patient) {
-                    boolean createCareGap = (careGapCount * 100 / count) < careGapPercentage;
 
-                    enhancePatientWithResources(patient, patientBundle, createCareGap);
+                Bundle patientBundle = patientGenerator.generateCohort(batchCount, tenantId);
+                lastGeneratedBundle = patientBundle;
+                int batchPatientCount = (int) countResourceType(patientBundle, "Patient");
+                totalGeneratedPatients += batchPatientCount;
+                if (sessionId != null) {
+                    progressService.updateCounts(sessionId, totalGeneratedPatients, null, null, null);
+                }
 
-                    if (createCareGap) {
-                        careGapCount++;
+                int batchCareGaps = 0;
+                for (Bundle.BundleEntryComponent entry : new java.util.ArrayList<>(patientBundle.getEntry())) {
+                    if (entry.getResource() instanceof Patient patient) {
+                        boolean createCareGap = (totalCareGaps * 100 / count) < careGapPercentage;
+                        enhancePatientWithResources(patient, patientBundle, createCareGap);
+                        if (createCareGap) {
+                            totalCareGaps++;
+                            batchCareGaps++;
+                        }
+                    }
+                    entryIndex++;
+                    if (sessionId != null && entryIndex % CANCEL_CHECK_INTERVAL == 0) {
+                        checkCancellation(sessionId, "Cancelled during patient generation");
+                    }
+                }
+
+                totalMedications += (int) countResourceType(patientBundle, "MedicationRequest");
+                totalObservations += (int) countResourceType(patientBundle, "Observation");
+                totalEncounters += (int) countResourceType(patientBundle, "Encounter");
+                totalProcedures += (int) countResourceType(patientBundle, "Procedure");
+
+                if (persistToServices) {
+                    if (!fhirStageSet && sessionId != null) {
+                        progressService.updateStage(sessionId, DemoProgressService.Stage.PERSISTING_FHIR, 45,
+                            "Persisting FHIR resources");
+                        checkCancellation(sessionId, "Cancelled before FHIR persistence");
+                        fhirStageSet = true;
+                    }
+                    if (fhirServiceClient.isServiceAvailable()) {
+                        FhirServiceClient.PersistenceResult persistResult =
+                            fhirServiceClient.persistBundle(patientBundle, tenantId);
+
+                        if (!persistResult.isSuccess()) {
+                            logger.warn("Some resources failed to persist: {} errors", persistResult.getErrorCount());
+                        }
+
+                        totalPersistedPatients += persistResult.getPatientCount();
+                        if (sessionId != null) {
+                            progressService.updateCounts(sessionId, null, totalPersistedPatients, null, null);
+                        }
+                    } else {
+                        logger.warn("FHIR service not available - data generated but not persisted");
+                    }
+
+                    if (!careGapStageSet && sessionId != null) {
+                        progressService.updateStage(sessionId, DemoProgressService.Stage.CREATING_CARE_GAPS, 65,
+                            "Creating care gaps");
+                        checkCancellation(sessionId, "Cancelled before care gap generation");
+                        careGapStageSet = true;
+                    }
+                    if (careGapServiceClient.isServiceAvailable()) {
+                        int actualCareGaps = careGapServiceClient.createCareGapsFromBundle(
+                            patientBundle, tenantId, batchCareGaps);
+                        totalPersistedCareGaps += actualCareGaps;
+                        if (sessionId != null) {
+                            progressService.updateCounts(sessionId, null, null, totalPersistedCareGaps, null);
+                        }
+                    } else {
+                        logger.warn("Care Gap service not available - care gaps not created");
+                    }
+
+                    if (qualityMeasuresEnabled) {
+                        if (!measureStageSet && sessionId != null) {
+                            progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
+                                "Seeding quality measures");
+                            checkCancellation(sessionId, "Cancelled before measure seeding");
+                            measureStageSet = true;
+                        }
+                        if (qualityMeasureServiceClient.isServiceAvailable()) {
+                            if (!measuresSeeded) {
+                                totalMeasureDefinitions = qualityMeasureServiceClient.seedMeasureDefinitions(tenantId);
+                                measuresSeeded = true;
+                                logger.info("Seeded {} HEDIS measure definitions", totalMeasureDefinitions);
+                            }
+                            int evaluationResults = qualityMeasureServiceClient.generateDemoResults(
+                                patientBundle, tenantId, careGapPercentage);
+                            totalEvaluationResults += evaluationResults;
+                            if (sessionId != null) {
+                                progressService.updateCounts(sessionId, null, null, null, totalMeasureDefinitions);
+                            }
+                        } else {
+                            logger.warn("Quality Measure service not available - evaluation results not generated");
+                        }
+                    } else if (!measureGenerationLogged) {
+                        if (!measureStageSet && sessionId != null) {
+                            progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
+                                "Skipping measure seeding (disabled)");
+                            measureStageSet = true;
+                        }
+                        logger.info("Quality measure generation disabled - skipping measure seeding and evaluation.");
+                        measureGenerationLogged = true;
                     }
                 }
             }
 
-            result.setCareGapCount(careGapCount);
-            result.setGeneratedBundle(patientBundle);
+            result.setPatientCount(persistToServices ? totalPersistedPatients : totalGeneratedPatients);
+            result.setCareGapCount(persistToServices ? totalPersistedCareGaps : totalCareGaps);
+            result.setMedicationCount(totalMedications);
+            result.setObservationCount(totalObservations);
+            result.setEncounterCount(totalEncounters);
+            result.setProcedureCount(totalProcedures);
+            result.setEvaluationResultCount(totalEvaluationResults);
+            result.setGeneratedBundle(persistToServices ? null : lastGeneratedBundle);
 
-            // Calculate statistics
-            long medicationCount = countResourceType(patientBundle, "MedicationRequest");
-            long observationCount = countResourceType(patientBundle, "Observation");
-            long encounterCount = countResourceType(patientBundle, "Encounter");
-            long procedureCount = countResourceType(patientBundle, "Procedure");
-
-            result.setMedicationCount((int) medicationCount);
-            result.setObservationCount((int) observationCount);
-            result.setEncounterCount((int) encounterCount);
-            result.setProcedureCount((int) procedureCount);
-
-            // Persist to downstream services if enabled
-            if (persistToServices) {
-                logger.info("Persisting generated data to downstream services...");
-                if (sessionId != null) {
-                    progressService.updateStage(sessionId, DemoProgressService.Stage.PERSISTING_FHIR, 45,
-                        "Persisting FHIR resources");
-                    checkCancellation(sessionId, "Cancelled before FHIR persistence");
-                }
-
-                // Persist FHIR resources
-                if (fhirServiceClient.isServiceAvailable()) {
-                    FhirServiceClient.PersistenceResult persistResult =
-                        fhirServiceClient.persistBundle(patientBundle, tenantId);
-
-                    if (!persistResult.isSuccess()) {
-                        logger.warn("Some resources failed to persist: {} errors", persistResult.getErrorCount());
-                    }
-
-                    // Update counts from actual persistence
-                    result.setPatientCount(persistResult.getPatientCount());
-                    if (sessionId != null) {
-                        progressService.updateCounts(sessionId, null, result.getPatientCount(), null, null);
-                    }
-                } else {
-                    logger.warn("FHIR service not available - data generated but not persisted");
-                }
-
-                // Create care gaps
-                if (sessionId != null) {
-                    progressService.updateStage(sessionId, DemoProgressService.Stage.CREATING_CARE_GAPS, 65,
-                        "Creating care gaps");
-                    checkCancellation(sessionId, "Cancelled before care gap generation");
-                }
-                if (careGapServiceClient.isServiceAvailable()) {
-                    int actualCareGaps = careGapServiceClient.createCareGapsFromBundle(
-                        patientBundle, tenantId, careGapCount);
-                    result.setCareGapCount(actualCareGaps);
-                    if (sessionId != null) {
-                        progressService.updateCounts(sessionId, null, null, actualCareGaps, null);
-                    }
-                } else {
-                    logger.warn("Care Gap service not available - care gaps not created");
-                }
-
-                // Generate evaluation results for demo
-                if (sessionId != null) {
-                    progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
-                        "Seeding quality measures");
-                    checkCancellation(sessionId, "Cancelled before measure seeding");
-                }
-                if (qualityMeasureServiceClient.isServiceAvailable()) {
-                    logger.info("Generating quality measure evaluation results...");
-
-                    // First seed measure definitions
-                    int measureCount = qualityMeasureServiceClient.seedMeasureDefinitions(tenantId);
-                    logger.info("Seeded {} HEDIS measure definitions", measureCount);
-
-                    // Generate evaluation results based on patient data
-                    int evaluationResults = qualityMeasureServiceClient.generateDemoResults(
-                        patientBundle, tenantId, careGapPercentage);
-                    result.setEvaluationResultCount(evaluationResults);
-                    if (sessionId != null) {
-                        progressService.updateCounts(sessionId, null, null, null, measureCount);
-                    }
-                    logger.info("Generated {} evaluation results", evaluationResults);
-                } else {
-                    logger.warn("Quality Measure service not available - evaluation results not generated");
-                }
-            } else {
+            if (!persistToServices) {
                 logger.info("Persistence disabled - data generated in memory only");
             }
 
@@ -378,23 +430,33 @@ public class DemoSeedingService {
                 "multi-tenant",
                 "Multi-Tenant Administration",
                 DemoScenario.ScenarioType.MULTI_TENANT,
-                1500,
+                600,
                 "demo-admin"
             );
             multiTenant.setDescription(
                 "Demonstrates secure multi-tenant SaaS architecture. " +
-                "Includes 3 demo tenants: Demo Tenant (5K), Summit Care (12K), Valley Health (8K)."
+                "Includes 3 demo tenants: Acme Health, Blue Shield Demo, United Demo."
             );
             multiTenant.setEstimatedLoadTimeSeconds(60);
             scenarioRepository.save(multiTenant);
         }
 
-        // Seed demo users for authentication
-        if (persistToServices && userSeedingClient.isDatabaseAvailable()) {
-            logger.info("Seeding demo users...");
-            userSeedingClient.seedDemoUsers("demo-tenant");
-            userSeedingClient.seedDemoUsers("acme-health");
-            userSeedingClient.seedDemoUsers("demo-admin");
+        if (persistToServices) {
+            if (tenantSeedingClient.areDatabasesAvailable()) {
+                logger.info("Seeding demo tenants...");
+                tenantSeedingClient.seedTenants(DEMO_TENANTS);
+            } else {
+                logger.warn("Tenant databases not available - tenants not seeded");
+            }
+
+            if (userSeedingClient.isDatabaseAvailable()) {
+                logger.info("Seeding demo users...");
+                for (TenantSeedingClient.TenantDefinition tenant : DEMO_TENANTS) {
+                    userSeedingClient.seedDemoUsers(tenant.id());
+                }
+            } else {
+                logger.warn("Gateway database not available - users not seeded");
+            }
         }
 
         logger.info("Demo scenarios initialized");

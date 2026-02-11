@@ -1,6 +1,7 @@
 package com.healthdata.quality.config;
 
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -40,6 +41,8 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
+@Tag("slow")
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @Import({
     TestSecurityConfiguration.class,

@@ -23,6 +23,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.kafka.core.KafkaTemplate;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import com.healthdata.fhir.persistence.PatientEntity;
 import com.healthdata.fhir.persistence.PatientRepository;
@@ -50,8 +51,8 @@ class PatientServiceTest {
     @Mock
     private PatientValidator validator;
 
-    @Mock
-    private MeterRegistry meterRegistry;
+    // Use SimpleMeterRegistry instead of mock - the service registers timers in constructor
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @Mock
     private FhirAuditIntegration fhirAuditIntegration;

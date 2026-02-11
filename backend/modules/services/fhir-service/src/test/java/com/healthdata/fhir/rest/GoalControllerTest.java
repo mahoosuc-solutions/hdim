@@ -60,7 +60,7 @@ class GoalControllerTest {
         when(goalService.createGoal(eq(TENANT_ID), any(Goal.class), eq("user")))
                 .thenReturn(goal);
 
-        mockMvc.perform(post("/fhir/Goal")
+        mockMvc.perform(post("/Goal")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -77,7 +77,7 @@ class GoalControllerTest {
         goal.setId(goalId.toString());
         when(goalService.getGoal(TENANT_ID, goalId)).thenReturn(Optional.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/{id}", goalId)
+        mockMvc.perform(get("/Goal/{id}", goalId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(goal.getId())));
@@ -89,7 +89,7 @@ class GoalControllerTest {
         UUID goalId = UUID.randomUUID();
         when(goalService.getGoal(TENANT_ID, goalId)).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Goal/{id}", goalId)
+        mockMvc.perform(get("/Goal/{id}", goalId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -103,7 +103,7 @@ class GoalControllerTest {
         when(goalService.updateGoal(eq(TENANT_ID), eq(goalId), any(Goal.class), eq("user")))
                 .thenReturn(goal);
 
-        mockMvc.perform(put("/fhir/Goal/{id}", goalId)
+        mockMvc.perform(put("/Goal/{id}", goalId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -117,7 +117,7 @@ class GoalControllerTest {
     void shouldDeleteGoal() throws Exception {
         UUID goalId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/fhir/Goal/{id}", goalId)
+        mockMvc.perform(delete("/Goal/{id}", goalId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -139,7 +139,7 @@ class GoalControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(goal)));
 
-        mockMvc.perform(get("/fhir/Goal")
+        mockMvc.perform(get("/Goal")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/" + patientId))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ class GoalControllerTest {
         when(goalService.getGoalsByPatient(TENANT_ID, patientId))
                 .thenReturn(List.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/patient/{patientId}", patientId)
+        mockMvc.perform(get("/Goal/patient/{patientId}", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(goal.getId())));
@@ -180,7 +180,7 @@ class GoalControllerTest {
         when(goalService.getActiveGoals(TENANT_ID, patientId))
                 .thenReturn(List.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/patient/{patientId}/active", patientId)
+        mockMvc.perform(get("/Goal/patient/{patientId}/active", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(goal.getId())));
@@ -195,7 +195,7 @@ class GoalControllerTest {
         when(goalService.getOverdueGoals(TENANT_ID, patientId))
                 .thenReturn(List.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/patient/{patientId}/overdue", patientId)
+        mockMvc.perform(get("/Goal/patient/{patientId}/overdue", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(goal.getId())));
@@ -210,7 +210,7 @@ class GoalControllerTest {
         when(goalService.getHighPriorityGoals(TENANT_ID, patientId))
                 .thenReturn(List.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/patient/{patientId}/high-priority", patientId)
+        mockMvc.perform(get("/Goal/patient/{patientId}/high-priority", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(goal.getId())));
@@ -225,7 +225,7 @@ class GoalControllerTest {
         when(goalService.getGoalsByCondition(TENANT_ID, conditionId))
                 .thenReturn(List.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/condition/{conditionId}", conditionId)
+        mockMvc.perform(get("/Goal/condition/{conditionId}", conditionId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(goal.getId())));
@@ -239,7 +239,7 @@ class GoalControllerTest {
         when(goalService.getGoalsDueInRange(eq(TENANT_ID), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(List.of(goal));
 
-        mockMvc.perform(get("/fhir/Goal/due")
+        mockMvc.perform(get("/Goal/due")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("start", "2025-01-01")
                         .param("end", "2025-02-01"))

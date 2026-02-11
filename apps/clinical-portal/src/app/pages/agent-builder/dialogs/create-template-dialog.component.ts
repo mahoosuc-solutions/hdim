@@ -135,6 +135,8 @@ export interface CreateTemplateDialogData {
           <mat-spinner diameter="20"></mat-spinner>
         } @else {
           <mat-icon>{{ data.isEdit ? 'save' : 'add' }}</mat-icon>
+        }
+        @if (!saving) {
           {{ data.isEdit ? 'Save Changes' : 'Create Template' }}
         }
       </button>

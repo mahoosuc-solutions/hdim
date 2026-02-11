@@ -28,6 +28,9 @@ LABEL description="No-Code AI Agent Builder Service for HDIM"
 
 WORKDIR /app
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -g 1000 hdim && \
     adduser -u 1000 -G hdim -D -h /app hdim

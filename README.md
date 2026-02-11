@@ -105,6 +105,8 @@ docker compose --profile core up -d
 
 ### For Investors 💼
 
+**📦 [Investor Documentation Repository](https://github.com/webemo-aaron/hdim-investor)** - Clean, standalone package with all investor materials
+
 **[INVESTOR-PITCH-DECK.md](./docs/INVESTOR-PITCH-DECK.md)** (38 KB, 25 slides)
 - Problem statement & market opportunity ($18B TAM)
 - HDIM solution overview (51 microservices, FHIR-native)
@@ -592,4 +594,4 @@ For licensing inquiries: legal@healthdata-in-motion.com
 
 **Built with ❤️ for better healthcare outcomes**
 
-*Last Updated: November 26, 2025*
+*Last Updated: February 3, 2026*

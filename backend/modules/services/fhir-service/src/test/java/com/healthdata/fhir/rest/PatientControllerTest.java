@@ -55,7 +55,7 @@ class PatientControllerTest {
         when(patientService.createPatient(eq("tenant-1"), any(Patient.class), eq("admin-portal")))
                 .thenReturn(patient);
 
-        mockMvc.perform(post("/fhir/Patient")
+        mockMvc.perform(post("/Patient")
                         .contentType("application/fhir+json")
                         .content(JSON_PARSER.encodeResourceToString(patient)))
                 .andExpect(status().isCreated())
@@ -69,7 +69,7 @@ class PatientControllerTest {
         when(patientService.getPatient("tenant-1", patientId.toString()))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Patient/{id}", patientId))
+        mockMvc.perform(get("/Patient/{id}", patientId))
                 .andExpect(status().isNotFound());
     }
 
@@ -79,7 +79,7 @@ class PatientControllerTest {
         when(patientService.createPatient(eq("tenant-1"), any(Patient.class), eq("admin-portal")))
                 .thenThrow(new PatientService.PatientValidationException("invalid"));
 
-        mockMvc.perform(post("/fhir/Patient")
+        mockMvc.perform(post("/Patient")
                         .contentType("application/fhir+json")
                         .content("{\"resourceType\":\"Patient\"}"))
                 .andExpect(status().isBadRequest())
@@ -93,7 +93,7 @@ class PatientControllerTest {
         when(patientService.updatePatient(eq("tenant-1"), eq(patientId.toString()), any(Patient.class), eq("admin-portal")))
                 .thenThrow(new PatientService.PatientNotFoundException("missing"));
 
-        mockMvc.perform(put("/fhir/Patient/{id}", patientId)
+        mockMvc.perform(put("/Patient/{id}", patientId)
                         .contentType("application/fhir+json")
                         .content("{\"resourceType\":\"Patient\",\"id\":\"" + patientId + "\"}"))
                 .andExpect(status().isNotFound());
@@ -105,7 +105,7 @@ class PatientControllerTest {
         when(patientService.searchPatients(eq("tenant-1"), any(), eq(20)))
                 .thenReturn(new org.hl7.fhir.r4.model.Bundle());
 
-        mockMvc.perform(get("/fhir/Patient")
+        mockMvc.perform(get("/Patient")
                         .param("family", "Chen")
                         .param("name", "Maya"))
                 .andExpect(status().isOk());

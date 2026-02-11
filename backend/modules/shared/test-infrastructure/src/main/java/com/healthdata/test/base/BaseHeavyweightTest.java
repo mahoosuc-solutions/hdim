@@ -1,5 +1,6 @@
 package com.healthdata.test.base;
 
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,6 +10,11 @@ import java.lang.annotation.*;
 
 /**
  * Base annotation for heavyweight integration tests with Testcontainers.
+ *
+ * JUnit 5 tags applied:
+ * - integration: Marks as integration test
+ * - slow: Marks as slow-running test
+ * - heavyweight: Marks as requiring significant resources (Testcontainers)
  * 
  * Characteristics:
  * - Full Spring context with real infrastructure
@@ -46,6 +52,9 @@ import java.lang.annotation.*;
 @ActiveProfiles("test")
 @Transactional
 @Testcontainers
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 public @interface BaseHeavyweightTest {
 }
 

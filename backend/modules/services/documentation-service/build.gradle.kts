@@ -38,7 +38,7 @@ dependencies {
 
     // Hypersistence for PostgreSQL JSONB and array support
     // Version 3.9.0+ required for Hibernate 6.5+ compatibility
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:${libs.versions.hypersistence.utils.get()}")
 
     // Spring Cache with Redis
     implementation(libs.spring.boot.starter.data.redis)
@@ -77,6 +77,9 @@ dependencies {
 }
 
 tasks.withType<Test> {
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
     systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
     systemProperty("spring.datasource.username", "test")
     systemProperty("spring.datasource.password", "test")

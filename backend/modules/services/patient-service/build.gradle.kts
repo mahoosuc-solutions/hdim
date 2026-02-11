@@ -6,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 
@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:authentication"))
     implementation(project(":modules:shared:infrastructure:security"))
+    implementation(project(":modules:shared:infrastructure:gateway-core"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
@@ -74,15 +75,24 @@ dependencies {
     testImplementation(libs.testcontainers.junit.jupiter)
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)
+
+    // Contract testing
+    testImplementation(project(":modules:shared:contract-testing"))
+
+    // OpenAPI validation
+    testImplementation(project(":modules:shared:openapi-validation"))
 }
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 
 tasks.withType<Test> {
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
     // Testcontainers system properties disabled - using running Docker PostgreSQL
     // Configuration now managed in src/test/resources/application-test.yml
     // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:16-alpine:///testdb")
@@ -95,6 +105,6 @@ tasks.withType<Test> {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }

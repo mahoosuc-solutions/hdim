@@ -6,6 +6,8 @@ server:
 spring:
   application:
     name: event-processing-service
+  main:
+    allow-bean-definition-overriding: true
 
   # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
@@ -16,11 +18,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
+      # Liquibase handles all schema management and validation
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Disable Liquibase's SessionFactoryObserver schema validation
+        # that runs even when ddl-auto is 'none'. This prevents validation
+        # of User entity against the wrong database.
+        jakarta.persistence.schema-generation.database.action: none
+        jakarta.persistence.schema-generation.create-source: none
+        jakarta.persistence.schema-generation.drop-source: none
     show-sql: false
 
   liquibase:

@@ -203,10 +203,10 @@ public class DocumentationGapService {
                 .gapType(DocumentationGapEntity.GapType.V28_SPECIFICITY)
                 .rafImpactV24(BigDecimal.ZERO)
                 .rafImpactV28(mapping.getCoefficientV24() != null ?
-                    BigDecimal.valueOf(-mapping.getCoefficientV24()) : BigDecimal.ZERO)
+                    mapping.getCoefficientV24().negate() : BigDecimal.ZERO)
                 .rafImpactBlended(calculateBlendedImpact(BigDecimal.ZERO,
                     mapping.getCoefficientV24() != null ?
-                        BigDecimal.valueOf(-mapping.getCoefficientV24()) : BigDecimal.ZERO))
+                        mapping.getCoefficientV24().negate() : BigDecimal.ZERO))
                 .priority("HIGH")
                 .clinicalGuidance(mapping.getV28ChangeDescription())
                 .requiredDocumentation("Review documentation to identify alternative HCC-eligible code for V28")

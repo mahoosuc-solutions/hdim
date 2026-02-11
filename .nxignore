@@ -1,8 +1,5 @@
-# Ignore directories without proper Nx project configuration
-e2e/
-landing-page-v0/
-documentation-site/
-landing-page/
-scripts/
-test-harness/
-tools/implementation-planner/
+hdim-master/**
+hdim-admin-portal/**
+hdim-backend-tests/**
+hdim-predictive-analytics/**
+healthdata-platform/**

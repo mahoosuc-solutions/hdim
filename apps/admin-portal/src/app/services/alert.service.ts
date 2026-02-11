@@ -26,12 +26,14 @@ import {
 })
 export class AlertService {
   private apiUrl = '/api/v1/admin/alerts';
-  private logger = this.loggerService.withContext('AlertService');
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private http: HttpClient,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('AlertService');
+  }
 
   /**
    * Get all alert configurations

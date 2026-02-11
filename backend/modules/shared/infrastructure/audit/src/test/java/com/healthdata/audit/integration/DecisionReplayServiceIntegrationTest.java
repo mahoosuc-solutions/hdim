@@ -8,6 +8,7 @@ import com.healthdata.audit.repository.ai.AIAgentDecisionEventRepository;
 import com.healthdata.audit.service.ai.DecisionReplayService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,14 +31,19 @@ import static org.mockito.Mockito.*;
 
 /**
  * Integration tests for Decision Replay Service.
- * 
+ *
  * Tests with real PostgreSQL database using Testcontainers.
  * Validates decision replay functionality with actual database persistence.
  */
-@SpringBootTest(classes = {AuditIntegrationTestConfiguration.class})
+@SpringBootTest(
+    classes = {AuditIntegrationTestConfiguration.class},
+    properties = "spring.main.allow-bean-definition-overriding=true")
 @Import({DecisionReplayService.class, AuditClientConfig.class})
 @Testcontainers
 @Transactional
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 @DisplayName("Decision Replay Service - Integration Tests")
 class DecisionReplayServiceIntegrationTest {
 

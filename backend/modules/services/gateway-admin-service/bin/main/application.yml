@@ -117,6 +117,12 @@ backend:
     sales-automation:
       url: ${BACKEND_SERVICES_SALES_AUTOMATION_URL:http://localhost:8106}
       timeout: 30000
+    audit:
+      url: ${BACKEND_SERVICES_AUDIT_URL:http://localhost:8088/api/v1/audit}
+      timeout: 30000
+    audit-base:
+      url: ${BACKEND_SERVICES_AUDIT_BASE_URL:http://localhost:8088}
+      timeout: 30000
     ai-assistant:
       url: ${BACKEND_SERVICES_AI_ASSISTANT_URL:http://localhost:8090}
       timeout: 120000  # Higher timeout for AI operations

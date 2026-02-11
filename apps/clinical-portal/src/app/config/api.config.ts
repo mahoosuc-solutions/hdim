@@ -72,6 +72,14 @@ export const API_CONFIG = {
 
   // Logging
   ENABLE_LOGGING: true, // Set to false in production
+
+  // Audit ingest - set true when audit-ingest-service is deployed
+  AUDIT_INGEST_ENABLED: false,
+
+  // Service availability flags — set true when respective backend services are deployed
+  NURSE_WORKFLOW_SERVICE_ENABLED: false,
+  MEDICATION_SERVICE_ENABLED: false,
+  CARE_PLAN_SERVICE_ENABLED: false,
 };
 
 /**

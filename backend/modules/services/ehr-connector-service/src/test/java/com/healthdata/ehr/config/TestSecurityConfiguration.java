@@ -2,7 +2,7 @@ package com.healthdata.ehr.config;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.authentication.repository.ApiKeyRepository;
 import com.healthdata.authentication.repository.RefreshTokenRepository;

@@ -45,7 +45,8 @@ export class MeasureFavoritesService {
   readonly hasRecent = computed(() => this._recentMeasures().length > 0);
 
   constructor(
-    private logger: LoggerService,) {
+    private logger: LoggerService
+  ) {
     this.loadFromStorage();
   }
 

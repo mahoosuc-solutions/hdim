@@ -18,8 +18,11 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -282,6 +285,69 @@ public class HdimGlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(response);
+    }
+
+    /**
+     * Handle unacceptable media types (406).
+     */
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<HdimErrorResponse> handleNotAcceptable(
+            HttpMediaTypeNotAcceptableException ex,
+            HttpServletRequest request) {
+
+        log.warn("Not acceptable at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        HdimErrorResponse response = HdimErrorResponse.builder()
+                .status(HttpStatus.NOT_ACCEPTABLE.value())
+                .error("Not Acceptable")
+                .errorCode("HDIM-HTTP-406")
+                .message("Requested media type is not acceptable")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(response);
+    }
+
+    /**
+     * Handle missing handlers (404) from MVC routing.
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<HdimErrorResponse> handleNoHandlerFound(
+            NoHandlerFoundException ex,
+            HttpServletRequest request) {
+
+        log.warn("No handler found for {} {}", ex.getHttpMethod(), ex.getRequestURL());
+
+        HdimErrorResponse response = HdimErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Not Found")
+                .errorCode("HDIM-HTTP-404")
+                .message("Requested resource not found")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    /**
+     * Handle missing static resources (404).
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<HdimErrorResponse> handleNoResourceFound(
+            NoResourceFoundException ex,
+            HttpServletRequest request) {
+
+        log.warn("No resource found at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        HdimErrorResponse response = HdimErrorResponse.builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("Not Found")
+                .errorCode("HDIM-HTTP-404")
+                .message("Requested resource not found")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     /**

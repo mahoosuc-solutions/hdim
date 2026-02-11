@@ -6,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 
@@ -49,7 +49,7 @@ dependencies {
     implementation(libs.spring.boot.starter.data.redis)
 
     // HTTP Client for AIMS API
-    implementation("org.apache.httpcomponents.client5:httpclient5:5.3")
+    implementation(libs.httpclient5)
 
     // Resilience4j for retry logic
     implementation(libs.resilience4j.spring.boot3)
@@ -74,8 +74,8 @@ dependencies {
     testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.spring.boot.starter.test)
-    testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.spring.kafka.test)
 
     // Testcontainers for integration tests
     testImplementation(libs.bundles.testcontainers)
@@ -86,25 +86,9 @@ dependencies {
     testAnnotationProcessor(libs.lombok)
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
-    systemProperty("spring.profiles.active", "test")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
     }
+    systemProperty("spring.profiles.active", "test")
 }

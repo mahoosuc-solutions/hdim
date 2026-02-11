@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @Transactional
+@Tag("integration")
 class ImmunizationRepositoryIT {
 
     private static final String H2_URL = "jdbc:tc:postgresql:15-alpine:///testdb";

@@ -20,7 +20,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-logging")
 
     // Spring OpenAPI / Swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Lombok
     compileOnly(libs.lombok)
@@ -41,7 +41,10 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
+    systemProperty("spring.profiles.active", "test")
 }
 
 springBoot {

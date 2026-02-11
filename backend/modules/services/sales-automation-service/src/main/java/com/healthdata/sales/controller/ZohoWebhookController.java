@@ -3,6 +3,10 @@ package com.healthdata.sales.controller;
 import com.healthdata.sales.config.ZohoConfig;
 import com.healthdata.sales.service.ZohoSyncService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +27,25 @@ import java.util.*;
 @RequestMapping("/api/sales/zoho/webhook")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Zoho Webhooks", description = "Webhook endpoints for Zoho CRM notifications")
+@Tag(
+    name = "Zoho Webhooks",
+    description = """
+        APIs for Zoho CRM integration and synchronization.
+
+        Handles bi-directional sync with Zoho CRM:
+        - Webhook receiver for real-time notifications from Zoho
+        - Manual sync trigger for full synchronization
+        - Status endpoint for monitoring sync health
+
+        Supported Zoho modules:
+        - Leads
+        - Accounts
+        - Contacts
+        - Deals (mapped to Opportunities)
+
+        Webhook signature verification ensures data integrity.
+        """
+)
 public class ZohoWebhookController {
 
     private final ZohoConfig zohoConfig;
@@ -34,9 +56,26 @@ public class ZohoWebhookController {
      * Zoho sends POST requests when records are modified
      */
     @PostMapping
-    @Operation(summary = "Receive Zoho webhook", description = "Handles incoming Zoho CRM notifications")
+    @Operation(
+        summary = "Receive Zoho webhook",
+        description = """
+            Handles incoming Zoho CRM notifications.
+
+            Zoho sends webhooks when records are created, updated, or deleted.
+            The payload includes module name, operation type, and affected records.
+
+            Signature verification is performed if a webhook secret is configured.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Webhook processed successfully"),
+        @ApiResponse(responseCode = "401", description = "Invalid webhook signature"),
+        @ApiResponse(responseCode = "503", description = "Webhooks are disabled")
+    })
     public ResponseEntity<Map<String, Object>> handleWebhook(
+        @Parameter(description = "Zoho webhook signature for verification")
         @RequestHeader(value = "X-Zoho-Signature", required = false) String signature,
+        @Parameter(description = "Webhook payload from Zoho", required = true)
         @RequestBody Map<String, Object> payload
     ) {
         log.info("Received Zoho webhook: {}", payload);
@@ -73,8 +112,20 @@ public class ZohoWebhookController {
      * Zoho may call this with GET to verify the endpoint
      */
     @GetMapping
-    @Operation(summary = "Verify webhook endpoint", description = "Verification endpoint for Zoho")
+    @Operation(
+        summary = "Verify webhook endpoint",
+        description = """
+            Verification endpoint for Zoho webhook setup.
+
+            Zoho calls this endpoint with a challenge parameter when configuring webhooks.
+            The challenge must be echoed back to confirm endpoint ownership.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Endpoint verified, challenge echoed")
+    })
     public ResponseEntity<Map<String, Object>> verifyEndpoint(
+        @Parameter(description = "Challenge string from Zoho to echo back")
         @RequestParam(required = false) String challenge
     ) {
         log.info("Zoho webhook verification request received");
@@ -90,8 +141,25 @@ public class ZohoWebhookController {
      * Manual sync trigger endpoint
      */
     @PostMapping("/sync")
-    @Operation(summary = "Trigger manual sync", description = "Manually trigger a full Zoho sync for a tenant")
+    @Operation(
+        summary = "Trigger manual sync",
+        description = """
+            Manually triggers a full Zoho sync for the tenant.
+
+            Syncs all supported modules (Leads, Accounts, Contacts, Deals)
+            from Zoho to HDIM. Use when webhooks may have been missed
+            or for initial data import.
+
+            Returns sync statistics including records processed and any errors.
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Sync completed, results returned"),
+        @ApiResponse(responseCode = "503", description = "Sync is disabled")
+    })
+    @SecurityRequirement(name = "bearer-jwt")
     public ResponseEntity<ZohoSyncService.FullSyncResult> triggerSync(
+        @Parameter(description = "Tenant identifier", required = true)
         @RequestHeader("X-Tenant-ID") UUID tenantId
     ) {
         log.info("Manual Zoho sync triggered for tenant {}", tenantId);
@@ -103,7 +171,21 @@ public class ZohoWebhookController {
      * Get sync status
      */
     @GetMapping("/status")
-    @Operation(summary = "Get sync status", description = "Check Zoho sync configuration status")
+    @Operation(
+        summary = "Get sync status",
+        description = """
+            Returns Zoho sync configuration status.
+
+            Includes:
+            - Sync enabled/disabled status
+            - Webhook enabled/disabled status
+            - Sync interval configuration
+            - API base URL
+            """
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Sync status returned")
+    })
     public ResponseEntity<Map<String, Object>> getSyncStatus() {
         Map<String, Object> status = new HashMap<>();
         status.put("syncEnabled", zohoConfig.getSync().isEnabled());

@@ -42,7 +42,7 @@ spring:
   liquibase:
     enabled: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:9094
     consumer:
       auto-offset-reset: earliest
       group-id: consent-test-group

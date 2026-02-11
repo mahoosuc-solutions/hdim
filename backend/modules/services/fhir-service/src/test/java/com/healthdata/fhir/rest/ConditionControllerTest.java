@@ -63,7 +63,7 @@ class ConditionControllerTest {
         when(conditionService.createCondition(eq(TENANT_ID), any(Condition.class), eq("user")))
                 .thenReturn(condition);
 
-        mockMvc.perform(post("/fhir/Condition")
+        mockMvc.perform(post("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -76,7 +76,7 @@ class ConditionControllerTest {
     @Test
     @DisplayName("Should return bad request on create invalid JSON")
     void shouldReturnBadRequestOnCreateInvalidJson() throws Exception {
-        mockMvc.perform(post("/fhir/Condition")
+        mockMvc.perform(post("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -90,7 +90,7 @@ class ConditionControllerTest {
         when(conditionService.createCondition(eq(TENANT_ID), any(Condition.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("bad"));
 
-        mockMvc.perform(post("/fhir/Condition")
+        mockMvc.perform(post("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -105,7 +105,7 @@ class ConditionControllerTest {
         Condition condition = buildCondition(UUID.randomUUID());
         when(conditionService.getCondition(TENANT_ID, condition.getId())).thenReturn(Optional.of(condition));
 
-        mockMvc.perform(get("/fhir/Condition/{id}", condition.getId())
+        mockMvc.perform(get("/Condition/{id}", condition.getId())
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(condition.getId())));
@@ -116,7 +116,7 @@ class ConditionControllerTest {
     void shouldReturnNotFound() throws Exception {
         when(conditionService.getCondition(TENANT_ID, "missing")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Condition/{id}", "missing")
+        mockMvc.perform(get("/Condition/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -128,7 +128,7 @@ class ConditionControllerTest {
         when(conditionService.updateCondition(eq(TENANT_ID), eq(condition.getId()), any(Condition.class), eq("user")))
                 .thenReturn(condition);
 
-        mockMvc.perform(put("/fhir/Condition/{id}", condition.getId())
+        mockMvc.perform(put("/Condition/{id}", condition.getId())
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -140,7 +140,7 @@ class ConditionControllerTest {
     @Test
     @DisplayName("Should return bad request on update invalid JSON")
     void shouldReturnBadRequestOnUpdateInvalidJson() throws Exception {
-        mockMvc.perform(put("/fhir/Condition/{id}", "id-1")
+        mockMvc.perform(put("/Condition/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -154,7 +154,7 @@ class ConditionControllerTest {
         doThrow(new ConditionService.ConditionNotFoundException("missing"))
                 .when(conditionService).updateCondition(eq(TENANT_ID), eq("missing"), any(Condition.class), eq("user"));
 
-        mockMvc.perform(put("/fhir/Condition/{id}", "missing")
+        mockMvc.perform(put("/Condition/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -165,7 +165,7 @@ class ConditionControllerTest {
     @Test
     @DisplayName("Should delete condition")
     void shouldDeleteCondition() throws Exception {
-        mockMvc.perform(delete("/fhir/Condition/{id}", "id-1")
+        mockMvc.perform(delete("/Condition/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -177,7 +177,7 @@ class ConditionControllerTest {
         doThrow(new ConditionService.ConditionNotFoundException("missing"))
                 .when(conditionService).deleteCondition(TENANT_ID, "missing", "user");
 
-        mockMvc.perform(delete("/fhir/Condition/{id}", "missing")
+        mockMvc.perform(delete("/Condition/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNotFound());
@@ -189,7 +189,7 @@ class ConditionControllerTest {
         when(conditionService.searchConditionsByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition")
+        mockMvc.perform(get("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -201,7 +201,7 @@ class ConditionControllerTest {
         when(conditionService.searchConditionsByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenThrow(new IllegalArgumentException("search failure"));
 
-        mockMvc.perform(get("/fhir/Condition")
+        mockMvc.perform(get("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -214,7 +214,7 @@ class ConditionControllerTest {
         when(conditionService.searchConditionsByPatientAndCode(TENANT_ID, "patient-1", "E11.9"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition")
+        mockMvc.perform(get("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "E11.9"))
@@ -227,7 +227,7 @@ class ConditionControllerTest {
         when(conditionService.searchConditionsByPatientAndCategory(TENANT_ID, "patient-1", "encounter-diagnosis"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition")
+        mockMvc.perform(get("/Condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("category", "encounter-diagnosis"))
@@ -237,7 +237,7 @@ class ConditionControllerTest {
     @Test
     @DisplayName("Should return bad request when patient param missing")
     void shouldReturnBadRequestWhenPatientMissing() throws Exception {
-        mockMvc.perform(get("/fhir/Condition")
+        mockMvc.perform(get("/Condition")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("patient parameter is required")));
@@ -249,7 +249,7 @@ class ConditionControllerTest {
         when(conditionService.getActiveConditionsByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition/active")
+        mockMvc.perform(get("/Condition/active")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -261,7 +261,7 @@ class ConditionControllerTest {
         when(conditionService.getActiveConditionsByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("active failure"));
 
-        mockMvc.perform(get("/fhir/Condition/active")
+        mockMvc.perform(get("/Condition/active")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -274,7 +274,7 @@ class ConditionControllerTest {
         when(conditionService.getChronicConditionsByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition/chronic")
+        mockMvc.perform(get("/Condition/chronic")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -286,7 +286,7 @@ class ConditionControllerTest {
         when(conditionService.getChronicConditionsByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("chronic failure"));
 
-        mockMvc.perform(get("/fhir/Condition/chronic")
+        mockMvc.perform(get("/Condition/chronic")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -299,7 +299,7 @@ class ConditionControllerTest {
         when(conditionService.getDiagnosesByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition/diagnoses")
+        mockMvc.perform(get("/Condition/diagnoses")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -311,7 +311,7 @@ class ConditionControllerTest {
         when(conditionService.getDiagnosesByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("diagnoses failure"));
 
-        mockMvc.perform(get("/fhir/Condition/diagnoses")
+        mockMvc.perform(get("/Condition/diagnoses")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -324,7 +324,7 @@ class ConditionControllerTest {
         when(conditionService.getProblemListByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Condition/problem-list")
+        mockMvc.perform(get("/Condition/problem-list")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -336,7 +336,7 @@ class ConditionControllerTest {
         when(conditionService.getProblemListByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("problem list failure"));
 
-        mockMvc.perform(get("/fhir/Condition/problem-list")
+        mockMvc.perform(get("/Condition/problem-list")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -348,7 +348,7 @@ class ConditionControllerTest {
     void shouldCheckHasCondition() throws Exception {
         when(conditionService.hasActiveCondition(TENANT_ID, "patient-1", "E11.9")).thenReturn(true);
 
-        mockMvc.perform(get("/fhir/Condition/has-condition")
+        mockMvc.perform(get("/Condition/has-condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "E11.9"))
@@ -362,7 +362,7 @@ class ConditionControllerTest {
         when(conditionService.hasActiveCondition(TENANT_ID, "patient-1", "E11.9"))
                 .thenThrow(new IllegalStateException("has condition failure"));
 
-        mockMvc.perform(get("/fhir/Condition/has-condition")
+        mockMvc.perform(get("/Condition/has-condition")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "E11.9"))
@@ -372,7 +372,7 @@ class ConditionControllerTest {
     @Test
     @DisplayName("Should return health check")
     void shouldReturnHealthCheck() throws Exception {
-        mockMvc.perform(get("/fhir/Condition/_health"))
+        mockMvc.perform(get("/Condition/_health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Condition")));
     }

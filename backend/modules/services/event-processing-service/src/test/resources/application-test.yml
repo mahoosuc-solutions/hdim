@@ -28,6 +28,10 @@ spring:
 
   liquibase:
     enabled: true
+
+  kafka:
+    bootstrap-servers: localhost:9094
+
 logging:
   level:
     root: WARN

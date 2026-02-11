@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0016-add-linkedin-profile-id" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="linkedin_outreach" columnName="linkedin_profile_id"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Add linkedin_profile_id column to linkedin_outreach table.
+            This column stores the LinkedIn member ID for tracking and deduplication.
+            Fixes schema mismatch between entity and database.
+        </comment>
+
+        <addColumn tableName="linkedin_outreach">
+            <column name="linkedin_profile_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="linkedin_outreach" columnName="linkedin_profile_id"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

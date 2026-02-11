@@ -541,10 +541,10 @@ curl -sk https://localhost:8001/hdim/actuator/health
 
 | Role | Contact | Availability |
 |------|---------|--------------|
-| **Deployment Lead** | [name]@hdim.com | During go-live (24h first week) |
-| **Support Engineer** | support@hdim.com | 24/7 on-call rotation |
-| **Hospital IT Contact** | [hospital IT] | Business hours + on-call |
-| **Escalation Manager** | [manager]@hdim.com | During incidents |
+| **Deployment Lead** | aaron@mahoosuc.solutions | During go-live (24h first week) |
+| **Support Engineer** | aaron@mahoosuc.solutions | 24/7 on-call rotation |
+| **Hospital IT Contact** | [Assigned by hospital] | Business hours + on-call |
+| **Escalation Manager** | aaron@mahoosuc.solutions | During incidents |
 
 ### SLA Definitions
 
@@ -560,11 +560,9 @@ curl -sk https://localhost:8001/hdim/actuator/health
 ```
 Hospital User
     ↓
-HDIM Support (support@hdim.com)
+HDIM Support (aaron@mahoosuc.solutions)
     ↓ (if not resolved in 2h)
-HDIM Support Manager
-    ↓ (if not resolved in 4h)
-HDIM CTO
+Aaron Bentley, Founder
     ↓ (if not resolved in 8h)
 Hospital Chief Medical Information Officer
 ```
@@ -573,7 +571,7 @@ Hospital Chief Medical Information Officer
 
 ```bash
 # Option 1: Email
-To: support@hdim.com
+To: aaron@mahoosuc.solutions
 Subject: [HOSPITAL-NAME] [SEVERITY] Issue description
 Body:
   Service Affected: [service name]
@@ -810,8 +808,8 @@ docker compose logs | grep "patient_id=12345"
 
 ## Questions?
 
-For technical support: support@hdim.com
-For hospital coordination: [deployment-lead@hdim.com]
+For technical support: aaron@mahoosuc.solutions
+For hospital coordination: aaron@mahoosuc.solutions
 
 ---
 

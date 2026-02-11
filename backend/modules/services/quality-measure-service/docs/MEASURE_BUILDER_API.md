@@ -2,9 +2,13 @@
 
 **Version:** 1.0
 **API Version:** v1
-**Last Updated:** January 18, 2026
-**Base URL:** `/api/v1/measures`
-**Authentication:** JWT Bearer Token
+**Last Updated:** February 10, 2026
+**Base URLs:**
+- Service context path: `/quality-measure`
+- Custom measure management: `/quality-measure/custom-measures`
+- Measure versioning: `/quality-measure/api/v1/measures`
+- AI endpoints: `/quality-measure/api/v1/measures/ai`
+**Authentication:** JWT Bearer Token (or trusted headers in demo)
 
 ---
 
@@ -21,12 +25,18 @@
 
 ## Authentication
 
-All API endpoints require JWT Bearer token authentication.
+All API endpoints require JWT Bearer token authentication in production.
+Demo environments may rely on trusted headers via the gateway.
 
 **Header:**
 ```
 Authorization: Bearer {token}
 X-Tenant-ID: {tenant_id}
+X-Auth-User-Id: {user_id} (demo/trusted headers)
+X-Auth-Username: {username} (demo/trusted headers)
+X-Auth-Roles: {roles} (demo/trusted headers)
+X-Auth-Tenant-Ids: {tenant_ids} (demo/trusted headers)
+X-Auth-Validated: {validator} (demo/trusted headers)
 ```
 
 **Token Lifecycle:**
@@ -38,9 +48,9 @@ X-Tenant-ID: {tenant_id}
 
 ## Endpoints
 
-### 1. Create Measure
+### 1. Create Measure (Custom Measure Draft)
 
-**POST** `/api/v1/measures`
+**POST** `/quality-measure/custom-measures`
 
 Create a new measure.
 
@@ -70,7 +80,7 @@ Create a new measure.
 
 ### 2. Get Measure
 
-**GET** `/api/v1/measures/{id}`
+**GET** `/quality-measure/custom-measures/{id}`
 
 Retrieve measure details.
 
@@ -93,15 +103,14 @@ Retrieve measure details.
 
 ### 3. List Measures
 
-**GET** `/api/v1/measures?status=PUBLISHED&limit=20&offset=0`
+**GET** `/quality-measure/custom-measures?status=PUBLISHED`
 
 List all measures with filters.
 
 **Parameters:**
 - `status`: DRAFT, PUBLISHED, ARCHIVED
 - `category`: Filter by category
-- `limit`: Results per page (default: 20, max: 100)
-- `offset`: Pagination offset
+- `status`: DRAFT, PUBLISHED, ARCHIVED
 
 **Response:** (200 OK)
 ```json
@@ -117,7 +126,7 @@ List all measures with filters.
 
 ### 4. Update Measure
 
-**PUT** `/api/v1/measures/{id}`
+**PUT** `/quality-measure/custom-measures/{id}`
 
 Update measure definition.
 
@@ -144,7 +153,7 @@ Update measure definition.
 
 ### 5. Delete Measure
 
-**DELETE** `/api/v1/measures/{id}`
+**DELETE** `/quality-measure/custom-measures/{id}`
 
 Delete a measure (DRAFT only).
 
@@ -197,7 +206,7 @@ Generate CQL from visual blocks.
 
 ### 8. Publish Measure
 
-**POST** `/api/v1/measures/{id}/publish`
+**POST** `/quality-measure/custom-measures/{id}/publish`
 
 Publish measure (makes it read-only).
 
@@ -223,7 +232,7 @@ Publish measure (makes it read-only).
 
 ### 9. Create New Version
 
-**POST** `/api/v1/measures/{id}/new-version`
+**POST** `/api/v1/measures/{id}/versions`
 
 Create new version of published measure.
 
@@ -381,7 +390,7 @@ Get evaluation results.
 
 ```bash
 # 1. Create measure
-curl -X POST http://localhost:8087/api/v1/measures \
+curl -X POST http://localhost:8087/quality-measure/custom-measures \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Tenant-ID: TENANT001" \
   -H "Content-Type: application/json" \
@@ -395,7 +404,7 @@ curl -X POST http://localhost:8087/api/v1/measures \
 MEASURE_ID="550e8400-..."
 
 # 2. Add blocks and update
-curl -X PUT http://localhost:8087/api/v1/measures/$MEASURE_ID \
+curl -X PUT http://localhost:8087/quality-measure/custom-measures/$MEASURE_ID \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Tenant-ID: TENANT001" \
   -H "Content-Type: application/json" \
@@ -404,14 +413,14 @@ curl -X PUT http://localhost:8087/api/v1/measures/$MEASURE_ID \
   }'
 
 # 3. Validate
-curl -X POST http://localhost:8087/api/v1/measures/$MEASURE_ID/validate \
+curl -X POST http://localhost:8087/quality-measure/api/v1/measures/$MEASURE_ID/validate \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Tenant-ID: TENANT001"
 
 # Response: { "isValid": true }
 
 # 4. Publish
-curl -X POST http://localhost:8087/api/v1/measures/$MEASURE_ID/publish \
+curl -X POST http://localhost:8087/quality-measure/custom-measures/$MEASURE_ID/publish \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Tenant-ID: TENANT001" \
   -H "Content-Type: application/json" \
@@ -424,7 +433,7 @@ curl -X POST http://localhost:8087/api/v1/measures/$MEASURE_ID/publish \
 
 ```bash
 # Execute evaluation
-curl -X POST http://localhost:8087/api/v1/measures/$MEASURE_ID/evaluate \
+curl -X POST http://localhost:8087/quality-measure/api/v1/measures/$MEASURE_ID/evaluate \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Tenant-ID: TENANT001" \
   -H "Content-Type: application/json" \
@@ -441,7 +450,7 @@ curl -X POST http://localhost:8087/api/v1/measures/$MEASURE_ID/evaluate \
 EVAL_ID="eval-550e8400"
 
 # Check results (after completion)
-curl -X GET http://localhost:8087/api/v1/evaluations/$EVAL_ID \
+curl -X GET http://localhost:8087/quality-measure/api/v1/evaluations/$EVAL_ID \
   -H "Authorization: Bearer $TOKEN" \
   -H "X-Tenant-ID: TENANT001"
 

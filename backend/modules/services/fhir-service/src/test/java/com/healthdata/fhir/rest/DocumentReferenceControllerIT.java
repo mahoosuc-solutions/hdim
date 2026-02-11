@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,7 @@ import ca.uhn.fhir.parser.IParser;
 @Transactional
 @ExtendWith(SpringExtension.class)
 @WithMockUser(username = "testuser")
+@Tag("integration")
 class DocumentReferenceControllerIT {
 
     private static final String TENANT_ID = "tenant-test-1";

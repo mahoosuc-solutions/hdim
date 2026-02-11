@@ -3,6 +3,7 @@ package com.healthdata.notification.integration;
 import com.healthdata.notification.application.AppointmentReminderService;
 import com.healthdata.notification.domain.model.AppointmentReminderSent;
 import com.healthdata.notification.domain.repository.AppointmentReminderSentRepository;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
 class AppointmentReminderSchedulerIntegrationTest {
 
     @Autowired

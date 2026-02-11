@@ -1,0 +1,13 @@
+# Vercel
+.vercel
+
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Prisma
+node_modules/.prisma
+
+# Build outputs
+dist-api/

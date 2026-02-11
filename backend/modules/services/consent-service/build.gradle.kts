@@ -8,7 +8,9 @@ dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:security"))
-    implementation(project(":modules:shared:infrastructure:authentication"))
+    // Use authentication-headers instead of authentication to avoid User entity scanning
+    // consent-service uses gateway-trust pattern and doesn't need local User entity
+    implementation(project(":modules:shared:infrastructure:authentication-headers"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))

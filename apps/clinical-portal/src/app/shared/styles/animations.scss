@@ -4,7 +4,7 @@
  * Global animations and transitions for the HealthData Platform.
  */
 
-@import './variables.scss';
+@use './variables' as *;
 
 // Fade Animations
 @keyframes fade-in {

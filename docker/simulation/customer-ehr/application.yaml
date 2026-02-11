@@ -1,0 +1,30 @@
+# Customer EHR simulation — HAPI FHIR R4 configuration
+# Mimics a typical mid-size health system's FHIR endpoint.
+hapi:
+  fhir:
+    fhir_version: R4
+    allow_external_references: true
+    allow_multiple_delete: true
+    allow_contains_searches: true
+    allow_override_default_search_params: true
+    reuse_cached_search_results_millis: 60000
+    subscription:
+      resthook_enabled: true
+    cr_enabled: true
+    expunge_enabled: true
+    binary_storage_enabled: true
+    default_page_size: 20
+    max_page_size: 200
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:customer-fhir-db}:5432/${DB_NAME:customer_fhir_db}
+    driverClassName: org.postgresql.Driver
+    username: ${DB_USERNAME:healthdata}
+    password: ${DB_PASSWORD:demo_password_2024}
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update

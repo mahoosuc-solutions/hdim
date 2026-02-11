@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.audit.models.AuditAction;
 import com.healthdata.audit.models.AuditEvent;
 import com.healthdata.audit.models.AuditOutcome;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIf;
 
@@ -26,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests are automatically skipped if the database is not available.
  */
 @EnabledIf("isDatabaseAvailable")
+@Tag("integration")
+@Tag("slow")
 public class AuditDatabaseIntegrationTest {
 
     private static final String DB_URL = "jdbc:postgresql://localhost:5435/healthdata_audit";

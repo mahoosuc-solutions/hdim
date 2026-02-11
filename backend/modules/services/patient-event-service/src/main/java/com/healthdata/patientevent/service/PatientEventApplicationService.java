@@ -1,6 +1,10 @@
 package com.healthdata.patientevent.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.authentication.context.UserContext;
+import com.healthdata.authentication.context.UserContextHolder;
+import com.healthdata.eventsourcing.event.EventUserContext;
+import com.healthdata.eventsourcing.kafka.UserContextKafkaInterceptor;
 import com.healthdata.patientevent.api.v1.dto.CreatePatientRequest;
 import com.healthdata.patientevent.api.v1.dto.PatientEventResponse;
 import com.healthdata.patientevent.persistence.PatientProjectionRepository;
@@ -51,7 +55,11 @@ public class PatientEventApplicationService {
     /**
      * Create patient event
      *
-     * Converts REST request to PatientCreatedEvent and processes through handler
+     * Converts REST request to PatientCreatedEvent and processes through handler.
+     *
+     * HIPAA Compliance:
+     * - 45 CFR 164.312(b): Includes user context for audit trail
+     * - 45 CFR 164.312(d): Captures authenticated user identity
      */
     public PatientEventResponse createPatientEvent(CreatePatientRequest request, String tenantId) {
         log.info("Creating patient event for tenant: {}, firstName: {}", tenantId, request.getFirstName());
@@ -59,22 +67,30 @@ public class PatientEventApplicationService {
         // Generate unique patient ID
         String patientId = "PATIENT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-        // Create domain event
+        // Build HIPAA-compliant user context for audit trail
+        EventUserContext userContext = buildEventUserContext(tenantId);
+
+        // Set user context for Kafka interceptor to propagate via headers
+        setKafkaUserContext();
+
+        // Create domain event with user context
         PatientCreatedEvent event = new PatientCreatedEvent(
             patientId,
             tenantId,
             request.getFirstName(),
             request.getLastName(),
-            request.getDateOfBirth()
+            request.getDateOfBirth(),
+            userContext
         );
 
         // Delegate to Phase 4 event handler for business logic
         patientEventHandler.handle(event);
 
-        // Publish to Kafka for other services
+        // Publish to Kafka for other services (UserContextKafkaInterceptor adds headers)
         kafkaTemplate.send(PATIENT_EVENTS_TOPIC, patientId, event);
 
-        log.info("Patient event created: patientId={}, tenantId={}", patientId, tenantId);
+        log.info("Patient event created: patientId={}, tenantId={}, user={}",
+            patientId, tenantId, userContext != null ? userContext.getUsername() : "system");
 
         // Return response with created patient ID
         return PatientEventResponse.builder()
@@ -87,10 +103,16 @@ public class PatientEventApplicationService {
     /**
      * Enroll patient event
      *
-     * Processes enrollment status change
+     * Processes enrollment status change.
+     *
+     * HIPAA Compliance:
+     * - 45 CFR 164.312(b): Audit trail via Kafka headers
      */
     public PatientEventResponse enrollPatientEvent(String enrollmentRequest, String tenantId) {
         log.info("Enrolling patient for tenant: {}", tenantId);
+
+        // Set user context for Kafka interceptor
+        setKafkaUserContext();
 
         try {
             // Parse enrollment request
@@ -107,7 +129,7 @@ public class PatientEventApplicationService {
             // Delegate to Phase 4 event handler
             patientEventHandler.handle(event);
 
-            // Publish to Kafka
+            // Publish to Kafka (UserContextKafkaInterceptor adds headers)
             kafkaTemplate.send(PATIENT_EVENTS_TOPIC, request.patientId, event);
 
             log.info("Patient enrolled: patientId={}, status={}", request.patientId, request.newStatus);
@@ -127,10 +149,16 @@ public class PatientEventApplicationService {
     /**
      * Update patient demographics event
      *
-     * Processes demographic changes
+     * Processes demographic changes.
+     *
+     * HIPAA Compliance:
+     * - 45 CFR 164.312(b): Audit trail via Kafka headers
      */
     public PatientEventResponse updateDemographicsEvent(String demographicsRequest, String tenantId) {
         log.info("Updating demographics for tenant: {}", tenantId);
+
+        // Set user context for Kafka interceptor
+        setKafkaUserContext();
 
         try {
             // Parse demographics request
@@ -148,7 +176,7 @@ public class PatientEventApplicationService {
             // Delegate to Phase 4 event handler
             patientEventHandler.handle(event);
 
-            // Publish to Kafka
+            // Publish to Kafka (UserContextKafkaInterceptor adds headers)
             kafkaTemplate.send(PATIENT_EVENTS_TOPIC, request.patientId, event);
 
             log.info("Demographics updated: patientId={}", request.patientId);
@@ -162,6 +190,48 @@ public class PatientEventApplicationService {
         } catch (Exception e) {
             log.error("Error processing demographics event", e);
             throw new RuntimeException("Failed to process demographics event", e);
+        }
+    }
+
+    // ===== Helper methods for HIPAA-compliant user context =====
+
+    /**
+     * Build EventUserContext from the current authenticated user.
+     *
+     * HIPAA Compliance:
+     * - Captures WHO is performing the action
+     * - Records WHY (purpose of use)
+     * - Includes tenant context for multi-tenant audit segregation
+     */
+    private EventUserContext buildEventUserContext(String tenantId) {
+        UserContext context = UserContextHolder.getContext();
+
+        if (context != null) {
+            return EventUserContext.builder()
+                .userId(context.userIdAsString())
+                .username(context.username())
+                .activeTenantId(tenantId)
+                .roles(context.roles() != null ? String.join(",", context.roles()) : null)
+                .ipAddress(context.ipAddress())
+                .purposeOfUse("TREATMENT")  // Default for patient operations
+                .initiatedAt(Instant.now().toString())
+                .tokenId(context.tokenId())
+                .userAgent(context.userAgent())
+                .build();
+        }
+
+        // System context for operations without user (e.g., scheduled jobs)
+        return EventUserContext.system(tenantId, "OPERATIONS");
+    }
+
+    /**
+     * Set user context for Kafka interceptor to propagate via message headers.
+     * This ensures audit context flows through event-driven processing.
+     */
+    private void setKafkaUserContext() {
+        UserContext context = UserContextHolder.getContext();
+        if (context != null) {
+            UserContextKafkaInterceptor.setUserContext(context);
         }
     }
 

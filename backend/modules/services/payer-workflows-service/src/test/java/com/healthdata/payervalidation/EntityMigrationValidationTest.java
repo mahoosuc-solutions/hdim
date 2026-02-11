@@ -36,10 +36,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DataJpaTest(
     properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.liquibase.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=validate",
+        "spring.liquibase.enabled=true",
         "spring.flyway.enabled=false",
-        "spring.data.jpa.repositories.enabled=false"
+        "spring.data.jpa.repositories.enabled=true"
     }
 )
 @ContextConfiguration(classes = EntityMigrationValidationTest.TestConfig.class)
@@ -51,7 +51,7 @@ class EntityMigrationValidationTest {
 
     @Configuration
     @EnableAutoConfiguration
-    @EntityScan(basePackages = "com.healthdata.payer.persistence")
+    @EntityScan(basePackages = {"com.healthdata.payer.domain", "com.healthdata.payer.persistence"})
     static class TestConfig {
     }
 
@@ -80,9 +80,9 @@ class EntityMigrationValidationTest {
     void validateAllEntitiesMatchDatabaseSchema() {
         Set<EntityType<?>> entities = entityManagerFactory.getMetamodel().getEntities();
 
-        // payer-workflows-service does not define its own JPA entities
+        // payer-workflows-service defines Phase2ExecutionTask entity
         if (entities.isEmpty()) {
-            return;
+            throw new AssertionError("Expected to find Phase2ExecutionTask entity, but no entities were found");
         }
 
         EntityMigrationValidator validator = new EntityMigrationValidator(dataSource);

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <!-- Add missing MFA columns to existing users table -->
+    <!-- Resolves: Schema-validation: missing column [mfa_method] in table [users] -->
+
+    <changeSet id="0011-add-missing-user-mfa-columns" author="payer-workflows-service">
+        <comment>Add missing MFA columns to users table (mfa_method, mfa_phone_number, SMS fields)</comment>
+
+        <!-- MFA method type (TOTP, SMS, or BOTH) -->
+        <addColumn tableName="users">
+            <column name="mfa_method" type="varchar(10)" defaultValue="TOTP">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Phone number for SMS MFA (E.164 format: +15555551234) -->
+        <addColumn tableName="users">
+            <column name="mfa_phone_number" type="varchar(20)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Hashed SMS verification code (6-digit) -->
+        <addColumn tableName="users">
+            <column name="sms_code" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- SMS code expiration timestamp (5-minute TTL) -->
+        <addColumn tableName="users">
+            <column name="sms_code_expiry" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- SMS code send count (for rate limiting) -->
+        <addColumn tableName="users">
+            <column name="sms_code_sent_count" type="integer" defaultValueNumeric="0">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <!-- Last reset timestamp for hourly rate limit counter -->
+        <addColumn tableName="users">
+            <column name="sms_code_last_reset" type="timestamp with time zone">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="users" columnName="mfa_method"/>
+            <dropColumn tableName="users" columnName="mfa_phone_number"/>
+            <dropColumn tableName="users" columnName="sms_code"/>
+            <dropColumn tableName="users" columnName="sms_code_expiry"/>
+            <dropColumn tableName="users" columnName="sms_code_sent_count"/>
+            <dropColumn tableName="users" columnName="sms_code_last_reset"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -95,7 +95,7 @@ public class Phase2ExecutionTask {
     private String notes;
 
     // ==================== Financial ROI Tracking Fields ====================
-    @Column(name = "hedise_measure", length = 10)
+    @Column(name = "hedis_measure", length = 10)
     private String hediseMeasure; // HEDIS measure code (e.g., HBA1C, BCS, CCS)
 
     @Column(name = "baseline_performance_percentage", precision = 5, scale = 2)

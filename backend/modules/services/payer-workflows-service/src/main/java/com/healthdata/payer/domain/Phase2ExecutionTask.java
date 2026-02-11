@@ -2,6 +2,7 @@ package com.healthdata.payer.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,6 +93,40 @@ public class Phase2ExecutionTask {
 
     @Column(name = "notes", length = 2000)
     private String notes;
+
+    // ==================== Financial ROI Tracking Fields ====================
+    @Column(name = "hedise_measure", length = 10)
+    private String hediseMeasure; // HEDIS measure code (e.g., HBA1C, BCS, CCS)
+
+    @Column(name = "baseline_performance_percentage", precision = 5, scale = 2)
+    private BigDecimal baselinePerformancePercentage; // Baseline % before intervention
+
+    @Column(name = "current_performance_percentage", precision = 5, scale = 2)
+    private BigDecimal currentPerformancePercentage; // Current % after intervention
+
+    @Column(name = "quality_bonus_at_risk", precision = 12, scale = 2)
+    private BigDecimal qualityBonusAtRisk; // Total potential quality bonus revenue at risk
+
+    @Column(name = "quality_bonus_captured", precision = 12, scale = 2)
+    private BigDecimal qualityBonusCaptured; // Actual quality bonus revenue captured
+
+    @Column(name = "intervention_type", length = 50)
+    private String interventionType; // Type of intervention used (e.g., "Digital Outreach", "Provider Training")
+
+    @Column(name = "gaps_closed")
+    private Integer gapsClosed; // Number of care gaps closed
+
+    @Column(name = "cost_per_gap", precision = 10, scale = 2)
+    private BigDecimal costPerGap; // Cost incurred per gap closure
+
+    @Column(name = "roi_percentage", precision = 8, scale = 2)
+    private BigDecimal roiPercentage; // Return on investment percentage
+
+    @Column(name = "customer_quote", columnDefinition = "TEXT")
+    private String customerQuote; // Customer testimonial quote demonstrating value
+
+    @Column(name = "case_study_published")
+    private Boolean caseStudyPublished; // Flag indicating if case study has been published
 
     // Phase 2 Context
     @Column(name = "phase2_week")

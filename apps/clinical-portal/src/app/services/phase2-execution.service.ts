@@ -12,7 +12,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class Phase2ExecutionService {
-  private apiUrl = `${environment.apiBaseUrl}/admin/phase2-execution`;
+  private apiUrl = 'http://localhost:8098/api/v1/payer/phase2-execution';
 
   constructor(private http: HttpClient) {}
 

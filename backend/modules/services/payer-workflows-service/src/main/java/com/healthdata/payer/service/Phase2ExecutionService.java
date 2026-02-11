@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -253,6 +255,144 @@ public class Phase2ExecutionService {
      */
     public List<Phase2ExecutionTask> getBlockingTasks(String blockedTaskId, String tenantId) {
         return taskRepository.findBlockingTasks(blockedTaskId, tenantId);
+    }
+
+    // ===== Financial ROI Calculations =====
+
+    /**
+     * Calculate ROI percentage given captured revenue and cost
+     * Formula: (captured - cost) / cost * 100
+     *
+     * @param captured Total revenue captured
+     * @param cost Total cost incurred
+     * @return ROI percentage rounded to 2 decimal places, or 0 if cost is zero/null
+     */
+    public BigDecimal calculateROI(BigDecimal captured, BigDecimal cost) {
+        if (cost == null || cost.compareTo(BigDecimal.ZERO) == 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal netRevenue = captured.subtract(cost);
+        BigDecimal roi = netRevenue.divide(cost, 4, RoundingMode.HALF_UP);
+        return roi.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculate performance improvement in percentage points
+     * Formula: currentPercentage - baselinePercentage
+     *
+     * @param task The execution task with baseline and current performance
+     * @return Improvement in percentage points, or 0 if either value is null
+     */
+    public BigDecimal calculatePerformanceImprovement(Phase2ExecutionTask task) {
+        if (task.getCurrentPerformancePercentage() == null || task.getBaselinePerformancePercentage() == null) {
+            return BigDecimal.ZERO;
+        }
+
+        return task.getCurrentPerformancePercentage()
+                .subtract(task.getBaselinePerformancePercentage())
+                .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Calculate monthly financial summary for a tenant
+     * Aggregates completed tasks and computes total bonus captured, gaps closed, and average ROI
+     *
+     * @param tenantId The tenant ID
+     * @return FinancialSummary with aggregated metrics
+     */
+    public FinancialSummary getMonthlyFinancialSummary(String tenantId) {
+        List<Phase2ExecutionTask> completedTasks = taskRepository.findByTenantIdAndStatus(tenantId, TaskStatus.COMPLETED);
+
+        BigDecimal totalBonusCaptured = BigDecimal.ZERO;
+        Integer totalGapsClosed = 0;
+        BigDecimal totalROI = BigDecimal.ZERO;
+        Integer roiCount = 0;
+        Integer taskCount = completedTasks.size();
+
+        for (Phase2ExecutionTask task : completedTasks) {
+            if (task.getQualityBonusCaptured() != null) {
+                totalBonusCaptured = totalBonusCaptured.add(task.getQualityBonusCaptured());
+            }
+            if (task.getGapsClosed() != null) {
+                totalGapsClosed += task.getGapsClosed();
+            }
+            if (task.getRoiPercentage() != null) {
+                totalROI = totalROI.add(task.getRoiPercentage());
+                roiCount++;
+            }
+        }
+
+        BigDecimal averageROI = roiCount > 0
+                ? totalROI.divide(new BigDecimal(roiCount), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        return FinancialSummary.builder()
+                .tenantId(tenantId)
+                .totalBonusCaptured(totalBonusCaptured)
+                .totalGapsClosed(totalGapsClosed)
+                .totalTasksCompleted(taskCount)
+                .averageROI(averageROI)
+                .calculatedAt(Instant.now())
+                .build();
+    }
+
+    /**
+     * Find the intervention with the highest ROI among a list of tasks
+     *
+     * @param tasks List of execution tasks to compare
+     * @return The task with the highest ROI percentage, or null if list is empty
+     */
+    public Phase2ExecutionTask findHighestROIIntervention(List<Phase2ExecutionTask> tasks) {
+        return tasks.stream()
+                .max((t1, t2) -> {
+                    BigDecimal roi1 = t1.getRoiPercentage() != null ? t1.getRoiPercentage() : BigDecimal.ZERO;
+                    BigDecimal roi2 = t2.getRoiPercentage() != null ? t2.getRoiPercentage() : BigDecimal.ZERO;
+                    return roi1.compareTo(roi2);
+                })
+                .orElse(null);
+    }
+
+    /**
+     * Get all unpublished (draft) case studies for a tenant
+     *
+     * @param tenantId The tenant ID
+     * @return List of draft case studies
+     */
+    public List<Phase2ExecutionTask> getDraftCaseStudies(String tenantId) {
+        return taskRepository.findByCaseStudyPublishedAndTenantId(false, tenantId);
+    }
+
+    /**
+     * Publish a case study by marking it as published
+     *
+     * @param taskId The task ID of the case study
+     * @param tenantId The tenant ID
+     * @return The updated task with published flag set to true
+     * @throws IllegalArgumentException if task not found
+     */
+    @Transactional
+    public Phase2ExecutionTask publishCaseStudy(String taskId, String tenantId) {
+        Phase2ExecutionTask task = taskRepository.findByIdAndTenantId(taskId, tenantId)
+                .orElseThrow(() -> new IllegalArgumentException("Task not found: " + taskId));
+
+        task.setCaseStudyPublished(true);
+        return taskRepository.save(task);
+    }
+
+    // ===== Inner Classes =====
+
+    @lombok.Data
+    @lombok.Builder
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class FinancialSummary {
+        private String tenantId;
+        private BigDecimal totalBonusCaptured;
+        private Integer totalGapsClosed;
+        private Integer totalTasksCompleted;
+        private BigDecimal averageROI;
+        private Instant calculatedAt;
     }
 
     @lombok.Data

@@ -44,10 +44,10 @@ public class DeadLetterQueueEntity {
     @Column(name = "topic", nullable = false)
     private String topic;
 
-    @Column(name = "event_type", nullable = false)
+    @Column(name = "event_type", nullable = false, length = 100)
     private String eventType;
 
-    @Column(name = "patient_id")
+    @Column(name = "patient_id", length = 100)
     private String patientId;
 
     @Column(name = "event_payload", columnDefinition = "jsonb")

@@ -122,7 +122,7 @@ public class ConsentEntity {
     @Column(name = "revoked_by", length = 255)
     private String revokedBy;
 
-    // Audit fields
+    // Audit fields - using Instant to match database timestamptz type
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

@@ -23,6 +23,11 @@ spring:
     enabled: ${SPRING_LIQUIBASE_ENABLED:true}
     change-log: classpath:db/changelog/db.changelog-master.xml
 
+# Gateway trust authentication (dev mode for local testing)
+gateway:
+  auth:
+    dev-mode: true
+
 logging:
   level:
     com.healthdata.sales: INFO

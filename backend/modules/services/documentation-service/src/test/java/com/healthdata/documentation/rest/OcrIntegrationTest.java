@@ -9,6 +9,7 @@ import com.healthdata.documentation.repository.DocumentAttachmentRepository;
 import com.healthdata.documentation.service.ClinicalDocumentService;
 import com.healthdata.documentation.test.TestFileGenerator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,6 +66,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @Import(OcrIntegrationTest.TestOcrConfiguration.class)
 @org.junit.jupiter.api.parallel.Execution(org.junit.jupiter.api.parallel.ExecutionMode.SAME_THREAD)
+@Tag("integration")  // Testcontainers + async OCR - exclude from testFast for reliability
 class OcrIntegrationTest {
 
     @Container

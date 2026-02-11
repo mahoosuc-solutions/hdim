@@ -5,6 +5,7 @@
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
+    <include file="db/changelog/0000-create-tenants-table.xml"/>
     <include file="db/changelog/0001-create-events-table.xml"/>
     <include file="db/changelog/0002-create-event-subscriptions-table.xml"/>
     <include file="db/changelog/0003-create-dead-letter-queue-table.xml"/>

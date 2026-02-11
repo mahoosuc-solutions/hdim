@@ -4,6 +4,8 @@ import com.healthdata.demo.domain.model.DemoScenario;
 import com.healthdata.demo.domain.model.DemoSession;
 import com.healthdata.demo.domain.repository.DemoScenarioRepository;
 import com.healthdata.demo.domain.repository.DemoSessionRepository;
+import com.healthdata.demo.strategy.MultiTenantStrategy;
+import com.healthdata.demo.strategy.ScenarioSeedingStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -42,6 +45,9 @@ class ScenarioLoaderServiceTest {
     @Mock
     private DemoProgressService progressService;
 
+    @Mock
+    private MultiTenantStrategy multiTenantStrategy;
+
     @BeforeEach
     void setUp() {
         service = new ScenarioLoaderService(
@@ -49,7 +55,8 @@ class ScenarioLoaderServiceTest {
                 sessionRepository,
                 seedingService,
                 resetService,
-                progressService
+                progressService,
+                multiTenantStrategy
         );
     }
 
@@ -62,13 +69,20 @@ class ScenarioLoaderServiceTest {
 
         when(scenarioRepository.findByName(scenarioName)).thenReturn(Optional.of(scenario));
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.empty());
-        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> i.getArgument(0));
+        // Set an ID on the session when saved so generatePatientCohort receives a valid UUID
+        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> {
+            DemoSession s = i.getArgument(0);
+            if (s.getId() == null) {
+                s.setId(UUID.randomUUID());
+            }
+            return s;
+        });
 
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);
         genResult.setPatientCount(5000);
         genResult.setCareGapCount(1400);
-        when(seedingService.generatePatientCohort(eq(5000), anyString(), anyInt())).thenReturn(genResult);
+        when(seedingService.generatePatientCohort(eq(5000), anyString(), anyInt(), any(UUID.class))).thenReturn(genResult);
 
         // When
         ScenarioLoaderService.LoadResult result = service.loadScenario(scenarioName);
@@ -99,6 +113,47 @@ class ScenarioLoaderServiceTest {
     }
 
     @Test
+    @DisplayName("loadScenario should apply multi-tenant overrides when provided")
+    void loadScenario_MultiTenantOverrides() {
+        // Given
+        DemoScenario scenario = new DemoScenario(
+                "multi-tenant",
+                "Multi-Tenant",
+                DemoScenario.ScenarioType.MULTI_TENANT,
+                1500,
+                "demo-admin"
+        );
+
+        when(scenarioRepository.findByName("multi-tenant")).thenReturn(Optional.of(scenario));
+        when(sessionRepository.findCurrentSession()).thenReturn(Optional.empty());
+        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> {
+            DemoSession s = i.getArgument(0);
+            if (s.getId() == null) {
+                s.setId(UUID.randomUUID());
+            }
+            return s;
+        });
+
+        ScenarioSeedingStrategy.SeedingResult seedResult = ScenarioSeedingStrategy.SeedingResult.builder()
+            .scenarioName("multi-tenant")
+            .patientsCreated(300)
+            .careGapsExpected(90)
+            .durationMs(10)
+            .success(true)
+            .build();
+        when(multiTenantStrategy.seedScenarioWithOverrides(100, 30)).thenReturn(seedResult);
+
+        // When
+        ScenarioLoaderService.LoadResult result = service.loadScenario("multi-tenant", 100, 30);
+
+        // Then
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getPatientCount()).isEqualTo(300);
+        assertThat(result.getCareGapCount()).isEqualTo(90);
+        verify(multiTenantStrategy).seedScenarioWithOverrides(100, 30);
+    }
+
+    @Test
     @DisplayName("loadScenario should end previous session")
     void loadScenario_EndsPreviousSession() {
         // Given
@@ -114,7 +169,7 @@ class ScenarioLoaderServiceTest {
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);
         genResult.setPatientCount(5000);
-        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt())).thenReturn(genResult);
+        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt(), any(UUID.class))).thenReturn(genResult);
 
         // When
         service.loadScenario("hedis-evaluation");
@@ -135,6 +190,7 @@ class ScenarioLoaderServiceTest {
         // Given
         DemoScenario scenario = createMockScenario("hedis-evaluation", 5000);
         DemoSession session = new DemoSession(scenario, "Test Session");
+        session.setId(UUID.randomUUID());
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
 
@@ -166,15 +222,23 @@ class ScenarioLoaderServiceTest {
         // Given
         DemoScenario scenario = createMockScenario("hedis-evaluation", 5000);
         DemoSession session = new DemoSession(scenario, "Test Session");
+        session.setId(UUID.randomUUID());
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
         when(scenarioRepository.findByName("hedis-evaluation")).thenReturn(Optional.of(scenario));
-        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> i.getArgument(0));
+        // Set an ID on the session when saved so generatePatientCohort receives a valid UUID
+        when(sessionRepository.save(any(DemoSession.class))).thenAnswer(i -> {
+            DemoSession s = i.getArgument(0);
+            if (s.getId() == null) {
+                s.setId(UUID.randomUUID());
+            }
+            return s;
+        });
 
         DemoSeedingService.GenerationResult genResult = new DemoSeedingService.GenerationResult();
         genResult.setSuccess(true);
         genResult.setPatientCount(5000);
-        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt())).thenReturn(genResult);
+        when(seedingService.generatePatientCohort(anyInt(), anyString(), anyInt(), any(UUID.class))).thenReturn(genResult);
 
         // When
         ScenarioLoaderService.LoadResult result = service.reloadCurrentScenario();
@@ -204,6 +268,7 @@ class ScenarioLoaderServiceTest {
         // Given
         DemoScenario scenario = createMockScenario("hedis-evaluation", 5000);
         DemoSession session = new DemoSession(scenario, "Test Session");
+        session.setId(UUID.randomUUID());
 
         when(sessionRepository.findCurrentSession()).thenReturn(Optional.of(session));
 

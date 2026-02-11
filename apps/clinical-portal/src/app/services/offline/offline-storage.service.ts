@@ -55,7 +55,8 @@ export class OfflineStorageService {
   readonly isReady$ = this.dbReady.asObservable();
 
   constructor(
-    private logger: LoggerService,) {
+    private logger: LoggerService
+  ) {
     this.initDatabase();
   }
 

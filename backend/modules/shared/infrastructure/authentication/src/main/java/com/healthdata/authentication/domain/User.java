@@ -28,7 +28,8 @@ import java.util.UUID;
 public class User {
 
     @Id
-    private UUID id;  // ID provided by authentication service/gateway, not auto-generated
+    @Builder.Default
+    private UUID id = UUID.randomUUID();  // ID provided by authentication service/gateway, not auto-generated
 
     @Column(nullable = false, unique = true, length = 50)
     private String username;

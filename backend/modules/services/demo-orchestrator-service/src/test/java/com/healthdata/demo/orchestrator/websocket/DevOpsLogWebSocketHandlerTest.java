@@ -1,6 +1,7 @@
 package com.healthdata.demo.orchestrator.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.healthdata.demo.orchestrator.model.DevOpsLogMessage;
 import com.healthdata.demo.orchestrator.model.DevOpsStatusUpdate;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -19,6 +21,8 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.lenient;
 
 /**
  * Unit tests for DevOpsLogWebSocketHandler.
@@ -45,6 +49,7 @@ class DevOpsLogWebSocketHandlerTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
         handler = new DevOpsLogWebSocketHandler(objectMapper);
     }
 
@@ -88,7 +93,7 @@ class DevOpsLogWebSocketHandlerTest {
         // Given: Established connection
         WebSocketSession session = createMockSession(TENANT_ID, "INFO");
         handler.afterConnectionEstablished(session);
-        reset(session); // Clear connection message
+        clearInvocations(session); // Clear invocations but keep stubs
 
         // When
         handler.afterConnectionClosed(session, CloseStatus.NORMAL);
@@ -105,7 +110,7 @@ class DevOpsLogWebSocketHandlerTest {
         WebSocketSession session2 = createMockSession(TENANT_ID, "INFO");
         handler.afterConnectionEstablished(session1);
         handler.afterConnectionEstablished(session2);
-        reset(session1, session2);
+        clearInvocations(session1, session2);
 
         // When: Log published
         DevOpsLogMessage logMessage = DevOpsLogMessage.builder()
@@ -134,7 +139,7 @@ class DevOpsLogWebSocketHandlerTest {
         // Given: Session with WARN level filter
         WebSocketSession session = createMockSession(TENANT_ID, "WARN");
         handler.afterConnectionEstablished(session);
-        reset(session);
+        clearInvocations(session);
 
         // When: INFO log published (below WARN threshold)
         DevOpsLogMessage infoLog = DevOpsLogMessage.builder()
@@ -171,7 +176,7 @@ class DevOpsLogWebSocketHandlerTest {
         WebSocketSession session2 = createMockSession("tenant-2", "INFO");
         handler.afterConnectionEstablished(session1);
         handler.afterConnectionEstablished(session2);
-        reset(session1, session2);
+        clearInvocations(session1, session2);
 
         // When: Log published for tenant-1
         DevOpsLogMessage logMessage = DevOpsLogMessage.builder()
@@ -193,7 +198,7 @@ class DevOpsLogWebSocketHandlerTest {
         // Given: Session connected
         WebSocketSession session = createMockSession(TENANT_ID, "INFO");
         handler.afterConnectionEstablished(session);
-        reset(session);
+        clearInvocations(session);
 
         // When: Status update published
         DevOpsStatusUpdate statusUpdate = DevOpsStatusUpdate.builder()
@@ -223,7 +228,7 @@ class DevOpsLogWebSocketHandlerTest {
         // Given: Connected session
         WebSocketSession session = createMockSession(TENANT_ID, "INFO");
         handler.afterConnectionEstablished(session);
-        reset(session);
+        clearInvocations(session);
 
         // When: Ping command received
         TextMessage pingMessage = new TextMessage("{\"type\":\"ping\"}");
@@ -241,7 +246,7 @@ class DevOpsLogWebSocketHandlerTest {
         // Given: Connected session with INFO level
         WebSocketSession session = createMockSession(TENANT_ID, "INFO");
         handler.afterConnectionEstablished(session);
-        reset(session);
+        clearInvocations(session);
 
         // When: setLevel command received
         TextMessage setLevelMessage = new TextMessage("{\"type\":\"setLevel\",\"payload\":\"ERROR\"}");
@@ -253,7 +258,7 @@ class DevOpsLogWebSocketHandlerTest {
         assertThat(messageCaptor.getValue().getPayload()).contains("\"level\":\"ERROR\"");
 
         // Verify filtering now uses ERROR level
-        reset(session);
+        clearInvocations(session);
         DevOpsLogMessage warnLog = DevOpsLogMessage.builder()
             .level("WARN")
             .message("Warning")
@@ -302,6 +307,8 @@ class DevOpsLogWebSocketHandlerTest {
 
     /**
      * Create mock WebSocket session with tenant and level.
+     * Uses lenient stubs to avoid UnnecessaryStubbingException.
+     * NOTE: Tests use clearInvocations() instead of reset() to preserve stubs.
      */
     private WebSocketSession createMockSession(String tenantId, String level) throws Exception {
         WebSocketSession session = mock(WebSocketSession.class);
@@ -310,9 +317,16 @@ class DevOpsLogWebSocketHandlerTest {
                        (level != null ? "&level=" + level : "");
         URI uri = new URI("ws://localhost:8090/ws/devops/logs?" + query);
 
-        when(session.getUri()).thenReturn(uri);
-        when(session.isOpen()).thenReturn(true);
-        when(session.getId()).thenReturn("session-" + System.nanoTime());
+        // Use lenient() for stubs that need to survive reset() calls
+        // These are needed throughout the test lifecycle for session tracking
+        String sessionId = "session-" + System.nanoTime();
+        lenient().when(session.getUri()).thenReturn(uri);
+        lenient().when(session.isOpen()).thenReturn(true);
+        lenient().when(session.getId()).thenReturn(sessionId);
+
+        // Mock handshake headers to avoid NPE
+        HttpHeaders headers = new HttpHeaders();
+        lenient().when(session.getHandshakeHeaders()).thenReturn(headers);
 
         return session;
     }

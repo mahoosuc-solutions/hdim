@@ -42,6 +42,7 @@ export class AuthService {
   // NOTE: Tokens are now stored in HttpOnly cookies, not localStorage
   // Only user profile is stored in localStorage
   private readonly USER_KEY = 'healthdata_user';
+  private readonly TENANT_KEY = 'healthdata_tenant';
   private readonly TOKEN_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
@@ -49,6 +50,9 @@ export class AuthService {
 
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(this.hasValidSession());
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+
+  private selectedTenantSubject = new BehaviorSubject<string | null>(this.getTenantFromStorage());
+  public selectedTenant$ = this.selectedTenantSubject.asObservable();
 
   private tokenRefreshSubscription: any;
 
@@ -233,6 +237,11 @@ export class AuthService {
    * Get the current tenant ID from the logged-in user
    */
   getTenantId(): string | null {
+    const selectedTenant = this.selectedTenantSubject.value;
+    if (selectedTenant) {
+      return selectedTenant;
+    }
+
     const user = this.currentUserSubject.value;
     // Use tenantIds array from gateway (UUIDs) if available
     if (user?.tenantIds && user.tenantIds.length > 0) {
@@ -240,6 +249,34 @@ export class AuthService {
     }
     // Fallback to tenantId for backward compatibility
     return user?.tenantId || null;
+  }
+
+  /**
+   * Get all tenant IDs available to the current user
+   */
+  getAvailableTenantIds(): string[] {
+    const user = this.currentUserSubject.value;
+    if (user?.tenantIds && user.tenantIds.length > 0) {
+      return user.tenantIds;
+    }
+    if (user?.tenantId) {
+      return [user.tenantId];
+    }
+    return [];
+  }
+
+  /**
+   * Set the active tenant for this session
+   */
+  setTenantId(tenantId: string): void {
+    const availableTenants = this.getAvailableTenantIds();
+    if (availableTenants.length > 0 && !availableTenants.includes(tenantId)) {
+      this.logger.warn('Attempted to set tenant not in user scope', { tenantId });
+      return;
+    }
+
+    localStorage.setItem(this.TENANT_KEY, tenantId);
+    this.selectedTenantSubject.next(tenantId);
   }
 
   /**
@@ -367,6 +404,11 @@ export class AuthService {
     }
   }
 
+  private getTenantFromStorage(): string | null {
+    const tenantId = localStorage.getItem(this.TENANT_KEY);
+    return tenantId || null;
+  }
+
   /**
    * Set user in local storage
    */
@@ -379,6 +421,11 @@ export class AuthService {
    */
   private removeUser(): void {
     localStorage.removeItem(this.USER_KEY);
+  }
+
+  private clearTenant(): void {
+    localStorage.removeItem(this.TENANT_KEY);
+    this.selectedTenantSubject.next(null);
   }
 
   /**
@@ -421,6 +468,7 @@ export class AuthService {
     this.setUser(user);
     this.currentUserSubject.next(user);
     this.isAuthenticatedSubject.next(true);
+    this.applyDefaultTenant(user);
     this.startTokenRefreshTimer();
     this.logger.info('Login successful', { username: user.username });
   }
@@ -433,6 +481,25 @@ export class AuthService {
     // Only clear user profile from localStorage
     // HttpOnly cookies are cleared by backend via Set-Cookie with Max-Age=0
     this.removeUser();
+    this.clearTenant();
+  }
+
+  private applyDefaultTenant(user: User): void {
+    const storedTenant = this.getTenantFromStorage();
+    const availableTenants = user.tenantIds && user.tenantIds.length > 0 ? user.tenantIds : (user.tenantId ? [user.tenantId] : []);
+
+    if (storedTenant && availableTenants.includes(storedTenant)) {
+      this.selectedTenantSubject.next(storedTenant);
+      return;
+    }
+
+    const fallbackTenant = availableTenants[0] || null;
+    if (fallbackTenant) {
+      localStorage.setItem(this.TENANT_KEY, fallbackTenant);
+    } else {
+      localStorage.removeItem(this.TENANT_KEY);
+    }
+    this.selectedTenantSubject.next(fallbackTenant);
   }
 
   /**

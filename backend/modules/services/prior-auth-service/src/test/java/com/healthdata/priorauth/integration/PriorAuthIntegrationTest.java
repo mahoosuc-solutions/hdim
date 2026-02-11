@@ -1,7 +1,7 @@
 package com.healthdata.priorauth.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.priorauth.config.TestConfig;
 import com.healthdata.priorauth.dto.PriorAuthRequestDTO;
@@ -10,6 +10,7 @@ import com.healthdata.priorauth.persistence.PayerEndpointRepository;
 import com.healthdata.priorauth.persistence.PriorAuthRequestEntity;
 import com.healthdata.priorauth.persistence.PriorAuthRequestRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,6 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("integration")
 class PriorAuthIntegrationTest {
 
     @MockBean

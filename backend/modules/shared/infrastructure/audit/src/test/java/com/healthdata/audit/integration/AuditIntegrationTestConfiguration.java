@@ -2,8 +2,8 @@ package com.healthdata.audit.integration;
 
 import com.healthdata.audit.config.AuditAutoConfiguration;
 import com.healthdata.audit.config.AuditClientConfig;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Import;
 
 /**

@@ -2,6 +2,7 @@ package com.healthdata.demo.generator;
 
 import org.hl7.fhir.r4.model.*;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -23,6 +24,18 @@ import java.util.concurrent.TimeUnit;
 public class EncounterGenerator {
 
     private final Random random = new Random();
+    private final int pastYears;
+    private final int futureYears;
+    private final int futureEncounterCount;
+
+    public EncounterGenerator(
+            @Value("${demo.encounters.past-years:2}") int pastYears,
+            @Value("${demo.encounters.future-years:1}") int futureYears,
+            @Value("${demo.encounters.future-count:1}") int futureEncounterCount) {
+        this.pastYears = Math.max(0, pastYears);
+        this.futureYears = Math.max(0, futureYears);
+        this.futureEncounterCount = Math.max(0, futureEncounterCount);
+    }
 
     /**
      * Generate encounter history for a patient.
@@ -37,15 +50,27 @@ public class EncounterGenerator {
         // Determine number of encounters based on risk
         int encounterCount = determineEncounterCount(riskCategory);
 
-        // Generate encounters over the past 2 years
+        // Generate encounters over the past configured years
         for (int i = 0; i < encounterCount; i++) {
             EncounterType type = selectEncounterType(riskCategory, i);
             Date encounterDate = generateEncounterDate(i, encounterCount);
 
-            Encounter encounter = createEncounter(patientRef, type, encounterDate, riskCategory);
+            Encounter encounter = createEncounter(patientRef, type, encounterDate, riskCategory, Encounter.EncounterStatus.FINISHED);
             bundle.addEntry()
                 .setFullUrl("Encounter/" + encounter.getId())
                 .setResource(encounter);
+        }
+
+        // Add future planned encounters for upcoming appointments
+        if (futureYears > 0 && futureEncounterCount > 0) {
+            for (int i = 0; i < futureEncounterCount; i++) {
+                Date encounterDate = generateFutureEncounterDate();
+                Encounter encounter = createEncounter(patientRef, EncounterType.AMBULATORY, encounterDate,
+                    riskCategory, Encounter.EncounterStatus.PLANNED);
+                bundle.addEntry()
+                    .setFullUrl("Encounter/" + encounter.getId())
+                    .setResource(encounter);
+            }
         }
     }
 
@@ -94,8 +119,8 @@ public class EncounterGenerator {
     private Date generateEncounterDate(int index, int totalEncounters) {
         Calendar cal = Calendar.getInstance();
 
-        // Spread encounters over past 2 years (730 days)
-        int daysRange = 730;
+        // Spread encounters over past N years
+        int daysRange = Math.max(1, pastYears) * 365;
         int interval = daysRange / totalEncounters;
         int daysAgo = (totalEncounters - index - 1) * interval + random.nextInt(interval / 2);
 
@@ -104,13 +129,24 @@ public class EncounterGenerator {
     }
 
     /**
+     * Generate encounter date within the next configured years.
+     */
+    private Date generateFutureEncounterDate() {
+        Calendar cal = Calendar.getInstance();
+        int daysRange = Math.max(1, futureYears) * 365;
+        int daysAhead = 7 + random.nextInt(daysRange);
+        cal.add(Calendar.DAY_OF_YEAR, daysAhead);
+        return cal.getTime();
+    }
+
+    /**
      * Create a FHIR Encounter resource.
      */
     private Encounter createEncounter(String patientRef, EncounterType type,
-                                       Date date, String riskCategory) {
+                                       Date date, String riskCategory, Encounter.EncounterStatus status) {
         Encounter encounter = new Encounter();
         encounter.setId(UUID.randomUUID().toString());
-        encounter.setStatus(Encounter.EncounterStatus.FINISHED);
+        encounter.setStatus(status);
 
         // Class (ambulatory, emergency, inpatient)
         Coding classCoding = new Coding();

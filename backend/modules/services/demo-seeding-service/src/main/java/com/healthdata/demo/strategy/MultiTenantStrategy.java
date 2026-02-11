@@ -4,10 +4,12 @@ import com.healthdata.demo.application.DemoSeedingService;
 import com.healthdata.demo.application.DemoSeedingService.GenerationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Multi-Tenant Scenario Strategy.
@@ -48,24 +50,52 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
     private static final String SCENARIO_NAME = "multi-tenant";
     private static final String SCENARIO_DESCRIPTION =
         "Multi-tenant population (3K across 3 tenants) for data isolation and security testing";
-    private static final int PATIENTS_PER_TENANT = 1000;
-    private static final int CARE_GAP_PERCENTAGE = 30;
-    private static final List<String> TENANT_IDS = List.of(
-        "acme-health",
-        "blue-shield-demo",
-        "united-demo"
-    );
-
+    private static final int DEFAULT_PATIENTS_PER_TENANT = 200;
+    private static final int DEFAULT_CARE_GAP_PERCENTAGE = 30;
     private final DemoSeedingService demoSeedingService;
+    private final int patientsPerTenant;
+    private final int careGapPercentage;
+    private final List<String> tenantIds;
 
-    public MultiTenantStrategy(DemoSeedingService demoSeedingService) {
+    public MultiTenantStrategy(
+            DemoSeedingService demoSeedingService,
+            @Value("${demo.multi-tenant.patients-per-tenant:" + DEFAULT_PATIENTS_PER_TENANT + "}") int patientsPerTenant,
+            @Value("${demo.multi-tenant.care-gap-percentage:" + DEFAULT_CARE_GAP_PERCENTAGE + "}") int careGapPercentage,
+            @Value("#{'${demo.multi-tenant.tenant-ids:acme-health,blue-shield-demo,united-demo}'.split(',')}")
+            List<String> tenantIds) {
         this.demoSeedingService = demoSeedingService;
+        this.patientsPerTenant = patientsPerTenant;
+        this.careGapPercentage = careGapPercentage;
+        this.tenantIds = sanitizeTenantIds(tenantIds);
     }
 
     @Override
     public SeedingResult seedScenario(String tenantId) {
+        return seedScenarioWithOverrides(null, null);
+    }
+
+    public SeedingResult seedScenarioWithOverrides(Integer patientsPerTenantOverride, Integer careGapPercentageOverride) {
+        int resolvedPatientsPerTenant = patientsPerTenantOverride != null ? patientsPerTenantOverride : patientsPerTenant;
+        int resolvedCareGapPercentage = careGapPercentageOverride != null ? careGapPercentageOverride : careGapPercentage;
+
+        if (resolvedPatientsPerTenant <= 0) {
+            return SeedingResult.builder()
+                .scenarioName(SCENARIO_NAME)
+                .success(false)
+                .errorMessage("patientsPerTenant must be greater than zero")
+                .build();
+        }
+
+        if (resolvedCareGapPercentage < 0 || resolvedCareGapPercentage > 100) {
+            return SeedingResult.builder()
+                .scenarioName(SCENARIO_NAME)
+                .success(false)
+                .errorMessage("careGapPercentage must be between 0 and 100")
+                .build();
+        }
+
         // Multi-tenant strategy ignores the passed tenant ID and seeds all configured tenants
-        logger.info("Starting Multi-Tenant scenario seeding for {} tenants", TENANT_IDS.size());
+        logger.info("Starting Multi-Tenant scenario seeding for {} tenants", tenantIds.size());
         long startTime = System.currentTimeMillis();
 
         try {
@@ -79,13 +109,13 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
             List<GenerationResult> tenantResults = new ArrayList<>();
 
             // Seed each tenant independently
-            for (String tenant : TENANT_IDS) {
-                logger.info("Seeding tenant: {} with {} patients", tenant, PATIENTS_PER_TENANT);
+            for (String tenant : tenantIds) {
+                logger.info("Seeding tenant: {} with {} patients", tenant, resolvedPatientsPerTenant);
 
                 GenerationResult result = demoSeedingService.generatePatientCohort(
-                    PATIENTS_PER_TENANT,
+                    resolvedPatientsPerTenant,
                     tenant,
-                    CARE_GAP_PERCENTAGE
+                    resolvedCareGapPercentage
                 );
 
                 tenantResults.add(result);
@@ -104,7 +134,7 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
             long durationMs = System.currentTimeMillis() - startTime;
 
             logger.info("Multi-Tenant scenario seeded successfully: {} total patients across {} tenants, {}ms",
-                totalPatients, TENANT_IDS.size(), durationMs);
+                totalPatients, tenantIds.size(), durationMs);
 
             return SeedingResult.builder()
                 .scenarioName(SCENARIO_NAME)
@@ -144,7 +174,7 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
 
     @Override
     public int getExpectedPatientCount() {
-        return PATIENTS_PER_TENANT * TENANT_IDS.size();
+        return patientsPerTenant * tenantIds.size();
     }
 
     /**
@@ -161,6 +191,17 @@ public class MultiTenantStrategy implements ScenarioSeedingStrategy {
      * @return List of tenant IDs
      */
     public List<String> getTenantIds() {
-        return new ArrayList<>(TENANT_IDS);
+        return new ArrayList<>(tenantIds);
+    }
+
+    private List<String> sanitizeTenantIds(List<String> tenantIds) {
+        if (tenantIds == null) {
+            return List.of();
+        }
+        return tenantIds.stream()
+            .map(String::trim)
+            .filter(id -> !id.isEmpty())
+            .distinct()
+            .collect(Collectors.toList());
     }
 }

@@ -28,6 +28,9 @@ LABEL description="Predictive Analytics Service for HDIM Healthcare Platform"
 
 WORKDIR /app
 
+# Install wget for health checks
+RUN apk add --no-cache wget
+
 # Create non-root user
 RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app

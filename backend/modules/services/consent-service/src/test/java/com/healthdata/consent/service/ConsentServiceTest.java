@@ -18,8 +18,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -800,8 +800,8 @@ class ConsentServiceTest {
                 .validTo(LocalDate.now().plusYears(1))
                 .consentDate(LocalDate.now())
                 .verificationMethod("electronic-signature")
-                .createdAt(LocalDateTime.now())
-                .lastModifiedAt(LocalDateTime.now())
+                .createdAt(Instant.now())
+                .lastModifiedAt(Instant.now())
                 .createdBy(CREATED_BY)
                 .lastModifiedBy(CREATED_BY)
                 .build();

@@ -67,25 +67,25 @@
     <changeSet id="0003-create-view-count-trigger" author="agent-5">
         <comment>Create trigger to update view_count in document_metadata</comment>
 
-        <sql>
-            CREATE OR REPLACE FUNCTION update_document_view_count()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                UPDATE document_metadata
-                SET view_count = view_count + 1,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = NEW.document_id
-                AND tenant_id = NEW.tenant_id;
+        <sql splitStatements="false" stripComments="false"><![CDATA[
+CREATE OR REPLACE FUNCTION update_document_view_count()
+RETURNS TRIGGER AS $func$
+BEGIN
+    UPDATE document_metadata
+    SET view_count = view_count + 1,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.document_id
+    AND tenant_id = NEW.tenant_id;
 
-                RETURN NEW;
-            END;
-            $$ LANGUAGE plpgsql;
+    RETURN NEW;
+END;
+$func$ LANGUAGE plpgsql;
 
-            CREATE TRIGGER trigger_increment_view_count
-            AFTER INSERT ON document_views
-            FOR EACH ROW
-            EXECUTE FUNCTION update_document_view_count();
-        </sql>
+CREATE TRIGGER trigger_increment_view_count
+AFTER INSERT ON document_views
+FOR EACH ROW
+EXECUTE FUNCTION update_document_view_count();
+        ]]></sql>
 
         <rollback>
             <sql>

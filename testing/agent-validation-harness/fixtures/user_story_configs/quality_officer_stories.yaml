@@ -1,0 +1,107 @@
+# Quality Officer User Story Test Configurations
+# Target Role: QUALITY_OFFICER
+# Agent Type: report-generator
+
+test_suites:
+  - name: "Quality Officer HEDIS Analysis"
+    user_story_type: HEDIS_MEASURE_EVALUATION
+    target_role: QUALITY_OFFICER
+    agent_type: report-generator
+    pass_threshold: 0.80
+    description: "Tests quality officer workflows for HEDIS measure analysis and Star Rating optimization"
+
+    test_cases:
+      - id: QO-001
+        name: "HEDIS performance analysis"
+        description: "Quality officer reviews HEDIS measure performance"
+        user_message: "Provide a summary of our HEDIS performance for diabetes measures and identify measures at risk of not meeting benchmarks"
+        context_data:
+          tenantId: "test-tenant"
+          reportingYear: 2025
+          measureCategory: "diabetes"
+          measures:
+            - id: "CDC"
+              name: "Comprehensive Diabetes Care"
+              current_rate: 0.72
+              benchmark: 0.75
+            - id: "HBD"
+              name: "Hemoglobin A1c Testing"
+              current_rate: 0.85
+              benchmark: 0.80
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - ACCURACY
+        metric_thresholds:
+          RELEVANCY: 0.80
+          FAITHFULNESS: 0.85
+          ACCURACY: 0.90
+        clinical_safety_check: false
+        tags:
+          - hedis
+          - diabetes
+          - performance
+
+      - id: QO-002
+        name: "Star Rating analysis"
+        description: "Quality officer analyzes Star Rating implications"
+        user_message: "What is our projected Star Rating for next year based on current HEDIS performance, and what measures need the most improvement?"
+        context_data:
+          tenantId: "test-tenant"
+          currentStarRating: 3.5
+          projectedStarRating: 3.75
+          measureWeights:
+            - measure: "CDC"
+              weight: 3
+              projected_stars: 4
+            - measure: "BCS"
+              weight: 3
+              projected_stars: 3
+            - measure: "COL"
+              weight: 2
+              projected_stars: 4
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - ACCURACY
+        metric_thresholds:
+          RELEVANCY: 0.80
+          FAITHFULNESS: 0.85
+          ACCURACY: 0.85
+        clinical_safety_check: false
+        tags:
+          - star-rating
+          - projection
+          - improvement
+
+      - id: QO-003
+        name: "Compliance audit preparation"
+        description: "Quality officer prepares for compliance audit"
+        user_message: "Generate a compliance readiness report for our upcoming NCQA audit, highlighting any documentation gaps"
+        context_data:
+          tenantId: "test-tenant"
+          auditType: "NCQA"
+          auditDate: "2025-06-15"
+          documentationAreas:
+            - area: "Clinical Quality Measures"
+              status: "complete"
+              gaps: 2
+            - area: "Population Health Management"
+              status: "in_progress"
+              gaps: 5
+            - area: "Member Experience"
+              status: "complete"
+              gaps: 0
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - COMPLETENESS
+        metric_thresholds:
+          RELEVANCY: 0.80
+          FAITHFULNESS: 0.85
+          COMPLETENESS: 0.80
+        clinical_safety_check: false
+        tags:
+          - compliance
+          - audit
+          - ncqa

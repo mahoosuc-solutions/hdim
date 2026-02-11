@@ -82,11 +82,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
           >
             @if (isLoading) {
               <mat-spinner diameter="20"></mat-spinner>
-              <span>Verifying...</span>
             } @else {
               <mat-icon>check</mat-icon>
-              <span>Verify</span>
             }
+            <span>{{ isLoading ? 'Verifying...' : 'Verify' }}</span>
           </button>
         </div>
       </form>

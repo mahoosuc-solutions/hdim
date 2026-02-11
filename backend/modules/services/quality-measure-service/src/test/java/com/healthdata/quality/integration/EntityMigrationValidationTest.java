@@ -37,10 +37,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author HDIM Platform Team
  */
+@Tag("integration")
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest {
 
     @Container

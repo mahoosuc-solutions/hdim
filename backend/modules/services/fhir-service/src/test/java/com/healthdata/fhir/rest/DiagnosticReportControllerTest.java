@@ -60,7 +60,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.createDiagnosticReport(eq(TENANT_ID), any(DiagnosticReport.class), eq("user")))
                 .thenReturn(report);
 
-        mockMvc.perform(post("/fhir/DiagnosticReport")
+        mockMvc.perform(post("/DiagnosticReport")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -78,7 +78,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getDiagnosticReport(TENANT_ID, reportId))
                 .thenReturn(Optional.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/{id}", reportId)
+        mockMvc.perform(get("/DiagnosticReport/{id}", reportId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -91,7 +91,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getDiagnosticReport(TENANT_ID, reportId))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/{id}", reportId)
+        mockMvc.perform(get("/DiagnosticReport/{id}", reportId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -105,7 +105,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.updateDiagnosticReport(eq(TENANT_ID), eq(reportId), any(DiagnosticReport.class), eq("user")))
                 .thenReturn(report);
 
-        mockMvc.perform(put("/fhir/DiagnosticReport/{id}", reportId)
+        mockMvc.perform(put("/DiagnosticReport/{id}", reportId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -119,7 +119,7 @@ class DiagnosticReportControllerTest {
     void shouldDeleteDiagnosticReport() throws Exception {
         UUID reportId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/fhir/DiagnosticReport/{id}", reportId)
+        mockMvc.perform(delete("/DiagnosticReport/{id}", reportId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -140,7 +140,7 @@ class DiagnosticReportControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(report)));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport")
+        mockMvc.perform(get("/DiagnosticReport")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/not-a-uuid")
                         .param("encounter", "Encounter/not-a-uuid"))
@@ -175,7 +175,7 @@ class DiagnosticReportControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(report)));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport")
+        mockMvc.perform(get("/DiagnosticReport")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/" + patientId)
                         .param("encounter", "Encounter/" + encounterId)
@@ -197,7 +197,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getReportsByPatient(TENANT_ID, patientId))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}", patientId)
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -212,7 +212,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getFinalReports(TENANT_ID, patientId))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/final", patientId)
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/final", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -227,7 +227,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getPendingReports(TENANT_ID, patientId))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/pending", patientId)
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/pending", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -242,7 +242,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getLabReports(TENANT_ID, patientId))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/lab", patientId)
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/lab", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -257,7 +257,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getImagingReports(TENANT_ID, patientId))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/imaging", patientId)
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/imaging", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -272,7 +272,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getReportsByEncounter(TENANT_ID, encounterId))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/encounter/{encounterId}", encounterId)
+        mockMvc.perform(get("/DiagnosticReport/encounter/{encounterId}", encounterId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -285,7 +285,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getLatestReportByCode(TENANT_ID, patientId, "718-7"))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/code/{code}/latest", patientId, "718-7")
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/code/{code}/latest", patientId, "718-7")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -299,7 +299,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getLatestReportByCode(TENANT_ID, patientId, "718-7"))
                 .thenReturn(Optional.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/code/{code}/latest", patientId, "718-7")
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/code/{code}/latest", patientId, "718-7")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(report.getId())));
@@ -314,7 +314,7 @@ class DiagnosticReportControllerTest {
         when(diagnosticReportService.getReportsByDateRange(eq(TENANT_ID), eq(patientId), any(Instant.class), any(Instant.class)))
                 .thenReturn(List.of(report));
 
-        mockMvc.perform(get("/fhir/DiagnosticReport/patient/{patientId}/date-range", patientId)
+        mockMvc.perform(get("/DiagnosticReport/patient/{patientId}/date-range", patientId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("start", "2025-01-01T00:00:00Z")
                         .param("end", "2025-01-02T00:00:00Z"))

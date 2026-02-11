@@ -15,7 +15,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
@@ -48,6 +52,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = AgentRuntimeServiceApplication.class)
 @ActiveProfiles("test")
 @Testcontainers
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 @Import(AgentRuntimeAuditIntegrationHeavyweightTest.TestRedisConfig.class)
 @DisplayName("Agent Runtime Audit Integration - Heavyweight Kafka Tests")
 class AgentRuntimeAuditIntegrationHeavyweightTest {

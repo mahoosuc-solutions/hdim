@@ -1,0 +1,435 @@
+name: Contract Testing Pipeline
+
+# Contract testing workflow for consumer-driven contract testing (Pact)
+# and OpenAPI compliance validation
+#
+# Jobs:
+# 1. consumer-contracts: Generate Pact files from Angular consumer tests
+# 2. provider-verification: Verify provider services against Pact contracts
+# 3. openapi-validation: Validate services against OpenAPI specifications
+# 4. contract-gate: Merge gate ensuring all contract tests pass
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'apps/clinical-portal/**'
+      - 'backend/modules/services/patient-service/**'
+      - 'backend/modules/services/care-gap-service/**'
+      - 'backend/modules/shared/contract-testing/**'
+      - 'backend/modules/shared/openapi-validation/**'
+      - '.github/workflows/contract-testing.yml'
+  pull_request:
+    branches:
+      - master
+      - develop
+    paths:
+      - 'apps/clinical-portal/**'
+      - 'backend/modules/services/patient-service/**'
+      - 'backend/modules/services/care-gap-service/**'
+      - 'backend/modules/shared/contract-testing/**'
+      - 'backend/modules/shared/openapi-validation/**'
+      - '.github/workflows/contract-testing.yml'
+  workflow_dispatch:
+    inputs:
+      publish_pacts:
+        description: 'Publish pacts to broker'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+  JAVA_VERSION: '21'
+  GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=4'
+
+jobs:
+  # ============================================================================
+  # Job 1: Consumer Contract Tests (Angular)
+  # ============================================================================
+  # Generates Pact files from Angular consumer tests
+  # Uploads pacts as artifacts for provider verification
+  # ============================================================================
+  consumer-contracts:
+    name: Consumer Contract Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Cache Node modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            .angular/cache
+          key: ${{ runner.os }}-npm-contracts-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-contracts-
+            ${{ runner.os }}-npm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run consumer contract tests
+        run: npm run test:contracts
+        env:
+          NODE_ENV: test
+
+      - name: Upload Pact files
+        uses: actions/upload-artifact@v4
+        with:
+          name: pact-files
+          path: apps/clinical-portal/pacts/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Publish pacts to broker
+        if: |
+          (github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop')) ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.publish_pacts == 'true')
+        run: npm run pact:publish
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_USERNAME: ${{ secrets.PACT_BROKER_USERNAME }}
+          PACT_BROKER_PASSWORD: ${{ secrets.PACT_BROKER_PASSWORD }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_BRANCH: ${{ github.ref_name }}
+        continue-on-error: true  # Don't fail if broker is not configured
+
+  # ============================================================================
+  # Job 2: Provider Verification (Java/Spring Boot)
+  # ============================================================================
+  # Verifies provider services against consumer-generated Pact contracts
+  # Uses matrix strategy to test multiple services in parallel
+  # ============================================================================
+  provider-verification:
+    name: Provider Verification - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    needs: consumer-contracts
+    timeout-minutes: 30
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - patient-service
+          - care-gap-service
+
+    # Test database credentials - use secrets with local dev fallbacks
+    # SECURITY: Configure CI_TEST_DB_USER and CI_TEST_DB_PASSWORD secrets for production CI
+    env:
+      TEST_DB_USER: ${{ secrets.CI_TEST_DB_USER || 'healthdata' }}
+      TEST_DB_PASSWORD: ${{ secrets.CI_TEST_DB_PASSWORD || 'healthdata_ci_temp' }}
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.CI_TEST_DB_USER || 'healthdata' }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_TEST_DB_PASSWORD || 'healthdata_ci_temp' }}
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-contracts-${{ hashFiles('backend/**/*.gradle.kts', 'backend/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-contracts-
+            ${{ runner.os }}-gradle-
+
+      - name: Download Pact files
+        uses: actions/download-artifact@v4
+        with:
+          name: pact-files
+          path: backend/modules/services/${{ matrix.service }}/src/test/resources/pacts/
+
+      - name: List downloaded pacts
+        run: |
+          echo "=== Downloaded Pact Files ==="
+          find backend/modules/services/${{ matrix.service }}/src/test/resources/pacts/ -name "*.json" -type f 2>/dev/null || echo "No pact files found"
+
+      - name: Download Gradle dependencies
+        working-directory: backend
+        run: ./gradlew downloadDependencies --no-daemon --console=plain
+
+      - name: Run provider verification tests
+        working-directory: backend
+        run: |
+          ./gradlew :modules:services:${{ matrix.service }}:test \
+            --tests "*ProviderTest" \
+            --tests "*PactProviderVerificationTest" \
+            --no-daemon --console=plain --continue
+        env:
+          SPRING_PROFILES_ACTIVE: ci,test
+          DATABASE_URL: jdbc:postgresql://localhost:5432/test_db
+          DATABASE_USERNAME: ${{ env.TEST_DB_USER }}
+          DATABASE_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_USERNAME: ${{ secrets.PACT_BROKER_USERNAME }}
+          PACT_BROKER_PASSWORD: ${{ secrets.PACT_BROKER_PASSWORD }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+          PACT_PROVIDER_VERSION: ${{ github.sha }}
+          PACT_PROVIDER_BRANCH: ${{ github.ref_name }}
+
+      - name: Upload provider test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-verification-results-${{ matrix.service }}
+          path: backend/modules/services/${{ matrix.service }}/build/test-results/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 3: OpenAPI Compliance Validation
+  # ============================================================================
+  # Validates service implementations against OpenAPI specifications
+  # Ensures API responses match documented contracts
+  # ============================================================================
+  openapi-validation:
+    name: OpenAPI Compliance - ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - patient-service
+
+    # Test database credentials - use secrets with local dev fallbacks
+    # SECURITY: Configure CI_TEST_DB_USER and CI_TEST_DB_PASSWORD secrets for production CI
+    env:
+      TEST_DB_USER: ${{ secrets.CI_TEST_DB_USER || 'healthdata' }}
+      TEST_DB_PASSWORD: ${{ secrets.CI_TEST_DB_PASSWORD || 'healthdata_ci_temp' }}
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ${{ secrets.CI_TEST_DB_USER || 'healthdata' }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_TEST_DB_PASSWORD || 'healthdata_ci_temp' }}
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-openapi-${{ hashFiles('backend/**/*.gradle.kts', 'backend/**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-openapi-
+            ${{ runner.os }}-gradle-
+
+      - name: Download Gradle dependencies
+        working-directory: backend
+        run: ./gradlew downloadDependencies --no-daemon --console=plain
+
+      - name: Run OpenAPI compliance tests
+        working-directory: backend
+        run: |
+          ./gradlew :modules:services:${{ matrix.service }}:test \
+            --tests "*ComplianceTest" \
+            --tests "*OpenApiValidationTest" \
+            --no-daemon --console=plain --continue
+        env:
+          SPRING_PROFILES_ACTIVE: ci,test
+          DATABASE_URL: jdbc:postgresql://localhost:5432/test_db
+          DATABASE_USERNAME: ${{ env.TEST_DB_USER }}
+          DATABASE_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+
+      - name: Upload OpenAPI validation results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-validation-results-${{ matrix.service }}
+          path: backend/modules/services/${{ matrix.service }}/build/test-results/
+          retention-days: 7
+
+  # ============================================================================
+  # Job 4: Contract Testing Gate
+  # ============================================================================
+  # Merge gate that ensures all contract tests pass
+  # Required status check for PRs modifying API contracts
+  # ============================================================================
+  contract-gate:
+    name: Contract Testing Gate
+    runs-on: ubuntu-latest
+    needs:
+      - consumer-contracts
+      - provider-verification
+      - openapi-validation
+    if: always()
+    timeout-minutes: 5
+
+    steps:
+      - name: Check job results
+        env:
+          CONSUMER_RESULT: ${{ needs.consumer-contracts.result }}
+          PROVIDER_RESULT: ${{ needs.provider-verification.result }}
+          OPENAPI_RESULT: ${{ needs.openapi-validation.result }}
+        run: |
+          echo "=== Contract Testing Results ==="
+          echo "Consumer Contracts: $CONSUMER_RESULT"
+          echo "Provider Verification: $PROVIDER_RESULT"
+          echo "OpenAPI Validation: $OPENAPI_RESULT"
+          echo ""
+
+          # Check for failures
+          if [[ "$CONSUMER_RESULT" == "failure" ]]; then
+            echo "Consumer contract tests FAILED"
+            exit 1
+          fi
+
+          if [[ "$PROVIDER_RESULT" == "failure" ]]; then
+            echo "Provider verification FAILED"
+            exit 1
+          fi
+
+          if [[ "$OPENAPI_RESULT" == "failure" ]]; then
+            echo "OpenAPI validation FAILED"
+            exit 1
+          fi
+
+          # Check for cancellations
+          if [[ "$CONSUMER_RESULT" == "cancelled" ]] || \
+             [[ "$PROVIDER_RESULT" == "cancelled" ]] || \
+             [[ "$OPENAPI_RESULT" == "cancelled" ]]; then
+            echo "One or more jobs were cancelled"
+            exit 1
+          fi
+
+          echo ""
+          echo "All contract tests passed!"
+          echo ""
+          echo "Summary:"
+          echo "  - Consumer contracts generated and validated"
+          echo "  - Provider services verified against contracts"
+          echo "  - OpenAPI specifications validated"
+
+      - name: Create summary
+        if: always()
+        env:
+          CONSUMER_RESULT: ${{ needs.consumer-contracts.result }}
+          PROVIDER_RESULT: ${{ needs.provider-verification.result }}
+          OPENAPI_RESULT: ${{ needs.openapi-validation.result }}
+        run: |
+          echo "## Contract Testing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+
+          # Consumer contracts status
+          if [[ "$CONSUMER_RESULT" == "success" ]]; then
+            echo "| Consumer Contracts | Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$CONSUMER_RESULT" == "skipped" ]]; then
+            echo "| Consumer Contracts | Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Consumer Contracts | Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Provider verification status
+          if [[ "$PROVIDER_RESULT" == "success" ]]; then
+            echo "| Provider Verification | Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$PROVIDER_RESULT" == "skipped" ]]; then
+            echo "| Provider Verification | Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Provider Verification | Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # OpenAPI validation status
+          if [[ "$OPENAPI_RESULT" == "success" ]]; then
+            echo "| OpenAPI Validation | Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$OPENAPI_RESULT" == "skipped" ]]; then
+            echo "| OpenAPI Validation | Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| OpenAPI Validation | Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "$CONSUMER_RESULT" == "success" ]] && \
+             [[ "$PROVIDER_RESULT" == "success" ]] && \
+             [[ "$OPENAPI_RESULT" == "success" ]]; then
+            echo "**All contract tests passed successfully.**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Contract testing has issues. Review the failed jobs above.**" >> $GITHUB_STEP_SUMMARY
+          fi

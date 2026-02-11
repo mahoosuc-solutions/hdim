@@ -1,12 +1,12 @@
 // Import prebuilt Angular Material theme
 @use './styles/patient-health-overview-utilities';
-@import '@angular/material/prebuilt-themes/azure-blue.css';
+@use '@angular/material/prebuilt-themes/azure-blue.css' as *;
 
 // Import custom theme system
-@import './styles/themes.scss';
+@use './styles/themes' as *;
 
 // Import demo mode styles
-@import './app/demo-mode/demo-mode.styles.scss';
+@use './app/demo-mode/demo-mode.styles' as *;
 
 // Global styles
 * {

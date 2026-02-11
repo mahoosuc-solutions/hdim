@@ -395,7 +395,9 @@ import { DemoSeedingDataFlowComponent } from '../demo-seeding-data-flow/demo-see
 })
 export class DemoControlBarComponent implements OnInit {
   scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
-  showDataFlow = false;  constructor(
+  showDataFlow = false;
+
+  constructor(
     public demoService: DemoModeService,
     private logger: LoggerService
   ) {}

@@ -23,6 +23,9 @@ dependencies {
     // Common models - optional
     compileOnly(project(":modules:shared:domain:common"))
 
+    // Authentication core for UserContext (NO Spring dependencies)
+    api(project(":modules:shared:infrastructure:authentication-core"))
+
     // JSON Processing
     api(libs.jackson.databind)
 
@@ -38,6 +41,7 @@ dependencies {
 
     // Kafka (optional - for audit event streaming)
     compileOnly("org.springframework.kafka:spring-kafka")
+    testImplementation("org.springframework.kafka:spring-kafka")
 
     // Utilities
     implementation(libs.commons.lang3)

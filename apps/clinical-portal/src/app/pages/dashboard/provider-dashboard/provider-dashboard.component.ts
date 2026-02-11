@@ -207,11 +207,8 @@ export interface RiskFactor {
     PageHeaderComponent,
     EmptyStateComponent,
     ShortcutHintDirective,
-    KeyboardShortcutsDialogComponent,
-    ProviderLeaderboardDialogComponent,
     TourOverlayComponent,
-    HelpPanelComponent,
-    HelpTooltipComponent
+    HelpPanelComponent
   ],
   templateUrl: './provider-dashboard.component.html',
   styleUrls: ['./provider-dashboard.component.scss']

@@ -15,6 +15,7 @@ import { ConnectionStatusComponent } from '../components/connection-status.compo
           <nav class="shell-nav">
             <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
             <a routerLink="/mfePatients" routerLinkActive="active">Patients</a>
+            <a routerLink="/mfeMeasureBuilder" routerLinkActive="active">Measure Builder</a>
           </nav>
           <app-connection-status></app-connection-status>
         </div>

@@ -1,24 +1,20 @@
 package com.healthdata.caregap.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
-import com.healthdata.caregap.config.TestKafkaInitializer;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.service.CareGapIdentificationService;
 import com.healthdata.caregap.service.CareGapReportService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import org.junit.jupiter.api.Tag;
 import java.time.Instant;
@@ -33,31 +29,37 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Controller tests for CareGapController.
  * Tests REST API endpoints for care gap management.
+ *
+ * Uses standalone MockMvc setup with Mockito for fast, isolated testing
+ * without requiring Spring context, Kafka, or database infrastructure.
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@ContextConfiguration(initializers = TestKafkaInitializer.class)
-@EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
-@WithMockUser(roles = "ADMIN")
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Care Gap Controller Tests")
-@Tag("integration")
+@Tag("unit")
 class CareGapControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
+    @Mock
     private CareGapIdentificationService identificationService;
 
-    @MockBean
+    @Mock
     private CareGapReportService reportService;
+
+    @InjectMocks
+    private CareGapController controller;
 
     private static final String TENANT_ID = "tenant-123";
     private static final UUID PATIENT_UUID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        objectMapper = new ObjectMapper();
+        objectMapper.findAndRegisterModules();
+    }
 
     @Nested
     @DisplayName("POST /care-gap/identify Tests")
@@ -402,7 +404,9 @@ class CareGapControllerTest {
                     100L, 75L, 1.33,
                     Map.of("high", 20L, "medium", 50L, "low", 30L),
                     Map.of("HEDIS", 70L, "CMS", 30L),
-                    Map.of("CDC_A1C", 15L, "BCS", 12L)
+                    Map.of("CDC_A1C", 15L, "BCS", 12L),
+                    15L,  // overdueCount
+                    8L    // closedThisMonth
             );
             when(reportService.getPopulationGapReport(TENANT_ID)).thenReturn(report);
 

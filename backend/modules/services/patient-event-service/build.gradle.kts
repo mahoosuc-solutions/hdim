@@ -6,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 
@@ -14,10 +14,12 @@ dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
     implementation(project(":modules:shared:infrastructure:authentication"))
+    implementation(project(":modules:shared:infrastructure:authentication-headers"))
     implementation(project(":modules:shared:infrastructure:security"))
     implementation(project(":modules:shared:infrastructure:persistence"))
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:messaging"))
+    implementation(project(":modules:shared:infrastructure:event-sourcing"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)
@@ -36,6 +38,9 @@ dependencies {
 
     // Distributed Tracing
     implementation(project(":modules:shared:infrastructure:tracing"))
+
+    // Event handler library (Phase 4)
+    implementation(project(":modules:services:patient-event-handler-service"))
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
@@ -70,12 +75,10 @@ dependencies {
 }
 
 tasks.withType<Test> {
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
     // Testcontainers system properties disabled - using running Docker PostgreSQL
     // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
 }

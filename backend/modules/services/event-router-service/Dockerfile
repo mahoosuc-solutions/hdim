@@ -18,6 +18,13 @@ RUN addgroup -S spring && adduser -S spring -G spring
 RUN chown -R spring:spring /app
 USER spring:spring
 
+# JVM configuration for containers
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -Djava.security.egd=file:/dev/./urandom"
+
 # Expose service port
 EXPOSE 8095
 
@@ -26,4 +33,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:8095/actuator/health || exit 1
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

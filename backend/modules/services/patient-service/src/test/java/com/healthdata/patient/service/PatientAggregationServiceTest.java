@@ -2,6 +2,7 @@ package com.healthdata.patient.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
+import com.healthdata.patient.audit.PatientAuditIntegration;
 import com.healthdata.patient.client.ConsentServiceClient;
 import com.healthdata.patient.client.FhirServiceClient;
 import feign.FeignException;
@@ -41,6 +42,9 @@ class PatientAggregationServiceTest {
 
     @Mock
     private ConsentServiceClient consentServiceClient;
+
+    @Mock
+    private PatientAuditIntegration auditIntegration;
 
     @InjectMocks
     private PatientAggregationService aggregationService;

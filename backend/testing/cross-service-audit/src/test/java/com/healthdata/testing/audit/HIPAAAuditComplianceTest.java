@@ -12,6 +12,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -34,6 +35,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @Testcontainers
 @DisplayName("HIPAA Audit Compliance Tests")
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class HIPAAAuditComplianceTest {
 
     @Container

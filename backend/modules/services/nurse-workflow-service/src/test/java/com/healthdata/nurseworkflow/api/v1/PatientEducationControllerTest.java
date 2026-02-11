@@ -7,8 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Managing education metrics
  */
 @WebMvcTest(PatientEducationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("PatientEducationController")
 class PatientEducationControllerTest {
 
@@ -193,8 +195,15 @@ class PatientEducationControllerTest {
     @DisplayName("GET /api/v1/patient-education/poor-understanding - should return sessions needing follow-up")
     void testFindWithPoorUnderstanding_Success() throws Exception {
         // Given
-        PatientEducationLogEntity poorUnderstandingLog = testEducationLog.toBuilder()
+        PatientEducationLogEntity poorUnderstandingLog = PatientEducationLogEntity.builder()
+            .id(testEducationLog.getId())
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .educatorId(educatorId)
+            .materialType(PatientEducationLogEntity.MaterialType.DIABETES_MANAGEMENT)
+            .deliveryMethod(PatientEducationLogEntity.DeliveryMethod.IN_PERSON)
             .patientUnderstanding(PatientEducationLogEntity.PatientUnderstanding.POOR)
+            .deliveredAt(Instant.now())
             .build();
 
         when(patientEducationService.findWithPoorUnderstanding(tenantId))

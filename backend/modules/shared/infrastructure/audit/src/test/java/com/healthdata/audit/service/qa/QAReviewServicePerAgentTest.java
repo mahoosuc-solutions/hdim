@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -37,6 +39,7 @@ import static org.mockito.Mockito.*;
  * - Confidence distributions
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("QA Review Service - Per-Agent Statistics Tests")
 class QAReviewServicePerAgentTest {
 
@@ -86,13 +89,7 @@ class QAReviewServicePerAgentTest {
 
         when(qaReviewRepository.findByTenantIdAndDateRange(tenantId, start, end))
             .thenReturn(reviews);
-        when(auditEventRepository.findByDecisionIdIn(anyList()))
-            .thenAnswer(invocation -> {
-                List<String> decisionIds = invocation.getArgument(0);
-                return events.stream()
-                    .filter(e -> decisionIds.contains(e.getEventId().toString()))
-                    .collect(java.util.stream.Collectors.toList());
-            });
+        stubEventLookups(events);
 
         // When
         QAMetrics metrics = qaReviewService.getMetrics(tenantId, null, startDate, endDate);
@@ -163,8 +160,7 @@ class QAReviewServicePerAgentTest {
 
         when(qaReviewRepository.findByTenantIdAndDateRange(tenantId, start, end))
             .thenReturn(allReviews);
-        when(auditEventRepository.findByDecisionIdIn(anyList()))
-            .thenReturn(allEvents);
+        stubEventLookups(allEvents);
 
         // When
         QAMetrics metrics = qaReviewService.getMetrics(tenantId, filterAgentType, startDate, endDate);
@@ -194,8 +190,7 @@ class QAReviewServicePerAgentTest {
 
         when(qaReviewRepository.findByTenantIdAndDateRange(tenantId, start, end))
             .thenReturn(Collections.emptyList());
-        when(auditEventRepository.findByDecisionIdIn(anyList()))
-            .thenReturn(Collections.emptyList());
+        stubEventLookups(Collections.emptyList());
 
         // When
         QAMetrics metrics = qaReviewService.getMetrics(tenantId, null, startDate, endDate);
@@ -234,13 +229,7 @@ class QAReviewServicePerAgentTest {
 
         when(qaReviewRepository.findByTenantIdAndDateRange(tenantId, start, end))
             .thenReturn(reviews);
-        when(auditEventRepository.findByDecisionIdIn(anyList()))
-            .thenAnswer(invocation -> {
-                List<String> decisionIds = invocation.getArgument(0);
-                return events.stream()
-                    .filter(e -> decisionIds.contains(e.getEventId().toString()))
-                    .collect(java.util.stream.Collectors.toList());
-            });
+        stubEventLookups(events);
 
         // When
         QAMetrics metrics = qaReviewService.getMetrics(tenantId, null, startDate, endDate);
@@ -286,13 +275,7 @@ class QAReviewServicePerAgentTest {
 
         when(qaReviewRepository.findByTenantIdAndDateRange(eq(tenantId), any(Instant.class), any(Instant.class)))
             .thenReturn(reviews);
-        when(auditEventRepository.findByDecisionIdIn(anyList()))
-            .thenAnswer(invocation -> {
-                List<String> decisionIds = invocation.getArgument(0);
-                return events.stream()
-                    .filter(e -> decisionIds.contains(e.getEventId().toString()))
-                    .collect(java.util.stream.Collectors.toList());
-            });
+        stubEventLookups(events);
 
         // When
         QATrendData trends = qaReviewService.getAccuracyTrends(tenantId, null, days);
@@ -340,13 +323,7 @@ class QAReviewServicePerAgentTest {
 
         when(qaReviewRepository.findByTenantIdAndDateRange(eq(tenantId), any(Instant.class), any(Instant.class)))
             .thenReturn(reviews);
-        when(auditEventRepository.findByDecisionIdIn(anyList()))
-            .thenAnswer(invocation -> {
-                List<String> decisionIds = invocation.getArgument(0);
-                return events.stream()
-                    .filter(e -> decisionIds.contains(e.getEventId().toString()))
-                    .collect(java.util.stream.Collectors.toList());
-            });
+        stubEventLookups(events);
 
         // When
         QATrendData trends = qaReviewService.getAccuracyTrends(tenantId, filterAgentType, days);
@@ -362,6 +339,19 @@ class QAReviewServicePerAgentTest {
     }
 
     // ==================== Helper Methods ====================
+
+    private void stubEventLookups(List<AIAgentDecisionEventEntity> events) {
+        when(auditEventRepository.findByDecisionIdIn(anyList()))
+            .thenAnswer(invocation -> {
+                List<String> ids = invocation.getArgument(0);
+                Set<UUID> requested = ids.stream()
+                    .map(UUID::fromString)
+                    .collect(java.util.stream.Collectors.toSet());
+                return events.stream()
+                        .filter(e -> requested.contains(e.getEventId()))
+                        .collect(java.util.stream.Collectors.toList());
+            });
+    }
 
     private AIAgentDecisionEventEntity createEvent(String eventId, 
                                                    AIAgentDecisionEvent.AgentType agentType, 

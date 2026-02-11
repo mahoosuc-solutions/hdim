@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Timeout;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +64,8 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("test")
 @Import({TestMessagingConfiguration.class, TestWebSocketConfiguration.class})
 @DisplayName("End-to-End Integration Tests")
+@Tag("e2e")
+@Tag("heavyweight")
 public class EndToEndIntegrationTest {
 
     @Container

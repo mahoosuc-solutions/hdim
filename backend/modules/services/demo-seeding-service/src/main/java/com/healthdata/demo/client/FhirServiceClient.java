@@ -175,7 +175,8 @@ public class FhirServiceClient {
 
         // Add gateway-trust headers for authentication (required by downstream services)
         // These simulate what the gateway would inject after JWT validation
-        headers.set("X-Auth-User-Id", "demo-seeding-service");
+        // User ID must be a valid UUID (required by UserAutoRegistrationFilter)
+        headers.set("X-Auth-User-Id", "00000000-0000-0000-0000-000000000001");
         headers.set("X-Auth-Username", "demo-seeder");
         headers.set("X-Auth-Tenant-Ids", tenantId);
         headers.set("X-Auth-Roles", "ADMIN,SYSTEM");

@@ -151,3 +151,109 @@ export type RiskCategory =
   | 'MENTAL_HEALTH'
   | 'RENAL'
   | 'ONCOLOGY';
+
+/**
+ * HCC-based Risk Assessment Response
+ * Matches the backend PatientRiskAssessmentResponse from patient-service
+ *
+ * This provides comprehensive risk assessment combining:
+ * - CMS-HCC RAF scores (V24, V28, and blended)
+ * - Risk level classification
+ * - Care gap integration
+ * - Documentation gap opportunities
+ */
+export interface HccRiskAssessment {
+  /**
+   * Patient identifier (UUID)
+   */
+  patientId: string;
+
+  /**
+   * Blended RAF score (weighted combination of V24 and V28)
+   */
+  rafScoreBlended: number | null;
+
+  /**
+   * RAF score under CMS-HCC V24 model
+   */
+  rafScoreV24: number | null;
+
+  /**
+   * RAF score under CMS-HCC V28 model
+   */
+  rafScoreV28: number | null;
+
+  /**
+   * Risk level classification
+   */
+  riskLevel: 'LOW' | 'MODERATE' | 'HIGH' | 'VERY_HIGH';
+
+  /**
+   * Numerical risk score (0-100) for UI display
+   */
+  riskScore: number;
+
+  /**
+   * Total count of captured HCC codes
+   */
+  hccCount: number;
+
+  /**
+   * Top HCC codes by RAF impact (up to 5)
+   */
+  topHccs: string[];
+
+  /**
+   * Chronic conditions derived from HCC codes
+   */
+  chronicConditions: string[];
+
+  /**
+   * Count of open care gaps
+   */
+  openCareGaps: number;
+
+  /**
+   * Count of high-priority care gaps
+   */
+  highPriorityCareGaps: number;
+
+  /**
+   * Count of overdue care gaps
+   */
+  overdueCareGaps: number;
+
+  /**
+   * Potential RAF uplift if documentation gaps are addressed
+   */
+  potentialRafUplift: number | null;
+
+  /**
+   * Count of documentation gaps that could improve RAF score
+   */
+  documentationGapCount: number | null;
+
+  /**
+   * Count of prior-year HCCs needing recapture
+   */
+  recaptureOpportunities: number | null;
+
+  /**
+   * Timestamp when risk assessment was calculated
+   */
+  calculatedAt: string;
+
+  /**
+   * Profile year for HCC calculations
+   */
+  profileYear: number;
+
+  /**
+   * Data availability indicators
+   */
+  dataAvailability: {
+    hccDataAvailable: boolean;
+    careGapDataAvailable: boolean;
+    documentationGapDataAvailable: boolean;
+  };
+}

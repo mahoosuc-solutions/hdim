@@ -46,6 +46,10 @@ healthdata:
     hikari:
       traffic-tier: HIGH  # FHIR R4 resource management: >100 req/sec, mission-critical, complex queries
 
+  # Disable Flyway - use Liquibase only (configured in application.yml)
+  flyway:
+    enabled: false
+
   data:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:redis}

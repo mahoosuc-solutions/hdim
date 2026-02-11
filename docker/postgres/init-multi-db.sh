@@ -23,6 +23,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE agent_db;
     CREATE DATABASE agent_runtime_db;
     CREATE DATABASE ai_assistant_db;
+    CREATE DATABASE agent_validation_db;
 
     -- Analytics Services
     CREATE DATABASE analytics_db;
@@ -70,6 +71,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Event Store Service (Immutable Event Log)
     CREATE DATABASE event_store_db;
 
+    -- Admin Tools
+    CREATE DATABASE investor_dashboard_db;
+
     -- Grant privileges to postgres user
     GRANT ALL PRIVILEGES ON DATABASE fhir_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE cql_db TO "$POSTGRES_USER";
@@ -84,6 +88,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE agent_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE agent_runtime_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE ai_assistant_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE agent_validation_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE analytics_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE predictive_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE sdoh_db TO "$POSTGRES_USER";
@@ -108,6 +113,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE quality_event_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE clinical_workflow_event_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE event_store_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE investor_dashboard_db TO "$POSTGRES_USER";
 EOSQL
 
 # Note: PostgreSQL extensions are now managed by service Liquibase migrations

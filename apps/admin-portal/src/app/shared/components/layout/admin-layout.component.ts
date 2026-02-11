@@ -274,6 +274,12 @@ export class AdminLayoutComponent {
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: '📊', route: '/dashboard' },
+    { label: 'Roadmap', icon: '🗺️', route: '/roadmap' },
+    { label: 'Investor Launch', icon: '🚀', route: '/investor-launch' },
+    { label: 'Sales Dashboard', icon: '💼', route: '/sales/dashboard' },
+    { label: 'Sales Leads', icon: '👤', route: '/sales/leads' },
+    { label: 'Sales Pipeline', icon: '📈', route: '/sales/pipeline' },
+    { label: 'Sales Activities', icon: '📞', route: '/sales/activities' },
     { label: 'Users', icon: '👥', route: '/users' },
     { label: 'Tenants', icon: '🏢', route: '/tenants' },
     { label: 'System Health', icon: '💚', route: '/system-health' },

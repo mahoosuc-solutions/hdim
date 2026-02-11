@@ -7,8 +7,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Managing referral metrics for quality reporting
  */
 @WebMvcTest(ReferralCoordinationController.class)
+@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("ReferralCoordinationController")
 class ReferralCoordinationControllerTest {
 
@@ -66,7 +68,7 @@ class ReferralCoordinationControllerTest {
             .coordinatorId(coordinatorId)
             .specialtyType("Cardiology")
             .status(ReferralCoordinationEntity.ReferralStatus.PENDING_AUTHORIZATION)
-            .priority(ReferralCoordinationEntity.Priority.ROUTINE)
+            .priority(ReferralCoordinationEntity.ReferralPriority.ROUTINE)
             .authorizationStatus(ReferralCoordinationEntity.AuthorizationStatus.PENDING)
             .requestedAt(Instant.now())
             .createdAt(Instant.now())
@@ -226,8 +228,16 @@ class ReferralCoordinationControllerTest {
     @DisplayName("GET /api/v1/referral-coordinations/awaiting-results - should return referrals awaiting results")
     void testFindAwaitingResults_Success() throws Exception {
         // Given
-        ReferralCoordinationEntity awaitingResults = testReferral.toBuilder()
+        ReferralCoordinationEntity awaitingResults = ReferralCoordinationEntity.builder()
+            .id(testReferral.getId())
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .coordinatorId(coordinatorId)
+            .specialtyType("Cardiology")
             .status(ReferralCoordinationEntity.ReferralStatus.AWAITING_APPOINTMENT)
+            .priority(ReferralCoordinationEntity.ReferralPriority.ROUTINE)
+            .authorizationStatus(ReferralCoordinationEntity.AuthorizationStatus.PENDING)
+            .requestedAt(Instant.now())
             .build();
 
         when(referralCoordinationService.findAwaitingResults(tenantId))
@@ -244,8 +254,16 @@ class ReferralCoordinationControllerTest {
     @DisplayName("GET /api/v1/referral-coordinations/urgent-awaiting-scheduling - should return urgent referrals")
     void testFindUrgentAwaitingScheduling_Success() throws Exception {
         // Given
-        ReferralCoordinationEntity urgentReferral = testReferral.toBuilder()
-            .priority(ReferralCoordinationEntity.Priority.URGENT)
+        ReferralCoordinationEntity urgentReferral = ReferralCoordinationEntity.builder()
+            .id(testReferral.getId())
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .coordinatorId(coordinatorId)
+            .specialtyType("Cardiology")
+            .status(ReferralCoordinationEntity.ReferralStatus.PENDING_AUTHORIZATION)
+            .priority(ReferralCoordinationEntity.ReferralPriority.URGENT)
+            .authorizationStatus(ReferralCoordinationEntity.AuthorizationStatus.PENDING)
+            .requestedAt(Instant.now())
             .build();
 
         when(referralCoordinationService.findUrgentAwaitingScheduling(tenantId))

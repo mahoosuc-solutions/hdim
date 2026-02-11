@@ -1,0 +1,61 @@
+# Development Profile for Local Testing
+# This profile allows local API testing without full gateway authentication
+
+spring:
+  # Database - use Docker Compose PostgreSQL
+  datasource:
+    url: jdbc:postgresql://localhost:5435/agent_validation_db
+    username: healthdata
+    password: healthdata_password
+
+  # Disable Kafka for local dev (enable when Kafka is running)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+
+# Security - relaxed for local development
+security:
+  gateway-trust:
+    enabled: false  # Disable gateway trust validation for local testing
+  jwt:
+    # Use a stable dev secret for local testing
+    secret: devSecretKeyForLocalTestingOnly256BitsLongForHS256Algorithm123456789
+
+# Allow actuator endpoints without auth
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,circuitbreakers,env,beans
+  endpoint:
+    health:
+      show-details: always
+
+# Enhanced logging for development
+logging:
+  level:
+    com.healthdata.agentvalidation: DEBUG
+    com.healthdata.authentication: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+# Override shared persistence defaults
+healthdata:
+  persistence:
+    primary:
+      url: jdbc:postgresql://localhost:5435/agent_validation_db
+      username: healthdata
+      password: healthdata_password
+
+# Local infrastructure
+hdim:
+  validation:
+    evaluation:
+      harness-url: http://localhost:8500  # Python evaluation harness
+      timeout-seconds: 30  # Shorter timeout for local dev
+  services:
+    agent-runtime:
+      url: http://localhost:8088
+    jaeger:
+      url: http://localhost:16686

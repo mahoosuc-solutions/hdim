@@ -58,7 +58,7 @@ class CoverageControllerTest {
         when(coverageService.createCoverage(eq(TENANT_ID), any(Coverage.class), eq("user")))
                 .thenReturn(coverage);
 
-        mockMvc.perform(post("/fhir/Coverage")
+        mockMvc.perform(post("/Coverage")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -76,7 +76,7 @@ class CoverageControllerTest {
         when(coverageService.getCoverage(TENANT_ID, coverageId))
                 .thenReturn(Optional.of(coverage));
 
-        mockMvc.perform(get("/fhir/Coverage/{id}", coverageId)
+        mockMvc.perform(get("/Coverage/{id}", coverageId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(coverage.getId())));
@@ -89,7 +89,7 @@ class CoverageControllerTest {
         when(coverageService.getCoverage(TENANT_ID, coverageId))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Coverage/{id}", coverageId)
+        mockMvc.perform(get("/Coverage/{id}", coverageId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -103,7 +103,7 @@ class CoverageControllerTest {
         when(coverageService.updateCoverage(eq(TENANT_ID), eq(coverageId), any(Coverage.class), eq("user")))
                 .thenReturn(coverage);
 
-        mockMvc.perform(put("/fhir/Coverage/{id}", coverageId)
+        mockMvc.perform(put("/Coverage/{id}", coverageId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -117,7 +117,7 @@ class CoverageControllerTest {
     void shouldDeleteCoverage() throws Exception {
         UUID coverageId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/fhir/Coverage/{id}", coverageId)
+        mockMvc.perform(delete("/Coverage/{id}", coverageId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -139,7 +139,7 @@ class CoverageControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(coverage)));
 
-        mockMvc.perform(get("/fhir/Coverage")
+        mockMvc.perform(get("/Coverage")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/" + patientId)
                         .param("status", "active")
@@ -161,7 +161,7 @@ class CoverageControllerTest {
         when(coverageService.getCoveragesByPatient(TENANT_ID, patientId))
                 .thenReturn(List.of(coverage));
 
-        mockMvc.perform(get("/fhir/Coverage/patient/{patientId}", patientId)
+        mockMvc.perform(get("/Coverage/patient/{patientId}", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(coverage.getId())));
@@ -176,7 +176,7 @@ class CoverageControllerTest {
         when(coverageService.getActiveCoverages(TENANT_ID, patientId))
                 .thenReturn(List.of(coverage));
 
-        mockMvc.perform(get("/fhir/Coverage/patient/{patientId}/active", patientId)
+        mockMvc.perform(get("/Coverage/patient/{patientId}/active", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(coverage.getId())));
@@ -191,7 +191,7 @@ class CoverageControllerTest {
         when(coverageService.getPrimaryCoverage(TENANT_ID, patientId))
                 .thenReturn(Optional.of(coverage));
 
-        mockMvc.perform(get("/fhir/Coverage/patient/{patientId}/primary", patientId)
+        mockMvc.perform(get("/Coverage/patient/{patientId}/primary", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(coverage.getId())));
@@ -204,7 +204,7 @@ class CoverageControllerTest {
         when(coverageService.getPrimaryCoverage(TENANT_ID, patientId))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Coverage/patient/{patientId}/primary", patientId)
+        mockMvc.perform(get("/Coverage/patient/{patientId}/primary", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -215,7 +215,7 @@ class CoverageControllerTest {
         UUID patientId = UUID.randomUUID();
         when(coverageService.hasActiveCoverage(TENANT_ID, patientId)).thenReturn(true);
 
-        mockMvc.perform(get("/fhir/Coverage/patient/{patientId}/has-active", patientId)
+        mockMvc.perform(get("/Coverage/patient/{patientId}/has-active", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("true")));
@@ -229,7 +229,7 @@ class CoverageControllerTest {
         when(coverageService.getCoveragesBySubscriberId(TENANT_ID, "sub-1"))
                 .thenReturn(List.of(coverage));
 
-        mockMvc.perform(get("/fhir/Coverage/subscriber/{subscriberId}", "sub-1")
+        mockMvc.perform(get("/Coverage/subscriber/{subscriberId}", "sub-1")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(coverage.getId())));

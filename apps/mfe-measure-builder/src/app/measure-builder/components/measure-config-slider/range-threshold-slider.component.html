@@ -1,0 +1,131 @@
+<div class="slider-container" [ngClass]="{ 'range': isRangeSlider(), 'threshold': isThresholdSlider() }">
+  <!-- Slider Label -->
+  <div class="slider-header">
+    <label class="slider-label">{{ config?.name }}</label>
+    <p class="slider-description">{{ config?.description }}</p>
+  </div>
+
+  <!-- Range Slider -->
+  <ng-container *ngIf="isRangeSlider()">
+    <div class="range-slider-wrapper">
+      <!-- Min/Max Inputs -->
+      <div class="range-inputs">
+        <div class="input-group">
+          <label>Min:</label>
+          <input
+            type="range"
+            class="slider slider-min"
+            [attr.min]="getRangeConfig().minValue"
+            [attr.max]="getRangeConfig().maxValue"
+            [attr.step]="getRangeConfig().step"
+            [value]="getRangeConfig().currentMin"
+            (input)="onRangeMinChange($event)"
+            [attr.aria-label]="'Minimum ' + config?.name"
+            [attr.aria-valuemin]="getRangeConfig().minValue"
+            [attr.aria-valuemax]="getRangeConfig().maxValue"
+            [attr.aria-valuenow]="getRangeConfig().currentMin" />
+        </div>
+
+        <div class="input-group">
+          <label>Max:</label>
+          <input
+            type="range"
+            class="slider slider-max"
+            [attr.min]="getRangeConfig().minValue"
+            [attr.max]="getRangeConfig().maxValue"
+            [attr.step]="getRangeConfig().step"
+            [value]="getRangeConfig().currentMax"
+            (input)="onRangeMaxChange($event)"
+            [attr.aria-label]="'Maximum ' + config?.name"
+            [attr.aria-valuemin]="getRangeConfig().minValue"
+            [attr.aria-valuemax]="getRangeConfig().maxValue"
+            [attr.aria-valuenow]="getRangeConfig().currentMax" />
+        </div>
+      </div>
+
+      <!-- Track Background -->
+      <div class="slider-track-background">
+        <div
+          class="slider-track-fill"
+          [style.left]="getTrackFillPercentage().left"
+          [style.width]="getTrackFillPercentage().width"></div>
+      </div>
+
+      <!-- Value Display -->
+      <div class="slider-values">
+        <span class="min-value">{{ getRangeConfig().currentMin }}</span>
+        <span class="range-separator">-</span>
+        <span class="max-value">{{ getRangeConfig().currentMax }}</span>
+        <span class="slider-unit">{{ getRangeConfig().unit }}</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Threshold Slider -->
+  <ng-container *ngIf="isThresholdSlider()">
+    <div class="threshold-slider-wrapper">
+      <!-- Single Value Input -->
+      <input
+        type="range"
+        class="slider slider-value"
+        [ngClass]="{ 'warning-level': isInWarningZone(), 'critical-level': isInCriticalZone() }"
+        [attr.min]="getThresholdConfig().minValue"
+        [attr.max]="getThresholdConfig().maxValue"
+        [attr.step]="getThresholdConfig().step"
+        [value]="getThresholdConfig().currentValue"
+        (input)="onThresholdChange($event)"
+        [attr.aria-label]="config?.name"
+        [attr.aria-valuemin]="getThresholdConfig().minValue"
+        [attr.aria-valuemax]="getThresholdConfig().maxValue"
+        [attr.aria-valuenow]="getThresholdConfig().currentValue" />
+
+      <!-- Threshold Indicators -->
+      <div class="threshold-indicators">
+        <div
+          class="threshold-warning"
+          [style.left.%]="getWarningIndicatorPosition()"
+          [title]="'Warning threshold: ' + getThresholdConfig().warningThreshold + getThresholdConfig().unit">
+        </div>
+        <div
+          class="threshold-critical"
+          [style.left.%]="getCriticalIndicatorPosition()"
+          [title]="'Critical threshold: ' + getThresholdConfig().criticalThreshold + getThresholdConfig().unit">
+        </div>
+      </div>
+
+      <!-- Current Value Display -->
+      <div class="slider-current-value" [ngClass]="{ 'warning': isInWarningZone(), 'critical': isInCriticalZone() }">
+        {{ getThresholdConfig().currentValue }}
+        <span class="slider-unit">{{ getThresholdConfig().unit }}</span>
+      </div>
+
+      <!-- Tooltips -->
+      <div class="slider-tooltips">
+        <div *ngIf="isInWarningZone()" class="warning-tooltip">
+          ⚠️ Warning: Value exceeds {{ getThresholdConfig().warningThreshold }}{{ getThresholdConfig().unit }}
+        </div>
+        <div *ngIf="isInCriticalZone()" class="critical-tooltip">
+          🚨 Critical: Value exceeds {{ getThresholdConfig().criticalThreshold }}{{ getThresholdConfig().unit }}
+        </div>
+      </div>
+
+      <!-- Preset Buttons -->
+      <div class="preset-buttons">
+        <button
+          *ngFor="let presetEntry of getAvailablePresets()"
+          type="button"
+          class="preset-button"
+          [class.active]="isPresetActive(presetEntry[0])"
+          (click)="applyPreset(presetEntry[0])"
+          [title]="presetEntry[1].label">
+          {{ presetEntry[1].label }}
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- CQL Preview -->
+  <div class="cql-preview" *ngIf="config">
+    <code>{{ generateCQL() }}</code>
+  </div>
+</div>

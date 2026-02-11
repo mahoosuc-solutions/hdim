@@ -62,7 +62,7 @@ class ProcedureControllerTest {
         when(procedureService.createProcedure(eq(TENANT_ID), any(Procedure.class), eq("user")))
                 .thenReturn(procedure);
 
-        mockMvc.perform(post("/fhir/Procedure")
+        mockMvc.perform(post("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -78,7 +78,7 @@ class ProcedureControllerTest {
         when(procedureService.createProcedure(eq(TENANT_ID), any(Procedure.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("create failure"));
 
-        mockMvc.perform(post("/fhir/Procedure")
+        mockMvc.perform(post("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -90,7 +90,7 @@ class ProcedureControllerTest {
     @Test
     @DisplayName("Should return bad request on create with invalid JSON")
     void shouldReturnBadRequestOnCreateInvalidJson() throws Exception {
-        mockMvc.perform(post("/fhir/Procedure")
+        mockMvc.perform(post("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -104,7 +104,7 @@ class ProcedureControllerTest {
         Procedure procedure = buildProcedure(UUID.randomUUID());
         when(procedureService.getProcedure(TENANT_ID, procedure.getId())).thenReturn(Optional.of(procedure));
 
-        mockMvc.perform(get("/fhir/Procedure/{id}", procedure.getId())
+        mockMvc.perform(get("/Procedure/{id}", procedure.getId())
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(procedure.getId())));
@@ -115,7 +115,7 @@ class ProcedureControllerTest {
     void shouldReturnNotFound() throws Exception {
         when(procedureService.getProcedure(TENANT_ID, "missing")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Procedure/{id}", "missing")
+        mockMvc.perform(get("/Procedure/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -127,7 +127,7 @@ class ProcedureControllerTest {
         when(procedureService.updateProcedure(eq(TENANT_ID), eq(procedure.getId()), any(Procedure.class), eq("user")))
                 .thenReturn(procedure);
 
-        mockMvc.perform(put("/fhir/Procedure/{id}", procedure.getId())
+        mockMvc.perform(put("/Procedure/{id}", procedure.getId())
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -142,7 +142,7 @@ class ProcedureControllerTest {
         when(procedureService.updateProcedure(eq(TENANT_ID), eq("id-1"), any(Procedure.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("update failure"));
 
-        mockMvc.perform(put("/fhir/Procedure/{id}", "id-1")
+        mockMvc.perform(put("/Procedure/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -154,7 +154,7 @@ class ProcedureControllerTest {
     @Test
     @DisplayName("Should return bad request on update invalid JSON")
     void shouldReturnBadRequestOnUpdateInvalidJson() throws Exception {
-        mockMvc.perform(put("/fhir/Procedure/{id}", "id-1")
+        mockMvc.perform(put("/Procedure/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -168,7 +168,7 @@ class ProcedureControllerTest {
         doThrow(new ProcedureService.ProcedureNotFoundException("missing"))
                 .when(procedureService).updateProcedure(eq(TENANT_ID), eq("missing"), any(Procedure.class), eq("user"));
 
-        mockMvc.perform(put("/fhir/Procedure/{id}", "missing")
+        mockMvc.perform(put("/Procedure/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -179,7 +179,7 @@ class ProcedureControllerTest {
     @Test
     @DisplayName("Should delete procedure")
     void shouldDeleteProcedure() throws Exception {
-        mockMvc.perform(delete("/fhir/Procedure/{id}", "id-1")
+        mockMvc.perform(delete("/Procedure/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -191,7 +191,7 @@ class ProcedureControllerTest {
         doThrow(new ProcedureService.ProcedureNotFoundException("missing"))
                 .when(procedureService).deleteProcedure(TENANT_ID, "missing", "user");
 
-        mockMvc.perform(delete("/fhir/Procedure/{id}", "missing")
+        mockMvc.perform(delete("/Procedure/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNotFound());
@@ -203,7 +203,7 @@ class ProcedureControllerTest {
         when(procedureService.searchProceduresByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Procedure")
+        mockMvc.perform(get("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -216,7 +216,7 @@ class ProcedureControllerTest {
                 TENANT_ID, "patient-1", LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31")))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Procedure")
+        mockMvc.perform(get("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2025-01-01")
@@ -227,7 +227,7 @@ class ProcedureControllerTest {
     @Test
     @DisplayName("Should return bad request when patient missing")
     void shouldReturnBadRequestWhenPatientMissing() throws Exception {
-        mockMvc.perform(get("/fhir/Procedure")
+        mockMvc.perform(get("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("patient parameter is required")));
@@ -239,7 +239,7 @@ class ProcedureControllerTest {
         doThrow(new IllegalArgumentException("bad search"))
                 .when(procedureService).searchProceduresByPatient(eq(TENANT_ID), eq("patient-1"), any());
 
-        mockMvc.perform(get("/fhir/Procedure")
+        mockMvc.perform(get("/Procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -252,7 +252,7 @@ class ProcedureControllerTest {
         when(procedureService.getCompletedProceduresByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Procedure/completed")
+        mockMvc.perform(get("/Procedure/completed")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -264,7 +264,7 @@ class ProcedureControllerTest {
         when(procedureService.getCompletedProceduresByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("completed failure"));
 
-        mockMvc.perform(get("/fhir/Procedure/completed")
+        mockMvc.perform(get("/Procedure/completed")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -277,7 +277,7 @@ class ProcedureControllerTest {
         when(procedureService.getSurgicalProceduresByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Procedure/surgical")
+        mockMvc.perform(get("/Procedure/surgical")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -289,7 +289,7 @@ class ProcedureControllerTest {
         when(procedureService.getSurgicalProceduresByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("surgical failure"));
 
-        mockMvc.perform(get("/fhir/Procedure/surgical")
+        mockMvc.perform(get("/Procedure/surgical")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -302,7 +302,7 @@ class ProcedureControllerTest {
         when(procedureService.getDiagnosticProceduresByPatient(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Procedure/diagnostic")
+        mockMvc.perform(get("/Procedure/diagnostic")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -314,7 +314,7 @@ class ProcedureControllerTest {
         when(procedureService.getDiagnosticProceduresByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("diagnostic failure"));
 
-        mockMvc.perform(get("/fhir/Procedure/diagnostic")
+        mockMvc.perform(get("/Procedure/diagnostic")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -327,7 +327,7 @@ class ProcedureControllerTest {
         when(procedureService.getProceduresWithComplications(TENANT_ID, "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Procedure/with-complications")
+        mockMvc.perform(get("/Procedure/with-complications")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -339,7 +339,7 @@ class ProcedureControllerTest {
         when(procedureService.getProceduresWithComplications(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("complications failure"));
 
-        mockMvc.perform(get("/fhir/Procedure/with-complications")
+        mockMvc.perform(get("/Procedure/with-complications")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -351,7 +351,7 @@ class ProcedureControllerTest {
     void shouldCheckHasProcedure() throws Exception {
         when(procedureService.hasCompletedProcedure(TENANT_ID, "patient-1", "PROC")).thenReturn(true);
 
-        mockMvc.perform(get("/fhir/Procedure/has-procedure")
+        mockMvc.perform(get("/Procedure/has-procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "PROC"))
@@ -365,7 +365,7 @@ class ProcedureControllerTest {
         when(procedureService.hasCompletedProcedure(TENANT_ID, "patient-1", "PROC"))
                 .thenThrow(new IllegalStateException("has procedure failure"));
 
-        mockMvc.perform(get("/fhir/Procedure/has-procedure")
+        mockMvc.perform(get("/Procedure/has-procedure")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("code", "PROC"))
@@ -380,7 +380,7 @@ class ProcedureControllerTest {
                 TENANT_ID, "patient-1", LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31")))
                 .thenReturn(true);
 
-        mockMvc.perform(get("/fhir/Procedure/has-procedure-in-range")
+        mockMvc.perform(get("/Procedure/has-procedure-in-range")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2025-01-01")
@@ -396,7 +396,7 @@ class ProcedureControllerTest {
                 TENANT_ID, "patient-1", LocalDate.parse("2025-01-01"), LocalDate.parse("2025-01-31")))
                 .thenThrow(new IllegalStateException("range failure"));
 
-        mockMvc.perform(get("/fhir/Procedure/has-procedure-in-range")
+        mockMvc.perform(get("/Procedure/has-procedure-in-range")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2025-01-01")
@@ -407,7 +407,7 @@ class ProcedureControllerTest {
     @Test
     @DisplayName("Should return health check")
     void shouldReturnHealthCheck() throws Exception {
-        mockMvc.perform(get("/fhir/Procedure/_health"))
+        mockMvc.perform(get("/Procedure/_health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Procedure")));
     }

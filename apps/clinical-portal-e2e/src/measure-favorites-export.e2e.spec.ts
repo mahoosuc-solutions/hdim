@@ -185,8 +185,11 @@ test.describe('Measure Favorites Feature', () => {
       localStorage.removeItem('hdim_measure_favorites');
       localStorage.removeItem('hdim_recent_measures');
       // Set up auth tokens
-      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
       localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+      localStorage.setItem(
+        'healthdata_tenant',
+        demoUser.tenantIds?.[0] || demoUser.tenantId || 'acme-health'
+      );
     }, DEMO_USER);
   });
 
@@ -374,8 +377,11 @@ test.describe('Export Features', () => {
     await setupMockRoutes(page);
     // Set up authentication
     await page.addInitScript((demoUser) => {
-      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
       localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+      localStorage.setItem(
+        'healthdata_tenant',
+        demoUser.tenantIds?.[0] || demoUser.tenantId || 'acme-health'
+      );
     }, DEMO_USER);
   });
 
@@ -476,8 +482,11 @@ test.describe('Results Dashboard Charts', () => {
     await setupMockRoutes(page);
     // Set up authentication
     await page.addInitScript((demoUser) => {
-      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
       localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+      localStorage.setItem(
+        'healthdata_tenant',
+        demoUser.tenantIds?.[0] || demoUser.tenantId || 'acme-health'
+      );
     }, DEMO_USER);
   });
 
@@ -516,8 +525,11 @@ test.describe('Batch Evaluation with Care Gaps', () => {
     await setupMockRoutes(page);
     // Set up authentication
     await page.addInitScript((demoUser) => {
-      localStorage.setItem('healthdata_auth_token', 'demo-jwt-token-' + Date.now());
       localStorage.setItem('healthdata_user', JSON.stringify(demoUser));
+      localStorage.setItem(
+        'healthdata_tenant',
+        demoUser.tenantIds?.[0] || demoUser.tenantId || 'acme-health'
+      );
     }, DEMO_USER);
 
     // Mock care gap detection

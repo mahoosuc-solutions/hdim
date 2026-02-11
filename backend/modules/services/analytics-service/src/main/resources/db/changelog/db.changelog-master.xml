@@ -8,6 +8,7 @@
     <include file="db/changelog/0001-create-analytics-metrics-table.xml"/>
     <include file="db/changelog/0002-create-analytics-reports-table.xml"/>
     <include file="db/changelog/0003-create-star-ratings-table.xml"/>
+    <include file="db/changelog/0004-align-star-ratings-with-entity.xml"/>
     <include file="db/changelog/changes/001-initial-schema.sql"/>
 
 </databaseChangeLog>

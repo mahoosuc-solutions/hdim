@@ -16,7 +16,9 @@ import { ApiService } from './api.service';
 import {
   RiskAssessment,
   PopulationStats,
+  HccRiskAssessment,
 } from '../models/risk-assessment.model';
+import { API_CONFIG } from '../config/api.config';
 import { LoggerService } from './logger.service';
 
 @Injectable({
@@ -33,9 +35,37 @@ export class RiskAssessmentService {
   ) {}
 
   /**
-   * Get the current risk assessment for a patient
+   * Get HCC-based risk assessment for a patient from patient-service.
+   *
+   * This is the primary method for risk stratification, combining:
+   * - CMS-HCC RAF scores (V24, V28, blended)
+   * - Care gap counts
+   * - Documentation gap opportunities
+   *
+   * @param patientId Patient UUID
+   * @returns Observable of HccRiskAssessment or null if not found
+   */
+  getHccRiskAssessment(patientId: string): Observable<HccRiskAssessment | null> {
+    if (!patientId || patientId.trim() === '') {
+      return throwError(() => new Error('Patient ID is required'));
+    }
+
+    const url = `${API_CONFIG.PATIENT_URL}/risk-assessment?patient=${encodeURIComponent(patientId)}`;
+
+    return this.apiService.get<HccRiskAssessment>(url).pipe(
+      map((assessment) => this.transformHccAssessment(assessment)),
+      catchError((error) => {
+        this.logger.warn(`HCC risk assessment not available for patient ${patientId}`, error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * Get the current risk assessment for a patient (legacy method)
    * @param patientId Patient FHIR ID
    * @returns Observable of RiskAssessment or null if not found
+   * @deprecated Use getHccRiskAssessment() for HCC-based assessments
    */
   getRiskAssessment(patientId: string): Observable<RiskAssessment | null> {
     if (!patientId || patientId.trim() === '') {
@@ -151,6 +181,24 @@ export class RiskAssessmentService {
       createdAt: assessment.createdAt
         ? new Date(assessment.createdAt)
         : new Date(),
+    };
+  }
+
+  /**
+   * Transform HCC assessment data
+   */
+  private transformHccAssessment(assessment: any): HccRiskAssessment {
+    return {
+      ...assessment,
+      // Ensure arrays are initialized
+      topHccs: assessment.topHccs || [],
+      chronicConditions: assessment.chronicConditions || [],
+      // Ensure data availability is present
+      dataAvailability: assessment.dataAvailability || {
+        hccDataAvailable: false,
+        careGapDataAvailable: false,
+        documentationGapDataAvailable: false,
+      },
     };
   }
 

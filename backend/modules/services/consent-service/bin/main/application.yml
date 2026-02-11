@@ -6,6 +6,14 @@ server:
 spring:
   application:
     name: consent-service
+  main:
+    allow-bean-definition-overriding: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_consent}
@@ -16,11 +24,18 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
+      # Liquibase handles all schema management and validation
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Disable Liquibase's SessionFactoryObserver schema validation
+        # that runs even when ddl-auto is 'none'. This prevents validation
+        # of User entity against the wrong database.
+        jakarta.persistence.schema-generation.database.action: none
+        jakarta.persistence.schema-generation.create-source: none
+        jakarta.persistence.schema-generation.drop-source: none
     show-sql: false
 
   liquibase:
@@ -39,6 +54,12 @@ audit:
   enabled: true
   retention-days: 2555  # 7 years for HIPAA
   include-phi: false
+  kafka:
+    enabled: true
+    topic:
+      ai-decisions: ai.agent.decisions
+      config-changes: configuration.engine.changes
+      user-actions: user.configuration.actions
 
 # Resilience4j Configuration
 resilience4j:

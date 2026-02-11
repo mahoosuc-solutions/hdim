@@ -63,7 +63,7 @@ class EncounterControllerTest {
         when(encounterService.createEncounter(eq(TENANT_ID), any(Encounter.class), eq("user")))
                 .thenReturn(encounter);
 
-        mockMvc.perform(post("/fhir/Encounter")
+        mockMvc.perform(post("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -79,7 +79,7 @@ class EncounterControllerTest {
         when(encounterService.createEncounter(eq(TENANT_ID), any(Encounter.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("bad create"));
 
-        mockMvc.perform(post("/fhir/Encounter")
+        mockMvc.perform(post("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -94,7 +94,7 @@ class EncounterControllerTest {
         Encounter encounter = buildEncounter(UUID.randomUUID());
         when(encounterService.getEncounter(TENANT_ID, encounter.getId())).thenReturn(Optional.of(encounter));
 
-        mockMvc.perform(get("/fhir/Encounter/{id}", encounter.getId())
+        mockMvc.perform(get("/Encounter/{id}", encounter.getId())
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(encounter.getId())));
@@ -105,7 +105,7 @@ class EncounterControllerTest {
     void shouldReturnNotFound() throws Exception {
         when(encounterService.getEncounter(TENANT_ID, "missing")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/Encounter/{id}", "missing")
+        mockMvc.perform(get("/Encounter/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -117,7 +117,7 @@ class EncounterControllerTest {
         when(encounterService.updateEncounter(eq(TENANT_ID), eq(encounter.getId()), any(Encounter.class), eq("user")))
                 .thenReturn(encounter);
 
-        mockMvc.perform(put("/fhir/Encounter/{id}", encounter.getId())
+        mockMvc.perform(put("/Encounter/{id}", encounter.getId())
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -129,7 +129,7 @@ class EncounterControllerTest {
     @Test
     @DisplayName("Should return bad request on invalid JSON")
     void shouldReturnBadRequestOnInvalidJson() throws Exception {
-        mockMvc.perform(post("/fhir/Encounter")
+        mockMvc.perform(post("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -144,7 +144,7 @@ class EncounterControllerTest {
         doThrow(new EncounterService.EncounterNotFoundException("missing"))
                 .when(encounterService).updateEncounter(eq(TENANT_ID), eq("missing"), any(Encounter.class), eq("user"));
 
-        mockMvc.perform(put("/fhir/Encounter/{id}", "missing")
+        mockMvc.perform(put("/Encounter/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -155,7 +155,7 @@ class EncounterControllerTest {
     @Test
     @DisplayName("Should return bad request on update parse failure")
     void shouldReturnBadRequestOnUpdateParseFailure() throws Exception {
-        mockMvc.perform(put("/fhir/Encounter/{id}", "id-1")
+        mockMvc.perform(put("/Encounter/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -167,7 +167,7 @@ class EncounterControllerTest {
     @Test
     @DisplayName("Should delete encounter")
     void shouldDeleteEncounter() throws Exception {
-        mockMvc.perform(delete("/fhir/Encounter/{id}", "id-1")
+        mockMvc.perform(delete("/Encounter/{id}", "id-1")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -179,7 +179,7 @@ class EncounterControllerTest {
         doThrow(new EncounterService.EncounterNotFoundException("missing"))
                 .when(encounterService).deleteEncounter(TENANT_ID, "missing", "user");
 
-        mockMvc.perform(delete("/fhir/Encounter/{id}", "missing")
+        mockMvc.perform(delete("/Encounter/{id}", "missing")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNotFound());
@@ -191,7 +191,7 @@ class EncounterControllerTest {
         when(encounterService.searchEncountersByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Encounter")
+        mockMvc.perform(get("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -204,7 +204,7 @@ class EncounterControllerTest {
                 eq(TENANT_ID), eq("patient-1"), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Encounter")
+        mockMvc.perform(get("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")
@@ -218,7 +218,7 @@ class EncounterControllerTest {
         when(encounterService.searchEncountersByPatient(eq(TENANT_ID), eq("patient-1"), any()))
                 .thenThrow(new IllegalStateException("boom"));
 
-        mockMvc.perform(get("/fhir/Encounter")
+        mockMvc.perform(get("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -239,27 +239,27 @@ class EncounterControllerTest {
         when(encounterService.getEmergencyEncountersByPatient(eq(TENANT_ID), eq("patient-1")))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/Encounter/finished")
+        mockMvc.perform(get("/Encounter/finished")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/fhir/Encounter/active")
+        mockMvc.perform(get("/Encounter/active")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/fhir/Encounter/inpatient")
+        mockMvc.perform(get("/Encounter/inpatient")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/fhir/Encounter/ambulatory")
+        mockMvc.perform(get("/Encounter/ambulatory")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/fhir/Encounter/emergency")
+        mockMvc.perform(get("/Encounter/emergency")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -279,31 +279,31 @@ class EncounterControllerTest {
         when(encounterService.getEmergencyEncountersByPatient(TENANT_ID, "patient-1"))
                 .thenThrow(new IllegalStateException("emergency error"));
 
-        mockMvc.perform(get("/fhir/Encounter/finished")
+        mockMvc.perform(get("/Encounter/finished")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("finished error")));
 
-        mockMvc.perform(get("/fhir/Encounter/active")
+        mockMvc.perform(get("/Encounter/active")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("active error")));
 
-        mockMvc.perform(get("/fhir/Encounter/inpatient")
+        mockMvc.perform(get("/Encounter/inpatient")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("inpatient error")));
 
-        mockMvc.perform(get("/fhir/Encounter/ambulatory")
+        mockMvc.perform(get("/Encounter/ambulatory")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("ambulatory error")));
 
-        mockMvc.perform(get("/fhir/Encounter/emergency")
+        mockMvc.perform(get("/Encounter/emergency")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -316,7 +316,7 @@ class EncounterControllerTest {
         when(encounterService.hasEncounterInDateRange(eq(TENANT_ID), eq("patient-1"), any(), any()))
                 .thenReturn(true);
 
-        mockMvc.perform(get("/fhir/Encounter/has-encounter")
+        mockMvc.perform(get("/Encounter/has-encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")
@@ -333,7 +333,7 @@ class EncounterControllerTest {
         when(encounterService.hasEncounterInDateRange(eq(TENANT_ID), eq("patient-1"), any(), any()))
                 .thenThrow(new IllegalArgumentException("range error"));
 
-        mockMvc.perform(get("/fhir/Encounter/has-encounter")
+        mockMvc.perform(get("/Encounter/has-encounter")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")
@@ -345,7 +345,7 @@ class EncounterControllerTest {
     @Test
     @DisplayName("Should return bad request when patient missing")
     void shouldReturnBadRequestWhenPatientMissing() throws Exception {
-        mockMvc.perform(get("/fhir/Encounter")
+        mockMvc.perform(get("/Encounter")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("patient parameter is required")));
@@ -359,7 +359,7 @@ class EncounterControllerTest {
         when(encounterService.countEmergencyEncounters(eq(TENANT_ID), eq("patient-1"), any(), any()))
                 .thenReturn(1L);
 
-        mockMvc.perform(get("/fhir/Encounter/count-inpatient")
+        mockMvc.perform(get("/Encounter/count-inpatient")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")
@@ -367,7 +367,7 @@ class EncounterControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("2")));
 
-        mockMvc.perform(get("/fhir/Encounter/count-emergency")
+        mockMvc.perform(get("/Encounter/count-emergency")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")
@@ -375,7 +375,7 @@ class EncounterControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("1")));
 
-        mockMvc.perform(get("/fhir/Encounter/_health"))
+        mockMvc.perform(get("/Encounter/_health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Encounter")));
     }
@@ -388,7 +388,7 @@ class EncounterControllerTest {
         when(encounterService.countEmergencyEncounters(eq(TENANT_ID), eq("patient-1"), any(), any()))
                 .thenThrow(new IllegalArgumentException("emergency count error"));
 
-        mockMvc.perform(get("/fhir/Encounter/count-inpatient")
+        mockMvc.perform(get("/Encounter/count-inpatient")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")
@@ -396,7 +396,7 @@ class EncounterControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("inpatient count error")));
 
-        mockMvc.perform(get("/fhir/Encounter/count-emergency")
+        mockMvc.perform(get("/Encounter/count-emergency")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "patient-1")
                         .param("date-start", "2024-01-01T00:00:00")

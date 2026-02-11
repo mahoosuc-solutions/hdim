@@ -3,19 +3,29 @@
 <app-demo-storyboard-overlay></app-demo-storyboard-overlay>
 
 <!-- Skip Links for Accessibility -->
-<a class="skip-link" href="#main-content">Skip to main content</a>
-<a class="skip-link" href="#main-navigation">Skip to navigation</a>
+<a class="skip-link" href="#main-content" data-test-id="skip-to-content">Skip to main content</a>
+<a class="skip-link" href="#main-navigation" data-test-id="skip-to-navigation">Skip to navigation</a>
 
 <!-- Session Timeout Warning Dialog -->
 @if (showSessionWarning) {
-  <div class="session-warning-overlay" role="alertdialog" aria-labelledby="session-warning-title" aria-describedby="session-warning-desc">
+  <div
+    class="session-warning-overlay"
+    role="alertdialog"
+    aria-labelledby="session-warning-title"
+    aria-describedby="session-warning-desc"
+    data-test-id="session-timeout-warning"
+  >
     <div class="session-warning-dialog">
       <mat-icon class="warning-icon">warning</mat-icon>
-      <h2 id="session-warning-title">Session Expiring</h2>
-      <p id="session-warning-desc">Your session will expire in {{ sessionTimeRemaining }} seconds due to inactivity.</p>
+      <h2 id="session-warning-title" data-test-id="session-warning-title">Session Expiring</h2>
+      <p id="session-warning-desc" data-test-id="session-warning-desc">
+        Your session will expire in
+        <span data-test-id="session-duration-minutes">{{ sessionTimeRemaining }}</span>
+        seconds due to inactivity.
+      </p>
       <div class="session-warning-actions">
-        <button mat-raised-button color="primary" (click)="extendSession()">Stay Logged In</button>
-        <button mat-stroked-button (click)="logout()">Logout Now</button>
+        <button mat-raised-button color="primary" (click)="extendSession()" data-test-id="stay-logged-in-button">Stay Logged In</button>
+        <button mat-stroked-button (click)="logout()" data-test-id="logout-now-button">Logout Now</button>
       </div>
     </div>
   </div>
@@ -43,11 +53,31 @@
           [routerLink]="item.path"
           routerLinkActive="active-link"
           [attr.aria-current]="item.path === router?.url ? 'page' : null"
+          [attr.data-test-id]="getNavTestId(item)"
         >
           <mat-icon matListItemIcon aria-hidden="true">{{ item.icon }}</mat-icon>
           <span matListItemTitle>{{ item.label }}</span>
         </a>
       }
+
+      <div class="admin-nav-group">
+        <a mat-list-item routerLink="/admin/users" data-test-id="nav-admin">
+          <mat-icon matListItemIcon aria-hidden="true">admin_panel_settings</mat-icon>
+          <span matListItemTitle>Admin</span>
+        </a>
+        <a mat-list-item routerLink="/admin/users" data-test-id="nav-users">
+          <mat-icon matListItemIcon aria-hidden="true">group</mat-icon>
+          <span matListItemTitle>Users</span>
+        </a>
+        <a mat-list-item routerLink="/admin/tenant-settings" data-test-id="nav-tenant-settings">
+          <mat-icon matListItemIcon aria-hidden="true">settings</mat-icon>
+          <span matListItemTitle>Tenant Settings</span>
+        </a>
+        <a mat-list-item routerLink="/admin/audit-logs" data-test-id="nav-audit-logs">
+          <mat-icon matListItemIcon aria-hidden="true">fact_check</mat-icon>
+          <span matListItemTitle>Audit Logs</span>
+        </a>
+      </div>
     </mat-nav-list>
   </mat-sidenav>
 
@@ -59,6 +89,7 @@
         mat-icon-button
         (click)="toggleSidenav()"
         aria-label="Toggle navigation menu"
+        data-test-id="menu-toggle"
       >
         <mat-icon>menu</mat-icon>
       </button>
@@ -72,9 +103,10 @@
         class="search-button"
         (click)="openGlobalSearch()"
         [matTooltip]="'Search (Ctrl+K)'"
-        aria-label="Open global search">
+        aria-label="Open global search"
+        data-test-id="global-search">
         <mat-icon>search</mat-icon>
-        <span class="search-text">Search</span>
+        <span class="search-text" data-test-id="search-button">Search</span>
         <span class="search-kbd">⌘K</span>
       </button>
 
@@ -86,6 +118,25 @@
         aria-label="Toggle theme">
         <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
+
+      @if (tenantOptions.length > 1) {
+        <mat-form-field class="tenant-select" appearance="fill">
+          <mat-label>Tenant</mat-label>
+          <mat-select
+            [value]="selectedTenantId"
+            (selectionChange)="onTenantChange($event.value)"
+            data-test-id="tenant-selector"
+            aria-label="Select tenant">
+            @for (tenantId of tenantOptions; track tenantId) {
+              <mat-option [value]="tenantId">{{ tenantId }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <span class="tenant-label" data-test-id="tenant-label">
+          {{ selectedTenantId || 'Default Tenant' }}
+        </span>
+      }
 
       <span class="practice-name">{{ practiceName }}</span>
 
@@ -100,7 +151,7 @@
       </button>
 
       <!-- User Menu -->
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu">
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="User menu" data-test-id="user-menu">
         <mat-icon>account_circle</mat-icon>
       </button>
       <mat-menu #userMenu="matMenu">

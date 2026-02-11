@@ -1,0 +1,68 @@
+# Pact Broker Infrastructure for HDIM Contract Testing
+#
+# This Docker Compose configuration provides a self-hosted Pact Broker
+# for consumer-driven contract testing across HDIM microservices.
+#
+# Usage:
+#   docker network create hdim-network 2>/dev/null || true
+#   docker compose -f docker/pact-broker/docker-compose.pact.yml up -d
+#
+# Access:
+#   Pact Broker UI: http://localhost:9292
+#   Default credentials: hdim / hdimcontract (configure via .env)
+
+services:
+  pact-broker:
+    image: pactfoundation/pact-broker:latest
+    container_name: hdim-pact-broker
+    ports:
+      - "9292:9292"
+    environment:
+      PACT_BROKER_DATABASE_URL: "postgres://pact:${PACT_BROKER_DB_PASSWORD:-pactpassword}@pact-db/pact_broker"
+      PACT_BROKER_BASIC_AUTH_USERNAME: "${PACT_BROKER_USERNAME:-hdim}"
+      PACT_BROKER_BASIC_AUTH_PASSWORD: "${PACT_BROKER_PASSWORD:-hdimcontract}"
+      PACT_BROKER_LOG_LEVEL: "INFO"
+      PACT_BROKER_SQL_LOG_LEVEL: "WARN"
+      # Enable webhooks for CI/CD integration
+      PACT_BROKER_WEBHOOK_HOST_WHITELIST: "localhost,127.0.0.1,github.com"
+      # Base URL for generated links (adjust for production)
+      PACT_BROKER_BASE_URL: "${PACT_BROKER_BASE_URL:-http://localhost:9292}"
+    depends_on:
+      pact-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9292/diagnostic/status/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - hdim-network
+    restart: unless-stopped
+
+  pact-db:
+    image: postgres:16-alpine
+    container_name: hdim-pact-db
+    environment:
+      POSTGRES_USER: pact
+      POSTGRES_PASSWORD: "${PACT_BROKER_DB_PASSWORD:-pactpassword}"
+      POSTGRES_DB: pact_broker
+    volumes:
+      - pact-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pact -d pact_broker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - hdim-network
+    restart: unless-stopped
+
+volumes:
+  pact-db-data:
+    name: hdim-pact-db-data
+
+networks:
+  hdim-network:
+    external: true

@@ -13,7 +13,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 @SpringBootTest(properties = "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml")
 @Testcontainers
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest extends AbstractEntityMigrationValidationTest {
 
     @Override

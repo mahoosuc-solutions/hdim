@@ -71,7 +71,7 @@ class ProcedureServiceTest {
         Procedure result = service.createProcedure(TENANT_ID, procedure, "creator");
 
         assertThat(result.getIdElement().getIdPart()).isEqualTo(procedureId.toString());
-        verify(kafkaTemplate).send(eq("fhir.procedures.created"), eq(TENANT_ID + ":" + procedureId), anyString());
+        verify(kafkaTemplate).send(eq("fhir.procedures.created"), eq(TENANT_ID + ":" + procedureId), any());
     }
 
     @Test
@@ -160,7 +160,7 @@ class ProcedureServiceTest {
         Procedure result = service.updateProcedure(TENANT_ID, procedureId.toString(), procedure, "updater");
 
         assertThat(result.getIdElement().getIdPart()).isEqualTo(procedureId.toString());
-        verify(kafkaTemplate).send(eq("fhir.procedures.updated"), eq(TENANT_ID + ":" + procedureId), anyString());
+        verify(kafkaTemplate).send(eq("fhir.procedures.updated"), eq(TENANT_ID + ":" + procedureId), any());
     }
 
     @Test
@@ -176,7 +176,7 @@ class ProcedureServiceTest {
         service.deleteProcedure(TENANT_ID, procedureId.toString(), "deleter");
 
         verify(repository).delete(existing);
-        verify(kafkaTemplate).send(eq("fhir.procedures.deleted"), eq(TENANT_ID + ":" + procedureId), anyString());
+        verify(kafkaTemplate).send(eq("fhir.procedures.deleted"), eq(TENANT_ID + ":" + procedureId), any());
     }
 
     @Test
@@ -205,7 +205,7 @@ class ProcedureServiceTest {
         Procedure procedure = buildProcedure(procedureId, patientId);
         ProcedureEntity saved = buildEntity(procedureId, patientId, procedure);
         when(repository.save(any(ProcedureEntity.class))).thenReturn(saved);
-        when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+        when(kafkaTemplate.send(anyString(), anyString(), any()))
                 .thenThrow(new RuntimeException("kafka down"));
 
         Procedure result = service.createProcedure(TENANT_ID, procedure, "creator");

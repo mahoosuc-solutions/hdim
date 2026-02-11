@@ -11,6 +11,19 @@ spring:
   application:
     name: sales-automation-service-test
 
+  # Mail configuration for tests (uses dummy values - email sending is not actually tested)
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
   datasource:
     url: jdbc:postgresql://localhost:5435/sales_automation_db
     driver-class-name: org.postgresql.Driver

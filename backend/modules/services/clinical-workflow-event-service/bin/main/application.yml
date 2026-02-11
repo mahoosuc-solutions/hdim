@@ -1,87 +1,98 @@
+server:
+  port: 8113
+  servlet:
+    context-path: /clinical-workflow-event
+
 spring:
   application:
     name: clinical-workflow-event-service
+
+  main:
+    allow-bean-definition-overriding: true  # Allow handler lib repos to override event service repos
+
+  # Disable Redis autoconfiguration (event services don't use cache)
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisReactiveAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+
   datasource:
-    url: jdbc:postgresql://localhost:5435/workflow_db
-    username: healthdata
-    password: healthdata_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/clinical_workflow_event_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    # ⚠️ SECURITY: Password MUST be provided via environment variable
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  # Kafka configuration for event production and consumption
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: clinical-workflow-event-service
+      auto-offset-reset: earliest
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        # HIPAA Compliance: Propagate user context via headers for audit trail
+        interceptor.classes: com.healthdata.eventsourcing.kafka.UserContextKafkaInterceptor
+
+  # Cache Configuration
+  # No caching for event services (projection read model)
+  cache:
+    type: none
+
+# Event Store Service Configuration
+event-store:
+  service:
+    url: http://${EVENT_STORE_HOST:localhost}:${EVENT_STORE_PORT:8090}
+
+# HealthData Database Configuration
+healthdata:
+  database:
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
+      traffic-tier: MEDIUM  # CQRS read model: event-driven projections
+
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
-  kafka:
-    bootstrap-servers: localhost:9094
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      acks: all
-    consumer:
-      bootstrap-servers: localhost:9094
-      group-id: workflow-event-service-group
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "com.healthdata.workflow.*"
-  jackson:
-    serialization:
-      write-dates-as-timestamps: false
-    default-property-inclusion: non_null
+        format_sql: true
+    show-sql: false
 
-server:
-  port: 8093
-  compression:
-    enabled: true
-
-logging:
-  level:
-    root: INFO
-    com.healthdata: DEBUG
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,metrics,prometheus
-  tracing:
-    sampling:
-      probability: 1.0
-
-app:
-  name: clinical-workflow-event-service
-  version: 5.0.0
-
----
-# Docker Profile Configuration
-spring:
-  config:
-    activate:
-      on-profile: docker
-  application:
-    name: clinical-workflow-event-service
-  datasource:
-    url: jdbc:postgresql://postgres:5432/workflow_db
-    username: healthdata
-    password: healthdata_password
-    hikari:
-      maximum-pool-size: 10
-      minimum-idle: 2
-  jpa:
-    hibernate:
-      ddl-auto: validate
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
-  kafka:
-    bootstrap-servers: kafka:29092
 
-server:
-  port: 8093
+  flyway:
+    enabled: false
+
+# HIPAA Audit Configuration
+audit:
+  enabled: true
+  encryption:
+    enabled: true
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.healthdata: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0001-create-gateway-fhir-schema
+      author: gateway-fhir-service
+      comment: Gateway FHIR service schema initialization
+      changes:
+        - sql:
+            sql: SELECT 1
+            comment: Gateway FHIR service is initialized (no schema changes required)
+      rollback:
+        - sql:
+            sql: SELECT 1

@@ -246,11 +246,10 @@ interface TenantRegistrationResponse {
                 [attr.aria-label]="isLoading() ? 'Registration in progress' : 'Submit registration form'">
                 @if (isLoading()) {
                   <mat-spinner diameter="20" aria-hidden="true"></mat-spinner>
-                  <span>Registering...</span>
                 } @else {
                   <mat-icon aria-hidden="true">business</mat-icon>
-                  <span>Register Organization</span>
                 }
+                <span>{{ isLoading() ? 'Registering...' : 'Register Organization' }}</span>
               </button>
             </div>
           </form>

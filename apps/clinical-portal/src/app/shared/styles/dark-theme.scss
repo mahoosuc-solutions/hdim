@@ -4,7 +4,8 @@
  * Dark color scheme for the HealthData Platform.
  */
 
-@import './variables.scss';
+@use 'sass:color';
+@use './variables' as *;
 
 // Dark Theme Variables
 $dark-bg-primary: #1e1e1e;
@@ -168,17 +169,17 @@ $dark-divider-color: rgba(255, 255, 255, 0.12);
   // Status Colors (slightly adjusted for dark mode)
   .status-active,
   .text-success {
-    color: lighten($success, 10%);
+    color: color.adjust($success, $lightness: 10%);
   }
 
   .status-warning,
   .text-warning {
-    color: lighten($warning, 10%);
+    color: color.adjust($warning, $lightness: 10%);
   }
 
   .status-error,
   .text-danger {
-    color: lighten($danger, 10%);
+    color: color.adjust($danger, $lightness: 10%);
   }
 
   // Code Blocks
@@ -191,10 +192,10 @@ $dark-divider-color: rgba(255, 255, 255, 0.12);
 
   // Links
   a {
-    color: lighten($primary, 20%);
+    color: color.adjust($primary, $lightness: 20%);
 
     &:hover {
-      color: lighten($primary, 30%);
+      color: color.adjust($primary, $lightness: 30%);
     }
   }
 
@@ -210,7 +211,7 @@ $dark-divider-color: rgba(255, 255, 255, 0.12);
   textarea:focus,
   select:focus,
   button:focus {
-    outline-color: lighten($primary, 20%);
+    outline-color: color.adjust($primary, $lightness: 20%);
   }
 }
 
@@ -241,6 +242,6 @@ $dark-divider-color: rgba(255, 255, 255, 0.12);
   }
 
   a {
-    color: lighten($primary, 20%);
+    color: color.adjust($primary, $lightness: 20%);
   }
 }

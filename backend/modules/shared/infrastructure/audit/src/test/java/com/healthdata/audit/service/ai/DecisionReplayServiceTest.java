@@ -93,8 +93,8 @@ class DecisionReplayServiceTest {
 
         when(aiDecisionRepository.findById(eventId)).thenReturn(Optional.of(original));
 
-        DecisionReplayService serviceWithoutClient = 
-            new DecisionReplayService(aiDecisionRepository);
+        DecisionReplayService serviceWithoutClient =
+            new DecisionReplayService(aiDecisionRepository, null);
 
         // When
         DecisionReplayService.ReplayResult result = serviceWithoutClient.replayDecision(eventId);

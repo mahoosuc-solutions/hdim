@@ -27,9 +27,7 @@ services:
       - "5435:5432"
     volumes:
       - demo_postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/01-init-multi-db.sh
-      - ./docker/postgres/init-auth-schema.sql:/docker-entrypoint-initdb.d/02-init-auth-schema.sql
-      - ./docker/demo/demo-users.sql:/docker-entrypoint-initdb.d/03-demo-users.sql
+      - ./docker/postgres/initdb:/docker-entrypoint-initdb.d:ro
       # Note: demo-seed-data.sql requires backend services to create patient_demographics table via migrations
       # It will be loaded after backend services start
       # - ./docker/demo/demo-seed-data.sql:/docker-entrypoint-initdb.d/03-demo-seed-data.sql
@@ -82,20 +80,21 @@ services:
       KAFKA_NUM_PARTITIONS: 1
       CLUSTER_ID: demo-cluster-hdim-2024
       KAFKA_LOG_RETENTION_HOURS: 24
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx512m"
     ports:
       - "9094:9092"
     healthcheck:
       test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092 || exit 1"]
       interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      timeout: 15s
+      retries: 20
+      start_period: 60s
     networks:
       - hdim-demo-network
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1024M
 
   jaeger:
     container_name: hdim-demo-jaeger
@@ -145,26 +144,28 @@ services:
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: gateway-admin-service
       BACKEND_SERVICES_AGENT_RUNTIME_URL: http://agent-runtime-service:8088
       BACKEND_SERVICES_AGENT_BUILDER_URL: http://agent-builder-service:8096
-      BACKEND_SERVICES_SALES_AUTOMATION_URL: http://sales-automation-service:8106
       BACKEND_SERVICES_AUDIT_URL: http://audit-query-service:8088/api/v1/audit
+      BACKEND_SERVICES_AUDIT_BASE_URL: http://audit-query-service:8088
       AUTHENTICATION_COOKIE_SECURE: "false"
       AUTHENTICATION_COOKIE_SAME_SITE: "Lax"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_RATE_LIMIT_ENABLED: "false"
-      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health,blue-shield-demo,united-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_0: "demo-tenant"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_1: "acme-health"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_2: "demo-admin"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_3: "summit-care"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_4: "valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-admin
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -212,9 +213,9 @@ services:
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: gateway-fhir-service
-      BACKEND_SERVICES_FHIR_URL: http://hdim-demo-fhir:8085/fhir
+      BACKEND_SERVICES_FHIR_URL: http://fhir-service:8085/fhir
       BACKEND_SERVICES_PATIENT_URL: http://patient-service:8084/patient
       BACKEND_SERVICES_QUALITY_MEASURE_URL: http://quality-measure-service:8087/quality-measure
       BACKEND_SERVICES_CQL_ENGINE_URL: http://cql-engine-service:8081/cql-engine
@@ -223,15 +224,17 @@ services:
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_RATE_LIMIT_ENABLED: "false"
-      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health,blue-shield-demo,united-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_0: "demo-tenant"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_1: "acme-health"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_2: "demo-admin"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_3: "summit-care"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_4: "valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-fhir
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -278,18 +281,18 @@ services:
       SPRING_CACHE_TYPE: redis
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_SERVICE_NAME: audit-query-service
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx3g -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-audit
     ports:
       - "8088:8088"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8088/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8088/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -333,7 +336,7 @@ services:
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_AUTH: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: gateway-clinical-service
       BACKEND_SERVICES_CARE_GAP_URL: http://hdim-demo-care-gap:8086/care-gap
       BACKEND_SERVICES_EVENTS_URL: http://event-processing-service:8083/events
@@ -347,15 +350,17 @@ services:
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_RATE_LIMIT_ENABLED: "false"
-      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS: "demo-tenant,acme-health,demo-admin,summit-care,valley-health,blue-shield-demo,united-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_0: "demo-tenant"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_1: "acme-health"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_2: "demo-admin"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_3: "summit-care"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_4: "valley-health"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
+      GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-clinical
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8080/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -380,7 +385,7 @@ services:
     ports:
       - "18080:8080"
     volumes:
-      - ./docker/gateway-edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/gateway-edge/default.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1"]
       interval: 10s
@@ -410,23 +415,24 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: fhir-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JACKSON_STREAM_WRITE_CONSTRAINTS_MAX_NESTING_DEPTH: 2000
-      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: DEBUG
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: DEBUG
-      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: DEBUG
+      LOGGING_LEVEL_COM_HEALTHDATA_FHIR: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB: INFO
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: INFO
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx2g -Xms512m"
+      JAVA_OPTS: "-Xmx1800m -Xms900m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
+      HEALTHCHECK_TENANT_ID: acme-health
     ports:
       - "8085:8085"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8085/fhir/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8085/fhir/actuator/health && wget --spider -q http://localhost:8085/fhir/metadata"]
       interval: 30s
       timeout: 30s
       retries: 5
@@ -436,100 +442,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 2048M
 
-  # Customer FHIR Server (HAPI) - simulates provider-managed FHIR endpoint
-  customer-fhir-db:
-    container_name: hdim-demo-customer-fhir-db
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: demo_password_2024
-      POSTGRES_DB: customer_fhir_db
-    ports:
-      - "5440:5432"
-    volumes:
-      - customer_fhir_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_fhir_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-
-  customer-fhir:
-    container_name: hdim-demo-customer-fhir
-    image: hapiproject/hapi:v7.0.2
-    depends_on:
-      customer-fhir-db:
-        condition: service_healthy
-    environment:
-      hapi.fhir.fhir_version: R4
-      hapi.fhir.allow_external_references: "true"
-      hapi.fhir.allow_multiple_delete: "true"
-      hapi.fhir.allow_contains_searches: "true"
-      hapi.fhir.allow_override_default_search_params: "true"
-      hapi.fhir.reuse_cached_search_results_millis: 60000
-      hapi.fhir.subscription.resthook_enabled: "true"
-      hapi.fhir.cr_enabled: "true"
-      hapi.fhir.expunge_enabled: "true"
-      hapi.fhir.binary_storage_enabled: "true"
-      hapi.fhir.default_page_size: 20
-      hapi.fhir.max_page_size: 200
-      spring.datasource.url: jdbc:postgresql://customer-fhir-db:5432/customer_fhir_db
-      spring.datasource.driverClassName: org.postgresql.Driver
-      spring.datasource.username: healthdata
-      spring.datasource.password: demo_password_2024
-      spring.jpa.properties.hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
-      spring.jpa.hibernate.ddl-auto: update
-      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Xms512m -Xmx2g"
-    ports:
-      - "8090:8080"
-    volumes:
-      - customer_fhir_data:/data/hapi
-    healthcheck:
-      test: ["CMD", "java", "-version"]
-      interval: 30s
-      timeout: 5s
-      retries: 5
-      start_period: 45s
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 1024M
-
-  # Customer CDR (relational clinical data repository)
-  customer-cdr:
-    container_name: hdim-demo-customer-cdr
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: demo_password_2024
-      POSTGRES_DB: customer_cdr
-    ports:
-      - "5441:5432"
-    volumes:
-      - customer_cdr_data:/var/lib/postgresql/data
-      - ./docker/cdr/init-cdr-schema.sql:/docker-entrypoint-initdb.d/01-init-cdr-schema.sql:ro
-      - ./docker/cdr/init-cdr-data.sql:/docker-entrypoint-initdb.d/02-init-cdr-data.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_cdr"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    networks:
-      - hdim-demo-network
-    deploy:
-      resources:
-        limits:
-          memory: 512M
+  # ── Customer Simulation Services ──────────────────────────────────────────────
+  # These simulate a customer's existing EHR infrastructure. They are NOT part of
+  # the HDIM platform — they represent what a customer already has in production.
+  # Moved to docker-compose.customer-sim.yml for clarity.
+  # To include them: docker compose -f docker-compose.demo.yml -f docker-compose.customer-sim.yml up -d
+  #
+  # customer-fhir-db:   (postgres:16-alpine, port 5440, 512M)
+  # customer-fhir:      (hapiproject/hapi:v7.0.2, port 8090, 1024M)
+  # customer-cdr:       (postgres:16-alpine, port 5441, 512M)
 
   cql-engine-service:
     container_name: hdim-demo-cql-engine
@@ -555,11 +478,11 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: cql-engine-service
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
@@ -578,7 +501,7 @@ services:
     ports:
       - "8081:8081"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8081/cql-engine/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8081/cql-engine/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -611,11 +534,12 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: DEBUG
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: patient-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
@@ -625,7 +549,7 @@ services:
     ports:
       - "8084:8084"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8084/patient/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8084/patient/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -662,19 +586,20 @@ services:
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      GATEWAY_AUTH_DEV_MODE: "true"
+      TRACING_URL: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: quality-measure-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       FHIR_SERVICE_URL: http://fhir-service:8085
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx2048m -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-quality-measure
     ports:
       - "8087:8087"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8087/quality-measure/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8087/quality-measure/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -711,20 +636,20 @@ services:
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       TENANT_ENFORCEMENT_MODE: enforce
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: care-gap-service
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx1024m -Xms256m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-care-gap
     ports:
       - "8086:8086"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://127.0.0.1:8086/care-gap/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8086/care-gap/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -753,23 +678,89 @@ services:
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: demo_password_2024
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
-      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
-      TRACING_URL: http://hdim-demo-jaeger:4318/v1/traces
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+      TRACING_URL: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: event-processing-service
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx1024m -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-events
     ports:
       - "8083:8083"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://localhost:8083/events/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8083/events/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # HCC Risk Adjustment Service - for RAF calculation and documentation gaps
+  hcc-service:
+    container_name: hdim-demo-hcc
+    build:
+      context: ./backend
+      dockerfile: modules/services/hcc-service/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      fhir-service:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,demo
+      SERVER_PORT: 8105
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hcc_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: demo_password_2024
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_CACHE_TYPE: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_CLOUD_COMPATIBILITY_VERIFIER_ENABLED: "false"
+      JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
+      TENANT_ENFORCEMENT_MODE: enforce
+      TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_SERVICE_NAME: hcc-service
+      TRACING_URL: http://jaeger:4318/v1/traces
+      GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
+      GATEWAY_AUTH_DEV_MODE: "true"
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+      SPRING_FLYWAY_ENABLED: "false"
+      # Using update mode for demo to handle shared authentication entities
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # FHIR service for patient conditions
+      FHIR_SERVER_URL: http://fhir-service:8085/fhir
+      # Patient service URL
+      PATIENT_SERVICE_URL: http://patient-service:8084/patient
+      # Care Gap service URL
+      CARE_GAP_SERVICE_URL: http://hdim-demo-care-gap:8086/care-gap
+      # HCC model weights (V24/V28 transition blending)
+      HCC_MODEL_V24_WEIGHT: "0.33"
+      HCC_MODEL_V28_WEIGHT: "0.67"
+      JAVA_OPTS: "-Xmx1024m -Xms512m"
+      JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      HEALTH_TENANT_ID: service-health-hcc
+    ports:
+      - "8105:8105"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8105/hcc/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -792,8 +783,6 @@ services:
         condition: service_healthy
       fhir-service:
         condition: service_healthy
-      customer-fhir:
-        condition: service_healthy
       care-gap-service:
         condition: service_healthy
       gateway-edge:
@@ -808,13 +797,13 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_CLEAR_CHECKSUMS: "true"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://hdim-demo-jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: demo-seeding-service
       JAVA_OPTS: "-Xmx384m -Xms192m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       # Downstream service URLs - Use direct service URLs to avoid gateway timeout issues
       FHIR_SERVICE_URL: http://fhir-service:8085/fhir
-      FHIR_EXTERNAL_URL: http://customer-fhir:8080/fhir
+      FHIR_EXTERNAL_URL: http://fhir-service:8085/fhir
       FHIR_TARGET: internal
       CARE_GAP_SERVICE_URL: http://hdim-demo-care-gap:8086/care-gap
       GATEWAY_SERVICE_URL: http://gateway-edge:8080
@@ -824,19 +813,24 @@ services:
       DEMO_SERVICES_GATEWAY_DB_URL: jdbc:postgresql://postgres:5432/gateway_db
       DEMO_SERVICES_GATEWAY_DB_USERNAME: healthdata
       DEMO_SERVICES_GATEWAY_DB_PASSWORD: demo_password_2024
+      DEMO_SERVICES_FHIR_DB_URL: jdbc:postgresql://postgres:5432/fhir_db
+      DEMO_SERVICES_FHIR_DB_USERNAME: healthdata
+      DEMO_SERVICES_FHIR_DB_PASSWORD: demo_password_2024
       # Snapshot storage
       DEMO_SNAPSHOTS_DIR: /app/snapshots
       DEMO_PERSISTENCE_ENABLED: "true"
-      DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "1000"
+      DEMO_QUALITY_MEASURES_ENABLED: "false"
+      DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "200"
+      DEMO_MULTI_TENANT_PATIENTS_PER_TENANT: "100"
       DEMO_PERFORMANCE_PARALLEL_GENERATION: "false"
-      DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "4"
+      DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "2"
       HEALTH_TENANT_ID: service-health-demo-seeding
     ports:
       - "8098:8098"
     volumes:
       - demo_snapshots:/app/snapshots
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q --header=\"X-Tenant-ID: $$HEALTH_TENANT_ID\" http://127.0.0.1:8098/demo/actuator/health"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8098/demo/actuator/health"]
       interval: 15s
       timeout: 10s
       retries: 5
@@ -846,38 +840,80 @@ services:
     deploy:
       resources:
         limits:
-          memory: 6144M
+          memory: 2048M
 
-  clinical-portal:
-    container_name: hdim-demo-clinical-portal
+  # Ops Service - orchestrates on-prem deployment steps for MFE console
+  ops-service:
+    container_name: hdim-demo-ops
     build:
       context: .
-      dockerfile: apps/clinical-portal/Dockerfile
-    depends_on:
-      gateway-edge:
-        condition: service_healthy
-      demo-seeding-service:
-        condition: service_healthy
+      dockerfile: tools/ops-server/Dockerfile
     environment:
-      API_URL: http://gateway-edge:8080
-      DEFAULT_TENANT_ID: acme-health
+      PORT: 4710
+      WORKSPACE_DIR: /workspace
+      COMPOSE_FILE: /workspace/docker-compose.demo.yml
+      COMPOSE_PROJECT_NAME: hdim-master
       DEMO_SEEDING_URL: http://demo-seeding-service:8098
+      AUTH_USERNAME: demo-evaluator
+      AUTH_PASSWORD: demo
+      SKIP_FRONTEND_VALIDATE: "1"
+      GATEWAY_URL: http://gateway-edge:8080
+      QUALITY_API_BASE: http://gateway-edge:8080/api/quality
+      QUALITY_DIRECT_BASE: http://quality-measure-service:8087/quality-measure
+      QUALITY_HEALTH_URL: http://quality-measure-service:8087/quality-measure/actuator/health
+      FHIR_URL: http://fhir-service:8085/fhir
+      AUDIT_DIRECT_URL: http://audit-query-service:8088/api/v1/audit/logs/statistics
+      AUDIT_GATEWAY_URL: http://gateway-edge:8080/api/v1/audit/logs/statistics
+      SKIP_FHIR_QUERY: "1"
+      CURL_MAX_TIME: "45"
+      CURL_CONNECT_TIMEOUT: "5"
     volumes:
-      - ./apps/clinical-portal/nginx.conf:/etc/nginx/conf.d/nginx.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
     ports:
-      - "4200:80"
-    healthcheck:
-      test: ["CMD", "sh", "-c", "test -f /usr/share/nginx/html/index.html && exit 0 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 45s
+      - "4710:4710"
     networks:
       - hdim-demo-network
     deploy:
       resources:
         limits:
           memory: 256M
+
+  # ── Clinical Portal ─────────────────────────────────────────────────────────
+  # For development/demo, run via: npx nx serve clinical-portal
+  # This gives hot-reload and faster iteration. The container build is for
+  # production/staging deployments only.
+  #
+  # clinical-portal:
+  #   container_name: hdim-demo-clinical-portal
+  #   build:
+  #     context: .
+  #     dockerfile: apps/clinical-portal/Dockerfile
+  #   depends_on:
+  #     gateway-edge:
+  #       condition: service_healthy
+  #     demo-seeding-service:
+  #       condition: service_healthy
+  #   environment:
+  #     API_URL: http://gateway-edge:8080
+  #     DEFAULT_TENANT_ID: acme-health
+  #     DEMO_SEEDING_URL: http://demo-seeding-service:8098
+  #   volumes:
+  #     - ./docker/clinical-portal:/etc/nginx/conf.d:ro
+  #   ports:
+  #     - "4200:80"
+  #   healthcheck:
+  #     test: ["CMD", "sh", "-c", "test -f /usr/share/nginx/html/index.html && exit 0 || exit 1"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 45s
+  #   networks:
+  #     - hdim-demo-network
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 256M
 
 networks:
   hdim-demo-network:
@@ -889,7 +925,4 @@ volumes:
     driver: local
   demo_snapshots:
     driver: local
-  customer_fhir_data:
-    driver: local
-  customer_cdr_data:
-    driver: local
+  # customer_fhir_data and customer_cdr_data moved to docker-compose.customer-sim.yml

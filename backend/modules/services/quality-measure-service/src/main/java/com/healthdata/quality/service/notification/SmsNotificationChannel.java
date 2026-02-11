@@ -1,5 +1,6 @@
 package com.healthdata.quality.service.notification;
 
+import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.dto.notification.NotificationRequest;
 import com.healthdata.quality.persistence.NotificationHistoryEntity;
 import com.healthdata.quality.persistence.NotificationHistoryRepository;
@@ -14,6 +15,10 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -163,6 +168,132 @@ public class SmsNotificationChannel {
                     request.getNotificationType());
         } catch (Exception e) {
             // Log but don't throw - history saving should not prevent notification
+            log.error("Failed to save notification history: {}", e.getMessage());
+        }
+    }
+
+    // ==================== DEPRECATED METHODS FOR BACKWARD COMPATIBILITY ====================
+
+    /**
+     * @deprecated Use {@link #send(NotificationRequest)} instead.
+     * Maintained for backward compatibility with clinical alert workflow.
+     */
+    @Deprecated
+    public boolean send(String tenantId, ClinicalAlertDTO alert) {
+        String smsContent = null;
+        String status = "FAILED";
+        String errorMessage = null;
+
+        try {
+            // Build template variables
+            Map<String, Object> templateVariables = buildAlertTemplateVariables(alert);
+            templateVariables.put("channel", "SMS");
+
+            // Render SMS template
+            smsContent = templateRenderer.render("critical-alert", templateVariables);
+
+            // Send via Twilio if configured, otherwise mock
+            if (twilioInitialized && fromPhone != null && !fromPhone.isBlank()) {
+                Message twilioMessage = Message.creator(
+                    new PhoneNumber(DEFAULT_PHONE),
+                    new PhoneNumber(fromPhone),
+                    smsContent
+                ).create();
+
+                status = "SENT";
+                log.info("SMS notification sent for alert {} via Twilio. SID: {}",
+                        alert.getId(), twilioMessage.getSid());
+            } else {
+                status = "SENT";  // Mock mode
+                log.info("SMS notification sent for alert {} (MOCK)", alert.getId());
+            }
+            log.debug("SMS content ({} chars): {}", smsContent.length(), smsContent);
+
+            return true;
+        } catch (Exception e) {
+            errorMessage = "Failed to send SMS notification: " + e.getMessage();
+            log.error(errorMessage);
+            return false;
+        } finally {
+            saveAlertNotificationHistory(tenantId, alert, smsContent, DEFAULT_PHONE, status, errorMessage);
+        }
+    }
+
+    /**
+     * Build template variables for alert SMS
+     */
+    private Map<String, Object> buildAlertTemplateVariables(ClinicalAlertDTO alert) {
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("alertType", formatAlertType(alert.getAlertType()));
+        variables.put("severity", alert.getSeverity());
+        variables.put("message", alert.getMessage());
+
+        // Format timestamp
+        if (alert.getTriggeredAt() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String timestamp = LocalDateTime.ofInstant(alert.getTriggeredAt(), ZoneId.systemDefault())
+                    .format(formatter);
+            variables.put("timestamp", timestamp);
+        } else {
+            variables.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        }
+
+        // Get patient name if available
+        String patientName = "Unknown Patient";
+        if (patientNameService != null && alert.getPatientId() != null) {
+            try {
+                patientName = patientNameService.getPatientName(alert.getPatientId());
+            } catch (Exception e) {
+                log.warn("Failed to get patient name for {}: {}", alert.getPatientId(), e.getMessage());
+            }
+        }
+        variables.put("patientName", patientName);
+
+        return variables;
+    }
+
+    /**
+     * Format alert type for display
+     */
+    private String formatAlertType(String alertType) {
+        if (alertType == null) return "Unknown";
+        return switch (alertType) {
+            case "MENTAL_HEALTH_CRISIS" -> "Mental Health Crisis";
+            case "RISK_ESCALATION" -> "Risk Escalation";
+            case "HEALTH_DECLINE" -> "Health Score Decline";
+            case "CHRONIC_DETERIORATION" -> "Chronic Disease Deterioration";
+            default -> alertType.replace("_", " ").toLowerCase()
+                    .substring(0, 1).toUpperCase() +
+                    alertType.replace("_", " ").toLowerCase().substring(1);
+        };
+    }
+
+    /**
+     * Save notification history for deprecated alert method
+     */
+    private void saveAlertNotificationHistory(String tenantId, ClinicalAlertDTO alert,
+                                              String content, String recipientPhone,
+                                              String status, String errorMessage) {
+        try {
+            NotificationHistoryEntity history = NotificationHistoryEntity.builder()
+                    .tenantId(tenantId)
+                    .notificationType("CLINICAL_ALERT")
+                    .channel("SMS")
+                    .templateId("critical-alert")
+                    .patientId(alert.getPatientId())
+                    .recipientId(recipientPhone)
+                    .subject(null)
+                    .content(content)
+                    .status(status)
+                    .errorMessage(errorMessage)
+                    .alertId(alert.getId())
+                    .severity(alert.getSeverity())
+                    .sentAt(Instant.now())
+                    .build();
+
+            notificationHistoryRepository.save(history);
+            log.debug("Notification history saved for clinical alert SMS {}", alert.getId());
+        } catch (Exception e) {
             log.error("Failed to save notification history: {}", e.getMessage());
         }
     }

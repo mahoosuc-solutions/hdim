@@ -6,24 +6,40 @@ kotlin = "2.0.21"
 # Spring Framework
 spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x
 spring-cloud = "2023.0.6"  # Updated to align with majority of services
+spring-cloud-openfeign = "4.3.1"  # Explicit version for openfeign starter
 spring-dependency-management = "1.1.7"
 
 # Healthcare Libraries
 hapi-fhir = "7.6.0"
+hapi-hl7 = "2.5.1"
 cql-engine = "3.3.1"
+cql-framework = "3.29.0"
+
+# Legacy/Integration Libraries
+jsch = "0.1.55"
+
+# XML Processing
+xerces = "2.12.2"
+xml-apis = "1.4.01"
+jaxb-api = "2.3.1"
+jaxb-runtime = "4.0.4"
+
+# Schematron/QRDA Validation
+ph-schematron = "8.0.3"
+ph-commons = "11.1.6"
 
 # Databases & Persistence
 postgresql = "42.7.7"
 h2 = "2.2.224"  # In-memory database for unit tests
-hikaricp = "6.0.0"
+hikaricp = "6.3.3"
 hibernate = "6.6.1.Final"
 liquibase = "4.29.2"
-httpclient5 = "5.2.1"
+httpclient5 = "5.6"
 
 # Caching & Messaging
-redis = "3.5.7"
+redis = "3.5.8"
 kafka = "3.7.1"  # Aligned with Spring Boot 3.3.6 BOM
-spring-kafka = "3.3.11"
+spring-kafka = "3.3.12"
 
 # API & Documentation
 springdoc-openapi = "2.6.0"
@@ -37,18 +53,27 @@ jjwt = "0.12.6"
 bouncycastle = "1.78.1"
 
 # Testing
-junit = "5.10.2"
-junit-platform = "1.10.2"
+junit = "5.14.2"
+junit-platform = "1.14.2"
 mockito = "5.2.0"
 testcontainers = "1.20.4"
 rest-assured = "5.5.0"
-testcontainers-redis = "2.2.2"
+testcontainers-redis = "2.2.4"
+
+# Math/ML Libraries
+commons-math3 = "3.6.1"
+
+# NLP Libraries
+opennlp = "2.3.3"
+stanford-corenlp = "4.5.10"
+re2j = "1.8"
 
 # Utilities
 lombok = "1.18.34"
 mapstruct = "1.6.2"
-commons-lang3 = "3.17.0"
+commons-lang3 = "3.20.0"
 commons-csv = "1.11.0"
+commons-io = "2.15.1"
 guava = "33.3.1-jre"
 hypersistence-utils = "3.9.0"
 datafaker = "2.4.2"
@@ -64,7 +89,7 @@ itext7 = "8.0.2"
 
 # Monitoring & Observability
 micrometer = "1.13.6"
-prometheus = "1.13.6"
+prometheus = "1.16.1"
 micrometer-tracing = "1.3.5"
 opentelemetry = "1.38.0"
 
@@ -79,7 +104,7 @@ azure-identity = "1.12.2"
 
 # Security Patches (override transitive dependencies)
 logback = "1.5.19"
-jetty = "12.0.19"
+jetty = "12.1.5"
 reactor-netty = "1.2.4"
 netty = "4.1.118.Final"
 commons-fileupload = "1.6.0"
@@ -108,10 +133,11 @@ snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 javafaker = { module = "com.github.javafaker:javafaker", version.ref = "javafaker" }
 
 # Spring Cloud
+spring-cloud-dependencies = { module = "org.springframework.cloud:spring-cloud-dependencies", version.ref = "spring-cloud" }
 spring-cloud-starter-config = { module = "org.springframework.cloud:spring-cloud-starter-config", version.ref = "spring-cloud" }
 spring-cloud-starter-netflix-eureka-client = { module = "org.springframework.cloud:spring-cloud-starter-netflix-eureka-client", version.ref = "spring-cloud" }
 spring-cloud-starter-vault-config = { module = "org.springframework.cloud:spring-cloud-starter-vault-config" }
-spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
+spring-cloud-starter-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign", version.ref = "spring-cloud-openfeign" }
 
 # HAPI FHIR
 hapi-fhir-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-base", version.ref = "hapi-fhir" }
@@ -125,6 +151,33 @@ hapi-fhir-jpaserver-base = { module = "ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base
 # CQL Engine
 cql-engine = { module = "org.opencds.cqf.cql:engine", version.ref = "cql-engine" }
 cql-engine-fhir = { module = "org.opencds.cqf.cql:engine.fhir", version.ref = "cql-engine" }
+
+# CQL Framework (cql-to-elm translation)
+cql-to-elm = { module = "info.cqframework:cql-to-elm", version.ref = "cql-framework" }
+cql-cql = { module = "info.cqframework:cql", version.ref = "cql-framework" }
+cql-elm = { module = "info.cqframework:elm", version.ref = "cql-framework" }
+cql-model = { module = "info.cqframework:model", version.ref = "cql-framework" }
+cql-model-jackson = { module = "info.cqframework:model-jackson", version.ref = "cql-framework" }
+cql-elm-jackson = { module = "info.cqframework:elm-jackson", version.ref = "cql-framework" }
+
+# HAPI HL7 v2 (for MLLP/HL7 integration)
+hapi-hl7-base = { module = "ca.uhn.hapi:hapi-base", version.ref = "hapi-hl7" }
+hapi-hl7-structures-v25 = { module = "ca.uhn.hapi:hapi-structures-v25", version.ref = "hapi-hl7" }
+hapi-hl7-structures-v26 = { module = "ca.uhn.hapi:hapi-structures-v26", version.ref = "hapi-hl7" }
+
+# XML Processing
+xerces-impl = { module = "xerces:xercesImpl", version.ref = "xerces" }
+xml-apis = { module = "xml-apis:xml-apis", version.ref = "xml-apis" }
+jaxb-api = { module = "javax.xml.bind:jaxb-api", version.ref = "jaxb-api" }
+jaxb-runtime = { module = "org.glassfish.jaxb:jaxb-runtime", version.ref = "jaxb-runtime" }
+
+# Schematron/QRDA Validation
+ph-schematron-pure = { module = "com.helger.schematron:ph-schematron-pure", version.ref = "ph-schematron" }
+ph-schematron-api = { module = "com.helger.schematron:ph-schematron-api", version.ref = "ph-schematron" }
+ph-commons = { module = "com.helger.commons:ph-commons", version.ref = "ph-commons" }
+
+# Legacy/Integration Libraries
+jsch = { module = "com.jcraft:jsch", version.ref = "jsch" }
 
 # Databases
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
@@ -163,6 +216,7 @@ resilience4j-reactor = { module = "io.github.resilience4j:resilience4j-reactor",
 spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "spring-security" }
 spring-security-config = { module = "org.springframework.security:spring-security-config", version.ref = "spring-security" }
 spring-security-web = { module = "org.springframework.security:spring-security-web", version.ref = "spring-security" }
+spring-security-test = { module = "org.springframework.security:spring-security-test", version.ref = "spring-security" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
@@ -182,12 +236,22 @@ testcontainers-jdbc = { module = "org.testcontainers:jdbc", version.ref = "testc
 testcontainers-redis = { module = "com.redis:testcontainers-redis", version.ref = "testcontainers-redis" }
 rest-assured = { module = "io.rest-assured:rest-assured", version.ref = "rest-assured" }
 
+# Math/ML Libraries
+commons-math3 = { module = "org.apache.commons:commons-math3", version.ref = "commons-math3" }
+
+# NLP Libraries
+opennlp-tools = { module = "org.apache.opennlp:opennlp-tools", version.ref = "opennlp" }
+stanford-corenlp = { module = "edu.stanford.nlp:stanford-corenlp", version.ref = "stanford-corenlp" }
+stanford-corenlp-models = { module = "edu.stanford.nlp:stanford-corenlp", version.ref = "stanford-corenlp" }
+re2j = { module = "com.google.re2j:re2j", version.ref = "re2j" }
+
 # Utilities
 lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
 mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
 mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commons-lang3" }
 commons-csv = { module = "org.apache.commons:commons-csv", version.ref = "commons-csv" }
+commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 hypersistence-utils-hibernate-63 = { module = "io.hypersistence:hypersistence-utils-hibernate-63", version.ref = "hypersistence-utils" }
 datafaker = { module = "net.datafaker:datafaker", version.ref = "datafaker" }

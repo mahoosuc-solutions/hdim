@@ -11,6 +11,8 @@ import {
   withEventReplay,
 } from '@angular/platform-browser';
 import { tenantInterceptor } from './interceptors/tenant.interceptor';
+import { investorAuthInterceptor } from './interceptors/investor-auth.interceptor';
+import { salesAuthInterceptor } from './interceptors/sales-auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -18,6 +20,10 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(appRoutes),
-    provideHttpClient(withInterceptors([tenantInterceptor])),
+    provideHttpClient(withInterceptors([
+      tenantInterceptor,
+      investorAuthInterceptor,
+      salesAuthInterceptor,
+    ])),
   ],
 };

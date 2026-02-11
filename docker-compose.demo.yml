@@ -432,7 +432,7 @@ services:
     ports:
       - "8085:8085"
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:8085/fhir/actuator/health && wget --spider -q --header=\"X-Tenant-ID: $$HEALTHCHECK_TENANT_ID\" --header=\"X-Auth-User-Id: 00000000-0000-0000-0000-000000000001\" --header=\"X-Auth-Username: demo-seeder\" --header=\"X-Auth-Tenant-Ids: $$HEALTHCHECK_TENANT_ID\" --header=\"X-Auth-Roles: ADMIN,SYSTEM\" --header=\"X-Auth-Validated: gateway-healthcheck\" \"http://localhost:8085/fhir/Patient?_count=1\""]
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:8085/fhir/actuator/health && wget --spider -q http://localhost:8085/fhir/metadata"]
       interval: 30s
       timeout: 30s
       retries: 5
@@ -754,7 +754,7 @@ services:
       # HCC model weights (V24/V28 transition blending)
       HCC_MODEL_V24_WEIGHT: "0.33"
       HCC_MODEL_V28_WEIGHT: "0.67"
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-Xmx1024m -Xms512m"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-hcc
     ports:
@@ -819,6 +819,7 @@ services:
       # Snapshot storage
       DEMO_SNAPSHOTS_DIR: /app/snapshots
       DEMO_PERSISTENCE_ENABLED: "true"
+      DEMO_QUALITY_MEASURES_ENABLED: "false"
       DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "200"
       DEMO_MULTI_TENANT_PATIENTS_PER_TENANT: "100"
       DEMO_PERFORMANCE_PARALLEL_GENERATION: "false"
@@ -840,6 +841,43 @@ services:
       resources:
         limits:
           memory: 2048M
+
+  # Ops Service - orchestrates on-prem deployment steps for MFE console
+  ops-service:
+    container_name: hdim-demo-ops
+    build:
+      context: .
+      dockerfile: tools/ops-server/Dockerfile
+    environment:
+      PORT: 4710
+      WORKSPACE_DIR: /workspace
+      COMPOSE_FILE: /workspace/docker-compose.demo.yml
+      COMPOSE_PROJECT_NAME: hdim-master
+      DEMO_SEEDING_URL: http://demo-seeding-service:8098
+      AUTH_USERNAME: demo-evaluator
+      AUTH_PASSWORD: demo
+      SKIP_FRONTEND_VALIDATE: "1"
+      GATEWAY_URL: http://gateway-edge:8080
+      QUALITY_API_BASE: http://gateway-edge:8080/api/quality
+      QUALITY_DIRECT_BASE: http://quality-measure-service:8087/quality-measure
+      QUALITY_HEALTH_URL: http://quality-measure-service:8087/quality-measure/actuator/health
+      FHIR_URL: http://fhir-service:8085/fhir
+      AUDIT_DIRECT_URL: http://audit-query-service:8088/api/v1/audit/logs/statistics
+      AUDIT_GATEWAY_URL: http://gateway-edge:8080/api/v1/audit/logs/statistics
+      SKIP_FHIR_QUERY: "1"
+      CURL_MAX_TIME: "45"
+      CURL_CONNECT_TIMEOUT: "5"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/workspace
+    ports:
+      - "4710:4710"
+    networks:
+      - hdim-demo-network
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
   # ── Clinical Portal ─────────────────────────────────────────────────────────
   # For development/demo, run via: npx nx serve clinical-portal

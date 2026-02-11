@@ -18,6 +18,7 @@ Thumbs.db
 
 # Logs
 *.log
+logs/
 
 # Environment variables (CRITICAL: Never commit secrets)
 .env

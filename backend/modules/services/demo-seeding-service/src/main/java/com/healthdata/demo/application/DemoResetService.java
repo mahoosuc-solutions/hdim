@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.nio.file.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -40,6 +43,49 @@ public class DemoResetService {
     @Value("${demo.database.name:healthdata_demo}")
     private String databaseName;
 
+    @Value("${demo.services.fhir-db.url:jdbc:postgresql://postgres:5432/fhir_db}")
+    private String fhirDbUrl;
+
+    @Value("${demo.services.fhir-db.username:healthdata}")
+    private String fhirDbUser;
+
+    @Value("${demo.services.fhir-db.password:healthdata_password}")
+    private String fhirDbPassword;
+
+    @Value("${demo.services.care-gap-db.url:jdbc:postgresql://postgres:5432/caregap_db}")
+    private String careGapDbUrl;
+
+    @Value("${demo.services.care-gap-db.username:healthdata}")
+    private String careGapDbUser;
+
+    @Value("${demo.services.care-gap-db.password:demo_password_2024}")
+    private String careGapDbPassword;
+
+    private static final String[] FHIR_TABLES = {
+        "patients",
+        "conditions",
+        "observations",
+        "medication_requests",
+        "encounters",
+        "procedures",
+        "immunizations",
+        "allergy_intolerances",
+        "diagnostic_reports",
+        "document_references",
+        "care_plans",
+        "goals",
+        "coverages",
+        "appointments",
+        "tasks",
+        "medication_administrations"
+    };
+
+    private static final String[] CARE_GAP_TABLES = {
+        "care_gaps",
+        "care_gap_closures",
+        "care_gap_recommendations"
+    };
+
     public DemoResetService(
             DemoSnapshotRepository snapshotRepository,
             JdbcTemplate jdbcTemplate) {
@@ -57,11 +103,17 @@ public class DemoResetService {
         long startTime = System.currentTimeMillis();
 
         try {
-            // Clear FHIR resources for tenant
+            // Clear FHIR resources for tenant (demo DB)
             clearFhirResources(tenantId);
+
+            // Clear FHIR resources in FHIR service DB (authoritative store)
+            clearFhirDbResources(tenantId);
 
             // Clear care gaps for tenant
             clearCareGaps(tenantId);
+
+            // Clear care gaps in care-gap service DB
+            clearCareGapDbResources(tenantId);
 
             // Clear quality evaluations for tenant
             clearQualityEvaluations(tenantId);
@@ -97,26 +149,19 @@ public class DemoResetService {
             int conditionsDeleted = safeDeleteWithClause("conditions", demoTenantClause);
             result.setConditionsDeleted(conditionsDeleted);
 
-            // Clear other FHIR resources for demo tenants
-            String[] fhirTables = {
-                "observations",
-                "medication_requests",
-                "encounters",
-                "procedures",
-                "immunizations",
-                "allergy_intolerances",
-                "diagnostic_reports",
-                "document_references",
-                "care_plans",
-                "goals",
-                "coverages"
-            };
-            for (String table : fhirTables) {
+            // Clear other FHIR resources for demo tenants (demo DB)
+            for (String table : FHIR_TABLES) {
                 safeDeleteWithClause(table, demoTenantClause);
             }
 
+            // Clear FHIR resources in FHIR service DB
+            clearFhirDbWithClause(demoTenantClause);
+
             int careGapsDeleted = safeDeleteWithClause("care_gaps", demoTenantClause);
             result.setCareGapsDeleted(careGapsDeleted);
+
+            // Clear care gaps in care-gap service DB
+            clearCareGapDbWithClause(demoTenantClause);
 
             // Clear demo sessions (but keep scenarios) - this table should exist
             try {
@@ -329,8 +374,90 @@ public class DemoResetService {
         }
     }
 
+    private void clearFhirDbResources(String tenantId) {
+        try (Connection conn = getFhirDbConnection()) {
+            for (String table : FHIR_TABLES) {
+                if (!tableExists(conn, table)) {
+                    logger.debug("FHIR DB table {} does not exist, skipping cleanup", table);
+                    continue;
+                }
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM " + table + " WHERE tenant_id = ?")) {
+                    stmt.setString(1, tenantId);
+                    int deleted = stmt.executeUpdate();
+                    if (deleted > 0) {
+                        logger.info("FHIR DB cleared {} rows from {} for tenant {}", deleted, table, tenantId);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to clear FHIR DB resources for tenant {}: {}", tenantId, e.getMessage());
+        }
+    }
+
+    private void clearFhirDbWithClause(String whereClause) {
+        try (Connection conn = getFhirDbConnection()) {
+            for (String table : FHIR_TABLES) {
+                if (!tableExists(conn, table)) {
+                    logger.debug("FHIR DB table {} does not exist, skipping cleanup", table);
+                    continue;
+                }
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM " + table + " WHERE " + whereClause)) {
+                    int deleted = stmt.executeUpdate();
+                    if (deleted > 0) {
+                        logger.info("FHIR DB cleared {} rows from {}", deleted, table);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to clear FHIR DB resources: {}", e.getMessage());
+        }
+    }
+
     private void clearCareGaps(String tenantId) {
         safeDeleteFromTable("care_gaps", tenantId);
+    }
+
+    private void clearCareGapDbResources(String tenantId) {
+        try (Connection conn = getCareGapDbConnection()) {
+            for (String table : CARE_GAP_TABLES) {
+                if (!tableExists(conn, table)) {
+                    logger.debug("Care-gap DB table {} does not exist, skipping cleanup", table);
+                    continue;
+                }
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM " + table + " WHERE tenant_id = ?")) {
+                    stmt.setString(1, tenantId);
+                    int deleted = stmt.executeUpdate();
+                    if (deleted > 0) {
+                        logger.info("Care-gap DB cleared {} rows from {} for tenant {}", deleted, table, tenantId);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to clear care-gap DB resources for tenant {}: {}", tenantId, e.getMessage());
+        }
+    }
+
+    private void clearCareGapDbWithClause(String whereClause) {
+        try (Connection conn = getCareGapDbConnection()) {
+            for (String table : CARE_GAP_TABLES) {
+                if (!tableExists(conn, table)) {
+                    logger.debug("Care-gap DB table {} does not exist, skipping cleanup", table);
+                    continue;
+                }
+                try (PreparedStatement stmt = conn.prepareStatement(
+                        "DELETE FROM " + table + " WHERE " + whereClause)) {
+                    int deleted = stmt.executeUpdate();
+                    if (deleted > 0) {
+                        logger.info("Care-gap DB cleared {} rows from {}", deleted, table);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to clear care-gap DB resources: {}", e.getMessage());
+        }
     }
 
     private void clearQualityEvaluations(String tenantId) {
@@ -344,6 +471,26 @@ public class DemoResetService {
         String sql = "SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = ?)";
         Boolean exists = jdbcTemplate.queryForObject(sql, Boolean.class, tableName);
         return Boolean.TRUE.equals(exists);
+    }
+
+    private boolean tableExists(Connection conn, String tableName) {
+        try (PreparedStatement stmt = conn.prepareStatement(
+                "SELECT 1 FROM information_schema.tables WHERE table_name = ?")) {
+            stmt.setString(1, tableName);
+            return stmt.executeQuery().next();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private Connection getFhirDbConnection() throws Exception {
+        Class.forName("org.postgresql.Driver");
+        return DriverManager.getConnection(fhirDbUrl, fhirDbUser, fhirDbPassword);
+    }
+
+    private Connection getCareGapDbConnection() throws Exception {
+        Class.forName("org.postgresql.Driver");
+        return DriverManager.getConnection(careGapDbUrl, careGapDbUser, careGapDbPassword);
     }
 
     /**

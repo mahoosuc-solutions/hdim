@@ -44,8 +44,8 @@ public class DemoSeedingService {
         new TenantSeedingClient.TenantDefinition("acme-health", "Acme Health", "ACTIVE"),
         new TenantSeedingClient.TenantDefinition("demo-admin", "Demo Admin", "ACTIVE"),
         new TenantSeedingClient.TenantDefinition("demo-tenant", "Demo Tenant", "ACTIVE"),
-        new TenantSeedingClient.TenantDefinition("summit-care", "Summit Care", "ACTIVE"),
-        new TenantSeedingClient.TenantDefinition("valley-health", "Valley Health", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("summit-care-2026", "Summit Care", "ACTIVE"),
+        new TenantSeedingClient.TenantDefinition("valley-health-2026", "Valley Health", "ACTIVE"),
         new TenantSeedingClient.TenantDefinition("blue-shield-demo", "Blue Shield Demo", "ACTIVE"),
         new TenantSeedingClient.TenantDefinition("united-demo", "United Demo", "ACTIVE")
     );
@@ -66,6 +66,7 @@ public class DemoSeedingService {
     private final UserSeedingClient userSeedingClient;
     private final DemoProgressService progressService;
     private final boolean persistToServices;
+    private final boolean qualityMeasuresEnabled;
     private final int generationBatchSize;
 
     public DemoSeedingService(
@@ -85,6 +86,7 @@ public class DemoSeedingService {
             UserSeedingClient userSeedingClient,
             DemoProgressService progressService,
             @Value("${demo.persistence.enabled:true}") boolean persistToServices,
+            @Value("${demo.quality-measures.enabled:true}") boolean qualityMeasuresEnabled,
             @Value("${demo.generation.batch-size:100}") int generationBatchSize) {
         this.patientGenerator = patientGenerator;
         this.medicationGenerator = medicationGenerator;
@@ -102,6 +104,7 @@ public class DemoSeedingService {
         this.userSeedingClient = userSeedingClient;
         this.progressService = progressService;
         this.persistToServices = persistToServices;
+        this.qualityMeasuresEnabled = qualityMeasuresEnabled;
         this.generationBatchSize = Math.max(1, generationBatchSize);
     }
 
@@ -148,6 +151,7 @@ public class DemoSeedingService {
             boolean fhirStageSet = false;
             boolean careGapStageSet = false;
             boolean measureStageSet = false;
+            boolean measureGenerationLogged = false;
 
             if (persistToServices) {
                 logger.info("Persisting generated data to downstream services...");
@@ -230,26 +234,36 @@ public class DemoSeedingService {
                         logger.warn("Care Gap service not available - care gaps not created");
                     }
 
-                    if (!measureStageSet && sessionId != null) {
-                        progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
-                            "Seeding quality measures");
-                        checkCancellation(sessionId, "Cancelled before measure seeding");
-                        measureStageSet = true;
-                    }
-                    if (qualityMeasureServiceClient.isServiceAvailable()) {
-                        if (!measuresSeeded) {
-                            totalMeasureDefinitions = qualityMeasureServiceClient.seedMeasureDefinitions(tenantId);
-                            measuresSeeded = true;
-                            logger.info("Seeded {} HEDIS measure definitions", totalMeasureDefinitions);
+                    if (qualityMeasuresEnabled) {
+                        if (!measureStageSet && sessionId != null) {
+                            progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
+                                "Seeding quality measures");
+                            checkCancellation(sessionId, "Cancelled before measure seeding");
+                            measureStageSet = true;
                         }
-                        int evaluationResults = qualityMeasureServiceClient.generateDemoResults(
-                            patientBundle, tenantId, careGapPercentage);
-                        totalEvaluationResults += evaluationResults;
-                        if (sessionId != null) {
-                            progressService.updateCounts(sessionId, null, null, null, totalMeasureDefinitions);
+                        if (qualityMeasureServiceClient.isServiceAvailable()) {
+                            if (!measuresSeeded) {
+                                totalMeasureDefinitions = qualityMeasureServiceClient.seedMeasureDefinitions(tenantId);
+                                measuresSeeded = true;
+                                logger.info("Seeded {} HEDIS measure definitions", totalMeasureDefinitions);
+                            }
+                            int evaluationResults = qualityMeasureServiceClient.generateDemoResults(
+                                patientBundle, tenantId, careGapPercentage);
+                            totalEvaluationResults += evaluationResults;
+                            if (sessionId != null) {
+                                progressService.updateCounts(sessionId, null, null, null, totalMeasureDefinitions);
+                            }
+                        } else {
+                            logger.warn("Quality Measure service not available - evaluation results not generated");
                         }
-                    } else {
-                        logger.warn("Quality Measure service not available - evaluation results not generated");
+                    } else if (!measureGenerationLogged) {
+                        if (!measureStageSet && sessionId != null) {
+                            progressService.updateStage(sessionId, DemoProgressService.Stage.SEEDING_MEASURES, 80,
+                                "Skipping measure seeding (disabled)");
+                            measureStageSet = true;
+                        }
+                        logger.info("Quality measure generation disabled - skipping measure seeding and evaluation.");
+                        measureGenerationLogged = true;
                     }
                 }
             }

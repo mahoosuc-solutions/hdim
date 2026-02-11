@@ -8,6 +8,7 @@
     "e2e:clinical-portal": "nx e2e clinical-portal-e2e",
     "e2e:clinical-portal:cli": "node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts",
     "e2e:clinical-portal:demo": "DEMO_SAFE=1 node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts",
+    "e2e:deployment-console": "BASE_URL=http://localhost:4300 OPS_BASE_URL=http://localhost:4710 nx e2e shell-app-e2e",
     "e2e:open": "cypress open",
     "e2e:run": "cypress run",
     "e2e:run:chrome": "cypress run --browser chrome",

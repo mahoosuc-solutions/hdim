@@ -2,7 +2,7 @@ import { ModuleFederationConfig } from '@nx/module-federation';
 
 const config: ModuleFederationConfig = {
   name: 'shell-app',
-  remotes: ['mfePatients', 'mfeMeasureBuilder'],
+  remotes: ['mfeDeployment'],
 };
 
 export const sharedMappings = new Map([

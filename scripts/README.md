@@ -65,6 +65,132 @@ npm run capture
 
 **Output**: 70+ screenshots in `docs/screenshots/`
 
+### 3. `validate-dockerfiles.sh`
+
+**Purpose**: Enforces Dockerfile runtime consistency across services.
+
+**What it checks**:
+- `USER` is set in the runtime stage
+- `HEALTHCHECK` is defined
+- `JAVA_OPTS` is defined
+- `wget` is installed if used by healthchecks
+
+**Usage**:
+```bash
+./scripts/validate-dockerfiles.sh
+```
+
+### 4. `complete-open-prs.sh`
+
+**Purpose**: Batch-validate and merge open PRs using the GitHub CLI.
+
+**What it does**:
+- Lists open PRs
+- Optionally waits for checks
+- Validates status checks and review state
+- Merges PRs when conditions are met
+
+**Usage**:
+```bash
+# Dry-run (default)
+./scripts/complete-open-prs.sh
+
+# Merge ready PRs
+CONFIRM=1 ./scripts/complete-open-prs.sh
+
+# Customize behavior
+REPO=owner/repo LIMIT=100 MERGE_METHOD=merge REQUIRE_APPROVAL=0 WATCH_CHECKS=1 CONFIRM=1 ./scripts/complete-open-prs.sh
+```
+
+### 5. `capture-compose-logs.sh`
+
+**Purpose**: Snapshot Docker Compose logs for troubleshooting.
+
+**What it does**:
+- Captures `docker compose ps`
+- Captures `docker compose logs --since`
+- Writes a timestamped log file under `logs/compose/`
+
+**Usage**:
+```bash
+./scripts/capture-compose-logs.sh
+
+# Custom compose file and time window
+COMPOSE_FILE=docker-compose.demo.yml SINCE=2h ./scripts/capture-compose-logs.sh
+```
+
+### 6. `dev-shell-deployment.sh`
+
+**Purpose**: Start only the shell + deployment console MFE with the demo stack.
+
+**What it does**:
+- Starts the demo Docker stack
+- Starts `mfeDeployment` on port `4210`
+- Starts `shell-app` on port `4300` with only the deployment remote
+
+**Usage**:
+```bash
+./scripts/dev-shell-deployment.sh
+```
+
+**Notes**:
+- Use this when you only need the deployment portal.
+- Other MFEs are intentionally not started to avoid `remoteEntry` errors.
+
+### 7. `dev-shell-all.sh`
+
+**Purpose**: Start the shell with all core MFEs for full navigation.
+
+**What it does**:
+- Starts the demo Docker stack
+- Starts `mfeDeployment` on port `4210`
+- Starts `mfePatients` on port `4201`
+- Starts `mfeMeasureBuilder` on port `4202`
+- Starts `shell-app` on port `4300` with all remotes
+
+**Usage**:
+```bash
+./scripts/dev-shell-all.sh
+```
+
+### 8. `shell-app-e2e` (Deployment Console UI Tests)
+
+**Purpose**: Exercise the deployment console UI and local ops backend.
+
+**What it does**:
+- Launches the demo stack + shell + deployment MFE (via `dev-shell-deployment.sh`)
+- Verifies the deployment console renders and connects to the ops service
+- Validates `/ops/status` returns services
+
+**Usage**:
+```bash
+BASE_URL=http://localhost:4300 OPS_BASE_URL=http://localhost:4710 npx nx e2e shell-app-e2e
+```
+
+**Convenience**:
+```bash
+npm run e2e:deployment-console
+```
+
+### 9. `verify-seeding-counts.sh`
+
+**Purpose**: Validate seeded record counts per tenant across FHIR and care-gap services.
+
+**What it does**:
+- Queries FHIR `/Patient?_summary=count`
+- Queries care-gap `/api/v1/care-gaps?page=0&size=1` and reads `totalElements`
+
+**Usage**:
+```bash
+./scripts/verify-seeding-counts.sh
+
+# With expectations (exit non-zero on mismatch)
+EXPECTED_PATIENTS_PER_TENANT=100 ./scripts/verify-seeding-counts.sh
+
+# Custom tenants
+TENANTS=summit-care-2026,valley-health-2026 ./scripts/verify-seeding-counts.sh
+```
+
 ---
 
 ## Quick Start
@@ -308,6 +434,15 @@ To stop all services and clean up:
 cd /home/webemo-aaron/projects/hdim-master
 docker-compose down -v
 ```
+
+---
+
+## Log Artifacts
+
+Scripts that generate log artifacts store them under `logs/`:
+- `logs/test-runs/` for `test-all-local.sh`
+- `logs/seed-runs/` for `seed-all-demo-data.sh`
+- `logs/compose/` for `capture-compose-logs.sh`
 
 ---
 

@@ -7,13 +7,8 @@ export const appRoutes: Route[] = [
     component: HomePage,
   },
   {
-    path: 'mfePatients',
+    path: 'deployment',
     loadChildren: () =>
-      import('mfePatients/Routes').then((m) => m!.remoteRoutes),
-  },
-  {
-    path: 'mfeMeasureBuilder',
-    loadChildren: () =>
-      import('mfeMeasureBuilder/Routes').then((m) => m!.remoteRoutes),
+      import('mfeDeployment/Routes').then((m) => m!.remoteRoutes),
   },
 ];

@@ -98,6 +98,7 @@ class DemoSeedingServiceTest {
                 userSeedingClient,
                 progressService,
                 false,  // persistToServices = false for unit tests
+                false,  // qualityMeasuresEnabled = false for unit tests
                 100     // generationBatchSize
         );
     }

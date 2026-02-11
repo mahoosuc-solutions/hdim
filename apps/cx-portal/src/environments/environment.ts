@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  cxApiUrl: 'http://localhost:8201',
-  cxWsUrl: 'ws://localhost:8201',
+  cxApiUrl: '/api',
+  cxWsUrl: 'ws://' + (typeof window !== 'undefined' ? window.location.host : 'localhost:8200'),
 };

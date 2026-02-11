@@ -13,8 +13,10 @@ import { Lead, Investor, Customer, Activity, Bead, DashboardData, PipelineView, 
   providedIn: 'root',
 })
 export class CxApiService {
-  private baseUrl = environment.cxApiUrl || 'http://localhost:8201';
-  private wsUrl = environment.cxWsUrl || 'ws://localhost:8201';
+  private baseUrl =
+    (window as any).__CX_API_URL || environment.cxApiUrl || 'http://localhost:8201';
+  private wsUrl =
+    (window as any).__CX_WS_URL || environment.cxWsUrl || 'ws://localhost:8201';
 
   // WebSocket connection
   private ws: WebSocket | null = null;

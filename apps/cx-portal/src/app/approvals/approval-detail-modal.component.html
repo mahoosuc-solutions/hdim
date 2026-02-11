@@ -1,0 +1,125 @@
+<div class="approval-detail-modal">
+  <!-- Header -->
+  <h2 mat-dialog-title>
+    <div class="modal-title">
+      <span>Approval Request</span>
+      <mat-chip [color]="getUrgencyColor(action.urgency)">{{ action.urgency | uppercase }}</mat-chip>
+    </div>
+  </h2>
+
+  <!-- Content -->
+  <mat-dialog-content>
+    <!-- Action Metadata -->
+    <div class="metadata-section">
+      <div class="metadata-item">
+        <span class="label">Action Type:</span>
+        <span class="value">{{ formatActionType(action.action_type) }}</span>
+      </div>
+      <div class="metadata-item">
+        <span class="label">Target:</span>
+        <span class="value">{{ action.target_name }} ({{ action.target_type }})</span>
+      </div>
+      <div class="metadata-item" *ngIf="action.created_by">
+        <span class="label">Created By:</span>
+        <span class="value">{{ action.created_by }}</span>
+      </div>
+      <div class="metadata-item" *ngIf="action.bead_id">
+        <span class="label">Bead ID:</span>
+        <span class="value">{{ action.bead_id }}</span>
+      </div>
+      <div class="metadata-item" *ngIf="action.formula_step">
+        <span class="label">Formula Step:</span>
+        <span class="value">{{ action.formula_step }}</span>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Email-specific metadata -->
+    <div class="email-metadata" *ngIf="action.action_type === 'email' && action.metadata">
+      <div class="metadata-item" *ngIf="action.metadata['to']">
+        <span class="label">To:</span>
+        <span class="value">{{ action.metadata['to'] }}</span>
+      </div>
+      <div class="metadata-item" *ngIf="action.metadata['from']">
+        <span class="label">From:</span>
+        <span class="value">{{ action.metadata['from'] }}</span>
+      </div>
+      <div class="metadata-item" *ngIf="action.metadata['cc']">
+        <span class="label">CC:</span>
+        <span class="value">{{ action.metadata['cc'] }}</span>
+      </div>
+      <div class="metadata-item" *ngIf="action.metadata['attachments'] && action.metadata['attachments'].length > 0">
+        <span class="label">Attachments:</span>
+        <span class="value">{{ action.metadata['attachments'].join(', ') }}</span>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Subject (editable) -->
+    <div class="subject-section" *ngIf="action.subject">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Subject</mat-label>
+        <input
+          matInput
+          [(ngModel)]="editedSubject"
+          [readonly]="!editMode"
+          placeholder="Email subject">
+      </mat-form-field>
+    </div>
+
+    <!-- Content (editable) -->
+    <div class="content-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Content</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="editedContent"
+          [readonly]="!editMode"
+          rows="15"
+          placeholder="Message content"></textarea>
+      </mat-form-field>
+    </div>
+
+    <!-- Decision Notes -->
+    <div class="notes-section">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Decision Notes (Optional)</mat-label>
+        <textarea
+          matInput
+          [(ngModel)]="decisionNotes"
+          rows="3"
+          placeholder="Add notes about your decision"></textarea>
+      </mat-form-field>
+    </div>
+
+    <!-- Edit Mode Indicator -->
+    <div class="edit-indicator" *ngIf="editMode">
+      <mat-icon>edit</mat-icon>
+      <span>Edit mode active</span>
+      <span *ngIf="isModified()" class="modified-badge">Modified</span>
+    </div>
+  </mat-dialog-content>
+
+  <!-- Actions -->
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="cancel()" [disabled]="processing">Cancel</button>
+    <button mat-raised-button color="warn" (click)="reject()" [disabled]="processing">
+      <mat-icon>close</mat-icon>
+      Reject
+    </button>
+    <button mat-raised-button color="accent" (click)="toggleEditMode()" [disabled]="processing">
+      <mat-icon>{{ editMode ? 'visibility' : 'edit' }}</mat-icon>
+      {{ editMode ? 'Preview' : 'Edit' }}
+    </button>
+    <button mat-raised-button color="primary" (click)="approve()" *ngIf="!editMode" [disabled]="processing">
+      <mat-icon>check</mat-icon>
+      Approve
+    </button>
+    <button mat-raised-button color="primary" (click)="editAndApprove()" *ngIf="editMode" [disabled]="processing">
+      <mat-icon>check</mat-icon>
+      Save & Approve
+    </button>
+  </mat-dialog-actions>
+</div>

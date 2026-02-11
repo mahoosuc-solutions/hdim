@@ -25,7 +25,12 @@ import com.healthdata.audit.service.AuditService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,9 +47,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.HashSet;
-import java.util.Optional;
 
 /**
  * REST controller for authentication operations.
@@ -368,6 +370,7 @@ public class AuthController {
 
         // Create new user
         User user = User.builder()
+            .id(UUID.randomUUID())
             .username(request.getUsername())
             .email(request.getEmail())
             .passwordHash(passwordHash)

@@ -107,6 +107,23 @@
         "staticFilePath": "dist/apps/clinical-portal/browser",
         "spa": true
       }
+    },
+    "test-contracts": {
+      "executor": "@nx/jest:jest",
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}/pact"
+      ],
+      "options": {
+        "jestConfig": "apps/clinical-portal/jest.pact.config.js",
+        "runInBand": true
+      }
+    },
+    "pact-publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pact-broker publish ./pacts --consumer-app-version=${CONSUMER_VERSION:-0.0.0} --broker-base-url=${PACT_BROKER_URL:-http://localhost:9292}",
+        "cwd": "apps/clinical-portal"
+      }
     }
   }
 }

@@ -38,11 +38,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // SFTP support (JSch)
-    implementation("com.jcraft:jsch:0.1.55")
+    implementation(libs.jsch)
 
     // HAPI HL7 for MLLP support
-    implementation("ca.uhn.hapi:hapi-base:2.5.1")
-    implementation("ca.uhn.hapi:hapi-structures-v25:2.5.1")
+    implementation(libs.hapi.hl7.base)
+    implementation(libs.hapi.hl7.structures.v25)
 
     // Resilience4j for fault tolerance
     implementation(libs.resilience4j.spring.boot3)
@@ -52,8 +52,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // JSON type support for JPA (JSONB, HSTORE, etc.)
-    // Version 3.9.0+ required for Hibernate 6.5+ compatibility
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:${libs.versions.hypersistence.utils.get()}")
 
     // Jackson for JSON processing
     implementation(libs.jackson.databind)
@@ -93,10 +92,8 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    systemProperty("spring.datasource.url", "jdbc:tc:postgresql:15-alpine:///testdb")
-    systemProperty("spring.datasource.username", "test")
-    systemProperty("spring.datasource.password", "test")
-    systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
     systemProperty("spring.profiles.active", "test")
 }

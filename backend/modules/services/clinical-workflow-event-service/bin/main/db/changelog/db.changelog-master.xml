@@ -1,8 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
-    <include file="db/changelog/0002-create-auth-tables.xml"/>
-    <include file="db/changelog/0001-create-workflow-tables.xml"/>
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Authentication tables (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
+
+    <!-- Clinical Workflow Event Service Liquibase Migrations -->
+    <include file="db/changelog/0001-create-workflow-projections-table.xml"/>
+    <include file="db/changelog/0002-fix-workflow-projections-schema.xml"/>
+    <include file="db/changelog/0003-complete-workflow-projections-schema.xml"/>
+    <include file="db/changelog/0004-fix-due-date-column-type.xml"/>
+    <include file="db/changelog/0005-fix-uuid-column-types.xml"/>
+
 </databaseChangeLog>

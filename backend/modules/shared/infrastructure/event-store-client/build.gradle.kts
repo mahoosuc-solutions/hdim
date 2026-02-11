@@ -19,7 +19,7 @@ repositories {
 dependencyManagement {
     imports {
         mavenBom(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 

@@ -80,7 +80,7 @@ class DocumentationGapServiceTest {
                 .hccCodeV28(null) // No longer maps in V28
                 .changedInV28(true)
                 .v28ChangeDescription("Removed from HCC in V28")
-                .coefficientV24(0.302)
+                .coefficientV24(new BigDecimal("0.302"))
                 .build();
 
             when(diagnosisMapRepository.findByIcd10Codes(diagnoses))
@@ -359,8 +359,8 @@ class DocumentationGapServiceTest {
             .hccCodeV24(hccV24)
             .hccCodeV28(hccV28)
             .requiresSpecificity(requiresSpecificity)
-            .coefficientV24(hccV24 != null ? 0.302 : null)
-            .coefficientV28(hccV28 != null ? 0.285 : null)
+            .coefficientV24(hccV24 != null ? new BigDecimal("0.302") : null)
+            .coefficientV28(hccV28 != null ? new BigDecimal("0.285") : null)
             .specificityGuidance("Document specific complications and manifestations")
             .build();
     }

@@ -379,7 +379,8 @@ class EmailNotificationChannelTest {
         @SuppressWarnings("unchecked")
         List<String> actions = (List<String>) variables.get("recommendedActions");
         assertThat(actions).anyMatch(action -> action.contains("Contact patient within 24 hours"));
-        assertThat(variables.get("alertType")).isEqualTo("CUSTOM_ALERT");
+        // The alertType is formatted for display in the template
+        assertThat(variables.get("alertType")).isEqualTo("Custom alert");
     }
     @Test
     @DisplayName("Should capture suicide risk guidance for critical alerts")

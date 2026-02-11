@@ -8,12 +8,15 @@
     "e2e:clinical-portal": "nx e2e clinical-portal-e2e",
     "e2e:clinical-portal:cli": "node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts",
     "e2e:clinical-portal:demo": "DEMO_SAFE=1 node node_modules/@playwright/test/cli.js test --config apps/clinical-portal-e2e/playwright.config.ts",
+    "e2e:deployment-console": "BASE_URL=http://localhost:4300 OPS_BASE_URL=http://localhost:4710 nx e2e shell-app-e2e",
     "e2e:open": "cypress open",
     "e2e:run": "cypress run",
     "e2e:run:chrome": "cypress run --browser chrome",
     "e2e:run:firefox": "cypress run --browser firefox",
     "e2e:run:dashboard": "cypress run --spec 'cypress/e2e/nurse-dashboard-workflows.cy.ts'",
-    "e2e:run:ci": "cypress run --record --headed=false --browser chrome"
+    "e2e:run:ci": "cypress run --record --headed=false --browser chrome",
+    "test:contracts": "nx run clinical-portal:test-contracts",
+    "pact:publish": "nx run clinical-portal:pact-publish"
   },
   "private": true,
   "dependencies": {
@@ -68,6 +71,8 @@
     "@nx/web": "22.3.3",
     "@nx/webpack": "22.3.3",
     "@nx/workspace": "22.3.3",
+    "@pact-foundation/pact": "^13.2.0",
+    "@pact-foundation/pact-node": "^10.18.0",
     "@playwright/test": "^1.36.0",
     "@schematics/angular": "21.0.5",
     "@swc-node/register": "~1.9.1",

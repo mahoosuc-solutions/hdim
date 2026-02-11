@@ -7,6 +7,7 @@ import com.healthdata.quality.dto.QualityMeasureResultMapper;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for DTO mapping
  * Tests the QualityMeasureResultMapper functionality
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")

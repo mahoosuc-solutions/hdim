@@ -58,10 +58,10 @@ public class WaitingQueueEntity {
     @Column(name = "queue_position", nullable = false)
     private Integer queuePosition;
 
-    @Column(name = "priority", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'urgent, high, normal, low'")
+    @Column(name = "priority", nullable = false, length = 50)
     private String priority;  // urgent, high, normal, low
 
-    @Column(name = "status", nullable = false, length = 50, columnDefinition = "VARCHAR(50) COMMENT 'waiting, called, in-room, completed, cancelled'")
+    @Column(name = "status", nullable = false, length = 50)
     private String status;  // waiting, called, in-room, completed, cancelled
 
     @Column(name = "entered_queue_at", nullable = false)

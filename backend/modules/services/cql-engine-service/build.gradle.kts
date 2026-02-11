@@ -6,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 
@@ -24,33 +24,15 @@ repositories {
     }
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 // Configure Java version
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 // Configure Spring Boot
 springBoot {
     mainClass.set("com.healthdata.cql.CqlEngineServiceApplication")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
 }
 
 
@@ -88,13 +70,13 @@ dependencies {
     // HAPI FHIR for resource handling
     implementation(libs.bundles.hapi.fhir.client)
 
-    // CQL-to-ELM Translation (https://mvnrepository.com/artifact/info.cqframework)
-    implementation("info.cqframework:cql-to-elm:3.29.0")
-    implementation("info.cqframework:cql:3.29.0")
-    implementation("info.cqframework:elm:3.29.0")
-    implementation("info.cqframework:model:3.29.0")
-    implementation("info.cqframework:model-jackson:3.29.0") // For model parsing
-    implementation("info.cqframework:elm-jackson:3.29.0") // For ELM JSON serialization
+    // CQL-to-ELM Translation
+    implementation(libs.cql.to.elm)
+    implementation(libs.cql.cql)
+    implementation(libs.cql.elm)
+    implementation(libs.cql.model)
+    implementation(libs.cql.model.jackson)
+    implementation(libs.cql.elm.jackson)
 
     // Redis for caching (used for ELM template caching)
     implementation(libs.spring.boot.starter.data.redis)
@@ -131,25 +113,9 @@ dependencies {
     testImplementation(libs.testcontainers.kafka)
 }
 
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
-    }
-}
-
 tasks.withType<Test> {
-    // Testcontainers system properties disabled - using running Docker PostgreSQL
-    // Configuration now managed in src/test/resources/application-test.yml
-    // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:///testdb")
-    // systemProperty("spring.datasource.username", "test")
-    // systemProperty("spring.datasource.password", "test")
-    // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
-    // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
-    systemProperty("spring.profiles.active", "test")
-}
-
-dependencyManagement {
-    imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
     }
+    systemProperty("spring.profiles.active", "test")
 }

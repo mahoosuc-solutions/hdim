@@ -6,6 +6,7 @@ import com.healthdata.caregap.api.v1.dto.DetectGapRequest;
 import com.healthdata.caregap.persistence.PopulationHealthRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -32,6 +33,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @EmbeddedKafka(partitions = 3, bootstrapServersProperty = "spring.kafka.bootstrap-servers")
 @ActiveProfiles("test")
 @AutoConfigureMockMvc(addFilters = false)
+@Tag("integration")
+@Tag("slow")
 @DisplayName("CareGapEventService Integration Tests")
 class CareGapEventServiceIntegrationTest {
 

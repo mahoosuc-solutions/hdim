@@ -1,0 +1,2 @@
+# Keep this directory for generated Pact contract files
+# The actual JSON contracts are generated during test runs

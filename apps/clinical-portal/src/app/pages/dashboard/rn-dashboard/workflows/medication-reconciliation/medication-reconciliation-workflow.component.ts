@@ -33,6 +33,8 @@ import { MedicationService } from '../../../../../services/medication/medication
 import { MedicationOrder, PrescriptionStatus } from '../../../../../services/medication/medication.models';
 import { ToastService } from '../../../../../services/toast.service';
 import { LoggerService, ContextualLogger } from '../../../../../services/logger.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { API_CONFIG } from '../../../../../config/api.config';
 
 export interface PatientReportedMedication {
   name: string;
@@ -123,6 +125,7 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
     private toastService: ToastService,
     private logger: LoggerService,
     private dialogRef: MatDialogRef<MedicationReconciliationWorkflowComponent>,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: MedicationReconciliationWorkflowData
   ) {    this.reconciliationId = data.reconciliationId;
     this.patientId = data.patientId;
@@ -163,7 +166,9 @@ export class MedicationReconciliationWorkflowComponent implements OnInit, OnDest
    */
   private loadSystemMedications(): void {
     this.loading = true;
-    this.medicationService.setTenantContext('TENANT001'); // TODO: Get from auth
+    this.medicationService.setTenantContext(
+      this.authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID
+    );
 
     this.medicationService
       .getActiveOrdersForPatient(this.patientId, 0, 100)

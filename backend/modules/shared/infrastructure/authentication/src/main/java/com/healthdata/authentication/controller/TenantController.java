@@ -9,11 +9,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 /**
  * REST controller for tenant management operations.
@@ -50,7 +50,11 @@ public class TenantController {
      * @throws ResponseStatusException 409 if tenant already exists
      * @throws ResponseStatusException 400 if validation fails
      */
-    @PostMapping("/register")
+    @PostMapping(
+        value = "/register",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
     @PreAuthorize("permitAll()")  // Public registration - change to hasRole('SUPER_ADMIN') for restricted
     public ResponseEntity<TenantRegistrationResponse> registerTenant(
             @Valid @RequestBody TenantRegistrationRequest request) {
@@ -63,16 +67,14 @@ public class TenantController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (TenantAlreadyExistsException e) {
             log.warn("Tenant registration failed - tenant already exists: {}", request.getTenantId());
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                "Tenant already exists: " + request.getTenantId(), e);
+            throw e;
         } catch (UserAlreadyExistsException e) {
             log.warn("Tenant registration failed - duplicate user: {}", e.getMessage());
-            throw new ResponseStatusException(HttpStatus.CONFLICT, e.getMessage(), e);
+            throw e;
         } catch (Exception e) {
             log.error("Tenant registration failed for {}: {}",
                 request.getTenantId(), e.getMessage(), e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Failed to register tenant: " + e.getMessage(), e);
+            throw e;
         }
     }
 

@@ -3,10 +3,12 @@
     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
-        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
 
-    <!-- Quality Measure Event Service Migrations -->
-    <include file="db/changelog/0002-create-auth-tables.xml"/>
-    <include file="db/changelog/0001-create-measure-tables.xml"/>
+    <!-- Authentication tables (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
+
+    <include file="db/changelog/0001-create-measure-evaluation-projections-table.xml"/>
+    <include file="db/changelog/0002-create-cohort-measure-rates-table.xml"/>
 
 </databaseChangeLog>

@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hdim-validation-harness"
+version = "1.0.0"
+description = "AI Agent Validation Harness for HDIM - DeepEval integration and custom healthcare metrics"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "HDIM Team" }
+]
+dependencies = [
+    "deepeval>=1.0.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "pydantic>=2.0.0",
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+    "sentence-transformers>=2.2.0",
+    "redis>=5.0.0",
+    "httpx>=0.26.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=24.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.1.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0",
+]
+
+[project.scripts]
+hdim-validation = "hdim_validation.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hdim_validation"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

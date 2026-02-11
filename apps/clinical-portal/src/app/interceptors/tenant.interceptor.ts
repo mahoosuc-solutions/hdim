@@ -1,5 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
+import { inject } from '@angular/core';
 import { API_CONFIG, HTTP_HEADERS } from '../config/api.config';
+import { AuthService } from '../services/auth.service';
 
 /**
  * Tenant Interceptor
@@ -16,7 +18,8 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Only add tenant header for backend API calls
   if (isCqlEngine || isQualityMeasure || isFhir || isCareGap || isPatient) {
-    const tenantId = API_CONFIG.DEFAULT_TENANT_ID; // Could be dynamic based on user session
+    const authService = inject(AuthService);
+    const tenantId = authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID;
 
     const clonedRequest = req.clone({
       setHeaders: {

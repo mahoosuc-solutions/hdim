@@ -1,5 +1,6 @@
 package com.healthdata.clinicalworkflow.config;
 
+import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,5 +32,7 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Tag("integration")
+@Tag("slow")
 public @interface BaseIntegrationTest {
 }

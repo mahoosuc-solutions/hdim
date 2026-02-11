@@ -1,0 +1,501 @@
+.slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  .slider-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .slider-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+  }
+
+  .slider-description {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+  }
+}
+
+/* Distribution Slider Styles */
+.distribution-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .distribution-bar {
+    width: 100%;
+    padding: 8px 0;
+
+    .bar-container {
+      display: flex;
+      width: 100%;
+      height: 32px;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+      .bar-segment {
+        transition: flex-basis 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+        font-size: 12px;
+        cursor: pointer;
+        position: relative;
+
+        &:hover::after {
+          content: attr(title);
+          position: absolute;
+          top: -30px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #333;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 11px;
+          white-space: nowrap;
+          font-weight: normal;
+          z-index: 10;
+        }
+      }
+    }
+  }
+
+  .components-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    .component-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px;
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+
+      .color-indicator {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .component-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+        flex: 0 0 auto;
+        min-width: 100px;
+      }
+
+      .component-slider {
+        flex: 1;
+        height: 6px;
+        border-radius: 3px;
+        background: linear-gradient(to right, #e0e0e0 0%, #e0e0e0 100%);
+        outline: none;
+        -webkit-appearance: none;
+
+        &::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #2196F3;
+          cursor: pointer;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: #1976D2;
+            transform: scale(1.1);
+          }
+        }
+
+        &::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: #2196F3;
+          cursor: pointer;
+          border: none;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: #1976D2;
+            transform: scale(1.1);
+          }
+        }
+      }
+
+      .component-weight {
+        font-size: 13px;
+        font-weight: 600;
+        color: #2196F3;
+        min-width: 40px;
+        text-align: right;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .total-weight-display {
+    padding: 12px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+
+    &.invalid {
+      background: #FFF3E0;
+      border-color: #FF9800;
+      color: #E65100;
+    }
+
+    .total-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .total-weight {
+      font-size: 16px;
+      color: #333;
+    }
+
+    .validation-message {
+      margin-left: auto;
+      font-size: 12px;
+      color: #E65100;
+    }
+  }
+
+  .validation-info {
+    padding: 8px 12px;
+    background: #FFEBEE;
+    border-left: 3px solid #F44336;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #B71C1C;
+    font-weight: 500;
+  }
+}
+
+/* Period Selector Styles */
+.period-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .period-presets {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+
+    .period-button {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 4px;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        border-color: #2196F3;
+        color: #2196F3;
+        background: #f5f5f5;
+      }
+
+      &.active {
+        background: #2196F3;
+        border-color: #2196F3;
+        color: white;
+        box-shadow: 0 2px 4px rgba(33, 150, 243, 0.3);
+      }
+
+      &:focus-visible {
+        outline: 2px solid #2196F3;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  .period-dates {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    flex-wrap: wrap;
+
+    .date-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #666;
+    }
+
+    .start-date,
+    .end-date {
+      font-size: 13px;
+      font-weight: 600;
+      color: #2196F3;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+  }
+
+  .custom-period-section {
+    padding: 12px;
+    background: white;
+    border: 1px dashed #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    h4 {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .custom-input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #666;
+      }
+
+      input {
+        padding: 8px 12px;
+        font-size: 13px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        font-family: inherit;
+
+        &:focus {
+          outline: none;
+          border-color: #2196F3;
+          box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+      }
+
+      .input-hint {
+        font-size: 11px;
+        color: #F44336;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+/* CQL Preview */
+.cql-preview {
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 11px;
+  color: #333;
+  word-break: break-all;
+  overflow-x: auto;
+
+  code {
+    display: block;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .slider-container {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .distribution-wrapper {
+    .components-list {
+      .component-item {
+        flex-wrap: wrap;
+
+        .component-slider {
+          order: 4;
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  .period-wrapper {
+    .period-presets {
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    }
+
+    .period-dates {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  .slider-container {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #e0e0e0;
+
+    .slider-label {
+      color: #e0e0e0;
+    }
+
+    .slider-description {
+      color: #b0b0b0;
+    }
+  }
+
+  .distribution-wrapper {
+    .components-list {
+      .component-item {
+        background: #333333;
+        border-color: #404040;
+
+        .component-label {
+          color: #e0e0e0;
+        }
+      }
+    }
+
+    .total-weight-display {
+      background: #333333;
+      border-color: #404040;
+      color: #e0e0e0;
+
+      .total-label {
+        color: #b0b0b0;
+      }
+
+      &.invalid {
+        background: #3a2a00;
+        border-color: #FF9800;
+        color: #ffb300;
+      }
+    }
+  }
+
+  .period-wrapper {
+    .period-presets {
+      .period-button {
+        background: #333333;
+        border-color: #404040;
+        color: #e0e0e0;
+
+        &:hover {
+          background: #404040;
+          border-color: #2196F3;
+        }
+
+        &.active {
+          background: #2196F3;
+        }
+      }
+    }
+
+    .period-dates {
+      background: #333333;
+      border-color: #404040;
+
+      .date-label {
+        color: #b0b0b0;
+      }
+    }
+
+    .custom-period-section {
+      background: #333333;
+      border-color: #404040;
+
+      h4 {
+        color: #e0e0e0;
+      }
+
+      .custom-input-group {
+        label {
+          color: #b0b0b0;
+        }
+
+        input {
+          background: #2a2a2a;
+          border-color: #404040;
+          color: #e0e0e0;
+        }
+      }
+    }
+  }
+
+  .cql-preview {
+    background: #333333;
+    border-color: #404040;
+    color: #e0e0e0;
+  }
+}
+
+/* High Contrast Support */
+@media (prefers-contrast: more) {
+  .slider-container {
+    border-width: 2px;
+  }
+
+  .distribution-wrapper {
+    .components-list {
+      .component-item {
+        border-width: 2px;
+      }
+    }
+  }
+
+  .period-wrapper {
+    .period-presets {
+      .period-button {
+        border-width: 3px;
+
+        &:focus-visible {
+          outline-width: 3px;
+          outline-offset: 3px;
+        }
+      }
+    }
+  }
+}

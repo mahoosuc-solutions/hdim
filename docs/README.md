@@ -2,7 +2,7 @@
 
 Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central hub for finding information about the HDIM platform.
 
-**Last Updated**: January 19, 2026
+**Last Updated**: February 3, 2026
 **Total Documentation Files**: 1,411 markdown files organized across architecture, services, operations, and user guides
 
 ---
@@ -107,6 +107,7 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 | [README.md](../README.md) | **Project Overview** - High-level project information |
 | [CONTRIBUTING.md](../CONTRIBUTING.md) | **Contribution Guidelines** - How to contribute |
 | [CHANGELOG.md](../CHANGELOG.md) | **Release History** - What changed in each release |
+| [Investor Documentation](https://github.com/webemo-aaron/hdim-investor) 💼 | **Investor Package** - Pitch deck, due diligence, technical analysis |
 
 ---
 

@@ -461,9 +461,23 @@
     </changeSet>
 
     <!-- Email Sequence Management -->
-    <include file="0012-create-email-sequences-table.xml"/>
-    <include file="0013-create-email-sequence-steps-table.xml"/>
-    <include file="0014-create-sequence-enrollments-table.xml"/>
-    <include file="0015-create-email-send-logs-table.xml"/>
+    <include file="0012-create-email-sequences-table.xml" relativeToChangelogFile="true"/>
+    <include file="0013-create-email-sequence-steps-table.xml" relativeToChangelogFile="true"/>
+    <include file="0014-create-sequence-enrollments-table.xml" relativeToChangelogFile="true"/>
+    <include file="0015-create-email-send-logs-table.xml" relativeToChangelogFile="true"/>
+
+    <!-- LinkedIn Outreach Schema Fix -->
+    <include file="0016-add-linkedin-profile-id.xml" relativeToChangelogFile="true"/>
+    <include file="0017-add-missing-linkedin-columns.xml" relativeToChangelogFile="true"/>
+
+    <!-- LinkedIn OAuth Token Storage -->
+    <include file="0018-create-linkedin-tokens-table.xml" relativeToChangelogFile="true"/>
+
+    <!-- LinkedIn Campaign Management -->
+    <include file="0019-create-linkedin-campaigns-table.xml" relativeToChangelogFile="true"/>
+
+    <!-- GTM Launch Seed Data -->
+    <include file="0020-seed-customer-leads.xml" relativeToChangelogFile="true"/>
+    <include file="0021-seed-email-sequences.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

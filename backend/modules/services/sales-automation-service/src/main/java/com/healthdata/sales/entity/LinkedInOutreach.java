@@ -112,7 +112,11 @@ public class LinkedInOutreach {
     @Column(name = "sequence_step")
     private Integer sequenceStep;
 
-    // Metadata
+    // Campaign relationship
+    @Column(name = "campaign_id")
+    private UUID campaignId;
+
+    // Metadata (legacy - kept for backwards compatibility)
     @Column(name = "campaign_name", length = 200)
     private String campaignName;
 

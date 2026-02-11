@@ -246,6 +246,25 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
         @Param("patientId") UUID patientId
     );
 
+    /**
+     * Count tenant-wide overdue gaps (for population dashboard)
+     */
+    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'OPEN' AND c.dueDate < :currentDate")
+    long countTenantOverdueGaps(
+        @Param("tenantId") String tenantId,
+        @Param("currentDate") LocalDate currentDate
+    );
+
+    /**
+     * Count gaps closed within date range for tenant (for population dashboard)
+     */
+    @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'CLOSED' AND c.closedDate >= :startDate AND c.closedDate <= :endDate")
+    long countGapsClosedInRange(
+        @Param("tenantId") String tenantId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+
     // ==================== Provider Queries (Issue #138) ====================
 
     /**

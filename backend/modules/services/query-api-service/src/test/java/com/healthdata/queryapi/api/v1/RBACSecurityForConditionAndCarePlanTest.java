@@ -1,6 +1,7 @@
 package com.healthdata.queryapi.api.v1;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * - Tests for allowed and denied access by role
  * - Multi-tenant isolation validation
  */
+@Tag("integration")
 @WebMvcTest(controllers = {ConditionController.class, CarePlanController.class})
 @DisplayName("RBAC Security for Condition and CarePlan Endpoints")
 class RBACSecurityForConditionAndCarePlanTest {

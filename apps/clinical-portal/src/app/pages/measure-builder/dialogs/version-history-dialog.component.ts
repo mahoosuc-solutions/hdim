@@ -11,7 +11,6 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
-import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import {
   CustomMeasureService,
   CustomMeasure,
@@ -47,7 +46,6 @@ interface AuditEntry {
     MatProgressSpinnerModule,
     MatMenuModule,
     MatDividerModule,
-    LoadingButtonComponent,
   ],
   template: `
     <div class="version-dialog">

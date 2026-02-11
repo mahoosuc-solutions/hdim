@@ -36,8 +36,8 @@
             },
             {
               "type": "anyComponentStyle",
-              "maximumWarning": "4kb",
-              "maximumError": "8kb"
+              "maximumWarning": "16kb",
+              "maximumError": "32kb"
             }
           ],
           "outputHashing": "all",
@@ -60,15 +60,21 @@
       "continuous": true,
       "executor": "@nx/angular:module-federation-dev-server",
       "options": {
-        "port": 4200,
-        "publicHost": "http://localhost:4200"
+        "port": 4300,
+        "publicHost": "http://localhost:4300",
+        "devRemotes": ["mfeDeployment"],
+        "staticRemotesPort": 4400
       },
       "configurations": {
         "production": {
           "buildTarget": "shell-app:build:production"
         },
         "development": {
-          "buildTarget": "shell-app:build:development"
+          "buildTarget": "shell-app:build:development",
+          "port": 4300,
+          "publicHost": "http://localhost:4300",
+          "devRemotes": ["mfeDeployment"],
+          "staticRemotesPort": 4400
         }
       },
       "defaultConfiguration": "development"

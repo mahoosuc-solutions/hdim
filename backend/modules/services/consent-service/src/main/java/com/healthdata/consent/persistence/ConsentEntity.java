@@ -1,7 +1,7 @@
 package com.healthdata.consent.persistence;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.*;
@@ -122,12 +122,12 @@ public class ConsentEntity {
     @Column(name = "revoked_by", length = 255)
     private String revokedBy;
 
-    // Audit fields
+    // Audit fields - using Instant to match database timestamptz type
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "last_modified_at", nullable = false)
-    private LocalDateTime lastModifiedAt;
+    private Instant lastModifiedAt;
 
     @Column(name = "created_by", nullable = false, length = 255)
     private String createdBy;
@@ -142,10 +142,10 @@ public class ConsentEntity {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = Instant.now();
         }
         if (lastModifiedAt == null) {
-            lastModifiedAt = LocalDateTime.now();
+            lastModifiedAt = Instant.now();
         }
         if (provisionType == null) {
             provisionType = "permit";
@@ -154,7 +154,7 @@ public class ConsentEntity {
 
     @PreUpdate
     protected void onUpdate() {
-        lastModifiedAt = LocalDateTime.now();
+        lastModifiedAt = Instant.now();
     }
 
     /**

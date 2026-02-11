@@ -1,7 +1,7 @@
 package com.healthdata.consent.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -49,8 +49,8 @@ public class ConsentService {
         consent.setTenantId(tenantId);
         consent.setCreatedBy(createdBy);
         consent.setLastModifiedBy(createdBy);
-        consent.setCreatedAt(LocalDateTime.now());
-        consent.setLastModifiedAt(LocalDateTime.now());
+        consent.setCreatedAt(Instant.now());
+        consent.setLastModifiedAt(Instant.now());
 
         // Set default status if not provided
         if (consent.getStatus() == null) {

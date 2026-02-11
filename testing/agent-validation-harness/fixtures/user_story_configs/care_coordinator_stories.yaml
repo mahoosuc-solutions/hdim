@@ -1,0 +1,116 @@
+# Care Coordinator User Story Test Configurations
+# Target Role: CARE_COORDINATOR
+# Agent Type: care-gap-optimizer
+
+test_suites:
+  - name: "Care Coordinator Panel Management"
+    user_story_type: CARE_GAP_PRIORITIZATION
+    target_role: CARE_COORDINATOR
+    agent_type: care-gap-optimizer
+    pass_threshold: 0.80
+    description: "Tests care coordinator workflows for panel prioritization and outreach optimization"
+
+    test_cases:
+      - id: COORD-001
+        name: "Panel prioritization by risk"
+        description: "Care coordinator requests panel prioritization based on risk factors"
+        user_message: "Prioritize my patient panel by care gap urgency and show the top 10 patients I should contact today"
+        context_data:
+          tenantId: "test-tenant"
+          coordinatorId: "coordinator-123"
+          panelSize: 150
+          filterCriteria:
+            hasOpenCareGaps: true
+            riskLevel: "high"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - COMPLETENESS
+        metric_thresholds:
+          RELEVANCY: 0.75
+          FAITHFULNESS: 0.80
+          COMPLETENESS: 0.70
+        clinical_safety_check: false
+        tags:
+          - prioritization
+          - panel
+          - risk
+
+      - id: COORD-002
+        name: "Outreach optimization"
+        description: "Care coordinator plans outreach for care gap closure"
+        user_message: "Create an outreach plan for patients with overdue breast cancer screening, considering their contact preferences"
+        context_data:
+          tenantId: "test-tenant"
+          careGapType: "BREAST_CANCER_SCREENING"
+          measureId: "BCS"
+          patientCount: 45
+          outreachMethods:
+            - phone
+            - sms
+            - mail
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - BIAS
+        metric_thresholds:
+          RELEVANCY: 0.75
+          FAITHFULNESS: 0.80
+          BIAS: 0.80
+        clinical_safety_check: false
+        tags:
+          - outreach
+          - screening
+          - planning
+
+      - id: COORD-003
+        name: "Barrier analysis"
+        description: "Care coordinator analyzes barriers to care for patient group"
+        user_message: "Analyze the common barriers preventing patients from completing their diabetic eye exams"
+        context_data:
+          tenantId: "test-tenant"
+          careGapType: "DIABETIC_EYE_EXAM"
+          populationSize: 200
+          knownBarriers:
+            - transportation: 35
+            - cost: 28
+            - appointment_availability: 22
+            - language: 15
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - COMPLETENESS
+        metric_thresholds:
+          RELEVANCY: 0.75
+          FAITHFULNESS: 0.80
+          COMPLETENESS: 0.70
+        clinical_safety_check: false
+        tags:
+          - barriers
+          - analysis
+          - sdoh
+
+      - id: COORD-004
+        name: "Care gap bundling opportunities"
+        description: "Care coordinator identifies bundling opportunities for efficient outreach"
+        user_message: "Find patients who have multiple care gaps that could be addressed in a single visit"
+        context_data:
+          tenantId: "test-tenant"
+          coordinatorId: "coordinator-123"
+          minimumGaps: 2
+          bundleTypes:
+            - "wellness_visit"
+            - "chronic_care_review"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - CLINICAL_ACCURACY
+        metric_thresholds:
+          RELEVANCY: 0.75
+          FAITHFULNESS: 0.80
+          CLINICAL_ACCURACY: 0.85
+        clinical_safety_check: false
+        tags:
+          - bundling
+          - efficiency
+          - visits

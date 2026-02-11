@@ -30,7 +30,10 @@ import java.util.Set;
 )
 @Testcontainers
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class EntityMigrationValidationTest extends AbstractEntityMigrationValidationTest {
 
     @Override

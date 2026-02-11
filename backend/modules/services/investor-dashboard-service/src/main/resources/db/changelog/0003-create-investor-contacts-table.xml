@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0003-create-investor-contacts-table" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="investor_contacts"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="investor_contacts">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="organization" type="VARCHAR(255)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="phone" type="VARCHAR(50)"/>
+            <column name="linkedin_url" type="VARCHAR(500)"/>
+            <column name="linkedin_profile_id" type="VARCHAR(100)"/>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)" defaultValue="identified">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tier" type="VARCHAR(10)" defaultValue="B">
+                <constraints nullable="false"/>
+            </column>
+            <column name="investment_thesis" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="last_contacted" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="next_follow_up" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="investor_contacts" indexName="idx_investor_contacts_category">
+            <column name="category"/>
+        </createIndex>
+
+        <createIndex tableName="investor_contacts" indexName="idx_investor_contacts_status">
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex tableName="investor_contacts" indexName="idx_investor_contacts_tier">
+            <column name="tier"/>
+        </createIndex>
+
+        <createIndex tableName="investor_contacts" indexName="idx_investor_contacts_linkedin">
+            <column name="linkedin_profile_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex tableName="investor_contacts" indexName="idx_investor_contacts_linkedin"/>
+            <dropIndex tableName="investor_contacts" indexName="idx_investor_contacts_tier"/>
+            <dropIndex tableName="investor_contacts" indexName="idx_investor_contacts_status"/>
+            <dropIndex tableName="investor_contacts" indexName="idx_investor_contacts_category"/>
+            <dropTable tableName="investor_contacts"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -60,7 +60,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.createDocumentReference(eq(TENANT_ID), any(DocumentReference.class), eq("user")))
                 .thenReturn(docRef);
 
-        mockMvc.perform(post("/fhir/DocumentReference")
+        mockMvc.perform(post("/DocumentReference")
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -78,7 +78,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getDocumentReference(TENANT_ID, docId))
                 .thenReturn(Optional.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/{id}", docId)
+        mockMvc.perform(get("/DocumentReference/{id}", docId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(docRef.getId())));
@@ -91,7 +91,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getDocumentReference(TENANT_ID, docId))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/DocumentReference/{id}", docId)
+        mockMvc.perform(get("/DocumentReference/{id}", docId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -105,7 +105,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.updateDocumentReference(eq(TENANT_ID), eq(docId), any(DocumentReference.class), eq("user")))
                 .thenReturn(docRef);
 
-        mockMvc.perform(put("/fhir/DocumentReference/{id}", docId)
+        mockMvc.perform(put("/DocumentReference/{id}", docId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -119,7 +119,7 @@ class DocumentReferenceControllerTest {
     void shouldDeleteDocumentReference() throws Exception {
         UUID docId = UUID.randomUUID();
 
-        mockMvc.perform(delete("/fhir/DocumentReference/{id}", docId)
+        mockMvc.perform(delete("/DocumentReference/{id}", docId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -141,7 +141,7 @@ class DocumentReferenceControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(docRef)));
 
-        mockMvc.perform(get("/fhir/DocumentReference")
+        mockMvc.perform(get("/DocumentReference")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/not-a-uuid")
                         .param("encounter", "Encounter/not-a-uuid"))
@@ -178,7 +178,7 @@ class DocumentReferenceControllerTest {
                 any(PageRequest.class)))
             .thenReturn(new PageImpl<>(List.of(docRef)));
 
-        mockMvc.perform(get("/fhir/DocumentReference")
+        mockMvc.perform(get("/DocumentReference")
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("patient", "Patient/" + patientId)
                         .param("encounter", "Encounter/" + encounterId)
@@ -201,7 +201,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getDocumentsByPatient(TENANT_ID, patientId))
                 .thenReturn(List.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}", patientId)
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(docRef.getId())));
@@ -216,7 +216,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getCurrentDocuments(TENANT_ID, patientId))
                 .thenReturn(List.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}/current", patientId)
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}/current", patientId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(docRef.getId())));
@@ -231,7 +231,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getDocumentsByEncounter(TENANT_ID, encounterId))
                 .thenReturn(List.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/encounter/{encounterId}", encounterId)
+        mockMvc.perform(get("/DocumentReference/encounter/{encounterId}", encounterId)
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(docRef.getId())));
@@ -246,7 +246,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getDocumentsByType(TENANT_ID, patientId, "34133-9"))
                 .thenReturn(List.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}/type/{typeCode}", patientId, "34133-9")
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}/type/{typeCode}", patientId, "34133-9")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(docRef.getId())));
@@ -259,7 +259,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getLatestDocumentByType(TENANT_ID, patientId, "34133-9"))
                 .thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}/type/{type}/latest", patientId, "34133-9")
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}/type/{type}/latest", patientId, "34133-9")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isNotFound());
     }
@@ -273,7 +273,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getLatestDocumentByType(TENANT_ID, patientId, "34133-9"))
                 .thenReturn(Optional.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}/type/{type}/latest", patientId, "34133-9")
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}/type/{type}/latest", patientId, "34133-9")
                         .header("X-Tenant-ID", TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(docRef.getId())));
@@ -288,7 +288,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.searchByDescription(TENANT_ID, patientId, "summary"))
                 .thenReturn(List.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}/search", patientId)
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}/search", patientId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("q", "summary"))
                 .andExpect(status().isOk())
@@ -304,7 +304,7 @@ class DocumentReferenceControllerTest {
         when(documentReferenceService.getDocumentsByDateRange(eq(TENANT_ID), eq(patientId), any(Instant.class), any(Instant.class)))
                 .thenReturn(List.of(docRef));
 
-        mockMvc.perform(get("/fhir/DocumentReference/patient/{patientId}/date-range", patientId)
+        mockMvc.perform(get("/DocumentReference/patient/{patientId}/date-range", patientId)
                         .header("X-Tenant-ID", TENANT_ID)
                         .param("start", "2025-01-01T00:00:00Z")
                         .param("end", "2025-01-02T00:00:00Z"))

@@ -6,32 +6,89 @@ jwt:
   issuer: healthdata-in-motion-test
   audience: healthdata-api-test
 
-
 spring:
   application:
     name: documentation-service-test
 
+  # Test database configuration - uses external PostgreSQL (not Testcontainers)
+  # Matches CQL Engine Service pattern for test database
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: sa
-    password:
+    url: jdbc:postgresql://localhost:5435/healthdata_docs
+    username: healthdata
+    password: healthdata_password
+    driver-class-name: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none  # Liquibase manages schema
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
-        jdbc:
-          batch_size: 20
+    show-sql: false
 
   liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml  # Fixed: .xml not .yaml
+    enabled: true
+
+  # Exclude custom database config, security, and Kafka/Redis for tests
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+
+  # Disable Redis for tests (use in-memory cache)
+  cache:
+    type: simple
+
+  # Disable Kafka for tests
+  kafka:
     enabled: false
 
+# HealthData Configuration for Tests
+healthdata:
+  database:
+    hikari:
+      traffic-tier: LOW
+
+  # Test document storage configuration
+  document:
+    storage:
+      base-path: ${java.io.tmpdir}/test-documents
+      max-file-size: 10485760  # 10MB
+      allowed-content-types:
+        - application/pdf
+        - image/png
+        - image/jpeg
+        - image/jpg
+        - image/tiff
+
+    # OCR Configuration for Tests
+    ocr:
+      enabled: true
+      async: false  # Synchronous for easier testing
+      tesseract:
+        language: eng
+        oem: 1  # LSTM engine
+        psm: 3  # Automatic page segmentation
+        dpi: 300
+
+server:
+  port: 0  # Random port for tests
+
+# Logging
 logging:
   level:
     root: WARN
     com.healthdata: DEBUG
+    com.healthdata.documentation: DEBUG
+    org.springframework.security: WARN
     org.springframework.test: INFO
+    org.testcontainers: INFO
+
+# Disable Actuator for tests
+management:
+  endpoints:
+    enabled-by-default: false

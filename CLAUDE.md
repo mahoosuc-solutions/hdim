@@ -36,6 +36,7 @@
 ### Reference Portals
 - **[Main Documentation Portal](./docs/README.md)** - Central hub for 1,411+ docs with role-based navigation
 - **[Troubleshooting Guide](./docs/troubleshooting/README.md)** - Problem resolution decision trees
+- **[Investor Documentation](https://github.com/webemo-aaron/hdim-investor)** 💼 - Standalone investor package (pitch deck, due diligence, technical analysis)
 
 ---
 
@@ -837,6 +838,54 @@ export _JAVA_OPTIONS="-Xmx3g"
 ```
 
 **See:** [Gradle Test Quick Reference](./backend/docs/GRADLE_TEST_QUICK_REFERENCE.md) for detailed troubleshooting guide and [Phase 6 Completion Summary](./backend/docs/PHASE-6-COMPLETION-SUMMARY.md) for comprehensive documentation.
+
+---
+
+## Contract Testing
+
+HDIM uses **consumer-driven contract testing** (Pact) and **OpenAPI validation** to ensure API contracts between services remain stable.
+
+### Quick Commands
+
+| Task | Command |
+|------|---------|
+| Run consumer tests | `cd apps/clinical-portal && npm run test:contracts` |
+| Verify Patient Service | `./gradlew :modules:services:patient-service:test --tests "*ProviderTest"` |
+| Verify Care Gap Service | `./gradlew :modules:services:care-gap-service:test --tests "*ProviderTest"` |
+| OpenAPI validation | `./gradlew :modules:services:patient-service:test --tests "*ComplianceTest"` |
+| Start Pact Broker | `docker compose -f docker/pact-broker/docker-compose.pact.yml up -d` |
+| Pact Broker UI | http://localhost:9292 (hdim/hdimcontract) |
+
+### Contract Coverage
+
+| Service | Consumer Tests | Provider Tests | OpenAPI Validation |
+|---------|---------------|----------------|-------------------|
+| Patient Service | Yes | Yes | Yes |
+| Care Gap Service | Yes | Yes | Planned |
+| Quality Measure Service | Planned | Planned | Planned |
+
+### Test Constants (Synchronized)
+
+| Constant | Value |
+|----------|-------|
+| Test Tenant ID | `test-tenant-contracts` |
+| John Doe Patient ID | `f47ac10b-58cc-4372-a567-0e02b2c3d479` |
+| Jane Smith Patient ID | `a1b2c3d4-e5f6-7890-abcd-ef1234567890` |
+| HBA1C Care Gap ID | `550e8400-e29b-41d4-a716-446655440001` |
+| BCS Care Gap ID | `550e8400-e29b-41d4-a716-446655440002` |
+
+### CI/CD Integration
+
+Contract tests run automatically on PRs modifying:
+- `apps/clinical-portal/**`
+- `backend/modules/services/patient-service/**`
+- `backend/modules/services/care-gap-service/**`
+- `backend/modules/shared/contract-testing/**`
+- `backend/modules/shared/openapi-validation/**`
+
+The `contract-gate` job blocks merges if any contract test fails.
+
+**Complete Guide:** [Contract Testing Guide](./docs/development/CONTRACT_TESTING_GUIDE.md)
 
 ---
 

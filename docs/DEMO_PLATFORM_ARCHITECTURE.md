@@ -171,6 +171,8 @@ The HDIM Demo Platform provides a complete, production-like environment optimize
 
 **Tenant alignment**:
 - Demo tenant IDs include `demo-tenant` (primary) and `acme-health` (payer demo).
+- `demo-admin` is reserved for super-admin workflows and platform configuration, and is not seeded with clinical data by default.
+- See `docs/DEMO_TENANTS.md` for the full tenant purpose matrix.
 
 ### External FHIR Access Requirements
 

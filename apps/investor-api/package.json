@@ -1,0 +1,35 @@
+{
+  "name": "investor-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone Investor Dashboard API for Vercel deployment",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "prisma generate",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "npx tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^20.11.30",
+    "@types/pg": "^8.11.0",
+    "@vercel/node": "^5.5.23",
+    "dotenv": "^17.2.3",
+    "prisma": "^7.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "~5.9.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

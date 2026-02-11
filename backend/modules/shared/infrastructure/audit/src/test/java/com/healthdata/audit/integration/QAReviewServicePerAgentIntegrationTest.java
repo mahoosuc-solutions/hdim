@@ -12,6 +12,7 @@ import com.healthdata.audit.service.qa.QAReviewService;
 import com.healthdata.audit.integration.AuditIntegrationTestConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,14 +33,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Integration tests for QA Review Service per-agent statistics.
- * 
+ *
  * Tests with real PostgreSQL database using Testcontainers.
  * Validates statistical calculations with actual database data.
  */
-@SpringBootTest(classes = {AuditIntegrationTestConfiguration.class})
+@SpringBootTest(
+    classes = {AuditIntegrationTestConfiguration.class},
+    properties = "spring.main.allow-bean-definition-overriding=true")
 @Import(QAReviewService.class)
 @Testcontainers
 @Transactional
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 @DisplayName("QA Review Service - Per-Agent Statistics Integration Tests")
 class QAReviewServicePerAgentIntegrationTest {
 

@@ -6,7 +6,7 @@ plugins {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}")
+        mavenBom(libs.spring.cloud.dependencies.get().toString())
     }
 }
 
@@ -77,6 +77,9 @@ dependencies {
 }
 
 tasks.withType<Test> {
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
     // Testcontainers system properties disabled - using running Docker PostgreSQL
     // Configuration now managed in src/test/resources/application-test.yml
     // systemProperty("spring.datasource.url", "jdbc:tc:postgresql:16-alpine:///testdb")

@@ -2,27 +2,20 @@ package com.healthdata.predictive.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.authentication.service.JwtTokenService;
-import com.healthdata.predictive.config.TestJpaConfiguration;
-import com.healthdata.predictive.controller.PredictiveAnalyticsController;
 import com.healthdata.predictive.model.*;
 import com.healthdata.predictive.service.*;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.AuditorAware;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
-import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -32,21 +25,29 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ExtendWith(SpringExtension.class)
-@WebMvcTest(controllers = PredictiveAnalyticsController.class)
-@Import(TestJpaConfiguration.class)
+/**
+ * Integration tests for PredictiveAnalyticsController.
+ *
+ * These tests use @SpringBootTest because the application's @EnableJpaRepositories
+ * annotation requires JPA infrastructure. For a pure unit test approach, the
+ * application would need to be refactored to not use @EnableJpaRepositories
+ * directly on the main class.
+ */
+@Tag("integration")
+@SpringBootTest(properties = {
+    "spring.datasource.url=jdbc:h2:mem:testdb;MODE=PostgreSQL",
+    "spring.datasource.driver-class-name=org.h2.Driver",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "spring.liquibase.enabled=false",
+    "spring.kafka.bootstrap-servers="
+})
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @DisplayName("PredictiveAnalyticsController Tests")
 class PredictiveAnalyticsControllerTest {
 
     @MockBean
     private JwtTokenService jwtTokenService;
-
-    @MockBean
-    private DataSource dataSource;
-
-    @MockBean
-    private AuditorAware<String> auditorAware;
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,6 +66,9 @@ class PredictiveAnalyticsControllerTest {
 
     @MockBean
     private PopulationRiskStratifier riskStratifier;
+
+    @MockBean
+    private com.healthdata.predictive.service.PredictedCareGapService predictedCareGapService;
 
     @Test
     @DisplayName("Should predict readmission risk")

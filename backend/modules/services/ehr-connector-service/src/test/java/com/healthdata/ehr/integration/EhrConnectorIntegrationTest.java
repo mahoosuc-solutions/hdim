@@ -11,6 +11,7 @@ import com.healthdata.ehr.service.EhrSyncService;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,7 @@ import java.io.IOException;
 @Import(TestSecurityConfiguration.class)
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @DisplayName("EHR Connector Integration Tests")
+@Tag("integration")
 class EhrConnectorIntegrationTest {
 
     @Autowired

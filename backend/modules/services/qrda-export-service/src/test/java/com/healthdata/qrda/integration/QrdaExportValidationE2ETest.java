@@ -10,6 +10,7 @@ import com.healthdata.qrda.persistence.QrdaExportJobEntity.QrdaJobStatus;
 import com.healthdata.qrda.persistence.QrdaExportJobEntity.QrdaJobType;
 import com.healthdata.qrda.persistence.QrdaExportJobRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -57,6 +58,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("integration")
+@Tag("e2e")
+@Tag("heavyweight")
 class QrdaExportValidationE2ETest {
 
     @Container

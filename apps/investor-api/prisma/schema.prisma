@@ -1,0 +1,134 @@
+// Prisma schema for Investor Dashboard API
+// Datasource: Vercel Postgres
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// User Management
+// ============================================
+
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  passwordHash        String    @map("password_hash")
+  firstName           String    @map("first_name")
+  lastName            String    @map("last_name")
+  role                String    @default("USER")
+  active              Boolean   @default(true)
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+  lastLogin           DateTime? @map("last_login")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+
+  linkedInConnection LinkedInConnection?
+
+  @@map("investor_users")
+}
+
+// ============================================
+// Task Management
+// ============================================
+
+model Task {
+  id          String    @id @default(uuid())
+  subject     String
+  description String?
+  status      String    @default("pending")
+  category    String
+  week        Int
+  deliverable String?
+  owner       String?
+  dueDate     DateTime? @map("due_date")
+  completedAt DateTime? @map("completed_at")
+  notes       String?
+  sortOrder   Int       @default(0) @map("sort_order")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("investor_tasks")
+}
+
+// ============================================
+// Contact Management
+// ============================================
+
+model Contact {
+  id                String    @id @default(uuid())
+  name              String
+  title             String?
+  organization      String?
+  email             String?
+  phone             String?
+  linkedinUrl       String?   @map("linkedin_url")
+  linkedinProfileId String?   @map("linkedin_profile_id")
+  category          String
+  status            String    @default("identified")
+  tier              String    @default("B")
+  investmentThesis  String?   @map("investment_thesis")
+  notes             String?
+  lastContacted     DateTime? @map("last_contacted")
+  nextFollowUp      DateTime? @map("next_follow_up")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  activities OutreachActivity[]
+
+  @@map("investor_contacts")
+}
+
+// ============================================
+// Outreach Activity Tracking
+// ============================================
+
+model OutreachActivity {
+  id                       String    @id @default(uuid())
+  contactId                String    @map("contact_id")
+  activityType             String    @map("activity_type")
+  status                   String    @default("pending")
+  subject                  String?
+  content                  String?
+  activityDate             DateTime  @map("activity_date")
+  scheduledTime            DateTime? @map("scheduled_time")
+  responseReceived         DateTime? @map("response_received")
+  responseContent          String?   @map("response_content")
+  notes                    String?
+  linkedinMessageId        String?   @map("linkedin_message_id")
+  linkedinConnectionStatus String?   @map("linkedin_connection_status")
+  createdBy                String?   @map("created_by")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@map("outreach_activities")
+}
+
+// ============================================
+// LinkedIn Integration
+// ============================================
+
+model LinkedInConnection {
+  id               String    @id @default(uuid())
+  userId           String    @unique @map("user_id")
+  linkedinMemberId String?   @map("linkedin_member_id")
+  accessToken      String?   @map("access_token")
+  refreshToken     String?   @map("refresh_token")
+  tokenExpiresAt   DateTime? @map("token_expires_at")
+  profileUrl       String?   @map("profile_url")
+  connected        Boolean   @default(false)
+  lastSync         DateTime? @map("last_sync")
+  syncError        String?   @map("sync_error")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("linkedin_connections")
+}

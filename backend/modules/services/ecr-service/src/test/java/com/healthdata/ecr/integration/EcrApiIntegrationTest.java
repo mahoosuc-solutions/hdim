@@ -1,7 +1,7 @@
 package com.healthdata.ecr.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthdata.audit.repository.AuditEventRepository;
+import com.healthdata.audit.repository.shared.AuditEventRepository;
 import com.healthdata.audit.service.AuditService;
 import com.healthdata.authentication.filter.JwtAuthenticationFilter;
 import com.healthdata.authentication.repository.UserRepository;
@@ -61,6 +61,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Import({TestKafkaConfig.class, com.healthdata.ecr.config.TestFhirConfig.class})
 @Testcontainers(disabledWithoutDocker = true)
+@Tag("integration")
+@Tag("slow")
+@Tag("heavyweight")
 class EcrApiIntegrationTest {
 
     // Testcontainers PostgreSQL - singleton pattern for all tests

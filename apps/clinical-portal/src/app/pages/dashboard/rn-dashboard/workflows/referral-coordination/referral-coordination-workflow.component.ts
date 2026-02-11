@@ -29,6 +29,8 @@ import { Subject, takeUntil } from 'rxjs';
 import { NurseWorkflowService } from '../../../../../services/nurse-workflow/nurse-workflow.service';
 import { ToastService } from '../../../../../services/toast.service';
 import { LoggerService, ContextualLogger } from '../../../../../services/logger.service';
+import { AuthService } from '../../../../../services/auth.service';
+import { API_CONFIG } from '../../../../../config/api.config';
 
 export interface Specialist {
   id: string;
@@ -113,6 +115,7 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
     private toastService: ToastService,
     private logger: LoggerService,
     private dialogRef: MatDialogRef<ReferralCoordinationWorkflowComponent>,
+    private authService: AuthService,
     @Inject(MAT_DIALOG_DATA) public data: ReferralCoordinationWorkflowData
   ) {    this.referralId = data.referralId;
     this.patientId = data.patientId;
@@ -177,7 +180,9 @@ export class ReferralCoordinationWorkflowComponent implements OnInit, OnDestroy 
    */
   private loadReferral(): void {
     this.loading = true;
-    this.nurseWorkflowService.setTenantContext('TENANT001'); // TODO: Get from auth
+    this.nurseWorkflowService.setTenantContext(
+      this.authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID
+    );
 
     this.nurseWorkflowService
       .getReferralById(this.referralId)

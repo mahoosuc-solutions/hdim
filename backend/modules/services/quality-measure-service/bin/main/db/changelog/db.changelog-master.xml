@@ -8,6 +8,12 @@
     <!-- PostgreSQL extensions must come FIRST -->
     <include file="db/changelog/0000-enable-extensions.xml"/>
 
+    <!-- Tenants table (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-tenants-table.xml"/>
+
+    <!-- Authentication tables (required by shared authentication module dependency) -->
+    <include file="db/changelog/0000-create-authentication-tables.xml"/>
+
     <include file="db/changelog/0001-create-quality-measure-results-table.xml"/>
     <include file="db/changelog/0002-create-saved-reports-table.xml"/>
     <include file="db/changelog/0003-create-custom-measures-table.xml"/>
@@ -43,6 +49,7 @@
     <!-- Notification routing and recipient configuration -->
     <include file="db/changelog/0024-create-notification-routing-tables.xml"/>
     <include file="db/changelog/0025-convert-quality-patient-ids-to-uuid.xml"/>
+    <include file="db/changelog/0030-drop-legacy-denominator-column.xml"/>
 
     <!-- Quality Measure Definition and Results Refactoring -->
     <include file="db/changelog/0026-create-quality-measures-table.xml"/>
@@ -76,5 +83,23 @@
     <include file="db/changelog/0039-create-measure-modification-audit.xml"/>
     <include file="db/changelog/0040-create-patient-measure-eligibility-cache.xml"/>
     <include file="db/changelog/0041-create-evaluation-default-presets.xml"/>
+
+    <!-- Fix column type mismatch: health_scores and health_score_history NUMERIC -> DOUBLE PRECISION -->
+    <include file="db/changelog/0042-fix-health-score-column-types.xml"/>
+
+    <!-- Fix missing column: Add measure_id to measure_config_profiles -->
+    <include file="db/changelog/0043-add-measure-id-to-config-profiles.xml"/>
+
+    <!-- Fix column name: Rename change_summary to change_description in measure_modification_audit -->
+    <include file="db/changelog/0044-fix-measure-modification-audit-columns.xml"/>
+
+    <!-- Fix missing column: Add created_by to patient_measure_assignments -->
+    <include file="db/changelog/0045-add-created-by-to-patient-measure-assignments.xml"/>
+
+    <!-- Fix missing column: Add created_by to patient_profile_assignments -->
+    <include file="db/changelog/0046-add-created-by-to-patient-profile-assignments.xml"/>
+
+    <!-- Fix missing MFA columns in users table -->
+    <include file="db/changelog/0047-add-missing-user-mfa-columns.xml"/>
 
 </databaseChangeLog>

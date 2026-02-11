@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        LinkedIn OAuth Token Storage Table
+        Stores OAuth 2.0 tokens for LinkedIn API integration.
+        Tokens are scoped per user per tenant for multi-user support.
+    -->
+    <changeSet id="0018-create-linkedin-tokens-table" author="hdim">
+        <createTable tableName="linkedin_tokens">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="linkedin_member_id" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="access_token" type="VARCHAR(2000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refresh_token" type="VARCHAR(2000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="scope" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refresh_expires_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_used_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+            <column name="error_message" type="VARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Unique constraint: one token per user per tenant -->
+        <addUniqueConstraint
+            tableName="linkedin_tokens"
+            columnNames="tenant_id, user_id"
+            constraintName="uk_linkedin_tokens_tenant_user"/>
+
+        <!-- Index for tenant lookup -->
+        <createIndex tableName="linkedin_tokens" indexName="idx_linkedin_tokens_tenant">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <!-- Index for finding active tokens -->
+        <createIndex tableName="linkedin_tokens" indexName="idx_linkedin_tokens_status">
+            <column name="status"/>
+        </createIndex>
+
+        <!-- Index for finding expiring tokens -->
+        <createIndex tableName="linkedin_tokens" indexName="idx_linkedin_tokens_expires">
+            <column name="expires_at"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="linkedin_tokens"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

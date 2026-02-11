@@ -1,0 +1,139 @@
+# Clinician User Story Test Configurations
+# Target Role: CLINICIAN
+# Agent Type: clinical-decision
+
+test_suites:
+  - name: "Clinician Care Gap Review"
+    user_story_type: PATIENT_SUMMARY_REVIEW
+    target_role: CLINICIAN
+    agent_type: clinical-decision
+    pass_threshold: 0.80
+    description: "Tests clinician workflows for patient summary review and care gap evaluation"
+
+    test_cases:
+      - id: CLIN-001
+        name: "Diabetic patient with multiple care gaps"
+        description: "Clinician reviews care gaps for a diabetic patient with HBA1C and eye exam gaps"
+        user_message: "Show me the care gaps for patient John Doe and prioritize them based on clinical urgency"
+        context_data:
+          patientId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          tenantId: "test-tenant"
+          patientName: "John Doe"
+          conditions:
+            - "Type 2 Diabetes"
+            - "Hypertension"
+          last_hba1c_date: "2024-06-15"
+          last_hba1c_value: 8.5
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - CLINICAL_ACCURACY
+          - HIPAA_COMPLIANCE
+        metric_thresholds:
+          RELEVANCY: 0.75
+          FAITHFULNESS: 0.80
+          CLINICAL_ACCURACY: 0.85
+          HIPAA_COMPLIANCE: 0.90
+        clinical_safety_check: true
+        tags:
+          - diabetes
+          - care-gaps
+          - priority
+
+      - id: CLIN-002
+        name: "Lab result interpretation"
+        description: "Clinician requests interpretation of recent lab results"
+        user_message: "Interpret the latest lab results for this patient and flag any concerning values"
+        context_data:
+          patientId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          tenantId: "test-tenant"
+          labResults:
+            - test: "HBA1C"
+              value: 9.2
+              unit: "%"
+              referenceRange: "4.0-5.6"
+            - test: "LDL"
+              value: 165
+              unit: "mg/dL"
+              referenceRange: "<100"
+            - test: "eGFR"
+              value: 58
+              unit: "mL/min/1.73m2"
+              referenceRange: ">60"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - CLINICAL_ACCURACY
+          - HALLUCINATION
+        metric_thresholds:
+          RELEVANCY: 0.80
+          FAITHFULNESS: 0.85
+          CLINICAL_ACCURACY: 0.90
+          HALLUCINATION: 0.20
+        clinical_safety_check: true
+        tags:
+          - labs
+          - interpretation
+          - critical
+
+      - id: CLIN-003
+        name: "Medication reconciliation"
+        description: "Clinician reviews patient medications for reconciliation"
+        user_message: "Review this patient's current medications and identify any potential interactions or duplications"
+        context_data:
+          patientId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          tenantId: "test-tenant"
+          medications:
+            - name: "Metformin"
+              dose: "1000mg"
+              frequency: "twice daily"
+            - name: "Lisinopril"
+              dose: "10mg"
+              frequency: "once daily"
+            - name: "Atorvastatin"
+              dose: "40mg"
+              frequency: "once daily"
+            - name: "Aspirin"
+              dose: "81mg"
+              frequency: "once daily"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - CLINICAL_ACCURACY
+          - CLINICAL_SAFETY
+        metric_thresholds:
+          RELEVANCY: 0.80
+          FAITHFULNESS: 0.85
+          CLINICAL_ACCURACY: 0.90
+          CLINICAL_SAFETY: 0.95
+        clinical_safety_check: true
+        tags:
+          - medications
+          - reconciliation
+          - safety
+
+      - id: CLIN-004
+        name: "Care gap closure guidance"
+        description: "Clinician requests guidance on addressing specific care gap"
+        user_message: "What steps should be taken to close the HBA1C monitoring care gap for this diabetic patient?"
+        context_data:
+          patientId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          tenantId: "test-tenant"
+          careGap:
+            type: "HBA1C_MONITORING"
+            measure: "CDC - Diabetes: HbA1c Control"
+            dueDate: "2025-03-31"
+            lastCompleted: "2024-06-15"
+        required_metrics:
+          - RELEVANCY
+          - FAITHFULNESS
+          - CLINICAL_ACCURACY
+        metric_thresholds:
+          RELEVANCY: 0.80
+          FAITHFULNESS: 0.80
+          CLINICAL_ACCURACY: 0.85
+        clinical_safety_check: true
+        tags:
+          - care-gaps
+          - closure
+          - guidance

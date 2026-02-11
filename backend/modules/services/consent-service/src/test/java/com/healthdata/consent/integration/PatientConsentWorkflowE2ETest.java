@@ -8,6 +8,7 @@ import com.healthdata.consent.rest.ConsentController.ConsentCheckResponse;
 import com.healthdata.consent.rest.ConsentController.ConsentValidationResponse;
 import com.healthdata.consent.rest.ConsentController.DataAccessRequest;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,8 +23,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +52,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Tag("e2e")
+@Tag("heavyweight")
 class PatientConsentWorkflowE2ETest {
 
     @Container
@@ -104,8 +107,8 @@ class PatientConsentWorkflowE2ETest {
             .verificationMethod("electronic-signature")
             .verifiedBy(USER_ID)
             .verificationDate(LocalDate.now())
-            .createdAt(LocalDateTime.now())
-            .lastModifiedAt(LocalDateTime.now())
+            .createdAt(Instant.now())
+            .lastModifiedAt(Instant.now())
             .createdBy(USER_ID)
             .lastModifiedBy(USER_ID)
             .version(0)
@@ -243,7 +246,9 @@ class PatientConsentWorkflowE2ETest {
         @Test
         @DisplayName("should retrieve expired consents")
         void shouldRetrieveExpiredConsents() throws Exception {
-            ConsentEntity expiredConsent = createTestConsent("read", "treatment", "expired");
+            // The /expired endpoint returns consents that are ACTIVE but have validTo in the past
+            // (i.e., they are expired by date but haven't been marked as 'expired' status yet)
+            ConsentEntity expiredConsent = createTestConsent("read", "treatment", "active");
             expiredConsent.setValidTo(LocalDate.now().minusDays(30));
             consentRepository.save(expiredConsent);
 
@@ -251,7 +256,8 @@ class PatientConsentWorkflowE2ETest {
                     .headers(createHeaders(TENANT_ID)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[?(@.status == 'expired')]").exists());
+                .andExpect(jsonPath("$[0].status").value("active"))
+                .andExpect(jsonPath("$[0].validTo").exists());
         }
 
         @Test

@@ -7,6 +7,7 @@ import com.healthdata.patient.service.PatientTimelineService;
 import org.hl7.fhir.r4.model.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Controller tests for PatientController.
  * Tests REST API endpoints for patient data aggregation and health status.
  */
+@Tag("integration")
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

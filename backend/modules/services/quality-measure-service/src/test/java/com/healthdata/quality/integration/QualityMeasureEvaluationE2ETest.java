@@ -10,6 +10,7 @@ import com.healthdata.testfixtures.security.GatewayTrustTestHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -60,6 +61,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @DisplayName("Quality Measure Evaluation E2E Functional Tests")
+@Tag("e2e")
+@Tag("heavyweight")
 class QualityMeasureEvaluationE2ETest {
 
     @Autowired

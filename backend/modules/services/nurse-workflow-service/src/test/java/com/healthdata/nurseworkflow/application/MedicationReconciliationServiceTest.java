@@ -202,10 +202,19 @@ class MedicationReconciliationServiceTest {
     @DisplayName("should find medication reconciliations with poor understanding")
     void testFindPoorUnderstandingReconciliations_Success() {
         // Given
-        MedicationReconciliationEntity poorUnderstanding =
-            testMedRec.toBuilder()
-                .patientUnderstanding(MedicationReconciliationEntity.PatientUnderstanding.POOR)
-                .build();
+        MedicationReconciliationEntity poorUnderstanding = MedicationReconciliationEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(tenantId)
+            .patientId(patientId)
+            .reconcilerId(reconcilerId)
+            .status(MedicationReconciliationEntity.ReconciliationStatus.COMPLETED)
+            .triggerType(MedicationReconciliationEntity.TriggerType.HOSPITAL_DISCHARGE)
+            .medicationCount(5)
+            .discrepancyCount(1)
+            .patientEducationProvided(true)
+            .patientUnderstanding(MedicationReconciliationEntity.PatientUnderstanding.POOR)
+            .startedAt(Instant.now())
+            .build();
 
         when(medRecRepository.findWithPoorUnderstanding(tenantId))
             .thenReturn(List.of(poorUnderstanding));

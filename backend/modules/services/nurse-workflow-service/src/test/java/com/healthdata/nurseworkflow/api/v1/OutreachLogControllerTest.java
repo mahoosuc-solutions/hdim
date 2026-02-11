@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -71,7 +72,7 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("POST /nurse-workflow/outreach-logs - should create outreach log")
+    @DisplayName("POST /nurse-workflow/api/v1/outreach-logs - should create outreach log")
     void testCreateOutreachLog_Success() throws Exception {
         // Given
         when(outreachLogService.createOutreachLog(any(OutreachLogEntity.class)))
@@ -89,7 +90,7 @@ class OutreachLogControllerTest {
             """.formatted(patientId, nurseId);
 
         // When & Then
-        mockMvc.perform(post("/outreach-logs")
+        mockMvc.perform(post("/api/v1/outreach-logs")
                 .header("X-Tenant-ID", tenantId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -102,14 +103,14 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("GET /nurse-workflow/outreach-logs/{id} - should retrieve outreach log")
+    @DisplayName("GET /nurse-workflow/api/v1/outreach-logs/{id} - should retrieve outreach log")
     void testGetOutreachLog_Success() throws Exception {
         // Given
         when(outreachLogService.getOutreachLogById(testOutreachLog.getId()))
             .thenReturn(Optional.of(testOutreachLog));
 
         // When & Then
-        mockMvc.perform(get("/outreach-logs/{id}", testOutreachLog.getId())
+        mockMvc.perform(get("/api/v1/outreach-logs/{id}", testOutreachLog.getId())
                 .header("X-Tenant-ID", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -120,7 +121,7 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("GET /nurse-workflow/outreach-logs/{id} - should return 404 when not found")
+    @DisplayName("GET /nurse-workflow/api/v1/outreach-logs/{id} - should return 404 when not found")
     void testGetOutreachLog_NotFound() throws Exception {
         // Given
         UUID nonExistentId = UUID.randomUUID();
@@ -128,14 +129,14 @@ class OutreachLogControllerTest {
             .thenReturn(Optional.empty());
 
         // When & Then
-        mockMvc.perform(get("/outreach-logs/{id}", nonExistentId)
+        mockMvc.perform(get("/api/v1/outreach-logs/{id}", nonExistentId)
                 .header("X-Tenant-ID", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
     }
 
     @Test
-    @DisplayName("GET /nurse-workflow/outreach-logs/patient/{patientId} - should retrieve patient history")
+    @DisplayName("GET /nurse-workflow/api/v1/outreach-logs/patient/{patientId} - should retrieve patient history")
     void testGetPatientOutreachHistory_Success() throws Exception {
         // Given
         PageRequest pageRequest = PageRequest.of(0, 10);
@@ -146,7 +147,7 @@ class OutreachLogControllerTest {
             .thenReturn(mockPage);
 
         // When & Then
-        mockMvc.perform(get("/outreach-logs/patient/{patientId}", patientId)
+        mockMvc.perform(get("/api/v1/outreach-logs/patient/{patientId}", patientId)
                 .header("X-Tenant-ID", tenantId)
                 .param("page", "0")
                 .param("size", "10")
@@ -157,7 +158,7 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /nurse-workflow/outreach-logs/{id} - should update outreach log")
+    @DisplayName("PUT /nurse-workflow/api/v1/outreach-logs/{id} - should update outreach log")
     void testUpdateOutreachLog_Success() throws Exception {
         // Given
         testOutreachLog.setNotes("Updated notes");
@@ -172,7 +173,7 @@ class OutreachLogControllerTest {
             """.formatted(testOutreachLog.getId());
 
         // When & Then
-        mockMvc.perform(put("/outreach-logs/{id}", testOutreachLog.getId())
+        mockMvc.perform(put("/api/v1/outreach-logs/{id}", testOutreachLog.getId())
                 .header("X-Tenant-ID", tenantId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -183,13 +184,13 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /nurse-workflow/outreach-logs/{id} - should delete outreach log")
+    @DisplayName("DELETE /nurse-workflow/api/v1/outreach-logs/{id} - should delete outreach log")
     void testDeleteOutreachLog_Success() throws Exception {
         // Given
         doNothing().when(outreachLogService).deleteOutreachLog(testOutreachLog.getId());
 
         // When & Then
-        mockMvc.perform(delete("/outreach-logs/{id}", testOutreachLog.getId())
+        mockMvc.perform(delete("/api/v1/outreach-logs/{id}", testOutreachLog.getId())
                 .header("X-Tenant-ID", tenantId))
             .andExpect(status().isNoContent());
 
@@ -197,7 +198,7 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("GET /nurse-workflow/outreach-logs/metrics/{patientId} - should return metrics")
+    @DisplayName("GET /nurse-workflow/api/v1/outreach-logs/metrics/{patientId} - should return metrics")
     void testGetOutreachMetrics_Success() throws Exception {
         // Given
         OutreachLogService.OutreachMetrics metrics = OutreachLogService.OutreachMetrics.builder()
@@ -210,7 +211,7 @@ class OutreachLogControllerTest {
             .thenReturn(metrics);
 
         // When & Then
-        mockMvc.perform(get("/outreach-logs/metrics/{patientId}", patientId)
+        mockMvc.perform(get("/api/v1/outreach-logs/metrics/{patientId}", patientId)
                 .header("X-Tenant-ID", tenantId)
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -220,10 +221,10 @@ class OutreachLogControllerTest {
     }
 
     @Test
-    @DisplayName("GET /nurse-workflow/outreach-logs - should require tenant header")
+    @DisplayName("GET /api/v1/outreach-logs/{id} - should require tenant header")
     void testMissingTenantHeader() throws Exception {
-        // When & Then
-        mockMvc.perform(get("/outreach-logs")
+        // When & Then - use existing endpoint that requires X-Tenant-ID header
+        mockMvc.perform(get("/api/v1/outreach-logs/{id}", testOutreachLog.getId())
                 .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
     }

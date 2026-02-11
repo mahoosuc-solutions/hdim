@@ -60,7 +60,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.createMedicationRequest(eq("tenant-1"), any(MedicationRequest.class), eq("user")))
                 .thenReturn(request);
 
-        mockMvc.perform(post("/fhir/MedicationRequest")
+        mockMvc.perform(post("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -76,7 +76,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.createMedicationRequest(eq("tenant-1"), any(MedicationRequest.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("create failed"));
 
-        mockMvc.perform(post("/fhir/MedicationRequest")
+        mockMvc.perform(post("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -88,7 +88,7 @@ class MedicationRequestControllerTest {
     @Test
     @DisplayName("Should return bad request on create invalid JSON")
     void shouldReturnBadRequestOnCreateInvalidJson() throws Exception {
-        mockMvc.perform(post("/fhir/MedicationRequest")
+        mockMvc.perform(post("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -102,7 +102,7 @@ class MedicationRequestControllerTest {
         MedicationRequest request = buildMedicationRequest(UUID.randomUUID());
         when(medicationRequestService.getMedicationRequest("tenant-1", request.getId())).thenReturn(Optional.of(request));
 
-        mockMvc.perform(get("/fhir/MedicationRequest/{id}", request.getId())
+        mockMvc.perform(get("/MedicationRequest/{id}", request.getId())
                         .header("X-Tenant-ID", "tenant-1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(request.getId())));
@@ -113,7 +113,7 @@ class MedicationRequestControllerTest {
     void shouldReturnNotFoundWhenMissing() throws Exception {
         when(medicationRequestService.getMedicationRequest("tenant-1", "missing")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/fhir/MedicationRequest/{id}", "missing")
+        mockMvc.perform(get("/MedicationRequest/{id}", "missing")
                         .header("X-Tenant-ID", "tenant-1"))
                 .andExpect(status().isNotFound());
     }
@@ -125,7 +125,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.updateMedicationRequest(eq("tenant-1"), eq(request.getId()), any(MedicationRequest.class), eq("user")))
                 .thenReturn(request);
 
-        mockMvc.perform(put("/fhir/MedicationRequest/{id}", request.getId())
+        mockMvc.perform(put("/MedicationRequest/{id}", request.getId())
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -139,7 +139,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.updateMedicationRequest(eq("tenant-1"), eq("id-1"), any(MedicationRequest.class), eq("user")))
                 .thenThrow(new IllegalArgumentException("update failed"));
 
-        mockMvc.perform(put("/fhir/MedicationRequest/{id}", "id-1")
+        mockMvc.perform(put("/MedicationRequest/{id}", "id-1")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -151,7 +151,7 @@ class MedicationRequestControllerTest {
     @Test
     @DisplayName("Should return bad request on update invalid JSON")
     void shouldReturnBadRequestOnUpdateInvalidJson() throws Exception {
-        mockMvc.perform(put("/fhir/MedicationRequest/{id}", "id-1")
+        mockMvc.perform(put("/MedicationRequest/{id}", "id-1")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -165,7 +165,7 @@ class MedicationRequestControllerTest {
         doThrow(new MedicationRequestService.MedicationRequestNotFoundException("missing"))
                 .when(medicationRequestService).updateMedicationRequest(eq("tenant-1"), eq("missing"), any(MedicationRequest.class), eq("user"));
 
-        mockMvc.perform(put("/fhir/MedicationRequest/{id}", "missing")
+        mockMvc.perform(put("/MedicationRequest/{id}", "missing")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user")
                         .contentType("application/fhir+json")
@@ -176,7 +176,7 @@ class MedicationRequestControllerTest {
     @Test
     @DisplayName("Should delete medication request")
     void shouldDeleteMedicationRequest() throws Exception {
-        mockMvc.perform(delete("/fhir/MedicationRequest/{id}", "id-1")
+        mockMvc.perform(delete("/MedicationRequest/{id}", "id-1")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNoContent());
@@ -188,7 +188,7 @@ class MedicationRequestControllerTest {
         doThrow(new MedicationRequestService.MedicationRequestNotFoundException("missing"))
                 .when(medicationRequestService).deleteMedicationRequest("tenant-1", "missing", "user");
 
-        mockMvc.perform(delete("/fhir/MedicationRequest/{id}", "missing")
+        mockMvc.perform(delete("/MedicationRequest/{id}", "missing")
                         .header("X-Tenant-ID", "tenant-1")
                         .header("X-User-ID", "user"))
                 .andExpect(status().isNotFound());
@@ -200,7 +200,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.searchMedicationRequestsByPatient(eq("tenant-1"), eq("patient-1"), any()))
                 .thenReturn(new org.hl7.fhir.r4.model.Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationRequest")
+        mockMvc.perform(get("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -212,7 +212,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.searchMedicationRequestsByPatientAndCode("tenant-1", "patient-1", "med-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationRequest")
+        mockMvc.perform(get("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                 .param("code", "med-1"))
@@ -225,7 +225,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.searchMedicationRequestsByPatientAndCode("tenant-1", "patient-1", "med-1"))
                 .thenThrow(new IllegalStateException("search code failed"));
 
-        mockMvc.perform(get("/fhir/MedicationRequest")
+        mockMvc.perform(get("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("code", "med-1"))
@@ -236,7 +236,7 @@ class MedicationRequestControllerTest {
     @Test
     @DisplayName("Should return bad request when patient missing")
     void shouldReturnBadRequestWhenPatientMissing() throws Exception {
-        mockMvc.perform(get("/fhir/MedicationRequest")
+        mockMvc.perform(get("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1"))
                 .andExpect(status().isBadRequest());
     }
@@ -247,7 +247,7 @@ class MedicationRequestControllerTest {
         doThrow(new IllegalArgumentException("bad search"))
                 .when(medicationRequestService).searchMedicationRequestsByPatient(eq("tenant-1"), eq("patient-1"), any());
 
-        mockMvc.perform(get("/fhir/MedicationRequest")
+        mockMvc.perform(get("/MedicationRequest")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -260,7 +260,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.getActiveRequestsByPatient("tenant-1", "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationRequest/active")
+        mockMvc.perform(get("/MedicationRequest/active")
                         .header("X-Tenant-ID", "tenant-1")
                 .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -272,7 +272,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.getActiveRequestsByPatient("tenant-1", "patient-1"))
                 .thenThrow(new IllegalStateException("active failed"));
 
-        mockMvc.perform(get("/fhir/MedicationRequest/active")
+        mockMvc.perform(get("/MedicationRequest/active")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -285,7 +285,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.getPrescriptionsByPatient("tenant-1", "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationRequest/prescriptions")
+        mockMvc.perform(get("/MedicationRequest/prescriptions")
                         .header("X-Tenant-ID", "tenant-1")
                 .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -297,7 +297,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.getPrescriptionsByPatient("tenant-1", "patient-1"))
                 .thenThrow(new IllegalStateException("prescriptions failed"));
 
-        mockMvc.perform(get("/fhir/MedicationRequest/prescriptions")
+        mockMvc.perform(get("/MedicationRequest/prescriptions")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -310,7 +310,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.getRequestsWithRefills("tenant-1", "patient-1"))
                 .thenReturn(new Bundle());
 
-        mockMvc.perform(get("/fhir/MedicationRequest/with-refills")
+        mockMvc.perform(get("/MedicationRequest/with-refills")
                         .header("X-Tenant-ID", "tenant-1")
                 .param("patient", "patient-1"))
                 .andExpect(status().isOk());
@@ -322,7 +322,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.getRequestsWithRefills("tenant-1", "patient-1"))
                 .thenThrow(new IllegalStateException("refills failed"));
 
-        mockMvc.perform(get("/fhir/MedicationRequest/with-refills")
+        mockMvc.perform(get("/MedicationRequest/with-refills")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1"))
                 .andExpect(status().isBadRequest())
@@ -335,7 +335,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.hasActiveMedication("tenant-1", "patient-1", "med-1"))
                 .thenReturn(true);
 
-        mockMvc.perform(get("/fhir/MedicationRequest/has-medication")
+        mockMvc.perform(get("/MedicationRequest/has-medication")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("code", "med-1"))
@@ -349,7 +349,7 @@ class MedicationRequestControllerTest {
         when(medicationRequestService.hasActiveMedication("tenant-1", "patient-1", "med-1"))
                 .thenThrow(new IllegalStateException("has medication failed"));
 
-        mockMvc.perform(get("/fhir/MedicationRequest/has-medication")
+        mockMvc.perform(get("/MedicationRequest/has-medication")
                         .header("X-Tenant-ID", "tenant-1")
                         .param("patient", "patient-1")
                         .param("code", "med-1"))
@@ -359,7 +359,7 @@ class MedicationRequestControllerTest {
     @Test
     @DisplayName("Should return health check")
     void shouldReturnHealthCheck() throws Exception {
-        mockMvc.perform(get("/fhir/MedicationRequest/_health"))
+        mockMvc.perform(get("/MedicationRequest/_health"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("MedicationRequest")));
     }

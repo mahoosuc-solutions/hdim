@@ -37,6 +37,13 @@ USER spring:spring
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD wget --spider --quiet http://localhost:8080/actuator/health || exit 1
 
+# JVM configuration for containers
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+    -XX:MaxRAMPercentage=75.0 \
+    -XX:+UseG1GC \
+    -XX:+UseStringDeduplication \
+    -Djava.security.egd=file:/dev/./urandom"
+
 # Start the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
 CMD ["--spring.profiles.active=docker"]

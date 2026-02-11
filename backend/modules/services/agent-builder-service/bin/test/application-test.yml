@@ -1,13 +1,12 @@
 spring:
   datasource:
-    url: jdbc:tc:postgresql:15-alpine:///testdb
-    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
-    username: sa
-    password:
-
+    url: jdbc:postgresql://localhost:5435/agent_db
+    driver-class-name: org.postgresql.Driver
+    username: healthdata
+    password: healthdata_password
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: validate
     show-sql: false
 
   flyway:

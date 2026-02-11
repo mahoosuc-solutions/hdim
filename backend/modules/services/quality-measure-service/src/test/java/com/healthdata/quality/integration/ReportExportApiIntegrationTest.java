@@ -5,6 +5,7 @@ import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.persistence.SavedReportEntity;
 import com.healthdata.quality.persistence.SavedReportRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
@@ -28,6 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * TDD Integration Tests for Report Export API
  * Tests written BEFORE implementation
  */
+@Tag("integration")
 @SpringBootTest
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @AutoConfigureMockMvc

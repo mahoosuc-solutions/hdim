@@ -33,7 +33,6 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
     drop-first: false
-    auto-update: true
 
   # Redis Configuration (HIPAA-compliant caching)
   cache:

@@ -23,10 +23,11 @@ import java.util.Set;
  *
  * @author HDIM Platform Team
  */
+@Tag("integration")
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("test")
-@Tag("entity-migration-validation")
+@Tag("integration")
 class EntityMigrationValidationTest extends AbstractEntityMigrationValidationTest {
 
     @Override

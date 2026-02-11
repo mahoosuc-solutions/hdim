@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -174,6 +175,11 @@ public class GatewayForwarder {
                 .status(e.getStatusCode())
                 .headers(filteredHeaders)
                 .body(e.getResponseBodyAsString());
+        } catch (ResourceAccessException e) {
+            log.warn("Gateway could not reach upstream {}: {}", serviceUrl, e.getMessage());
+            return ResponseEntity
+                .status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("Gateway error: upstream service unavailable");
         } catch (Exception e) {
             log.error("Gateway error forwarding request to {}: {}", serviceUrl, e.getMessage(), e);
             return ResponseEntity

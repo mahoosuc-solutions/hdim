@@ -1,3 +1,4 @@
+import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import {
@@ -21,6 +22,7 @@ import {
  * });
  * ```
  */
+@Injectable()
 export class MockWebSocketService {
   private messageSubject = new Subject<WebSocketMessage>();
   private statusSubject = new BehaviorSubject<ConnectionStatus>({

@@ -1,5 +1,6 @@
 package com.healthdata.approval.service;
 
+import com.healthdata.approval.audit.ApprovalAuditIntegration;
 import com.healthdata.approval.domain.entity.ApprovalHistory;
 import com.healthdata.approval.domain.entity.ApprovalHistory.HistoryAction;
 import com.healthdata.approval.domain.entity.ApprovalRequest;
@@ -53,6 +54,9 @@ class ApprovalServiceTest {
 
     @Mock
     private ApprovalEventPublisher eventPublisher;
+
+    @Mock
+    private ApprovalAuditIntegration approvalAuditIntegration;
 
     @InjectMocks
     private ApprovalService approvalService;
@@ -617,6 +621,7 @@ class ApprovalServiceTest {
             .expiresAt(Instant.now().plus(Duration.ofHours(24)))
             .build();
         ReflectionTestUtils.setField(request, "id", id);
+        ReflectionTestUtils.setField(request, "createdAt", Instant.now());
         return request;
     }
 

@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>
+  <mat-icon color="primary">description</mat-icon>
+  {{ data?.name }}
+</h2>
+<mat-dialog-content class="dialog-content">
+  <div class="meta">
+    <mat-chip color="primary" selected>Draft</mat-chip>
+    <span class="timestamp">{{ data?.createdAt | date: 'short' }}</span>
+  </div>
+  <p class="description">{{ data?.description || 'No description provided yet.' }}</p>
+
+<form class="form" (ngSubmit)="save()">
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="name" name="name" required />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Description</mat-label>
+    <textarea matInput rows="3" [(ngModel)]="description" name="description"></textarea>
+  </mat-form-field>
+
+  <div class="row">
+    <mat-form-field appearance="outline" class="half-width">
+      <mat-label>Category</mat-label>
+      <input matInput [(ngModel)]="category" name="category" placeholder="CUSTOM" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="half-width">
+      <mat-label>Year</mat-label>
+      <input matInput type="number" [(ngModel)]="year" name="year" min="2000" />
+    </mat-form-field>
+  </div>
+
+  <div class="actions">
+    <button mat-button type="button" (click)="close()" matTooltip="Discard changes and close">
+      <mat-icon>close</mat-icon>
+      Close
+    </button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="saving || !name.trim()">
+      <mat-icon>save</mat-icon>
+      <span *ngIf="!saving">Save</span>
+      <span *ngIf="saving">Saving...</span>
+    </button>
+  </div>
+</form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">
+    <mat-icon>close</mat-icon>
+    Close
+  </button>
+</mat-dialog-actions>

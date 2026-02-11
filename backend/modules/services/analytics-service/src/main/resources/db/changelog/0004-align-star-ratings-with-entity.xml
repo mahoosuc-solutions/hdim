@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0004-align-star-ratings-with-entity" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="measure_domain"/>
+            </not>
+        </preConditions>
+
+        <comment>
+            Align star_ratings table with StarRatingEntity.
+            The entity was redesigned with different column names and types.
+            This migration adds missing columns to match the entity definition.
+        </comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="measure_domain" type="varchar(100)" defaultValue="UNKNOWN">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="measure_domain"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-rating-year-column" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="rating_year"/>
+            </not>
+        </preConditions>
+
+        <comment>Add rating_year column (entity uses this instead of measurement_year)</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="rating_year" type="integer" defaultValueNumeric="2024">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="rating_year"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-rating-value-column" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="rating_value"/>
+            </not>
+        </preConditions>
+
+        <comment>Add rating_value column for the star rating decimal value</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="rating_value" type="decimal(3,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="rating_value"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-performance-score-column" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="performance_score"/>
+            </not>
+        </preConditions>
+
+        <comment>Add performance_score column</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="performance_score" type="decimal(6,2)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="performance_score"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-benchmark-column" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="benchmark"/>
+            </not>
+        </preConditions>
+
+        <comment>Add benchmark column for comparison values</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="benchmark" type="decimal(6,2)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="benchmark"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-percentile-rank-column" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="percentile_rank"/>
+            </not>
+        </preConditions>
+
+        <comment>Add percentile_rank column</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="percentile_rank" type="decimal(5,2)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="percentile_rank"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-measurement-period-columns" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="measurement_period_start"/>
+            </not>
+        </preConditions>
+
+        <comment>Add measurement period start/end date columns</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="measurement_period_start" type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="star_ratings">
+            <column name="measurement_period_end" type="date">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="measurement_period_start"/>
+            <dropColumn tableName="star_ratings" columnName="measurement_period_end"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0004-add-data-source-column" author="hdim">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="star_ratings" columnName="data_source"/>
+            </not>
+        </preConditions>
+
+        <comment>Add data_source column to track origin of rating data</comment>
+
+        <addColumn tableName="star_ratings">
+            <column name="data_source" type="varchar(100)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="star_ratings" columnName="data_source"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -20,7 +20,7 @@ dependencies {
     annotationProcessor("info.picocli:picocli-codegen:4.7.5")
 
     // ANSI terminal colors
-    implementation("org.fusesource.jansi:jansi:2.4.1")
+    implementation("org.fusesource.jansi:jansi:2.4.2")
 
     // JSON processing
     implementation("com.fasterxml.jackson.core:jackson-databind")

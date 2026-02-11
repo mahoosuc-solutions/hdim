@@ -1,8 +1,8 @@
 package com.healthdata.sales.service;
 
 import com.healthdata.sales.config.LinkedInConfig;
+import com.healthdata.sales.dto.LinkedInBulkCampaignResponse;
 import com.healthdata.sales.dto.LinkedInOutreachDTO;
-import com.healthdata.sales.dto.LinkedInCampaignDTO;
 import com.healthdata.sales.entity.Contact;
 import com.healthdata.sales.entity.Lead;
 import com.healthdata.sales.entity.LinkedInOutreach;
@@ -216,10 +216,10 @@ public class LinkedInOutreachService {
     // ==================== Bulk Operations ====================
 
     /**
-     * Create a campaign and schedule outreach for multiple leads
+     * Create a bulk campaign and schedule outreach for multiple leads
      */
     @Transactional
-    public LinkedInCampaignDTO createCampaign(UUID tenantId, String campaignName,
+    public LinkedInBulkCampaignResponse createBulkCampaign(UUID tenantId, String campaignName,
             List<UUID> leadIds, OutreachType type, String messageTemplate,
             LocalDateTime startDate, int delayMinutesBetween, UUID createdBy) {
 
@@ -269,7 +269,7 @@ public class LinkedInOutreachService {
             }
         }
 
-        return LinkedInCampaignDTO.builder()
+        return LinkedInBulkCampaignResponse.builder()
             .campaignName(campaignName)
             .totalLeads(leadIds.size())
             .scheduled(scheduled.size())

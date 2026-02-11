@@ -44,8 +44,7 @@ class MessagingAutoConfigurationTest {
 
             assertThat(config.get(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG)).isEqualTo(JsonSerializer.class);
 
-            @SuppressWarnings("unchecked")
-            KafkaTemplate<String, Object> kafkaTemplate = context.getBean(KafkaTemplate.class);
+            KafkaTemplate<String, Object> kafkaTemplate = context.getBean("kafkaTemplate", KafkaTemplate.class);
             assertThat(kafkaTemplate).isNotNull();
         });
     }

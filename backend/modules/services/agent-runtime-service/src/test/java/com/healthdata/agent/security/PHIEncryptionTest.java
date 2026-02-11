@@ -4,6 +4,7 @@ import com.healthdata.agent.security.PHIEncryption.EncryptionException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -437,6 +438,7 @@ class PHIEncryptionTest {
 
     @Nested
     @DisplayName("Performance Tests")
+    @Tag("slow")
     class PerformanceTests {
 
         @Test

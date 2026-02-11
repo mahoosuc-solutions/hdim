@@ -16,6 +16,10 @@ export const environment = {
     defaultTenantId: process.env['DEFAULT_TENANT_ID'] || 'default',
     timeoutMs: 30000,
     retryAttempts: 3,
+    // Investor Dashboard Service API (via gateway in production)
+    investorApiUrl: process.env['INVESTOR_API_URL'] || '/investor',
+    // Sales Automation Service API (via gateway in production)
+    salesApiUrl: process.env['SALES_API_URL'] || '/sales',
   },
 
   // Logging Configuration (HIPAA Compliance)
@@ -32,6 +36,7 @@ export const environment = {
     enableAnalytics: true,
     enableErrorReporting: true,
     enableDebugMode: false,
+    demoMode: false, // SECURITY: Demo mode disabled in production - requires real authentication
   },
 
   // Error reporting (e.g., Sentry)

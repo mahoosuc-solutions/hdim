@@ -14,6 +14,9 @@ spring:
   cache:
     type: none  # Disable Redis cache to avoid circular dependencies
 
+  session:
+    store-type: none  # Disable Spring Session to avoid Redis dependency
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/gateway_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

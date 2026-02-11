@@ -5,6 +5,7 @@ import com.healthdata.quality.config.TestMessagingConfiguration;
 import com.healthdata.quality.config.TestWebSocketConfiguration;
 import com.healthdata.quality.service.notification.TemplateRenderer;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * Day 7 of TDD Swarm: Integration & Mobile Testing
  */
+@Tag("integration")
 @SpringBootTest(classes = QualityMeasureServiceApplication.class)
 @EnableAutoConfiguration(exclude = {AuthenticationAutoConfiguration.class})
 @ActiveProfiles("test")

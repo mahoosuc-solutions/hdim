@@ -80,6 +80,14 @@ export class AuditService {
   private sendBatch(events: AuditEvent[]): void {
     const url = this.getAuditUrl();
 
+    // In demo/dev mode, the audit ingest endpoint may not exist yet.
+    // Store events locally for when the endpoint becomes available.
+    if (!API_CONFIG.USE_API_GATEWAY && !API_CONFIG.AUDIT_INGEST_ENABLED) {
+      this.logger.debug('[AuditService] Audit ingest disabled, buffering locally');
+      this.storeEventsLocally(events);
+      return;
+    }
+
     this.http.post<void>(url, { events }).pipe(
       catchError((error) => {
         this.logger.warn('[AuditService] Failed to send audit batch, storing locally:', error);

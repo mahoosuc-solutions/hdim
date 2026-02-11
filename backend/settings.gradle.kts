@@ -25,6 +25,8 @@ include(
     "modules:shared:infrastructure:cache",
     "modules:shared:infrastructure:persistence",
     "modules:shared:infrastructure:database-config",
+    "modules:shared:infrastructure:authentication-core",
+    "modules:shared:infrastructure:authentication-headers",
     "modules:shared:infrastructure:authentication",
     "modules:shared:infrastructure:gateway-core",
     "modules:shared:infrastructure:api-docs",
@@ -33,7 +35,9 @@ include(
     "modules:shared:infrastructure:event-sourcing",
     "modules:shared:infrastructure:event-store-client",
     "modules:shared:infrastructure:feature-flags",
-    "modules:shared:test-infrastructure"
+    "modules:shared:test-infrastructure",
+    "modules:shared:contract-testing",
+    "modules:shared:openapi-validation"
 )
 
 // Shared API Contracts
@@ -92,7 +96,9 @@ include(
     "modules:services:patient-event-handler-service",
     "modules:services:care-gap-event-handler-service",
     "modules:services:quality-measure-event-handler-service",
-    "modules:services:clinical-workflow-event-handler-service"
+    "modules:services:clinical-workflow-event-handler-service",
+    "modules:services:investor-dashboard-service",
+    "modules:services:agent-validation-service"
 )
 
 // Applications

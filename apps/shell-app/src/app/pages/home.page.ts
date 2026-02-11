@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   loadCurrentUser,
   selectIsAuthenticated,
@@ -13,6 +14,7 @@ import {
 } from '@health-platform/shared/state';
 import type { User } from '@health-platform/shared/util-auth';
 import { getUserDisplayName } from '@health-platform/shared/util-auth';
+import { ClinicalEventType, EventBusService } from '@health-platform/shared/data-access';
 
 @Component({
   selector: 'health-platform-home',
@@ -66,6 +68,30 @@ import { getUserDisplayName } from '@health-platform/shared/util-auth';
           <h2>🏥 Patient Management</h2>
           <p>Comprehensive patient data management with real-time updates</p>
           <a routerLink="/mfePatients" class="btn-primary">Access Patients Module</a>
+        </div>
+
+        <div class="feature-card">
+          <h2>🧮 Measure Builder</h2>
+          <p>Design, test, and publish custom measures with FHIR-driven inputs</p>
+          <a routerLink="/mfeMeasureBuilder" class="btn-primary">Open Measure Builder</a>
+        </div>
+
+        <div class="feature-card feature-card--ops">
+          <h2>🛠️ Deployment Console</h2>
+          <p>Guide on-prem installs, seed data, and validate Docker deployments</p>
+          <a routerLink="/deployment" class="btn-primary">Open Deployment Console</a>
+        </div>
+
+        <div class="feature-card feature-card--diagnostics">
+          <h2>🧪 MFE Diagnostics</h2>
+          <p>Broadcast a patient context and verify MFE event flow</p>
+          <div class="diagnostic-actions">
+            <button class="btn-secondary btn-secondary--active" (click)="broadcastPatient('demo-patient-001')">Select Demo Patient</button>
+            <button class="btn-secondary btn-secondary--active" (click)="clearPatient()">Clear Patient</button>
+          </div>
+          <p class="diagnostic-status">
+            Current Patient: {{ (currentPatientId$ | async) || 'none' }}
+          </p>
         </div>
 
         <div class="feature-card">
@@ -260,6 +286,28 @@ import { getUserDisplayName } from '@health-platform/shared/util-auth';
       cursor: not-allowed;
     }
 
+    .btn-secondary--active {
+      color: #263238;
+      cursor: pointer;
+    }
+
+    .feature-card--diagnostics {
+      border: 1px dashed #7f8fa4;
+      background: #f7f9fc;
+    }
+
+    .diagnostic-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .diagnostic-status {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #52657a;
+    }
+
     .architecture-info {
       background: #0d1117;
       color: #f0f3ff;
@@ -292,8 +340,11 @@ export class HomePage implements OnInit {
   readonly loading$: Observable<boolean> = this.store.select(selectSharedAuthLoading);
   readonly error$: Observable<string | null> = this.store.select(selectSharedAuthError);
   readonly isAuthenticated$: Observable<boolean> = this.store.select(selectIsAuthenticated);
+  readonly currentPatientId$: Observable<string | null> = this.eventBus.currentPatient$.pipe(
+    map((context) => context.patientId)
+  );
 
-  constructor(private readonly store: Store) {}
+  constructor(private readonly store: Store, private readonly eventBus: EventBusService) {}
 
   ngOnInit(): void {
     this.store.dispatch(loadCurrentUser());
@@ -304,5 +355,18 @@ export class HomePage implements OnInit {
    */
   getUserDisplayName(user: User): string {
     return getUserDisplayName(user);
+  }
+
+  broadcastPatient(patientId: string): void {
+    this.eventBus.emit({
+      type: ClinicalEventType.PATIENT_SELECTED,
+      source: 'shell-app',
+      timestamp: Date.now(),
+      data: { patientId, tenantId: 'demo' },
+    });
+  }
+
+  clearPatient(): void {
+    this.eventBus.clearPatientContext();
   }
 }

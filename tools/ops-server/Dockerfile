@@ -3,7 +3,7 @@ FROM node:20-alpine
 RUN apk add --no-cache bash curl docker-cli docker-cli-compose
 
 WORKDIR /app
-COPY tools/ops-server/server.js ./server.js
+COPY server.js ./server.js
 
 ENV PORT=4710 \
   WORKSPACE_DIR=/workspace \

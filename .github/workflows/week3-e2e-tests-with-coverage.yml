@@ -106,7 +106,7 @@ jobs:
           retention-days: 7
 
       - name: Publish Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: Consent Workflow Test Results
@@ -184,7 +184,7 @@ jobs:
           retention-days: 7
 
       - name: Publish Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: QRDA Export Test Results
@@ -262,7 +262,7 @@ jobs:
           retention-days: 7
 
       - name: Publish Test Report
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@v2
         if: always()
         with:
           name: HCC Risk Adjustment Test Results

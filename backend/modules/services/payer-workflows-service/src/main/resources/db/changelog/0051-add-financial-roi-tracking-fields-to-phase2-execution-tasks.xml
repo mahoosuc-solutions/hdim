@@ -16,12 +16,12 @@
 
         <!-- Baseline Performance Percentage (5,2 precision) -->
         <addColumn tableName="phase2_execution_tasks">
-            <column name="baseline_performance_pct" type="NUMERIC(5,2)"/>
+            <column name="baseline_performance_percentage" type="NUMERIC(5,2)"/>
         </addColumn>
 
         <!-- Current Performance Percentage (5,2 precision) -->
         <addColumn tableName="phase2_execution_tasks">
-            <column name="current_performance_pct" type="NUMERIC(5,2)"/>
+            <column name="current_performance_percentage" type="NUMERIC(5,2)"/>
         </addColumn>
 
         <!-- Quality Bonus At Risk (12,2 precision) -->
@@ -98,8 +98,8 @@
             <dropColumn tableName="phase2_execution_tasks" columnName="intervention_type"/>
             <dropColumn tableName="phase2_execution_tasks" columnName="quality_bonus_captured"/>
             <dropColumn tableName="phase2_execution_tasks" columnName="quality_bonus_at_risk"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="current_performance_pct"/>
-            <dropColumn tableName="phase2_execution_tasks" columnName="baseline_performance_pct"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="current_performance_percentage"/>
+            <dropColumn tableName="phase2_execution_tasks" columnName="baseline_performance_percentage"/>
             <dropColumn tableName="phase2_execution_tasks" columnName="hedis_measure"/>
         </rollback>
     </changeSet>

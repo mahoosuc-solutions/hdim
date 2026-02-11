@@ -44,7 +44,7 @@ dependencies {
     // Testing
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.junit.jupiter)
-    testImplementation("org.assertj:assertj-core:3.25.3")
+    testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.junit.jupiter)
     testImplementation(libs.testcontainers.postgresql)

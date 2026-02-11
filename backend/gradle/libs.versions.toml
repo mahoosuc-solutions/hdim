@@ -6,7 +6,7 @@ kotlin = "2.0.21"
 # Spring Framework
 spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x
 spring-cloud = "2023.0.6"  # Updated to align with majority of services
-spring-cloud-openfeign = "4.1.3"  # Explicit version for openfeign starter
+spring-cloud-openfeign = "4.3.1"  # Explicit version for openfeign starter
 spring-dependency-management = "1.1.7"
 
 # Healthcare Libraries
@@ -37,9 +37,9 @@ liquibase = "4.29.2"
 httpclient5 = "5.2.1"
 
 # Caching & Messaging
-redis = "3.5.7"
+redis = "3.5.8"
 kafka = "3.7.1"  # Aligned with Spring Boot 3.3.6 BOM
-spring-kafka = "3.3.11"
+spring-kafka = "3.3.12"
 
 # API & Documentation
 springdoc-openapi = "2.6.0"

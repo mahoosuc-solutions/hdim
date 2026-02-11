@@ -10,5 +10,6 @@
 
     <!-- Phase 2 Execution Task Management -->
     <include file="db/changelog/0050-create-phase2-execution-tasks-table.xml"/>
+    <include file="db/changelog/0051-add-financial-roi-tracking-fields-to-phase2-execution-tasks.xml"/>
 
 </databaseChangeLog>

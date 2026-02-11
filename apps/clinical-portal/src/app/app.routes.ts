@@ -402,6 +402,15 @@ export const appRoutes: Route[] = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['ADMIN', 'MPI_ANALYST', 'DATA_STEWARD'] },
   },
+  {
+    path: 'phase2-execution',
+    loadComponent: () =>
+      import('./pages/phase2-execution/phase2-execution.component').then(
+        (m) => m.Phase2ExecutionComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { title: 'Phase 2 Execution Dashboard' },
+  },
 
   // ==================== Fallback Route ====================
   {

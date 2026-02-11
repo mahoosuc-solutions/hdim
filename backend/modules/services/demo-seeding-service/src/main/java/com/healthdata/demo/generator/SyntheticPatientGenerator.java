@@ -8,6 +8,7 @@ import net.datafaker.Faker;
 import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -51,6 +52,11 @@ public class SyntheticPatientGenerator {
     private final EncounterGenerator encounterGenerator;
     private final ProcedureGenerator procedureGenerator;
     private final ObjectMapper objectMapper;
+    private final double pediatricPct;
+    private final double geriatricPct;
+    private final double chronicPct;
+    private final double behavioralPct;
+    private final double preventivePct;
 
     public SyntheticPatientGenerator(
             FhirContext fhirContext,
@@ -58,7 +64,12 @@ public class SyntheticPatientGenerator {
             ObservationGenerator observationGenerator,
             EncounterGenerator encounterGenerator,
             ProcedureGenerator procedureGenerator,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            @Value("${demo.population.pediatric-pct:0.10}") double pediatricPct,
+            @Value("${demo.population.geriatric-pct:0.15}") double geriatricPct,
+            @Value("${demo.population.chronic-pct:0.30}") double chronicPct,
+            @Value("${demo.population.behavioral-pct:0.12}") double behavioralPct,
+            @Value("${demo.population.preventive-pct:0.12}") double preventivePct) {
         this.fhirContext = fhirContext;
         this.faker = new Faker();
         this.random = new Random();
@@ -67,6 +78,11 @@ public class SyntheticPatientGenerator {
         this.encounterGenerator = encounterGenerator;
         this.procedureGenerator = procedureGenerator;
         this.objectMapper = objectMapper;
+        this.pediatricPct = clampPct(pediatricPct);
+        this.geriatricPct = clampPct(geriatricPct);
+        this.chronicPct = clampPct(chronicPct);
+        this.behavioralPct = clampPct(behavioralPct);
+        this.preventivePct = clampPct(preventivePct);
     }
 
     /**
@@ -83,8 +99,9 @@ public class SyntheticPatientGenerator {
         bundle.setType(Bundle.BundleType.COLLECTION);
         bundle.setTimestamp(new Date());
 
-        for (int i = 0; i < count; i++) {
-            PatientGenerationContext context = determinePatientContext(i, count);
+        List<PatientGenerationContext> contexts = buildCohortContexts(count);
+        for (int i = 0; i < contexts.size(); i++) {
+            PatientGenerationContext context = contexts.get(i);
             Patient patient = generatePatient(context, tenantId);
 
             bundle.addEntry()
@@ -142,33 +159,85 @@ public class SyntheticPatientGenerator {
     }
 
     /**
-     * Determine patient generation context based on distribution.
+     * Build a cohort with configured demographic and clinical distribution.
      */
-    private PatientGenerationContext determinePatientContext(int index, int total) {
-        double percentile = (double) index / total;
+    private List<PatientGenerationContext> buildCohortContexts(int total) {
+        List<PatientGenerationContext> contexts = new ArrayList<>(total);
 
-        PatientGenerationContext context = new PatientGenerationContext();
+        int pediatricCount = Math.round((float) (total * pediatricPct));
+        int geriatricCount = Math.round((float) (total * geriatricPct));
+        int chronicCount = Math.round((float) (total * chronicPct));
+        int behavioralCount = Math.round((float) (total * behavioralPct));
+        int preventiveCount = Math.round((float) (total * preventivePct));
 
-        // Risk distribution: 60% low, 30% moderate, 10% high
-        if (percentile < 0.60) {
-            context.setRiskCategory(RiskCategory.LOW);
-            context.setHccScore(BigDecimal.valueOf(0.5 + (random.nextDouble() * 0.5))); // 0.5-1.0
-        } else if (percentile < 0.90) {
-            context.setRiskCategory(RiskCategory.MODERATE);
-            context.setHccScore(BigDecimal.valueOf(1.0 + (random.nextDouble() * 1.0))); // 1.0-2.0
-        } else {
-            context.setRiskCategory(RiskCategory.HIGH);
-            context.setHccScore(BigDecimal.valueOf(2.0 + (random.nextDouble() * 2.0))); // 2.0-4.0
+        int reserved = pediatricCount + geriatricCount + chronicCount + behavioralCount + preventiveCount;
+        if (reserved > total) {
+            double scale = (double) total / Math.max(1, reserved);
+            pediatricCount = (int) Math.floor(pediatricCount * scale);
+            geriatricCount = (int) Math.floor(geriatricCount * scale);
+            chronicCount = (int) Math.floor(chronicCount * scale);
+            behavioralCount = (int) Math.floor(behavioralCount * scale);
+            preventiveCount = (int) Math.floor(preventiveCount * scale);
+            reserved = pediatricCount + geriatricCount + chronicCount + behavioralCount + preventiveCount;
         }
+        int generalCount = Math.max(0, total - reserved);
 
-        // Age distribution
-        double ageRand = random.nextDouble();
-        if (ageRand < 0.25) {
-            context.setAgeRange(AgeRange.YOUNG_ADULT); // 18-44
-        } else if (ageRand < 0.65) {
-            context.setAgeRange(AgeRange.MIDDLE_AGE); // 45-64
-        } else {
-            context.setAgeRange(AgeRange.SENIOR); // 65+
+        addContexts(contexts, CohortCategory.PEDIATRIC, pediatricCount);
+        addContexts(contexts, CohortCategory.GERIATRIC, geriatricCount);
+        addContexts(contexts, CohortCategory.ADULT_CHRONIC, chronicCount);
+        addContexts(contexts, CohortCategory.ADULT_BEHAVIORAL, behavioralCount);
+        addContexts(contexts, CohortCategory.ADULT_PREVENTIVE, preventiveCount);
+        addContexts(contexts, CohortCategory.ADULT_GENERAL, generalCount);
+
+        Collections.shuffle(contexts, random);
+        return contexts;
+    }
+
+    private void addContexts(List<PatientGenerationContext> contexts, CohortCategory category, int count) {
+        for (int i = 0; i < count; i++) {
+            contexts.add(createContextForCategory(category));
+        }
+    }
+
+    private PatientGenerationContext createContextForCategory(CohortCategory category) {
+        PatientGenerationContext context = new PatientGenerationContext();
+        context.setCohortCategory(category);
+
+        switch (category) {
+            case PEDIATRIC -> {
+                context.setAgeRange(AgeRange.PEDIATRIC);
+                context.setRiskCategory(RiskCategory.LOW);
+                context.setHccScore(generateHccScore(RiskCategory.LOW));
+            }
+            case GERIATRIC -> {
+                context.setAgeRange(AgeRange.SENIOR);
+                RiskCategory risk = random.nextDouble() < 0.4 ? RiskCategory.HIGH : RiskCategory.MODERATE;
+                context.setRiskCategory(risk);
+                context.setHccScore(generateHccScore(risk));
+            }
+            case ADULT_CHRONIC -> {
+                context.setAgeRange(selectAdultAgeRange());
+                RiskCategory risk = random.nextDouble() < 0.5 ? RiskCategory.HIGH : RiskCategory.MODERATE;
+                context.setRiskCategory(risk);
+                context.setHccScore(generateHccScore(risk));
+            }
+            case ADULT_BEHAVIORAL -> {
+                context.setAgeRange(selectAdultAgeRange());
+                RiskCategory risk = random.nextDouble() < 0.7 ? RiskCategory.MODERATE : RiskCategory.LOW;
+                context.setRiskCategory(risk);
+                context.setHccScore(generateHccScore(risk));
+            }
+            case ADULT_PREVENTIVE -> {
+                context.setAgeRange(selectAdultAgeRange());
+                context.setRiskCategory(RiskCategory.LOW);
+                context.setHccScore(generateHccScore(RiskCategory.LOW));
+            }
+            case ADULT_GENERAL -> {
+                context.setAgeRange(selectAdultAgeRange());
+                RiskCategory risk = random.nextDouble() < 0.6 ? RiskCategory.LOW : RiskCategory.MODERATE;
+                context.setRiskCategory(risk);
+                context.setHccScore(generateHccScore(risk));
+            }
         }
 
         return context;
@@ -234,11 +303,13 @@ public class SyntheticPatientGenerator {
 
     private LocalDate generateBirthDate(AgeRange ageRange) {
         int minAge = switch (ageRange) {
+            case PEDIATRIC -> 0;
             case YOUNG_ADULT -> 18;
             case MIDDLE_AGE -> 45;
             case SENIOR -> 65;
         };
         int maxAge = switch (ageRange) {
+            case PEDIATRIC -> 17;
             case YOUNG_ADULT -> 44;
             case MIDDLE_AGE -> 64;
             case SENIOR -> 85;
@@ -303,39 +374,35 @@ public class SyntheticPatientGenerator {
     private List<ConditionTemplate> selectConditions(PatientGenerationContext context) {
         List<ConditionTemplate> conditions = new ArrayList<>();
 
-        switch (context.getRiskCategory()) {
-            case LOW:
-                // 0-1 conditions
-                if (random.nextDouble() < 0.3) { // 30% have hypertension
+        switch (context.getCohortCategory()) {
+            case PEDIATRIC -> {
+                if (random.nextDouble() < 0.15) {
+                    conditions.add(ConditionTemplates.ASTHMA);
+                }
+            }
+            case GERIATRIC -> {
+                if (random.nextDouble() < 0.6) {
                     conditions.add(ConditionTemplates.HYPERTENSION);
                 }
-                break;
-
-            case MODERATE:
-                // 1-2 conditions
-                if (random.nextDouble() < 0.6) { // 60% have hypertension
-                    conditions.add(ConditionTemplates.HYPERTENSION);
-                }
-                if (random.nextDouble() < 0.4) { // 40% have diabetes
-                    conditions.add(ConditionTemplates.DIABETES_TYPE_2);
-                }
-                break;
-
-            case HIGH:
-                // 3-5 conditions
-                conditions.add(ConditionTemplates.HYPERTENSION);
-                conditions.add(ConditionTemplates.DIABETES_TYPE_2);
-
-                if (random.nextDouble() < 0.5) {
-                    conditions.add(ConditionTemplates.CHF);
-                }
-                if (random.nextDouble() < 0.5) {
+                if (random.nextDouble() < 0.25) {
                     conditions.add(ConditionTemplates.CKD_STAGE_3);
                 }
-                if (random.nextDouble() < 0.3) {
-                    conditions.add(ConditionTemplates.COPD);
+            }
+            case ADULT_CHRONIC -> addChronicConditions(conditions, context.getRiskCategory());
+            case ADULT_BEHAVIORAL -> {
+                conditions.add(ConditionTemplates.DEPRESSION);
+                if (random.nextDouble() < 0.5) {
+                    conditions.add(ConditionTemplates.ANXIETY);
                 }
-                break;
+            }
+            case ADULT_PREVENTIVE -> {
+                // No chronic conditions for preventive-only patients.
+            }
+            case ADULT_GENERAL -> {
+                if (random.nextDouble() < 0.2) {
+                    conditions.add(ConditionTemplates.HYPERTENSION);
+                }
+            }
         }
 
         return conditions;
@@ -551,13 +618,23 @@ public class SyntheticPatientGenerator {
     }
 
     public enum AgeRange {
-        YOUNG_ADULT, MIDDLE_AGE, SENIOR
+        PEDIATRIC, YOUNG_ADULT, MIDDLE_AGE, SENIOR
+    }
+
+    public enum CohortCategory {
+        PEDIATRIC,
+        GERIATRIC,
+        ADULT_CHRONIC,
+        ADULT_BEHAVIORAL,
+        ADULT_PREVENTIVE,
+        ADULT_GENERAL
     }
 
     public static class PatientGenerationContext {
         private RiskCategory riskCategory;
         private AgeRange ageRange;
         private BigDecimal hccScore;
+        private CohortCategory cohortCategory;
 
         public RiskCategory getRiskCategory() { return riskCategory; }
         public void setRiskCategory(RiskCategory riskCategory) { this.riskCategory = riskCategory; }
@@ -565,6 +642,8 @@ public class SyntheticPatientGenerator {
         public void setAgeRange(AgeRange ageRange) { this.ageRange = ageRange; }
         public BigDecimal getHccScore() { return hccScore; }
         public void setHccScore(BigDecimal hccScore) { this.hccScore = hccScore; }
+        public CohortCategory getCohortCategory() { return cohortCategory; }
+        public void setCohortCategory(CohortCategory cohortCategory) { this.cohortCategory = cohortCategory; }
     }
 
     public static class ConditionTemplate {
@@ -591,5 +670,65 @@ public class SyntheticPatientGenerator {
             new ConditionTemplate("J44.9", "Chronic Obstructive Pulmonary Disease");
         public static final ConditionTemplate CKD_STAGE_3 =
             new ConditionTemplate("N18.3", "Chronic Kidney Disease, Stage 3");
+        public static final ConditionTemplate DEPRESSION =
+            new ConditionTemplate("F32.9", "Major Depressive Disorder, Single Episode");
+        public static final ConditionTemplate ANXIETY =
+            new ConditionTemplate("F41.9", "Anxiety Disorder, Unspecified");
+        public static final ConditionTemplate ASTHMA =
+            new ConditionTemplate("J45.909", "Asthma, Unspecified, Uncomplicated");
+    }
+
+    private AgeRange selectAdultAgeRange() {
+        return random.nextDouble() < 0.5 ? AgeRange.YOUNG_ADULT : AgeRange.MIDDLE_AGE;
+    }
+
+    private BigDecimal generateHccScore(RiskCategory riskCategory) {
+        return switch (riskCategory) {
+            case LOW -> BigDecimal.valueOf(0.5 + (random.nextDouble() * 0.5));
+            case MODERATE -> BigDecimal.valueOf(1.0 + (random.nextDouble() * 1.0));
+            case HIGH -> BigDecimal.valueOf(2.0 + (random.nextDouble() * 2.0));
+        };
+    }
+
+    private void addChronicConditions(List<ConditionTemplate> conditions, RiskCategory riskCategory) {
+        switch (riskCategory) {
+            case LOW -> {
+                if (random.nextDouble() < 0.5) {
+                    conditions.add(ConditionTemplates.HYPERTENSION);
+                }
+            }
+            case MODERATE -> {
+                conditions.add(ConditionTemplates.HYPERTENSION);
+                if (random.nextDouble() < 0.6) {
+                    conditions.add(ConditionTemplates.DIABETES_TYPE_2);
+                }
+            }
+            case HIGH -> {
+                conditions.add(ConditionTemplates.HYPERTENSION);
+                conditions.add(ConditionTemplates.DIABETES_TYPE_2);
+                if (random.nextDouble() < 0.6) {
+                    conditions.add(ConditionTemplates.CHF);
+                }
+                if (random.nextDouble() < 0.6) {
+                    conditions.add(ConditionTemplates.CKD_STAGE_3);
+                }
+                if (random.nextDouble() < 0.4) {
+                    conditions.add(ConditionTemplates.COPD);
+                }
+            }
+        }
+    }
+
+    private double clampPct(double value) {
+        if (Double.isNaN(value)) {
+            return 0.0;
+        }
+        if (value < 0.0) {
+            return 0.0;
+        }
+        if (value > 1.0) {
+            return 1.0;
+        }
+        return value;
     }
 }

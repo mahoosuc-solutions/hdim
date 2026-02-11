@@ -5,6 +5,8 @@ import com.healthdata.demo.application.DemoSeedingService.GenerationResult;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -15,7 +17,7 @@ class MultiTenantStrategyTest {
     @Test
     void seedScenarioWithOverrides_RejectsInvalidPatientCount() {
         DemoSeedingService seedingService = Mockito.mock(DemoSeedingService.class);
-        MultiTenantStrategy strategy = new MultiTenantStrategy(seedingService, 200, 30);
+        MultiTenantStrategy strategy = new MultiTenantStrategy(seedingService, 200, 30, List.of("tenant-a"));
 
         ScenarioSeedingStrategy.SeedingResult result = strategy.seedScenarioWithOverrides(0, 30);
 
@@ -26,7 +28,7 @@ class MultiTenantStrategyTest {
     @Test
     void seedScenarioWithOverrides_RejectsInvalidCareGapPercentage() {
         DemoSeedingService seedingService = Mockito.mock(DemoSeedingService.class);
-        MultiTenantStrategy strategy = new MultiTenantStrategy(seedingService, 200, 30);
+        MultiTenantStrategy strategy = new MultiTenantStrategy(seedingService, 200, 30, List.of("tenant-a"));
 
         ScenarioSeedingStrategy.SeedingResult result = strategy.seedScenarioWithOverrides(100, 120);
 
@@ -37,7 +39,7 @@ class MultiTenantStrategyTest {
     @Test
     void seedScenarioWithOverrides_UsesOverridesWhenProvided() {
         DemoSeedingService seedingService = Mockito.mock(DemoSeedingService.class);
-        MultiTenantStrategy strategy = new MultiTenantStrategy(seedingService, 200, 30);
+        MultiTenantStrategy strategy = new MultiTenantStrategy(seedingService, 200, 30, List.of("tenant-a"));
 
         GenerationResult gen = new GenerationResult();
         gen.setSuccess(true);

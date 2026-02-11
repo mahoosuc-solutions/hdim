@@ -1,6 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+: "${LOG_DIR:=logs/test-runs}"
+: "${RUN_ID:=$(date +%Y%m%d-%H%M%S)}"
+LOG_FILE="${LOG_DIR}/test-all-local-${RUN_ID}.log"
+mkdir -p "$LOG_DIR"
+START_TS="$(date +%s)"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+on_exit() {
+  local exit_code=$?
+  local end_ts
+  end_ts="$(date +%s)"
+  local duration=$((end_ts - START_TS))
+  echo ""
+  echo "═══════════════════════════════════════════════════════════════"
+  echo "Test Run Summary"
+  echo "═══════════════════════════════════════════════════════════════"
+  echo "Run ID: ${RUN_ID}"
+  echo "Log file: ${LOG_FILE}"
+  echo "Exit code: ${exit_code}"
+  echo "Duration: ${duration}s"
+}
+trap on_exit EXIT
+
 stage() {
   echo ""
   echo "═══════════════════════════════════════════════════════════════"

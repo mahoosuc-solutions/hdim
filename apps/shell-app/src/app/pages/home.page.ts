@@ -76,6 +76,12 @@ import { ClinicalEventType, EventBusService } from '@health-platform/shared/data
           <a routerLink="/mfeMeasureBuilder" class="btn-primary">Open Measure Builder</a>
         </div>
 
+        <div class="feature-card feature-card--ops">
+          <h2>🛠️ Deployment Console</h2>
+          <p>Guide on-prem installs, seed data, and validate Docker deployments</p>
+          <a routerLink="/deployment" class="btn-primary">Open Deployment Console</a>
+        </div>
+
         <div class="feature-card feature-card--diagnostics">
           <h2>🧪 MFE Diagnostics</h2>
           <p>Broadcast a patient context and verify MFE event flow</p>

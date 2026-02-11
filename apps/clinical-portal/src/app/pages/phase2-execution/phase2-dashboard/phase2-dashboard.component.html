@@ -1,0 +1,260 @@
+<div class="dashboard-container">
+  <!-- Overall Progress -->
+  <mat-card class="progress-card">
+    <mat-card-header>
+      <mat-card-title>Overall Execution Progress</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="progress-section">
+        <div class="progress-text">
+          <h2 class="progress-percentage">{{ dashboard.completionPercentage }}%</h2>
+          <p class="progress-subtitle">
+            {{ dashboard.completedTasks }} of {{ dashboard.totalTasks }} tasks complete
+          </p>
+        </div>
+
+        <mat-progress-bar
+          mode="determinate"
+          [value]="dashboard.completionPercentage"
+          [color]="dashboard.completionPercentage >= 75 ? 'accent' : 'primary'">
+        </mat-progress-bar>
+
+        <div class="status-chips">
+          <mat-chip-set aria-label="Status summary">
+            <mat-chip highlighted color="accent">
+              <mat-icon>check_circle</mat-icon>
+              {{ formatStatus(dashboard.completedTasks, 'Completed') }}
+            </mat-chip>
+            <mat-chip color="primary">
+              <mat-icon>schedule</mat-icon>
+              {{ formatStatus(dashboard.inProgressTasks, 'In Progress') }}
+            </mat-chip>
+            <mat-chip color="warn">
+              <mat-icon>block</mat-icon>
+              {{ formatStatus(dashboard.blockedTasks, 'Blocked') }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- By Category -->
+  <mat-card class="category-card">
+    <mat-card-header>
+      <mat-card-title>Tasks by Category</mat-card-title>
+      <mat-card-subtitle>Click to filter by category</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-grid-list cols="2" rowHeight="120px" gutterSize="16px">
+        <mat-grid-tile *ngFor="let cat of categories">
+          <div class="category-tile" (click)="onCategoryClick(cat.id)">
+            <div class="category-icon">
+              <mat-icon [attr.aria-label]="cat.label">{{ cat.icon }}</mat-icon>
+            </div>
+            <div class="category-info">
+              <h3>{{ cat.label }}</h3>
+              <p class="task-count">{{ getCategoryTaskCount(cat.id) }} tasks</p>
+            </div>
+          </div>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- By Week -->
+  <mat-card class="week-card">
+    <mat-card-header>
+      <mat-card-title>Timeline: March 2026</mat-card-title>
+      <mat-card-subtitle>Click to view week details</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="week-grid">
+        <div
+          *ngFor="let week of weeks"
+          class="week-tile"
+          (click)="onWeekClick(week.id)">
+          <div class="week-number">Week {{ week.id }}</div>
+          <div class="week-label">{{ week.label }}</div>
+          <div class="week-task-count">
+            <mat-icon>task_alt</mat-icon>
+            {{ getWeekTaskCount(week.id) }} tasks
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Key Metrics -->
+  <mat-card class="metrics-card">
+    <mat-card-header>
+      <mat-card-title>Key Metrics</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="metrics-grid">
+        <div class="metric">
+          <div class="metric-value">{{ dashboard.totalTasks }}</div>
+          <div class="metric-label">Total Tasks</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value primary">{{ dashboard.completedTasks }}</div>
+          <div class="metric-label">Completed</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value warning">{{ dashboard.blockedTasks }}</div>
+          <div class="metric-label">Blocked</div>
+        </div>
+        <div class="metric">
+          <div class="metric-value">{{ dashboard.inProgressTasks }}</div>
+          <div class="metric-label">In Progress</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Success Criteria -->
+  <mat-card class="success-card">
+    <mat-card-header>
+      <mat-card-title>Phase 2 Success Criteria (End of March)</mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="success-items">
+        <div class="success-item go">
+          <mat-icon>check_circle</mat-icon>
+          <div class="success-text">
+            <h4>GO: Achieved Must-Achieve Criteria</h4>
+            <p>1-2 pilots signed, 1 AI feature delivered, thought leadership traction</p>
+          </div>
+        </div>
+
+        <div class="success-item accelerate">
+          <mat-icon>trending_up</mat-icon>
+          <div class="success-text">
+            <h4>ACCELERATE: Strong Performance</h4>
+            <p>2 pilots signed, 2 AI features, conference speaking accepted</p>
+          </div>
+        </div>
+
+        <div class="success-item caution">
+          <mat-icon>warning</mat-icon>
+          <div class="success-text">
+            <h4>CAUTION: Warning Signals Present</h4>
+            <p>0-1 pilots, 0 AI features, weak thought leadership engagement</p>
+          </div>
+        </div>
+
+        <div class="success-item stop">
+          <mat-icon>cancel</mat-icon>
+          <div class="success-text">
+            <h4>STOP: Critical Failure</h4>
+            <p>0 pilots, 0 AI features, 0 traction - strategic review required</p>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Financial ROI Dashboard -->
+  <mat-card class="financial-dashboard-card">
+    <mat-card-header>
+      <mat-card-title>💰 Financial ROI Dashboard</mat-card-title>
+      <mat-card-subtitle>Quality measure financial impact and care gap resolution metrics</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Key Financial Metrics -->
+      <div class="financial-header">
+        <h3>Monthly Financial Summary</h3>
+      </div>
+
+      <div class="metrics-grid financial-metrics">
+        <mat-card class="metric-card financial-metric">
+          <mat-card-header>
+            <mat-card-title>Quality Bonus Captured</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="metric-value currency">{{ formatCurrency(totalBonusCaptured) }}</div>
+            <div class="metric-subtitle">Real revenue impact from quality measures</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card financial-metric">
+          <mat-card-header>
+            <mat-card-title>Gaps Closed</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="metric-value count">{{ totalGapsClosed }}</div>
+            <div class="metric-subtitle">Care gap resolutions contributing to bonus</div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="metric-card financial-metric">
+          <mat-card-header>
+            <mat-card-title>Average ROI per Gap</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="metric-value percentage">{{ formatPercentage(averageROI) }}</div>
+            <div class="metric-subtitle">Return on investment per care gap closed</div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Measure Breakdown Table -->
+      <div class="measure-section">
+        <h3>ROI by HEDIS Measure</h3>
+        <p class="section-subtitle">Detailed breakdown of financial impact by clinical measure</p>
+
+        <div class="table-container">
+          <table mat-table [dataSource]="measureROIData" class="measure-table">
+            <!-- Measure Column -->
+            <ng-container matColumnDef="measure">
+              <th mat-header-cell *matHeaderCellDef>HEDIS Measure</th>
+              <td mat-cell *matCellDef="let element">
+                <span class="measure-name">{{ element.measure }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Captured Amount Column -->
+            <ng-container matColumnDef="captured">
+              <th mat-header-cell *matHeaderCellDef>Bonus Captured</th>
+              <td mat-cell *matCellDef="let element">
+                <span class="captured-amount">{{ formatCurrency(element.totalCaptured) }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Gaps Closed Column -->
+            <ng-container matColumnDef="gaps">
+              <th mat-header-cell *matHeaderCellDef>Gaps Closed</th>
+              <td mat-cell *matCellDef="let element">
+                <span class="gaps-count">{{ element.totalGapsClosed }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Tasks Column -->
+            <ng-container matColumnDef="tasks">
+              <th mat-header-cell *matHeaderCellDef>Tasks Created</th>
+              <td mat-cell *matCellDef="let element">
+                <span class="task-count">{{ element.taskCount }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Table Rows -->
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="measure-row"></tr>
+          </table>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="measureROIData.length === 0" class="empty-state">
+          <mat-icon>info</mat-icon>
+          <p>No measure-specific ROI data available yet. Tasks and care gaps will populate this data.</p>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

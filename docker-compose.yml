@@ -1511,7 +1511,7 @@ services:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payer_db
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_db
       SPRING_DATASOURCE_USERNAME: healthdata
       SPRING_DATASOURCE_PASSWORD: healthdata_password
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
@@ -1521,6 +1521,7 @@ services:
       JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_LIQUIBASE_ENABLED: "true"
     ports:
       - "8098:8098"
     healthcheck:

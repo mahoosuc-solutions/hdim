@@ -39,6 +39,9 @@ dependencies {
     // Distributed Tracing (uses shared module for W3C + B3 context propagation)
     implementation(project(":modules:shared:infrastructure:tracing"))
 
+    // Micrometer Tracing bridge for automatic span generation (Spring Boot 3.x requirement)
+    implementation(libs.bundles.tracing)
+
     // Kafka for distributed tracing and audit events (required by TracingAutoConfiguration)
     implementation(libs.bundles.kafka)
 

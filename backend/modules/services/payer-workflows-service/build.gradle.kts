@@ -50,6 +50,9 @@ dependencies {
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
+    // Distributed Tracing (Micrometer Tracing + OpenTelemetry)
+    implementation(libs.bundles.tracing)
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

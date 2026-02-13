@@ -83,6 +83,12 @@ management:
     export:
       prometheus:
         enabled: true
+  # Enable distributed tracing observations (automatic HTTP span generation)
+  observations:
+    enabled: true
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling (development - see application-prod.yml for production)
 
 # OpenAPI/Swagger Configuration
 springdoc:
@@ -189,6 +195,12 @@ logging:
   level:
     root: WARN
     com.healthdata.payer: INFO
+
+# Production Tracing Configuration
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling (reduced overhead for production)
 
 # Test Profile
 ---

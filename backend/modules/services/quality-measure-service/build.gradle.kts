@@ -62,6 +62,9 @@ dependencies {
     // Distributed Tracing (uses shared module for W3C + B3 context propagation)
     implementation(project(":modules:shared:infrastructure:tracing"))
 
+    // Micrometer Tracing bridge for automatic span generation (Spring Boot 3.x requirement)
+    implementation(libs.bundles.tracing)
+
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)

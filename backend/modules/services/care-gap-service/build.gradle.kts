@@ -55,6 +55,9 @@ dependencies {
     // Distributed Tracing (uses shared module for W3C + B3 context propagation)
     implementation(project(":modules:shared:infrastructure:tracing"))
 
+    // Micrometer Tracing bridge for automatic span generation (Spring Boot 3.x requirement)
+    implementation(libs.bundles.tracing)
+
     // Resilience4j for circuit breaker, retry, and rate limiting
     implementation(libs.resilience4j.spring.boot3)
     implementation(libs.resilience4j.circuitbreaker)

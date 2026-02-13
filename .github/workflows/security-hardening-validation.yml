@@ -1,0 +1,44 @@
+name: Security Hardening Validation
+
+on:
+  pull_request:
+    paths:
+      - 'docker-compose.production.yml'
+      - 'docker-compose.staging.sales-agents.yml'
+      - 'monitoring/**'
+      - 'scripts/security/**'
+      - '.github/workflows/security-hardening-validation.yml'
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - 'docker-compose.production.yml'
+      - 'docker-compose.staging.sales-agents.yml'
+      - 'monitoring/**'
+      - 'scripts/security/**'
+
+jobs:
+  hardening-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate compose security controls
+        run: ./scripts/security/validate-hipaa-docker-security.sh docker-compose.production.yml
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trivy config scan (IaC)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'

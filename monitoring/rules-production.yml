@@ -100,7 +100,7 @@ groups:
           component: performance
         annotations:
           summary: "{{ $labels.job }} throughput decreased >20%"
-          description: "Current: {{ $value }} req/s, baseline: {{ $value | divideBy:0.8 }} req/s"
+          description: "Current throughput is {{ $value }} req/s and below 80% of recent baseline"
           action: "Investigate service capacity and resource constraints"
 
   # ====================================================================================================

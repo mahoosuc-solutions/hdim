@@ -2200,6 +2200,129 @@ services:
       start_period: 60s
 
   # ============================================
+  # LIVE CALL SALES AGENT (PHASE 4 NEW)
+  # ============================================
+
+  live-call-sales-agent:
+    container_name: hdim-live-call-sales-agent
+    restart: unless-stopped
+    build:
+      context: ./backend/modules/services/live-call-sales-agent
+      dockerfile: Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      # Python Service Configuration
+      PYTHONUNBUFFERED: "1"
+
+      # Google Cloud Configuration
+      GOOGLE_APPLICATION_CREDENTIALS: /secrets/google-meet-service-account.json
+      GOOGLE_CLOUD_PROJECT: ${GOOGLE_CLOUD_PROJECT:-hdim-project}
+
+      # AI Sales Agent Integration
+      AI_SALES_AGENT_URL: http://ai-sales-agent:8090
+
+      # WebSocket Configuration (Clinical Workflow Service)
+      WEBSOCKET_HOST: clinical-workflow-service
+      WEBSOCKET_PORT: "8093"
+      WEBSOCKET_URL: ws://clinical-workflow-service:8093/ws
+
+      # Database Configuration (customer_deployments_db)
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: customer_deployments_db
+      POSTGRES_USER: healthdata
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+      # Service Configuration
+      SERVICE_PORT: "8095"
+      MOCK_MODE: ${MOCK_MODE:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+      # OpenTelemetry Tracing
+      OTEL_SERVICE_NAME: live-call-sales-agent
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_TRACES_EXPORTER: otlp
+
+      # Puppeteer Configuration (Chrome automation)
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome-stable
+
+    ports:
+      - "8095:8095"
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:ro  # Display forwarding for Chrome
+      - ./secrets:/secrets:ro              # Mount service account credentials
+      - /tmp/coaching-transcripts:/data/transcripts  # Mount transcript storage
+
+    networks:
+      - healthdata-network
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8095/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "2G"
+        reservations:
+          cpus: "1.0"
+          memory: "1G"
+
+  # ============================================
+  # COACHING UI (PHASE 4 NEW)
+  # ============================================
+
+  coaching-ui:
+    container_name: hdim-coaching-ui
+    restart: unless-stopped
+    build:
+      context: ./apps/coaching-ui
+      dockerfile: Dockerfile
+    profiles: ["ai", "full"]
+    depends_on:
+      - live-call-sales-agent
+
+    environment:
+      # Angular Application Configuration
+      API_URL: http://live-call-sales-agent:8095
+      WEBSOCKET_URL: ws://live-call-sales-agent:8095
+
+    ports:
+      - "4201:4200"
+
+    networks:
+      - healthdata-network
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4200/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "512M"
+        reservations:
+          cpus: "0.25"
+          memory: "256M"
+
+  # ============================================
   # FRONTEND SERVICE
   # ============================================
 

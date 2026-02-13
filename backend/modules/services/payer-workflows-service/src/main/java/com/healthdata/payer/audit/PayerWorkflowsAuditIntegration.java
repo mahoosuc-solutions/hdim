@@ -33,14 +33,14 @@ public class PayerWorkflowsAuditIntegration {
     private static final String AGENT_VERSION = "1.0.0";
 
     @Autowired
-    public PayerWorkflowsAuditIntegration(AIAuditEventPublisher auditEventPublisher, ObjectMapper objectMapper) {
+    public PayerWorkflowsAuditIntegration(@Autowired(required = false) AIAuditEventPublisher auditEventPublisher, ObjectMapper objectMapper) {
         this.auditEventPublisher = auditEventPublisher;
         this.objectMapper = objectMapper;
     }
 
-    public void publishStarRatingCalculationEvent(String tenantId, String planId, int starRating, 
+    public void publishStarRatingCalculationEvent(String tenantId, String planId, int starRating,
             Map<String, Double> domainScores, long calculationTimeMs, String executingUser) {
-        if (!auditEnabled) return;
+        if (!auditEnabled || auditEventPublisher == null) return;
         try {
             Map<String, Object> metrics = new HashMap<>();
             metrics.put("planId", planId);
@@ -48,7 +48,7 @@ public class PayerWorkflowsAuditIntegration {
             metrics.put("domainScores", domainScores);
             metrics.put("calculationTimeMs", calculationTimeMs);
             metrics.put("executingUser", executingUser);
-            
+
             auditEventPublisher.publishAIDecision(AIAgentDecisionEvent.builder()
                     .eventId(UUID.randomUUID()).timestamp(Instant.now()).tenantId(tenantId).correlationId(planId)
                     .agentId(AGENT_ID).agentType(AgentType.PREDICTIVE_ANALYTICS).agentVersion(AGENT_VERSION)
@@ -62,9 +62,9 @@ public class PayerWorkflowsAuditIntegration {
         }
     }
 
-    public void publishMedicaidComplianceEvent(String tenantId, String state, String reportType, 
+    public void publishMedicaidComplianceEvent(String tenantId, String state, String reportType,
             boolean compliant, Map<String, Object> metrics, long processingTimeMs, String executingUser) {
-        if (!auditEnabled) return;
+        if (!auditEnabled || auditEventPublisher == null) return;
         try {
             Map<String, Object> auditMetrics = new HashMap<>();
             auditMetrics.put("state", state);
@@ -72,7 +72,7 @@ public class PayerWorkflowsAuditIntegration {
             auditMetrics.put("compliant", compliant);
             auditMetrics.putAll(metrics);
             auditMetrics.put("executingUser", executingUser);
-            
+
             auditEventPublisher.publishAIDecision(AIAgentDecisionEvent.builder()
                     .eventId(UUID.randomUUID()).timestamp(Instant.now()).tenantId(tenantId).correlationId(UUID.randomUUID().toString())
                     .agentId(AGENT_ID).agentType(AgentType.CLINICAL_WORKFLOW).agentVersion(AGENT_VERSION)
@@ -86,9 +86,9 @@ public class PayerWorkflowsAuditIntegration {
         }
     }
 
-    public void publishPayerWorkflowStepEvent(String tenantId, String workflowId, String stepName, 
+    public void publishPayerWorkflowStepEvent(String tenantId, String workflowId, String stepName,
             String stepStatus, Map<String, Object> stepData, String executingUser) {
-        if (!auditEnabled) return;
+        if (!auditEnabled || auditEventPublisher == null) return;
         try {
             Map<String, Object> metrics = new HashMap<>();
             metrics.put("workflowId", workflowId);
@@ -96,7 +96,7 @@ public class PayerWorkflowsAuditIntegration {
             metrics.put("stepStatus", stepStatus);
             metrics.putAll(stepData);
             metrics.put("executingUser", executingUser);
-            
+
             auditEventPublisher.publishAIDecision(AIAgentDecisionEvent.builder()
                     .eventId(UUID.randomUUID()).timestamp(Instant.now()).tenantId(tenantId).correlationId(workflowId)
                     .agentId(AGENT_ID).agentType(AgentType.CLINICAL_WORKFLOW).agentVersion(AGENT_VERSION)

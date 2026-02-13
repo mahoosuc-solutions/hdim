@@ -57,7 +57,7 @@ public interface Phase2ExecutionTaskRepository extends JpaRepository<Phase2Execu
     @Query("""
         SELECT t FROM Phase2ExecutionTask t
         WHERE t.tenantId = :tenantId
-        AND t.blockedByTasks LIKE CONCAT('%', :blockingTaskId, '%')
+        AND t.blockedByTaskIds LIKE CONCAT('%', :blockingTaskId, '%')
         ORDER BY t.targetDueDate ASC
         """)
     List<Phase2ExecutionTask> findBlockedByTask(
@@ -67,7 +67,7 @@ public interface Phase2ExecutionTaskRepository extends JpaRepository<Phase2Execu
     @Query("""
         SELECT t FROM Phase2ExecutionTask t
         WHERE t.tenantId = :tenantId
-        AND t.blocksTasks LIKE CONCAT('%', :blockedTaskId, '%')
+        AND t.blocksTaskIds LIKE CONCAT('%', :blockedTaskId, '%')
         ORDER BY t.targetDueDate ASC
         """)
     List<Phase2ExecutionTask> findBlockingTasks(

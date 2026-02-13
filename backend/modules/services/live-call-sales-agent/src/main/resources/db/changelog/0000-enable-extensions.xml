@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0000-enable-uuid-extension" author="aaron">
+        <sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp";</sql>
+        <rollback>DROP EXTENSION IF EXISTS "uuid-ossp";</rollback>
+    </changeSet>
+
+    <changeSet id="0000-enable-jsonb-extension" author="aaron">
+        <sql>CREATE EXTENSION IF NOT EXISTS "hstore";</sql>
+        <rollback>DROP EXTENSION IF EXISTS "hstore";</rollback>
+    </changeSet>
+
+</databaseChangeLog>

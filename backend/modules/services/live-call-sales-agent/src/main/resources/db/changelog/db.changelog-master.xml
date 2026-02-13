@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <include file="db/changelog/0000-enable-extensions.xml"/>
+    <include file="db/changelog/0001-create-lc-deployments-table.xml"/>
+    <include file="db/changelog/0002-create-lc-call-transcripts-table.xml"/>
+    <include file="db/changelog/0003-create-lc-coaching-sessions-table.xml"/>
+
+</databaseChangeLog>

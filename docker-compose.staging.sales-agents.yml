@@ -1,0 +1,369 @@
+# Docker Compose for Staging Environment - Sales Agent Services
+# Production-like configuration with resource limits, monitoring, and realistic settings
+# Usage: docker compose -f docker-compose.staging.sales-agents.yml up -d
+
+version: '3.9'
+
+services:
+  # ============================================================================
+  # AI Sales Agent Service
+  # ============================================================================
+  ai-sales-agent:
+    container_name: ai-sales-agent-staging
+    build:
+      context: ./backend/modules/services/ai-sales-agent
+      dockerfile: Dockerfile.optimized
+    image: hdim-ai-sales-agent:staging
+    ports:
+      - "8090:8090"
+    environment:
+      # Application
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8090
+      # OpenTelemetry - 10% sampling in staging
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_SAMPLER=parentbased_traceidratio
+      - OTEL_SAMPLER_ARG=0.1
+      # Google APIs (real APIs for staging)
+      - MOCK_GOOGLE_API=false
+      - MOCK_ANTHROPIC_API=false
+      # Internal services
+      - WEBSOCKET_URL=ws://clinical-workflow-service:8090/ws
+    volumes:
+      # Logging
+      - ./logs/staging/ai-sales-agent:/app/logs
+    networks:
+      - healthdata-network
+    depends_on:
+      jaeger:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    # Resource limits (production-like)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # Live Call Sales Agent Service
+  # ============================================================================
+  live-call-sales-agent:
+    container_name: live-call-sales-agent-staging
+    build:
+      context: ./backend/modules/services/live-call-sales-agent
+      dockerfile: Dockerfile.optimized
+    image: hdim-live-call-sales-agent:staging
+    ports:
+      - "8095:8095"
+    environment:
+      # Application
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+      - API_HOST=0.0.0.0
+      - API_PORT=8095
+      # OpenTelemetry - 10% sampling in staging
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_SAMPLER=parentbased_traceidratio
+      - OTEL_SAMPLER_ARG=0.1
+      # Google APIs (real for staging)
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/google-meet-service-account.json
+      - GOOGLE_CLOUD_PROJECT=hdim-project
+      - MOCK_GOOGLE_MEET=false
+      - MOCK_SPEECH_TO_TEXT=false
+      # Internal services
+      - AI_SALES_AGENT_URL=http://ai-sales-agent:8090
+      - WEBSOCKET_URL=ws://clinical-workflow-service:8090/ws
+      # Database
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=customer_deployments_db
+      - POSTGRES_USER=healthdata
+      # Cache
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      # Secrets (read-only for security)
+      - ./secrets:/secrets:ro
+      # Logging
+      - ./logs/staging/live-call-sales-agent:/app/logs
+      # Call transcripts storage
+      - call_transcripts_staging:/data/transcripts
+    networks:
+      - healthdata-network
+    depends_on:
+      jaeger:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    # Resource limits (production-like)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8095/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ============================================================================
+  # Coaching UI - Angular Application
+  # ============================================================================
+  coaching-ui:
+    container_name: coaching-ui-staging
+    build:
+      context: .
+      dockerfile: apps/coaching-ui/Dockerfile.optimized
+    image: hdim-coaching-ui:staging
+    ports:
+      - "4200:4200"
+    environment:
+      # Production-like settings
+      - ANGULAR_HOST=0.0.0.0
+      - ANGULAR_PORT=4200
+      - DEBUG=false
+    networks:
+      - healthdata-network
+    restart: always
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.125'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4200/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # Infrastructure Services
+  # ============================================================================
+
+  # PostgreSQL Database
+  postgres:
+    container_name: postgres-staging
+    image: postgres:16-alpine
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=healthdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-staging_db_password}
+      - POSTGRES_MULTIPLE_DATABASES=customer_deployments_db
+      - POSTGRES_INITDB_ARGS=-c shared_buffers=512MB -c max_connections=300 -c log_min_duration_statement=1000
+    volumes:
+      # Database initialization
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/01-init-multi-db.sh:ro
+      # Staging data
+      - ./scripts/init-staging-db.sql:/docker-entrypoint-initdb.d/02-init-staging-db.sql:ro
+      # Persistent storage
+      - postgres_data_staging:/var/lib/postgresql/data
+    networks:
+      - healthdata-network
+    restart: always
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_deployments_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    container_name: redis-staging
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru --loglevel notice
+    volumes:
+      # Persistent storage
+      - redis_data_staging:/data
+    networks:
+      - healthdata-network
+    restart: always
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    container_name: jaeger-staging
+    image: jaegertracing/all-in-one:latest
+    ports:
+      # Jaeger UI
+      - "16686:16686"
+      # OTLP gRPC receiver
+      - "4317:4317"
+      # OTLP HTTP receiver
+      - "4318:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - MEMORY_MAX_TRACES=50000
+      - SPAN_STORAGE_TYPE=memory
+    networks:
+      - healthdata-network
+    restart: always
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:16686/api/traces"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    container_name: prometheus-staging
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      # Prometheus configuration
+      - ./monitoring/prometheus-staging.yml:/etc/prometheus/prometheus.yml:ro
+      # Alert rules
+      - ./monitoring/rules-staging.yml:/etc/prometheus/rules.yml:ro
+      # Persistent storage
+      - prometheus_data_staging:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - healthdata-network
+    restart: always
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Grafana - Dashboards
+  grafana:
+    container_name: grafana-staging
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+      - GF_SECURITY_ALLOW_EMBED_INIT_STATUS_TOKEN=true
+    volumes:
+      # Provisioned data sources
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      # Persistent storage
+      - grafana_data_staging:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - jaeger
+    networks:
+      - healthdata-network
+    restart: always
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.125'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  healthdata-network:
+    driver: bridge
+    name: healthdata-network
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres_data_staging:
+    driver: local
+  redis_data_staging:
+    driver: local
+  call_transcripts_staging:
+    driver: local
+  prometheus_data_staging:
+    driver: local
+  grafana_data_staging:
+    driver: local

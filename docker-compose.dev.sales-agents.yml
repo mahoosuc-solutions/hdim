@@ -1,0 +1,304 @@
+# Docker Compose for Local Development - Sales Agent Services
+# Enables live code reloading, full infrastructure stack, and easy service interaction
+# Usage: docker compose -f docker-compose.dev.sales-agents.yml up -d
+
+version: '3.9'
+
+services:
+  # ============================================================================
+  # AI Sales Agent Service
+  # ============================================================================
+  ai-sales-agent:
+    container_name: ai-sales-agent-dev
+    build:
+      context: ./backend/modules/services/ai-sales-agent
+      dockerfile: Dockerfile.optimized
+    profiles: ["ai", "full"]
+    ports:
+      - "8090:8090"
+    environment:
+      # Application
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - API_HOST=0.0.0.0
+      - API_PORT=8090
+      # OpenTelemetry
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=prometheus
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      # Mock modes for development (no credentials needed)
+      - MOCK_GOOGLE_API=true
+      - MOCK_ANTHROPIC_API=false  # Set to false if testing with real Claude API
+      # Internal services
+      - WEBSOCKET_URL=ws://clinical-workflow-service:8090/ws
+    volumes:
+      # Live code reloading - source code synced from host
+      - ./backend/modules/services/ai-sales-agent/src:/app/src:ro
+      # Allow logging to host
+      - ./logs/ai-sales-agent:/app/logs
+    networks:
+      - healthdata-network
+    depends_on:
+      jaeger:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # ============================================================================
+  # Live Call Sales Agent Service
+  # ============================================================================
+  live-call-sales-agent:
+    container_name: live-call-sales-agent-dev
+    build:
+      context: ./backend/modules/services/live-call-sales-agent
+      dockerfile: Dockerfile.optimized
+    profiles: ["ai", "full"]
+    ports:
+      - "8095:8095"
+    environment:
+      # Application
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - API_HOST=0.0.0.0
+      - API_PORT=8095
+      # OpenTelemetry
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+      - OTEL_SAMPLER=always_on  # 100% sampling in dev
+      # Google APIs
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/google-meet-service-account.json
+      - GOOGLE_CLOUD_PROJECT=hdim-project
+      # Mock modes (use for testing without credentials)
+      - MOCK_GOOGLE_MEET=true
+      - MOCK_SPEECH_TO_TEXT=false  # Set false to use real API
+      # Internal services
+      - AI_SALES_AGENT_URL=http://ai-sales-agent:8090
+      - WEBSOCKET_URL=ws://clinical-workflow-service:8090/ws
+      # Database
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=customer_deployments_db
+      - POSTGRES_USER=healthdata
+      - POSTGRES_PASSWORD=healthdata_dev
+      # Cache
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      # Live code reloading
+      - ./backend/modules/services/live-call-sales-agent/src:/app/src:ro
+      # Secrets (mount read-only for security)
+      - ./secrets:/secrets:ro
+      # Logging
+      - ./logs/live-call-sales-agent:/app/logs
+      # Call transcripts storage
+      - ./data/transcripts:/data/transcripts
+    networks:
+      - healthdata-network
+    depends_on:
+      jaeger:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8095/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  # ============================================================================
+  # Coaching UI - Angular Application
+  # ============================================================================
+  coaching-ui:
+    container_name: coaching-ui-dev
+    build:
+      context: .
+      dockerfile: apps/coaching-ui/Dockerfile.optimized
+    profiles: ["ui", "full"]
+    ports:
+      - "4200:4200"
+    environment:
+      # Development server
+      - ANGULAR_HOST=0.0.0.0
+      - ANGULAR_PORT=4200
+      - DEBUG=true
+    volumes:
+      # Live code reloading for Angular development
+      # Note: For hot reload, consider using 'ng serve' instead of Docker build
+      - ./apps/coaching-ui/src:/usr/share/nginx/html/src:ro
+      - ./logs/coaching-ui:/var/log/nginx
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4200/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  # ============================================================================
+  # Infrastructure Services
+  # ============================================================================
+
+  # PostgreSQL Database (customer_deployments_db)
+  postgres:
+    container_name: postgres-dev
+    image: postgres:16-alpine
+    profiles: ["full", "db"]
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_USER=healthdata
+      - POSTGRES_PASSWORD=healthdata_dev
+      - POSTGRES_MULTIPLE_DATABASES=customer_deployments_db
+      - POSTGRES_INITDB_ARGS=-c shared_buffers=256MB -c max_connections=200
+    volumes:
+      # Database initialization
+      - ./docker/postgres/init-multi-db.sh:/docker-entrypoint-initdb.d/01-init-multi-db.sh:ro
+      # Initial data
+      - ./tmp/init_live_call_agent_db.sql:/docker-entrypoint-initdb.d/02-init-live-call-agent-db.sql:ro
+      # Persistent storage
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthdata -d customer_deployments_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    container_name: redis-dev
+    image: redis:7-alpine
+    profiles: ["full", "cache"]
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      # Persistent storage for cache
+      - redis_data_dev:/data
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    container_name: jaeger-dev
+    image: jaegertracing/all-in-one:latest
+    profiles: ["full", "observability"]
+    ports:
+      # Jaeger UI
+      - "16686:16686"
+      # OTLP gRPC receiver
+      - "4317:4317"
+      # OTLP HTTP receiver
+      - "4318:4318"
+      # Zipkin receiver
+      - "9411:9411"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - MEMORY_MAX_TRACES=10000
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:16686/api/traces"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    container_name: prometheus-dev
+    image: prom/prometheus:latest
+    profiles: ["full", "observability"]
+    ports:
+      - "9090:9090"
+    volumes:
+      # Prometheus configuration
+      - ./monitoring/prometheus-dev.yml:/etc/prometheus/prometheus.yml:ro
+      # Persistent storage
+      - prometheus_data_dev:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Grafana - Dashboards
+  grafana:
+    container_name: grafana-dev
+    image: grafana/grafana:latest
+    profiles: ["full", "observability"]
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      # Provisioned data sources
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      # Persistent storage
+      - grafana_data_dev:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - jaeger
+    networks:
+      - healthdata-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  healthdata-network:
+    driver: bridge
+    name: healthdata-network
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres_data_dev:
+    driver: local
+  redis_data_dev:
+    driver: local
+  prometheus_data_dev:
+    driver: local
+  grafana_data_dev:
+    driver: local

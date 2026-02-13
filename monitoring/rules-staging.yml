@@ -1,0 +1,469 @@
+# Prometheus Alerting Rules - Staging Environment
+# Critical alerts for production-readiness validation
+# These rules ensure staging environment detects issues early before production
+
+groups:
+  # ============================================================================
+  # Service Availability (CRITICAL)
+  # ============================================================================
+  - name: service_availability
+    interval: 15s
+    rules:
+      # Service Down Detection
+      - alert: ServiceDown
+        expr: up{environment="staging"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "{{ $labels.job }} service is DOWN"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has not responded to health checks for 2 minutes"
+          impact: "Service is unavailable. Customers unable to access functionality"
+          action: "Check service logs, restart if necessary, review recent deployments"
+
+      # Health Check Failures
+      - alert: HealthCheckFailing
+        expr: |
+          rate(http_requests_total{endpoint="/health", status=~"5.."}[1m]) > 0 OR
+          rate(http_requests_total{endpoint="/health", status=~"4.."}[1m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          environment: staging
+          service: "{{ $labels.service }}"
+        annotations:
+          summary: "{{ $labels.service }} health check failing"
+          description: "Health endpoint returning errors on {{ $labels.instance }}"
+          impact: "Load balancers may route traffic away from this instance"
+          action: "Review service health, check dependencies, verify configurations"
+
+  # ============================================================================
+  # Error Rates (CRITICAL)
+  # ============================================================================
+  - name: error_rates
+    interval: 15s
+    rules:
+      # High Error Rate (5xx errors)
+      - alert: HighErrorRate
+        expr: |
+          (sum(rate(http_requests_total{status=~"5.."}[1m])) by (job) /
+           sum(rate(http_requests_total[1m])) by (job)) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "High error rate (>5%) on {{ $labels.job }}"
+          description: "{{ $labels.job }} experiencing {{ printf \"%.2f\" $value | float64 | mul 100 }}% error rate (5xx)"
+          impact: "Customers seeing failures for 5% of requests. Functional degradation."
+          action: "Check application logs, identify failing endpoints, rollback if needed"
+
+      # Elevated Client Errors (4xx - potential configuration issues)
+      - alert: ElevatedClientErrors
+        expr: |
+          (sum(rate(http_requests_total{status=~"4.."}[1m])) by (job) /
+           sum(rate(http_requests_total[1m])) by (job)) > 0.15
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Elevated client errors (>15%) on {{ $labels.job }}"
+          description: "{{ printf \"%.2f\" $value | float64 | mul 100 }}% of requests returning 4xx errors"
+          impact: "May indicate invalid client requests or missing resources"
+          action: "Review request patterns, check API compatibility, validate client configurations"
+
+  # ============================================================================
+  # Performance & Latency (WARNING)
+  # ============================================================================
+  - name: performance_metrics
+    interval: 15s
+    rules:
+      # High Request Latency (P95)
+      - alert: HighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[1m])) by (le, job)
+          ) > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          environment: staging
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "High latency (P95 > 500ms) on {{ $labels.job }}"
+          description: "95th percentile response time is {{ printf \"%.2f\" $value }}s"
+          impact: "User experience degraded. Slow API responses."
+          action: "Profile endpoints, check database queries, optimize hot paths"
+
+      # Critical Latency (P99)
+      - alert: CriticalLatencyP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_request_duration_seconds_bucket[1m])) by (le, job)
+          ) > 1.0
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Critical latency (P99 > 1s) on {{ $labels.job }}"
+          description: "99th percentile response time is {{ printf \"%.2f\" $value }}s"
+          impact: "Worst-case user experience severely impacted. Risk of timeouts."
+          action: "Immediate performance investigation required. Check database load, cache hit rates"
+
+      # Throughput Degradation
+      - alert: ThroughputDegradation
+        expr: |
+          (rate(http_requests_total[5m]) offset 10m -
+           rate(http_requests_total[5m])) / rate(http_requests_total[5m]) offset 10m > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+          service: "{{ $labels.job }}"
+        annotations:
+          summary: "Throughput degraded by >20% on {{ $labels.job }}"
+          description: "Request rate decreased significantly compared to baseline"
+          impact: "Reduced system capacity. May fail under load."
+          action: "Check resource utilization, review recent deployments, investigate bottlenecks"
+
+  # ============================================================================
+  # Database Connectivity (CRITICAL)
+  # ============================================================================
+  - name: database_health
+    interval: 15s
+    rules:
+      # Database Connection Pool Exhaustion
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          (pg_stat_activity_count{datname=~".*_db"} /
+           pg_settings_max_connections) > 0.8
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+          database: "{{ $labels.datname }}"
+        annotations:
+          summary: "Database connection pool exhausted (>80%) on {{ $labels.datname }}"
+          description: "{{ $value | humanizePercentage }} of max connections in use"
+          impact: "New connections will fail. Service will timeout."
+          action: "Terminate idle connections, reduce connection pool size, optimize queries"
+
+      # Database Query Performance
+      - alert: SlowDatabaseQueries
+        expr: |
+          histogram_quantile(0.95,
+            rate(pg_slow_queries_duration_seconds_bucket[5m])
+          ) > 1.0
+        for: 3m
+        labels:
+          severity: warning
+          environment: staging
+          database: "{{ $labels.datname }}"
+        annotations:
+          summary: "Slow database queries detected (P95 > 1s)"
+          description: "Database queries taking {{ printf \"%.2f\" $value }}s for 95th percentile"
+          impact: "API latency increased. User-facing slowness."
+          action: "Run EXPLAIN ANALYZE on slow queries, add indexes, optimize query patterns"
+
+      # Replication Lag (if applicable)
+      - alert: PostgresReplicationLag
+        expr: |
+          pg_replication_lag_seconds > 10
+        for: 2m
+        labels:
+          severity: warning
+          environment: staging
+          instance: "{{ $labels.instance }}"
+        annotations:
+          summary: "PostgreSQL replication lag > 10s on {{ $labels.instance }}"
+          description: "Replication lag: {{ printf \"%.0f\" $value }}s"
+          impact: "Standby database out of sync. Risk of data loss on failover."
+          action: "Check network connectivity, investigate replication bottlenecks"
+
+  # ============================================================================
+  # Cache Layer (REDIS)
+  # ============================================================================
+  - name: redis_health
+    interval: 15s
+    rules:
+      # Redis Unavailable
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          environment: staging
+        annotations:
+          summary: "Redis cache is DOWN"
+          description: "Redis on {{ $labels.instance }} not responding"
+          impact: "Cache layer unavailable. Database load will spike."
+          action: "Restart Redis, check disk space, review AOF rewrite logs"
+
+      # Redis Memory Usage Critical
+      - alert: RedisMemoryUsageCritical
+        expr: |
+          (redis_memory_used_bytes / redis_memory_max_bytes) > 0.9
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+        annotations:
+          summary: "Redis memory usage critical (>90%)"
+          description: "Redis using {{ printf \"%.2f\" $value | float64 | mul 100 }}% of max memory"
+          impact: "Redis may evict keys or crash. Cache misses increase."
+          action: "Increase Redis max memory, review eviction policy, identify memory leaks"
+
+      # Redis High Eviction Rate
+      - alert: RedisHighEvictionRate
+        expr: |
+          rate(redis_evicted_keys_total[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Redis evicting keys at high rate (>10/s)"
+          description: "Redis eviction rate: {{ printf \"%.2f\" $value }}/s"
+          impact: "Cache effectiveness reduced. Working set doesn't fit in memory."
+          action: "Increase Redis memory, optimize cache key TTLs, review access patterns"
+
+  # ============================================================================
+  # Distributed Tracing & Observability
+  # ============================================================================
+  - name: observability_health
+    interval: 15s
+    rules:
+      # Jaeger Collector Down
+      - alert: JaegerCollectorDown
+        expr: up{job="jaeger"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Jaeger collector unavailable"
+          description: "Jaeger on {{ $labels.instance }} not responding"
+          impact: "Distributed traces not collected. Debugging capability impaired."
+          action: "Restart Jaeger, check disk space, review collector logs"
+
+      # Prometheus Scrape Failures
+      - alert: PrometheusScrapeFailing
+        expr: |
+          rate(prometheus_tsdb_symbol_table_size_bytes{job="prometheus"}[5m]) == 0
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Prometheus scrape target failing"
+          description: "Unable to scrape metrics from {{ $labels.instance }}"
+          impact: "Metrics gaps in monitoring. Alerting may be delayed."
+          action: "Check target health, verify network connectivity, review scrape configs"
+
+  # ============================================================================
+  # Storage & Disk Space
+  # ============================================================================
+  - name: storage_health
+    interval: 15s
+    rules:
+      # Low Disk Space (PostgreSQL volumes)
+      - alert: LowDiskSpace
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint=~"/var/lib/postgresql.*"} /
+           node_filesystem_size_bytes) < 0.1
+        for: 3m
+        labels:
+          severity: critical
+          environment: staging
+          instance: "{{ $labels.instance }}"
+        annotations:
+          summary: "Low disk space on {{ $labels.mountpoint }} (< 10%)"
+          description: "Available space: {{ humanize $value }}%"
+          impact: "Database writes will fail. Services will crash."
+          action: "Expand volume, delete old backups, archive logs"
+
+      # Disk Space Warning
+      - alert: DiskSpaceWarning
+        expr: |
+          (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+          instance: "{{ $labels.instance }}"
+        annotations:
+          summary: "Disk space running low (< 20%)"
+          description: "Available space: {{ humanize $value | float64 | mul 100 }}%"
+          impact: "Risk of running out of space. System degradation."
+          action: "Plan volume expansion, clean up temporary files"
+
+      # Prometheus Storage Full
+      - alert: PrometheusStorageFull
+        expr: |
+          (prometheus_tsdb_symbol_table_size_bytes /
+           prometheus_tsdb_max_bytes) > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Prometheus storage nearly full (>85%)"
+          description: "Storage usage: {{ printf \"%.2f\" $value | float64 | mul 100 }}%"
+          impact: "Prometheus may stop accepting metrics. Data loss risk."
+          action: "Increase retention period review, enable compression, scale storage"
+
+  # ============================================================================
+  # Container & Resource Health
+  # ============================================================================
+  - name: container_health
+    interval: 30s
+    rules:
+      # Service Memory Usage Critical
+      - alert: ContainerMemoryUsageCritical
+        expr: |
+          (container_memory_working_set_bytes{container_name!=""} /
+           container_spec_memory_limit_bytes) > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          environment: staging
+          container: "{{ $labels.container_name }}"
+        annotations:
+          summary: "Container memory usage critical (>90%)"
+          description: "{{ $labels.container_name }} using {{ printf \"%.2f\" $value | float64 | mul 100 }}% of limit"
+          impact: "Container may be OOMKilled. Service interrupted."
+          action: "Increase memory limit in docker-compose, optimize memory usage"
+
+      # Service CPU Throttling
+      - alert: CPUThrottling
+        expr: |
+          rate(container_cpu_cfs_throttled_seconds_total[1m]) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+          environment: staging
+          container: "{{ $labels.container_name }}"
+        annotations:
+          summary: "{{ $labels.container_name }} CPU being throttled"
+          description: "CPU throttled {{ printf \"%.2f\" $value }}s/s"
+          impact: "Service performance degraded. Latency increased."
+          action: "Increase CPU limit, reduce container count, optimize hot paths"
+
+  # ============================================================================
+  # Data Pipeline Health (Live Call Sales Agent)
+  # ============================================================================
+  - name: sales_agent_health
+    interval: 30s
+    rules:
+      # Live Call Agent Health
+      - alert: LiveCallAgentDown
+        expr: up{job="live-call-sales-agent"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+          service: live-call-sales-agent
+        annotations:
+          summary: "Live Call Sales Agent service is DOWN"
+          description: "live-call-sales-agent has not responded for 2 minutes"
+          impact: "Real-time sales coaching unavailable"
+          action: "Check service logs, restart if necessary, verify Google Meet API credentials"
+
+      # AI Sales Agent Health
+      - alert: AISalesAgentDown
+        expr: up{job="ai-sales-agent"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          environment: staging
+          service: ai-sales-agent
+        annotations:
+          summary: "AI Sales Agent service is DOWN"
+          description: "ai-sales-agent has not responded for 2 minutes"
+          impact: "Discovery call analysis and coaching generation unavailable"
+          action: "Check service logs, verify Anthropic API connectivity, restart service"
+
+      # Coaching Message Queue Backup
+      - alert: CoachingQueueBackup
+        expr: |
+          rate(coaching_messages_queued_total[1m]) >
+          rate(coaching_messages_processed_total[1m])
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+          service: sales-agent
+        annotations:
+          summary: "Coaching message queue backing up"
+          description: "Messages queuing faster than processing"
+          impact: "Coaching suggestions delayed. Real-time responsiveness reduced."
+          action: "Scale coaching processor, check database latency, review bottlenecks"
+
+  # ============================================================================
+  # Business SLO Metrics (Observable)
+  # ============================================================================
+  - name: observable_slo_metrics
+    interval: 30s
+    rules:
+      # SLO Availability Breach (99.9% target)
+      - alert: SLOAvailabilityBreach
+        expr: |
+          (1 - (sum(increase(requests_failed_total[5m])) by (service) /
+                 sum(increase(requests_total[5m])) by (service))) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          environment: staging
+          slo: availability
+        annotations:
+          summary: "SLO Availability breach for {{ $labels.service }}"
+          description: "Availability {{ printf \"%.4f\" $value | float64 | mul 100 }}% (target: 99.9%)"
+          impact: "SLO violation. Customer credit applicable."
+          action: "Investigate errors, prioritize fixes, escalate if trend continues"
+
+      # SLO Latency Breach (P95 < 500ms)
+      - alert: SLOLatencyBreach
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+          slo: latency
+        annotations:
+          summary: "SLO Latency breach for {{ $labels.service }}"
+          description: "P95 latency {{ printf \"%.2f\" $value }}s (target: < 500ms)"
+          impact: "SLO at risk. Customer experience degraded."
+          action: "Profile hot paths, optimize queries, check resource utilization"
+
+# ============================================================================
+# Alert Routing & Notifications (Placeholder - configure per environment)
+# ============================================================================
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+#
+# notification_channels:
+#   # Critical alerts to on-call engineer (PagerDuty)
+#   - name: critical
+#     type: pagerduty
+#     routing_key: ${PAGERDUTY_CRITICAL_KEY}
+#     labels:
+#       severity: critical
+#
+#   # Warnings to Slack #alerts channel
+#   - name: warnings
+#     type: slack
+#     webhook_url: ${SLACK_ALERTS_WEBHOOK}
+#     labels:
+#       severity: warning

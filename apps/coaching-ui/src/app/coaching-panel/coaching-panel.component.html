@@ -1,0 +1,49 @@
+<div class="coaching-panel">
+  <!-- Current speaker & transcript -->
+  <div class="current-speaker">
+    <div class="speaker-label">{{ currentSpeaker || 'Waiting for speaker...' }}</div>
+    <div class="transcript-preview">{{ latestTranscript || 'No transcript yet' }}</div>
+  </div>
+
+  <!-- Call status -->
+  <div class="call-status" [class.active]="callActive">
+    <span class="status-indicator" [class.active]="callActive"></span>
+    <span class="status-text">{{ callActive ? 'Call Active' : 'Waiting for call...' }}</span>
+  </div>
+
+  <!-- Coaching messages -->
+  <div class="messages-container">
+    <div *ngFor="let msg of messages" [attr.data-type]="msg.type" [ngClass]="'coaching-message ' + getSeverityClass(msg.severity)">
+      <div class="message-header">
+        <span class="message-type">{{ getTypeLabel(msg.type) }}</span>
+        <span class="confidence">{{ (msg.confidence * 100).toFixed(0) }}% confident</span>
+        <button class="dismiss-btn" (click)="dismissMessage(msg)" aria-label="Dismiss message">×</button>
+      </div>
+
+      <div class="message-body">
+        <p class="message-text">{{ msg.message }}</p>
+
+        <!-- Objection reframe -->
+        <div *ngIf="msg.reframe" class="reframe">
+          <strong>🔄 Reframe:</strong>
+          <p>{{ msg.reframe }}</p>
+        </div>
+
+        <!-- Suggested question -->
+        <div *ngIf="msg.suggested_question" class="suggestion">
+          <strong>❓ Try asking:</strong>
+          <p>"{{ msg.suggested_question }}"</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="messages.length === 0 && callActive" class="empty-state">
+      <p>🎯 Listening to call... Coaching suggestions will appear here.</p>
+    </div>
+
+    <div *ngIf="messages.length === 0 && !callActive" class="empty-state">
+      <p>⏳ Waiting for coaching bot to join call...</p>
+    </div>
+  </div>
+</div>

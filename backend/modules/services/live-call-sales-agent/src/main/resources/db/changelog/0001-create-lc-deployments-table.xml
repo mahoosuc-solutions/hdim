@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0001-create-lc-deployments-table" author="aaron">
+        <createTable tableName="lc_deployments">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deployment_status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contract_value" type="DECIMAL(10,2)"/>
+            <column name="pilot_start_date" type="TIMESTAMP"/>
+            <column name="pilot_end_date" type="TIMESTAMP"/>
+            <column name="success_metrics" type="JSONB"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+
+        <createIndex indexName="idx_lc_deployments_tenant" tableName="lc_deployments">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="lc_deployments"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

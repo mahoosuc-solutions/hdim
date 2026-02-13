@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-lc-coaching-sessions-table" author="aaron">
+        <createTable tableName="lc_coaching_sessions">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="call_transcript_id" type="UUID">
+                <constraints foreignKeyName="fk_lc_coaching_call"
+                             referencedTableName="lc_call_transcripts"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="session_type" type="VARCHAR(50)"/>
+            <column name="coaching_count" type="INTEGER"/>
+            <column name="objections_detected" type="INTEGER"/>
+            <column name="phase_transitions" type="INTEGER"/>
+            <column name="avg_response_score" type="DECIMAL(3,2)"/>
+            <column name="effectiveness_rating" type="DECIMAL(3,2)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex indexName="idx_lc_coaching_sessions_tenant" tableName="lc_coaching_sessions">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_lc_coaching_sessions_call" tableName="lc_coaching_sessions">
+            <column name="call_transcript_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="lc_coaching_sessions"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

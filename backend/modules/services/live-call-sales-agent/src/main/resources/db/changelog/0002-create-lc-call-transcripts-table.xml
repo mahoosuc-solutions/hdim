@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0002-create-lc-call-transcripts-table" author="aaron">
+        <createTable tableName="lc_call_transcripts">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="deployment_id" type="UUID">
+                <constraints foreignKeyName="fk_lc_call_deployment"
+                             referencedTableName="lc_deployments"
+                             referencedColumnNames="id"/>
+            </column>
+            <column name="call_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration_minutes" type="INTEGER"/>
+            <column name="persona_type" type="VARCHAR(50)"/>
+            <column name="qualification_status" type="VARCHAR(20)"/>
+            <column name="call_score" type="DECIMAL(5,2)"/>
+            <column name="sentiment_score" type="DECIMAL(3,2)"/>
+            <column name="transcript_file_path" type="TEXT"/>
+            <column name="pain_points_discovered" type="JSONB"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <createIndex indexName="idx_lc_call_transcripts_tenant" tableName="lc_call_transcripts">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_lc_call_transcripts_deployment" tableName="lc_call_transcripts">
+            <column name="deployment_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="lc_call_transcripts"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

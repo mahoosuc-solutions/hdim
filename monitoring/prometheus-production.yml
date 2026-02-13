@@ -1,0 +1,327 @@
+# ====================================================================================================
+# Prometheus Configuration - Production Environment
+# ====================================================================================================
+# Cost-optimized production configuration with reduced scrape intervals (30s vs 15s dev)
+# All services monitored with appropriate scrape intervals based on criticality
+
+global:
+  scrape_interval: 30s                    # Reduced from 15s (cost optimization)
+  evaluation_interval: 30s                # Alert evaluation frequency
+  scrape_timeout: 10s
+  external_labels:
+    environment: production
+    region: us-east-1
+    cluster: hdim-sales-agent-services
+
+# Alert manager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+      scheme: http
+      timeout: 10s
+      api_version: v1
+
+# Load rules from file
+rule_files:
+  - '/etc/prometheus/rules-production.yml'
+
+# Service scrape configurations
+scrape_configs:
+  # ====================================================================================================
+  # Application Services (30s interval - standard)
+  # ====================================================================================================
+
+  - job_name: 'ai-sales-agent'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['ai-sales-agent-1:8090', 'ai-sales-agent-2:8090']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+      - source_labels: [__scheme__, __address__, __metrics_path__]
+        separator: ://
+        target_label: __param_target
+      - target_label: __address__
+        replacement: localhost:9090
+
+  - job_name: 'live-call-sales-agent'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['live-call-sales-agent-1:8095', 'live-call-sales-agent-2:8095']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  - job_name: 'coaching-ui'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 60s                  # 60s for frontend (less frequent changes)
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['coaching-ui-1:3000', 'coaching-ui-2:3000']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # ====================================================================================================
+  # Database Layer (60s interval - reduced sampling for cost)
+  # ====================================================================================================
+
+  - job_name: 'postgres-primary'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 60s                  # Reduced frequency for cost optimization
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'pg_stat_.*'
+        action: keep              # Only keep postgres metrics
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'postgres-primary'
+        target_label: instance
+      - source_labels: [__address__]
+        replacement: 'primary'
+        target_label: db_role
+
+  - job_name: 'postgres-replica'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['postgres-replica-exporter:9187']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'postgres-replica'
+        target_label: instance
+      - source_labels: [__address__]
+        replacement: 'replica'
+        target_label: db_role
+
+  # ====================================================================================================
+  # Cache Layer (45s interval - moderate frequency)
+  # ====================================================================================================
+
+  - job_name: 'redis-primary'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 45s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'redis-primary'
+        target_label: instance
+      - source_labels: [__address__]
+        replacement: 'primary'
+        target_label: redis_role
+
+  - job_name: 'redis-replica-1'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 45s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['redis-replica-1-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'redis-replica-1'
+        target_label: instance
+      - source_labels: [__address__]
+        replacement: 'replica'
+        target_label: redis_role
+
+  - job_name: 'redis-replica-2'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 45s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['redis-replica-2-exporter:9121']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'redis-replica-2'
+        target_label: instance
+      - source_labels: [__address__]
+        replacement: 'replica'
+        target_label: redis_role
+
+  # ====================================================================================================
+  # Observability Stack (30s interval - critical for operations)
+  # ====================================================================================================
+
+  - job_name: 'prometheus'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['localhost:9090']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'prometheus'
+        target_label: instance
+
+  - job_name: 'jaeger'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['jaeger:14269']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'jaeger-collector'
+        target_label: instance
+
+  - job_name: 'alertmanager'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['alertmanager:9093']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'alertmanager'
+        target_label: instance
+
+  - job_name: 'grafana'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['grafana:3000']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'grafana'
+        target_label: instance
+
+  # ====================================================================================================
+  # Log Aggregation Stack (60s interval - less critical than application metrics)
+  # ====================================================================================================
+
+  - job_name: 'elasticsearch'
+    scheme: http
+    metrics_path: '/_prometheus/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'elasticsearch'
+        target_label: instance
+
+  - job_name: 'logstash'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['logstash:9600']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'logstash'
+        target_label: instance
+
+  - job_name: 'kibana'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['kibana:5601']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'kibana'
+        target_label: instance
+
+  # ====================================================================================================
+  # System Monitoring (Node Exporter) (30s interval - important for host health)
+  # ====================================================================================================
+
+  - job_name: 'node'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'node-exporter'
+        target_label: instance
+
+  # ====================================================================================================
+  # Service Discovery (Docker) - Optional: for dynamic environments
+  # ====================================================================================================
+  # Uncomment to enable Docker service discovery (requires Docker daemon metrics enabled)
+  # - job_name: 'docker'
+  #   scheme: http
+  #   metrics_path: '/metrics'
+  #   scrape_interval: 30s
+  #   scrape_timeout: 10s
+  #   static_configs:
+  #     - targets: ['unix_socket_exporter:9323']
+  #   relabel_configs:
+  #     - source_labels: [__address__]
+  #       replacement: 'docker'
+  #       target_label: instance
+
+  # ====================================================================================================
+  # Self-Monitoring
+  # ====================================================================================================
+
+  - job_name: 'prometheus-self'
+    scheme: http
+    metrics_path: '/metrics'
+    scrape_interval: 15s                  # Monitor Prometheus itself more frequently
+    scrape_timeout: 10s
+    static_configs:
+      - targets: ['localhost:9090']
+    relabel_configs:
+      - source_labels: [__address__]
+        replacement: 'prometheus'
+        target_label: instance
+
+# ====================================================================================================
+# Remote Storage (Optional: For long-term retention and HA)
+# ====================================================================================================
+# Uncomment to enable remote storage integration (e.g., Thanos, VictoriaMetrics)
+# remote_write:
+#   - url: "http://remote-storage:9201/api/v1/write"
+#     queue_config:
+#       capacity: 100000
+#       max_shards: 200
+#       min_shards: 1
+#       max_samples_per_send: 10000
+#       batch_send_wait: 5s
+#       min_backoff: 30ms
+#       max_backoff: 100ms
+#
+# remote_read:
+#   - url: "http://remote-storage:9201/api/v1/read"
+#     read_recent: true
+
+# ====================================================================================================
+# Storage Configuration
+# ====================================================================================================
+# Default: Local storage under /prometheus directory
+# Retention: 30 days of data (configured in docker-compose.production.yml)
+# Retention Size: 50GB max (to prevent disk full conditions)
+#
+# For scaling: Consider implementing remote storage solution (Thanos, VictoriaMetrics)
+# For HA: Deploy multiple Prometheus instances with federated configuration

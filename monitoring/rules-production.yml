@@ -1,0 +1,486 @@
+# ====================================================================================================
+# Production Alerting Rules - HDIM Sales Agent Services
+# ====================================================================================================
+# Critical alerting rules for production environment with SLO-based thresholds
+# Rules organized by category: Service Availability, Performance, Database, Cache, Security, Business
+
+groups:
+
+  # ====================================================================================================
+  # Group 1: Service Availability & Health
+  # ====================================================================================================
+  - name: service_availability
+    interval: 30s
+    rules:
+
+      - alert: ServiceDown
+        expr: up{job=~"ai-sales-agent|live-call-sales-agent|coaching-ui"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "{{ $labels.job }} service is down"
+          description: "{{ $labels.job }} on {{ $labels.instance }} has been unreachable for 2 minutes"
+          action: "Check service logs: docker compose logs {{ $labels.job }}"
+          impact: "Sales calls cannot be coached. Customer impact: HIGH"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          component: service
+        annotations:
+          summary: "{{ $labels.job }} has high error rate (>5%)"
+          description: "{{ $labels.job }} error rate is {{ $value | humanizePercentage }} over last 5 minutes"
+          action: "Check application logs for errors"
+          impact: "Customer-facing requests failing. SLO breach likely."
+
+      - alert: ElevatedClientErrors
+        expr: rate(http_requests_total{status=~"4.."}[5m]) > 0.15
+        for: 5m
+        labels:
+          severity: warning
+          component: service
+        annotations:
+          summary: "{{ $labels.job }} has elevated client error rate (>15%)"
+          description: "Client errors (4xx): {{ $value | humanizePercentage }} over last 5 minutes"
+          action: "Verify client integration and API contracts"
+
+      - alert: HealthCheckFailing
+        expr: rate(health_check_failures_total[5m]) > 0
+        for: 3m
+        labels:
+          severity: warning
+          component: service
+        annotations:
+          summary: "{{ $labels.job }} health check is failing"
+          description: "Health endpoint not responding for {{ $value }} instances"
+          action: "Check service logs and resource availability"
+
+  # ====================================================================================================
+  # Group 2: Request Latency & Performance (SLO-Based)
+  # ====================================================================================================
+  - name: latency_slo
+    interval: 30s
+    rules:
+
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+          slo_metric: "true"
+        annotations:
+          summary: "{{ $labels.job }} P95 latency exceeds 200ms"
+          description: "P95 latency: {{ $value | humanizeDuration }}. SLO target: <200ms"
+          action: "Check database performance and cache hit rates"
+          slo_impact: "May breach latency SLO if sustained"
+
+      - alert: CriticalLatencyP99
+        expr: histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+          component: performance
+          slo_metric: "true"
+        annotations:
+          summary: "{{ $labels.job }} P99 latency exceeds 500ms"
+          description: "P99 latency: {{ $value | humanizeDuration }}. SLO target: <500ms"
+          action: "Immediately investigate slow queries and resource bottlenecks"
+          slo_impact: "Critical SLO breach - immediate action required"
+
+      - alert: ThroughputDegradation
+        expr: rate(http_requests_total[5m]) < (avg_over_time(rate(http_requests_total[5m])[1h:5m]) * 0.8)
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "{{ $labels.job }} throughput decreased >20%"
+          description: "Current: {{ $value }} req/s, baseline: {{ $value | divideBy:0.8 }} req/s"
+          action: "Investigate service capacity and resource constraints"
+
+  # ====================================================================================================
+  # Group 3: Database Layer Health & Performance
+  # ====================================================================================================
+  - name: database_health
+    interval: 30s
+    rules:
+
+      - alert: PostgresDown
+        expr: up{job="postgres-primary"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL primary database is down"
+          description: "PostgreSQL primary has been unreachable for 1 minute"
+          action: "Check DB container: docker compose logs postgres-primary"
+          impact: "All database operations failing. Complete system outage."
+
+      - alert: DatabaseReplicationLag
+        expr: pg_replication_lag_seconds > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "PostgreSQL replica is lagging by {{ $value | humanizeDuration }}"
+          description: "Replication lag exceeds 10 seconds (SLO: <10s)"
+          action: "Check network latency and database load on primary"
+          impact: "Read replicas serving stale data"
+
+      - alert: ConnectionPoolExhausted
+        expr: pg_stat_activity_count > 80  # 80% of 100 max
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "PostgreSQL connection pool near exhaustion ({{ $value }}/100)"
+          description: "Active connections: {{ $value }}. Max: 100"
+          action: "Investigate connection leaks in application code"
+          impact: "New connections may be rejected if limit reached"
+
+      - alert: SlowQueries
+        expr: rate(pg_slow_queries_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "{{ $value | humanize }} slow queries per second"
+          description: "Queries exceeding 1 second detected"
+          action: "Enable query logging and analyze slow queries: log_min_duration_statement"
+          impact: "Performance degradation for affected operations"
+
+      - alert: DatabaseDiskSpaceCritical
+        expr: (node_filesystem_avail_bytes{mountpoint="/var/lib/postgresql/data"} / node_filesystem_size_bytes{mountpoint="/var/lib/postgresql/data"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL disk space <10%"
+          description: "Remaining space: {{ $value | humanizePercentage }}. Critical: <10%"
+          action: "Immediately increase disk space or clean old logs/backups"
+          impact: "Database will crash when disk fills completely"
+
+  # ====================================================================================================
+  # Group 4: Cache Layer (Redis) Health
+  # ====================================================================================================
+  - name: redis_health
+    interval: 30s
+    rules:
+
+      - alert: RedisDown
+        expr: up{job=~"redis-primary|redis-replica.*"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "{{ $labels.instance }} Redis instance is down"
+          description: "Redis {{ $labels.redis_role }} unreachable for 2 minutes"
+          action: "Check Redis container: docker compose logs redis-{{ $labels.redis_role }}"
+          impact: "Cache misses will increase query load on database"
+
+      - alert: RedisMemoryUsageCritical
+        expr: (redis_memory_used_bytes / redis_memory_max_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis memory usage >90% ({{ $value | humanizePercentage }})"
+          description: "Used: {{ $value | humanize1024 }}MB / Max: 2GB"
+          action: "Monitor eviction rate and increase memory if needed"
+          impact: "Keys being evicted, cache hit rate dropping"
+
+      - alert: RedisHighEvictionRate
+        expr: rate(redis_evicted_keys_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis evicting {{ $value | humanize }} keys/sec"
+          description: "High eviction rate detected (threshold: 10/sec)"
+          action: "Increase maxmemory or optimize cache usage patterns"
+          impact: "Cache effectiveness reduced, database load increasing"
+
+      - alert: RedisReplicationLag
+        expr: redis_replication_backlog_size{role="slave"} > 1000000
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis replica has {{ $value | humanize1024 }}MB backlog"
+          description: "Replication backlog exceeds 1MB"
+          action: "Check network latency between Redis nodes"
+          impact: "Replica data consistency at risk"
+
+  # ====================================================================================================
+  # Group 5: Observability Stack (Jaeger, Prometheus)
+  # ====================================================================================================
+  - name: observability_health
+    interval: 30s
+    rules:
+
+      - alert: JaegerCollectorDown
+        expr: up{job="jaeger"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Jaeger collector is down"
+          description: "Distributed tracing unavailable for 2 minutes"
+          action: "Check Jaeger container: docker compose logs jaeger"
+          impact: "No trace data collected (non-critical but reduces debugging capability)"
+
+      - alert: PrometheusScrapeFailing
+        expr: up{job="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Prometheus unable to scrape {{ $labels.job }}"
+          description: "Prometheus scrape failures detected"
+          action: "Check prometheus logs for scrape errors"
+          impact: "Metrics not being collected"
+
+      - alert: PrometheusStorageFull
+        expr: (prometheus_tsdb_symbol_table_size_bytes / 50000000000) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: observability
+        annotations:
+          summary: "Prometheus storage >85% full"
+          description: "Storage usage: {{ $value | humanizePercentage }}"
+          action: "Increase storage or reduce retention period"
+          impact: "Old metrics will be deleted automatically"
+
+  # ====================================================================================================
+  # Group 6: Container & System Health
+  # ====================================================================================================
+  - name: system_health
+    interval: 30s
+    rules:
+
+      - alert: ContainerMemoryUsageCritical
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "{{ $labels.name }} memory usage >90%"
+          description: "Memory: {{ $value | humanizePercentage }} of limit"
+          action: "Check for memory leaks or increase container memory limit"
+          impact: "Container may be killed by OOMKiller"
+
+      - alert: CPUThrottling
+        expr: rate(container_cpu_cfs_throttled_seconds_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "{{ $labels.name }} CPU throttled >10% of time"
+          description: "CPU throttling rate: {{ $value | humanizePercentage }}"
+          action: "Increase CPU limit or optimize application code"
+          impact: "Application performance degraded"
+
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.2
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "Disk space <20% on {{ $labels.device }}"
+          description: "Available: {{ $value | humanizePercentage }}"
+          action: "Clean up logs or increase disk space"
+
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "Disk space critically low (<10%) on {{ $labels.device }}"
+          description: "Available: {{ $value | humanizePercentage }}"
+          action: "IMMEDIATELY increase disk space or services will fail"
+          impact: "System may crash due to disk full"
+
+  # ====================================================================================================
+  # Group 7: SLO Compliance (Observable Commitments)
+  # ====================================================================================================
+  - name: slo_compliance
+    interval: 30s
+    rules:
+
+      - alert: SLOAvailabilityBreach
+        expr: (increase(http_requests_total{status=~"2.."}[30m]) / increase(http_requests_total[30m])) < 0.999
+        for: 10m
+        labels:
+          severity: critical
+          component: slo
+          slo_metric: "true"
+        annotations:
+          summary: "Availability SLO breached (<99.9%)"
+          description: "Current availability: {{ $value | humanizePercentage }}. Target: 99.9%"
+          action: "Emergency response required - investigate root cause immediately"
+          slo_impact: "Customer credit of 5% of monthly bill triggered"
+
+      - alert: SLOLatencyBreach
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[30m])) > 0.2
+        for: 10m
+        labels:
+          severity: critical
+          component: slo
+          slo_metric: "true"
+        annotations:
+          summary: "Latency SLO breached (P95 > 200ms)"
+          description: "P95 latency: {{ $value | humanizeDuration }}. Target: <200ms"
+          action: "Performance optimization required"
+          slo_impact: "Customer credit of 5% triggered"
+
+      - alert: SLOErrorRateBreach
+        expr: (increase(http_requests_total{status=~"5.."}[30m]) / increase(http_requests_total[30m])) > 0.001
+        for: 10m
+        labels:
+          severity: critical
+          component: slo
+          slo_metric: "true"
+        annotations:
+          summary: "Error Rate SLO breached (>0.1%)"
+          description: "Error rate: {{ $value | humanizePercentage }}. Target: <0.1%"
+          action: "Investigate and fix errors causing SLO breach"
+          slo_impact: "Customer credit of 10% triggered"
+
+  # ====================================================================================================
+  # Group 8: Business Metrics & Sales Operations
+  # ====================================================================================================
+  - name: business_metrics
+    interval: 30s
+    rules:
+
+      - alert: LowDiscoveryCallVolume
+        expr: rate(discovery_calls_total[1h]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "Discovery call volume below baseline"
+          description: "Current rate: {{ $value }} calls/sec. Baseline: 0.1+ calls/sec"
+          action: "Verify coaching system is operational and sales team is active"
+          impact: "Potential issue with AI Sales Agent service"
+
+      - alert: HighCoachingQueueBackup
+        expr: coaching_queue_length > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "Coaching suggestion queue backlog: {{ $value }} items"
+          description: "Queue processing falling behind recommendations"
+          action: "Scale coaching engine replicas or investigate performance"
+          impact: "Real-time coaching suggestions delayed"
+
+      - alert: LowCallSuccessRate
+        expr: (rate(qualified_calls_total[1h]) / rate(total_calls_total[1h])) < 0.3
+        for: 30m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "Call qualification rate below 30%"
+          description: "Success rate: {{ $value | humanizePercentage }}. Baseline: >30%"
+          action: "Review coaching effectiveness and discovery playbook"
+          impact: "Sales pipeline health may be declining"
+
+  # ====================================================================================================
+  # Group 9: Security & Compliance
+  # ====================================================================================================
+  - name: security_compliance
+    interval: 30s
+    rules:
+
+      - alert: UnauthorizedAccessAttempts
+        expr: rate(unauthorized_requests_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "{{ $value | humanize }} unauthorized access attempts/sec"
+          description: "Potential security incident detected"
+          action: "Review authentication logs and check for brute force attacks"
+          impact: "Possible security breach attempt"
+
+      - alert: HIPAAAuditLogFailure
+        expr: rate(hipaa_audit_log_failures_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+          component: compliance
+        annotations:
+          summary: "HIPAA audit logging failure detected"
+          description: "Failed to log {{ $value }} audit events in last 5 minutes"
+          action: "IMMEDIATELY investigate - HIPAA compliance breach"
+          impact: "Compliance violation - regulatory penalties possible"
+
+  # ====================================================================================================
+  # Group 10: Custom Business Alerts (Configurable)
+  # ====================================================================================================
+  - name: custom_alerts
+    interval: 30s
+    rules:
+
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_lag{group="sales-agent"} > 10000
+        for: 5m
+        labels:
+          severity: warning
+          component: messaging
+        annotations:
+          summary: "Kafka consumer lag for sales-agent: {{ $value }} messages"
+          description: "Message processing falling behind"
+          action: "Scale consumers or investigate processing bottlenecks"
+          impact: "Delayed event processing"
+
+# ====================================================================================================
+# Recording Rules (Pre-computed metrics for faster queries)
+# ====================================================================================================
+# These rules pre-compute frequently-used metrics to improve dashboard performance
+
+  - name: sli_computation
+    interval: 1m
+    rules:
+
+      - record: sli:http_requests:success_rate_5m
+        expr: sum(rate(http_requests_total{status=~"2.."}[5m])) / sum(rate(http_requests_total[5m]))
+
+      - record: sli:http_requests:latency_p95_5m
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job))
+
+      - record: sli:http_requests:latency_p99_5m
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, job))
+
+      - record: sli:database:availability_5m
+        expr: up{job="postgres-primary"}
+
+      - record: sli:cache:availability_5m
+        expr: up{job="redis-primary"}

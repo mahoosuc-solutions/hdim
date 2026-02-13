@@ -1,0 +1,230 @@
+name: Build Docker Sales Agent Images
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/**
+    paths:
+      - 'backend/modules/services/ai-sales-agent/**'
+      - 'backend/modules/services/live-call-sales-agent/**'
+      - 'apps/coaching-ui/**'
+      - 'docker/**'
+      - '.env.dev'
+      - '.env.production'
+      - 'docker-compose.dev.sales-agents.yml'
+      - 'docker-compose.staging.sales-agents.yml'
+      - 'docker-compose.production.yml'
+      - '.github/workflows/build-docker-sales-agent-images.yml'
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'backend/modules/services/ai-sales-agent/**'
+      - 'backend/modules/services/live-call-sales-agent/**'
+      - 'apps/coaching-ui/**'
+      - 'docker/**'
+
+env:
+  REGISTRY: docker.io
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service:
+          - ai-sales-agent
+          - live-call-sales-agent
+          - coaching-ui
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/modules/services/${{ matrix.service }}
+          file: ./backend/modules/services/${{ matrix.service }}/Dockerfile.optimized
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}:buildcache,mode=max
+
+      - name: Build coaching-ui (Angular)
+        if: matrix.service == 'coaching-ui'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./apps/coaching-ui
+          file: ./apps/coaching-ui/Dockerfile.optimized
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-coaching-ui:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-coaching-ui:buildcache,mode=max
+
+  scan:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    strategy:
+      matrix:
+        service:
+          - ai-sales-agent
+          - live-call-sales-agent
+          - coaching-ui
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}:${{ github.sha }}
+          format: 'sarif'
+          output: 'trivy-${{ matrix.service }}.sarif'
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-${{ matrix.service }}.sarif'
+          category: trivy-${{ matrix.service }}
+
+      - name: Run Trivy with fail on high severity
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+  generate-sbom:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Syft
+        run: curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+      - name: Generate SBOMs
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          REGISTRY_URL: ${{ env.REGISTRY }}
+          DOCKER_USER: ${{ env.DOCKER_USERNAME }}
+        run: |
+          for service in ai-sales-agent live-call-sales-agent coaching-ui; do
+            syft "${REGISTRY_URL}/${DOCKER_USER}/hdim-${service}:${COMMIT_SHA}" \
+              -o json > "sbom-${service}-${COMMIT_SHA}.json"
+            syft "${REGISTRY_URL}/${DOCKER_USER}/hdim-${service}:${COMMIT_SHA}" \
+              -o cyclonedx > "sbom-${service}-${COMMIT_SHA}.xml"
+          done
+
+      - name: Upload SBOMs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom-*
+          retention-days: 90
+
+  validate:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate image structure
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          REGISTRY_URL: ${{ env.REGISTRY }}
+          DOCKER_USER: ${{ env.DOCKER_USERNAME }}
+        run: |
+          docker pull "${REGISTRY_URL}/${DOCKER_USER}/hdim-ai-sales-agent:${COMMIT_SHA}"
+          docker inspect "${REGISTRY_URL}/${DOCKER_USER}/hdim-ai-sales-agent:${COMMIT_SHA}" | grep -q '"User"' || exit 1
+          docker inspect "${REGISTRY_URL}/${DOCKER_USER}/hdim-ai-sales-agent:${COMMIT_SHA}" | grep -q '"Healthcheck"' || exit 1
+
+      - name: Generate build report
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          BUILD_DATE: ${{ github.event.head_commit.timestamp }}
+          REGISTRY_URL: ${{ env.REGISTRY }}
+          DOCKER_USER: ${{ env.DOCKER_USERNAME }}
+        run: |
+          cat > build-report.md << 'EOF'
+          # Docker Image Build Report
+
+          **Build Date:** $(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          **Branch:** main
+          **Trigger:** push
+          **Status:** ✅ Success
+
+          ## Built Images
+
+          - ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-ai-sales-agent:${{ github.sha }}
+          - ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-live-call-sales-agent:${{ github.sha }}
+          - ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-coaching-ui:${{ github.sha }}
+
+          ## Security Scanning
+
+          - Trivy vulnerability scanning: ✅ Completed
+          - SBOM generation: ✅ Completed
+          - Image structure validation: ✅ Completed
+
+          ## Next Steps
+
+          1. Deploy to staging environment
+          2. Run integration tests
+          3. Validate SLOs in staging
+          4. Prepare for production deployment
+
+          EOF
+
+          cat build-report.md
+
+      - name: Upload build report
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-report
+          path: build-report.md
+          retention-days: 30

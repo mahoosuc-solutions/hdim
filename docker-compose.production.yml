@@ -14,11 +14,22 @@
 
 version: '3.9'
 
+x-app-security: &app_security
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=128m
+    - /run:rw,noexec,nosuid,size=32m
+
 services:
   # ============================================================================
   # AI Sales Agent (HA: 2+ replicas with load balancing)
   # ============================================================================
   ai-sales-agent-1:
+    <<: *app_security
     container_name: ai-sales-agent-prod-1
     image: hdim-ai-sales-agent:${BUILD_VERSION:-latest}
     ports:
@@ -74,6 +85,7 @@ services:
       start_period: 15s
 
   ai-sales-agent-2:
+    <<: *app_security
     container_name: ai-sales-agent-prod-2
     image: hdim-ai-sales-agent:${BUILD_VERSION:-latest}
     ports:
@@ -117,6 +129,7 @@ services:
   # Live Call Sales Agent (HA: 2+ replicas with Chrome support)
   # ============================================================================
   live-call-sales-agent-1:
+    <<: *app_security
     container_name: live-call-sales-agent-prod-1
     image: hdim-live-call-sales-agent:${BUILD_VERSION:-latest}
     ports:
@@ -163,6 +176,7 @@ services:
       start_period: 20s
 
   live-call-sales-agent-2:
+    <<: *app_security
     container_name: live-call-sales-agent-prod-2
     image: hdim-live-call-sales-agent:${BUILD_VERSION:-latest}
     ports:

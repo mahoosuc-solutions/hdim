@@ -72,6 +72,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push ${{ matrix.service }}
+        if: matrix.service != 'coaching-ui'
         uses: docker/build-push-action@v5
         with:
           context: ./backend/modules/services/${{ matrix.service }}

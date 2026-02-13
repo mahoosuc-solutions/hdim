@@ -1,0 +1,27 @@
+filebeat.inputs:
+  - type: filestream
+    id: docker-json-logs
+    enabled: true
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+
+processors:
+  - add_docker_metadata:
+      host: "unix:///var/run/docker.sock"
+  - drop_fields:
+      fields: ["agent.ephemeral_id", "ecs.version", "log.offset"]
+
+setup.ilm.enabled: true
+setup.template.enabled: true
+setup.template.name: "hdim-logs"
+setup.template.pattern: "hdim-logs-*"
+
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  index: "hdim-logs-%{+yyyy.MM.dd}"
+
+logging.level: info

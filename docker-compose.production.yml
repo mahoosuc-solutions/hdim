@@ -12,8 +12,6 @@
 #
 # DO NOT use in development. Use docker-compose.dev.sales-agents.yml instead.
 
-version: '3.9'
-
 x-app-security: &app_security
   security_opt:
     - no-new-privileges:true

@@ -1,28 +1,28 @@
 # Build stage
 FROM node:20-alpine AS builder
 
-WORKDIR /build
+WORKDIR /workspace
 
-# Copy package files
-COPY package.json package-lock.json ./
+# Copy root workspace files
+COPY nx.json package.json package-lock.json tsconfig.base.json ./
+
+# Copy coaching-ui app
+COPY apps/coaching-ui ./apps/coaching-ui
 
 # Install dependencies
-RUN npm ci
+RUN npm install --legacy-peer-deps --omit=optional
 
-# Copy source code
-COPY . .
-
-# Build Angular app
-RUN npm run build:prod
+# Build Angular app using Nx
+RUN npx nx build coaching-ui --configuration production
 
 # Production stage
 FROM nginx:alpine
 
 # Copy nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY apps/coaching-ui/nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
-COPY --from=builder /build/dist/coaching-ui /usr/share/nginx/html
+COPY --from=builder /workspace/dist/apps/coaching-ui /usr/share/nginx/html
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

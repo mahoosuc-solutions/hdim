@@ -1,0 +1,330 @@
+# ====================================================================================================
+# Alertmanager Configuration - Production
+# ====================================================================================================
+# Routes alerts to multiple channels based on severity and component
+# Provides intelligent grouping, deduplication, and escalation
+
+global:
+  resolve_timeout: 5m
+  slack_api_url: '${SLACK_WEBHOOK_URL}'
+  pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+
+# Default receiver when no route matches
+# Template variables: {{ .GroupLabels.alertname }}, {{ .Status }}, etc.
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+route:
+  # Root route - all alerts start here
+  receiver: 'default'
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s          # Wait 10s for alerts to arrive before sending
+  group_interval: 10m      # Wait 10m before re-sending grouped alerts
+  repeat_interval: 12h     # Re-send ongoing alerts every 12 hours
+
+  # Sub-routes for different alert types
+  routes:
+
+    # ====================================================================================================
+    # CRITICAL: Immediate PagerDuty notification + Slack
+    # ====================================================================================================
+    - match:
+        severity: critical
+      receiver: 'pagerduty-critical'
+      group_wait: 0s              # Send immediately - no waiting
+      group_interval: 5m
+      repeat_interval: 5m         # Re-send every 5 minutes for critical
+      continue: true              # Continue to other routes
+
+    # ====================================================================================================
+    # SLO BREACHES: PagerDuty + Slack + Email
+    # ====================================================================================================
+    - match:
+        slo_metric: "true"
+      receiver: 'slo-breach'
+      group_wait: 0s
+      group_interval: 5m
+      repeat_interval: 5m
+      continue: true
+
+    # ====================================================================================================
+    # SECURITY: PagerDuty + Slack (immediate)
+    # ====================================================================================================
+    - match:
+        component: 'security'
+      receiver: 'pagerduty-security'
+      group_wait: 0s              # Immediate notification
+      group_interval: 5m
+      repeat_interval: 15m        # Check every 15 minutes
+      continue: true
+
+    # ====================================================================================================
+    # COMPLIANCE: PagerDuty (immediate) + Email (compliance team)
+    # ====================================================================================================
+    - match:
+        component: 'compliance'
+      receiver: 'compliance-team'
+      group_wait: 0s
+      group_interval: 5m
+      repeat_interval: 15m
+      continue: true
+
+    # ====================================================================================================
+    # WARNING: Slack notification
+    # ====================================================================================================
+    - match:
+        severity: warning
+      receiver: 'slack-warnings'
+      group_wait: 30s             # Batch warnings for 30 seconds
+      group_interval: 30m         # Re-send every 30 minutes
+      repeat_interval: 4h         # Daily re-sends (less noisy)
+
+    # ====================================================================================================
+    # INFO: Email notification (less frequent)
+    # ====================================================================================================
+    - match:
+        severity: info
+      receiver: 'email-team'
+      group_wait: 5m              # Batch info alerts for 5 minutes
+      group_interval: 1h          # Re-send every hour
+      repeat_interval: 24h        # Re-send daily
+
+    # ====================================================================================================
+    # Database component: Special handling
+    # ====================================================================================================
+    - match:
+        component: 'database'
+      receiver: 'database-team'
+      group_wait: 5s
+      group_interval: 10m
+      repeat_interval: 2h
+
+    # ====================================================================================================
+    # Cache component: Special handling
+    # ====================================================================================================
+    - match:
+        component: 'cache'
+      receiver: 'database-team'   # Redis team - same as database
+      group_wait: 5s
+      group_interval: 10m
+      repeat_interval: 2h
+
+receivers:
+
+  # ====================================================================================================
+  # Default Receiver (catch-all)
+  # ====================================================================================================
+  - name: 'default'
+    slack_configs:
+      - channel: '#alerts'
+        title: 'Alert: {{ .GroupLabels.alertname }}'
+        text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+  # ====================================================================================================
+  # Critical Alerts: PagerDuty + Slack
+  # ====================================================================================================
+  - name: 'pagerduty-critical'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_INTEGRATION_KEY}'
+        description: '{{ .GroupLabels.alertname }} - {{ .CommonAnnotations.summary }}'
+        details:
+          firing: '{{ template "pagerduty.default.instances" .Alerts.Firing }}'
+          resolved: '{{ template "pagerduty.default.instances" .Alerts.Resolved }}'
+        severity: 'critical'
+        client: 'Prometheus'
+        client_url: '{{ .ExternalURL }}'
+
+    slack_configs:
+      - channel: '#critical-alerts'
+        color: 'danger'           # Red
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        text: |
+          *Status:* {{ .Status }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Impact:* {{ .CommonAnnotations.impact }}
+          *Action:* {{ .CommonAnnotations.action }}
+          {{ range .Alerts }}
+          • *{{ .Labels.instance }}*: {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: true
+        actions:
+          - type: button
+            text: 'View in Grafana'
+            url: '{{ .ExternalURL }}'
+
+    email_configs:
+      - to: 'oncall@hdim.local'
+        from: 'alerts@hdim.local'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: '${EMAIL_USERNAME}'
+        auth_password: '${EMAIL_PASSWORD}'
+        headers:
+          Subject: '🚨 CRITICAL ALERT: {{ .GroupLabels.alertname }}'
+
+  # ====================================================================================================
+  # SLO Breaches: PagerDuty + Slack + Email
+  # ====================================================================================================
+  - name: 'slo-breach'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_INTEGRATION_KEY}'
+        description: 'SLO BREACH: {{ .GroupLabels.alertname }}'
+        severity: 'critical'
+
+    slack_configs:
+      - channel: '#slo-breaches'
+        color: 'danger'
+        title: '⚠️ SLO BREACH: {{ .GroupLabels.alertname }}'
+        text: |
+          *SLO Violated:* {{ .CommonAnnotations.summary }}
+          *Impact:* {{ .CommonAnnotations.slo_impact }}
+          *Customer Credit:* Automatic 5-10% monthly credit triggered
+          {{ range .Alerts }}
+          Details: {{ .Annotations.description }}
+          {{ end }}
+
+    email_configs:
+      - to: 'leadership@hdim.local'
+        from: 'slo-alerts@hdim.local'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: '${EMAIL_USERNAME}'
+        auth_password: '${EMAIL_PASSWORD}'
+        headers:
+          Subject: 'SLO BREACH ALERT: {{ .GroupLabels.alertname }}'
+
+  # ====================================================================================================
+  # Security Alerts: PagerDuty + Slack (immediate)
+  # ====================================================================================================
+  - name: 'pagerduty-security'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_SECURITY_KEY}'
+        description: 'SECURITY ALERT: {{ .GroupLabels.alertname }}'
+        severity: 'critical'
+
+    slack_configs:
+      - channel: '#security-alerts'
+        color: 'danger'
+        title: '🔒 SECURITY ALERT: {{ .GroupLabels.alertname }}'
+        text: |
+          *Alert:* {{ .CommonAnnotations.summary }}
+          *Impact:* {{ .CommonAnnotations.impact }}
+          *Action:* {{ .CommonAnnotations.action }}
+          *Time:* {{ .StartsAt }}
+
+  # ====================================================================================================
+  # Compliance Team Alerts
+  # ====================================================================================================
+  - name: 'compliance-team'
+    pagerduty_configs:
+      - service_key: '${PAGERDUTY_COMPLIANCE_KEY}'
+        description: 'COMPLIANCE ALERT: {{ .GroupLabels.alertname }}'
+        severity: 'critical'
+
+    email_configs:
+      - to: 'compliance@hdim.local'
+        from: 'alerts@hdim.local'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: '${EMAIL_USERNAME}'
+        auth_password: '${EMAIL_PASSWORD}'
+        headers:
+          Subject: 'COMPLIANCE ALERT: {{ .GroupLabels.alertname }}'
+
+  # ====================================================================================================
+  # Slack Warnings (less urgent)
+  # ====================================================================================================
+  - name: 'slack-warnings'
+    slack_configs:
+      - channel: '#alerts'
+        color: 'warning'           # Orange
+        title: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+        text: |
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+          *Action:* {{ .CommonAnnotations.action }}
+          {{ range .Alerts.Firing }}
+          • {{ .Labels.instance }}: {{ .Annotations.description }}
+          {{ end }}
+        send_resolved: false
+
+  # ====================================================================================================
+  # Email Notifications (info level)
+  # ====================================================================================================
+  - name: 'email-team'
+    email_configs:
+      - to: 'devops@hdim.local'
+        from: 'alerts@hdim.local'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: '${EMAIL_USERNAME}'
+        auth_password: '${EMAIL_PASSWORD}'
+        headers:
+          Subject: 'Alert: {{ .GroupLabels.alertname }}'
+
+  # ====================================================================================================
+  # Database/Cache Team Alerts
+  # ====================================================================================================
+  - name: 'database-team'
+    slack_configs:
+      - channel: '#database-alerts'
+        color: 'danger'
+        title: '🗄️ DATABASE/CACHE ALERT: {{ .GroupLabels.alertname }}'
+        text: |
+          *Component:* {{ .GroupLabels.component }}
+          *Alert:* {{ .GroupLabels.alertname }}
+          *Details:* {{ .CommonAnnotations.description }}
+          *Action:* {{ .CommonAnnotations.action }}
+
+    email_configs:
+      - to: 'database-team@hdim.local'
+        from: 'alerts@hdim.local'
+        smarthost: 'smtp.gmail.com:587'
+        auth_username: '${EMAIL_USERNAME}'
+        auth_password: '${EMAIL_PASSWORD}'
+
+  # ====================================================================================================
+  # Null Receiver (for alerts to suppress)
+  # ====================================================================================================
+  - name: 'null'
+
+# ====================================================================================================
+# Inhibition Rules (suppress certain alerts when others are firing)
+# ====================================================================================================
+inhibit_rules:
+
+  # Don't alert on high latency if service is already down
+  - source_match:
+      severity: 'critical'
+      alertname: 'ServiceDown'
+    target_match_re:
+      severity: 'warning|info'
+      alertname: '.*Latency|.*Error.*'
+    equal: ['job', 'instance']
+
+  # Don't alert on connection pool exhaustion if database is down
+  - source_match:
+      severity: 'critical'
+      alertname: 'PostgresDown'
+    target_match:
+      alertname: 'ConnectionPoolExhausted'
+
+  # Don't alert on replication lag if database is down
+  - source_match:
+      severity: 'critical'
+      alertname: 'PostgresDown'
+    target_match:
+      alertname: 'DatabaseReplicationLag'
+
+  # Don't alert on cache metrics if Redis is down
+  - source_match:
+      severity: 'critical'
+      alertname: 'RedisDown'
+    target_match_re:
+      alertname: '.*Redis.*'
+
+# ====================================================================================================
+# Environment Variables Required
+# ====================================================================================================
+# SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+# PAGERDUTY_INTEGRATION_KEY=YOUR_PAGERDUTY_KEY
+# PAGERDUTY_SECURITY_KEY=YOUR_SECURITY_KEY
+# PAGERDUTY_COMPLIANCE_KEY=YOUR_COMPLIANCE_KEY
+# EMAIL_USERNAME=your-email@gmail.com
+# EMAIL_PASSWORD=your-app-password

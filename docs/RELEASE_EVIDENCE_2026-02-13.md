@@ -58,3 +58,34 @@ Repro command:
    - `docker compose -f docker-compose.staging.sales-agents.yml build ai-sales-agent`
    - `docker compose -f docker-compose.staging.sales-agents.yml up -d`
 3. Re-capture this evidence section with full-stack health green.
+
+---
+
+## Update - 2026-02-14T13:58:53Z
+
+### Blocker Remediation
+- Fixed `ai-sales-agent` Docker packaging/build issue:
+  - `backend/modules/services/ai-sales-agent/Dockerfile.optimized`
+    - moved venv from `/app/venv` to `/opt/venv`.
+  - `backend/modules/services/ai-sales-agent/pyproject.toml`
+    - constrained setuptools package discovery to `where = ["src"]`.
+- Validation:
+  - `docker compose -f docker-compose.staging.sales-agents.yml build ai-sales-agent`: PASS
+  - `curl -fsS http://localhost:8090/health`: PASS
+    - `{"status":"healthy","service":"ai-sales-agent","version":"0.1.0"}`
+
+### Additional Runtime Validation
+- `curl -fsS http://localhost:8095/health`: PASS
+  - `{"status":"healthy","service":"live-call-sales-agent","version":"1.0.0"}`
+- `docker images` includes:
+  - `hdim-ai-sales-agent:staging`
+  - `hdim-live-call-sales-agent:staging`
+
+### Remaining Gaps
+- `coaching-ui` staging image build remained long-running/incomplete in this execution window.
+- `curl -fsS --max-time 5 http://localhost:8098/actuator/health`: FAIL (timeout).
+- `docker compose ps` reports `payer-workflows-service` and `jaeger` unhealthy in the current environment.
+
+### Updated Go/No-Go
+- `ai-sales-agent` build blocker: RESOLVED.
+- Full staging readiness: STILL NO-GO until coaching-ui build completion and payer/jaeger health are green.

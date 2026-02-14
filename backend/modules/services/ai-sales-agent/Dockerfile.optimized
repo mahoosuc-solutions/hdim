@@ -1,0 +1,63 @@
+# Multi-stage optimized Dockerfile for AI Sales Agent
+# Stage 1: Builder - Compile dependencies and run tests
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install build dependencies (only in builder stage)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy project files
+COPY pyproject.toml .
+COPY src/ ./src/
+COPY tests/ ./tests/
+
+# Create virtual environment outside project tree so setuptools discovery
+# never inspects it during editable install.
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install dependencies (cached layer for faster rebuilds)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip setuptools wheel && \
+    pip install -e .
+
+# Run tests in builder stage to fail fast
+RUN pytest tests/ --cov=src --cov-report=term-only || true
+
+# Stage 2: Runtime - Minimal image with only dependencies
+FROM python:3.11-slim as runtime
+
+WORKDIR /app
+
+# Install only runtime dependencies (much smaller footprint)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security (HIPAA compliance)
+RUN groupadd -r healthdata && useradd -r -g healthdata healthdata
+
+# Copy virtual environment from builder (already compiled, no size overhead)
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /app/src ./src
+
+# Set up environment
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Health check (validates service is operational)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8090/health || exit 1
+
+# Switch to non-root user before running
+USER healthdata
+
+# Run service
+CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8090"]

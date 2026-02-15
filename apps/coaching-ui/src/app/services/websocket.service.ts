@@ -190,7 +190,7 @@ export class WebSocketService {
     }
   }
 
-  private buildWebSocketUrl(topic: string, token: string): string {
+  private buildWebSocketUrl(_topic: string, token: string): string {
     // Get WebSocket host from environment or window.location
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;

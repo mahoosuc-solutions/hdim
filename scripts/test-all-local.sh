@@ -125,6 +125,28 @@ else
 fi
 
 stage "4) Full Stack E2E API (demo stack)"
+if [ -x ./backend/gradlew ]; then
+  echo ""
+  echo "Building backend bootJars required by demo stack..."
+  (cd backend && ./gradlew \
+    :modules:services:gateway-admin-service:bootJar \
+    :modules:services:gateway-fhir-service:bootJar \
+    :modules:services:gateway-clinical-service:bootJar \
+    :modules:services:fhir-service:bootJar \
+    :modules:services:cql-engine-service:bootJar \
+    :modules:services:patient-service:bootJar \
+    :modules:services:quality-measure-service:bootJar \
+    :modules:services:care-gap-service:bootJar \
+    :modules:services:event-processing-service:bootJar \
+    :modules:services:hcc-service:bootJar \
+    :modules:services:audit-query-service:bootJar \
+    :modules:services:demo-seeding-service:bootJar \
+    -x test --no-daemon)
+else
+  echo "Missing ./backend/gradlew; cannot build demo bootJars."
+  exit 1
+fi
+
 if ! docker compose -f docker-compose.demo.yml up -d; then
   echo ""
   echo "docker compose up failed. Recent status/logs:"

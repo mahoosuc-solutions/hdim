@@ -8,6 +8,7 @@
  * - Integrates with 360 pipeline
  */
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { TestScenario } from './tdd-harness';
 
 /**

@@ -6,6 +6,7 @@ import {
 import { Clinical360PipelineService } from '@health-platform/shared/data-access';
 import { EventBusService } from '@health-platform/shared/data-access';
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 /**
  * mfe-reports - TDD Swarm Test Suite
  *

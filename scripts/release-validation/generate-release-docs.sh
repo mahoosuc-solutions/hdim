@@ -140,6 +140,21 @@ sed -i "s/{DATE}/$DATE/g" "$RELEASE_DIR/KNOWN_ISSUES_${VERSION}.md"
 
 echo -e "${GREEN}✓${NC} KNOWN_ISSUES_${VERSION}.md created"
 
+# --- Generate SCOPE ---
+if [ -f "$TEMPLATE_DIR/SCOPE_TEMPLATE.md" ]; then
+    echo -e "${GREEN}Generating SCOPE_${VERSION}.md...${NC}"
+
+    cp "$TEMPLATE_DIR/SCOPE_TEMPLATE.md" "$RELEASE_DIR/SCOPE_${VERSION}.md"
+
+    sed -i "s/{VERSION}/$VERSION/g" "$RELEASE_DIR/SCOPE_${VERSION}.md"
+    sed -i "s/{DATE}/$DATE/g" "$RELEASE_DIR/SCOPE_${VERSION}.md"
+    sed -i "s/{PREVIOUS_VERSION}/$PREVIOUS_VERSION/g" "$RELEASE_DIR/SCOPE_${VERSION}.md"
+
+    echo -e "${GREEN}✓${NC} SCOPE_${VERSION}.md created"
+else
+    echo -e "${YELLOW}Skipping SCOPE_${VERSION}.md (missing $TEMPLATE_DIR/SCOPE_TEMPLATE.md)${NC}"
+fi
+
 # --- Summary ---
 echo ""
 echo "=========================================="

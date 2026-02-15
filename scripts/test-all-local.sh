@@ -180,7 +180,11 @@ fi
 AUTH_USERNAME="${AUTH_USERNAME}" AUTH_PASSWORD="${AUTH_PASSWORD}" ./validate-system.sh
 
 stage "5) Full Stack E2E UI (Playwright)"
-run_npm_script e2e:clinical-portal
+if [[ "${RUN_FULL_E2E:-0}" == "1" ]]; then
+  run_npm_script e2e:clinical-portal
+else
+  run_npm_script e2e:clinical-portal:demo
+fi
 
 stage "DONE"
 echo "All local tests completed."

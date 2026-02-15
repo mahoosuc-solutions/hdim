@@ -115,6 +115,16 @@ run_demo() {
   docker compose -f docker-compose.demo.yml up -d --build
   log "./scripts/seed-all-demo-data.sh (non-interactive)"
   NON_INTERACTIVE=1 SEED_PROFILE="${SEED_PROFILE:-smoke}" WAIT_TIMEOUT_SECS="${WAIT_TIMEOUT_SECS:-900}" ./scripts/seed-all-demo-data.sh
+  if [ -x ./scripts/verify-seeding-counts.sh ]; then
+    log "Validating seeded data counts"
+    expected_patients=""
+    if [[ "${SEED_PROFILE:-smoke}" == "smoke" ]]; then
+      expected_patients="50"
+    fi
+    TENANTS="${TENANT_ID:-acme-health}" \
+      EXPECTED_PATIENTS_PER_TENANT="${expected_patients}" \
+      ./scripts/verify-seeding-counts.sh
+  fi
   log "./validate-system.sh"
   ./validate-system.sh
 

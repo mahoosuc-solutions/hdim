@@ -185,7 +185,7 @@ notification:
       email: care-team@hospital.com
       sms: "+12345678900"
 
-# Actuator
+# Actuator & Distributed Tracing
 management:
   endpoints:
     web:
@@ -194,6 +194,9 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  # Enable distributed tracing observations (automatic HTTP span generation)
+  observations:
+    enabled: true
 
 # OpenAPI/Swagger Configuration
 springdoc:

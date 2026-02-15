@@ -94,7 +94,7 @@ rate-limiting:
   api:
     per-minute: 100
 
-# Actuator
+# Actuator & Distributed Tracing
 management:
   endpoints:
     web:
@@ -103,6 +103,12 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  # Enable distributed tracing observations (automatic HTTP span generation)
+  observations:
+    enabled: true
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling (development - see application-prod.yml for production)
 
 # OpenAPI/Swagger Configuration
 springdoc:
@@ -130,3 +136,29 @@ logging:
     com.healthdata: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# Production Profile
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_patient}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+
+  jpa:
+    show-sql: false
+
+logging:
+  level:
+    root: WARN
+    com.healthdata: INFO
+
+# Production Tracing Configuration
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling (reduced overhead for production)

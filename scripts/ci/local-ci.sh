@@ -36,6 +36,7 @@ Env:
   VERSION             Required for release mode (e.g., v2.7.1-rc1)
   KEEP_STACK=1        Keep demo stack up after demo/pr mode runs (via scripts/test-all-local.sh)
   SKIP_BACKEND_TESTS=1 Skip backend gradle tasks in scripts/test-all-local.sh
+  RUN_SLOW_LINT=1     Run slower TS lint targets in scripts/test-all-local.sh (optional)
 EOF
 }
 
@@ -57,7 +58,7 @@ run_quick() {
   log "Mode=quick"
   run_npm_script test:mcp
   run_npm_script lint
-  run_npm_script test -- --runInBand
+  run_npm_script test
 }
 
 run_pr() {

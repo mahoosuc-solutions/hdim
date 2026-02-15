@@ -93,6 +93,11 @@ trap teardown EXIT
 
 stage "1) Lint"
 run_npm_script lint
+if [[ "${RUN_SLOW_LINT:-0}" == "1" ]]; then
+  run_npm_script lint:slow
+else
+  echo "Skipping npm run lint:slow (set RUN_SLOW_LINT=1 to enable)"
+fi
 if [[ "${SKIP_BACKEND_TESTS}" == "1" ]]; then
   echo "Skipping backend lint tasks (SKIP_BACKEND_TESTS=1)"
 else
@@ -107,7 +112,7 @@ if [[ "${SKIP_BACKEND_TESTS}" == "1" ]]; then
 else
   run_gradle_tasks_if_available test
 fi
-run_npm_script test -- --runInBand
+run_npm_script test
 
 stage "3) Integration Tests (service-level)"
 if [[ "${SKIP_BACKEND_TESTS}" == "1" ]]; then
@@ -128,7 +133,7 @@ if ! docker compose -f docker-compose.demo.yml up -d; then
   exit 1
 fi
 STACK_STARTED=1
-./scripts/seed-all-demo-data.sh
+NON_INTERACTIVE=1 SEED_PROFILE="${SEED_PROFILE:-smoke}" WAIT_TIMEOUT_SECS="${WAIT_TIMEOUT_SECS:-900}" ./scripts/seed-all-demo-data.sh
 AUTH_USERNAME="${AUTH_USERNAME}" AUTH_PASSWORD="${AUTH_PASSWORD}" ./validate-system.sh
 
 stage "5) Full Stack E2E UI (Playwright)"

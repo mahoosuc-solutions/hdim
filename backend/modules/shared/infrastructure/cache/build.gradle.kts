@@ -16,6 +16,9 @@ dependencies {
     // Common models
     api(project(":modules:shared:domain:common"))
 
+    // Tenant context for cache key isolation (HIPAA multi-tenant safety)
+    implementation(project(":modules:shared:infrastructure:persistence"))
+
     // JSON Processing
     api(libs.jackson.databind)
 

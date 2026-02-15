@@ -109,7 +109,7 @@ WORKFLOW STRUCTURE:
 - Phase 1: Code Quality & Testing (5 tasks)
 - Phase 2: Documentation & Examples (5 tasks)
 - Phase 3: Integration Testing (3 tasks)
-- Phase 4: User Acceptance & Deployment (4 tasks)
+- Phase 4: User Acceptance & Deployment (5 tasks)
 - Phase 5: Release & Communication (3 tasks)
 
 EOF
@@ -299,12 +299,14 @@ TASKS:
   13. Docker Image Build & Security Validation
   14. Health Check Configuration Validation
   15. Environment Variable Security Validation
-  16. Production Deployment Checklist Review
+  16. CX Access Admin Endpoint Validation
+  17. Production Deployment Checklist Review
 
 VALIDATION SCRIPTS:
   - scripts/release-validation/build-and-validate-images.sh
   - scripts/release-validation/validate-health-checks.sh
   - scripts/release-validation/validate-environment-vars.sh
+  - scripts/release-validation/validate-cx-access-admin.sh
 
 COMPLETION PROMISE: "PHASE_4_COMPLETE"
 
@@ -330,7 +332,12 @@ Read the workflow configuration from docs/releases/release-validation-workflow.j
    - Ensure all sensitive values use environment variable interpolation
    - Check for password/secret/key without \${} placeholders
 
-4. Review docs/releases/$VERSION/PRODUCTION_DEPLOYMENT_CHECKLIST_$VERSION.md
+4. Run scripts/release-validation/validate-cx-access-admin.sh
+   - Validate /health and /api/auth/config reachability
+   - Confirm /api/admin/customer-access and /api/admin/identity-access reject unauthenticated requests
+   - Optionally set SERVICE_URL, ADMIN_BEARER_TOKEN, and ALLOW_WRITE=true for authenticated and write-path checks
+
+5. Review docs/releases/$VERSION/PRODUCTION_DEPLOYMENT_CHECKLIST_$VERSION.md
    - Validate all deployment steps are included
    - Check pre-deployment checklist completeness
    - Verify rollback procedure is documented
@@ -438,6 +445,7 @@ VALIDATION REPORTS:
   📊 Docker Images: docs/releases/$VERSION/validation/docker-image-manifest.json
   📊 Health Checks: docs/releases/$VERSION/validation/health-check-report.md
   📊 Environment Vars: docs/releases/$VERSION/validation/environment-security-report.md
+  📊 CX Access Admin: docs/releases/$VERSION/validation/cx-access-admin-validation-report.md
   📊 Version Matrix: docs/releases/$VERSION/validation/version-matrix-validation.md
   📊 Git Status: docs/releases/$VERSION/validation/git-status-report.md
 

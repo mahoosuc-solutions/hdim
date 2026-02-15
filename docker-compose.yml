@@ -33,7 +33,7 @@ services:
     command: postgres -c max_connections=300 -c shared_buffers=256MB
     environment:
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: healthdata_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: healthdata_db
     ports:
       - "5435:5432"
@@ -127,7 +127,7 @@ services:
       - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin_change_me
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=http://localhost:3001
       - GF_AUTH_ANONYMOUS_ENABLED=false
@@ -211,7 +211,7 @@ services:
       PGHOST: postgres
       PGPORT: 5432
       PGUSER: healthdata
-      PGPASSWORD: healthdata_password
+      PGPASSWORD: ${POSTGRES_PASSWORD}
       BACKUP_RETENTION_DAYS: 7
       BACKUP_OUTPUT_DIR: /backups
       BACKUP_CRON: "0 2 * * *"  # Daily at 2 AM
@@ -243,10 +243,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
@@ -309,10 +309,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
@@ -358,10 +358,10 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8080
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gateway_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
@@ -437,10 +437,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cql_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8081
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
@@ -482,10 +482,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/consent_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8082
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -525,10 +525,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8083
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Gateway Trust Authentication - trusts gateway-injected X-Auth-* headers
@@ -568,12 +568,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8084
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
@@ -620,12 +620,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/fhir_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Kafka producer config - don't add type headers to allow cross-service consumption
       SPRING_KAFKA_PRODUCER_PROPERTIES_SPRING_JSON_ADD_TYPE_HEADERS: "false"
       SERVER_PORT: 8085
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
@@ -673,14 +673,14 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/caregap_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       HEALTHDATA_CACHE_REDIS_HOST: redis
       HEALTHDATA_CACHE_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8086
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Use simple cache to avoid Redis/Jackson serialization issues with FHIR objects
@@ -725,7 +725,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       # Kafka consumer config - ignore type headers to avoid ClassNotFoundException
       SPRING_KAFKA_CONSUMER_PROPERTIES_SPRING_JSON_USE_TYPE_HEADERS: "false"
@@ -733,7 +733,7 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8087
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
       SPRING_FLYWAY_ENABLED: "false"
@@ -788,10 +788,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_event_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8110
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
@@ -837,12 +837,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/care_gap_event_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8111
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
@@ -891,12 +891,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/quality_event_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8112
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
@@ -945,12 +945,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clinical_workflow_event_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8113
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
       SPRING_FLYWAY_ENABLED: "false"
@@ -1001,12 +1001,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_runtime_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8088
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # LLM Provider Configuration
@@ -1050,12 +1050,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_assistant_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8090
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1088,7 +1088,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       SERVER_PORT: 8096
@@ -1133,12 +1133,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agent_validation_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8114
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -1191,12 +1191,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/analytics_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8092
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1229,12 +1229,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/predictive_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8093
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1267,12 +1267,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sdoh_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8094
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1307,10 +1307,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/enrichment_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8089
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1341,10 +1341,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_router_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8095
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # OpenTelemetry - use Jaeger container hostname (not localhost)
@@ -1383,9 +1383,9 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/event_store_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SERVER_PORT: 8090
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_LIQUIBASE_ENABLED: "true"
@@ -1435,10 +1435,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/cdr_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8099
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1475,12 +1475,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/approval_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8097
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1513,12 +1513,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8098
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_LIQUIBASE_ENABLED: "true"
@@ -1556,18 +1556,18 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/migration_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       # Migration Workflow service requires these for application.yml defaults
       DB_HOST: postgres
       DB_PORT: 5432
       DB_NAME: migration_db
       DB_USER: healthdata
-      DB_PASSWORD: healthdata_password
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8103
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       # Service URLs
@@ -1607,12 +1607,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ehr_connector_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8100
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
     ports:
@@ -1649,14 +1649,14 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ecr_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       HEALTHDATA_CACHE_REDIS_HOST: redis
       HEALTHDATA_CACHE_REDIS_PORT: 6379
       SERVER_PORT: 8101
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -1704,13 +1704,13 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/qrda_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       HEALTHDATA_CACHE_REDIS_HOST: redis
       HEALTHDATA_CACHE_REDIS_PORT: 6379
       SERVER_PORT: 8104
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       AUDIT_ENABLED: "false"
@@ -1758,14 +1758,14 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hcc_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       HEALTHDATA_CACHE_REDIS_HOST: redis
       HEALTHDATA_CACHE_REDIS_PORT: 6379
       SERVER_PORT: 8105
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       AUDIT_ENABLED: "false"
@@ -1814,11 +1814,11 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/prior_auth_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       # HDIM Persistence Module Configuration
       HEALTHDATA_PERSISTENCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/prior_auth_db
       HEALTHDATA_PERSISTENCE_PRIMARY_USERNAME: healthdata
-      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: healthdata_password
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: ${POSTGRES_PASSWORD}
       HEALTHDATA_PERSISTENCE_PRIMARY_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
@@ -1826,8 +1826,8 @@ services:
       HEALTHDATA_CACHE_REDIS_HOST: redis
       HEALTHDATA_CACHE_REDIS_PORT: 6379
       SERVER_PORT: 8102
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      HEALTHDATA_SECURITY_JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
+      HEALTHDATA_SECURITY_JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_LIQUIBASE_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -1877,12 +1877,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/sales_automation_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SERVER_PORT: 8106
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       # Zoho CRM Integration
@@ -1935,10 +1935,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/docs_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8091
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: none  # Liquibase manages schema - no Hibernate validation
     ports:
@@ -1971,12 +1971,12 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SERVER_PORT: 8107
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
       # Database schema management - USE LIQUIBASE (CRITICAL: never use create/update in production!)
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -2019,7 +2019,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_demo
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SERVER_PORT: 8098
       DEMO_SNAPSHOTS_DIR: /app/demo-snapshots
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
@@ -2059,11 +2059,11 @@ services:
       # Spring Boot datasource configuration
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/audit_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       # Healthdata persistence module configuration (overrides Spring datasource)
       HEALTHDATA_PERSISTENCE_PRIMARY_URL: jdbc:postgresql://postgres:5432/audit_db
       HEALTHDATA_PERSISTENCE_PRIMARY_USERNAME: healthdata
-      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: healthdata_password
+      HEALTHDATA_PERSISTENCE_PRIMARY_PASSWORD: ${POSTGRES_PASSWORD}
       HEALTHDATA_PERSISTENCE_PRIMARY_DRIVER_CLASS_NAME: org.postgresql.Driver
       HEALTHDATA_PERSISTENCE_PRIMARY_POOL_NAME: audit-pool
       HEALTHDATA_PERSISTENCE_PRIMARY_MAXIMUM_POOL_SIZE: 10
@@ -2073,8 +2073,8 @@ services:
       # Server configuration
       SERVER_PORT: 8088
       # JWT configuration
-      JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
-      HEALTHDATA_SECURITY_JWT_SECRET: mySecretKeyForJWTShouldBeAtLeast256BitsLongForHS256Algorithm123456
+      JWT_SECRET: ${JWT_SECRET}
+      HEALTHDATA_SECURITY_JWT_SECRET: ${JWT_SECRET}
       # Liquibase configuration
       SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
@@ -2121,10 +2121,10 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/investor_dashboard_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SERVER_PORT: 8120
       # JWT Configuration (HS512 requires minimum 512-bit key)
-      JWT_SECRET: MLeQ6ppVImMUVKmbBX4gTuSozMIuDlh0HP9LX3cjOOopxgxEVA/zUPSAlcCsyLlhh2dnT4ZArmlAsREjpJm46Q==
+      JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRATION: 86400000
       JWT_REFRESH_EXPIRATION: 604800000
       # LinkedIn OAuth (optional)
@@ -2170,7 +2170,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/data_ingestion_db
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: healthdata_password
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       FHIR_SERVICE_URL: http://fhir-service:8085/fhir
       CARE_GAP_SERVICE_URL: http://care-gap-service:8086/care-gap
       QUALITY_MEASURE_SERVICE_URL: http://quality-measure-service:8087/quality-measure
@@ -2234,7 +2234,7 @@ services:
       POSTGRES_PORT: "5432"
       POSTGRES_DB: customer_deployments_db
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-healthdata_password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
       # Redis Configuration
       REDIS_HOST: redis

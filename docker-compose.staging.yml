@@ -16,7 +16,7 @@ services:
       - "5435:5432"
     environment:
       POSTGRES_USER: healthdata
-      POSTGRES_PASSWORD: staging_password_2025
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -169,12 +169,12 @@ services:
       SERVER_PORT: 8083
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_fhir
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: staging_password_2025
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
-      JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
+      JWT_SECRET: ${JWT_SECRET}
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       LOGGING_LEVEL_COM_HEALTHDATA_FHIR: DEBUG
       JAVA_OPTS: >
@@ -223,12 +223,12 @@ services:
       SERVER_PORT: 8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_cql
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: staging_password_2025
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       FHIR_SERVICE_URL: http://fhir-service:8080/fhir
-      JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
+      JWT_SECRET: ${JWT_SECRET}
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       LOGGING_LEVEL_COM_HEALTHDATA_CQL: DEBUG
@@ -278,7 +278,7 @@ services:
       SERVER_PORT: 8087
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_quality_measure
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: staging_password_2025
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
@@ -288,7 +288,7 @@ services:
       MEASURE_BUILDER_VALIDATION_ENABLED: ${MEASURE_BUILDER_VALIDATION_ENABLED:-true}
       MEASURE_BUILDER_DRAFT_TTL_HOURS: ${MEASURE_BUILDER_DRAFT_TTL_HOURS:-72}
       MEASURE_BUILDER_AUTO_VERSION: ${MEASURE_BUILDER_AUTO_VERSION:-true}
-      JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
+      JWT_SECRET: ${JWT_SECRET}
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
       LOGGING_LEVEL_COM_HEALTHDATA_QUALITY: DEBUG
@@ -339,9 +339,9 @@ services:
       SERVER_PORT: 8089
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_event_router
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: staging_password_2025
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
+      JWT_SECRET: ${JWT_SECRET}
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       LOGGING_LEVEL_COM_HEALTHDATA_EVENTROUTER: DEBUG
       # Priority queue configuration
@@ -390,11 +390,11 @@ services:
       SERVER_PORT: 8084
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_patient
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: staging_password_2025
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
+      JWT_SECRET: ${JWT_SECRET}
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       LOGGING_LEVEL_COM_HEALTHDATA_PATIENT: DEBUG
       JAVA_OPTS: >
@@ -441,11 +441,11 @@ services:
       SERVER_PORT: 8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthdata_care_gap
       SPRING_DATASOURCE_USERNAME: healthdata
-      SPRING_DATASOURCE_PASSWORD: staging_password_2025
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      JWT_SECRET: staging_jwt_secret_key_for_docker_environment_minimum_256_bits_required_for_hs512_algorithm_2025
+      JWT_SECRET: ${JWT_SECRET}
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,metrics,prometheus
       LOGGING_LEVEL_COM_HEALTHDATA_CAREGAP: DEBUG
       JAVA_OPTS: >
@@ -488,8 +488,8 @@ services:
       DB_PORT: 5432
       DB_NAME: healthdata_gateway
       DB_USERNAME: healthdata
-      DB_PASSWORD: staging_password_2025
-      JWT_SECRET: healthdata-gateway-staging-secret-key-minimum-256-bits-required-2025
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_EXPIRATION: 900000
       JWT_REFRESH_EXPIRATION: 604800000
       AUTH_ENFORCED: "true"
@@ -534,8 +534,8 @@ services:
       DB_PORT: 5432
       DB_NAME: healthdata_gateway
       DB_USERNAME: healthdata
-      DB_PASSWORD: staging_password_2025
-      JWT_SECRET: healthdata-gateway-staging-secret-key-minimum-256-bits-required-2025
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_EXPIRATION: 900000
       JWT_REFRESH_EXPIRATION: 604800000
       CQL_ENGINE_URL: http://cql-engine-service:8081
@@ -580,8 +580,8 @@ services:
       DB_PORT: 5432
       DB_NAME: healthdata_gateway
       DB_USERNAME: healthdata
-      DB_PASSWORD: staging_password_2025
-      JWT_SECRET: healthdata-gateway-staging-secret-key-minimum-256-bits-required-2025
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
       JWT_ACCESS_EXPIRATION: 900000
       JWT_REFRESH_EXPIRATION: 604800000
       CARE_GAP_URL: http://care-gap-service:8085

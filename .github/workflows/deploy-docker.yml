@@ -76,7 +76,7 @@ jobs:
 
   build-and-test:
     name: Build ${{ matrix.service }}
-    needs: build-matrix
+    needs: [build-matrix, release-policy-gate]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -172,6 +172,24 @@ jobs:
           name: ${{ matrix.service }}-build-logs
           path: backend/modules/services/${{ matrix.service }}/build/reports/
 
+  release-policy-gate:
+    name: Release Policy Gate
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run release environment and image policy validation
+        run: |
+          chmod +x ./scripts/release-validation/validate-environment-vars.sh
+          ./scripts/release-validation/validate-environment-vars.sh "${{ needs.build-matrix.outputs.version }}"
+
+      - name: Validate Kubernetes digest-based deploy policy
+        run: |
+          chmod +x ./scripts/release-validation/validate-k8s-digest-deploy.sh
+          ./scripts/release-validation/validate-k8s-digest-deploy.sh
+
   deploy-summary:
     name: Deployment Summary
     needs: [build-matrix, build-and-test]
@@ -246,9 +264,46 @@ jobs:
           docker pull ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}
           docker inspect ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/gateway-service:${{ needs.build-matrix.outputs.version }}
 
+  generate-image-manifest:
+    name: Generate Image Manifest
+    needs: [build-matrix, build-and-test, verify-deployment]
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate release image manifest
+        env:
+          REGISTRY: ${{ env.REGISTRY }}
+          REPOSITORY_OWNER: ${{ github.repository_owner }}
+          IMAGE_PREFIX: ${{ env.IMAGE_PREFIX }}
+          SERVICES_JSON: ${{ needs.build-matrix.outputs.services }}
+        run: |
+          chmod +x ./scripts/release-validation/generate-image-manifest.sh
+          ./scripts/release-validation/generate-image-manifest.sh "${{ needs.build-matrix.outputs.version }}"
+
+      - name: Upload image manifest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-manifest-${{ needs.build-matrix.outputs.version }}
+          path: |
+            docs/releases/${{ needs.build-matrix.outputs.version }}/artifacts/docker-image-manifest.json
+            docs/releases/latest-docker-image-manifest.json
+
   deploy-to-staging:
     name: Deploy to Staging
-    needs: [build-matrix, build-and-test, verify-deployment]
+    needs: [build-matrix, build-and-test, verify-deployment, release-policy-gate, generate-image-manifest]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment:
@@ -257,6 +312,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download image manifest artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-manifest-${{ needs.build-matrix.outputs.version }}
+          path: .
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
@@ -275,19 +336,26 @@ jobs:
           # Apply kustomize overlay with load restrictor disabled for cross-directory references
           kubectl kustomize overlays/staging --load-restrictor=LoadRestrictionsNone | kubectl apply -f -
 
-          # Update image tags for all services
+          # Update image digests for all services from release manifest
           VERSION="${{ needs.build-matrix.outputs.version }}"
-          SERVICES="gateway-service fhir-service patient-service care-gap-service quality-measure-service cql-engine-service consent-service event-processing-service event-router-service agent-runtime-service ai-assistant-service agent-builder-service analytics-service predictive-analytics-service sdoh-service approval-service payer-workflows-service cdr-processor-service data-enrichment-service ehr-connector-service documentation-service"
-
+          MANIFEST_FILE="../docs/releases/${VERSION}/artifacts/docker-image-manifest.json"
+          SERVICES=$(jq -r '.images[].service' "$MANIFEST_FILE")
           for service in $SERVICES; do
-            echo "Updating $service to version $VERSION..."
-            kubectl set image deployment/$service $service=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/$service:$VERSION -n hdim-staging 2>/dev/null || true
+            repo_digest=$(jq -r --arg s "$service" '.images[] | select(.service == $s) | .repo_digest' "$MANIFEST_FILE")
+            if [ -z "$repo_digest" ] || [ "$repo_digest" = "null" ]; then
+              echo "ERROR: Missing repo_digest for $service in $MANIFEST_FILE"
+              exit 1
+            fi
+            echo "Updating $service to digest ${repo_digest}..."
+            kubectl set image deployment/$service $service=$repo_digest -n hdim-staging 2>/dev/null || true
           done
 
       - name: Wait for rollout
         run: |
           echo "Waiting for deployments to be ready..."
-          SERVICES="gateway-service fhir-service patient-service care-gap-service quality-measure-service"
+          VERSION="${{ needs.build-matrix.outputs.version }}"
+          MANIFEST_FILE="docs/releases/${VERSION}/artifacts/docker-image-manifest.json"
+          SERVICES=$(jq -r '.images[].service' "$MANIFEST_FILE")
           for service in $SERVICES; do
             echo "Waiting for $service..."
             kubectl rollout status deployment/$service -n hdim-staging --timeout=300s 2>/dev/null || echo "Warning: $service rollout status check failed"
@@ -308,7 +376,7 @@ jobs:
 
   deploy-to-production:
     name: Deploy to Production
-    needs: [build-matrix, build-and-test, verify-deployment, deploy-to-staging]
+    needs: [build-matrix, build-and-test, verify-deployment, release-policy-gate, generate-image-manifest, deploy-to-staging]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     environment:
@@ -317,6 +385,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Download image manifest artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: image-manifest-${{ needs.build-matrix.outputs.version }}
+          path: .
 
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
@@ -335,19 +409,26 @@ jobs:
           # Apply kustomize overlay with load restrictor disabled
           kubectl kustomize overlays/production --load-restrictor=LoadRestrictionsNone | kubectl apply -f -
 
-          # Update image tags for all services
+          # Update image digests for all services from release manifest
           VERSION="${{ needs.build-matrix.outputs.version }}"
-          SERVICES="gateway-service fhir-service patient-service care-gap-service quality-measure-service cql-engine-service consent-service event-processing-service event-router-service agent-runtime-service ai-assistant-service agent-builder-service analytics-service predictive-analytics-service sdoh-service approval-service payer-workflows-service cdr-processor-service data-enrichment-service ehr-connector-service documentation-service"
-
+          MANIFEST_FILE="../docs/releases/${VERSION}/artifacts/docker-image-manifest.json"
+          SERVICES=$(jq -r '.images[].service' "$MANIFEST_FILE")
           for service in $SERVICES; do
-            echo "Updating $service to version $VERSION..."
-            kubectl set image deployment/$service $service=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_PREFIX }}/$service:$VERSION -n hdim-production 2>/dev/null || true
+            repo_digest=$(jq -r --arg s "$service" '.images[] | select(.service == $s) | .repo_digest' "$MANIFEST_FILE")
+            if [ -z "$repo_digest" ] || [ "$repo_digest" = "null" ]; then
+              echo "ERROR: Missing repo_digest for $service in $MANIFEST_FILE"
+              exit 1
+            fi
+            echo "Updating $service to digest ${repo_digest}..."
+            kubectl set image deployment/$service $service=$repo_digest -n hdim-production 2>/dev/null || true
           done
 
       - name: Wait for rollout
         run: |
           echo "Waiting for deployments to be ready..."
-          SERVICES="gateway-service fhir-service patient-service care-gap-service quality-measure-service cql-engine-service consent-service event-processing-service event-router-service"
+          VERSION="${{ needs.build-matrix.outputs.version }}"
+          MANIFEST_FILE="docs/releases/${VERSION}/artifacts/docker-image-manifest.json"
+          SERVICES=$(jq -r '.images[].service' "$MANIFEST_FILE")
           for service in $SERVICES; do
             echo "Waiting for $service..."
             kubectl rollout status deployment/$service -n hdim-production --timeout=300s

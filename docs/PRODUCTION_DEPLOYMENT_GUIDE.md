@@ -1,5 +1,7 @@
 # 🚀 PRODUCTION DEPLOYMENT GUIDE - v2.7.0
 
+> Note (February 14, 2026): Authoritative production deployment path is the Kubernetes workflow in `.github/workflows/deploy-docker.yml` using digest-pinned image manifests. This document is retained as a legacy Docker Compose runbook.
+
 **Release:** v2.7.0  
 **Environment:** Local Docker Compose (Production)  
 **Status:** Ready to deploy  
@@ -428,4 +430,3 @@ docker compose ps
 **Production Deployment Guide Created:** February 11, 2026  
 **Release:** v2.7.0  
 **Status:** Ready for deployment when backups are ready
-

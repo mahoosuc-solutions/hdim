@@ -3,6 +3,30 @@ node_modules
 .pnp
 .pnp.js
 
+# Big repo-only content (not needed to build cx-portal on Vercel)
+docs
+documentation-site
+deployments
+deployment-content
+demo
+screenshots
+presentations
+logs
+tmp
+.worktrees
+.serena
+.git
+
+# Nested copies/archives in this monorepo (not part of the Vercel build input)
+hdim-admin-portal
+hdim-backend-tests
+hdim-master
+hdim-predictive-analytics
+healthdata-platform
+landing-page
+landing-page-v0
+mahoosuc-slash-commands.tgz
+
 # Testing
 coverage
 *.log
@@ -16,7 +40,6 @@ coverage
 # Nx
 .nx
 dist
-tmp
 out-tsc
 
 # Backend services (not deployed to Vercel)

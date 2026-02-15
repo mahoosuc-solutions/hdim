@@ -87,8 +87,8 @@ jobs:
         if: matrix.service == 'coaching-ui'
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/coaching-ui
-          file: ./apps/coaching-ui/Dockerfile.optimized
+          context: .
+          file: ./apps/coaching-ui/Dockerfile.staging
           push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -4,7 +4,7 @@
 # Version: 1.0.0
 # Date: 2025-11-18
 
-set -e  # Exit on error
+set -euo pipefail  # Exit on error and undefined vars
 
 # Colors
 RED='\033[0;31m'
@@ -17,11 +17,26 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env.production"
 DOCKER_COMPOSE_FILE="$SCRIPT_DIR/docker-compose.production.yml"
+LOAD_SAMPLE_DATA="${LOAD_SAMPLE_DATA:-false}"
+
+if docker compose version &> /dev/null; then
+  DOCKER_COMPOSE=(docker compose)
+elif command -v docker-compose &> /dev/null; then
+  DOCKER_COMPOSE=(docker-compose)
+else
+  echo -e "${RED}Error: neither 'docker compose' nor 'docker-compose' is available${NC}"
+  exit 1
+fi
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}HealthData in Motion - Production Deploy${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
+
+service_exists() {
+  local service_name="$1"
+  "${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" config --services | grep -qx "$service_name"
+}
 
 # Pre-flight checks
 echo -e "${YELLOW}Running pre-flight checks...${NC}"
@@ -32,7 +47,7 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # Check required tools
-REQUIRED_TOOLS=("docker" "docker-compose" "git" "curl")
+REQUIRED_TOOLS=("docker" "git" "curl")
 for tool in "${REQUIRED_TOOLS[@]}"; do
     if ! command -v $tool &> /dev/null; then
         echo -e "${RED}Error: $tool is not installed${NC}"
@@ -50,12 +65,38 @@ fi
 echo -e "${GREEN}✓${NC} Environment file found"
 
 # Check for default passwords
-if grep -q "CHANGE_ME" "$ENV_FILE"; then
+if grep -Eq "CHANGE_ME|YOUR/WEBHOOK/URL" "$ENV_FILE"; then
     echo -e "${RED}Error: Default passwords found in .env.production${NC}"
-    echo "Please replace all CHANGE_ME values with secure passwords"
+    echo "Please replace all placeholder values with secure secrets"
     exit 1
 fi
 echo -e "${GREEN}✓${NC} No default passwords found"
+
+# Check immutable image refs are configured with digest pinning
+REQUIRED_IMAGE_VARS=(
+  "AI_SALES_AGENT_IMAGE"
+  "LIVE_CALL_SALES_AGENT_IMAGE"
+  "COACHING_UI_IMAGE"
+  "POSTGRES_IMAGE"
+  "REDIS_IMAGE"
+  "JAEGER_IMAGE"
+  "PROMETHEUS_IMAGE"
+  "ALERTMANAGER_IMAGE"
+  "GRAFANA_IMAGE"
+)
+
+for image_var in "${REQUIRED_IMAGE_VARS[@]}"; do
+    image_value=$(grep -E "^${image_var}=" "$ENV_FILE" | cut -d'=' -f2- || true)
+    if [ -z "$image_value" ]; then
+        echo -e "${RED}Error: ${image_var} is not set in .env.production${NC}"
+        exit 1
+    fi
+    if [[ "$image_value" != *@sha256:* ]]; then
+        echo -e "${RED}Error: ${image_var} must be digest-pinned (expected @sha256:...)${NC}"
+        exit 1
+    fi
+done
+echo -e "${GREEN}✓${NC} Immutable digest-pinned image refs configured"
 
 # Check Docker Compose file
 if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
@@ -70,14 +111,10 @@ if grep -q "SSL_ENABLED=true" "$ENV_FILE"; then
     SSL_KEY=$(grep "SSL_KEY_PATH" "$ENV_FILE" | cut -d'=' -f2)
 
     if [ ! -f "$SSL_CERT" ] || [ ! -f "$SSL_KEY" ]; then
-        echo -e "${YELLOW}Warning: SSL enabled but certificates not found${NC}"
+        echo -e "${RED}Error: SSL enabled but certificates not found${NC}"
         echo "  Certificate: $SSL_CERT"
         echo "  Key: $SSL_KEY"
-        read -p "Continue anyway? (y/N) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            exit 1
-        fi
+        exit 1
     else
         echo -e "${GREEN}✓${NC} SSL certificates found"
     fi
@@ -89,33 +126,37 @@ echo -e "${BLUE}Deployment Steps${NC}"
 echo -e "${BLUE}========================================${NC}"
 echo ""
 
-# Step 1: Build Docker images
-echo -e "${YELLOW}Step 1: Building Docker images...${NC}"
-docker-compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" build
-echo -e "${GREEN}✓${NC} Docker images built"
+# Step 1: Pull pinned Docker images
+echo -e "${YELLOW}Step 1: Pulling pinned Docker images...${NC}"
+"${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" pull
+echo -e "${GREEN}✓${NC} Docker images pulled"
 echo ""
 
 # Step 2: Run database migrations
 echo -e "${YELLOW}Step 2: Running database migrations...${NC}"
 # Start only the database
-docker-compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d postgres
+"${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d postgres-primary
 sleep 10  # Wait for PostgreSQL to be ready
 
 # Run migrations for each service
-echo "  Running CQL Engine migrations..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" run --rm cql-engine-service \
-    java -jar app.jar db migrate || echo -e "${YELLOW}  Migration may have already run${NC}"
+if service_exists "cql-engine-service"; then
+    echo "  Running CQL Engine migrations..."
+    "${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" run --rm cql-engine-service \
+      java -jar app.jar db migrate || echo -e "${YELLOW}  Migration may have already run${NC}"
+fi
 
-echo "  Running Quality Measure migrations..."
-docker-compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" run --rm quality-measure-service \
-    java -jar app.jar db migrate || echo -e "${YELLOW}  Migration may have already run${NC}"
+if service_exists "quality-measure-service"; then
+    echo "  Running Quality Measure migrations..."
+    "${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" run --rm quality-measure-service \
+      java -jar app.jar db migrate || echo -e "${YELLOW}  Migration may have already run${NC}"
+fi
 
 echo -e "${GREEN}✓${NC} Database migrations complete"
 echo ""
 
 # Step 3: Start all services
 echo -e "${YELLOW}Step 3: Starting all services...${NC}"
-docker-compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d
+"${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d
 echo -e "${GREEN}✓${NC} All services started"
 echo ""
 
@@ -126,7 +167,7 @@ WAITED=0
 ALL_HEALTHY=false
 
 while [ $WAITED -lt $MAX_WAIT ]; do
-    UNHEALTHY=$(docker-compose -f "$DOCKER_COMPOSE_FILE" ps | grep -c "unhealthy" || true)
+    UNHEALTHY=$("${DOCKER_COMPOSE[@]}" -f "$DOCKER_COMPOSE_FILE" ps | grep -c "unhealthy" || true)
     if [ $UNHEALTHY -eq 0 ]; then
         ALL_HEALTHY=true
         break
@@ -140,43 +181,41 @@ if [ "$ALL_HEALTHY" = true ]; then
     echo -e "${GREEN}✓${NC} All services are healthy"
 else
     echo -e "${YELLOW}Warning: Some services may still be starting up${NC}"
-    echo "Run 'docker-compose -f $DOCKER_COMPOSE_FILE ps' to check status"
+    echo "Run '${DOCKER_COMPOSE[*]} -f $DOCKER_COMPOSE_FILE ps' to check status"
 fi
 echo ""
 
 # Step 5: Run health checks
 echo -e "${YELLOW}Step 5: Running health checks...${NC}"
 
-# Check CQL Engine
-CQL_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/actuator/health || echo "000")
-if [ "$CQL_HEALTH" = "200" ]; then
-    echo -e "${GREEN}✓${NC} CQL Engine Service: Healthy"
+# Check AI Sales Agent
+AI_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8090/health || echo "000")
+if [ "$AI_HEALTH" = "200" ]; then
+    echo -e "${GREEN}✓${NC} AI Sales Agent: Healthy"
 else
-    echo -e "${YELLOW}⚠${NC} CQL Engine Service: Status $CQL_HEALTH"
+    echo -e "${YELLOW}⚠${NC} AI Sales Agent: Status $AI_HEALTH"
 fi
 
-# Check Quality Measure Service
-QM_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8087/actuator/health || echo "000")
-if [ "$QM_HEALTH" = "200" ]; then
-    echo -e "${GREEN}✓${NC} Quality Measure Service: Healthy"
+# Check Live Call Sales Agent
+LIVE_CALL_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8095/health || echo "000")
+if [ "$LIVE_CALL_HEALTH" = "200" ]; then
+    echo -e "${GREEN}✓${NC} Live Call Sales Agent: Healthy"
 else
-    echo -e "${YELLOW}⚠${NC} Quality Measure Service: Status $QM_HEALTH"
+    echo -e "${YELLOW}⚠${NC} Live Call Sales Agent: Status $LIVE_CALL_HEALTH"
 fi
 
-# Check FHIR Service
-FHIR_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8083/fhir/metadata || echo "000")
-if [ "$FHIR_HEALTH" = "200" ]; then
-    echo -e "${GREEN}✓${NC} FHIR Service: Healthy"
+# Check Coaching UI
+COACHING_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:4200/ || echo "000")
+if [ "$COACHING_HEALTH" = "200" ]; then
+    echo -e "${GREEN}✓${NC} Coaching UI: Healthy"
 else
-    echo -e "${YELLOW}⚠${NC} FHIR Service: Status $FHIR_HEALTH"
+    echo -e "${YELLOW}⚠${NC} Coaching UI: Status $COACHING_HEALTH"
 fi
 
 echo ""
 
-# Step 6: Load initial data (optional)
-read -p "Load sample data? (y/N) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+# Step 6: Load initial data (optional; disabled by default in production)
+if [[ "$LOAD_SAMPLE_DATA" == "true" ]]; then
     echo -e "${YELLOW}Step 6: Loading sample data...${NC}"
     if [ -f "$SCRIPT_DIR/sample-data/load-sample-data.py" ]; then
         python3 "$SCRIPT_DIR/sample-data/load-sample-data.py"
@@ -184,6 +223,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     else
         echo -e "${YELLOW}Warning: Sample data script not found${NC}"
     fi
+    echo ""
+else
+    echo -e "${GREEN}✓${NC} Step 6: Sample data load skipped (LOAD_SAMPLE_DATA=false)"
     echo ""
 fi
 
@@ -193,11 +235,9 @@ echo -e "${GREEN}Deployment Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "${BLUE}Service URLs:${NC}"
-echo "  CQL Engine Service:      http://localhost:8081"
-echo "  Quality Measure Service: http://localhost:8087"
-echo "  FHIR Service:            http://localhost:8083"
-echo "  Angular Clinical Portal: http://localhost:4200"
-echo "  React Dashboard:         http://localhost:3004"
+echo "  AI Sales Agent:          http://localhost:8090"
+echo "  Live Call Sales Agent:   http://localhost:8095"
+echo "  Coaching UI:             http://localhost:4200"
 echo "  Prometheus:              http://localhost:9090"
 echo "  Grafana:                 http://localhost:3000"
 echo ""
@@ -213,8 +253,8 @@ echo ""
 echo -e "${YELLOW}Important:${NC}"
 echo "  - All services are running in Docker containers"
 echo "  - Data is persisted in Docker volumes"
-echo "  - Logs are available via 'docker-compose logs'"
-echo "  - To stop: docker-compose -f $DOCKER_COMPOSE_FILE down"
-echo "  - To restart: docker-compose -f $DOCKER_COMPOSE_FILE restart"
+echo "  - Logs are available via '${DOCKER_COMPOSE[*]} logs'"
+echo "  - To stop: ${DOCKER_COMPOSE[*]} -f $DOCKER_COMPOSE_FILE down"
+echo "  - To restart: ${DOCKER_COMPOSE[*]} -f $DOCKER_COMPOSE_FILE restart"
 echo ""
 echo -e "${GREEN}Deployment successful!${NC}"

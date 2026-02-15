@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, RouterOutlet } from '@angular/router';
+import { AuthTokenService } from './shared/services/auth-token.service';
 
 /**
  * CX Portal Root Component
@@ -62,12 +63,39 @@ import { RouterModule, RouterOutlet } from '@angular/router';
               <span class="nav-text">Approvals</span>
             </a>
           </li>
+          <li>
+            <a routerLink="/admin/access" routerLinkActive="active">
+              <span class="nav-icon">🔐</span>
+              <span class="nav-text">Access Admin</span>
+            </a>
+          </li>
         </ul>
 
         <div class="sidebar-footer">
           <div class="status-indicator online">
             <span class="dot"></span>
             <span>API Connected</span>
+          </div>
+          <div class="auth-tools">
+            <label class="auth-label" for="authToken">Admin Token</label>
+            <input
+              id="authToken"
+              class="auth-input"
+              type="password"
+              autocomplete="off"
+              [value]="authTokenDraft"
+              (input)="authTokenDraft = ($any($event.target).value || '')"
+              placeholder="Paste JWT to enable admin calls"
+            />
+            <div class="auth-actions">
+              <button class="auth-btn primary" type="button" (click)="saveToken()">
+                Save
+              </button>
+              <button class="auth-btn" type="button" (click)="clearToken()">
+                Clear
+              </button>
+            </div>
+            <div class="auth-hint" *ngIf="hasToken">Token set for this browser.</div>
           </div>
         </div>
       </nav>
@@ -181,6 +209,58 @@ import { RouterModule, RouterOutlet } from '@angular/router';
       background: #e74c3c;
     }
 
+    .auth-tools {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .auth-label {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.75);
+    }
+
+    .auth-input {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      outline: none;
+    }
+
+    .auth-input::placeholder {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    .auth-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .auth-btn {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.85);
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .auth-btn.primary {
+      background: #4361ee;
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .auth-hint {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
     .main-content {
       flex: 1;
       overflow-y: auto;
@@ -189,4 +269,28 @@ import { RouterModule, RouterOutlet } from '@angular/router';
 })
 export class App {
   protected title = 'HDIM CX Portal';
+
+  protected authTokenDraft = '';
+  protected hasToken = false;
+
+  constructor(private tokens: AuthTokenService) {
+    this.hasToken = this.tokens.has();
+  }
+
+  saveToken(): void {
+    const token = (this.authTokenDraft || '').trim();
+    if (!token) return;
+    this.tokens.set(token);
+    this.authTokenDraft = '';
+    this.hasToken = true;
+    // A reload keeps existing components simple (they'll re-fetch with Authorization).
+    window.location.reload();
+  }
+
+  clearToken(): void {
+    this.tokens.clear();
+    this.authTokenDraft = '';
+    this.hasToken = false;
+    window.location.reload();
+  }
 }

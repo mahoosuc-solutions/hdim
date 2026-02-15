@@ -216,6 +216,7 @@ resilience4j-reactor = { module = "io.github.resilience4j:resilience4j-reactor",
 spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "spring-security" }
 spring-security-config = { module = "org.springframework.security:spring-security-config", version.ref = "spring-security" }
 spring-security-web = { module = "org.springframework.security:spring-security-web", version.ref = "spring-security" }
+spring-security-crypto = { module = "org.springframework.security:spring-security-crypto", version.ref = "spring-security" }
 spring-security-test = { module = "org.springframework.security:spring-security-test", version.ref = "spring-security" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }

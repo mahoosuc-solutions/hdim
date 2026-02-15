@@ -119,3 +119,8 @@ tasks.withType<Test> {
     }
     systemProperty("spring.profiles.active", "test")
 }
+
+tasks.bootJar {
+    // Stable filename for Docker COPY instructions.
+    archiveFileName.set("cql-engine-service.jar")
+}

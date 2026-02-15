@@ -11,6 +11,11 @@ dependencyManagement {
     }
 }
 
+tasks.bootJar {
+    // Stable filename for Docker COPY instructions.
+    archiveFileName.set("quality-measure-service.jar")
+}
+
 
 
 dependencies {

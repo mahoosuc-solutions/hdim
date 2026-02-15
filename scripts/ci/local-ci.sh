@@ -88,10 +88,32 @@ run_demo() {
     die "Missing ./validate-system.sh"
   fi
 
-  log "docker compose -f docker-compose.demo.yml up -d"
-  docker compose -f docker-compose.demo.yml up -d
-  log "./scripts/seed-all-demo-data.sh"
-  ./scripts/seed-all-demo-data.sh
+  # Most backend service Dockerfiles expect pre-built JARs.
+  # We build only what the demo compose file needs, then build the stack.
+  if [ -x ./backend/gradlew ]; then
+    log "Building backend bootJars required by demo stack"
+    (cd backend && ./gradlew \
+      :modules:services:gateway-admin-service:bootJar \
+      :modules:services:gateway-fhir-service:bootJar \
+      :modules:services:gateway-clinical-service:bootJar \
+      :modules:services:fhir-service:bootJar \
+      :modules:services:cql-engine-service:bootJar \
+      :modules:services:patient-service:bootJar \
+      :modules:services:quality-measure-service:bootJar \
+      :modules:services:care-gap-service:bootJar \
+      :modules:services:event-processing-service:bootJar \
+      :modules:services:hcc-service:bootJar \
+      :modules:services:audit-query-service:bootJar \
+      :modules:services:demo-seeding-service:bootJar \
+      -x test --no-daemon)
+  else
+    die "Missing ./backend/gradlew"
+  fi
+
+  log "docker compose -f docker-compose.demo.yml up -d --build"
+  docker compose -f docker-compose.demo.yml up -d --build
+  log "./scripts/seed-all-demo-data.sh (non-interactive)"
+  NON_INTERACTIVE=1 SEED_PROFILE="${SEED_PROFILE:-smoke}" WAIT_TIMEOUT_SECS="${WAIT_TIMEOUT_SECS:-900}" ./scripts/seed-all-demo-data.sh
   log "./validate-system.sh"
   ./validate-system.sh
 
@@ -120,4 +142,3 @@ case "${MODE}" in
   release) run_release ;;
   *) die "Unknown mode: ${MODE}. Use --help." ;;
 esac
-

@@ -3,17 +3,27 @@
 ## Prereqs
 - `npm install -g agent-browser`
 - `agent-browser install`
-- Portal running (default: `http://localhost:18080`)
+- Portal running (default: `http://localhost:4200`)
 - Demo data seeded: `./scripts/seed-all-demo-data.sh`
 
 ## Environment
-- `PORTAL_URL` (default: `http://localhost:18080`)
+- `PORTAL_URL` (default: `http://localhost:4200`)
 - `SCREENSHOT_DIR` (default: `/tmp/agent-browser-smoke`)
 - `AB_SLEEP_SECS` (default: `2`)
 
 ## Run All Suites
-```
+Gateway-served portal:
+
+```bash
 PORTAL_URL=http://localhost:18080 \
+SCREENSHOT_DIR=/tmp/agent-browser-smoke \
+./scripts/agent-browser/nav-global.sh
+```
+
+Clinical portal container:
+
+```bash
+PORTAL_URL=http://localhost:4200 \
 SCREENSHOT_DIR=/tmp/agent-browser-smoke \
 ./scripts/agent-browser/nav-global.sh
 ```

@@ -46,6 +46,11 @@ export const appRoutes: Routes = [
       ),
   },
   {
+    path: 'admin/access',
+    loadComponent: () =>
+      import('./admin/access-admin.component').then((m) => m.AccessAdminComponent),
+  },
+  {
     path: 'campaigns',
     loadComponent: () =>
       import('./campaigns/campaigns-dashboard.component').then(

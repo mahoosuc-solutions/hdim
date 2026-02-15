@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject, timer } from 'rxjs';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { retry, tap, delayWhen } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 export interface WebSocketMessage {
   type: 'pipeline_update' | 'lead_created' | 'lead_updated' | 'lead_deleted';
@@ -17,7 +18,7 @@ export class WebSocketService {
   private messagesSubject$ = new Subject<WebSocketMessage>();
   public messages$ = this.messagesSubject$.asObservable();
 
-  private readonly WS_URL = 'ws://localhost:8201/ws/pipeline';
+  private readonly WS_URL = `${(window as any).__CX_WS_URL ?? environment.cxWsUrl ?? 'ws://localhost:8201'}/ws/pipeline`;
 
   connect(): void {
     if (!this.socket$ || this.socket$.closed) {

@@ -397,7 +397,7 @@ class CachingBehaviorIntegrationTest {
                 .measureCategory("HEDIS")
                 .measureYear(year)
                 .numeratorCompliant(compliant)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .complianceRate(compliant ? 100.0 : 0.0)
                 .score(compliant ? 95.0 : 50.0)
                 .calculationDate(LocalDate.now())

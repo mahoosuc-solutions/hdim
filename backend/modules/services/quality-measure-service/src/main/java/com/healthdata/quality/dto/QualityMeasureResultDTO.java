@@ -1,6 +1,8 @@
 package com.healthdata.quality.dto;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -56,7 +58,30 @@ public class QualityMeasureResultDTO implements Serializable {
     private Boolean numeratorCompliant;
 
     @Schema(description = "Whether patient is in the denominator (eligible)", example = "true")
-    private Boolean denominatorElligible;
+    private Boolean denominatorEligible;
+
+    /**
+     * Backward-compatible JSON mapping for the historical typo in the API field name.
+     *
+     * We intentionally emit BOTH fields:
+     * - denominatorEligible (correct)
+     * - denominatorElligible (deprecated typo)
+     *
+     * This allows existing clients to keep working while new clients migrate.
+     */
+    @JsonGetter("denominatorElligible")
+    @Schema(
+        description = "DEPRECATED: historical typo for denominatorEligible. Will be removed in a future major version.",
+        deprecated = true
+    )
+    public Boolean getDenominatorElligible() {
+        return denominatorEligible;
+    }
+
+    @JsonSetter("denominatorElligible")
+    public void setDenominatorElligible(Boolean denominatorElligible) {
+        this.denominatorEligible = denominatorElligible;
+    }
 
     @Schema(description = "Compliance rate percentage (0.0 to 100.0)", example = "85.5")
     private Double complianceRate;

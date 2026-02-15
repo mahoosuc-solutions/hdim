@@ -292,7 +292,7 @@ class QualityReportServiceSaveTest {
                         .measureCategory("HEDIS")
                         .measureYear(2024)
                         .numeratorCompliant(true)
-                        .denominatorElligible(true)
+                        .denominatorEligible(true)
                         .calculationDate(LocalDate.now())
                         .createdBy(CREATED_BY)
                         .build(),
@@ -304,7 +304,7 @@ class QualityReportServiceSaveTest {
                         .measureCategory("HEDIS")
                         .measureYear(2024)
                         .numeratorCompliant(false)
-                        .denominatorElligible(true)
+                        .denominatorEligible(true)
                         .calculationDate(LocalDate.now())
                         .createdBy(CREATED_BY)
                         .build()

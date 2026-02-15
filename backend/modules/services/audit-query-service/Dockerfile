@@ -12,7 +12,7 @@ USER spring:spring
 WORKDIR /app
 
 # Copy the built JAR from Gradle build
-ARG JAR_FILE=modules/services/audit-query-service/build/libs/*-boot.jar
+ARG JAR_FILE=modules/services/audit-query-service/build/libs/audit-query-service.jar
 COPY --chown=spring:spring ${JAR_FILE} app.jar
 
 # Expose service port

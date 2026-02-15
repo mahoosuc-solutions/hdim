@@ -45,6 +45,12 @@ ENV PYTHONUNBUFFERED=1
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 
+# Run as non-root (required by local dockerfile gate)
+RUN groupadd -g 10001 app \
+    && useradd -u 10001 -g 10001 -s /usr/sbin/nologin -m app \
+    && chown -R app:app /app
+USER app
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8095/health', timeout=5)" || exit 1

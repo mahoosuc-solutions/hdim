@@ -15,7 +15,7 @@ RUN addgroup -g 1001 -S healthdata && \
     adduser -u 1001 -S healthdata -G healthdata -h /app
 
 # Copy the pre-built JAR
-COPY modules/services/demo-seeding-service/build/libs/demo-seeding-service-1.0.0.jar app.jar
+COPY modules/services/demo-seeding-service/build/libs/demo-seeding-service.jar app.jar
 
 # Set ownership
 RUN chown -R healthdata:healthdata /app

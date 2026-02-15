@@ -106,6 +106,11 @@ tasks.withType<Test> {
     systemProperty("spring.profiles.active", "test")
 }
 
+tasks.bootJar {
+    // Stable filename for Docker COPY instructions.
+    archiveFileName.set("patient-service.jar")
+}
+
 dependencyManagement {
     imports {
         mavenBom(libs.spring.cloud.dependencies.get().toString())

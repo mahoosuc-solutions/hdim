@@ -75,8 +75,8 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-// Bootable JAR configuration
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    archiveClassifier.set("boot")
+tasks.bootJar {
+    // Stable filename for Docker COPY instructions.
+    archiveFileName.set("audit-query-service.jar")
     mainClass.set("com.healthdata.auditquery.AuditQueryServiceApplication")
 }

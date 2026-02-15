@@ -32,7 +32,7 @@ This plan is aligned to the market-validated differentiators in `docs/PHASE_2_MA
 
 ## Automated Screenshot Pass (Agent Browser)
 
-When the portal is running at `http://localhost:18080`:
+When the portal is running at `http://localhost:4200`:
 
 ```bash
 ./scripts/media/capture-release-screenshots.sh v2.7.1-rc1 smoke
@@ -61,4 +61,3 @@ Keep each clip 30-90 seconds. Use a fixed viewport (1440x900) and seeded demo da
 ## Messaging Guardrails (No Over-Claim)
 
 - If the real-time financial ROI dashboard is not demonstrably working end-to-end in this build, do not record it as a primary differentiator. Position as preview/roadmap only.
-

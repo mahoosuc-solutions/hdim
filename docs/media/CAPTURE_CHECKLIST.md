@@ -66,10 +66,10 @@ Pick the minimum set that tells the story:
 
 ## Automation: Agent Browser (Screenshots)
 
-If the portal is running at the gateway and seeded:
+If the clinical portal is running and seeded:
 
 ```bash
-PORTAL_URL=http://localhost:18080 \
+PORTAL_URL=http://localhost:4200 \
 SCREENSHOT_DIR=docs/releases/<version>/media/screenshots/agent-browser \
 ./scripts/agent-browser/nav-global.sh
 ```

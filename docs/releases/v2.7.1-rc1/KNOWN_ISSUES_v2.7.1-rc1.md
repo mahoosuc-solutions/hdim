@@ -1,87 +1,37 @@
-# HDIM Platform Known Issues - v2.7.1-rc1
+# Known Issues: v2.7.1-rc1
 
-**Release Version:** v2.7.1-rc1
+**Release Version:** v2.7.1-rc1  
 **Last Updated:** 2026-02-15
 
----
+## Critical
 
-## 🔴 Critical Issues
+- None currently identified for the demo gate (`./scripts/ci/local-ci.sh demo`).
 
-### Issue #1: {TITLE}
-- **Severity:** Critical
-- **Impact:** {DESCRIPTION_OF_IMPACT}
-- **Affected Components:** {COMPONENTS}
-- **Workaround:** {WORKAROUND_IF_AVAILABLE}
-- **Fix ETA:** {DATE_OR_VERSION}
-- **Tracking:** GitHub Issue #{NUMBER}
+## High
 
-{AUTO_GENERATE_FROM_GITHUB_ISSUES_TAGGED_critical}
+- `clinical-portal` unit tests are currently unstable and fail locally.
+  - Symptom examples: `MatDialog is not defined`, missing mocks, spec import issues.
+  - Impact: `nx run clinical-portal:test` is not a reliable gate for this RC.
+  - Workaround: rely on `./scripts/ci/local-ci.sh demo` (boot/seed/validate + UI smoke) and `npm run e2e:clinical-portal`.
 
----
+## Medium
 
-## 🟡 High Priority Issues
+- Legacy `frontend` project lint is not clean.
+  - Impact: `nx run frontend:lint` fails with many pre-existing errors.
+  - Workaround: keep it out of the default RC lint lane; track cleanup separately.
 
-### Issue #1: {TITLE}
-- **Severity:** High
-- **Impact:** {DESCRIPTION}
-- **Affected Components:** {COMPONENTS}
-- **Workaround:** {WORKAROUND}
-- **Fix ETA:** {DATE_OR_VERSION}
-- **Tracking:** GitHub Issue #{NUMBER}
+- `shared-notifications` unit tests are currently failing under the default TypeScript/Jest resolution.
+  - Impact: `nx run shared-notifications:test` fails.
+  - Workaround: excluded from the default `npm run test` lane for this RC.
 
-{AUTO_GENERATE_FROM_GITHUB_ISSUES_TAGGED_high}
+- `libs/shared/testing` project has an incomplete Jest/TS config surface (missing tsconfig/jest config files).
+  - Impact: `nx run testing:test` is not usable as a gate.
+  - Workaround: excluded from `npm run test` lane.
 
----
+## Notes
 
-## 🟢 Medium Priority Issues
+- Default local CI gates for this RC:
+  - `./scripts/ci/local-ci.sh quick` (MCP + scoped lint + scoped unit tests)
+  - `./scripts/ci/local-ci.sh demo` (full demo stack, deterministic seed, validate, screenshot smoke)
+  - `./scripts/ci/local-ci.sh pr` (quick + dockerfile checks + `scripts/test-all-local.sh`)
 
-### Issue #1: {TITLE}
-- **Severity:** Medium
-- **Impact:** {DESCRIPTION}
-- **Workaround:** {WORKAROUND}
-- **Tracking:** GitHub Issue #{NUMBER}
-
-{AUTO_GENERATE_FROM_GITHUB_ISSUES_TAGGED_medium}
-
----
-
-## ℹ️ Limitations & Constraints
-
-### Performance Limitations
-- {LIMITATION_1}
-- {LIMITATION_2}
-
-### Configuration Limitations
-- {LIMITATION_1}
-- {LIMITATION_2}
-
-### Compatibility Limitations
-- {LIMITATION_1}
-- {LIMITATION_2}
-
----
-
-## 🔧 Resolved Issues (from previous release)
-
-| Issue | Description | Resolution | Version |
-|-------|-------------|------------|---------|
-| #{NUMBER} | {DESCRIPTION} | {RESOLUTION} | v2.7.1-rc1 |
-
-{AUTO_GENERATE_FROM_CLOSED_GITHUB_ISSUES}
-
----
-
-## 📞 Reporting New Issues
-
-**GitHub Issues:** https://github.com/{ORG}/hdim/issues/new
-
-**Required Information:**
-- HDIM version
-- Environment (dev/staging/production)
-- Steps to reproduce
-- Expected vs actual behavior
-- Relevant logs/screenshots
-
----
-
-**Note:** This document is updated regularly as new issues are discovered or resolved.

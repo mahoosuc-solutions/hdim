@@ -44,6 +44,14 @@ If you want the full suite:
 ./scripts/media/capture-release-screenshots.sh v2.7.1-rc1 all
 ```
 
+## Advanced Capture Automation (Planned)
+
+Target state: a single “storyboard” runner that can produce both screenshots and short clips.
+
+- Screenshots: keep using agent-browser suites (fast, resilient selectors).
+- Videos: implement Playwright storyboard flows with deterministic viewport, fixed seeded user, and `video: 'on'`.
+- Promo asset automation: once storyboard clips exist, generate short cutdowns (15s/30s/60s) and thumbnail frames as part of the release artifacts under `docs/releases/v2.7.1-rc1/media/`.
+
 ## Video Clips (Recommended)
 
 Keep each clip 30-90 seconds. Use a fixed viewport (1440x900) and seeded demo data.

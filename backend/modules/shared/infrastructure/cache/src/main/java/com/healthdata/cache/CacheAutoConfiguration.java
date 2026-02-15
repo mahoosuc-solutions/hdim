@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.healthdata.persistence.tenant.TenantContext;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -31,6 +32,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ConditionalOnClass(RedisConnectionFactory.class)
 @ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis", matchIfMissing = true)
 public class CacheAutoConfiguration {
+
+    private static final String NO_TENANT_PREFIX = "no-tenant";
+    private static final String SYSTEM_PREFIX = "system";
 
     @Bean
     @ConditionalOnMissingBean
@@ -113,14 +117,28 @@ public class CacheAutoConfiguration {
 
     private RedisCacheConfiguration createConfiguration(Duration ttl, boolean cacheNulls,
                                                         RedisSerializationContext.SerializationPair<Object> serializer) {
+        // Tenant-aware prefixing prevents cross-tenant cache key collisions in Redis.
+        // It complements DB RLS and ensures PHI caches are isolated even when keys overlap.
         RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeValuesWith(serializer)
-                .entryTtl(ttl);
+                .entryTtl(ttl)
+                .computePrefixWith(cacheName -> currentTenantPrefix() + ":" + cacheName + "::");
 
         if (!cacheNulls) {
             configuration = configuration.disableCachingNullValues();
         }
 
         return configuration;
+    }
+
+    private static String currentTenantPrefix() {
+        if (TenantContext.isSystemMode()) {
+            return SYSTEM_PREFIX;
+        }
+        String tenantId = TenantContext.getCurrentTenant();
+        if (tenantId == null || tenantId.isBlank()) {
+            return NO_TENANT_PREFIX;
+        }
+        return tenantId;
     }
 }

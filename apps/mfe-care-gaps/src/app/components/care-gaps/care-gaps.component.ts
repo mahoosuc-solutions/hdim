@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -23,54 +23,72 @@ export interface CareGap {
     <div class="care-gaps-container">
       <h2>Care Gaps</h2>
 
-      <div class="filters" *ngIf="priorities">
-        <button *ngFor="let priority of priorities"
-                (click)="filterByPriority(priority)"
-                [class.active]="activeFilter === priority"
-                class="filter-btn">
-          {{ priority }}
-        </button>
-      </div>
-
-      <div *ngIf="filteredGaps$ | async as gaps; else loading" class="gaps-list">
-        <div *ngIf="gaps.length > 0; else noGaps" class="gap-items">
-          <div *ngFor="let gap of gaps" class="gap-card" [class]="'priority-' + gap.priority">
-            <div class="gap-header">
-              <h3 (click)="showDetail(gap)">{{ gap.name }}</h3>
-              <span class="status-badge" [class]="'status-' + gap.status">{{ gap.status }}</span>
-            </div>
-            <p class="gap-description">{{ gap.description }}</p>
-            <div class="gap-actions">
-              <button (click)="showDetail(gap)" class="detail-btn">View</button>
-              <button (click)="closeGap(gap)" class="close-btn">Close</button>
-            </div>
-          </div>
+      @if (priorities?.length) {
+        <div class="filters">
+          @for (priority of priorities; track priority) {
+            <button
+              type="button"
+              (click)="filterByPriority(priority)"
+              [class.active]="activeFilter === priority"
+              class="filter-btn"
+            >
+              {{ priority }}
+            </button>
+          }
         </div>
-      </div>
+      }
 
-      <ng-template #loading>
+      @if (filteredGaps$ | async; as gaps) {
+        <div class="gaps-list">
+          @if (gaps.length > 0) {
+            <div class="gap-items">
+              @for (gap of gaps; track gap.id) {
+                <div class="gap-card" [class]="'priority-' + gap.priority">
+                  <div class="gap-header">
+                    <h3>
+                      <button type="button" (click)="showDetail(gap)" class="gap-title">
+                        {{ gap.name }}
+                      </button>
+                    </h3>
+                    <span class="status-badge" [class]="'status-' + gap.status">{{ gap.status }}</span>
+                  </div>
+                  <p class="gap-description">{{ gap.description }}</p>
+                  <div class="gap-actions">
+                    <button type="button" (click)="showDetail(gap)" class="detail-btn">View</button>
+                    <button type="button" (click)="closeGap(gap)" class="close-btn">Close</button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="no-gaps">No care gaps identified! ✅</div>
+          }
+        </div>
+      } @else {
         <div class="loading">Loading care gaps...</div>
-      </ng-template>
-
-      <ng-template #noGaps>
-        <div class="no-gaps">No care gaps identified! ✅</div>
-      </ng-template>
+      }
 
       <!-- Detail Panel -->
-      <div *ngIf="selectedGap$ | async as gap" class="detail-panel">
-        <div class="detail-content">
-          <button (click)="closeDetail()" class="close-btn">×</button>
-          <h3>{{ gap.name }}</h3>
-          <p>{{ gap.description }}</p>
-          <div class="gap-details">
-            <div>Priority: <strong [class]="'priority-' + gap.priority">{{ gap.priority }}</strong></div>
-            <div>Status: <strong>{{ gap.status }}</strong></div>
-            <div *ngIf="gap.dueDate">Due: <strong>{{ gap.dueDate | date }}</strong></div>
-            <div *ngIf="gap.intervention">Intervention: <strong>{{ gap.intervention }}</strong></div>
+      @if (selectedGap$ | async; as gap) {
+        <div class="detail-panel">
+          <div class="detail-content">
+            <button type="button" (click)="closeDetail()" class="close-btn">×</button>
+            <h3>{{ gap.name }}</h3>
+            <p>{{ gap.description }}</p>
+            <div class="gap-details">
+              <div>Priority: <strong [class]="'priority-' + gap.priority">{{ gap.priority }}</strong></div>
+              <div>Status: <strong>{{ gap.status }}</strong></div>
+              @if (gap.dueDate) {
+                <div>Due: <strong>{{ gap.dueDate | date }}</strong></div>
+              }
+              @if (gap.intervention) {
+                <div>Intervention: <strong>{{ gap.intervention }}</strong></div>
+              }
+            </div>
+            <button type="button" (click)="closeGap(gap)" class="action-btn">Close Gap</button>
           </div>
-          <button (click)="closeGap(gap)" class="action-btn">Close Gap</button>
         </div>
-      </div>
+      }
     </div>
   `,
   styles: [`
@@ -142,9 +160,22 @@ export interface CareGap {
 
     .gap-header h3 {
       margin: 0;
-      cursor: pointer;
       color: #007bff;
+    }
+
+    .gap-title {
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
+      text-align: left;
       text-decoration: underline;
+    }
+
+    .gap-title:hover {
+      text-decoration-thickness: 2px;
     }
 
     .status-badge {
@@ -317,10 +348,10 @@ export class CareGapsComponent implements OnInit {
   private activeFilterSubject$ = new BehaviorSubject<string>('ALL');
   private selectedGapSubject$ = new BehaviorSubject<CareGap | null>(null);
 
-  constructor(
-    private pipeline: Clinical360PipelineService,
-    private eventBus: EventBusService
-  ) {
+  private pipeline = inject(Clinical360PipelineService);
+  private eventBus = inject(EventBusService);
+
+  constructor() {
     this.selectedGap$ = this.selectedGapSubject$.asObservable();
   }
 

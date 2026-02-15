@@ -11,6 +11,7 @@
  * Usage: Run tests in parallel (swarm) with coordinated assertions
  */
 
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { Observable, Subject, of } from 'rxjs';
 import { TestBed } from '@angular/core/testing';
 

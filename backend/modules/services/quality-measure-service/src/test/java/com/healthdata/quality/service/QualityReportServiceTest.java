@@ -58,7 +58,7 @@ class QualityReportServiceTest {
                 .measureCategory("HEDIS")
                 .measureYear(2024)
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 .build(),
             QualityMeasureResultEntity.builder()
@@ -68,7 +68,7 @@ class QualityReportServiceTest {
                 .measureCategory(null)
                 .measureYear(2024)
                 .numeratorCompliant(false)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 .build()
         );
@@ -120,7 +120,7 @@ class QualityReportServiceTest {
                 .measureCategory("HEDIS")
                 .measureYear(year)
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 .build(),
             QualityMeasureResultEntity.builder()
@@ -130,7 +130,7 @@ class QualityReportServiceTest {
                 .measureCategory("CMS")
                 .measureYear(year)
                 .numeratorCompliant(false)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 .build(),
             QualityMeasureResultEntity.builder()
@@ -140,7 +140,7 @@ class QualityReportServiceTest {
                 .measureCategory("HEDIS")
                 .measureYear(year)
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 .build()
         );
@@ -173,7 +173,7 @@ class QualityReportServiceTest {
                     .measureCategory("HEDIS")
                     .measureYear(2024)
                     .numeratorCompliant(true)
-                    .denominatorElligible(true)
+                    .denominatorEligible(true)
                     .calculationDate(LocalDate.now())
                     .build()
             ));
@@ -207,7 +207,7 @@ class QualityReportServiceTest {
                     .measureCategory("HEDIS")
                     .measureYear(year)
                     .numeratorCompliant(true)
-                    .denominatorElligible(true)
+                    .denominatorEligible(true)
                     .calculationDate(LocalDate.now())
                     .build()
             ));

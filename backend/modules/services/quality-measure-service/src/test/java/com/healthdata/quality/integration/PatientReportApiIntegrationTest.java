@@ -324,7 +324,7 @@ class PatientReportApiIntegrationTest {
                 .measureCategory(category)
                 .measureYear(LocalDate.now().getYear())
                 .numeratorCompliant(compliant)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .complianceRate(compliant ? 100.0 : 0.0)
                 .score(compliant ? 95.0 : 50.0)
                 .calculationDate(LocalDate.now())

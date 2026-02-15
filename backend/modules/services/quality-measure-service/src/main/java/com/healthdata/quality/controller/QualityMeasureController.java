@@ -427,7 +427,7 @@ public class QualityMeasureController {
                 result.getPatientId(),
                 result.getMeasureId(),
                 result.getNumeratorCompliant(),
-                result.getDenominatorElligible(),
+                result.getDenominatorEligible(),
                 result.getScore() != null ? result.getScore() : 0.0
             ));
         }

@@ -64,6 +64,18 @@ jobs:
       - name: Run clinical portal E2E smoke
         run: npm run e2e:clinical-portal:smoke
 
+      - name: Upload E2E artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clinical-portal-e2e-artifacts
+          path: |
+            playwright-report/
+            test-results/
+            dist/.playwright/
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: Tear down demo stack
         if: always()
         run: docker compose -f docker-compose.demo.yml down -v --remove-orphans
@@ -90,4 +102,3 @@ jobs:
       - name: Tear down demo stack
         if: always()
         run: docker compose -f docker-compose.demo.yml down -v --remove-orphans
-

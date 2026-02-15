@@ -32,3 +32,8 @@ backend/**/reports
 **/*.temp
 **/*.swp
 **/*.swo
+
+!dist/
+!dist/apps/
+!dist/apps/coaching-ui/
+!dist/apps/coaching-ui/**

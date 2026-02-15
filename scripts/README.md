@@ -119,6 +119,20 @@ REPO=owner/repo LIMIT=100 MERGE_METHOD=merge REQUIRE_APPROVAL=0 WATCH_CHECKS=1 C
 COMPOSE_FILE=docker-compose.demo.yml SINCE=2h ./scripts/capture-compose-logs.sh
 ```
 
+## Local CI (Pre-Push Gate)
+
+If GitHub Actions is unavailable or you want confidence before pushing, run:
+
+```bash
+./scripts/ci/local-ci.sh pr
+```
+
+Demo-only gate (for media capture readiness):
+
+```bash
+./scripts/ci/local-ci.sh demo
+```
+
 ### 6. `dev-shell-deployment.sh`
 
 **Purpose**: Start only the shell + deployment console MFE with the demo stack.

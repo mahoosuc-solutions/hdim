@@ -4,9 +4,9 @@ spring:
 
   # ⚠️ SECURITY: Database credentials MUST be provided via environment variables
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/healthdata_payer}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5435/healthdata_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -17,6 +17,12 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+        # Disable implicit entity scanning to avoid scanning shared authentication Tenant entity
+        "hibernate.archive.autodetection": ""
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 # HealthData Database Configuration
 healthdata:
@@ -77,6 +83,12 @@ management:
     export:
       prometheus:
         enabled: true
+  # Enable distributed tracing observations (automatic HTTP span generation)
+  observations:
+    enabled: true
+  tracing:
+    sampling:
+      probability: 1.0  # 100% sampling (development - see application-prod.yml for production)
 
 # OpenAPI/Swagger Configuration
 springdoc:
@@ -125,6 +137,50 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# OpenTelemetry Tracing Configuration
+tracing:
+  url: http://localhost:4318/v1/traces
+
+# Docker Profile
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/healthdata_db}
+    username: ${SPRING_DATASOURCE_USERNAME:healthdata}
+    password: ${SPRING_DATASOURCE_PASSWORD:healthdata_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        hibernate.archive.autodetection: ""
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    default-schema: public
+
+# OpenTelemetry Tracing Configuration (Docker)
+tracing:
+  url: http://jaeger:4318/v1/traces
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.payer: DEBUG
+    org.springframework.web: INFO
+    org.hibernate: WARN
+    org.liquibase: DEBUG
+
 # Production Profile
 ---
 spring:
@@ -139,6 +195,12 @@ logging:
   level:
     root: WARN
     com.healthdata.payer: INFO
+
+# Production Tracing Configuration
+management:
+  tracing:
+    sampling:
+      probability: 0.1  # 10% sampling (reduced overhead for production)
 
 # Test Profile
 ---

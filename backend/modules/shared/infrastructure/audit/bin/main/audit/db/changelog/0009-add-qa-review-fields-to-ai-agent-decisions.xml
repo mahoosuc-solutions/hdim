@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0009-add-qa-review-fields-to-ai-agent-decisions" author="claude-code">
+        <comment>Add QA review tracking fields to ai_agent_decision_events table</comment>
+
+        <addColumn tableName="ai_agent_decision_events">
+            <column name="reviewed_at" type="TIMESTAMP">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="ai_agent_decision_events">
+            <column name="reviewed_by" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="ai_agent_decision_events">
+            <column name="review_status" type="VARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="ai_agent_decision_events">
+            <column name="review_notes" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="ai_agent_decision_events" columnName="review_notes"/>
+            <dropColumn tableName="ai_agent_decision_events" columnName="review_status"/>
+            <dropColumn tableName="ai_agent_decision_events" columnName="reviewed_by"/>
+            <dropColumn tableName="ai_agent_decision_events" columnName="reviewed_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

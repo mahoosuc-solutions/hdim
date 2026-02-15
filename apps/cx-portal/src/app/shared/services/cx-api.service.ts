@@ -13,10 +13,11 @@ import { Lead, Investor, Customer, Activity, Bead, DashboardData, PipelineView, 
   providedIn: 'root',
 })
 export class CxApiService {
+  // Use nullish coalescing so empty-string values (same-origin) are respected.
   private baseUrl =
-    (window as any).__CX_API_URL || environment.cxApiUrl || 'http://localhost:8201';
+    (window as any).__CX_API_URL ?? environment.cxApiUrl ?? 'http://localhost:8201';
   private wsUrl =
-    (window as any).__CX_WS_URL || environment.cxWsUrl || 'ws://localhost:8201';
+    (window as any).__CX_WS_URL ?? environment.cxWsUrl ?? 'ws://localhost:8201';
 
   // WebSocket connection
   private ws: WebSocket | null = null;
@@ -203,6 +204,38 @@ export class CxApiService {
 
   getCustomerStats(): Observable<any> {
     return this.http.get(`${this.baseUrl}/api/customers/stats`);
+  }
+
+  // ============================================================================
+  // ACCESS ADMIN
+  // ============================================================================
+
+  getCustomerAccess(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/admin/customer-access`);
+  }
+
+  upsertCustomerAccess(record: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/api/admin/customer-access`, record);
+  }
+
+  deleteCustomerAccess(email: string): Observable<any> {
+    return this.http.delete<any>(
+      `${this.baseUrl}/api/admin/customer-access/${encodeURIComponent(email)}`
+    );
+  }
+
+  getIdentityAccess(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/api/admin/identity-access`);
+  }
+
+  upsertIdentityAccess(record: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/api/admin/identity-access`, record);
+  }
+
+  deleteIdentityAccess(email: string): Observable<any> {
+    return this.http.delete<any>(
+      `${this.baseUrl}/api/admin/identity-access/${encodeURIComponent(email)}`
+    );
   }
 
   // ============================================================================

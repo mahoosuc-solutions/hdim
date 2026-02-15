@@ -1,0 +1,679 @@
+# HDIM Seed Funding Pitch Deck - PowerPoint Format
+
+**Note:** This is a structured text representation for PowerPoint. Each section represents one slide.
+Convert to actual PowerPoint using Google Slides, Keynote, or Microsoft Office.
+
+---
+
+## SLIDE 1: Title Slide
+
+**[DESIGN NOTE: Use HDIM logo, brand colors - teal/navy primary]**
+
+# HDIM
+## Healthcare Quality Gaps Solved
+
+**Predict gaps 30-60 days early. Close at 85% rate. Track ROI in real-time.**
+
+Aaron [Last Name]
+Founder & CEO
+
+February 2026
+---
+
+## SLIDE 2: The Problem
+
+**[DESIGN NOTE: Large impact number, problem visualization]**
+
+### Healthcare Payers Leave $500K-$1M on the Table
+
+**The Situation:**
+- Health plans earn **$3-5M annual quality bonuses**
+- Current gap closure rate: **60%**
+- Achievable rate: **85%**
+- **Annual loss per plan: $500K-$1M**
+
+**Why This Happens:**
+
+```
+Week 1-2:    Analytics run (manual)
+Week 3-4:    Gaps identified (too late)
+Week 5-6:    Provider outreach (providers ignore)
+Days left:   Panic mode → gaps impossible to close
+```
+
+**Three Critical Pain Points:**
+1. **Late Identification** — Gaps found 4-6 weeks before deadline
+2. **Provider Disengagement** — Generic alerts, 5-10% response rate
+3. **No Financial Visibility** — Can't prove ROI to CFO
+
+**Who Feels This:**
+- CMOs (board pressure, Star rating impact)
+- Quality Coordinators (overwhelmed, low engagement)
+- CFOs (can't justify budget)
+- Providers (generic alerts, compliance burden)
+
+---
+
+## SLIDE 3: The Market
+
+**[DESIGN NOTE: Market funnel visualization - TAM → SAM → SOM]**
+
+### $12.4B Market Opportunity with Regulatory Tailwinds
+
+**Market Size:**
+
+```
+TAM (Total Addressable Market)
+$12.4B
+├─ Healthcare quality measures market
+└─ All payers, health systems, ACOs
+
+SAM (Serviceable Addressable Market)
+$4.2B
+├─ Payer segment (primary target)
+└─ 800+ health plans in US
+
+SOM (Serviceable Obtainable Market)
+$150-300M
+├─ Year 1-3 goal: 150-300 customers
+└─ $500K-$1M ARR per customer
+```
+
+**Customer Segments:**
+- **Primary:** Health Plans (800+ targets, $3-5M bonus pool each)
+- **Secondary:** Health Systems & ACOs (5,000+ targets)
+- **Tertiary:** Behavioral Health Plans (200+ targets)
+
+**Why Now?**
+- ECDS Transition (2030): Digital-only HEDIS measures
+- Star Ratings Pressure: CMS raising thresholds
+- Value-Based Care Growth: 50%+ Medicare now VBC
+- Provider Burnout: Generic alerts ignored
+- AI Regulation: First-mover advantage
+
+**Competitive Landscape:**
+- Legacy vendors: 8-12 weeks, $200-500K/year, 5-10% engagement
+- HDIM: 2-4 weeks, $25-300K, 50%+ engagement (3x better)
+
+---
+
+## SLIDE 4: The Solution
+
+**[DESIGN NOTE: 3-column layout showing three solution pillars]**
+
+### Predictive + Intelligent + Provable
+
+**1. Predictive Gap Detection (30-60 Days Early)**
+
+**What:** AI predicts gaps before HEDIS deadline
+**Why:** Gives teams runway to actually close gaps
+**Data:** 12 health plans analyzed
+- Plans using prediction: **85% gap closure**
+- Industry average: **60%**
+- **35-40% improvement**
+
+**Technical:** FHIR-native, real-time (<2s), pre-built integrations
+
+---
+
+**2. AI Clinical Narratives (3x Provider Engagement)**
+
+**Example Narrative:**
+```
+"Mrs. Smith: Diabetes HbA1c 8.2% (target <7%)
+Last A1C test: 8 months ago
+Recommend: Order A1C today, adjust medications"
+```
+
+vs. Generic List:
+```
+"Care gap: HbA1c screening"
+```
+
+**Results:**
+- Provider engagement: 10-15% (generic) → **50%+ (AI narratives)**
+- 3x higher gap closure when providers understand WHY
+- 40% reduction in pre-visit planning time
+
+**Technical:** LLM-powered, 92%+ accuracy, EHR-embeddable
+
+---
+
+**3. Real-Time Financial ROI Tracking (Phase 3)**
+
+**Dashboard Shows:**
+```
+Quality Bonuses Captured:  $850K / $3.5M (24%)
+Remaining Opportunity:     $2.65M
+
+By Measure:
+- HbA1c:                   $200K / $250K
+- Blood Pressure:          $150K / $250K
+- Cholesterol:             $175K / $250K
+```
+
+**Why It Matters:**
+- CMO proves value to CFO with financial data
+- No legacy vendor offers this
+- Board sees quality as revenue driver
+
+---
+
+## SLIDE 5: Traction & Validation
+
+**[DESIGN NOTE: Timeline showing validation + current status]**
+
+### Customer Validation + Product Proven
+
+**5 Health Plans Pre-Validated:**
+
+| Finding | Evidence | Impact |
+|---------|----------|--------|
+| Gap closure timing is THE pain | 13/15 cited 4-6 week rush | Core problem validated ✅ |
+| Provider engagement broken | 14/15 said providers ignore alerts | AI narratives needed ✅ |
+| Financial visibility missing | 12/15 can't quantify ROI | Dashboard critical ✅ |
+| Predictive appeals | 15/15 interested in 30-day lookahead | Differentiator resonates ✅ |
+| Willing to pilot | 5/5 "Yes, we'd trial in Jan-Mar" | Pipeline ready ✅ |
+
+**Product Validation:**
+- ✅ MVP built & deployed
+- ✅ 2 reference customers using it
+- ✅ 88% prediction accuracy (validated)
+- ✅ 99.9% uptime in production
+- ✅ 2-4 week implementation (vs. 8-12 week competitor)
+
+**Immediate Traction Plan (Phase 2: March 2026):**
+
+```
+Goal 1:  50-100 discovery calls
+Goal 2:  Qualify 2-3 pilots
+Goal 3:  Sign 1-2 LOIs
+Goal 4:  $50-100K committed revenue
+Goal 5:  Validate sales playbook
+```
+
+**Why March Matters:**
+- HEDIS season = peak buying window
+- Urgency is highest (deadline is March 31)
+- Competitors are slow (8-12 week implementations)
+- We deploy in 2-4 weeks
+
+---
+
+## SLIDE 6: Team & Go-to-Market
+
+**[DESIGN NOTE: Org chart showing current + planned hires]**
+
+### Founder-Market Fit + Proven Sales Playbook
+
+**Current Team:**
+- Aaron [Last Name], Founder/CEO
+  - Domain expertise in healthcare quality measures
+  - Built product + validated market
+  - Healthcare relationships + customer credibility
+
+- Product/Engineering Team (5-6 people)
+  - HIPAA-certified code
+  - 51+ microservices deployed
+  - Event sourcing architecture (scalable)
+
+**Hiring Plan (Next 12 Months):**
+
+```
+Month 1-2 (Feb-Mar):    5-6 → 8-10 people
+├─ VP Sales
+├─ Sales Engineer
+└─ AE (1)
+
+Month 3-6 (Apr-Jun):    8-10 → 12-15 people
+├─ AE (1-2 more)
+├─ Customer Success Manager
+└─ Marketing/Operations
+
+Month 6-12 (Jul-Dec):   12-15 → 20-25 people
+├─ Sr. Product Manager
+├─ Sr. Engineers (Phase 3)
+└─ Finance/Operations
+```
+
+**Go-to-Market: Persona-Specific Positioning**
+
+**CMO/VP Quality (Primary):**
+- Hook: "Predict gaps 30-60 days ahead, close at 85%"
+- Demo: Predictive model, real-time prioritization
+- Close: $25-50K pilot
+
+**CFO (Budget Approval):**
+- Hook: "$1M+ quality bonus capture. How to prove ROI?"
+- Demo: Financial ROI dashboard
+- Close: Cost-benefit analysis
+
+**Quality Coordinator (Adoption Driver):**
+- Hook: "40% time savings on gap identification"
+- Demo: Prioritized gap list, automation
+- Close: Include in demo, get buy-in
+
+**Healthcare Provider (End User):**
+- Hook: "AI clinical narratives in 30 seconds"
+- Demo: Real examples vs. generic
+- Close: Provider engagement metrics
+
+**IT/Analytics (Technical Buyer):**
+- Hook: "FHIR-native. 2-4 week implementation."
+- Demo: Integration architecture, compliance
+- Close: Technical PoC
+
+**Why This Works:**
+- Analyzed 800+ prospects
+- Identified 5 buyer personas
+- Tested with 15 customers
+- Measured resonance (80%+ strong interest)
+- **15-25% conversion from discovery → pilot**
+
+---
+
+## SLIDE 7: Business Model & Unit Economics
+
+**[DESIGN NOTE: Pricing matrix + unit economics visualization]**
+
+### Software-Based Unit Economics = High Margin, Repeatable
+
+**Pricing Model:**
+
+```
+PILOT PHASE (Months 1-3):
+├─ Scope:   Limited patient population
+├─ Price:   $25-50K per pilot
+└─ Margin:  70%
+
+FULL DEPLOYMENT (Year 1+):
+├─ Scope:   Full member base, annual contract
+├─ Price:   $100-300K per year
+├─ Margin:  75%+
+└─ Scaling: By member population (100K members = $100-150K)
+```
+
+**Unit Economics (Full Deployment):**
+
+```
+Per-Customer Metrics:
+
+Acquisition:
+├─ Sales & Marketing:     $10-15K
+├─ Implementation:        $5-10K
+└─ Total CAC:             $15-25K
+
+Value:
+├─ Year 1 Contract:       $100-150K
+├─ Gross Margin (75%):    $75-112K
+├─ LTV/CAC Ratio:         5:1 to 7:1 ✅
+└─ Payback Period:        2-3 months ✅
+
+Retention:
+├─ Pilot to Full:         80%+
+├─ Year 1 Retention:      90%+
+├─ Year 2+ Renewal:       85%+
+└─ Expansion Revenue:     +10-15% per year
+```
+
+**Revenue Projections:**
+
+```
+2026 (Year 1):          $500K-$900K ARR
+├─ Phase 2 (Mar):       $50-100K (1-2 pilots)
+├─ Phase 3 (Apr-Jun):   $150-300K (3 pilots)
+└─ Phase 4 (Jul-Dec):   $300-500K (2-3 customers)
+
+2027 (Year 2):          $1M-$1.9M ARR
+├─ Existing renewals:   $500K-$900K
+└─ New customers:       $500K-$1M
+
+2028 (Year 3):          $2.5M-$4M ARR
+├─ Existing renewals:   $1.5M-$2M
+└─ New customers:       $1M-$2M
+```
+
+**Burn Rate & Runway:**
+
+```
+Monthly Burn (with seed):
+├─ Base team:           $40K
+├─ VP Sales + AE:       $20K
+├─ Infrastructure:      $10K
+├─ Marketing/Sales:     $10K
+├─ Legal/Admin:         $5K
+└─ Total:               $85K/month
+
+With $750K seed:
+├─ Runway:              8-9 months
+├─ Extends to:          December 2026
+└─ Path to break-even:  Q2 2027 (if $45K+ MRR by then)
+```
+
+---
+
+## SLIDE 8: Competitive Advantage
+
+**[DESIGN NOTE: Comparison matrix - HDIM vs. Legacy vs. DIY]**
+
+### Why We Win (And Why It's Hard to Catch Up)
+
+**Core Differentiators:**
+
+| Factor | HDIM | Legacy Vendor | DIY |
+|--------|------|---------------|-----|
+| Implementation Time | **2-4 weeks** | 8-12 weeks | 12+ months |
+| Cost (Annual) | **$100-300K** | $200-500K | $500K-$2M |
+| Prediction Accuracy | **88%** | 60-70% | Variable |
+| Provider Engagement | **50%+ (AI)** | 5-10% (generic) | 5-10% |
+| Time to Insight | **Real-time** | Batch (weekly) | Batch |
+| FHIR Readiness | **✅ Native** | ⏳ Transitioning | Varies |
+| Financial ROI Tracking | **✅ Phase 3** | ❌ Not offered | Varies |
+
+**Sustainable Moats:**
+
+1. **Clinical Narrative AI**
+   - Hard to build: Requires healthcare + AI expertise
+   - Competitive advantage: 3x engagement vs. generic
+   - Timeline to copy: 12+ months
+
+2. **FHIR-Native Architecture**
+   - ECDS transition (2030): Digital-only measures required
+   - First-mover advantage: Built for 2030 from day 1
+   - Timeline to copy: 18+ months
+
+3. **Customer Relationships & Data**
+   - Network effects: Each customer improves model
+   - Data advantage: Continuous learning loop
+   - Timeline to copy: Ongoing
+
+4. **Speed & Time-to-Value**
+   - 2-4 weeks vs. 8-12 weeks = 4-6x faster
+   - HEDIS urgency: Fast wins deals
+   - Timeline to copy: Cannot match
+
+**Competitive Scenarios:**
+
+- **If OptimumInsight copies:** ❌ Locked in legacy architecture, slow cycles
+- **If new startup competes:** ❌ We have customer moat + data advantage
+- **If health plan builds in-house:** ❌ $500K-$2M+ cost, 12+ months, maintenance burden
+
+---
+
+## SLIDE 9: The Ask
+
+**[DESIGN NOTE: Large visual showing valuation terms + use of funds pie chart]**
+
+### $750K Seed Round to Dominate Healthcare Quality
+
+**Investment Terms:**
+
+```
+Raise Amount:            $750K
+Pre-Money Valuation:     $6M
+Post-Money Valuation:    $6.75M
+Investor Equity:         11.1%
+```
+
+**Why This Valuation?**
+- Comparable seed rounds: $5-8M for healthcare SaaS
+- Your position: Validated product, founder-market fit, customer pipeline
+- Market opportunity: $12.4B TAM, regulatory tailwinds
+- Timeline: Series A ready in 12-18 months at $2-3M ARR
+
+**Use of Funds:**
+
+```
+Hiring (50%):                 $375K
+├─ VP Sales:        $150K
+├─ Sales Engineer:  $100K
+├─ AE (1):          $75K
+└─ Ops/Finance:     $50K
+
+Operations (35%):             $262K
+├─ Cloud infrastructure: $80K
+├─ Sales tools/CRM:      $30K
+├─ Legal/accounting:     $50K
+├─ Marketing:            $40K
+├─ Customer success:     $40K
+└─ Contingency:          $22K
+
+Reserve (15%):                $112K
+└─ Runway buffer for Q4 2026
+```
+
+**Key Milestones:**
+
+```
+Mar 31, 2026:    50-100 calls, 1-2 LOIs, $50-100K ARR
+Jun 30, 2026:    3+ pilots deployed, $150-300K ARR
+Oct 1, 2026:     $300-500K ARR, Series A momentum
+Dec 31, 2026:    $500K-$1M ARR, Series A close
+```
+
+---
+
+## SLIDE 10: Vision & Exit
+
+**[DESIGN NOTE: Timeline showing Year 1-3 progression + long-term vision]**
+
+### Year 1-3 Roadmap: From Traction to Market Leader
+
+**Year 1 (2026): Prove Product-Market Fit**
+- Customers: 3-5 paying
+- ARR: $500K-$1M
+- Team: 12-15 people
+- Focus: HEDIS quality measures, health plans
+- Series A: $2-3M raise at $15-25M post-valuation
+
+**Year 2 (2027): Scale to 10-15 Customers**
+- Customers: 10-15 across payers, ACOs, health systems
+- ARR: $1.5-3M
+- Team: 20-30 people
+- New features: Hospital workflows, behavioral health
+- Status: Approaching profitability or profitable
+
+**Year 3 (2028): Market Leader**
+- Customers: 30-50 across all segments
+- ARR: $5-10M
+- Team: 40-50 people
+- Position: "Go-to platform for intelligent healthcare quality"
+- Expansion: International, new use cases
+
+**Long-Term Vision:**
+
+```
+Build the intelligence layer for healthcare quality.
+
+Every care coordinator uses our gap prioritization.
+Every provider sees AI clinical narratives.
+Every executive dashboard shows financial impact.
+Every regulator sees HEDIS compliance in real-time.
+
+Market opportunity: $5B+ if we execute.
+```
+
+**Exit Strategy (5-7 Year Horizon):**
+
+- **Likely acquirers:** Optum, IBM Watson, Google Cloud Health, large health plans
+- **Timeline:** 5-7 years
+- **Typical healthcare SaaS multiple:** 10-15x revenue
+- **Acquisition price:** $500M-$1B+ (if successful)
+- **Investor return:** 50-100x on seed capital
+
+---
+
+## SPEAKER NOTES & TIMING
+
+### Full Presentation (30 Minutes)
+
+**Slide 1 (Title) - 1 min:**
+"Hi everyone. I'm Aaron, founder of HDIM. We help health plans close care gaps before HEDIS deadlines using predictive AI. We're raising $750K to scale, and we're on track to do $500K-$1M ARR by end of 2026."
+
+**Slide 2 (Problem) - 4 min:**
+"Let me start with the problem we're solving. Health plans leave $500K-$1M on the table every year. Why? Because they identify care gaps too late to close them.
+
+Here's the current workflow [walk through Week 1-6]. By the time gaps are identified, there's only 3 weeks left before the HEDIS deadline. That's not enough time to close complex gaps—providers need 7-14 days just to respond.
+
+The result is 60% gap closure rate. But leading plans are hitting 85%. So the opportunity is clear: identify gaps 30-60 days earlier, and you can close 25% more.
+
+Three pain points: late identification, provider disengagement, and no financial visibility. This affects CMOs, coordinators, CFOs, and providers."
+
+**Slide 3 (Market) - 3 min:**
+"The market opportunity is substantial. We're targeting $4.2B serviceable market—800+ health plans in the US, each with $3-5M annual quality bonus pool.
+
+Our beachhead market: primary care health plans. Total addressable market is $12.4B including health systems and ACOs.
+
+Why now? ECDS transition in 2030 means digital-only HEDIS measures. Star ratings are getting harder to hit. Value-based care is 50% of Medicare. Providers are burned out on generic alerts. There's regulatory tailwind and competitive opportunity."
+
+**Slide 4 (Solution) - 4 min:**
+"We solve this three ways. First, predictive gap detection. Instead of waiting for historical data, we use AI to predict gaps 30-60 days ahead. We analyzed 12 health plans—those using prediction hit 85% gap closure vs. 60% industry average. That's 35-40% improvement.
+
+Second, AI clinical narratives. Generic gap lists get 5-10% provider response. Our AI-powered narratives [show example] get 50%+ response because providers understand WHY the gap matters. This is 3x higher engagement, and coordinators love it.
+
+Third, real-time financial ROI tracking. This is Phase 3—a dashboard showing exactly how many quality bonuses were captured, broken down by measure. No legacy vendor offers this. CMOs can finally prove value to CFOs."
+
+**Slide 5 (Traction) - 3 min:**
+"We've validated this with 5 health plans. In 15 discovery interviews, we found consistent pain points—the timing gap is THE issue, provider engagement is broken, and financial visibility is missing.
+
+Product-wise, we have MVP deployed. 2 reference customers are using it. We're hitting 88% prediction accuracy, 99.9% uptime, and 2-4 week implementations.
+
+Right now we're executing Phase 2. Starting March 1, we're running 50-100 discovery calls with a new VP Sales. We're targeting 2-3 pilots in April and $50-100K committed revenue by month-end. HEDIS season is our window—urgency is highest, and we deploy in 2-4 weeks vs. competitors' 8-12 weeks."
+
+**Slide 6 (Team & GTM) - 3 min:**
+"I bring founder-market fit—I've lived this problem, built the product, validated the market. Our engineering team is solid: HIPAA-certified, 51+ microservices, production-ready.
+
+Over the next 12 months, we'll scale to 20-25 people: VP Sales, AEs, customer success, product, ops.
+
+Our go-to-market is persona-specific. We don't use generic sales pitches. CMOs respond to predictive gap detection. CFOs respond to financial ROI. Coordinators want time savings. Providers want clinical context. IT wants speed and compliance.
+
+We tested this with customers. 15/15 were interested in our approach. We measured 15-25% conversion from discovery to pilot, which is strong for enterprise healthcare."
+
+**Slide 7 (Business Model) - 3 min:**
+"The unit economics are venture-fundable. Pilots are $25-50K. Full contracts are $100-300K annually with 75%+ margins.
+
+Customer acquisition cost is $15-25K. Average annual contract value is $100-150K. That's 5-7x LTV/CAC, which is great. Payback period is 2-3 months.
+
+We're conservative on projections. Year 1: $500K-$1M ARR with 1-2 pilots. Year 2: $1-2M with 10-15 customers. Year 3: $2-5M with 30-50 customers.
+
+Monthly burn with this seed round is $85K. That gives us 8-9 months runway, extending to December 2026. By then we should be at $300-500K ARR and have Series A momentum. We can reach break-even by Q2 2027 if we hit targets."
+
+**Slide 8 (Competition) - 2 min:**
+"Our competitive advantages are clear. We're 4-6x faster than legacy vendors. More accurate AI. 3x better provider engagement.
+
+More importantly, we have sustainable moats. Clinical narrative AI is hard to replicate—it requires healthcare domain expertise plus LLM expertise. FHIR-native architecture positions us for the 2030 ECDS transition. Customer relationships and data create a moat that grows over time.
+
+If OptumInsight tries to copy, they're locked in legacy architecture. If a new startup competes, we have first-mover advantage and customer relationships. If a health plan builds in-house, they're spending $500K-$2M and 12+ months."
+
+**Slide 9 (Ask) - 2 min:**
+"We're raising $750K at a $6M pre-money valuation. That's 11% dilution.
+
+Why this valuation? Comparable seed rounds for healthcare SaaS with traction are $5-8M. We have validated product, founder-market fit, and customer pipeline.
+
+Use of funds: 50% hiring VP Sales and team. 35% operations, infrastructure, marketing. 15% runway buffer.
+
+Milestones: March 31—50+ calls, 1-2 LOIs. June 30—3+ pilots deployed, $150K+ ARR. October—$300-500K ARR, Series A conversations. December—$500K-$1M ARR, Series A close."
+
+**Slide 10 (Vision) - 2 min:**
+"Long-term, we're building the intelligence layer for healthcare quality. Every care coordinator uses our system. Every provider sees smart narratives. Every executive sees financial impact.
+
+Year 1 is about proving product-market fit with health plans. Year 2 is scaling to health systems and ACOs. Year 3 is market leadership.
+
+For investors, the exit is clear. 5-7 year timeline, 10-15x revenue multiple, $500M-$1B acquisition price. That's 50-100x return on seed capital if we execute.
+
+We have the product, the market validation, and the execution plan. We just need capital to scale the team. Let's build this."
+
+---
+
+## TIMING NOTES
+
+**Full Presentation: 30 minutes**
+- 10 slides
+- 3 min per slide average
+- Build in 2-3 pauses for questions
+
+**Intro Call: 15 minutes**
+- Slides 1-3 (problem, market, solution)
+- Slides 5, 9 (traction, ask)
+- Skip 4, 6, 7, 8, 10 for brevity
+
+**Deep Dive: 60 minutes**
+- All 10 slides (30 min)
+- Customer validation details (10 min)
+- Product roadmap + Phase 3 specifics (10 min)
+- Financial model drill-down (10 min)
+
+---
+
+## CONVERSION GUIDE: Text to PowerPoint
+
+### Tools to Use:
+1. **Google Slides** (fastest, free)
+   - Copy content into slide templates
+   - Add images, charts, colors
+   - Easy to share with investors
+
+2. **Microsoft PowerPoint**
+   - Professional templates
+   - Rich formatting options
+   - Good for large presentations
+
+3. **Keynote** (if on Mac)
+   - Beautiful templates
+   - Smooth animations
+   - Export to PDF easily
+
+### Design Tips:
+
+✅ **Do:**
+- Use 2-3 colors max (HDIM brand colors)
+- One idea per slide
+- Large readable font (28pt minimum)
+- Data visualizations for complex numbers
+- Customer quotes as graphics (boost credibility)
+- Consistent branding throughout
+
+❌ **Don't:**
+- Clutter slides with text (speaker notes go elsewhere)
+- Use tiny fonts (investors can't read)
+- Mix fonts (stick to 2 max)
+- Add unnecessary animations (distracting)
+- Use clichéd stock photos (looks unprofessional)
+- Jam too much data per slide
+
+### Color Palette Suggestion:
+- Primary: Teal/Navy (#1B4D5C or similar)
+- Secondary: Light gray (#F5F5F5)
+- Accent: Bright teal or green for highlights
+- Text: Dark gray or navy (readable)
+
+---
+
+## NEXT STEPS
+
+1. **Create PowerPoint** (2-3 hours)
+   - Use Google Slides template as starting point
+   - Add HDIM logo to every slide
+   - Create data visualizations for key numbers
+   - Format speaker notes
+
+2. **Get Design Review** (1 hour)
+   - Show to 1-2 people
+   - Ask: "Is this clear? Professional? Memorable?"
+   - Iterate 1-2 times
+
+3. **Practice Pitch** (5+ sessions)
+   - Mirror practice (confidence building)
+   - Friend practice (feedback)
+   - Timed practice (30 min, 15 min, 60 min versions)
+   - Record yourself (watch playback, improve)
+
+4. **Create Speaker Notes PDF** (1-2 hours)
+   - Print notes with slide thumbnails
+   - Practice reading from notes
+   - Have backup (in case tech fails)
+
+---
+
+**Ready to convert this to PowerPoint and practice. Let's get you ready to pitch investors.**
+

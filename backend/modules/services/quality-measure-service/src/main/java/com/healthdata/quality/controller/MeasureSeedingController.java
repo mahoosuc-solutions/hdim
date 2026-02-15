@@ -146,7 +146,7 @@ public class MeasureSeedingController {
             .measureCategory("HEDIS")
             .measureYear(LocalDate.now().getYear())
             .numeratorCompliant(isCompliant)
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .complianceRate(isCompliant ? 100.0 : 0.0)
             .score(isCompliant ? 1.0 : 0.0)
             .calculationDate(LocalDate.now())

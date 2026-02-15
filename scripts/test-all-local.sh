@@ -148,6 +148,10 @@ else
   exit 1
 fi
 
+echo ""
+echo "Ensuring demo stack is clean (down -v) before bringing it up..."
+docker compose -f docker-compose.demo.yml down -v --remove-orphans || true
+
 if ! docker compose -f docker-compose.demo.yml up -d; then
   echo ""
   echo "docker compose up failed. Recent status/logs:"

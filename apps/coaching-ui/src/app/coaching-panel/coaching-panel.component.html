@@ -1,49 +1,125 @@
 <div class="coaching-panel">
-  <!-- Current speaker & transcript -->
-  <div class="current-speaker">
-    <div class="speaker-label">{{ currentSpeaker || 'Waiting for speaker...' }}</div>
-    <div class="transcript-preview">{{ latestTranscript || 'No transcript yet' }}</div>
+  <div class="top-bar">
+    <div class="title-block">
+      <h1>AI Sales Operator Console</h1>
+      <p>Live oversight for agent decisions and call execution.</p>
+    </div>
+    <div class="status-cluster">
+      <span class="pill" [class.good]="wsConnected">{{ wsConnected ? 'WebSocket connected' : 'WebSocket disconnected' }}</span>
+      <span class="pill" [class.good]="apiConnected">{{ apiConnected ? 'API connected' : 'API disconnected' }}</span>
+      <span class="pill" [class.good]="callActive">{{ callActive ? 'Call active' : 'Call idle' }}</span>
+      <span class="pill">{{ role === 'operator' ? 'Operator mode' : 'Viewer mode' }}</span>
+      <span class="pill" [ngClass]="getRiskClass(agentState.riskLevel)">Risk: {{ agentState.riskLevel }}</span>
+    </div>
   </div>
 
-  <!-- Call status -->
-  <div class="call-status" [class.active]="callActive">
-    <span class="status-indicator" [class.active]="callActive"></span>
-    <span class="status-text">{{ callActive ? 'Call Active' : 'Waiting for call...' }}</span>
+  <div class="agent-summary">
+    <div class="summary-card">
+      <label>Objective</label>
+      <p>{{ agentState.objective }}</p>
+    </div>
+    <div class="summary-card">
+      <label>Current phase</label>
+      <p>{{ agentState.phase }}</p>
+    </div>
+    <div class="summary-card">
+      <label>Confidence</label>
+      <p>{{ (agentState.confidence * 100).toFixed(0) }}%</p>
+    </div>
+    <div class="summary-card">
+      <label>Next action</label>
+      <p>{{ agentState.nextAction }}</p>
+    </div>
+    <div class="summary-card">
+      <label>Autonomy</label>
+      <p>{{ agentState.autonomy }}</p>
+    </div>
   </div>
 
-  <!-- Coaching messages -->
-  <div class="messages-container">
-    <div *ngFor="let msg of messages" [attr.data-type]="msg.type" [ngClass]="'coaching-message ' + getSeverityClass(msg.severity)">
-      <div class="message-header">
-        <span class="message-type">{{ getTypeLabel(msg.type) }}</span>
-        <span class="confidence">{{ (msg.confidence * 100).toFixed(0) }}% confident</span>
-        <button class="dismiss-btn" (click)="dismissMessage(msg)" aria-label="Dismiss message">×</button>
+  <div class="workspace">
+    <section class="panel action-queue">
+      <div class="panel-head">
+        <h2>Pending Agent Actions</h2>
+        <span>{{ actionQueue.length }} pending</span>
       </div>
-
-      <div class="message-body">
-        <p class="message-text">{{ msg.message }}</p>
-
-        <!-- Objection reframe -->
-        <div *ngIf="msg.reframe" class="reframe">
-          <strong>🔄 Reframe:</strong>
-          <p>{{ msg.reframe }}</p>
+      <div class="panel-body">
+        <div *ngFor="let action of actionQueue" class="action-card">
+          <div class="action-top">
+            <h3>{{ action.title }}</h3>
+            <span class="impact" [ngClass]="'impact-' + action.impact">{{ action.impact }} impact</span>
+          </div>
+          <p>{{ action.rationale }}</p>
+          <div class="action-meta">Queued {{ action.createdAt | date:'shortTime' }}</div>
+          <div class="action-controls">
+            <button class="btn approve" [disabled]="role !== 'operator'" (click)="decideAction(action, 'approved')">Approve</button>
+            <button class="btn revise" [disabled]="role !== 'operator'" (click)="decideAction(action, 'revision_requested')">Request revision</button>
+            <button class="btn reject" [disabled]="role !== 'operator'" (click)="decideAction(action, 'rejected')">Reject</button>
+          </div>
         </div>
 
-        <!-- Suggested question -->
-        <div *ngIf="msg.suggested_question" class="suggestion">
-          <strong>❓ Try asking:</strong>
-          <p>"{{ msg.suggested_question }}"</p>
+        <div *ngIf="actionQueue.length === 0" class="empty-state">
+          <p>No pending decisions.</p>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Empty state -->
-    <div *ngIf="messages.length === 0 && callActive" class="empty-state">
-      <p>🎯 Listening to call... Coaching suggestions will appear here.</p>
-    </div>
+    <section class="panel transcript-panel">
+      <div class="panel-head">
+        <h2>Live Transcript + Coaching</h2>
+      </div>
+      <div class="panel-body">
+        <div class="transcript-live">
+          <div class="speaker-label">{{ currentSpeaker || 'Waiting for speaker...' }}</div>
+          <div class="transcript-preview">{{ latestTranscript || 'No transcript yet' }}</div>
+        </div>
 
-    <div *ngIf="messages.length === 0 && !callActive" class="empty-state">
-      <p>⏳ Waiting for coaching bot to join call...</p>
-    </div>
+        <div *ngFor="let msg of messages" [attr.data-type]="msg.type" [ngClass]="'coaching-message ' + getSeverityClass(msg.severity)">
+          <div class="message-header">
+            <span class="message-type">{{ getTypeLabel(msg.type) }}</span>
+            <span class="confidence">{{ (msg.confidence * 100).toFixed(0) }}% confident</span>
+            <button class="dismiss-btn" (click)="dismissMessage(msg)" aria-label="Dismiss message">×</button>
+          </div>
+          <div class="message-body">
+            <p class="message-text">{{ msg.message }}</p>
+            <div *ngIf="msg.reframe" class="reframe">
+              <strong>Reframe</strong>
+              <p>{{ msg.reframe }}</p>
+            </div>
+            <div *ngIf="msg.suggested_question" class="suggestion">
+              <strong>Suggested question</strong>
+              <p>"{{ msg.suggested_question }}"</p>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="messages.length === 0" class="empty-state">
+          <p>Waiting for coaching signals.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel decision-log">
+      <div class="panel-head">
+        <h2>Decision History</h2>
+        <div class="panel-actions">
+          <button class="link-btn" (click)="exportActivity('json')">Export JSON</button>
+          <button class="link-btn" (click)="exportActivity('csv')">Export CSV</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div *ngFor="let event of decisionHistory" class="decision-item">
+          <div class="decision-main">
+            <strong>{{ getDecisionLabel(event.decision) }}</strong>
+            <span>{{ event.actionTitle }}</span>
+          </div>
+          <div class="decision-meta">
+            <span>{{ event.operator }}</span>
+            <span>{{ event.decidedAt | date:'shortTime' }}</span>
+          </div>
+        </div>
+        <div *ngIf="decisionHistory.length === 0" class="empty-state">
+          <p>No decisions recorded yet.</p>
+        </div>
+      </div>
+    </section>
   </div>
 </div>

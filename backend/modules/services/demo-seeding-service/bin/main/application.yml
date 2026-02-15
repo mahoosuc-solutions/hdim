@@ -56,16 +56,30 @@ demo:
     name: ${POSTGRES_DB:healthdata_demo}
   generation:
     default-care-gap-percentage: 28
-    default-patient-count: 5000
+    default-patient-count: 200
     batch-size: 100
+  population:
+    pediatric-pct: 0.10
+    geriatric-pct: 0.15
+    chronic-pct: 0.30
+    behavioral-pct: 0.12
+    preventive-pct: 0.12
+  encounters:
+    past-years: 2
+    future-years: 1
+    future-count: 1
+  multi-tenant:
+    patients-per-tenant: 1200
+    care-gap-percentage: 30
+    tenant-ids: summit-care-2026,valley-health-2026
   # Cache warmup on startup
   cache:
     warmup:
       enabled: ${DEMO_CACHE_WARMUP:true}
   # Performance tuning
   performance:
-    parallel-generation: true
-    max-concurrent-requests: 16
+    parallel-generation: false
+    max-concurrent-requests: 2
   # Enable persistence to downstream services (FHIR, Care Gap)
   persistence:
     enabled: ${DEMO_PERSISTENCE_ENABLED:true}
@@ -83,6 +97,10 @@ demo:
       url: ${GATEWAY_DB_URL:jdbc:postgresql://postgres:5432/gateway_db}
       username: ${GATEWAY_DB_USER:healthdata}
       password: ${GATEWAY_DB_PASSWORD:healthdata_password}
+    care-gap-db:
+      url: ${CARE_GAP_DB_URL:jdbc:postgresql://postgres:5432/caregap_db}
+      username: ${CARE_GAP_DB_USER:healthdata}
+      password: ${CARE_GAP_DB_PASSWORD:demo_password_2024}
 
 # Logging
 logging:

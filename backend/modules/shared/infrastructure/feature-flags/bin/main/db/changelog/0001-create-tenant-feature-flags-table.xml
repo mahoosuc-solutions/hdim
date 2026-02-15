@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0001-create-tenant-feature-flags-table" author="claude">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="tenant_feature_flags"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="tenant_feature_flags">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="feature_key" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="config_json" type="TEXT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_by" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+
+        <addUniqueConstraint
+            tableName="tenant_feature_flags"
+            columnNames="tenant_id, feature_key"
+            constraintName="uk_tenant_feature_flags_tenant_feature"/>
+
+        <createIndex indexName="idx_tenant_feature_flags_tenant_id"
+                     tableName="tenant_feature_flags">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tenant_feature_flags_feature_key"
+                     tableName="tenant_feature_flags">
+            <column name="feature_key"/>
+        </createIndex>
+
+        <createIndex indexName="idx_tenant_feature_flags_enabled"
+                     tableName="tenant_feature_flags">
+            <column name="enabled"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="tenant_feature_flags"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="0001-insert-default-feature-flags" author="claude">
+        <comment>Insert default feature flags for all integrations</comment>
+
+        <insert tableName="tenant_feature_flags">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="feature_key" value="twilio-sms-reminders"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"reminder_days": [1, 3, 7], "default_from_number": null}'/>
+            <column name="created_by" value="system"/>
+            <column name="updated_by" value="system"/>
+        </insert>
+
+        <insert tableName="tenant_feature_flags">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="feature_key" value="smart-on-fhir"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"client_id": null, "launch_url": null}'/>
+            <column name="created_by" value="system"/>
+            <column name="updated_by" value="system"/>
+        </insert>
+
+        <insert tableName="tenant_feature_flags">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="feature_key" value="cds-hooks"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"discovery_url": null, "enabled_hooks": []}'/>
+            <column name="created_by" value="system"/>
+            <column name="updated_by" value="system"/>
+        </insert>
+
+        <insert tableName="tenant_feature_flags">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="feature_key" value="nowpow-sdoh"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"api_key": null, "region": "us"}'/>
+            <column name="created_by" value="system"/>
+            <column name="updated_by" value="system"/>
+        </insert>
+
+        <insert tableName="tenant_feature_flags">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="default"/>
+            <column name="feature_key" value="validic-rpm"/>
+            <column name="enabled" valueBoolean="false"/>
+            <column name="config_json" value='{"org_id": null, "api_key": null}'/>
+            <column name="created_by" value="system"/>
+            <column name="updated_by" value="system"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="tenant_feature_flags">
+                <where>tenant_id = 'default'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

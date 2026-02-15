@@ -32,6 +32,14 @@ This checklist is meant to be *repeatable*. Capture media only after `docs/DEMO_
 
 Pick the minimum set that tells the story:
 
+### Research-Driven “Hero Set” (Recommended)
+
+1. Predictive care gaps surfaced (30-60 day look-ahead) on dashboard
+2. Drilldown from prediction to patient/care gap context
+3. Care gaps execution loop (prioritize, view detail, take action or document next step)
+4. FHIR-native proof point (`/fhir/metadata` + one read path)
+5. Auditability proof point (audit log viewer + detail/export)
+
 ### A. Patient Context -> Action
 
 1. Patients list (search/filter if available)
@@ -66,6 +74,12 @@ SCREENSHOT_DIR=docs/releases/<version>/media/screenshots/agent-browser \
 ./scripts/agent-browser/nav-global.sh
 ```
 
+Release-focused runner (recommended):
+
+```bash
+./scripts/media/capture-release-screenshots.sh vX.Y.Z-rcN smoke
+```
+
 Run the rest of the suites as needed:
 - `./scripts/agent-browser/provider-care-gaps.sh`
 - `./scripts/agent-browser/quality-reports.sh`
@@ -78,4 +92,3 @@ Use Playwright video recording for deterministic clips:
 - Export MP4s into `docs/releases/<version>/media/videos/`
 
 Once we pick the exact “hero set”, we can implement the storyboard suite.
-

@@ -15,6 +15,9 @@
     "e2e:run:firefox": "cypress run --browser firefox",
     "e2e:run:dashboard": "cypress run --spec 'cypress/e2e/nurse-dashboard-workflows.cy.ts'",
     "e2e:run:ci": "cypress run --record --headed=false --browser chrome",
+    "ci:local": "./scripts/ci/local-ci.sh pr",
+    "ci:local:quick": "./scripts/ci/local-ci.sh quick",
+    "ci:local:demo": "./scripts/ci/local-ci.sh demo",
     "test:contracts": "nx run clinical-portal:test-contracts",
     "pact:publish": "nx run clinical-portal:pact-publish",
     "test:mcp": "node --test scripts/mcp/nx-mcp-config.test.mjs && node scripts/mcp/run-smoke.mjs"

@@ -3,7 +3,7 @@
   "workflow_metadata": {
     "workflow_id": "hdim-release-validation",
     "version": "1.0.0",
-    "description": "Comprehensive release validation workflow for HDIM platform with 5 phases and 20 validation tasks",
+    "description": "Comprehensive release validation workflow for HDIM platform with 5 phases and 21 validation tasks",
     "author": "HDIM Platform Team",
     "created_date": "2026-01-20",
     "max_iterations_per_phase": 10,
@@ -375,6 +375,27 @@
           "retry_on_failure": false
         },
         {
+          "task_id": "task-16a",
+          "name": "CX Access Admin Endpoint Validation",
+          "prompt": "Validate CX access-admin endpoints are reachable and properly protected in the target deployment.\n\n**Actions:**\n1. Set SERVICE_URL to target API endpoint\n2. Run ./scripts/release-validation/validate-cx-access-admin.sh v{VERSION}\n3. Verify unauthenticated requests to:\n   - /api/admin/customer-access\n   - /api/admin/identity-access\n   are rejected (401/403)\n4. If admin token available, set ADMIN_BEARER_TOKEN and re-run\n5. If safe in environment, set ALLOW_WRITE=true and verify create/delete smoke path\n6. Review generated report\n\n**Completion Criteria:**\n- /health and /api/auth/config return 200\n- Unauthenticated admin endpoint access is rejected\n- Authenticated admin list checks pass when token provided\n- Optional write-path smoke check passes when enabled\n\n**Validation Command:**\nSERVICE_URL=<target-url> ./scripts/release-validation/validate-cx-access-admin.sh v{VERSION}\n\n**Expected Output:**\ndocs/releases/v{VERSION}/validation/cx-access-admin-validation-report.md",
+          "completion_criteria": [
+            "/health and /api/auth/config return 200",
+            "Unauthenticated access to admin access endpoints is rejected (401/403)",
+            "Authenticated admin checks pass when ADMIN_BEARER_TOKEN is provided",
+            "Optional write-path smoke check passes when ALLOW_WRITE=true",
+            "Report created: docs/releases/v{VERSION}/validation/cx-access-admin-validation-report.md"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-cx-access-admin.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/cx-access-admin-validation-report.md"
+          ],
+          "blocking": false,
+          "timeout_seconds": 180,
+          "retry_on_failure": true
+        },
+        {
           "task_id": "task-16",
           "name": "Production Deployment Checklist Validation",
           "prompt": "Validate PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md is complete and accurate.\n\n**Actions:**\n1. Check if docs/releases/v{VERSION}/PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md exists\n2. If not, auto-generate from template\n3. Validate checklist includes:\n   - Pre-deployment tasks (backups, secrets rotation, DNS updates)\n   - Deployment steps (sequential, executable commands)\n   - Post-deployment validation steps (health checks, smoke tests)\n   - Rollback procedures (with specific commands)\n   - Communication plan (stakeholder notifications)\n4. Verify all steps are testable and have clear success criteria\n\n**Completion Criteria:**\n- PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md exists\n- Pre-deployment section complete\n- Deployment steps clear and executable\n- Post-deployment validation checklist present\n- Rollback procedure documented with commands\n\n**Auto-Generation:**\nIf file missing: ./scripts/release-validation/generate-release-docs.sh v{VERSION}\n\n**Expected Output:**\ndocs/releases/v{VERSION}/PRODUCTION_DEPLOYMENT_CHECKLIST_v{VERSION}.md",
@@ -505,7 +526,7 @@
       "phase_1": "/ralph-loop \"Execute Phase 1: Code Quality & Testing Validation. Complete tasks 01-04. Output <promise>PHASE_1_COMPLETE</promise> when all validation reports created and tests pass.\" --max-iterations 10 --completion-promise \"PHASE_1_COMPLETE\"",
       "phase_2": "/ralph-loop \"Execute Phase 2: Documentation Completeness Validation. Complete tasks 05-08. Auto-generate missing docs. Output <promise>PHASE_2_COMPLETE</promise> when all documentation validated.\" --max-iterations 10 --completion-promise \"PHASE_2_COMPLETE\"",
       "phase_3": "/ralph-loop \"Execute Phase 3: Integration & Configuration Validation. Complete tasks 09-12. Output <promise>PHASE_3_COMPLETE</promise> when all integration checks pass.\" --max-iterations 10 --completion-promise \"PHASE_3_COMPLETE\"",
-      "phase_4": "/ralph-loop \"Execute Phase 4: Deployment Readiness Validation. Complete tasks 13-16. Output <promise>PHASE_4_COMPLETE</promise> when Docker builds complete and deployment checklist validated.\" --max-iterations 10 --completion-promise \"PHASE_4_COMPLETE\"",
+      "phase_4": "/ralph-loop \"Execute Phase 4: Deployment Readiness Validation. Complete tasks 13-16a and 16. Output <promise>PHASE_4_COMPLETE</promise> when deployment checks, CX access-admin validation, and checklist review are complete.\" --max-iterations 10 --completion-promise \"PHASE_4_COMPLETE\"",
       "phase_5": "/ralph-loop \"Execute Phase 5: Final Release Preparation. Complete tasks 17-20. Output <promise>PHASE_5_COMPLETE</promise> when git tag created and GitHub release published.\" --max-iterations 10 --completion-promise \"PHASE_5_COMPLETE\""
     }
   }

@@ -191,6 +191,38 @@ EXPECTED_PATIENTS_PER_TENANT=100 ./scripts/verify-seeding-counts.sh
 TENANTS=summit-care-2026,valley-health-2026 ./scripts/verify-seeding-counts.sh
 ```
 
+### 10. `release-validation/validate-cx-access-admin.sh`
+
+**Purpose**: Validate CX access-admin API rollout (health, auth enforcement, optional admin CRUD checks).
+
+**What it does**:
+- Checks `GET /health` and `GET /api/auth/config`
+- Verifies unauthenticated access to:
+  - `GET /api/admin/customer-access`
+  - `GET /api/admin/identity-access`
+  is rejected (`401/403`)
+- Optionally (with admin token) verifies authenticated list access (`200`)
+- Optionally (with `ALLOW_WRITE=true`) runs write-path smoke test for identity access create/delete
+
+**Usage**:
+```bash
+# Read-only checks (public + auth-required behavior)
+SERVICE_URL=https://cx-api-xxxx.a.run.app \
+  ./scripts/release-validation/validate-cx-access-admin.sh
+
+# Authenticated list checks
+SERVICE_URL=https://cx-api-xxxx.a.run.app \
+ADMIN_BEARER_TOKEN=<admin-jwt> \
+  ./scripts/release-validation/validate-cx-access-admin.sh
+
+# Full smoke (includes create/delete test record)
+SERVICE_URL=https://cx-api-xxxx.a.run.app \
+ADMIN_BEARER_TOKEN=<admin-jwt> \
+ALLOW_WRITE=true \
+TEST_EMAIL=cx-access-test@example.com \
+  ./scripts/release-validation/validate-cx-access-admin.sh
+```
+
 ---
 
 ## Quick Start

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0003-create-ai-agent-decision-events-table" author="healthdata-system">
+        <comment>AI Agent Decision Events table for tracking AI recommendations and decisions</comment>
+
+        <createTable tableName="ai_agent_decision_events">
+            <column name="event_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="timestamp" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(100)"/>
+            <column name="agent_id" type="varchar(255)"/>
+            <column name="agent_type" type="varchar(50)"/>
+            <column name="agent_version" type="varchar(50)"/>
+            <column name="model_name" type="varchar(100)"/>
+            <column name="decision_type" type="varchar(50)"/>
+            <column name="resource_type" type="varchar(100)"/>
+            <column name="resource_id" type="varchar(255)"/>
+            <column name="customer_tier" type="varchar(50)"/>
+            <column name="patient_count" type="bigint"/>
+            <column name="provider_count" type="integer"/>
+            <column name="average_daily_messages" type="bigint"/>
+            <column name="traffic_tier" type="varchar(20)"/>
+            <column name="input_metrics" type="jsonb"/>
+            <column name="user_query" type="text"/>
+            <column name="config_type" type="varchar(255)"/>
+            <column name="current_value" type="varchar(500)"/>
+            <column name="recommended_value" type="varchar(500)"/>
+            <column name="confidence_score" type="double precision"/>
+            <column name="reasoning" type="text"/>
+            <column name="expected_impact" type="text"/>
+            <column name="risk_level" type="varchar(20)"/>
+            <column name="outcome" type="varchar(30)"/>
+            <column name="applied_by_user" type="boolean"/>
+            <column name="user_feedback_rating" type="integer"/>
+            <column name="user_feedback_comment" type="text"/>
+            <column name="user_feedback_timestamp" type="timestamp with time zone"/>
+            <column name="inference_time_ms" type="bigint"/>
+            <column name="token_count" type="integer"/>
+            <column name="cost_estimate" type="double precision"/>
+            <column name="request_id" type="varchar(100)"/>
+            <column name="correlation_id" type="varchar(100)"/>
+            <column name="previous_event_id" type="uuid"/>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_ai_decision_tenant_timestamp" tableName="ai_agent_decision_events">
+            <column name="tenant_id"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_ai_decision_agent_type" tableName="ai_agent_decision_events">
+            <column name="agent_type"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_ai_decision_type" tableName="ai_agent_decision_events">
+            <column name="decision_type"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_ai_decision_outcome" tableName="ai_agent_decision_events">
+            <column name="outcome"/>
+            <column name="timestamp"/>
+        </createIndex>
+        <createIndex indexName="idx_ai_decision_correlation" tableName="ai_agent_decision_events">
+            <column name="correlation_id"/>
+        </createIndex>
+        <createIndex indexName="idx_ai_decision_customer_tier" tableName="ai_agent_decision_events">
+            <column name="customer_tier"/>
+            <column name="timestamp"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

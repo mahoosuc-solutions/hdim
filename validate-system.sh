@@ -88,21 +88,15 @@ fi
 echo ""
 echo "✅ Frontend (Port 4200)"
 if [ "${SKIP_FRONTEND_VALIDATE:-0}" = "1" ]; then
-    LISTEN_COUNT=1
+    FRONTEND_STATUS=200
     APP_COUNT=1
     echo "   • NX Serve:          skipped (SKIP_FRONTEND_VALIDATE=1)"
     echo "   • Angular App:       skipped (SKIP_FRONTEND_VALIDATE=1)"
 else
-    DEMO_PORTAL_CONTAINER="hdim-demo-clinical-portal"
-    if docker ps --format '{{.Names}}' | rg -q "^${DEMO_PORTAL_CONTAINER}$"; then
-        LISTEN_COUNT=1
-        echo "   • NX Serve:          docker (nginx)"
-    else
-        LISTEN_COUNT=$(lsof -i :4200 2>/dev/null | grep -c LISTEN)
-        echo "   • NX Serve:          $LISTEN_COUNT process listening"
-    fi
+    FRONTEND_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' http://localhost:4200 2>/dev/null || true)
+    echo "   • HTTP Status:       HTTP $FRONTEND_STATUS"
 
-    APP_COUNT=$(curl "${CURL_OPTS[@]}" http://localhost:4200 2>/dev/null | grep -c 'app-root')
+    APP_COUNT=$(curl "${CURL_OPTS[@]}" http://localhost:4200 2>/dev/null | grep -c 'app-root' || true)
     echo "   • Angular App:       $APP_COUNT components loaded"
 fi
 
@@ -127,22 +121,18 @@ AUDIT_GATEWAY_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' \
 echo "   • Gateway Stats:     HTTP $AUDIT_GATEWAY_STATUS"
 
 echo ""
-echo "═══════════════════════════════════════════════════════════════"
-echo "                    ✅ ALL SYSTEMS OPERATIONAL"
-echo "═══════════════════════════════════════════════════════════════"
-echo ""
-echo "Dashboard URL: http://localhost:4200"
-echo "Documentation: CRITICAL_FIXES_COMPLETE.md"
-echo ""
-
 # Summary
 echo "SUMMARY:"
 if [ "$QM_HEALTH" = "200" ] && ( [ "$QM_RESULTS" = "200" ] || [ "$QM_RESULTS" = "400" ] ) && \
    ( [ "$QM_MISSING_TENANT" = "400" ] || [ "$QM_MISSING_TENANT" = "403" ] ) && \
    [ "$FHIR_META" = "200" ] && [ "$FHIR_META_NO_TENANT" = "200" ] && [ "$FHIR_PATIENT" = "200" ] && \
-   [ "$AUTH_NO_TENANT_STATUS" = "200" ] && [ "$CORS_COUNT" -gt "0" ] && [ "$LISTEN_COUNT" -gt "0" ] && \
+   [ "$AUTH_NO_TENANT_STATUS" = "200" ] && [ "$CORS_COUNT" -gt "0" ] && \
+   [ "$FRONTEND_STATUS" = "200" ] && [ "$APP_COUNT" -gt "0" ] && \
    [ "$AUDIT_DIRECT_STATUS" = "200" ] && [ "$AUDIT_GATEWAY_STATUS" = "200" ]; then
-    echo "✅ All critical services operational - Dashboard ready for use"
+    echo "✅ All critical services operational - Demo is ready"
+    echo ""
+    echo "Dashboard URL: http://localhost:4200"
+    echo "Documentation: CRITICAL_FIXES_COMPLETE.md"
     exit 0
 else
     echo "⚠️  Some services may need attention - Check status codes above"

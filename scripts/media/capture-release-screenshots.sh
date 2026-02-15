@@ -19,7 +19,7 @@ Examples:
   ./scripts/media/capture-release-screenshots.sh v2.7.1-rc1 all
 
 Env:
-  PORTAL_URL      Defaults to http://localhost:18080
+  PORTAL_URL      Defaults to http://localhost:4200
   AB_SLEEP_SECS   agent-browser sleep between navigation steps (default: scripts/agent-browser/_common.sh default)
 EOF
 }
@@ -29,7 +29,7 @@ if [[ -z "$VERSION" || "$VERSION" == "-h" || "$VERSION" == "--help" ]]; then
   exit 1
 fi
 
-PORTAL_URL="${PORTAL_URL:-http://localhost:18080}"
+PORTAL_URL="${PORTAL_URL:-http://localhost:4200}"
 OUT_DIR="docs/releases/${VERSION}/media/screenshots/agent-browser"
 mkdir -p "$OUT_DIR"
 
@@ -90,4 +90,3 @@ case "$SUITE" in
 esac
 
 echo "Screenshots captured under: ${OUT_DIR}"
-

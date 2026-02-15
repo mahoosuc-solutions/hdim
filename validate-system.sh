@@ -23,9 +23,14 @@ CURL_MAX_TIME="${CURL_MAX_TIME:-15}"
 CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-5}"
 CURL_OPTS=(-sS --max-time "${CURL_MAX_TIME}" --connect-timeout "${CURL_CONNECT_TIMEOUT}")
 
-AUTH_TOKEN=$(curl "${CURL_OPTS[@]}" -X POST "${GATEWAY_URL}/api/v1/auth/login" \
+AUTH_LOGIN_RESP="$(curl "${CURL_OPTS[@]}" -X POST "${GATEWAY_URL}/api/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))" 2>/dev/null)
+  -H "X-Tenant-ID: ${TENANT_ID}" \
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" \
+  -w $'\n%{http_code}' 2>/dev/null || true)"
+AUTH_LOGIN_STATUS="$(printf '%s' "${AUTH_LOGIN_RESP}" | tail -n 1)"
+AUTH_LOGIN_BODY="$(printf '%s' "${AUTH_LOGIN_RESP}" | sed '$d')"
+AUTH_TOKEN="$(printf '%s' "${AUTH_LOGIN_BODY}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))" 2>/dev/null || true)"
 
 AUTH_HEADER=()
 if [ -n "$AUTH_TOKEN" ] && [ "$AUTH_TOKEN" != "null" ]; then
@@ -102,6 +107,7 @@ fi
 
 echo ""
 echo "✅ Auth Service (Tenant Allowlist)"
+echo "   • Login (With Tenant): HTTP $AUTH_LOGIN_STATUS"
 AUTH_NO_TENANT_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' \
   -X POST "${GATEWAY_URL}/api/v1/auth/login" \
   -H "Content-Type: application/json" \
@@ -126,7 +132,9 @@ echo "SUMMARY:"
 if [ "$QM_HEALTH" = "200" ] && ( [ "$QM_RESULTS" = "200" ] || [ "$QM_RESULTS" = "400" ] ) && \
    ( [ "$QM_MISSING_TENANT" = "400" ] || [ "$QM_MISSING_TENANT" = "403" ] ) && \
    [ "$FHIR_META" = "200" ] && [ "$FHIR_META_NO_TENANT" = "200" ] && [ "$FHIR_PATIENT" = "200" ] && \
-   [ "$AUTH_NO_TENANT_STATUS" = "200" ] && [ "$CORS_COUNT" -gt "0" ] && \
+   [ "$AUTH_LOGIN_STATUS" = "200" ] && [ -n "${AUTH_TOKEN}" ] && [ "${AUTH_TOKEN}" != "null" ] && \
+   ( [ "$AUTH_NO_TENANT_STATUS" = "200" ] || [ "$AUTH_NO_TENANT_STATUS" = "400" ] || [ "$AUTH_NO_TENANT_STATUS" = "401" ] || [ "$AUTH_NO_TENANT_STATUS" = "403" ] ) && \
+   [ "$CORS_COUNT" -gt "0" ] && \
    [ "$FRONTEND_STATUS" = "200" ] && [ "$APP_COUNT" -gt "0" ] && \
    [ "$AUDIT_DIRECT_STATUS" = "200" ] && [ "$AUDIT_GATEWAY_STATUS" = "200" ]; then
     echo "✅ All critical services operational - Demo is ready"

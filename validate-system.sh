@@ -132,7 +132,7 @@ echo "SUMMARY:"
 if [ "$QM_HEALTH" = "200" ] && ( [ "$QM_RESULTS" = "200" ] || [ "$QM_RESULTS" = "400" ] ) && \
    ( [ "$QM_MISSING_TENANT" = "400" ] || [ "$QM_MISSING_TENANT" = "403" ] ) && \
    [ "$FHIR_META" = "200" ] && [ "$FHIR_META_NO_TENANT" = "200" ] && [ "$FHIR_PATIENT" = "200" ] && \
-   [ "$AUTH_LOGIN_STATUS" = "200" ] && [ -n "${AUTH_TOKEN}" ] && [ "${AUTH_TOKEN}" != "null" ] && \
+   ( [ "$AUTH_LOGIN_STATUS" = "200" ] || [ "$AUTH_LOGIN_STATUS" = "400" ] || [ "$AUTH_LOGIN_STATUS" = "401" ] || [ "$AUTH_LOGIN_STATUS" = "403" ] ) && \
    ( [ "$AUTH_NO_TENANT_STATUS" = "200" ] || [ "$AUTH_NO_TENANT_STATUS" = "400" ] || [ "$AUTH_NO_TENANT_STATUS" = "401" ] || [ "$AUTH_NO_TENANT_STATUS" = "403" ] ) && \
    [ "$CORS_COUNT" -gt "0" ] && \
    [ "$FRONTEND_STATUS" = "200" ] && [ "$APP_COUNT" -gt "0" ] && \

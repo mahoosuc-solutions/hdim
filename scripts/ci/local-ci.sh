@@ -111,6 +111,9 @@ run_demo() {
     die "Missing ./backend/gradlew"
   fi
 
+  log "Ensuring demo stack is clean (down -v) before bringing it up"
+  docker compose -f docker-compose.demo.yml down -v --remove-orphans || true
+
   log "docker compose -f docker-compose.demo.yml up -d --build"
   docker compose -f docker-compose.demo.yml up -d --build
   log "./scripts/seed-all-demo-data.sh (non-interactive)"

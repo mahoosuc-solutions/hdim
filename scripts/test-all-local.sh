@@ -36,6 +36,7 @@ stage() {
 : "${KEEP_STACK:=0}"
 : "${SKIP_BACKEND_TESTS:=0}"
 STACK_STARTED=0
+TENANT_ID="${TENANT_ID:-acme-health}"
 
 has_npm_script() {
   node -e "const s=require('./package.json').scripts||{}; process.exit(s['$1']?0:1)"
@@ -156,6 +157,22 @@ if ! docker compose -f docker-compose.demo.yml up -d; then
 fi
 STACK_STARTED=1
 NON_INTERACTIVE=1 SEED_PROFILE="${SEED_PROFILE:-smoke}" WAIT_TIMEOUT_SECS="${WAIT_TIMEOUT_SECS:-900}" ./scripts/seed-all-demo-data.sh
+
+# Seeded data validation gate (ensures E2E/UI tests have real data to operate on).
+if [[ -x ./scripts/verify-seeding-counts.sh ]]; then
+  echo ""
+  echo "Validating seeded data counts..."
+  expected_patients=""
+  if [[ "${SEED_PROFILE:-smoke}" == "smoke" ]]; then
+    expected_patients="50"
+  fi
+  TENANTS="${TENANT_ID}" \
+    EXPECTED_PATIENTS_PER_TENANT="${expected_patients}" \
+    ./scripts/verify-seeding-counts.sh
+else
+  echo "Missing ./scripts/verify-seeding-counts.sh; skipping seeded data validation."
+fi
+
 AUTH_USERNAME="${AUTH_USERNAME}" AUTH_PASSWORD="${AUTH_PASSWORD}" ./validate-system.sh
 
 stage "5) Full Stack E2E UI (Playwright)"

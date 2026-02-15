@@ -35,6 +35,8 @@ Notes:
 - Runs `./scripts/validate-dockerfiles.sh` (if present).
 - Runs `./scripts/test-all-local.sh` which can also run the demo stack + Playwright.
 - Optional: set `RUN_SLOW_LINT=1` to enable slower lint targets inside `scripts/test-all-local.sh`.
+- Playwright: by default `scripts/test-all-local.sh` runs a fast chromium-only smoke suite (`npm run e2e:clinical-portal:smoke`).
+  - Set `RUN_FULL_E2E=1` to run the larger demo-safe suite (`npm run e2e:clinical-portal:demo`).
 
 ### `demo`
 
@@ -71,4 +73,3 @@ For broader enforcement:
 - `npm run test:all`
 
 See `docs/releases/v2.7.1-rc1/KNOWN_ISSUES_v2.7.1-rc1.md` for current exclusions.
-

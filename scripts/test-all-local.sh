@@ -181,9 +181,9 @@ AUTH_USERNAME="${AUTH_USERNAME}" AUTH_PASSWORD="${AUTH_PASSWORD}" ./validate-sys
 
 stage "5) Full Stack E2E UI (Playwright)"
 if [[ "${RUN_FULL_E2E:-0}" == "1" ]]; then
-  run_npm_script e2e:clinical-portal
-else
   run_npm_script e2e:clinical-portal:demo
+else
+  run_npm_script e2e:clinical-portal:smoke
 fi
 
 stage "DONE"

@@ -1,0 +1,5 @@
+version=v2.7.1-rc1
+captured_at_utc=2026-02-15T17:24:47Z
+git_rev=3410aba3efbc0e7a9cb03055ad7b253de6a32af4
+portal_url=http://localhost:4200
+suite=smoke

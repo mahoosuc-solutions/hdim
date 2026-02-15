@@ -1,0 +1,16 @@
+services:
+  nx-mcp-host:
+    image: node:20-bookworm
+    container_name: hdim-nx-mcp
+    working_dir: /workspace
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./:/workspace
+      # Keep Linux node_modules inside Docker (don’t clobber with Windows/WSL host files).
+      - hdim_nx_mcp_node_modules:/workspace/node_modules
+    command: ["bash", "-lc", "npm ci && tail -f /dev/null"]
+
+volumes:
+  hdim_nx_mcp_node_modules:
+

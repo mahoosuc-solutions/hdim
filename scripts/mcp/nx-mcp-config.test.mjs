@@ -25,3 +25,10 @@ test('.mcp.json pins nx-mcp and uses wrapper script', () => {
   assert.match(wrapper, /stdio/);
   assert.match(wrapper, /--disableTelemetry/);
 });
+
+test('docker MCP host compose file exists', () => {
+  const composePath = path.join(repoRoot, 'docker-compose.mcp.yml');
+  const compose = readFileSync(composePath, 'utf8');
+  assert.match(compose, /container_name:\s*hdim-nx-mcp/);
+  assert.match(compose, /hdim_nx_mcp_node_modules/);
+});

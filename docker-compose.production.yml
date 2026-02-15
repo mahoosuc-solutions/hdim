@@ -29,7 +29,7 @@ services:
   ai-sales-agent-1:
     <<: *app_security
     container_name: ai-sales-agent-prod-1
-    image: hdim-ai-sales-agent:${BUILD_VERSION:-latest}
+    image: ${AI_SALES_AGENT_IMAGE:?Set immutable image ref, e.g. repo@sha256:...}
     ports:
       - "8090:8090"
     environment:
@@ -85,7 +85,7 @@ services:
   ai-sales-agent-2:
     <<: *app_security
     container_name: ai-sales-agent-prod-2
-    image: hdim-ai-sales-agent:${BUILD_VERSION:-latest}
+    image: ${AI_SALES_AGENT_IMAGE:?Set immutable image ref, e.g. repo@sha256:...}
     ports:
       - "8091:8090"
     environment:
@@ -129,7 +129,7 @@ services:
   live-call-sales-agent-1:
     <<: *app_security
     container_name: live-call-sales-agent-prod-1
-    image: hdim-live-call-sales-agent:${BUILD_VERSION:-latest}
+    image: ${LIVE_CALL_SALES_AGENT_IMAGE:?Set immutable image ref, e.g. repo@sha256:...}
     ports:
       - "8095:8095"
     environment:
@@ -176,7 +176,7 @@ services:
   live-call-sales-agent-2:
     <<: *app_security
     container_name: live-call-sales-agent-prod-2
-    image: hdim-live-call-sales-agent:${BUILD_VERSION:-latest}
+    image: ${LIVE_CALL_SALES_AGENT_IMAGE:?Set immutable image ref, e.g. repo@sha256:...}
     ports:
       - "8096:8095"
     environment:
@@ -221,7 +221,7 @@ services:
   # ============================================================================
   coaching-ui-1:
     container_name: coaching-ui-prod-1
-    image: hdim-coaching-ui:${BUILD_VERSION:-latest}
+    image: ${COACHING_UI_IMAGE:?Set immutable image ref, e.g. repo@sha256:...}
     ports:
       - "4200:4200"
     environment:
@@ -249,7 +249,7 @@ services:
 
   coaching-ui-2:
     container_name: coaching-ui-prod-2
-    image: hdim-coaching-ui:${BUILD_VERSION:-latest}
+    image: ${COACHING_UI_IMAGE:?Set immutable image ref, e.g. repo@sha256:...}
     ports:
       - "4201:4200"
     environment:
@@ -280,7 +280,7 @@ services:
   # ============================================================================
   postgres-primary:
     container_name: postgres-primary-prod
-    image: postgres:16-alpine
+    image: ${POSTGRES_IMAGE:?Set immutable image ref, e.g. postgres@sha256:...}
     ports:
       - "5432:5432"
     environment:
@@ -315,7 +315,7 @@ services:
   # ============================================================================
   postgres-replica:
     container_name: postgres-replica-prod
-    image: postgres:16-alpine
+    image: ${POSTGRES_IMAGE:?Set immutable image ref, e.g. postgres@sha256:...}
     ports:
       - "5433:5432"
     environment:
@@ -357,7 +357,7 @@ services:
   # ============================================================================
   redis-primary:
     container_name: redis-primary-prod
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE:?Set immutable image ref, e.g. redis@sha256:...}
     ports:
       - "6379:6379"
     command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec --loglevel notice
@@ -386,7 +386,7 @@ services:
   # ============================================================================
   redis-replica:
     container_name: redis-replica-prod
-    image: redis:7-alpine
+    image: ${REDIS_IMAGE:?Set immutable image ref, e.g. redis@sha256:...}
     ports:
       - "6380:6379"
     command: redis-server --maxmemory 2gb --maxmemory-policy allkeys-lru --appendonly yes --replicaof redis-primary 6379
@@ -417,7 +417,7 @@ services:
   # ============================================================================
   jaeger:
     container_name: jaeger-prod
-    image: jaegertracing/all-in-one:latest
+    image: ${JAEGER_IMAGE:?Set immutable image ref, e.g. jaegertracing/all-in-one@sha256:...}
     ports:
       - "16686:16686"
       - "4317:4317"
@@ -450,7 +450,7 @@ services:
   # ============================================================================
   prometheus:
     container_name: prometheus-prod
-    image: prom/prometheus:latest
+    image: ${PROMETHEUS_IMAGE:?Set immutable image ref, e.g. prom/prometheus@sha256:...}
     ports:
       - "9090:9090"
     volumes:
@@ -486,7 +486,7 @@ services:
   # ============================================================================
   alertmanager:
     container_name: alertmanager-prod
-    image: prom/alertmanager:latest
+    image: ${ALERTMANAGER_IMAGE:?Set immutable image ref, e.g. prom/alertmanager@sha256:...}
     ports:
       - "9093:9093"
     volumes:
@@ -518,7 +518,7 @@ services:
   # ============================================================================
   grafana:
     container_name: grafana-prod
-    image: grafana/grafana:latest
+    image: ${GRAFANA_IMAGE:?Set immutable image ref, e.g. grafana/grafana@sha256:...}
     ports:
       - "3000:3000"
     environment:

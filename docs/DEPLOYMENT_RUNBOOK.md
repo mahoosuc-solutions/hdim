@@ -1,6 +1,8 @@
 # Production Deployment Runbook
 **HealthData-in-Motion CQL Quality Measure Evaluation System**
 
+> Note (February 14, 2026): Authoritative production deployment path is the Kubernetes workflow in `.github/workflows/deploy-docker.yml` using digest-pinned image manifests. This runbook documents legacy Docker Compose operations.
+
 **Version:** 1.0
 **Last Updated:** November 5, 2025
 

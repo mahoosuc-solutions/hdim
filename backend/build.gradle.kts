@@ -368,6 +368,10 @@ subprojects {
 
     // Common dependencies for all subprojects
     dependencies {
+        if (project.path.startsWith(":modules:services:")) {
+            implementation(project(":modules:shared:infrastructure:sentry"))
+        }
+
         // Lombok for all modules
         compileOnly("org.projectlombok:lombok:1.18.34")
         annotationProcessor("org.projectlombok:lombok:1.18.34")

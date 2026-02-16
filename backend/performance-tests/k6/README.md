@@ -24,3 +24,20 @@ Optional environment variables:
 - `TENANT_ID` (default: `TENANT001`)
 - `TEST_USERNAME` / `TEST_PASSWORD` (auth scenario)
 - `PATIENT_ID` (quality scenario)
+
+## Dedicated Patient Search Load Test (Issue #273)
+
+This scenario matches the explicit target profile from issue #273:
+
+- Target load: `100 requests/second`
+- Duration: `10 minutes` total
+- Ramp-up: `2 minutes`
+- Thresholds:
+  - `p95 < 200ms`
+  - `0% error rate`
+
+Run command:
+
+```bash
+k6 run backend/performance-tests/k6/patient-search-load-test.js
+```

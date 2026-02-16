@@ -1,7 +1,7 @@
 [versions]
 # Core
 java = "21"
-kotlin = "2.0.21"
+kotlin = "2.3.10"
 
 # Spring Framework
 spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x

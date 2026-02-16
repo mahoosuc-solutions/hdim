@@ -31,7 +31,7 @@ dependencies {
     implementation(libs.bundles.monitoring)
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
-    implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.9.0")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-63:${libs.versions.hypersistence.utils.get()}")
     implementation(libs.liquibase)
 
     compileOnly(libs.lombok)
@@ -39,7 +39,7 @@ dependencies {
 
     testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.bundles.testing)
-    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation(libs.spring.security.test)
     testRuntimeOnly(libs.h2)
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)

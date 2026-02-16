@@ -73,7 +73,7 @@ jobs:
           fetch-depth: 0
 
       - name: Detect path changes
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -995,10 +995,29 @@ jobs:
           echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
           echo "Discovered ${#files[@]} JUnit XML files"
 
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: Summarize test results
         if: always() && steps.detect-test-results.outputs.count != '0'
-        with:
-          files: test-results/**/test-results/**/*.xml
-          check_name: Test Results Summary
-          comment_mode: always
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          files=(test-results/**/test-results/**/*.xml)
+          total=0
+          failures=0
+          skipped=0
+          for f in "${files[@]}"; do
+            tests=$(grep -o 'tests="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            fail=$(grep -o 'failures="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            errs=$(grep -o 'errors="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            skip=$(grep -o 'skipped="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            total=$((total + tests))
+            failures=$((failures + fail + errs))
+            skipped=$((skipped + skip))
+          done
+          {
+            echo "### Test Results Summary"
+            echo ""
+            echo "- Files: ${#files[@]}"
+            echo "- Tests: ${total}"
+            echo "- Failures+Errors: ${failures}"
+            echo "- Skipped: ${skipped}"
+          } >> "$GITHUB_STEP_SUMMARY"

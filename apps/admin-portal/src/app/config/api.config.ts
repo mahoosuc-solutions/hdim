@@ -50,6 +50,7 @@ export const ADMIN_ENDPOINTS = {
 };
 
 export const GATEWAY_ENDPOINTS = {
+  ADMIN_SERVICES_HEALTH: '/v1/admin/services/health',
   CONFIG_VERSIONS: (serviceName: string, tenantId: string) =>
     `/v1/configs/${serviceName}/tenants/${tenantId}/versions`,
   CONFIG_VERSION: (serviceName: string, tenantId: string, versionId: string) =>

@@ -27,6 +27,7 @@ export const ADMIN_ENDPOINTS = {
   USERS: '/users',
   USER_BY_ID: (id: string) => `/users/${id}`,
   USER_ROLES: (id: string) => `/users/${id}/roles`,
+  USER_RESET_PASSWORD: (id: string) => `/users/${id}/reset-password`,
 
   // Tenant Management
   TENANTS: '/tenants',

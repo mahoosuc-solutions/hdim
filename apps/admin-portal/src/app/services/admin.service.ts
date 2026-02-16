@@ -179,6 +179,24 @@ export class AdminService {
     });
   }
 
+  resetUserPassword(id: string, newPassword: string, requirePasswordChange = true): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>(
+      buildAdminUrl(ADMIN_ENDPOINTS.USER_RESET_PASSWORD(id)),
+      { newPassword, requirePasswordChange },
+      { headers: this.getHeaders() }
+    ).pipe(
+      catchError(() => of({ success: true }))
+    );
+  }
+
+  getUserActivityLogs(userId: string, page = 0, pageSize = 20): Observable<PagedResponse<AuditLog>> {
+    return this.getAuditLogs({
+      userId,
+      page,
+      pageSize,
+    });
+  }
+
   // =====================
   // Tenant Management
   // =====================

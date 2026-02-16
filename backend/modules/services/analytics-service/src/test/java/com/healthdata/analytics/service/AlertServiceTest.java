@@ -672,6 +672,64 @@ class AlertServiceTest {
         }
     }
 
+    @Nested
+    @DisplayName("Predictive Alert Tests")
+    class PredictiveAlertTests {
+
+        @Test
+        @DisplayName("Should trigger predictive alert for CHANGE_PCT rule")
+        void shouldTriggerPredictiveChangePercentRule() {
+            AlertRuleEntity rule = createAlertRuleWithCooldown("Trend Alert", "CHANGE_PCT",
+                BigDecimal.valueOf(10), null);
+            rule.setMetricType("QUALITY_SCORE");
+            rule.setMetricName("Overall Score");
+
+            when(alertRepository.findByTenantIdAndIsActiveTrue(TENANT_ID)).thenReturn(List.of(rule));
+            when(kpiService.getTrends(TENANT_ID, "QUALITY_SCORE", 14)).thenReturn(List.of(
+                KpiSummaryDto.builder()
+                    .metricType("QUALITY_SCORE")
+                    .metricName("Overall Score")
+                    .currentValue(BigDecimal.valueOf(80))
+                    .changePercent(BigDecimal.valueOf(12))
+                    .asOfDate(LocalDate.now())
+                    .build()
+            ));
+            when(alertRepository.save(any(AlertRuleEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            List<AlertService.PredictiveAlertDto> result = service.checkPredictiveAlerts(TENANT_ID, 14);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).metricName()).isEqualTo("Overall Score");
+            assertThat(result.get(0).predictedChangePercent()).isEqualByComparingTo("12");
+        }
+
+        @Test
+        @DisplayName("Should trigger predictive alert when projected value breaches threshold")
+        void shouldTriggerPredictiveProjectedThresholdBreach() {
+            AlertRuleEntity rule = createAlertRuleWithCooldown("Projected High Alert", "GT",
+                BigDecimal.valueOf(90), null);
+            rule.setMetricType("QUALITY_SCORE");
+            rule.setMetricName("Overall Score");
+
+            when(alertRepository.findByTenantIdAndIsActiveTrue(TENANT_ID)).thenReturn(List.of(rule));
+            when(kpiService.getTrends(TENANT_ID, "QUALITY_SCORE", 14)).thenReturn(List.of(
+                KpiSummaryDto.builder()
+                    .metricType("QUALITY_SCORE")
+                    .metricName("Overall Score")
+                    .currentValue(BigDecimal.valueOf(85))
+                    .changePercent(BigDecimal.valueOf(8))
+                    .asOfDate(LocalDate.now())
+                    .build()
+            ));
+            when(alertRepository.save(any(AlertRuleEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            List<AlertService.PredictiveAlertDto> result = service.checkPredictiveAlerts(TENANT_ID, 14);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).predictedValue()).isGreaterThan(BigDecimal.valueOf(90));
+        }
+    }
+
     // ==================== Helper Methods ====================
 
     private AlertRuleEntity createAlertRule(String name, String operator, BigDecimal threshold) {

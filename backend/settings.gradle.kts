@@ -21,6 +21,7 @@ include(
 include(
     "modules:shared:infrastructure:security",
     "modules:shared:infrastructure:audit",
+    "modules:shared:infrastructure:sentry",
     "modules:shared:infrastructure:messaging",
     "modules:shared:infrastructure:cache",
     "modules:shared:infrastructure:persistence",

@@ -60,14 +60,16 @@ load_gradle_tasks() {
 }
 
 has_gradle_task() {
-  echo "$GRADLE_TASKS" | rg -qx "$1"
+  local task="${1#\:}"
+  echo "$GRADLE_TASKS" | rg -qx "$task"
 }
 
 run_gradle_tasks_if_available() {
   local tasks=()
   for t in "$@"; do
-    if has_gradle_task "$t"; then
-      tasks+=("$t")
+    local normalized="${t#\:}"
+    if has_gradle_task "$normalized"; then
+      tasks+=(":$normalized")
     else
       echo "Skipping gradle task ${t} (task not found)"
     fi
@@ -119,10 +121,12 @@ stage "3) Integration Tests (service-level)"
 if [[ "${SKIP_BACKEND_TESTS}" == "1" ]]; then
   echo "Skipping backend integration tests (SKIP_BACKEND_TESTS=1)"
 else
-  run_gradle_tasks_if_available :modules:services:fhir-service:test
-  run_gradle_tasks_if_available :modules:services:patient-service:test
-  run_gradle_tasks_if_available :modules:services:quality-measure-service:test
-  run_gradle_tasks_if_available :modules:services:care-gap-service:test
+  # These are required PR-gate integration targets; fail fast if a task is renamed/removed.
+  run_gradle \
+    :modules:services:fhir-service:test \
+    :modules:services:patient-service:test \
+    :modules:services:quality-measure-service:test \
+    :modules:services:care-gap-service:test
 fi
 
 stage "4) Full Stack E2E API (demo stack)"

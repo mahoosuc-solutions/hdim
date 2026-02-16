@@ -126,6 +126,13 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'real-time-metrics',
+        loadComponent: () =>
+          import('./pages/real-time-metrics/real-time-metrics.component').then(
+            (m) => m.RealTimeMetricsComponent
+          ),
+      },
+      {
         path: 'audit-logs',
         loadComponent: () =>
           import('./pages/audit-logs/audit-logs-enhanced.component').then(

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { catchError, throwError, timer, retry, delayWhen } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { LoggerService } from '../services/logger.service';
+import { SentryService } from '../services/sentry.service';
 import { API_CONFIG } from '../config/api.config';
 import { ErrorValidationService } from '../services/error-validation.service';
 import { ErrorCode, ErrorSeverity } from '../models/error.model';
@@ -75,6 +76,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const errorValidationService = inject(ErrorValidationService);
   const loggerService = inject(LoggerService);
+  const sentryService = inject(SentryService);
   const logger = loggerService.withContext('ErrorInterceptor');
 
   // Get tenant ID from current user or use default
@@ -192,6 +194,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           retryAttempts: retryAttempt,
           error: error.error,
         });
+
+        if (error.status >= 500 || error.status === 0) {
+          sentryService.captureHttpError(error, {
+            requestUrl: req.url,
+            requestMethod: req.method,
+            retryAttempts: retryAttempt,
+          });
+        }
       }
 
       // Track error for compliance validation if enabled

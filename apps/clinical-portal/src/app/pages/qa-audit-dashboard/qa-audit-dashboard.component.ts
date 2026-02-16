@@ -78,8 +78,6 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
         this.refreshQAData();
       });
     }
-    
-    this.loadMockData();
   }
   
   ngOnDestroy(): void {
@@ -301,7 +299,6 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
    * Apply filters to review queue
    */
   applyFilters(): void {
-    // TODO: Call backend with filter parameters
     this.logger.info('Applying filters', {
       agentType: this.filterAgentType,
       confidenceRange: this.filterConfidenceRange,
@@ -416,85 +413,6 @@ export class QaAuditDashboardComponent implements OnInit, OnDestroy {
       return { startDate, endDate };
     }
     return undefined;
-  }
-
-  /**
-   * Load mock data for demonstration
-   */
-  private loadMockData(): void {
-    this.pendingReviewDecisions = [
-      {
-        eventId: '550e8400-e29b-41d4-a716-446655440001',
-        timestamp: new Date(),
-        agentType: 'CARE_GAP_IDENTIFIER',
-        decisionType: 'CARE_GAP_IDENTIFICATION',
-        patientId: 'PAT-12345',
-        confidenceScore: 0.65,
-        recommendedAction: 'Schedule diabetic eye exam',
-        reasoning: 'Patient has diabetes diagnosis, no eye exam in past 12 months',
-        reviewPriority: 'high',
-        qaReviewStatus: 'pending',
-        clinicalImpact: 'medium',
-        requiresPhysicianReview: false
-      },
-      {
-        eventId: '550e8400-e29b-41d4-a716-446655440002',
-        timestamp: new Date(Date.now() - 3600000),
-        agentType: 'MEDICATION_OPTIMIZATION',
-        decisionType: 'MEDICATION_RECOMMENDATION',
-        patientId: 'PAT-67890',
-        confidenceScore: 0.45,
-        recommendedAction: 'Consider switching ACE inhibitor',
-        reasoning: 'Patient has persistent cough, potential ACE inhibitor side effect',
-        reviewPriority: 'critical',
-        qaReviewStatus: 'pending',
-        clinicalImpact: 'high',
-        requiresPhysicianReview: true
-      },
-      {
-        eventId: '550e8400-e29b-41d4-a716-446655440003',
-        timestamp: new Date(Date.now() - 7200000),
-        agentType: 'RISK_STRATIFICATION',
-        decisionType: 'RISK_SCORE_CALCULATION',
-        patientId: 'PAT-11111',
-        confidenceScore: 0.92,
-        recommendedAction: 'Elevated readmission risk - care management referral',
-        reasoning: 'Multiple risk factors: age 75+, CHF, 2 hospitalizations in 30 days',
-        reviewPriority: 'medium',
-        qaReviewStatus: 'pending',
-        clinicalImpact: 'high',
-        requiresPhysicianReview: false
-      }
-    ];
-    
-    this.qaMetrics = {
-      totalReviewed: 127,
-      approvedDecisions: 98,
-      rejectedDecisions: 18,
-      flaggedForEscalation: 11,
-      averageConfidenceScore: 0.74,
-      lowConfidenceCount: 23,
-      falsePositiveRate: 0.08,
-      falseNegativeRate: 0.03
-    };
-    
-    this.confidenceTrends = [
-      { date: '2026-01-06', avgConfidence: 0.71, lowConfidenceCount: 8 },
-      { date: '2026-01-07', avgConfidence: 0.73, lowConfidenceCount: 6 },
-      { date: '2026-01-08', avgConfidence: 0.75, lowConfidenceCount: 5 },
-      { date: '2026-01-09', avgConfidence: 0.72, lowConfidenceCount: 7 },
-      { date: '2026-01-10', avgConfidence: 0.76, lowConfidenceCount: 4 },
-      { date: '2026-01-13', avgConfidence: 0.74, lowConfidenceCount: 6 }
-    ];
-    
-    this.accuracyTrends = [
-      { date: '2026-01-06', approvalRate: 0.82, rejectionRate: 0.12, flaggedRate: 0.06 },
-      { date: '2026-01-07', approvalRate: 0.85, rejectionRate: 0.10, flaggedRate: 0.05 },
-      { date: '2026-01-08', approvalRate: 0.79, rejectionRate: 0.14, flaggedRate: 0.07 },
-      { date: '2026-01-09', approvalRate: 0.83, rejectionRate: 0.11, flaggedRate: 0.06 },
-      { date: '2026-01-10', approvalRate: 0.87, rejectionRate: 0.09, flaggedRate: 0.04 },
-      { date: '2026-01-13', approvalRate: 0.84, rejectionRate: 0.10, flaggedRate: 0.06 }
-    ];
   }
 }
 

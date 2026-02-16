@@ -1,20 +1,6 @@
 name: Backend CI/CD Pipeline (Parallel V2)
 
 on:
-  push:
-    branches:
-      - master
-      - develop
-      - 'release/**'
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-ci-v2-parallel.yml'
-  pull_request:
-    branches:
-      - master
-      - develop
-    paths:
-      - 'backend/**'
   workflow_dispatch:
     inputs:
       deploy_environment:

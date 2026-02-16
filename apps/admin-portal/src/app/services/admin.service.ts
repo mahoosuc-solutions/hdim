@@ -71,22 +71,31 @@ export class AdminService {
   }
 
   getSystemHealth(): Observable<SystemHealth> {
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.SYSTEM_HEALTH), {
+    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.ADMIN_SERVICES_HEALTH), {
       headers: this.getHeaders(),
     }).pipe(
-      map((response) => ({
-        services: response.services || [],
-        metrics: {
-          cpuUsage: response.cpuUsage || 0,
-          memoryUsage: response.memoryUsage || 0,
-          diskUsage: response.diskUsage || 0,
-          activeConnections: response.activeConnections || 0,
-          requestsPerSecond: response.requestsPerSecond || 0,
-          avgResponseTimeMs: response.avgResponseTimeMs || 0,
-        },
-        overallStatus: response.overallStatus || 'healthy',
-        timestamp: new Date(response.timestamp || Date.now()),
-      })),
+      map((response) => {
+        const services = (response.services || []).map((service: any) => ({
+          ...service,
+          lastDeploymentAt: service.lastDeploymentAt
+            ? new Date(service.lastDeploymentAt)
+            : undefined,
+        }));
+
+        return {
+          services,
+          metrics: {
+            cpuUsage: response.cpuUsage || 0,
+            memoryUsage: response.memoryUsage || 0,
+            diskUsage: response.diskUsage || 0,
+            activeConnections: response.activeConnections || 0,
+            requestsPerSecond: response.requestsPerSecond || 0,
+            avgResponseTimeMs: response.avgResponseTimeMs || 0,
+          },
+          overallStatus: response.overallStatus || 'healthy',
+          timestamp: new Date(response.timestamp || Date.now()),
+        };
+      }),
       catchError(() => of(this.getMockSystemHealthV2()))
     );
   }
@@ -593,17 +602,60 @@ export class AdminService {
   }
 
   private getMockSystemHealthV2(): SystemHealth {
+    const mockServiceNames = [
+      'Gateway Service',
+      'Auth Service',
+      'FHIR Service',
+      'Quality Measure Service',
+      'CQL Engine Service',
+      'Patient Service',
+      'Care Gap Service',
+      'Analytics Service',
+      'Notification Service',
+      'Audit Service',
+      'Tenant Service',
+      'User Service',
+      'Measure Evaluation Service',
+      'Schedule Service',
+      'Task Service',
+      'Encounter Service',
+      'Eligibility Service',
+      'Claims Service',
+      'Prior Auth Service',
+      'Document Service',
+      'Terminology Service',
+      'Rules Engine Service',
+      'Search Service',
+      'Webhook Service',
+      'Integration Service',
+      'Config Service',
+      'Feature Flag Service',
+      'Observability Service',
+      'Event Router Service',
+      'Reporting Service',
+      'Data Export Service',
+      'Consent Service',
+    ];
+
+    const services = mockServiceNames.map((name, index) => {
+      const responseTimeMs = 12 + ((index * 7) % 120);
+      const status: 'UP' | 'DEGRADED' = index % 17 === 0 ? 'DEGRADED' : 'UP';
+      return {
+        name,
+        status,
+        uptime: Number((99.2 + ((index % 8) * 0.09)).toFixed(2)),
+        responseTimeMs,
+        instances: index % 5 === 0 ? 3 : 2,
+        endpoint: `http://${name.toLowerCase().replace(/\s+/g, '-').replace('service', '').trim()}:808${(index % 9) + 1}`,
+        version: `2.${Math.floor(index / 8)}.${index % 8}`,
+        lastDeploymentAt: new Date(Date.now() - ((index + 1) * 6 * 60 * 60 * 1000)),
+        logsUrl: `/observability/logs?service=${encodeURIComponent(name)}`,
+        metricsUrl: `/observability/metrics?service=${encodeURIComponent(name)}`,
+      };
+    });
+
     return {
-      services: [
-        { name: 'Gateway Service', status: 'UP', uptime: 99.9, responseTimeMs: 12, instances: 3, endpoint: 'http://gateway:8001' },
-        { name: 'FHIR Service', status: 'UP', uptime: 99.8, responseTimeMs: 25, instances: 2, endpoint: 'http://fhir:8085' },
-        { name: 'Quality Measure Service', status: 'UP', uptime: 99.7, responseTimeMs: 45, instances: 2, endpoint: 'http://quality-measure:8087' },
-        { name: 'CQL Engine Service', status: 'UP', uptime: 99.9, responseTimeMs: 120, instances: 2, endpoint: 'http://cql-engine:8081' },
-        { name: 'Patient Service', status: 'UP', uptime: 99.8, responseTimeMs: 18, instances: 2, endpoint: 'http://patient:8084' },
-        { name: 'Care Gap Service', status: 'UP', uptime: 99.7, responseTimeMs: 35, instances: 2, endpoint: 'http://care-gap:8086' },
-        { name: 'Analytics Service', status: 'UP', uptime: 99.5, responseTimeMs: 85, instances: 1, endpoint: 'http://analytics:8090' },
-        { name: 'Notification Service', status: 'UP', uptime: 99.9, responseTimeMs: 15, instances: 1, endpoint: 'http://notification:8092' },
-      ],
+      services,
       metrics: {
         cpuUsage: 42.5,
         memoryUsage: 68.2,

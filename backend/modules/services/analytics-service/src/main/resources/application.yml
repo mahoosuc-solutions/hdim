@@ -129,3 +129,12 @@ logging:
     com.healthdata: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+hdim:
+  analytics:
+    alerting:
+      # CSV tenant list for scheduled 5-minute alert evaluation.
+      # Example: TENANT_A,TENANT_B
+      scheduled-tenants: ${HDIM_ANALYTICS_ALERTING_SCHEDULED_TENANTS:}
+      # 300000 ms = 5 minutes
+      evaluation-interval-ms: ${HDIM_ANALYTICS_ALERTING_INTERVAL_MS:300000}

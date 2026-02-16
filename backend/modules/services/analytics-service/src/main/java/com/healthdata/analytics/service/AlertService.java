@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -137,6 +138,50 @@ public class AlertService {
         return triggeredAlerts;
     }
 
+    @Transactional
+    public List<PredictiveAlertDto> checkPredictiveAlerts(String tenantId, int daysWindow) {
+        List<AlertRuleEntity> activeRules = alertRepository.findByTenantIdAndIsActiveTrue(tenantId);
+        List<PredictiveAlertDto> triggered = new ArrayList<>();
+
+        for (AlertRuleEntity rule : activeRules) {
+            if (!rule.canTrigger()) {
+                continue;
+            }
+
+            List<KpiSummaryDto> trends = kpiService.getTrends(tenantId, rule.getMetricType(), daysWindow);
+            KpiSummaryDto trend = findMatchingMetric(trends, rule.getMetricName());
+            if (trend == null || trend.getCurrentValue() == null) {
+                continue;
+            }
+
+            BigDecimal changePercent = trend.getChangePercent() == null ? BigDecimal.ZERO : trend.getChangePercent();
+            BigDecimal predictedValue = applyPercentChange(trend.getCurrentValue(), changePercent);
+            boolean shouldTrigger = shouldTriggerPredictive(rule, trend, changePercent, predictedValue);
+
+            if (!shouldTrigger) {
+                continue;
+            }
+
+            rule.setLastTriggeredAt(LocalDateTime.now());
+            rule.setTriggerCount(rule.getTriggerCount() + 1);
+            alertRepository.save(rule);
+
+            triggered.add(new PredictiveAlertDto(
+                rule.getId(),
+                rule.getName(),
+                rule.getMetricType(),
+                trend.getMetricName(),
+                trend.getCurrentValue(),
+                predictedValue,
+                changePercent,
+                rule.getSeverity(),
+                "Predictive threshold breach forecast"
+            ));
+        }
+
+        return triggered;
+    }
+
     @Transactional(readOnly = true)
     public List<AlertDto> getRecentlyTriggeredAlerts(String tenantId, int limit) {
         return alertRepository.findRecentlyTriggeredRules(tenantId, PageRequest.of(0, limit))
@@ -171,6 +216,44 @@ public class AlertService {
         return null;
     }
 
+    private KpiSummaryDto findMatchingMetric(List<KpiSummaryDto> trends, String metricName) {
+        if (trends == null || trends.isEmpty()) {
+            return null;
+        }
+        if (metricName == null) {
+            return trends.get(0);
+        }
+        return trends.stream()
+            .filter(kpi -> metricName.equals(kpi.getMetricName()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private BigDecimal applyPercentChange(BigDecimal current, BigDecimal changePercent) {
+        BigDecimal multiplier = BigDecimal.ONE.add(changePercent.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
+        return current.multiply(multiplier);
+    }
+
+    private boolean shouldTriggerPredictive(
+        AlertRuleEntity rule,
+        KpiSummaryDto trend,
+        BigDecimal changePercent,
+        BigDecimal predictedValue
+    ) {
+        if ("CHANGE_PCT".equals(rule.getConditionOperator())) {
+            return changePercent.abs().compareTo(rule.getThresholdValue()) >= 0;
+        }
+
+        String direction = trend.getTrend();
+        boolean directionalMatch = switch (rule.getConditionOperator()) {
+            case "GT", "GTE" -> "UP".equals(direction) || "STABLE".equals(direction);
+            case "LT", "LTE" -> "DOWN".equals(direction) || "STABLE".equals(direction);
+            default -> true;
+        };
+
+        return directionalMatch && evaluateCondition(predictedValue, rule);
+    }
+
     private boolean evaluateCondition(BigDecimal value, AlertRuleEntity rule) {
         BigDecimal threshold = rule.getThresholdValue();
 
@@ -180,6 +263,7 @@ public class AlertService {
             case "LT" -> value.compareTo(threshold) < 0;
             case "LTE" -> value.compareTo(threshold) <= 0;
             case "EQ" -> value.compareTo(threshold) == 0;
+            case "CHANGE_PCT" -> false;
             default -> false;
         };
     }
@@ -206,4 +290,16 @@ public class AlertService {
                 .updatedAt(entity.getUpdatedAt())
                 .build();
     }
+
+    public record PredictiveAlertDto(
+        UUID ruleId,
+        String ruleName,
+        String metricType,
+        String metricName,
+        BigDecimal currentValue,
+        BigDecimal predictedValue,
+        BigDecimal predictedChangePercent,
+        String severity,
+        String reason
+    ) {}
 }

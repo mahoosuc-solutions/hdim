@@ -34,7 +34,7 @@ dependencies {
     implementation(libs.commons.lang3)
 
     // Synthetic data generation - using Datafaker (modern successor to JavaFaker)
-    implementation("net.datafaker:datafaker:2.4.2")
+    implementation("net.datafaker:datafaker:2.5.4")
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))

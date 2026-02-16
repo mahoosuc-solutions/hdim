@@ -13,12 +13,23 @@ import com.healthdata.demo.domain.repository.DemoSessionRepository;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 /**
  * REST API for demo platform operations.
@@ -244,6 +255,82 @@ public class DemoController {
         return progressService.getBySessionId(sessionOpt.get().getId())
             .map(progress -> ResponseEntity.ok(toProgressResponse(progress)))
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Stream progress updates for the current session via Server-Sent Events (SSE).
+     *
+     * Event types:
+     * - PROGRESS_UPDATE: Progress counters/percent updated
+     * - STAGE_CHANGE: Stage transitioned (e.g., PERSISTING_FHIR -> CREATING_CARE_GAPS)
+     * - COMPLETION: Session reached terminal stage (COMPLETE/FAILED/CANCELLED)
+     * - ERROR: Unable to fetch current progress/session
+     */
+    @GetMapping(value = "/sessions/current/progress/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamCurrentProgress() {
+        logger.info("GET /api/v1/demo/sessions/current/progress/stream");
+        var sessionOpt = sessionRepository.findCurrentSession();
+        if (sessionOpt.isEmpty()) {
+            throw new ResponseStatusException(NOT_FOUND, "No current session available");
+        }
+
+        UUID sessionId = sessionOpt.get().getId();
+        SseEmitter emitter = new SseEmitter(0L);
+        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+        AtomicReference<String> lastFingerprint = new AtomicReference<>("");
+        AtomicReference<String> lastStage = new AtomicReference<>("");
+
+        Runnable sendProgress = () -> {
+            try {
+                var progressOpt = progressService.getBySessionId(sessionId);
+                if (progressOpt.isEmpty()) {
+                    emitter.send(SseEmitter.event()
+                        .name("ERROR")
+                        .data("No progress found for current session"));
+                    emitter.complete();
+                    scheduler.shutdown();
+                    return;
+                }
+
+                ProgressResponse response = toProgressResponse(progressOpt.get());
+                String fingerprint = fingerprint(response);
+                if (Objects.equals(lastFingerprint.get(), fingerprint)) {
+                    return;
+                }
+
+                String eventType = resolveEventType(lastStage.get(), response.getStage());
+                emitter.send(SseEmitter.event()
+                    .name(eventType)
+                    .data(response));
+
+                lastFingerprint.set(fingerprint);
+                lastStage.set(response.getStage());
+
+                if (isTerminalStage(response.getStage())) {
+                    emitter.complete();
+                    scheduler.shutdown();
+                }
+            } catch (IOException e) {
+                logger.debug("SSE client disconnected for session {}", sessionId);
+                emitter.complete();
+                scheduler.shutdown();
+            } catch (Exception e) {
+                logger.warn("Failed to stream progress for session {}: {}", sessionId, e.getMessage());
+                emitter.completeWithError(e);
+                scheduler.shutdown();
+            }
+        };
+
+        emitter.onCompletion(scheduler::shutdown);
+        emitter.onTimeout(() -> {
+            emitter.complete();
+            scheduler.shutdown();
+        });
+        emitter.onError(error -> scheduler.shutdown());
+
+        scheduler.scheduleAtFixedRate(sendProgress, 0, 1, TimeUnit.SECONDS);
+        return emitter;
     }
 
     /**
@@ -489,5 +576,32 @@ public class DemoController {
         response.setUpdatedAt(progress.getUpdatedAt() != null ? progress.getUpdatedAt().toString() : null);
         response.setCancelRequested(progress.isCancelRequested());
         return response;
+    }
+
+    private String resolveEventType(String previousStage, String currentStage) {
+        if (isTerminalStage(currentStage)) {
+            return "COMPLETION";
+        }
+        if (previousStage != null && !previousStage.isBlank() && !Objects.equals(previousStage, currentStage)) {
+            return "STAGE_CHANGE";
+        }
+        return "PROGRESS_UPDATE";
+    }
+
+    private boolean isTerminalStage(String stage) {
+        return "COMPLETE".equals(stage) || "FAILED".equals(stage) || "CANCELLED".equals(stage);
+    }
+
+    private String fingerprint(ProgressResponse response) {
+        return String.join("|",
+            String.valueOf(response.getStage()),
+            String.valueOf(response.getProgressPercent()),
+            String.valueOf(response.getPatientsGenerated()),
+            String.valueOf(response.getPatientsPersisted()),
+            String.valueOf(response.getCareGapsCreated()),
+            String.valueOf(response.getMeasuresSeeded()),
+            String.valueOf(response.getUpdatedAt()),
+            String.valueOf(response.isCancelRequested())
+        );
     }
 }

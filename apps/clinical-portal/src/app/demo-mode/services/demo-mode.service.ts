@@ -111,6 +111,9 @@ export class DemoModeService {
   private demoBackendAvailable: boolean | null = null;
   private backendCheckInProgress = false;
   private progressInterval: ReturnType<typeof setInterval> | null = null;
+  private progressEventSource: EventSource | null = null;
+  private progressSseConnected = false;
+  private progressUsingPollingFallback = false;
   private storyboardSocket: WebSocket | null = null;
 
   // Recording state
@@ -204,6 +207,7 @@ export class DemoModeService {
     this.isDemoMode.set(false);
     localStorage.removeItem(this.DEMO_MODE_KEY);
     this.stopRecording();
+    this.stopProgressTracking();
     this.tooltips.set([]);
     this.activeStoryboardStep.set(null);
     this.storyboardConnected.set(false);
@@ -433,7 +437,7 @@ export class DemoModeService {
     this.error.set(null);
     this.lastLoadResult.set(null);
     this.progress.set(null);
-    this.startProgressPolling();
+    this.startProgressTracking();
     const statusInterval = setInterval(() => {
       this.loadStatus();
     }, 1000);
@@ -465,7 +469,7 @@ export class DemoModeService {
     } finally {
       clearInterval(statusInterval);
       await this.pollProgress();
-      this.stopProgressPolling();
+      this.stopProgressTracking();
       this.isLoading.set(false);
     }
   }
@@ -539,6 +543,74 @@ export class DemoModeService {
     if (this.progressInterval) {
       clearInterval(this.progressInterval);
       this.progressInterval = null;
+    }
+  }
+
+  private startProgressTracking(): void {
+    this.stopProgressTracking();
+
+    if (typeof EventSource === 'undefined') {
+      this.progressUsingPollingFallback = true;
+      this.startProgressPolling();
+      return;
+    }
+
+    const streamUrl = `${this.DEMO_API_URL}/api/v1/demo/sessions/current/progress/stream`;
+    this.progressEventSource = new EventSource(streamUrl);
+    this.progressSseConnected = false;
+    this.progressUsingPollingFallback = false;
+
+    const handleProgressEvent = (event: MessageEvent): void => {
+      const progress = this.parseProgressEvent(event);
+      if (!progress) {
+        return;
+      }
+
+      this.progress.set(progress);
+
+      if (progress.stage === 'COMPLETE' || progress.stage === 'FAILED' || progress.stage === 'CANCELLED') {
+        this.stopProgressTracking();
+      }
+    };
+
+    this.progressEventSource.addEventListener('PROGRESS_UPDATE', handleProgressEvent as EventListener);
+    this.progressEventSource.addEventListener('STAGE_CHANGE', handleProgressEvent as EventListener);
+    this.progressEventSource.addEventListener('COMPLETION', handleProgressEvent as EventListener);
+
+    this.progressEventSource.onopen = () => {
+      this.progressSseConnected = true;
+      this.stopProgressPolling();
+      this.logger.info('[Demo Mode] Progress SSE connected');
+    };
+
+    this.progressEventSource.onerror = () => {
+      this.logger.warn('[Demo Mode] Progress SSE error - using polling fallback if needed');
+
+      if (!this.progressSseConnected && !this.progressUsingPollingFallback) {
+        this.progressUsingPollingFallback = true;
+        this.startProgressPolling();
+      }
+    };
+  }
+
+  private stopProgressTracking(): void {
+    this.stopProgressPolling();
+
+    if (this.progressEventSource) {
+      this.progressEventSource.close();
+      this.progressEventSource = null;
+    }
+
+    this.progressSseConnected = false;
+    this.progressUsingPollingFallback = false;
+  }
+
+  private parseProgressEvent(event: MessageEvent): DemoProgress | null {
+    try {
+      return JSON.parse(event.data) as DemoProgress;
+    } catch (error) {
+      this.logger.warn('[Demo Mode] Failed to parse progress SSE payload', error);
+      return null;
     }
   }
 

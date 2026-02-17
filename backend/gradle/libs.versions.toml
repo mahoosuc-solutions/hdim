@@ -92,6 +92,7 @@ micrometer = "1.13.6"
 prometheus = "1.16.1"
 micrometer-tracing = "1.3.5"
 opentelemetry = "1.38.0"
+sentry = "7.22.0"
 
 # Build Tools
 openapi-generator = "7.18.0"
@@ -212,10 +213,14 @@ resilience4j-ratelimiter = { module = "io.github.resilience4j:resilience4j-ratel
 resilience4j-timelimiter = { module = "io.github.resilience4j:resilience4j-timelimiter", version.ref = "resilience4j" }
 resilience4j-reactor = { module = "io.github.resilience4j:resilience4j-reactor", version.ref = "resilience4j" }
 
+# Sentry
+sentry-spring-boot-jakarta = { module = "io.sentry:sentry-spring-boot-jakarta", version.ref = "sentry" }
+
 # Security
 spring-security-core = { module = "org.springframework.security:spring-security-core", version.ref = "spring-security" }
 spring-security-config = { module = "org.springframework.security:spring-security-config", version.ref = "spring-security" }
 spring-security-web = { module = "org.springframework.security:spring-security-web", version.ref = "spring-security" }
+spring-security-crypto = { module = "org.springframework.security:spring-security-crypto", version.ref = "spring-security" }
 spring-security-test = { module = "org.springframework.security:spring-security-test", version.ref = "spring-security" }
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }

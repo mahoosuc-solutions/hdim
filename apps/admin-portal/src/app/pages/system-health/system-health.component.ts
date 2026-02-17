@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
-import { SystemHealth, ServiceHealth } from '../../models/admin.model';
+import { SystemHealth } from '../../models/admin.model';
 import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
 
 @Component({
@@ -150,10 +150,23 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
                 <span class="label">Instances</span>
                 <span class="value">{{ service.instances || 1 }}</span>
               </div>
+              <div class="detail" *ngIf="service.version">
+                <span class="label">Version</span>
+                <span class="value">{{ service.version }}</span>
+              </div>
+              <div class="detail" *ngIf="service.lastDeploymentAt">
+                <span class="label">Last Deploy</span>
+                <span class="value">{{ service.lastDeploymentAt | date:'short' }}</span>
+              </div>
             </div>
 
             <div class="service-endpoint" *ngIf="service.endpoint">
               <span class="endpoint">{{ service.endpoint }}</span>
+            </div>
+
+            <div class="service-links" *ngIf="service.logsUrl || service.metricsUrl">
+              <a *ngIf="service.logsUrl" [href]="service.logsUrl" target="_blank" rel="noopener noreferrer">Logs</a>
+              <a *ngIf="service.metricsUrl" [href]="service.metricsUrl" target="_blank" rel="noopener noreferrer">Metrics</a>
             </div>
 
             <div class="service-error" *ngIf="service.lastError">
@@ -462,6 +475,7 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
     .service-details {
       display: flex;
       gap: 16px;
+      flex-wrap: wrap;
       margin-bottom: 8px;
     }
 
@@ -490,6 +504,23 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
       font-family: monospace;
       font-size: 12px;
       color: #666;
+    }
+
+    .service-links {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .service-links a {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e3f2fd;
+      color: #1565c0;
     }
 
     .service-error {

@@ -73,7 +73,7 @@ class CareGapDetectionServiceTest {
             .measureName("Breast Cancer Screening")
             .measureCategory("HEDIS")
             .measureYear(2024)
-            .denominatorElligible(true)  // Patient is eligible
+            .denominatorEligible(true)  // Patient is eligible
             .numeratorCompliant(false)    // But NOT compliant = GAP EXISTS
             .complianceRate(0.0)
             .calculationDate(LocalDate.now())
@@ -111,7 +111,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(true)  // COMPLIANT - no gap
             .complianceRate(1.0)
             .calculationDate(LocalDate.now())
@@ -137,7 +137,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(false)  // NOT ELIGIBLE
+            .denominatorEligible(false)  // NOT ELIGIBLE
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -162,7 +162,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -192,7 +192,7 @@ class CareGapDetectionServiceTest {
             .measureId("CMS134")
             .measureName("Diabetes: HbA1c Control")
             .measureCategory("HEDIS")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -237,7 +237,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -282,7 +282,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")  // Breast Cancer Screening - annual
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -320,7 +320,7 @@ class CareGapDetectionServiceTest {
             .measureId("CMS134")
             .measureName("Diabetes: HbA1c Control")
             .measureCategory("HEDIS")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -355,7 +355,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -396,7 +396,7 @@ class CareGapDetectionServiceTest {
             .measureName("Breast Cancer Screening")
             .measureCategory("HEDIS")
             .measureYear(2024)
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .cqlLibrary("BreastCancerScreening-v1.0")
@@ -431,7 +431,7 @@ class CareGapDetectionServiceTest {
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
             .measureCategory("HEDIS")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();
@@ -466,7 +466,7 @@ class CareGapDetectionServiceTest {
             .patientId(patientId)
             .measureId("CMS125")
             .measureName("Breast Cancer Screening")
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .numeratorCompliant(false)
             .calculationDate(LocalDate.now())
             .build();

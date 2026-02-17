@@ -481,6 +481,13 @@ See [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) for complete security docum
 
 We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
 
+Before opening or merging PRs, also review:
+
+- [PR Template](./.github/pull_request_template.md) - validation and merge-gate checklist
+- [CI Branch Protection Checklist](./docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md) - required status checks and branch settings
+- [Frontend Session Flow E2E Workflow](./.github/workflows/frontend-session-flow-e2e.yml) - session expiry browser gate on frontend changes
+  - Includes both standard and external-auth session-expiry e2e checks.
+
 ### Commercial Support
 
 For production deployments, SLAs, and custom development:

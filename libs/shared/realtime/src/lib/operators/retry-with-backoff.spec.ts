@@ -1,6 +1,5 @@
 import { retryWithBackoff } from './retry-with-backoff';
-import { throwError, of, Subject } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { defer, of, throwError } from 'rxjs';
 
 describe('retryWithBackoff operator', () => {
   it('should succeed on first attempt without retry', (done) => {
@@ -35,23 +34,18 @@ describe('retryWithBackoff operator', () => {
 
   it('should retry specified number of times', (done) => {
     let attemptCount = 0;
-    const source = new Subject<string>();
+    const source = defer(() => {
+      attemptCount++;
+      return throwError(() => new Error('First error'));
+    }).pipe(retryWithBackoff({ maxRetries: 2, initialDelay: 0 }));
 
-    const testSource = source.pipe(
-      take(1), // Only take first emission
-      retryWithBackoff({ maxRetries: 2, initialDelay: 10 })
-    );
-
-    let errorCount = 0;
-    testSource.subscribe({
+    source.subscribe({
       error: () => {
-        errorCount++;
+        // Initial attempt + 2 retries.
+        expect(attemptCount).toBe(3);
         done();
-      }
+      },
     });
-
-    // Error immediately to trigger retries
-    source.error(new Error('First error'));
   });
 
   it('should handle zero initial delay', (done) => {

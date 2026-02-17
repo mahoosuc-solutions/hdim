@@ -82,8 +82,6 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
         this.refreshData();
       });
     }
-    
-    this.loadMockData();
   }
   
   ngOnDestroy(): void {
@@ -345,126 +343,6 @@ export class MpiAuditDashboardComponent implements OnInit, OnDestroy {
       return { startDate, endDate };
     }
     return undefined;
-  }
-
-  /**
-   * Load mock data for demonstration
-   */
-  private loadMockData(): void {
-    this.mpiEvents = [
-      {
-        eventId: '660e8400-e29b-41d4-a716-446655440001',
-        timestamp: new Date(),
-        eventType: 'PATIENT_MERGE',
-        userId: 'mpi-admin-001',
-        tenantId: 'tenant-001',
-        sourcePatientId: 'PAT-12345',
-        targetPatientId: 'PAT-67890',
-        matchScore: 0.95,
-        mergeReason: 'Duplicate detected - same SSN, DOB, and name',
-        automatedMerge: false,
-        status: 'COMPLETED',
-        validationErrors: []
-      },
-      {
-        eventId: '660e8400-e29b-41d4-a716-446655440002',
-        timestamp: new Date(Date.now() - 3600000),
-        eventType: 'IDENTITY_RESOLUTION',
-        userId: 'mpi-admin-002',
-        tenantId: 'tenant-001',
-        sourcePatientId: 'PAT-11111',
-        targetPatientId: 'PAT-22222',
-        matchScore: 0.68,
-        mergeReason: 'Similar demographics - requires manual review',
-        automatedMerge: false,
-        status: 'PENDING',
-        validationErrors: ['SSN mismatch', 'Middle name differs']
-      },
-      {
-        eventId: '660e8400-e29b-41d4-a716-446655440003',
-        timestamp: new Date(Date.now() - 7200000),
-        eventType: 'DUPLICATE_DETECTION',
-        userId: 'system',
-        tenantId: 'tenant-002',
-        sourcePatientId: 'PAT-33333',
-        targetPatientId: 'PAT-44444',
-        matchScore: 0.88,
-        mergeReason: 'Automated duplicate detection - phonetic name match',
-        automatedMerge: true,
-        status: 'COMPLETED',
-        validationErrors: []
-      }
-    ];
-    
-    this.mergeEvents = [
-      {
-        eventId: '770e8400-e29b-41d4-a716-446655440001',
-        timestamp: new Date(Date.now() - 86400000),
-        mergedPatientId: 'PAT-12345',
-        survivingRecordId: 'PAT-67890',
-        mergedBy: 'mpi-admin-001',
-        matchScore: 0.95,
-        fieldsConflicted: ['address', 'phone'],
-        resolutionStrategy: 'KEEP_MOST_RECENT',
-        canRollback: true,
-        rolledBack: false
-      },
-      {
-        eventId: '770e8400-e29b-41d4-a716-446655440002',
-        timestamp: new Date(Date.now() - 172800000),
-        mergedPatientId: 'PAT-33333',
-        survivingRecordId: 'PAT-44444',
-        mergedBy: 'system',
-        matchScore: 0.88,
-        fieldsConflicted: ['email'],
-        resolutionStrategy: 'AUTOMATED_RULE',
-        canRollback: true,
-        rolledBack: false
-      }
-    ];
-    
-    this.dataQualityIssues = [
-      {
-        issueId: '880e8400-e29b-41d4-a716-446655440001',
-        timestamp: new Date(),
-        patientId: 'PAT-55555',
-        issueType: 'MISSING_SSN',
-        severity: 'HIGH',
-        description: 'Patient record missing SSN - impacts identity matching',
-        resolved: false,
-        resolvedBy: null,
-        resolutionDate: null
-      },
-      {
-        issueId: '880e8400-e29b-41d4-a716-446655440002',
-        timestamp: new Date(Date.now() - 3600000),
-        patientId: 'PAT-66666',
-        issueType: 'INVALID_DOB',
-        severity: 'MEDIUM',
-        description: 'Date of birth is in the future',
-        resolved: false,
-        resolvedBy: null,
-        resolutionDate: null
-      }
-    ];
-    
-    this.mpiMetrics = {
-      totalMerges: 247,
-      totalUnmerges: 12,
-      pendingResolutions: 8,
-      dataQualityIssues: 34,
-      duplicatesDetected: 156,
-      autoMergedRecords: 112,
-      manualReviewRequired: 8,
-      crossReferencesValidated: 523
-    };
-    
-    this.matchQualityMetrics = {
-      highConfidenceMatches: 112,
-      mediumConfidenceMatches: 87,
-      lowConfidenceMatches: 48,
-      averageMatchScore: 0.78
-    };
   }
 }
 

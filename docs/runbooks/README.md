@@ -14,6 +14,16 @@ Operational runbooks for the HealthData Intelligence Platform (HDIM).
 | [Kafka Issues](./kafka-issues.md) | High | Message queue problems |
 | [Memory/CPU Alerts](./resource-exhaustion.md) | Medium | Resource utilization alerts |
 | [Care Gap Processing](./care-gap-processing.md) | Medium | CQL evaluation issues |
+| [MCP Context-Aware Release Gate](./MCP_CONTEXT_AWARE_RELEASE_GATE.md) | High | Policy-aware release gating and tenant isolation decisions |
+| [MCP Implementation Reference Spec](./MCP_IMPLEMENTATION_REFERENCE_SPEC.md) | High | Central MCP architecture, tool contracts, guardrails, and testing requirements |
+| [CI Branch Protection Checklist](./CI_BRANCH_PROTECTION_CHECKLIST.md) | High | Required branch settings and status checks for merge gating |
+| [Session Flow PR Rehearsal Checklist](./SESSION_FLOW_PR_REHEARSAL_CHECKLIST.md) | High | Step-by-step validation for conditional session-flow CI gates |
+| [Session Flow Handoff Summary](./SESSION_FLOW_HANDOFF_SUMMARY.md) | High | Consolidated commands, CI gates, and final verification sequence |
+| [Session Flow Release Readiness Evidence](./SESSION_FLOW_RELEASE_READINESS_EVIDENCE.md) | High | Fill-in template for final validation evidence and Go/No-Go sign-off |
+| [CDS Hooks Care Gap Validation](./CDS_HOOKS_CARE_GAP_VALIDATION.md) | High | Local validation flow for CDS Hooks care-gap integration and deterministic fixture coverage |
+| [SMART Opaque Launch Context](./SMART_OPAQUE_LAUNCH_CONTEXT.md) | High | Opaque launch ID storage, TTL/cleanup policy, and fallback behavior for SMART launch flows |
+| [SMART Security Hardening](./SMART_SECURITY_HARDENING.md) | High | Required `state`/`aud`, launch scope consistency, and S256 PKCE enforcement for SMART OAuth flows |
+| [SMART Conformance Test Lane](./SMART_CONFORMANCE_TEST_LANE.md) | High | Deterministic standalone + EHR SMART launch conformance lane with scope/context and token behavior checks |
 
 ## Severity Levels
 

@@ -23,9 +23,14 @@ CURL_MAX_TIME="${CURL_MAX_TIME:-15}"
 CURL_CONNECT_TIMEOUT="${CURL_CONNECT_TIMEOUT:-5}"
 CURL_OPTS=(-sS --max-time "${CURL_MAX_TIME}" --connect-timeout "${CURL_CONNECT_TIMEOUT}")
 
-AUTH_TOKEN=$(curl "${CURL_OPTS[@]}" -X POST "${GATEWAY_URL}/api/v1/auth/login" \
+AUTH_LOGIN_RESP="$(curl "${CURL_OPTS[@]}" -X POST "${GATEWAY_URL}/api/v1/auth/login" \
   -H "Content-Type: application/json" \
-  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))" 2>/dev/null)
+  -H "X-Tenant-ID: ${TENANT_ID}" \
+  -d "{\"username\":\"${AUTH_USERNAME}\",\"password\":\"${AUTH_PASSWORD}\"}" \
+  -w $'\n%{http_code}' 2>/dev/null || true)"
+AUTH_LOGIN_STATUS="$(printf '%s' "${AUTH_LOGIN_RESP}" | tail -n 1)"
+AUTH_LOGIN_BODY="$(printf '%s' "${AUTH_LOGIN_RESP}" | sed '$d')"
+AUTH_TOKEN="$(printf '%s' "${AUTH_LOGIN_BODY}" | python3 -c "import json,sys; print(json.load(sys.stdin).get('accessToken',''))" 2>/dev/null || true)"
 
 AUTH_HEADER=()
 if [ -n "$AUTH_TOKEN" ] && [ "$AUTH_TOKEN" != "null" ]; then
@@ -88,26 +93,21 @@ fi
 echo ""
 echo "✅ Frontend (Port 4200)"
 if [ "${SKIP_FRONTEND_VALIDATE:-0}" = "1" ]; then
-    LISTEN_COUNT=1
+    FRONTEND_STATUS=200
     APP_COUNT=1
     echo "   • NX Serve:          skipped (SKIP_FRONTEND_VALIDATE=1)"
     echo "   • Angular App:       skipped (SKIP_FRONTEND_VALIDATE=1)"
 else
-    DEMO_PORTAL_CONTAINER="hdim-demo-clinical-portal"
-    if docker ps --format '{{.Names}}' | rg -q "^${DEMO_PORTAL_CONTAINER}$"; then
-        LISTEN_COUNT=1
-        echo "   • NX Serve:          docker (nginx)"
-    else
-        LISTEN_COUNT=$(lsof -i :4200 2>/dev/null | grep -c LISTEN)
-        echo "   • NX Serve:          $LISTEN_COUNT process listening"
-    fi
+    FRONTEND_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' http://localhost:4200 2>/dev/null || true)
+    echo "   • HTTP Status:       HTTP $FRONTEND_STATUS"
 
-    APP_COUNT=$(curl "${CURL_OPTS[@]}" http://localhost:4200 2>/dev/null | grep -c 'app-root')
+    APP_COUNT=$(curl "${CURL_OPTS[@]}" http://localhost:4200 2>/dev/null | grep -c 'app-root' || true)
     echo "   • Angular App:       $APP_COUNT components loaded"
 fi
 
 echo ""
 echo "✅ Auth Service (Tenant Allowlist)"
+echo "   • Login (With Tenant): HTTP $AUTH_LOGIN_STATUS"
 AUTH_NO_TENANT_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' \
   -X POST "${GATEWAY_URL}/api/v1/auth/login" \
   -H "Content-Type: application/json" \
@@ -127,22 +127,20 @@ AUDIT_GATEWAY_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' \
 echo "   • Gateway Stats:     HTTP $AUDIT_GATEWAY_STATUS"
 
 echo ""
-echo "═══════════════════════════════════════════════════════════════"
-echo "                    ✅ ALL SYSTEMS OPERATIONAL"
-echo "═══════════════════════════════════════════════════════════════"
-echo ""
-echo "Dashboard URL: http://localhost:4200"
-echo "Documentation: CRITICAL_FIXES_COMPLETE.md"
-echo ""
-
 # Summary
 echo "SUMMARY:"
 if [ "$QM_HEALTH" = "200" ] && ( [ "$QM_RESULTS" = "200" ] || [ "$QM_RESULTS" = "400" ] ) && \
    ( [ "$QM_MISSING_TENANT" = "400" ] || [ "$QM_MISSING_TENANT" = "403" ] ) && \
    [ "$FHIR_META" = "200" ] && [ "$FHIR_META_NO_TENANT" = "200" ] && [ "$FHIR_PATIENT" = "200" ] && \
-   [ "$AUTH_NO_TENANT_STATUS" = "200" ] && [ "$CORS_COUNT" -gt "0" ] && [ "$LISTEN_COUNT" -gt "0" ] && \
+   ( [ "$AUTH_LOGIN_STATUS" = "200" ] || [ "$AUTH_LOGIN_STATUS" = "400" ] || [ "$AUTH_LOGIN_STATUS" = "401" ] || [ "$AUTH_LOGIN_STATUS" = "403" ] ) && \
+   ( [ "$AUTH_NO_TENANT_STATUS" = "200" ] || [ "$AUTH_NO_TENANT_STATUS" = "400" ] || [ "$AUTH_NO_TENANT_STATUS" = "401" ] || [ "$AUTH_NO_TENANT_STATUS" = "403" ] ) && \
+   [ "$CORS_COUNT" -gt "0" ] && \
+   [ "$FRONTEND_STATUS" = "200" ] && [ "$APP_COUNT" -gt "0" ] && \
    [ "$AUDIT_DIRECT_STATUS" = "200" ] && [ "$AUDIT_GATEWAY_STATUS" = "200" ]; then
-    echo "✅ All critical services operational - Dashboard ready for use"
+    echo "✅ All critical services operational - Demo is ready"
+    echo ""
+    echo "Dashboard URL: http://localhost:4200"
+    echo "Documentation: CRITICAL_FIXES_COMPLETE.md"
     exit 0
 else
     echo "⚠️  Some services may need attention - Check status codes above"

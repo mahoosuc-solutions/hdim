@@ -141,7 +141,7 @@ class QualityMeasureEvaluationE2ETest {
                 .andExpect(jsonPath("$.patientId").value(PATIENT_ID.toString()))
                 .andExpect(jsonPath("$.measureId").value(MEASURE_CDC_A1C9))
                 .andExpect(jsonPath("$.numeratorCompliant").value(true))
-                .andExpect(jsonPath("$.denominatorElligible").value(true))
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
                 .andExpect(jsonPath("$.score").value(92.3))
                 .andExpect(jsonPath("$.complianceRate").value(85.5));
 
@@ -151,7 +151,7 @@ class QualityMeasureEvaluationE2ETest {
             assertThat(results.get(0).getTenantId()).isEqualTo(TENANT_ID);
             assertThat(results.get(0).getPatientId()).isEqualTo(PATIENT_ID);
             assertThat(results.get(0).getNumeratorCompliant()).isTrue();
-            assertThat(results.get(0).getDenominatorElligible()).isTrue();
+            assertThat(results.get(0).getDenominatorEligible()).isTrue();
 
             // Verify CQL engine was called
             verify(cqlEngineServiceClient, times(1)).evaluateCql(
@@ -193,7 +193,7 @@ class QualityMeasureEvaluationE2ETest {
                     .param("patient", PATIENT_ID.toString())
                     .param("measure", MEASURE_CBP))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.denominatorElligible").value(false))
+                .andExpect(jsonPath("$.denominatorEligible").value(false))
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
                 .andExpect(jsonPath("$.score").value(0));
         }
@@ -229,7 +229,7 @@ class QualityMeasureEvaluationE2ETest {
                     .param("patient", PATIENT_ID.toString())
                     .param("measure", MEASURE_CBP))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.denominatorElligible").value(true))
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
                 .andExpect(jsonPath("$.score").value(45.0))
                 .andExpect(jsonPath("$.complianceRate").value(0));
@@ -554,7 +554,7 @@ class QualityMeasureEvaluationE2ETest {
                 .measureId("HEDIS_CDC_A1C9")
                 .measureName("Diabetes HbA1c Control")
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .score(95.0)
                 .calculationDate(LocalDate.now())
                 .createdBy("test-user")
@@ -566,7 +566,7 @@ class QualityMeasureEvaluationE2ETest {
                 .measureId("HEDIS_CBP")
                 .measureName("Blood Pressure Control")
                 .numeratorCompliant(false)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .score(45.0)
                 .calculationDate(LocalDate.now())
                 .createdBy("test-user")
@@ -602,7 +602,7 @@ class QualityMeasureEvaluationE2ETest {
                 .measureId(MEASURE_CDC_A1C9)
                 .measureName("Diabetes HbA1c Control")
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .score(95.0)
                 .calculationDate(LocalDate.now())
                 .createdBy("test-user")
@@ -640,7 +640,7 @@ class QualityMeasureEvaluationE2ETest {
                 .measureId(MEASURE_CDC_A1C9)
                 .measureName("Diabetes HbA1c Control")
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .score(95.0)
                 .calculationDate(LocalDate.now())
                 .createdBy("test-user")

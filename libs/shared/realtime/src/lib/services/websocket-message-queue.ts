@@ -15,7 +15,7 @@ import { WebSocketMessage } from '../models/websocket-message.model';
 export class WebSocketMessageQueue {
   private queue: WebSocketMessage[] = [];
 
-  constructor(private maxSize: number = 100) {}
+  constructor(private maxSize = 100) {}
 
   /**
    * Add message to queue

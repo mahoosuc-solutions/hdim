@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -23,68 +23,86 @@ export interface QualityMeasure {
     <div class="quality-measures-container">
       <h2>Quality Measures</h2>
 
-      <div class="filters" *ngIf="statuses">
-        <button *ngFor="let status of statuses"
-                (click)="filterByStatus(status)"
-                [class.active]="activeFilter === status"
-                class="filter-btn">
-          {{ status }}
-        </button>
-      </div>
-
-      <div *ngIf="filteredMeasures$ | async as measures; else loading" class="measures-list">
-        <div *ngIf="measures.length > 0; else noData" class="table-container">
-          <table class="measures-table">
-            <thead>
-              <tr>
-                <th>Measure Name</th>
-                <th>Status</th>
-                <th>Population</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let measure of measures" [class]="'status-' + measure.status">
-                <td (click)="showDetail(measure)" class="measure-name">
-                  {{ measure.name }}
-                </td>
-                <td class="status">
-                  <span [class]="'badge-' + measure.status">
-                    {{ measure.status }}
-                  </span>
-                </td>
-                <td>{{ measure.population || '-' }}</td>
-                <td>
-                  <button (click)="showDetail(measure)" class="detail-btn">View</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      @if (statuses?.length) {
+        <div class="filters">
+          @for (status of statuses; track status) {
+            <button
+              type="button"
+              (click)="filterByStatus(status)"
+              [class.active]="activeFilter === status"
+              class="filter-btn"
+            >
+              {{ status }}
+            </button>
+          }
         </div>
-      </div>
+      }
 
-      <ng-template #loading>
+      @if (filteredMeasures$ | async; as measures) {
+        <div class="measures-list">
+          @if (measures.length > 0) {
+            <div class="table-container">
+              <table class="measures-table">
+                <thead>
+                  <tr>
+                    <th>Measure Name</th>
+                    <th>Status</th>
+                    <th>Population</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (measure of measures; track measure.id) {
+                    <tr [class]="'status-' + measure.status">
+                      <td class="measure-name">
+                        <button type="button" (click)="showDetail(measure)" class="measure-link">
+                          {{ measure.name }}
+                        </button>
+                      </td>
+                      <td class="status">
+                        <span [class]="'badge-' + measure.status">
+                          {{ measure.status }}
+                        </span>
+                      </td>
+                      <td>{{ measure.population || '-' }}</td>
+                      <td>
+                        <button type="button" (click)="showDetail(measure)" class="detail-btn">View</button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <div class="no-data">No quality measures available</div>
+          }
+        </div>
+      } @else {
         <div class="loading">Loading quality measures...</div>
-      </ng-template>
-
-      <ng-template #noData>
-        <div class="no-data">No quality measures available</div>
-      </ng-template>
+      }
 
       <!-- Detail Panel -->
-      <div *ngIf="selectedMeasure$ | async as measure" class="detail-panel">
-        <div class="detail-content">
-          <button (click)="closeDetail()" class="close-btn">×</button>
-          <h3>{{ measure.name }}</h3>
-          <p>{{ measure.description }}</p>
-          <div class="detail-metrics">
-            <div>Status: <strong>{{ measure.status }}</strong></div>
-            <div *ngIf="measure.target">Target: <strong>{{ measure.target }}</strong></div>
-            <div *ngIf="measure.actual">Actual: <strong>{{ measure.actual }}</strong></div>
-            <div *ngIf="measure.population">Population: <strong>{{ measure.population }}</strong></div>
+      @if (selectedMeasure$ | async; as measure) {
+        <div class="detail-panel">
+          <div class="detail-content">
+            <button type="button" (click)="closeDetail()" class="close-btn">×</button>
+            <h3>{{ measure.name }}</h3>
+            <p>{{ measure.description }}</p>
+            <div class="detail-metrics">
+              <div>Status: <strong>{{ measure.status }}</strong></div>
+              @if (measure.target) {
+                <div>Target: <strong>{{ measure.target }}</strong></div>
+              }
+              @if (measure.actual) {
+                <div>Actual: <strong>{{ measure.actual }}</strong></div>
+              }
+              @if (measure.population) {
+                <div>Population: <strong>{{ measure.population }}</strong></div>
+              }
+            </div>
           </div>
         </div>
-      </div>
+      }
     </div>
   `,
   styles: [`
@@ -144,9 +162,22 @@ export interface QualityMeasure {
     }
 
     .measure-name {
-      cursor: pointer;
       color: #007bff;
+    }
+
+    .measure-link {
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font: inherit;
+      color: inherit;
       text-decoration: underline;
+      text-align: left;
+    }
+
+    .measure-link:hover {
+      text-decoration-thickness: 2px;
     }
 
     .status-MET {
@@ -282,10 +313,10 @@ export class QualityMeasuresComponent implements OnInit {
   private activeFilterSubject$ = new BehaviorSubject<string>('ALL');
   private selectedMeasureSubject$ = new BehaviorSubject<QualityMeasure | null>(null);
 
-  constructor(
-    private pipeline: Clinical360PipelineService,
-    private eventBus: EventBusService
-  ) {
+  private pipeline = inject(Clinical360PipelineService);
+  private eventBus = inject(EventBusService);
+
+  constructor() {
     this.selectedMeasure$ = this.selectedMeasureSubject$.asObservable();
   }
 

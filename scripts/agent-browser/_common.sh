@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-AB_BASE_URL="${PORTAL_URL:-http://localhost:18080}"
+AB_BASE_URL="${PORTAL_URL:-http://localhost:4200}"
 AB_SCREENSHOT_DIR="${SCREENSHOT_DIR:-/tmp/agent-browser-smoke}"
 AB_SLEEP_SECS="${AB_SLEEP_SECS:-2}"
 

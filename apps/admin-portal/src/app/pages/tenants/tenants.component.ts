@@ -744,9 +744,8 @@ export class TenantsComponent implements OnInit, OnDestroy {
   }
 
   openSettings(tenant: Tenant): void {
-    // Navigate to tenant settings page
     this.logger.info('Opening tenant settings', { tenantId: tenant.id });
-    // TODO: Implement navigation to tenant settings page
+    this.editTenant(tenant);
   }
 
   toggleTenantStatus(tenant: Tenant): void {

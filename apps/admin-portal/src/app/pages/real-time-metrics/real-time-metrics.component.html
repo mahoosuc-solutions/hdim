@@ -142,7 +142,7 @@
           </div>
         </div>
 
-        <div class="metric-row single">
+        <div class="metric-row">
           <div
             class="metric-card latency"
             [class.status-healthy]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p95LatencyMs) === 'healthy'"
@@ -151,6 +151,17 @@
             <div class="metric-label">P95 Latency</div>
             <div class="metric-value">
               {{ formatNumber(serviceMetrics.get(service.id)!.p95LatencyMs, 0) }} ms
+            </div>
+          </div>
+
+          <div
+            class="metric-card latency"
+            [class.status-healthy]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p99LatencyMs) === 'healthy'"
+            [class.status-warning]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p99LatencyMs) === 'warning'"
+            [class.status-critical]="getMetricStatus('latency', serviceMetrics.get(service.id)!.p99LatencyMs) === 'critical'">
+            <div class="metric-label">P99 Latency</div>
+            <div class="metric-value">
+              {{ formatNumber(serviceMetrics.get(service.id)!.p99LatencyMs, 0) }} ms
             </div>
           </div>
         </div>

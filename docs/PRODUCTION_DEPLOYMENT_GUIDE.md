@@ -47,6 +47,16 @@
   wc -l production_backup_*.sql  # Should show thousands of lines
   ```
 
+- [ ] **5. Run MCP Context-Aware Release Gate (Pre-check)**
+  ```bash
+  # Warn-only policy for pre-deployment situational awareness
+  npm run mcp:release-gate -- --mode permissive
+
+  # Artifacts:
+  # logs/mcp-reports/release-gate-<timestamp>.json
+  # logs/mcp-reports/release-gate-<timestamp>.md
+  ```
+
 ---
 
 ## 🚀 DEPLOYMENT STEPS
@@ -122,6 +132,14 @@ docker exec hdim-demo-redis redis-cli ping
 
 # Check database connections
 docker exec hdim-demo-postgres psql -U healthdata -d patient_db -c "SELECT version();"
+```
+
+### Step 6: Run Strict MCP Release Gate (Production Decision)
+```bash
+# Blocking production policy
+npm run mcp:release-gate -- --mode strict --include-logs
+
+# Expected: pass=true and exit code 0
 ```
 
 ---
@@ -238,6 +256,8 @@ echo "services running"
 - ✅ No critical errors in logs
 - ✅ FHIR metadata accessible
 - ✅ Audit logging active
+- ✅ MCP strict release gate passed (`pass=true`)
+- ✅ MCP gate artifacts saved with deployment evidence
 
 ---
 
@@ -353,6 +373,7 @@ docker compose ps
 - [ ] Database backup created
 - [ ] Backup file verified
 - [ ] Current configuration saved
+- [ ] MCP permissive release gate run and reviewed
 - [ ] Rollback procedure tested
 - [ ] Team notified
 - [ ] On-call engineer available
@@ -364,6 +385,7 @@ docker compose ps
 - [ ] Services are healthy (checking status)
 - [ ] All health checks passing
 - [ ] No critical errors in logs
+- [ ] MCP strict release gate passed
 
 **Post-Deployment:**
 - [ ] All 12 services running
@@ -380,6 +402,7 @@ docker compose ps
 - [ ] Zero service failures
 - [ ] Zero database errors
 - [ ] HIPAA compliance verified
+- [ ] MCP gate artifacts archived (`logs/mcp-reports/*`)
 - [ ] Deployment log recorded
 - [ ] Team notified of success
 

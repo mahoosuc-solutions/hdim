@@ -171,7 +171,7 @@ public class CareGapDetectionService {
      */
     private boolean shouldCreateGap(QualityMeasureResultEntity measureResult) {
         // Must be eligible (in denominator)
-        if (!measureResult.getDenominatorElligible()) {
+        if (!measureResult.getDenominatorEligible()) {
             return false;
         }
 
@@ -259,7 +259,7 @@ public class CareGapDetectionService {
             measureResult.getMeasureId(),
             measureResult.getMeasureYear() != null ? measureResult.getMeasureYear() : LocalDate.now().getYear(),
             measureResult.getCalculationDate(),
-            measureResult.getDenominatorElligible(),
+            measureResult.getDenominatorEligible(),
             measureResult.getNumeratorCompliant(),
             measureResult.getCqlLibrary() != null ? measureResult.getCqlLibrary() : "N/A"
         );

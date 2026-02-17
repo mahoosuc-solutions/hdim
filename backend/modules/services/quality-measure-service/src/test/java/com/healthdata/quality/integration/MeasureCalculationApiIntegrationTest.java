@@ -102,7 +102,7 @@ class MeasureCalculationApiIntegrationTest {
                 .andExpect(jsonPath("$.measureName").value("Comprehensive Diabetes Care: HbA1c Control (<9.0%)"))
                 .andExpect(jsonPath("$.measureCategory").value("HEDIS"))
                 .andExpect(jsonPath("$.numeratorCompliant").value(true))
-                .andExpect(jsonPath("$.denominatorElligible").value(true))
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
                 .andExpect(jsonPath("$.complianceRate").value(85.5))
                 .andExpect(jsonPath("$.score").value(92.3))
                 .andExpect(jsonPath("$.cqlLibrary").value(MEASURE_ID))
@@ -278,7 +278,7 @@ class MeasureCalculationApiIntegrationTest {
         QualityMeasureResultEntity entity = results.get(0);
         assert entity.getMeasureId().equals(MEASURE_ID);
         assert entity.getNumeratorCompliant();
-        assert entity.getDenominatorElligible();
+        assert entity.getDenominatorEligible();
     }
 
     @Test
@@ -306,7 +306,7 @@ class MeasureCalculationApiIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
-                .andExpect(jsonPath("$.denominatorElligible").value(true))
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
                 .andExpect(jsonPath("$.complianceRate").value(0.0));
     }
 }

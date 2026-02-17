@@ -276,6 +276,34 @@ describe('PrometheusService', () => {
     });
   });
 
+  describe('getP99Latency', () => {
+    it('should return P99 latency in milliseconds for a service', (done) => {
+      const mockResponse: PrometheusQueryResult = {
+        status: 'success',
+        data: {
+          resultType: 'vector',
+          result: [
+            {
+              metric: { instance: 'patient-service:8084' },
+              value: [1706140800, '0.25'] // 250ms in seconds
+            }
+          ]
+        }
+      };
+
+      service.getP99Latency(mockServiceName).subscribe((latency) => {
+        expect(latency).toBe(250);
+        done();
+      });
+
+      const req = httpMock.expectOne((request) =>
+        request.url.includes('/api/v1/query') &&
+        request.params.get('query')?.includes('histogram_quantile(0.99')
+      );
+      req.flush(mockResponse);
+    });
+  });
+
   describe('isPrometheusAvailable', () => {
     it('should return true when Prometheus is reachable', (done) => {
       service.isPrometheusAvailable().subscribe((available) => {
@@ -283,8 +311,8 @@ describe('PrometheusService', () => {
         done();
       });
 
-      const req = httpMock.expectOne((request) => request.url.includes('/-/ready'));
-      req.flush({ status: 'ready' });
+      const req = httpMock.expectOne((request) => request.url.includes('/-/healthy'));
+      req.flush('Prometheus is Healthy');
     });
 
     it('should return false when Prometheus is unreachable', (done) => {
@@ -293,7 +321,7 @@ describe('PrometheusService', () => {
         done();
       });
 
-      const req = httpMock.expectOne((request) => request.url.includes('/-/ready'));
+      const req = httpMock.expectOne((request) => request.url.includes('/-/healthy'));
       req.flush(null, { status: 503, statusText: 'Service Unavailable' });
     });
 
@@ -303,7 +331,7 @@ describe('PrometheusService', () => {
         done();
       });
 
-      const req = httpMock.expectOne((request) => request.url.includes('/-/ready'));
+      const req = httpMock.expectOne((request) => request.url.includes('/-/healthy'));
       req.error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
     });
   });

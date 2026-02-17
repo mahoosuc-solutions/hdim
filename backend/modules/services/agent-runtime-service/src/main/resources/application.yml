@@ -171,19 +171,24 @@ hdim:
   # Service discovery
   services:
     fhir:
-      url: ${FHIR_SERVICE_URL:http://localhost:8085}
+      url: ${FHIR_SERVICE_URL:http://fhir-service:8085}
     cql-engine:
-      url: ${CQL_ENGINE_URL:http://localhost:8081}
+      url: ${CQL_ENGINE_URL:http://cql-engine-service:8081}
     care-gap:
-      url: ${CARE_GAP_SERVICE_URL:http://localhost:8086}
+      url: ${CARE_GAP_SERVICE_URL:http://care-gap-service:8086}
     quality-measure:
-      url: ${QUALITY_MEASURE_SERVICE_URL:http://localhost:8087}
+      url: ${QUALITY_MEASURE_SERVICE_URL:http://quality-measure-service:8087}
     predictive-analytics:
-      url: ${PREDICTIVE_ANALYTICS_URL:http://localhost:8090}
+      url: ${PREDICTIVE_ANALYTICS_URL:http://predictive-analytics-service:8090}
     agent-builder:
-      url: ${AGENT_BUILDER_URL:http://localhost:8095}
+      url: ${AGENT_BUILDER_URL:http://agent-builder-service:8095}
     approval:
-      url: ${APPROVAL_SERVICE_URL:http://localhost:8096}
+      url: ${APPROVAL_SERVICE_URL:http://approval-service:8096}
+    # approval-service key used by ApprovalServiceClient Feign annotation
+    approval-service:
+      url: ${APPROVAL_SERVICE_URL:http://approval-service:8096}
+    notification:
+      url: ${NOTIFICATION_SERVICE_URL:http://notification-service:8107}
 
 ---
 # Resilience4j Configuration

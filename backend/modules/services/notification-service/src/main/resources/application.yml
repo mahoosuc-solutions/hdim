@@ -94,11 +94,11 @@ notification:
 # Service URLs
 fhir:
   service:
-    url: http://localhost:8085
+    url: ${FHIR_SERVICE_URL:http://fhir-service:8085}
 
 patient:
   service:
-    url: http://localhost:8084
+    url: ${PATIENT_SERVICE_URL:http://patient-service:8084}
 
 # Kafka topics
 kafka:

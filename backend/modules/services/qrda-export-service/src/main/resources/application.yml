@@ -36,22 +36,22 @@ healthdata:
 # Quality Measure Service (for measure results)
 quality-measure:
   service:
-    url: http://localhost:8087/quality-measure
+    url: ${QUALITY_MEASURE_SERVICE_URL:http://quality-measure-service:8087/quality-measure}
 
 # CQL Engine Service (for measure calculation)
 cql:
   engine:
-    url: http://localhost:8081/cql-engine
+    url: ${CQL_ENGINE_URL:http://cql-engine-service:8081/cql-engine}
 
 # Patient Service (for patient demographics)
 patient:
   service:
-    url: http://localhost:8084/patient
+    url: ${PATIENT_SERVICE_URL:http://patient-service:8084/patient}
 
 # FHIR Server (for clinical data)
 fhir:
   server:
-    url: http://localhost:8085/fhir
+    url: ${FHIR_SERVICE_URL:http://fhir-service:8085/fhir}
 
 # JWT Configuration
 jwt:
@@ -67,15 +67,15 @@ feign:
         readTimeout: 30000
         loggerLevel: basic
       quality-measure-service:
-        url: http://localhost:8087
+        url: ${QUALITY_MEASURE_SERVICE_URL:http://quality-measure-service:8087}
         connectTimeout: 5000
         readTimeout: 30000
       cql-engine-service:
-        url: http://localhost:8081
+        url: ${CQL_ENGINE_URL:http://cql-engine-service:8081}
         connectTimeout: 5000
         readTimeout: 60000  # CQL evaluation can take longer
       patient-service:
-        url: http://localhost:8084
+        url: ${PATIENT_SERVICE_URL:http://patient-service:8084}
         connectTimeout: 5000
         readTimeout: 15000
 

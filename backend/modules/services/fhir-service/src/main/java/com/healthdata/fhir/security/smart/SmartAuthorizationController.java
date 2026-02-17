@@ -39,6 +39,7 @@ public class SmartAuthorizationController {
 
     private final SmartAuthorizationService authorizationService;
     private final SmartClientRepository clientRepository;
+    private final SmartLaunchContextStore launchContextStore;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Operation(
@@ -316,30 +317,29 @@ public class SmartAuthorizationController {
         builder.audience(audience);
 
         if (StringUtils.hasText(launch)) {
-            // EHR launch - decode launch parameter
-            builder.launch(launch);
+            // EHR launch - decode or resolve launch parameter
             builder.standalone(false);
-            applyLaunchParameterContext(launch, builder);
+            resolveAndApplyLaunchContext(launch, builder);
         } else {
             // Standalone launch
             builder.standalone(true);
         }
 
-        // For demo purposes, set some context if requested
-        if (scopes.contains("launch/patient") || scopes.contains("patient/*.read")) {
-            // In production, this would come from user selection or EHR context
-            builder.patient("demo-patient-001");
+        SmartLaunchContext context = builder.build();
+
+        // Fallback defaults for standalone/demo flows when context is not provided by launch.
+        if ((scopes.contains("launch/patient") || scopes.contains("patient/*.read"))
+                && !StringUtils.hasText(context.getPatient())) {
+            context.setPatient("demo-patient-001");
+        }
+        if (scopes.contains("launch/encounter") && !StringUtils.hasText(context.getEncounter())) {
+            context.setEncounter("demo-encounter-001");
+        }
+        if (scopes.contains("fhirUser") && !StringUtils.hasText(context.getFhirUser())) {
+            context.setFhirUser("Practitioner/demo-practitioner-001");
         }
 
-        if (scopes.contains("launch/encounter")) {
-            builder.encounter("demo-encounter-001");
-        }
-
-        if (scopes.contains("fhirUser")) {
-            builder.fhirUser("Practitioner/demo-practitioner-001");
-        }
-
-        return builder.build();
+        return context;
     }
 
     /**
@@ -349,23 +349,40 @@ public class SmartAuthorizationController {
      * - base64url-encoded JSON object
      * - JWT/JWS where payload is base64url-encoded JSON object
      */
-    private void applyLaunchParameterContext(String launch, SmartLaunchContext.SmartLaunchContextBuilder builder) {
+    private void resolveAndApplyLaunchContext(String launch, SmartLaunchContext.SmartLaunchContextBuilder builder) {
+        builder.launch(launch);
         try {
             Map<String, Object> launchContext = parseLaunchParameter(launch);
-            if (launchContext == null || launchContext.isEmpty()) {
+            if (launchContext != null && !launchContext.isEmpty()) {
+                // Replace inline launch payload with opaque launch ID for downstream continuity.
+                String opaqueLaunchId = launchContextStore.storeLaunchContext(launchContext);
+                builder.launch(opaqueLaunchId);
+                applyLaunchContext(launchContext, builder);
                 return;
             }
 
-            builder.patient(asString(launchContext.get("patient")));
-            builder.encounter(asString(launchContext.get("encounter")));
-            builder.fhirUser(asString(launchContext.get("fhirUser")));
-            builder.tenant(asString(launchContext.get("tenant")));
-            builder.intent(asString(launchContext.get("intent")));
-            builder.smartStyleUrl(asString(launchContext.get("smart_style_url")));
-            builder.needPatientBanner(asBoolean(launchContext.get("need_patient_banner")));
+            Optional<Map<String, Object>> storedLaunchContext = Optional.ofNullable(
+                launchContextStore.resolveLaunchContext(launch)).orElse(Optional.empty());
+
+            if (storedLaunchContext.isPresent()) {
+                applyLaunchContext(storedLaunchContext.get(), builder);
+                return;
+            }
+
+            log.debug("Launch parameter not decodable and no opaque context found. Falling back to scope-based context. launch={}", launch);
         } catch (Exception e) {
-            log.debug("Launch parameter could not be decoded as context payload; falling back to scope-based context. launch={}", launch);
+            log.debug("Launch parameter resolution failed; falling back to scope-based context. launch={}", launch);
         }
+    }
+
+    private void applyLaunchContext(Map<String, Object> launchContext, SmartLaunchContext.SmartLaunchContextBuilder builder) {
+        builder.patient(asString(launchContext.get("patient")));
+        builder.encounter(asString(launchContext.get("encounter")));
+        builder.fhirUser(asString(launchContext.get("fhirUser")));
+        builder.tenant(asString(launchContext.get("tenant")));
+        builder.intent(asString(launchContext.get("intent")));
+        builder.smartStyleUrl(asString(launchContext.get("smart_style_url")));
+        builder.needPatientBanner(asBoolean(launchContext.get("need_patient_banner")));
     }
 
     private Map<String, Object> parseLaunchParameter(String launch) {

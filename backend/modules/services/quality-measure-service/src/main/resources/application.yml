@@ -79,6 +79,8 @@ jwt:
 
 # Feign Client Configuration
 feign:
+  circuitbreaker:
+    enabled: true
   client:
     config:
       default:
@@ -227,11 +229,6 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-# Enable Feign's Resilience4j circuit breaker integration
-feign:
-  circuitbreaker:
-    enabled: true
 
 # Resilience4j Circuit Breaker Configuration
 # Prevents cascading failures when downstream services degrade

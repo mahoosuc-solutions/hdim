@@ -139,14 +139,25 @@ class SmartAuthorizationServiceTest {
     @DisplayName("Should reject missing code verifier")
     void shouldRejectMissingCodeVerifier() {
         SmartAuthorizationService service = buildService();
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .accessTokenLifetime(3600)
+                .redirectUris(Set.of("http://app/callback"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        String codeChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                "challenge".getBytes(StandardCharsets.US_ASCII));
 
         String code = service.generateAuthorizationCode(
                 "client-1",
                 "http://app/callback",
                 Set.of("launch"),
                 null,
-                "challenge",
-                "plain",
+                codeChallenge,
+                "S256",
                 SmartLaunchContext.builder().build());
 
         assertThatThrownBy(() -> service.exchangeAuthorizationCode(
@@ -157,16 +168,27 @@ class SmartAuthorizationServiceTest {
 
     @Test
     @DisplayName("Should reject invalid code verifier")
-    void shouldRejectInvalidCodeVerifier() {
+    void shouldRejectInvalidCodeVerifier() throws Exception {
         SmartAuthorizationService service = buildService();
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .accessTokenLifetime(3600)
+                .redirectUris(Set.of("http://app/callback"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        String codeChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(
+                MessageDigest.getInstance("SHA-256").digest("expected-verifier".getBytes(StandardCharsets.US_ASCII)));
 
         String code = service.generateAuthorizationCode(
                 "client-1",
                 "http://app/callback",
                 Set.of("launch"),
                 null,
-                "challenge",
-                "plain",
+                codeChallenge,
+                "S256",
                 SmartLaunchContext.builder().build());
 
         assertThatThrownBy(() -> service.exchangeAuthorizationCode(
@@ -179,6 +201,14 @@ class SmartAuthorizationServiceTest {
     @DisplayName("Should reject unsupported PKCE method")
     void shouldRejectUnsupportedPkceMethod() {
         SmartAuthorizationService service = buildService();
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .accessTokenLifetime(3600)
+                .redirectUris(Set.of("http://app/callback"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
 
         String code = service.generateAuthorizationCode(
                 "client-1",
@@ -192,7 +222,64 @@ class SmartAuthorizationServiceTest {
         assertThatThrownBy(() -> service.exchangeAuthorizationCode(
                 code, "client-1", "http://app/callback", "challenge"))
             .isInstanceOf(SmartAuthorizationException.class)
-            .hasMessageContaining("Invalid code verifier");
+            .hasMessageContaining("Only S256 PKCE is supported");
+    }
+
+    @Test
+    @DisplayName("Should require PKCE for public client")
+    void shouldRequirePkceForPublicClient() {
+        SmartAuthorizationService service = buildService();
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.PUBLIC)
+                .accessTokenLifetime(3600)
+                .redirectUris(Set.of("http://app/callback"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        String code = service.generateAuthorizationCode(
+                "client-1",
+                "http://app/callback",
+                Set.of("launch"),
+                null,
+                null,
+                "S256",
+                SmartLaunchContext.builder().build());
+
+        assertThatThrownBy(() -> service.exchangeAuthorizationCode(
+                code, "client-1", "http://app/callback", null))
+            .isInstanceOf(SmartAuthorizationException.class)
+            .hasMessageContaining("PKCE is required for this client");
+    }
+
+    @Test
+    @DisplayName("Should require PKCE when client is configured to require it")
+    void shouldRequirePkceWhenClientConfigured() {
+        SmartAuthorizationService service = buildService();
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .requirePkce(true)
+                .accessTokenLifetime(3600)
+                .redirectUris(Set.of("http://app/callback"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        String code = service.generateAuthorizationCode(
+                "client-1",
+                "http://app/callback",
+                Set.of("launch"),
+                null,
+                null,
+                "S256",
+                SmartLaunchContext.builder().build());
+
+        assertThatThrownBy(() -> service.exchangeAuthorizationCode(
+                code, "client-1", "http://app/callback", null))
+            .isInstanceOf(SmartAuthorizationException.class)
+            .hasMessageContaining("PKCE is required for this client");
     }
 
     @Test

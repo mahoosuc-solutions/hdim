@@ -69,6 +69,7 @@ public class RiskAssessmentEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing condition created event", e);
+            throw new RuntimeException("Failed to process condition created event", e);
         }
     }
 
@@ -107,6 +108,7 @@ public class RiskAssessmentEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing condition updated event", e);
+            throw new RuntimeException("Failed to process condition updated event", e);
         }
     }
 
@@ -151,6 +153,7 @@ public class RiskAssessmentEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing observation created event", e);
+            throw new RuntimeException("Failed to process observation created event", e);
         }
     }
 

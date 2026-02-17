@@ -61,6 +61,7 @@ public class EvaluationEventConsumer {
 
         } catch (Exception e) {
             logger.error("Error processing batch progress event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process batch progress event", e);
         }
     }
 
@@ -85,6 +86,7 @@ public class EvaluationEventConsumer {
 
         } catch (Exception e) {
             logger.error("Error processing evaluation started event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process evaluation started event", e);
         }
     }
 
@@ -110,6 +112,7 @@ public class EvaluationEventConsumer {
 
         } catch (Exception e) {
             logger.error("Error processing evaluation completed event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process evaluation completed event", e);
         }
     }
 
@@ -135,6 +138,7 @@ public class EvaluationEventConsumer {
 
         } catch (Exception e) {
             logger.error("Error processing evaluation failed event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process evaluation failed event", e);
         }
     }
 }

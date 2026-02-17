@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { LoggerService } from './logger.service';
 
@@ -170,8 +170,23 @@ export class PrometheusService {
   }
 
   /**
+   * Get P99 latency for a specific service
+   * Returns 99th percentile response time in milliseconds
+   *
+   * @param serviceName Name of the service
+   * @returns Observable<number> P99 latency in ms
+   */
+  getP99Latency(serviceName: string): Observable<number> {
+    const query = `histogram_quantile(0.99, rate(http_server_requests_seconds_bucket{job="hdim-services",instance=~"${serviceName}.*"}[5m])) * 1000`;
+    return this.query(query).pipe(
+      map((result) => this.extractScalarValue(result) || 0)
+    );
+  }
+
+  /**
    * Get all metrics for a specific service
-   * Convenience method that fetches CPU, memory, request rate, error rate, and P95 latency
+   * Convenience method that fetches CPU, memory, request rate, error rate,
+   * and latency percentiles (P95/P99)
    *
    * @param serviceName Name of the service
    * @returns Observable<ServiceMetrics>
@@ -185,7 +200,7 @@ export class PrometheusService {
       this.getCpuUsage(serviceName).subscribe({
         next: (cpu) => {
           metrics.cpuUsage = cpu;
-          if (Object.keys(metrics).length === 6) {
+          if (Object.keys(metrics).length === 7) {
             observer.next(metrics as ServiceMetrics);
             observer.complete();
           }
@@ -196,7 +211,7 @@ export class PrometheusService {
       this.getMemoryUsage(serviceName).subscribe({
         next: (memory) => {
           metrics.memoryUsageMb = memory;
-          if (Object.keys(metrics).length === 6) {
+          if (Object.keys(metrics).length === 7) {
             observer.next(metrics as ServiceMetrics);
             observer.complete();
           }
@@ -207,7 +222,7 @@ export class PrometheusService {
       this.getRequestRate(serviceName).subscribe({
         next: (requestRate) => {
           metrics.requestsPerSecond = requestRate;
-          if (Object.keys(metrics).length === 6) {
+          if (Object.keys(metrics).length === 7) {
             observer.next(metrics as ServiceMetrics);
             observer.complete();
           }
@@ -218,7 +233,7 @@ export class PrometheusService {
       this.getErrorRate(serviceName).subscribe({
         next: (errorRate) => {
           metrics.errorsPerSecond = errorRate;
-          if (Object.keys(metrics).length === 6) {
+          if (Object.keys(metrics).length === 7) {
             observer.next(metrics as ServiceMetrics);
             observer.complete();
           }
@@ -229,7 +244,18 @@ export class PrometheusService {
       this.getP95Latency(serviceName).subscribe({
         next: (latency) => {
           metrics.p95LatencyMs = latency;
-          if (Object.keys(metrics).length === 6) {
+          if (Object.keys(metrics).length === 7) {
+            observer.next(metrics as ServiceMetrics);
+            observer.complete();
+          }
+        },
+        error: (err) => observer.error(err),
+      });
+
+      this.getP99Latency(serviceName).subscribe({
+        next: (latency) => {
+          metrics.p99LatencyMs = latency;
+          if (Object.keys(metrics).length === 7) {
             observer.next(metrics as ServiceMetrics);
             observer.complete();
           }
@@ -253,7 +279,7 @@ export class PrometheusService {
       }),
       catchError((error) => {
         this.logger.warn('Prometheus is not available, will use mock data', error);
-        return throwError(() => false);
+        return of(false);
       })
     );
   }
@@ -322,4 +348,5 @@ export interface ServiceMetrics {
   requestsPerSecond: number;
   errorsPerSecond: number;
   p95LatencyMs: number; // Milliseconds
+  p99LatencyMs: number; // Milliseconds
 }

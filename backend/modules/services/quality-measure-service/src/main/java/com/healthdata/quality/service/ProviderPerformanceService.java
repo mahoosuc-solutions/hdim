@@ -223,20 +223,20 @@ public class ProviderPerformanceService {
 
         // Calculate provider rate
         long providerEligible = providerResults.stream()
-            .filter(QualityMeasureResultEntity::getDenominatorElligible)
+            .filter(QualityMeasureResultEntity::getDenominatorEligible)
             .count();
         long providerCompliant = providerResults.stream()
-            .filter(r -> r.getDenominatorElligible() && r.getNumeratorCompliant())
+            .filter(r -> r.getDenominatorEligible() && r.getNumeratorCompliant())
             .count();
         double providerRate = providerEligible > 0 ?
             (providerCompliant * 100.0) / providerEligible : 0;
 
         // Calculate practice average
         long practiceEligible = practiceResults.stream()
-            .filter(QualityMeasureResultEntity::getDenominatorElligible)
+            .filter(QualityMeasureResultEntity::getDenominatorEligible)
             .count();
         long practiceCompliant = practiceResults.stream()
-            .filter(r -> r.getDenominatorElligible() && r.getNumeratorCompliant())
+            .filter(r -> r.getDenominatorEligible() && r.getNumeratorCompliant())
             .count();
         double practiceAverage = practiceEligible > 0 ?
             (practiceCompliant * 100.0) / practiceEligible : 0;
@@ -313,19 +313,19 @@ public class ProviderPerformanceService {
 
             // Calculate rates
             long providerEligible = monthProviderResults.stream()
-                .filter(QualityMeasureResultEntity::getDenominatorElligible)
+                .filter(QualityMeasureResultEntity::getDenominatorEligible)
                 .count();
             long providerCompliant = monthProviderResults.stream()
-                .filter(r -> r.getDenominatorElligible() && r.getNumeratorCompliant())
+                .filter(r -> r.getDenominatorEligible() && r.getNumeratorCompliant())
                 .count();
             double providerRate = providerEligible > 0 ?
                 (providerCompliant * 100.0) / providerEligible : 0;
 
             long practiceEligible = monthPracticeResults.stream()
-                .filter(QualityMeasureResultEntity::getDenominatorElligible)
+                .filter(QualityMeasureResultEntity::getDenominatorEligible)
                 .count();
             long practiceCompliant = monthPracticeResults.stream()
-                .filter(r -> r.getDenominatorElligible() && r.getNumeratorCompliant())
+                .filter(r -> r.getDenominatorEligible() && r.getNumeratorCompliant())
                 .count();
             double practiceAverage = practiceEligible > 0 ?
                 (practiceCompliant * 100.0) / practiceEligible : 0;
@@ -404,10 +404,10 @@ public class ProviderPerformanceService {
             List<QualityMeasureResultEntity> practiceResults) {
 
         long providerCompliant = providerResults.stream()
-            .filter(r -> r.getDenominatorElligible() && r.getNumeratorCompliant())
+            .filter(r -> r.getDenominatorEligible() && r.getNumeratorCompliant())
             .count();
         long providerEligible = providerResults.stream()
-            .filter(QualityMeasureResultEntity::getDenominatorElligible)
+            .filter(QualityMeasureResultEntity::getDenominatorEligible)
             .count();
 
         double providerRate = providerEligible > 0 ?

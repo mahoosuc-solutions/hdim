@@ -20,10 +20,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(DemoController.class)
 @ContextConfiguration(classes = DemoControllerTest.TestConfig.class)
@@ -84,5 +88,30 @@ class DemoControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void streamCurrentProgress_ReturnsNotFound_WhenNoCurrentSession() throws Exception {
+        when(sessionRepository.findCurrentSession()).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/demo/sessions/current/progress/stream"))
+            .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testWebhook_EchoesPayloadAndHeaders() throws Exception {
+        String payload = "{\"integration\":\"sandbox\",\"status\":\"ok\"}";
+
+        mockMvc.perform(post("/api/v1/demo/webhooks/test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Tenant-Id", "sandbox-tenant")
+                .header("X-Webhook-Event", "integration.test")
+                .content(payload))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.received").value(true))
+            .andExpect(jsonPath("$.tenantId").value("sandbox-tenant"))
+            .andExpect(jsonPath("$.eventType").value("integration.test"))
+            .andExpect(jsonPath("$.payload.integration").value("sandbox"))
+            .andExpect(jsonPath("$.payload.status").value("ok"));
     }
 }

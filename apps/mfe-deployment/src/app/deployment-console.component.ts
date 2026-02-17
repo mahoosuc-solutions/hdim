@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription, timer, firstValueFrom } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -37,7 +37,7 @@ export class DeploymentConsoleComponent implements OnInit, OnDestroy {
   generatedOverride = '';
   private statusSub?: Subscription;
 
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   ngOnInit(): void {
     this.refreshOverride();

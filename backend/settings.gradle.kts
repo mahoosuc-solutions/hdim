@@ -21,6 +21,7 @@ include(
 include(
     "modules:shared:infrastructure:security",
     "modules:shared:infrastructure:audit",
+    "modules:shared:infrastructure:sentry",
     "modules:shared:infrastructure:messaging",
     "modules:shared:infrastructure:cache",
     "modules:shared:infrastructure:persistence",
@@ -66,6 +67,7 @@ include(
     "modules:services:clinical-workflow-event-service",
     "modules:services:nurse-workflow-service",
     "modules:services:analytics-service",
+    "modules:services:cost-analysis-service",
     "modules:services:documentation-service",
     "modules:services:gateway-admin-service",
     "modules:services:gateway-fhir-service",

@@ -178,6 +178,57 @@ logging:
     root: WARN
     com.healthdata: INFO
 
+# Enable Feign's Resilience4j circuit breaker integration
+feign:
+  circuitbreaker:
+    enabled: true
+
+# Resilience4j Circuit Breaker Configuration
+# Prevents cascading failures when downstream services (patient-service, cql-engine) are degraded
+resilience4j:
+  circuitbreaker:
+    instances:
+      patient-service:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 5s
+        slowCallRateThreshold: 50
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+      cql-engine-service:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 60s
+        permittedNumberOfCallsInHalfOpenState: 2
+        slowCallDurationThreshold: 10s
+        slowCallRateThreshold: 50
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+  retry:
+    instances:
+      patient-service:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.RetryableException
+      cql-engine-service:
+        maxAttempts: 2
+        waitDuration: 1s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.RetryableException
+
 # Production Tracing Configuration
 management:
   tracing:

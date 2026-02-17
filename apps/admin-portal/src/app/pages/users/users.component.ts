@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
-import { User, UserRole, CreateUserRequest, PagedResponse } from '../../models/admin.model';
+import { User, UserRole, CreateUserRequest, PagedResponse, AuditLog } from '../../models/admin.model';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -87,6 +87,8 @@ import { Subject, takeUntil } from 'rxjs';
                 <button class="action-btn toggle" (click)="toggleUserStatus(user)" [title]="user.active ? 'Deactivate' : 'Activate'">
                   {{ user.active ? '🔒' : '🔓' }}
                 </button>
+                <button class="action-btn reset" (click)="openResetPasswordModal(user)" title="Reset password">🔑</button>
+                <button class="action-btn activity" (click)="openActivityLogModal(user)" title="View activity">📋</button>
                 <button class="action-btn delete" (click)="confirmDelete(user)" title="Delete">🗑️</button>
               </td>
             </tr>
@@ -182,6 +184,83 @@ import { Subject, takeUntil } from 'rxjs';
           <div class="modal-footer">
             <button class="btn-secondary" (click)="closeDeleteConfirm()">Cancel</button>
             <button class="btn-danger" (click)="deleteUser()">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Password Modal -->
+      <div class="modal-overlay" *ngIf="showResetPasswordModal" (click)="closeResetPasswordModal()">
+        <div class="modal confirm-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Reset Password</h3>
+          </div>
+          <div class="modal-body">
+            <p>Reset password for <strong>{{ userToResetPassword?.firstName }} {{ userToResetPassword?.lastName }}</strong>.</p>
+            <div class="form-group">
+              <label>New Temporary Password</label>
+              <input type="password" [(ngModel)]="resetPasswordValue" placeholder="Enter temporary password" />
+            </div>
+            <label class="checkbox-row">
+              <input type="checkbox" [(ngModel)]="forcePasswordChangeOnNextLogin" />
+              Require password change on next login
+            </label>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeResetPasswordModal()">Cancel</button>
+            <button class="btn-primary" (click)="resetPassword()" [disabled]="!resetPasswordValue.trim()">Reset Password</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Activity Log Modal -->
+      <div class="modal-overlay" *ngIf="showActivityLogModal" (click)="closeActivityLogModal()">
+        <div class="modal activity-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>User Activity Log</h3>
+            <button class="close-btn" (click)="closeActivityLogModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <p *ngIf="selectedUserForActivity" class="activity-user">
+              {{ selectedUserForActivity.firstName }} {{ selectedUserForActivity.lastName }} ({{ selectedUserForActivity.email }})
+            </p>
+
+            <div class="loading-state" *ngIf="activityLoading">
+              <div class="spinner"></div>
+              <span>Loading activity...</span>
+            </div>
+
+            <div class="empty-state" *ngIf="!activityLoading && userActivityLogs.length === 0">
+              <span class="empty-icon">📝</span>
+              <span>No activity found for this user.</span>
+            </div>
+
+            <table class="activity-table" *ngIf="!activityLoading && userActivityLogs.length > 0">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Action</th>
+                  <th>Resource</th>
+                  <th>Severity</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let log of userActivityLogs">
+                  <td>{{ log.timestamp | date:'short' }}</td>
+                  <td>{{ log.action }}</td>
+                  <td>{{ log.resourceType }}</td>
+                  <td>
+                    <span class="severity-badge" [class]="log.severity.toLowerCase()">
+                      {{ log.severity }}
+                    </span>
+                  </td>
+                  <td>{{ log.details }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button class="btn-secondary" (click)="closeActivityLogModal()">Close</button>
           </div>
         </div>
       </div>
@@ -420,6 +499,22 @@ import { Subject, takeUntil } from 'rxjs';
       background: #ffe0b2;
     }
 
+    .action-btn.reset {
+      background: #ede7f6;
+    }
+
+    .action-btn.reset:hover {
+      background: #d1c4e9;
+    }
+
+    .action-btn.activity {
+      background: #e0f2f1;
+    }
+
+    .action-btn.activity:hover {
+      background: #b2dfdb;
+    }
+
     .action-btn.delete {
       background: #ffebee;
     }
@@ -501,6 +596,10 @@ import { Subject, takeUntil } from 'rxjs';
       width: 100%;
       max-width: 480px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .activity-modal {
+      max-width: 980px;
     }
 
     .modal-header {
@@ -590,6 +689,55 @@ import { Subject, takeUntil } from 'rxjs';
       color: #f44336;
       font-size: 14px;
     }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #333;
+    }
+
+    .activity-user {
+      margin-top: 0;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .activity-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .activity-table th {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid #e6e6e6;
+      color: #666;
+      background: #f8f9fb;
+      font-weight: 600;
+    }
+
+    .activity-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #f2f2f2;
+      color: #333;
+      vertical-align: top;
+    }
+
+    .severity-badge {
+      display: inline-flex;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .severity-badge.info { background: #e3f2fd; color: #1565c0; }
+    .severity-badge.warning { background: #fff3e0; color: #ef6c00; }
+    .severity-badge.error { background: #ffebee; color: #c62828; }
+    .severity-badge.critical { background: #f3e5f5; color: #6a1b9a; }
   `],
 })
 export class UsersComponent implements OnInit, OnDestroy {
@@ -608,6 +756,15 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   showDeleteConfirm = false;
   userToDelete: User | null = null;
+  showResetPasswordModal = false;
+  userToResetPassword: User | null = null;
+  resetPasswordValue = '';
+  forcePasswordChangeOnNextLogin = true;
+
+  showActivityLogModal = false;
+  selectedUserForActivity: User | null = null;
+  activityLoading = false;
+  userActivityLogs: AuditLog[] = [];
 
   roles: UserRole[] = ['SUPER_ADMIN', 'ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER'];
 
@@ -779,5 +936,63 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.loadUsers();
         },
       });
+  }
+
+  openResetPasswordModal(user: User): void {
+    this.userToResetPassword = user;
+    this.resetPasswordValue = '';
+    this.forcePasswordChangeOnNextLogin = true;
+    this.showResetPasswordModal = true;
+  }
+
+  closeResetPasswordModal(): void {
+    this.showResetPasswordModal = false;
+    this.userToResetPassword = null;
+    this.resetPasswordValue = '';
+    this.forcePasswordChangeOnNextLogin = true;
+  }
+
+  resetPassword(): void {
+    if (!this.userToResetPassword || !this.resetPasswordValue.trim()) return;
+
+    this.adminService
+      .resetUserPassword(
+        this.userToResetPassword.id,
+        this.resetPasswordValue.trim(),
+        this.forcePasswordChangeOnNextLogin
+      )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.closeResetPasswordModal();
+        },
+      });
+  }
+
+  openActivityLogModal(user: User): void {
+    this.selectedUserForActivity = user;
+    this.showActivityLogModal = true;
+    this.activityLoading = true;
+    this.userActivityLogs = [];
+
+    this.adminService
+      .getUserActivityLogs(user.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.userActivityLogs = response.content;
+          this.activityLoading = false;
+        },
+        error: () => {
+          this.activityLoading = false;
+        },
+      });
+  }
+
+  closeActivityLogModal(): void {
+    this.showActivityLogModal = false;
+    this.selectedUserForActivity = null;
+    this.userActivityLogs = [];
+    this.activityLoading = false;
   }
 }

@@ -4,9 +4,6 @@ plugins {
     java
 }
 
-group = "com.healthdata"
-version = "1.0.0"
-
 dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
@@ -19,7 +16,7 @@ dependencies {
     implementation(libs.spring.boot.starter.validation)
 
     // Spring Security (for BCrypt password encoding)
-    implementation("org.springframework.security:spring-security-crypto")
+    implementation(libs.spring.security.crypto)
 
     // HAPI FHIR
     implementation(libs.bundles.hapi.fhir.client)
@@ -34,7 +31,7 @@ dependencies {
     implementation(libs.commons.lang3)
 
     // Synthetic data generation - using Datafaker (modern successor to JavaFaker)
-    implementation("net.datafaker:datafaker:2.5.4")
+    implementation(libs.datafaker)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
@@ -55,4 +52,9 @@ tasks.withType<Test> {
     // systemProperty("spring.datasource.driver-class-name", "org.testcontainers.jdbc.ContainerDatabaseDriver")
     // systemProperty("spring.jpa.properties.hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect")
     systemProperty("spring.profiles.active", "test")
+}
+
+tasks.bootJar {
+    // Stable filename for Docker COPY instructions.
+    archiveFileName.set("demo-seeding-service.jar")
 }

@@ -41,6 +41,7 @@ describe('WebSocketService', () => {
   class TrackedMockWebSocket extends MockWebSocket {
     constructor() {
       super();
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       lastCreatedSocket = this;
     }
   }

@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +37,7 @@ class CostAnalysisServiceTest {
 
     @BeforeEach
     void setUp() {
-        costAnalysisService = new CostAnalysisService(cacheRepository);
+        costAnalysisService = new CostAnalysisService(cacheRepository, null);
     }
 
     @Test
@@ -46,7 +45,7 @@ class CostAnalysisServiceTest {
         // Given
         CostAnalysisCache expectedCache = buildCostAnalysisCache();
         when(cacheRepository.findValidCache(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD, null))
-            .thenReturn(Optional.of(expectedCache));
+            .thenReturn(List.of(expectedCache));
 
         // When
         CostAnalysisCache result = costAnalysisService.analyzeCosts(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD, null);
@@ -62,7 +61,7 @@ class CostAnalysisServiceTest {
     void shouldCreateNewAnalysisWhenCacheExpired() {
         // Given
         when(cacheRepository.findValidCache(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD, null))
-            .thenReturn(Optional.empty());
+            .thenReturn(List.of());
 
         // When
         CostAnalysisCache result = costAnalysisService.analyzeCosts(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD, null);
@@ -95,13 +94,13 @@ class CostAnalysisServiceTest {
         // Given
         CostAnalysisCache cache = buildCostAnalysisCache();
         when(cacheRepository.findByTenantAndTypeAndPeriod(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD))
-            .thenReturn(Optional.of(cache));
+            .thenReturn(List.of(cache));
 
         // When
         costAnalysisService.invalidateAnalysisCache(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD);
 
         // Then
-        verify(cacheRepository).delete(any(CostAnalysisCache.class));
+        verify(cacheRepository).deleteAll(any(List.class));
     }
 
     @Test
@@ -118,7 +117,7 @@ class CostAnalysisServiceTest {
         // Given
         CostAnalysisCache expectedCache = buildCostAnalysisCache();
         when(cacheRepository.findValidCache(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD, null))
-            .thenReturn(Optional.of(expectedCache));
+            .thenReturn(List.of(expectedCache));
 
         // When
         costAnalysisService.analyzeCosts(TENANT_ID, ANALYSIS_TYPE, ANALYSIS_PERIOD, null);

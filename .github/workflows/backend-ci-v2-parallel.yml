@@ -49,23 +49,23 @@ jobs:
       infrastructure-changed: ${{ steps.filter.outputs.infrastructure }}
       gradle-changed: ${{ steps.filter.outputs.gradle }}
       shared-changed: ${{ steps.filter.outputs.shared }}
-      approval-service-changed: ${{ steps.filter.outputs.approval-service }}
-      agent-builder-service-changed: ${{ steps.filter.outputs.agent-builder-service }}
-      agent-runtime-service-changed: ${{ steps.filter.outputs.agent-runtime-service }}
-      audit-query-service-changed: ${{ steps.filter.outputs.audit-query-service }}
-      care-gap-service-changed: ${{ steps.filter.outputs.care-gap-service }}
-      care-gap-event-service-changed: ${{ steps.filter.outputs.care-gap-event-service }}
-      cdr-processor-service-changed: ${{ steps.filter.outputs.cdr-processor-service }}
-      cql-engine-changed: ${{ steps.filter.outputs.cql-engine }}
-      event-router-service-changed: ${{ steps.filter.outputs.event-router-service }}
-      fhir-service-changed: ${{ steps.filter.outputs.fhir-service }}
-      patient-service-changed: ${{ steps.filter.outputs.patient-service }}
-      patient-event-service-changed: ${{ steps.filter.outputs.patient-event-service }}
-      quality-service-changed: ${{ steps.filter.outputs.quality-service }}
-      quality-measure-event-service-changed: ${{ steps.filter.outputs.quality-measure-event-service }}
-      clinical-workflow-service-changed: ${{ steps.filter.outputs.clinical-workflow-service }}
-      gateway-services-changed: ${{ steps.filter.outputs.gateway-services }}
-      event-services-changed: ${{ steps.filter.outputs.event-services }}
+      approval-service-changed: ${{ steps.filter.outputs['approval-service'] }}
+      agent-builder-service-changed: ${{ steps.filter.outputs['agent-builder-service'] }}
+      agent-runtime-service-changed: ${{ steps.filter.outputs['agent-runtime-service'] }}
+      audit-query-service-changed: ${{ steps.filter.outputs['audit-query-service'] }}
+      care-gap-service-changed: ${{ steps.filter.outputs['care-gap-service'] }}
+      care-gap-event-service-changed: ${{ steps.filter.outputs['care-gap-event-service'] }}
+      cdr-processor-service-changed: ${{ steps.filter.outputs['cdr-processor-service'] }}
+      cql-engine-changed: ${{ steps.filter.outputs['cql-engine'] }}
+      event-router-service-changed: ${{ steps.filter.outputs['event-router-service'] }}
+      fhir-service-changed: ${{ steps.filter.outputs['fhir-service'] }}
+      patient-service-changed: ${{ steps.filter.outputs['patient-service'] }}
+      patient-event-service-changed: ${{ steps.filter.outputs['patient-event-service'] }}
+      quality-service-changed: ${{ steps.filter.outputs['quality-service'] }}
+      quality-measure-event-service-changed: ${{ steps.filter.outputs['quality-measure-event-service'] }}
+      clinical-workflow-service-changed: ${{ steps.filter.outputs['clinical-workflow-service'] }}
+      gateway-services-changed: ${{ steps.filter.outputs['gateway-services'] }}
+      event-services-changed: ${{ steps.filter.outputs['event-services'] }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -73,7 +73,7 @@ jobs:
           fetch-depth: 0
 
       - name: Detect path changes
-        uses: dorny/paths-filter@v2
+        uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -137,12 +137,12 @@ jobs:
           echo "Infrastructure: ${{ steps.filter.outputs.infrastructure }}"
           echo "Gradle Config: ${{ steps.filter.outputs.gradle }}"
           echo "Shared Modules: ${{ steps.filter.outputs.shared }}"
-          echo "Patient Service: ${{ steps.filter.outputs.patient-service }}"
-          echo "Care Gap Service: ${{ steps.filter.outputs.care-gap-service }}"
-          echo "Quality Service: ${{ steps.filter.outputs.quality-service }}"
-          echo "FHIR Service: ${{ steps.filter.outputs.fhir-service }}"
-          echo "CQL Engine: ${{ steps.filter.outputs.cql-engine }}"
-          echo "Event Services: ${{ steps.filter.outputs.event-services }}"
+          echo "Patient Service: ${{ steps.filter.outputs['patient-service'] }}"
+          echo "Care Gap Service: ${{ steps.filter.outputs['care-gap-service'] }}"
+          echo "Quality Service: ${{ steps.filter.outputs['quality-service'] }}"
+          echo "FHIR Service: ${{ steps.filter.outputs['fhir-service'] }}"
+          echo "CQL Engine: ${{ steps.filter.outputs['cql-engine'] }}"
+          echo "Event Services: ${{ steps.filter.outputs['event-services'] }}"
           echo "Backend (any): ${{ steps.filter.outputs.backend }}"
 
   # ============================================================================
@@ -980,14 +980,44 @@ jobs:
     steps:
       - name: Download all test results
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           path: test-results
           pattern: test-*-results
+          merge-multiple: true
 
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          files: test-results/**/test-results/**/*.xml
-          check_name: Test Results Summary
-          comment_mode: always
+      - name: Detect test result files
+        id: detect-test-results
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          files=(test-results/**/test-results/**/*.xml)
+          echo "count=${#files[@]}" >> "$GITHUB_OUTPUT"
+          echo "Discovered ${#files[@]} JUnit XML files"
+
+      - name: Summarize test results
+        if: always() && steps.detect-test-results.outputs.count != '0'
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          files=(test-results/**/test-results/**/*.xml)
+          total=0
+          failures=0
+          skipped=0
+          for f in "${files[@]}"; do
+            tests=$(grep -o 'tests="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            fail=$(grep -o 'failures="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            errs=$(grep -o 'errors="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            skip=$(grep -o 'skipped="[0-9]*"' "$f" | head -n1 | cut -d'"' -f2 || echo 0)
+            total=$((total + tests))
+            failures=$((failures + fail + errs))
+            skipped=$((skipped + skip))
+          done
+          {
+            echo "### Test Results Summary"
+            echo ""
+            echo "- Files: ${#files[@]}"
+            echo "- Tests: ${total}"
+            echo "- Failures+Errors: ${failures}"
+            echo "- Skipped: ${skipped}"
+          } >> "$GITHUB_STEP_SUMMARY"

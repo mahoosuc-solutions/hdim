@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,6 +39,8 @@ public class SmartAuthorizationController {
 
     private final SmartAuthorizationService authorizationService;
     private final SmartClientRepository clientRepository;
+    private final SmartLaunchContextStore launchContextStore;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Operation(
         summary = "OAuth 2.0 Authorization",
@@ -77,6 +81,10 @@ public class SmartAuthorizationController {
                     "Only 'code' response type is supported", state);
             }
 
+            if (!StringUtils.hasText(state)) {
+                return errorRedirect(redirectUri, "invalid_request", "State parameter is required", null);
+            }
+
             // Parse and validate scopes
             Set<String> requestedScopes = parseScopes(scope);
             for (String s : requestedScopes) {
@@ -84,6 +92,29 @@ public class SmartAuthorizationController {
                     return errorRedirect(redirectUri, "invalid_scope",
                         "Scope not allowed: " + s, state);
                 }
+            }
+
+            if (requestedScopes.contains("launch") && !StringUtils.hasText(launch)) {
+                return errorRedirect(redirectUri, "invalid_request",
+                    "Launch parameter is required when launch scope is requested", state);
+            }
+
+            if (!StringUtils.hasText(audience)) {
+                return errorRedirect(redirectUri, "invalid_request", "Audience parameter is required", state);
+            }
+            if (!isValidAudience(audience)) {
+                return errorRedirect(redirectUri, "invalid_request", "Audience must be an absolute http(s) URL", state);
+            }
+
+            if (StringUtils.hasText(codeChallengeMethod) && !StringUtils.hasText(codeChallenge)) {
+                return errorRedirect(redirectUri, "invalid_request",
+                    "code_challenge is required when code_challenge_method is provided", state);
+            }
+            if (StringUtils.hasText(codeChallenge) && !"S256".equals(codeChallengeMethod)) {
+                return errorRedirect(redirectUri, "invalid_request", "Only S256 code_challenge_method is supported", state);
+            }
+            if ((client.isPublicClient() || client.isRequirePkce()) && !StringUtils.hasText(codeChallenge)) {
+                return errorRedirect(redirectUri, "invalid_request", "PKCE code_challenge is required for this client", state);
             }
 
             // Build launch context
@@ -313,30 +344,139 @@ public class SmartAuthorizationController {
         builder.audience(audience);
 
         if (StringUtils.hasText(launch)) {
-            // EHR launch - decode launch parameter
-            builder.launch(launch);
+            // EHR launch - decode or resolve launch parameter
             builder.standalone(false);
-            // In a real implementation, decode the launch context from EHR
+            resolveAndApplyLaunchContext(launch, builder);
         } else {
             // Standalone launch
             builder.standalone(true);
         }
 
-        // For demo purposes, set some context if requested
-        if (scopes.contains("launch/patient") || scopes.contains("patient/*.read")) {
-            // In production, this would come from user selection or EHR context
-            builder.patient("demo-patient-001");
+        SmartLaunchContext context = builder.build();
+
+        // Fallback defaults for standalone/demo flows when context is not provided by launch.
+        if ((scopes.contains("launch/patient") || scopes.contains("patient/*.read"))
+                && !StringUtils.hasText(context.getPatient())) {
+            context.setPatient("demo-patient-001");
+        }
+        if (scopes.contains("launch/encounter") && !StringUtils.hasText(context.getEncounter())) {
+            context.setEncounter("demo-encounter-001");
+        }
+        if (scopes.contains("fhirUser") && !StringUtils.hasText(context.getFhirUser())) {
+            context.setFhirUser("Practitioner/demo-practitioner-001");
         }
 
-        if (scopes.contains("launch/encounter")) {
-            builder.encounter("demo-encounter-001");
+        return context;
+    }
+
+    /**
+     * Apply launch context values if the launch parameter is decodable.
+     * Supported formats:
+     * - raw JSON object string
+     * - base64url-encoded JSON object
+     * - JWT/JWS where payload is base64url-encoded JSON object
+     */
+    private void resolveAndApplyLaunchContext(String launch, SmartLaunchContext.SmartLaunchContextBuilder builder) {
+        builder.launch(launch);
+        try {
+            Map<String, Object> launchContext = parseLaunchParameter(launch);
+            if (launchContext != null && !launchContext.isEmpty()) {
+                // Replace inline launch payload with opaque launch ID for downstream continuity.
+                String opaqueLaunchId = launchContextStore.storeLaunchContext(launchContext);
+                builder.launch(opaqueLaunchId);
+                applyLaunchContext(launchContext, builder);
+                return;
+            }
+
+            Optional<Map<String, Object>> storedLaunchContext = Optional.ofNullable(
+                launchContextStore.resolveLaunchContext(launch)).orElse(Optional.empty());
+
+            if (storedLaunchContext.isPresent()) {
+                applyLaunchContext(storedLaunchContext.get(), builder);
+                return;
+            }
+
+            log.debug("Launch parameter not decodable and no opaque context found. Falling back to scope-based context. launch={}", launch);
+        } catch (Exception e) {
+            log.debug("Launch parameter resolution failed; falling back to scope-based context. launch={}", launch);
+        }
+    }
+
+    private void applyLaunchContext(Map<String, Object> launchContext, SmartLaunchContext.SmartLaunchContextBuilder builder) {
+        builder.patient(asString(launchContext.get("patient")));
+        builder.encounter(asString(launchContext.get("encounter")));
+        builder.fhirUser(asString(launchContext.get("fhirUser")));
+        builder.tenant(asString(launchContext.get("tenant")));
+        builder.intent(asString(launchContext.get("intent")));
+        builder.smartStyleUrl(asString(launchContext.get("smart_style_url")));
+        builder.needPatientBanner(asBoolean(launchContext.get("need_patient_banner")));
+    }
+
+    private Map<String, Object> parseLaunchParameter(String launch) {
+        String raw = launch == null ? "" : launch.trim();
+        if (raw.isEmpty()) {
+            return Map.of();
         }
 
-        if (scopes.contains("fhirUser")) {
-            builder.fhirUser("Practitioner/demo-practitioner-001");
+        // 1) Plain JSON object
+        if (raw.startsWith("{") && raw.endsWith("}")) {
+            return parseJsonObject(raw);
         }
 
-        return builder.build();
+        // 2) JWT/JWS token -> parse payload segment
+        String[] jwtParts = raw.split("\\.");
+        if (jwtParts.length == 3 && StringUtils.hasText(jwtParts[1])) {
+            String payloadJson = decodeBase64Url(jwtParts[1]);
+            if (payloadJson.startsWith("{") && payloadJson.endsWith("}")) {
+                return parseJsonObject(payloadJson);
+            }
+        }
+
+        // 3) Base64url JSON object
+        String decoded = decodeBase64Url(raw);
+        if (decoded.startsWith("{") && decoded.endsWith("}")) {
+            return parseJsonObject(decoded);
+        }
+
+        return Map.of();
+    }
+
+    private Map<String, Object> parseJsonObject(String json) {
+        try {
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    private String decodeBase64Url(String value) {
+        try {
+            return new String(Base64.getUrlDecoder().decode(value));
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private String asString(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Boolean asBoolean(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        return Boolean.parseBoolean(String.valueOf(value));
+    }
+
+    private boolean isValidAudience(String audience) {
+        String candidate = audience == null ? "" : audience.trim();
+        if (candidate.isEmpty()) {
+            return false;
+        }
+        return candidate.startsWith("http://") || candidate.startsWith("https://");
     }
 
     /**

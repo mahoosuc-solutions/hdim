@@ -36,6 +36,7 @@ Env:
   VERSION             Required for release mode (e.g., v2.7.1-rc1)
   KEEP_STACK=1        Keep demo stack up after demo/pr mode runs (via scripts/test-all-local.sh)
   SKIP_BACKEND_TESTS=1 Skip backend gradle tasks in scripts/test-all-local.sh
+  RUN_SLOW_LINT=1     Run slower TS lint targets in scripts/test-all-local.sh (optional)
 EOF
 }
 
@@ -57,7 +58,7 @@ run_quick() {
   log "Mode=quick"
   run_npm_script test:mcp
   run_npm_script lint
-  run_npm_script test -- --runInBand
+  run_npm_script test
 }
 
 run_pr() {
@@ -88,10 +89,45 @@ run_demo() {
     die "Missing ./validate-system.sh"
   fi
 
-  log "docker compose -f docker-compose.demo.yml up -d"
-  docker compose -f docker-compose.demo.yml up -d
-  log "./scripts/seed-all-demo-data.sh"
-  ./scripts/seed-all-demo-data.sh
+  # Most backend service Dockerfiles expect pre-built JARs.
+  # We build only what the demo compose file needs, then build the stack.
+  if [ -x ./backend/gradlew ]; then
+    log "Building backend bootJars required by demo stack"
+    (cd backend && ./gradlew \
+      :modules:services:gateway-admin-service:bootJar \
+      :modules:services:gateway-fhir-service:bootJar \
+      :modules:services:gateway-clinical-service:bootJar \
+      :modules:services:fhir-service:bootJar \
+      :modules:services:cql-engine-service:bootJar \
+      :modules:services:patient-service:bootJar \
+      :modules:services:quality-measure-service:bootJar \
+      :modules:services:care-gap-service:bootJar \
+      :modules:services:event-processing-service:bootJar \
+      :modules:services:hcc-service:bootJar \
+      :modules:services:audit-query-service:bootJar \
+      :modules:services:demo-seeding-service:bootJar \
+      -x test --no-daemon)
+  else
+    die "Missing ./backend/gradlew"
+  fi
+
+  log "Ensuring demo stack is clean (down -v) before bringing it up"
+  docker compose -f docker-compose.demo.yml down -v --remove-orphans || true
+
+  log "docker compose -f docker-compose.demo.yml up -d --build"
+  docker compose -f docker-compose.demo.yml up -d --build
+  log "./scripts/seed-all-demo-data.sh (non-interactive)"
+  NON_INTERACTIVE=1 SEED_PROFILE="${SEED_PROFILE:-smoke}" WAIT_TIMEOUT_SECS="${WAIT_TIMEOUT_SECS:-900}" ./scripts/seed-all-demo-data.sh
+  if [ -x ./scripts/verify-seeding-counts.sh ]; then
+    log "Validating seeded data counts"
+    expected_patients=""
+    if [[ "${SEED_PROFILE:-smoke}" == "smoke" ]]; then
+      expected_patients="50"
+    fi
+    TENANTS="${TENANT_ID:-acme-health}" \
+      EXPECTED_PATIENTS_PER_TENANT="${expected_patients}" \
+      ./scripts/verify-seeding-counts.sh
+  fi
   log "./validate-system.sh"
   ./validate-system.sh
 
@@ -120,4 +156,3 @@ case "${MODE}" in
   release) run_release ;;
   *) die "Unknown mode: ${MODE}. Use --help." ;;
 esac
-

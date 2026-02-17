@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hdim-pilot
+  labels:
+    app.kubernetes.io/part-of: hdim-platform
+    environment: pilot
+    # HIPAA: namespaced isolation per customer tenant
+    hdim.io/tenant-scope: pilot

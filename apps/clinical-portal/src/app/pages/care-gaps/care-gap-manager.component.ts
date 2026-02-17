@@ -34,9 +34,11 @@ import { CareGapService, CareGapApiItem, GapPriority } from '../../services/care
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { QuickActionDialogComponent, QuickActionType, QuickActionConfig, QuickActionResult } from './dialogs/quick-action-dialog.component';
+import { BulkActionDialogComponent, BulkActionResult } from './dialogs/bulk-action-dialog.component';
 import { getQuickActionsForGap, getPrimaryQuickAction, getSecondaryQuickActions, getClosureMetrics, CLOSURE_METRICS } from './quick-actions.config';
 import { LoggerService } from '../../services/logger.service';
 import { CareGapStatsDashboardComponent } from '../../components/care-gap-stats-dashboard/care-gap-stats-dashboard.component';
+import { CSVHelper } from '../../utils/csv-helper';
 
 /**
  * Intervention Recommendation with ROI metrics
@@ -884,6 +886,71 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   /**
+   * Bulk assign selected care gaps to a care manager
+   */
+  bulkAssignCareManager(): void {
+    if (!this.selection.hasValue()) {
+      return;
+    }
+
+    const selectedGaps = [...this.selection.selected];
+    const gapIds = selectedGaps.map((gap) => gap.gapId || `gap-${gap.patientId}`);
+
+    const dialogRef = this.dialog.open(BulkActionDialogComponent, {
+      width: '520px',
+      data: {
+        actionType: 'assign-care-manager',
+        selectedCount: selectedGaps.length,
+        gapIds,
+      },
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result: BulkActionResult | null) => {
+        if (!result?.success) {
+          return;
+        }
+
+        const careManager = String(result.formData?.careManager || '').trim();
+        if (!careManager) {
+          return;
+        }
+
+        this.careGaps = this.careGaps.map((gap) => (
+          selectedGaps.includes(gap) ? { ...gap, careManager } : gap
+        ));
+        this.applyFilters();
+        this.selection.clear();
+
+        this.snackBar.open(
+          `Assigned ${selectedGaps.length} care gap(s) to ${careManager}`,
+          'Close',
+          { duration: 3000 }
+        );
+      });
+  }
+
+  /**
+   * Export selected care gaps to an Excel-compatible file
+   */
+  exportSelectedToExcel(): void {
+    if (!this.selection.hasValue()) {
+      this.snackBar.open('Please select care gaps first', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const rows = this.buildSelectedGapExportRows();
+    const csvContent = CSVHelper.arrayToCSV(rows);
+    const filename = `care-gaps-selected-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    // Excel can open CSV content, and .xlsx naming aligns with user export expectation.
+    CSVHelper.downloadCSV(filename, csvContent);
+    this.snackBar.open(`Exported ${this.selection.selected.length} care gap(s)`, 'Close', { duration: 3000 });
+  }
+
+  /**
    * Perform bulk closure
    */
   private performBulkClose(): void {
@@ -1063,6 +1130,38 @@ export class CareGapManagerComponent implements OnInit, OnDestroy, AfterViewInit
       return;
     }
     this.createOutreachCampaign();
+  }
+
+  private buildSelectedGapExportRows(): string[][] {
+    const headers = [
+      'Gap ID',
+      'Patient ID',
+      'Patient Name',
+      'MRN',
+      'Gap Type',
+      'Description',
+      'Urgency',
+      'Days Overdue',
+      'Measure',
+      'Care Manager',
+      'Due Date',
+    ];
+
+    const rows = this.selection.selected.map((gap) => [
+      gap.gapId || '',
+      gap.patientId,
+      gap.patientName,
+      gap.mrn,
+      gap.gapType,
+      gap.gapDescription,
+      gap.urgency,
+      String(gap.daysOverdue),
+      gap.measureName,
+      gap.careManager || '',
+      gap.dueDate ? this.formatDate(gap.dueDate) : '',
+    ]);
+
+    return [headers, ...rows];
   }
 
   // ============================================================================

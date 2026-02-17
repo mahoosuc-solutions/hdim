@@ -3,6 +3,8 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { CareGapManagerComponent } from './care-gap-manager.component';
 import { PatientService } from '../../services/patient.service';
@@ -10,15 +12,18 @@ import { MeasureService } from '../../services/measure.service';
 import { DialogService } from '../../services/dialog.service';
 import { CareGapService } from '../../services/care-gap.service';
 import { LoggerService } from '../../services/logger.service';
-import { MatDialog } from '@angular/material/dialog';
 import { createMockLoggerService } from '../../testing/mocks';
+import { CSVHelper } from '../../utils/csv-helper';
 
 describe('CareGapManagerComponent', () => {
   let component: CareGapManagerComponent;
   let fixture: ComponentFixture<CareGapManagerComponent>;
   let mockPatientService: jest.Mocked<PatientService>;
   let mockMeasureService: jest.Mocked<MeasureService>;
+  let mockCareGapService: jest.Mocked<CareGapService>;
   let mockDialogService: jest.Mocked<DialogService>;
+  let mockMatDialog: jest.Mocked<MatDialog>;
+  let mockSnackBar: jest.Mocked<MatSnackBar>;
   let mockRouter: jest.Mocked<Router>;
 
   beforeEach(async () => {
@@ -53,6 +58,36 @@ describe('CareGapManagerComponent', () => {
       confirm: jest.fn(),
     } as any;
 
+    mockCareGapService = {
+      getCareGapsPage: jest.fn().mockReturnValue(of({
+        content: [
+          {
+            id: 'gap-1',
+            tenantId: 'TENANT-001',
+            patientId: 'p1',
+            measureId: 'COL-001',
+            measureName: 'COL - Colorectal Cancer Screening',
+            gapCategory: 'SCREENING',
+            priority: 'HIGH',
+            gapDescription: 'Screening overdue',
+            dueDate: '2025-01-01',
+          },
+        ],
+        totalElements: 1,
+        totalPages: 1,
+        number: 0,
+        size: 200,
+      })),
+    } as any;
+
+    mockMatDialog = {
+      open: jest.fn(),
+    } as any;
+
+    mockSnackBar = {
+      open: jest.fn(),
+    } as any;
+
     mockRouter = {
       navigate: jest.fn(),
     } as any;
@@ -82,6 +117,7 @@ describe('CareGapManagerComponent', () => {
         { provide: CareGapService, useValue: mockCareGapService },
         { provide: DialogService, useValue: mockDialogService },
         { provide: MatDialog, useValue: mockMatDialog },
+        { provide: MatSnackBar, useValue: mockSnackBar },
         { provide: Router, useValue: mockRouter },
       ],
     }).compileComponents();
@@ -316,13 +352,46 @@ describe('CareGapManagerComponent', () => {
 
     component.ngOnInit();
     const initialLength = component.careGaps.length;
-    const gapsToSelect = component.careGaps.slice(0, 2);
+    const gapsToSelect = component.careGaps.slice(0, Math.min(2, initialLength));
     gapsToSelect.forEach((gap) => component.selection.select(gap));
 
     component.bulkCloseGaps();
 
     expect(mockDialogService.confirm).toHaveBeenCalled();
-    expect(component.careGaps.length).toBe(initialLength - 2);
+    expect(component.careGaps.length).toBe(initialLength - gapsToSelect.length);
+  });
+
+  it('should assign selected gaps to care manager', () => {
+    component.ngOnInit();
+    const firstGap = component.careGaps[0];
+    component.selection.select(firstGap);
+    (component as any).dialog = mockMatDialog;
+    mockMatDialog.open.mockReturnValue({
+      afterClosed: () => of({
+        success: true,
+        actionType: 'assign-care-manager',
+        formData: { careManager: 'cm1' },
+        gapIds: ['gap-1'],
+      }),
+    } as any);
+
+    component.bulkAssignCareManager();
+
+    expect(mockMatDialog.open).toHaveBeenCalled();
+    expect(component.careGaps[0].careManager).toBe('cm1');
+    expect(component.selection.selected.length).toBe(0);
+  });
+
+  it('should export selected gaps to excel', () => {
+    const downloadSpy = jest.spyOn(CSVHelper, 'downloadCSV').mockImplementation(() => undefined);
+    component.ngOnInit();
+    component.selection.select(component.careGaps[0]);
+
+    component.exportSelectedToExcel();
+
+    expect(downloadSpy).toHaveBeenCalled();
+    expect(downloadSpy.mock.calls[0][0]).toContain('.xlsx');
+    downloadSpy.mockRestore();
   });
 
   it('should not bulk close when no selection', () => {

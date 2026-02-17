@@ -19,7 +19,7 @@ import { CommonModule } from '@angular/common';
  * - Bulk Priority Update: Change priority for multiple gaps
  */
 
-export type BulkActionType = 'close' | 'assign-intervention' | 'update-priority';
+export type BulkActionType = 'close' | 'assign-intervention' | 'assign-care-manager' | 'update-priority';
 
 export interface BulkActionDialogData {
   actionType: BulkActionType;
@@ -116,6 +116,22 @@ export interface BulkActionResult {
             <input matInput formControlName="assignedTo"
                    placeholder="care-coordinator@example.com">
             <mat-hint>User or team responsible for this intervention</mat-hint>
+          </mat-form-field>
+        </ng-container>
+
+        <!-- Bulk Priority Update Form -->
+        <ng-container *ngIf="data.actionType === 'assign-care-manager'">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Care Manager</mat-label>
+            <input matInput formControlName="careManager"
+                   placeholder="care-manager@example.com">
+            <mat-hint>User or team assigned to the selected care gaps</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Notes (Optional)</mat-label>
+            <textarea matInput formControlName="notes" rows="2"
+                      placeholder="Assignment context or handoff notes..."></textarea>
           </mat-form-field>
         </ng-container>
 
@@ -307,6 +323,11 @@ export class BulkActionDialogComponent {
           scheduledDate: [''],
           assignedTo: ['']
         });
+      case 'assign-care-manager':
+        return this.fb.group({
+          careManager: ['', Validators.required],
+          notes: ['']
+        });
       case 'update-priority':
         return this.fb.group({
           priority: ['', Validators.required]
@@ -320,6 +341,8 @@ export class BulkActionDialogComponent {
         return 'Close Care Gaps';
       case 'assign-intervention':
         return 'Assign Intervention';
+      case 'assign-care-manager':
+        return 'Assign Care Manager';
       case 'update-priority':
         return 'Update Priority';
     }
@@ -331,6 +354,8 @@ export class BulkActionDialogComponent {
         return 'close';
       case 'assign-intervention':
         return 'assignment';
+      case 'assign-care-manager':
+        return 'person_add';
       case 'update-priority':
         return 'flag';
     }
@@ -342,6 +367,8 @@ export class BulkActionDialogComponent {
         return 'check_circle';
       case 'assign-intervention':
         return 'send';
+      case 'assign-care-manager':
+        return 'person_add';
       case 'update-priority':
         return 'done';
     }
@@ -355,6 +382,8 @@ export class BulkActionDialogComponent {
         return `Close ${this.selectedCount} Gap(s)`;
       case 'assign-intervention':
         return `Assign to ${this.selectedCount} Gap(s)`;
+      case 'assign-care-manager':
+        return `Assign ${this.selectedCount} Gap(s)`;
       case 'update-priority':
         return `Update ${this.selectedCount} Gap(s)`;
     }

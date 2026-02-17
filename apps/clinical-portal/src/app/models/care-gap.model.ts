@@ -12,6 +12,7 @@ export interface CareGapAlert {
   daysOverdue: number;
   urgency: 'high' | 'medium' | 'low';
   measureName: string;
+  careManager?: string;
   dueDate?: string;
   lastContactDate?: string;
 }

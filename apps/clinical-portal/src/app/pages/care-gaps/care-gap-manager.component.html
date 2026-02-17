@@ -180,6 +180,14 @@
               <mat-icon>campaign</mat-icon>
               Generate Outreach
             </button>
+            <button mat-raised-button color="primary" (click)="bulkAssignCareManager()">
+              <mat-icon>person_add</mat-icon>
+              Assign Care Manager
+            </button>
+            <button mat-raised-button (click)="exportSelectedToExcel()">
+              <mat-icon>download</mat-icon>
+              Export to Excel
+            </button>
             <app-loading-button
               text="Close Selected"
               icon="check_circle"

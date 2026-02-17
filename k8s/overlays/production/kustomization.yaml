@@ -89,10 +89,29 @@ commonAnnotations:
   prometheus.io/port: "8080"
   prometheus.io/path: "/actuator/prometheus"
 
-# Images - production uses versioned tags
+# Images — production image tags
+#
+# ⚠️  WARNING: All tags below are set to "latest" as a placeholder.
+#    "latest" is NOT safe for production — it makes deployments non-reproducible
+#    and prevents rollbacks to a known-good version.
+#
+#    REQUIRED before every production deploy:
+#      Option A (recommended — CI/CD): Let the pipeline patch tags automatically:
+#        kustomize edit set image hdim/patient-service=hdim/patient-service:${IMAGE_TAG}
+#        kubectl apply -k k8s/overlays/production/
+#
+#      Option B (manual): Override IMAGE_TAG when running deploy.sh:
+#        IMAGE_TAG=v2.7.0 ./scripts/deploy.sh production --target k8s
+#
+#      Option C (kustomize CLI): Patch before apply:
+#        kustomize edit set image hdim/patient-service:v2.7.0
+#        kubectl apply -k .
+#
+#    The /devops:deploy command passes IMAGE_TAG from the environment when set.
+#    Set IMAGE_TAG in your CI/CD pipeline (e.g., GitHub Actions job output).
 images:
   - name: hdim/gateway-service
-    newTag: latest
+    newTag: latest  # TODO: replace with pinned version tag (e.g., v2.7.0)
   - name: hdim/fhir-service
     newTag: latest
   - name: hdim/patient-service

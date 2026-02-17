@@ -1,383 +1,364 @@
 ---
 name: devops:deploy
-description: Deploy HDIM microservices to multi-environment infrastructure with HIPAA-compliant safety checks
+description: Orchestrate a full HDIM deployment — pre-flight, migrations, build, deploy, health-check, smoke-test, rollback-on-failure. Accepts environment + instance + target parameters and actually runs the commands.
 category: devops
 priority: high
 ---
 
-# Deploy HDIM Microservices
+# HDIM Deployment Orchestrator
 
-Deploy HDIM healthcare platform to production, staging, or development environments with comprehensive safety checks and HIPAA compliance validation.
+You are orchestrating an HDIM deployment. Follow each phase in strict order. Do not skip phases unless the flag is explicitly set. Announce each phase before executing it. If any phase fails, execute rollback immediately.
 
-## Usage
+## Command Signature
 
-```bash
-/devops:deploy <environment> [options]
+```
+/devops:deploy <environment> [--instance <name>] [--target compose|k8s|auto] [--services <list>] [--strategy rolling|blue-green|recreate] [--skip-tests] [--dry-run]
 ```
 
-## Options
+## Parse Arguments First
 
-- `<environment>` - Target environment (production, staging, development)
-- `--services <list>` - Specific services to deploy (default: all)
-- `--skip-tests` - Skip test execution (NOT recommended for production)
-- `--skip-backup` - Skip database backup (NOT recommended for production)
-- `--strategy <blue-green|rolling|recreate>` - Deployment strategy (default: rolling)
+Read the user's arguments and set these variables for the session:
+
+| Variable         | Default     | Source                         |
+|------------------|-------------|--------------------------------|
+| `ENV`            | (required)  | first positional arg           |
+| `INSTANCE`       | `default`   | `--instance <name>`            |
+| `TARGET`         | `auto`      | `--target compose|k8s|auto`    |
+| `SERVICES`       | (all)       | `--services svc1,svc2`         |
+| `STRATEGY`       | `rolling`   | `--strategy <name>`            |
+| `SKIP_TESTS`     | false       | `--skip-tests`                 |
+| `DRY_RUN`        | false       | `--dry-run`                    |
+
+Derived:
+- `COMPOSE_PROJECT` = `hdim-${INSTANCE}`
+- `K8S_NAMESPACE` = `hdim-${ENV}-${INSTANCE}`
+
+## Environment → Toolchain Mapping
+
+| Environment  | Docker Compose files                                                                     | K8s overlay             |
+|--------------|------------------------------------------------------------------------------------------|-------------------------|
+| `dev`        | `docker-compose.yml`                                                                     | n/a                     |
+| `demo`       | `docker-compose.demo.yml`                                                                | n/a                     |
+| `staging`    | `docker-compose.staging.yml -f docker-compose.observability.yml`                        | `k8s/overlays/staging/` |
+| `pilot`      | `docker-compose.minimal-clinical.yml`                                                    | `k8s/overlays/pilot/`   |
+| `production` | `docker-compose.production.yml -f docker-compose.ha.yml -f docker-compose.observability.yml` | `k8s/overlays/production/` |
+
+If `--target auto`, detect: if `kubectl cluster-info` succeeds → use `k8s`; otherwise → use `compose`.
+
+---
+
+## Phase 1: Pre-flight Validation
+
+**Announce:** "Running Phase 1: Pre-flight validation..."
+
+Run each check. Abort the deployment if any check fails (unless --dry-run).
+
+### 1a. Repository sanity
+
+```bash
+# Confirm we're at the repo root
+ls backend/
+```
+
+If `backend/` is missing, stop: "Run this command from the HDIM repo root."
+
+### 1b. Git state (production only)
+
+If ENV is `production`:
+
+```bash
+git status --porcelain
+git rev-parse --abbrev-ref HEAD
+```
+
+- If `git status` output is non-empty → abort: "Production requires a clean working directory."
+- If branch is not `master` → abort: "Production deployments must be from the master branch."
+
+### 1c. Tool availability
+
+For compose target:
+```bash
+docker --version
+docker compose version
+```
+
+For k8s target:
+```bash
+kubectl version --client
+kubectl cluster-info
+```
+
+### 1d. Schema + HIPAA pre-flight
+
+```bash
+./scripts/validate-before-docker-build.sh
+```
+
+If this script exits non-zero, abort. Do not proceed to deployment.
+
+---
+
+## Phase 2: Database Migration Validation
+
+**Announce:** "Running Phase 2: Database migration validation..."
+
+```bash
+cd backend && ./gradlew test --tests '*EntityMigrationValidationTest' -x javadoc --continue
+```
+
+If any test fails, abort the deployment. Migrations must pass before any container is started.
+
+For Kubernetes: also confirm that Liquibase init containers are present in the service manifests.
+
+---
+
+## Phase 3: Build (Docker Compose only)
+
+**Announce:** "Running Phase 3: Building Docker images..."
+
+Skip this phase for Kubernetes targets (CI/CD pipeline manages image builds and pushes).
+
+### 3a. Pre-cache Gradle dependencies
+
+```bash
+cd backend && ./gradlew downloadDependencies --no-daemon
+```
+
+### 3b. Build images
+
+For all services:
+```bash
+docker compose -p hdim-${INSTANCE} -f <compose-files> build
+```
+
+For production, add `--no-cache`:
+```bash
+docker compose -p hdim-${INSTANCE} -f <compose-files> build --no-cache
+```
+
+For selected services only (if --services was specified):
+```bash
+docker compose -p hdim-${INSTANCE} -f <compose-files> build ${SERVICES//,/ }
+```
+
+---
+
+## Phase 4: Deploy
+
+**Announce:** "Running Phase 4: Deploying to ${ENV} (instance=${INSTANCE}, target=${TARGET}, strategy=${STRATEGY})..."
+
+### Docker Compose (rolling — default)
+
+```bash
+docker compose -p hdim-${INSTANCE} -f <compose-files> up -d --remove-orphans
+```
+
+### Docker Compose (recreate)
+
+```bash
+docker compose -p hdim-${INSTANCE} -f <compose-files> down --remove-orphans
+docker compose -p hdim-${INSTANCE} -f <compose-files> up -d
+```
+
+### Kubernetes (default instance)
+
+```bash
+kubectl apply -k k8s/overlays/${ENV}/
+kubectl rollout status deployment --timeout=300s --namespace hdim-${ENV}
+```
+
+### Kubernetes (named instance — namespace override)
+
+```bash
+kubectl apply -k k8s/overlays/${ENV}/ --namespace ${K8S_NAMESPACE}
+kubectl rollout status deployment --timeout=300s --namespace ${K8S_NAMESPACE}
+```
+
+---
+
+## Phase 5: Health Checks
+
+**Announce:** "Running Phase 5: Health checks..."
+
+For Kubernetes: Phase 4's `kubectl rollout status` already confirms readiness. Report success and continue.
+
+For Docker Compose: poll each core service. Do NOT use `sleep` — poll with retries:
+
+```bash
+# Poll pattern: 12 retries × 5s = 60s max per service
+for service in gateway patient fhir care-gap quality-measure; do
+  curl -sf http://localhost:<PORT>/actuator/health --retry 12 --retry-delay 5 --retry-all-errors -o /dev/null
+done
+```
+
+Core service ports:
+| Service           | Port | Health URL                                         |
+|-------------------|------|----------------------------------------------------|
+| API Gateway       | 8001 | `http://localhost:8001/actuator/health`            |
+| Patient Service   | 8084 | `http://localhost:8084/patient/actuator/health`    |
+| FHIR Service      | 8085 | `http://localhost:8085/fhir/actuator/health`       |
+| Care Gap Service  | 8086 | `http://localhost:8086/care-gap/actuator/health`   |
+| Quality Measure   | 8087 | `http://localhost:8087/quality-measure/actuator/health` |
+
+For staging/pilot/production also check (non-fatal warnings if unavailable):
+| Service    | URL                                |
+|------------|------------------------------------|
+| Prometheus | `http://localhost:9090/-/healthy`  |
+| Grafana    | `http://localhost:3000/api/health` |
+| Jaeger     | `http://localhost:16686/api/traces`|
+
+**If any core service fails health checks → trigger Rollback (below) and stop.**
+
+---
+
+## Rollback Procedure
+
+**Trigger when:** Phase 5 health check fails or Phase 6 smoke tests fail.
+
+**Announce:** "⚠️ ROLLBACK TRIGGERED — reverting deployment..."
+
+### Docker Compose rollback
+
+```bash
+docker compose -p hdim-${INSTANCE} -f <compose-files> down --remove-orphans
+```
+
+Then notify the user: "Services stopped. Redeploy the previous version by re-running with the previous image tag or reverting the git commit."
+
+### Kubernetes rollback
+
+```bash
+kubectl rollout undo deployment --namespace hdim-${ENV}-${INSTANCE}
+kubectl rollout status deployment --timeout=120s --namespace hdim-${ENV}-${INSTANCE}
+```
+
+---
+
+## Phase 6: Smoke Tests
+
+**Announce:** "Running Phase 6: Smoke tests..."
+
+Skip if `--skip-tests` was specified (warn: "Smoke tests skipped. Validate manually.").
+
+```bash
+./scripts/smoke-tests.sh \
+  --environment ${ENV} \
+  --gateway http://localhost:8001 \
+  --tenant ${INSTANCE}
+```
+
+For dev environments, add `--quick` to run core-only tests:
+```bash
+./scripts/smoke-tests.sh --environment dev --gateway http://localhost:8001 --quick
+```
+
+If smoke tests fail → trigger Rollback.
+
+---
+
+## Phase 7: Post-Deployment Report
+
+**Announce:** "Running Phase 7: Post-deployment report..."
+
+```bash
+mkdir -p deployments/
+```
+
+Write a JSON report to `deployments/hdim-${ENV}-${INSTANCE}-<timestamp>.json`:
+
+```bash
+cat > deployments/hdim-${ENV}-${INSTANCE}-$(date +%Y%m%d-%H%M%S).json <<EOF
+{
+  "environment": "${ENV}",
+  "instance": "${INSTANCE}",
+  "target": "${TARGET}",
+  "strategy": "${STRATEGY}",
+  "compose_project": "hdim-${INSTANCE}",
+  "k8s_namespace": "hdim-${ENV}-${INSTANCE}",
+  "git_commit": "$(git rev-parse --short HEAD)",
+  "deployed_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "smoke_tests_skipped": ${SKIP_TESTS},
+  "dry_run": ${DRY_RUN}
+}
+EOF
+```
+
+Then print access URLs:
+
+**For dev/demo:**
+- Frontend: http://localhost:4200
+- API Gateway: http://localhost:8001
+- Patient Swagger: http://localhost:8084/patient/swagger-ui/index.html
+- FHIR Swagger: http://localhost:8085/fhir/swagger-ui/index.html
+- Care Gap Swagger: http://localhost:8086/care-gap/swagger-ui/index.html
+- Quality Measure Swagger: http://localhost:8087/quality-measure/swagger-ui/index.html
+
+**For staging/pilot/production:**
+- Frontend: http://localhost:4200
+- API Gateway: http://localhost:8001
+- Grafana: http://localhost:3000 (admin/admin)
+- Prometheus: http://localhost:9090
+- Jaeger: http://localhost:16686
+
+Print helpful follow-up commands:
+```bash
+# View live logs
+docker compose -p hdim-${INSTANCE} -f <compose-files> logs -f
+
+# Check status
+docker compose -p hdim-${INSTANCE} -f <compose-files> ps
+
+# Stop environment
+docker compose -p hdim-${INSTANCE} -f <compose-files> down
+```
+
+---
+
+## Dry-Run Mode
+
+When `--dry-run` is specified:
+- Print every command that **would** be executed, prefixed with `[DRY-RUN]`
+- Do not execute any shell commands
+- Skip health polling (print what would be polled)
+- Still write the JSON report with `"dry_run": true`
+
+---
 
 ## Examples
 
-### Deploy All Services to Staging
-
 ```bash
-/devops:deploy staging
+# 1. Development — local default stack
+/devops:deploy dev
+
+# 2. Staging — named instance, all services
+/devops:deploy staging --instance staging-1
+
+# 3. Pilot — customer tenant on Kubernetes (dry-run first)
+/devops:deploy pilot --instance acme-health --target k8s --dry-run
+
+# 4. Pilot — customer tenant on Kubernetes (live)
+/devops:deploy pilot --instance acme-health --target k8s
+
+# 5. Production — rolling deploy, specific services only
+/devops:deploy production --instance prod --services patient-service,care-gap-service --strategy rolling
+
+# 6. Demo environment — skip smoke tests for quick iteration
+/devops:deploy demo --skip-tests
 ```
 
-Deploys all 51 HDIM microservices to staging environment.
-
-### Deploy Specific Services to Production
-
-```bash
-/devops:deploy production --services patient-service,care-gap-service,fhir-service
-```
-
-Deploys only Patient, Care Gap, and FHIR services to production.
-
-### Blue-Green Deployment
-
-```bash
-/devops:deploy production --strategy blue-green
-```
-
-Uses blue-green deployment strategy for zero-downtime production deployment.
-
-## HDIM Deployment Workflow
-
-```mermaid
-graph TD
-    A[/devops:deploy] --> B{Environment?}
-    B -->|Production| C[Require Explicit Approval]
-    B -->|Staging/Dev| D[Skip Approval]
-    C --> E[Pre-Deployment Checks]
-    D --> E
-    E --> F[Database Migrations]
-    F --> G[Backup Databases]
-    G --> H[Build Docker Images]
-    H --> I[Run Tests]
-    I --> J{Tests Pass?}
-    J -->|No| K[Abort Deployment]
-    J -->|Yes| L[Deploy Microservices]
-    L --> M[Health Checks]
-    M --> N{All Healthy?}
-    N -->|No| O[Rollback]
-    N -->|Yes| P[HIPAA Compliance Scan]
-    P --> Q[Post-Deployment Verification]
-    Q --> R[Generate Audit Report]
-```
-
-## Pre-Deployment Checks
-
-### 1. Git Repository Validation
-
-- Clean working directory (no uncommitted changes)
-- Correct branch for environment:
-  - **Production:** `master` branch only
-  - **Staging:** `master` or `develop`
-  - **Development:** any branch
-
-### 2. Database Migration Validation
-
-```bash
-# Validate all service migrations
-./gradlew :modules:services:patient-service:test --tests "*EntityMigrationValidationTest"
-./gradlew :modules:services:care-gap-service:test --tests "*EntityMigrationValidationTest"
-# ... (all 29 databases)
-```
-
-### 3. Build Verification
-
-```bash
-# Build all services
-./gradlew build -x test
-
-# Build Docker images
-docker-compose build
-```
-
-### 4. HIPAA Compliance Check
-
-- PHI encryption enabled
-- Cache TTL ≤ 5 minutes
-- Audit logging configured
-- Multi-tenant isolation verified
-
-## Deployment Strategies
-
-### Rolling Deployment (Default)
-
-- Deploy services one at a time
-- Wait for health checks before next service
-- Automatic rollback on failure
-- Zero downtime for stateless services
-
-### Blue-Green Deployment
-
-- Deploy to new environment (green)
-- Run smoke tests on green
-- Switch traffic from blue to green
-- Keep blue as rollback target
-
-### Recreate Deployment
-
-- Stop all services
-- Deploy new versions
-- Start all services
-- Faster but causes downtime
-
-## Service Deployment Order
-
-HDIM services deployed in dependency order:
-
-```
-1. Infrastructure Services
-   - PostgreSQL (29 databases)
-   - Redis (cache layer)
-   - Kafka (message broker)
-   - Kong (API Gateway)
-
-2. Core Services
-   - patient-service
-   - fhir-service
-   - patient-event-service
-
-3. Domain Services
-   - quality-measure-service
-   - cql-engine-service
-   - care-gap-service
-   - risk-stratification-service
-
-4. Integration Services
-   - hl7v2-adapter-service
-   - ccda-import-service
-   - documentation-service
-
-5. Frontend Applications
-   - clinical-portal (Angular)
-   - admin-portal (Angular)
-```
-
-## Health Checks
-
-Each service must pass health checks before deployment continues:
-
-```bash
-# HTTP Health Endpoint
-GET http://localhost:PORT/actuator/health
-
-# Expected Response
-{
-  "status": "UP",
-  "components": {
-    "db": { "status": "UP" },
-    "redis": { "status": "UP" },
-    "kafka": { "status": "UP" }
-  }
-}
-```
-
-### Critical Health Checks
-
-1. **Database Connectivity**
-   - All 29 databases reachable
-   - Connection pool healthy
-   - Tenant isolation verified
-
-2. **Cache Layer**
-   - Redis connection active
-   - PHI cache TTL ≤ 5 minutes
-   - Cache encryption enabled
-
-3. **Message Broker**
-   - Kafka brokers available
-   - Event topics exist
-   - Consumer groups active
-
-4. **API Gateway**
-   - Kong routes configured
-   - JWT validation working
-   - Rate limiting active
-
-## Smoke Tests
-
-Post-deployment validation:
-
-1. **Patient Service**
-   ```bash
-   curl -H "Authorization: Bearer $TOKEN" \
-        -H "X-Tenant-ID: test-tenant" \
-        http://gateway:8001/api/v1/patients/test-patient-id
-   ```
-
-2. **FHIR Service**
-   ```bash
-   curl http://gateway:8001/fhir/Patient/test-patient-id
-   ```
-
-3. **Care Gap Service**
-   ```bash
-   curl -H "Authorization: Bearer $TOKEN" \
-        -H "X-Tenant-ID: test-tenant" \
-        http://gateway:8001/api/v1/care-gaps?status=OPEN
-   ```
-
-4. **Quality Measure Service**
-   ```bash
-   curl -H "Authorization: Bearer $TOKEN" \
-        http://gateway:8001/api/v1/quality-measures
-   ```
-
-## Rollback Procedures
-
-### Automatic Rollback Triggers
-
-- Health checks fail after 3 retries
-- Smoke tests fail
-- Error rate > 5% within 5 minutes
-- Database migration failure
-
-### Manual Rollback
-
-```bash
-# Rollback specific service
-/devops:rollback patient-service --to-version v2.5.1
-
-# Rollback all services
-/devops:rollback --all --to-tag production-2026-01-24
-
-# Emergency rollback (immediate)
-/devops:rollback --emergency --all
-```
-
-### Rollback Steps
-
-1. Stop traffic to failed services
-2. Revert Docker images to previous tags
-3. Rollback database migrations
-4. Restore Redis cache (if needed)
-5. Verify rollback success
-6. Resume traffic
-
-## HIPAA Compliance Validation
-
-Post-deployment HIPAA checks:
-
-1. **Audit Logging**
-   - `@Audited` annotations present
-   - Audit events flowing to Kafka
-   - Audit database receiving events
-
-2. **PHI Encryption**
-   - Database encryption at rest enabled
-   - TLS for all service-to-service communication
-   - Cache encryption enabled
-
-3. **Access Controls**
-   - JWT validation working
-   - RBAC enforced (`@PreAuthorize`)
-   - Multi-tenant isolation verified
-
-4. **Session Management**
-   - Session timeout ≤ 15 minutes
-   - Auto-logout working
-   - Session audit logging active
-
-## Deployment Report
-
-Generated at: `deployments/hdim_${ENVIRONMENT}_${TIMESTAMP}.json`
-
-```json
-{
-  "environment": "production",
-  "deployment_status": "success",
-  "deployment_id": "hdim-prod-2026-01-25-001",
-  "deployment_strategy": "rolling",
-  "services_deployed": [
-    {
-      "name": "patient-service",
-      "version": "v2.6.0",
-      "status": "healthy",
-      "health_check_passed": true,
-      "deployment_duration_seconds": 45
-    },
-    {
-      "name": "care-gap-service",
-      "version": "v2.6.0",
-      "status": "healthy",
-      "health_check_passed": true,
-      "deployment_duration_seconds": 52
-    }
-  ],
-  "database_migrations": {
-    "executed": 12,
-    "rollback_tags_created": 12,
-    "validation_passed": true
-  },
-  "hipaa_compliance": {
-    "audit_logging": "enabled",
-    "phi_encryption": "enabled",
-    "cache_ttl_compliant": true,
-    "access_controls": "verified"
-  },
-  "smoke_tests": {
-    "patient_api": "passed",
-    "fhir_api": "passed",
-    "care_gap_api": "passed",
-    "quality_measure_api": "passed",
-    "authentication": "passed"
-  },
-  "rollback_plan": {
-    "backup_created": true,
-    "rollback_tag": "production-2026-01-25-pre-deployment",
-    "rollback_tested": true
-  },
-  "deployed_at": "2026-01-25T12:34:56Z",
-  "deployed_by": "aaron@mahoosuc.solutions",
-  "git_commit": "2ed6c14d",
-  "total_duration_seconds": 487
-}
-```
-
-## Production Deployment Checklist
-
-Before deploying to production:
-
-- [ ] All tests passing (`./gradlew test`)
-- [ ] Database migrations validated
-- [ ] HIPAA compliance verified
-- [ ] Staging deployment successful
-- [ ] Rollback plan tested
-- [ ] Team notified of deployment window
-- [ ] On-call engineer available
-- [ ] Database backups created
-- [ ] Git tag created (`v2.6.0`)
-- [ ] Deployment approval obtained
-
-## Performance
-
-- **Single service deployment:** 30-60 seconds
-- **All 51 services (rolling):** 8-12 minutes
-- **Blue-green deployment:** 15-20 minutes
-- **Rollback operation:** 2-5 minutes
+---
 
 ## Related Commands
 
-- `/devops:monitor` - Monitor production health
-- `/devops:rollback` - Emergency rollback
-- `/db:migrate` - Execute database migrations
-- `/test:integration` - Run integration tests
-- `/auth:audit` - Audit authentication system
+- `/devops:monitor` — Monitor production health dashboards
+- `/db:migrate` — Execute database migrations independently
+- `/test:integration` — Run integration test suite
+- `/auth:audit` — Audit authentication and HIPAA compliance
 
 ## See Also
 
-- [Deployment Runbook](../docs/DEPLOYMENT_RUNBOOK.md)
-- [Build Management Guide](../backend/docs/BUILD_MANAGEMENT_GUIDE.md)
-- [HIPAA Compliance Guide](../backend/HIPAA-CACHE-COMPLIANCE.md)
-- [Service Catalog](../docs/services/SERVICE_CATALOG.md)
+- [Deployment Runbook](../../docs/DEPLOYMENT_RUNBOOK.md)
+- [Build Management Guide](../../backend/docs/BUILD_MANAGEMENT_GUIDE.md)
+- [HIPAA Compliance Guide](../../backend/HIPAA-CACHE-COMPLIANCE.md)
+- [Service Catalog](../../docs/services/SERVICE_CATALOG.md)
+- [scripts/deploy.sh](../../scripts/deploy.sh) — backing shell script

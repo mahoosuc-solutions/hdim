@@ -4,6 +4,12 @@
 # Usage:
 #   docker compose -f docker-compose.yml -f docker-compose.external-db.yml --profile core up -d
 #
+# Developer portal sandbox isolation:
+#   docker compose -f docker-compose.yml \
+#     -f docker-compose.external-db.yml \
+#     -f docker-compose.developer-sandbox.yml \
+#     --profile core up -d
+#
 # Prerequisites:
 #   1. Run external-db-setup.sql on your PostgreSQL instance
 #   2. Set POSTGRES_HOST in .env (default: host.docker.internal for Docker Desktop)

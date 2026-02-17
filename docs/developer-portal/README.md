@@ -260,6 +260,56 @@ cd docs/api
 ./generate-openapi-specs.sh --service quality-measure-service
 ```
 
+---
+
+## Sandbox Database Isolation
+
+For developer portal sandbox testing, run with the sandbox DB override so
+developer traffic is isolated from default runtime databases.
+
+### 1. Create Sandbox Databases
+
+Run:
+
+```bash
+psql -U postgres -f docker/postgres/external-db-setup.sql
+```
+
+This now creates dedicated sandbox databases:
+- `gateway_sandbox_db`
+- `fhir_sandbox_db`
+- `healthdata_demo_sandbox`
+
+### 2. Configure Environment
+
+Use `.env.external-db` values (or set equivalents):
+
+```bash
+SANDBOX_GATEWAY_DB=gateway_sandbox_db
+SANDBOX_FHIR_DB=fhir_sandbox_db
+SANDBOX_DEMO_DB=healthdata_demo_sandbox
+```
+
+### 3. Start with Sandbox Override
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.external-db.yml \
+  -f docker-compose.developer-sandbox.yml \
+  --profile core up -d
+```
+
+### 4. Verify Service DB Targets
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.external-db.yml \
+  -f docker-compose.developer-sandbox.yml \
+  config | rg "SPRING_DATASOURCE_URL"
+```
+
 **Output:**
 ```
 docs/api/

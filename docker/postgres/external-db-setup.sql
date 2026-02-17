@@ -53,9 +53,15 @@ CREATE DATABASE prior_auth_db OWNER healthdata;
 CREATE DATABASE qrda_db OWNER healthdata;
 CREATE DATABASE ecr_db OWNER healthdata;
 CREATE DATABASE healthdata_demo OWNER healthdata;
+CREATE DATABASE gateway_sandbox_db OWNER healthdata;
+CREATE DATABASE fhir_sandbox_db OWNER healthdata;
+CREATE DATABASE healthdata_demo_sandbox OWNER healthdata;
 
 -- Enable pg_trgm extension for databases that use GIN trigram indexes
 \c fhir_db
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+\c fhir_sandbox_db
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 \c cql_db
@@ -134,5 +140,5 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at);
 
 \echo 'HDIM external database setup complete!'
-\echo 'Databases created: 30'
+\echo 'Databases created: 33'
 \echo 'User: healthdata / healthdata_password'

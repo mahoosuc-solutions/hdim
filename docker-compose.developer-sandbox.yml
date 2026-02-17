@@ -1,0 +1,36 @@
+# Docker Compose Override for Developer Portal Sandbox Database Isolation
+#
+# Purpose:
+# - Route developer-portal-facing services to sandbox-only databases.
+# - Keep sandbox integration traffic isolated from default runtime databases.
+#
+# Usage (with external PostgreSQL):
+#   cp .env.external-db .env
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f docker-compose.external-db.yml \
+#     -f docker-compose.developer-sandbox.yml \
+#     --profile core up -d
+#
+# Usage (without external-db override):
+# - You may also use this file directly, but sandbox DBs must exist on the configured
+#   PostgreSQL host and match the names below.
+
+services:
+  gateway-fhir-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/${SANDBOX_GATEWAY_DB:-gateway_sandbox_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+
+  fhir-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/${SANDBOX_FHIR_DB:-fhir_sandbox_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
+
+  demo-seeding-service:
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://${POSTGRES_HOST:-host.docker.internal}:${POSTGRES_PORT:-5432}/${SANDBOX_DEMO_DB:-healthdata_demo_sandbox}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-admin}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}

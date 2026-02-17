@@ -35,3 +35,6 @@ CREATE DATABASE prior_auth_db;
 CREATE DATABASE qrda_db;
 CREATE DATABASE ecr_db;
 CREATE DATABASE healthdata_demo;
+CREATE DATABASE gateway_sandbox_db;
+CREATE DATABASE fhir_sandbox_db;
+CREATE DATABASE healthdata_demo_sandbox;

@@ -157,6 +157,64 @@ logging:
     root: WARN
     com.healthdata: INFO
 
+# Enable Feign's Resilience4j circuit breaker integration
+# This wraps every Feign client method with the named circuit breaker automatically
+feign:
+  circuitbreaker:
+    enabled: true
+
+# Resilience4j Circuit Breaker Configuration
+# Prevents cascading failures when downstream services (fhir-service, care-gap-service) are degraded
+resilience4j:
+  circuitbreaker:
+    instances:
+      fhir-service:
+        # Open circuit after 50% failures in a 10-call sliding window
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        # Wait 30s in OPEN state before trying again (HALF_OPEN)
+        waitDurationInOpenState: 30s
+        # Allow 3 calls through in HALF_OPEN to test recovery
+        permittedNumberOfCallsInHalfOpenState: 3
+        # Treat slow calls (>5s) as failures
+        slowCallDurationThreshold: 5s
+        slowCallRateThreshold: 50
+        # Exceptions that count as failures
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+      care-gap-service:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 5s
+        slowCallRateThreshold: 50
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+  retry:
+    instances:
+      fhir-service:
+        # Retry up to 3 times with 500ms delay, exponential backoff
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.RetryableException
+      care-gap-service:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.RetryableException
+
 # Production Tracing Configuration
 management:
   tracing:

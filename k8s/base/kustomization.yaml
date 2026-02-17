@@ -8,6 +8,7 @@ kind: Kustomization
 resources:
   - secrets.yaml
   - configmap.yaml
+  - vault-serviceaccount.yaml
 
 labels:
   - pairs:

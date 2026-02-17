@@ -48,8 +48,16 @@ public class CdsHooksController {
             .prefetch(null)
             .build();
 
+        CdsServiceDescriptor orderSelect = CdsServiceDescriptor.builder()
+            .id("order-select")
+            .hook("order-select")
+            .title("HDIM Order Select Gap Closure Guidance")
+            .description("Returns gap closure suggestions at order selection time.")
+            .prefetch(null)
+            .build();
+
         return ResponseEntity.ok(CdsServicesDiscoveryResponse.builder()
-            .services(List.of(patientView))
+            .services(List.of(patientView, orderSelect))
             .build());
     }
 
@@ -102,6 +110,62 @@ public class CdsHooksController {
             cards.size(), tenantId, patientId);
 
         return ResponseEntity.ok(CdsHooksResponse.builder().cards(cards).build());
+    }
+
+    @PostMapping(path = "/order-select", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CdsHooksResponse> orderSelect(
+            @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
+            @RequestBody @Valid CdsHooksRequest request) {
+        UUID patientId = extractPatientId(request);
+        if (patientId == null) {
+            return ResponseEntity.badRequest().body(CdsHooksResponse.builder()
+                .cards(List.of(CdsCard.builder()
+                    .summary("Invalid CDS Hooks request")
+                    .detail("context.patientId is required for order-select hook.")
+                    .indicator("warning")
+                    .source(CdsCardSource.builder().label("HDIM CDS").build())
+                    .build()))
+                .build());
+        }
+
+        List<CdsRecommendationDTO> recommendations = cdsService.getActiveRecommendations(tenantId, patientId);
+        List<CdsCard> cards = new ArrayList<>();
+
+        for (CdsRecommendationDTO recommendation : recommendations) {
+            cards.add(CdsCard.builder()
+                .summary("Consider order to close care gap")
+                .detail(buildDetail(recommendation))
+                .indicator(toIndicator(recommendation.getUrgency()))
+                .source(CdsCardSource.builder()
+                    .label("HDIM Care Gap Engine")
+                    .url("https://github.com/webemo-aaron/hdim")
+                    .build())
+                .suggestions(List.of(
+                    CdsSuggestion.builder()
+                        .label("Close gap: " + recommendation.getTitle())
+                        .actions(List.of(CdsAction.builder()
+                            .type("create")
+                            .description("Create order to address recommendation: " + recommendation.getTitle())
+                            .build()))
+                        .build()))
+                .build());
+        }
+
+        log.info("CDS Hooks order-select generated {} cards for tenant={} patient={}",
+            cards.size(), tenantId, patientId);
+
+        return ResponseEntity.ok(CdsHooksResponse.builder().cards(cards).build());
+    }
+
+    private UUID extractPatientId(CdsHooksRequest request) {
+        if (request == null || request.getContext() == null || request.getContext().getPatientId() == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(request.getContext().getPatientId());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private String toIndicator(String urgency) {
@@ -185,6 +249,7 @@ public class CdsHooksController {
         private String detail;
         private String indicator;
         private CdsCardSource source;
+        private List<CdsSuggestion> suggestions;
     }
 
     @Data
@@ -195,5 +260,25 @@ public class CdsHooksController {
     public static class CdsCardSource {
         private String label;
         private String url;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class CdsSuggestion {
+        private String label;
+        private List<CdsAction> actions;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class CdsAction {
+        private String type;
+        private String description;
     }
 }

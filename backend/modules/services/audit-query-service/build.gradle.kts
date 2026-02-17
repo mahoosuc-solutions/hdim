@@ -69,6 +69,7 @@ dependencies {
     testImplementation(libs.testcontainers.jdbc)
     testImplementation(libs.h2)  // H2 in-memory database for unit tests
     testImplementation(project(":modules:shared:test-infrastructure"))
+    testImplementation(project(":platform:test-fixtures"))
 }
 
 tasks.withType<Test> {

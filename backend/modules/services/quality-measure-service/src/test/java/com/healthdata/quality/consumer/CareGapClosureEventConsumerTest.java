@@ -50,7 +50,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         FhirResourceEvent event = FhirResourceEvent.builder()
@@ -80,7 +81,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         UUID patientId = UUID.randomUUID();
@@ -112,7 +114,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         UUID patientId = UUID.randomUUID();
@@ -161,7 +164,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         UUID patientId = UUID.randomUUID();
@@ -202,7 +206,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         UUID patientId = UUID.randomUUID();
@@ -244,7 +249,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         // Pass empty map which makes buildFhirResourceEvent return partial object or fail safely
@@ -266,7 +272,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         UUID patientId = UUID.randomUUID();
@@ -307,7 +314,8 @@ class CareGapClosureEventConsumerTest {
             careGapService,
             matchingService,
             kafkaTemplate,
-            objectMapper
+            objectMapper,
+            Mockito.mock(com.healthdata.audit.service.AuditService.class)
         );
 
         UUID patientId = UUID.randomUUID();

@@ -40,7 +40,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onWorkflowStarted(String tenantId, UUID workflowId, UUID patientId, String workflowType,
                                   String priority, String description, Integer totalSteps) {
         log.debug("Processing workflow.started for workflow {} (patient: {}, type: {})",
@@ -79,7 +79,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onWorkflowAssigned(String tenantId, UUID workflowId, String assignedTo) {
         log.debug("Processing workflow.assigned for workflow {}: assigned to {}", workflowId, assignedTo);
 
@@ -109,7 +109,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onWorkflowReassigned(String tenantId, UUID workflowId, String oldAssignee, String newAssignee) {
         log.debug("Processing workflow.reassigned for workflow {}: {} -> {}", workflowId, oldAssignee, newAssignee);
 
@@ -136,7 +136,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onProgressUpdated(String tenantId, UUID workflowId, Integer stepsCompleted, Integer totalSteps) {
         log.debug("Processing workflow.progress.updated for workflow {}: {}/{} steps", workflowId, stepsCompleted, totalSteps);
 
@@ -165,7 +165,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onWorkflowCompleted(String tenantId, UUID workflowId) {
         log.debug("Processing workflow.completed for workflow {}", workflowId);
 
@@ -193,7 +193,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onWorkflowCancelled(String tenantId, UUID workflowId) {
         log.debug("Processing workflow.cancelled for workflow {}", workflowId);
 
@@ -218,7 +218,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onReviewRequired(String tenantId, UUID workflowId) {
         log.debug("Processing workflow.review.required for workflow {}", workflowId);
 
@@ -243,7 +243,7 @@ public class WorkflowEventListener {
         groupId = "clinical-workflow-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onBlockingIssue(String tenantId, UUID workflowId) {
         log.debug("Processing workflow.blocking.issue for workflow {}", workflowId);
 

@@ -40,7 +40,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapIdentified(String tenantId, UUID careGapId, UUID patientId, String measureId,
                                     String priority, LocalDate dueDate, String description) {
         log.debug("Processing care-gap.identified event for care gap {} (patient: {}, priority: {})",
@@ -74,7 +74,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapClosed(String tenantId, UUID careGapId, String closedReason, String closureMethod) {
         log.debug("Processing care-gap.closed event for care gap {}: reason={}, method={}",
             careGapId, closedReason, closureMethod);
@@ -103,7 +103,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapAutoClosed(String tenantId, UUID careGapId, String reason) {
         log.debug("Processing care-gap.auto-closed event for care gap {}: reason={}", careGapId, reason);
 
@@ -119,7 +119,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onPriorityChanged(String tenantId, UUID careGapId, String oldPriority, String newPriority) {
         log.debug("Processing care-gap.priority.changed for care gap {}: {} -> {}",
             careGapId, oldPriority, newPriority);
@@ -145,7 +145,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapWaived(String tenantId, UUID careGapId, String waiveReason, String waiveAuthor) {
         log.debug("Processing care-gap.waived for care gap {}: reason={}, author={}",
             careGapId, waiveReason, waiveAuthor);
@@ -175,7 +175,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapAssigned(String tenantId, UUID careGapId, String assignedTo) {
         log.debug("Processing care-gap.assigned for care gap {}: assigned to {}", careGapId, assignedTo);
 
@@ -200,7 +200,7 @@ public class CareGapEventListener {
         groupId = "care-gap-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onDueDateUpdated(String tenantId, UUID careGapId, LocalDate newDueDate) {
         log.debug("Processing care-gap.due-date-updated for care gap {}: new due date {}", careGapId, newDueDate);
 

@@ -166,7 +166,7 @@ public class HealthScoreService {
         groupId = "health-score-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleObservationEvent(Map<String, Object> event) {
         try {
             log.info("Received observation event");
@@ -239,7 +239,7 @@ public class HealthScoreService {
         topics = "mental-health-assessment.submitted",
         groupId = "health-score-service"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleMentalHealthAssessment(String tenantId, MentalHealthAssessmentEntity assessment) {
         log.info("Processing mental health assessment for patient: {}", assessment.getPatientId());
 
@@ -282,7 +282,7 @@ public class HealthScoreService {
         topics = "care-gap.addressed",
         groupId = "health-score-service"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleCareGapAddressed(String tenantId, CareGapEntity careGap) {
         log.info("Processing care gap addressed for patient: {}", careGap.getPatientId());
 
@@ -355,7 +355,7 @@ public class HealthScoreService {
         groupId = "health-score-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleConditionEvent(Map<String, Object> event) {
         try {
             log.info("Received condition event");

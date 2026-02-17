@@ -66,7 +66,7 @@ public class AuditEventProjectionConsumer {
         groupId = "${spring.kafka.consumer.group-id}",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void consumeAuditEvent(AuditEvent auditEvent) {
         try {
             log.debug("Processing audit event: {}", auditEvent.getId());

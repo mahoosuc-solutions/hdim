@@ -48,7 +48,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch"))
                 .build();
@@ -64,13 +64,153 @@ class SmartAuthorizationControllerTest {
                 "http://app/callback",
                 "launch",
                 "state",
-                null,
-                null,
+                "http://localhost/fhir",
+                "launch-1",
                 null,
                 "S256");
 
         assertThat(view.getUrl()).contains("code=auth-code");
         assertThat(view.getUrl()).contains("state=state");
+    }
+
+    @Test
+    @DisplayName("Should require state parameter")
+    void shouldRequireStateParameter() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        RedirectView view = controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch",
+                null,
+                "http://localhost/fhir",
+                "launch-1",
+                null,
+                "S256");
+
+        assertThat(view.getUrl()).contains("invalid_request");
+        assertThat(view.getUrl()).contains("State+parameter+is+required");
+    }
+
+    @Test
+    @DisplayName("Should require audience parameter")
+    void shouldRequireAudienceParameter() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        RedirectView view = controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch",
+                "state",
+                null,
+                "launch-1",
+                null,
+                "S256");
+
+        assertThat(view.getUrl()).contains("invalid_request");
+        assertThat(view.getUrl()).contains("Audience+parameter+is+required");
+    }
+
+    @Test
+    @DisplayName("Should require launch parameter when launch scope requested")
+    void shouldRequireLaunchForLaunchScope() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        RedirectView view = controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch",
+                "state",
+                "http://localhost/fhir",
+                null,
+                null,
+                "S256");
+
+        assertThat(view.getUrl()).contains("invalid_request");
+        assertThat(view.getUrl()).contains("Launch+parameter+is+required");
+    }
+
+    @Test
+    @DisplayName("Should require PKCE for public client")
+    void shouldRequirePkceForPublicClient() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.PUBLIC)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        RedirectView view = controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch",
+                "state",
+                "http://localhost/fhir",
+                "launch-1",
+                null,
+                "S256");
+
+        assertThat(view.getUrl()).contains("invalid_request");
+        assertThat(view.getUrl()).contains("PKCE+code_challenge+is+required");
+    }
+
+    @Test
+    @DisplayName("Should reject non-S256 PKCE method")
+    void shouldRejectNonS256PkceMethod() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+
+        RedirectView view = controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch",
+                "state",
+                "http://localhost/fhir",
+                "launch-1",
+                "challenge",
+                "plain");
+
+        assertThat(view.getUrl()).contains("invalid_request");
+        assertThat(view.getUrl()).contains("Only+S256+code_challenge_method+is+supported");
     }
 
     @Test
@@ -80,7 +220,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch"))
                 .build();
@@ -107,7 +247,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch"))
                 .build();
@@ -134,7 +274,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch"))
                 .build();
@@ -181,7 +321,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch/patient", "launch/encounter", "fhirUser"))
                 .build();
@@ -197,7 +337,7 @@ class SmartAuthorizationControllerTest {
                 "http://app/callback",
                 "launch/patient launch/encounter fhirUser",
                 "state",
-                "aud",
+                "http://localhost/fhir",
                 "launch-1",
                 null,
                 "S256");
@@ -212,7 +352,7 @@ class SmartAuthorizationControllerTest {
         assertThat(context.getPatient()).isEqualTo("demo-patient-001");
         assertThat(context.getEncounter()).isEqualTo("demo-encounter-001");
         assertThat(context.getFhirUser()).isEqualTo("Practitioner/demo-practitioner-001");
-        assertThat(context.getAudience()).isEqualTo("aud");
+        assertThat(context.getAudience()).isEqualTo("http://localhost/fhir");
     }
 
     @Test
@@ -222,7 +362,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch/patient", "launch/encounter", "fhirUser"))
                 .build();
@@ -242,7 +382,7 @@ class SmartAuthorizationControllerTest {
                 "http://app/callback",
                 "launch/patient launch/encounter fhirUser",
                 "state",
-                "aud",
+                "http://localhost/fhir",
                 launchToken,
                 null,
                 "S256");
@@ -269,7 +409,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch/patient", "launch/encounter", "fhirUser"))
                 .build();
@@ -291,7 +431,7 @@ class SmartAuthorizationControllerTest {
                 "http://app/callback",
                 "launch/patient launch/encounter fhirUser",
                 "state",
-                "aud",
+                "http://localhost/fhir",
                 "opaque-launch-id",
                 null,
                 "S256");
@@ -315,7 +455,7 @@ class SmartAuthorizationControllerTest {
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
-                .clientType(SmartClient.ClientType.PUBLIC)
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
                 .redirectUris(Set.of("http://app/callback"))
                 .allowedScopes(Set.of("launch"))
                 .build();
@@ -331,8 +471,8 @@ class SmartAuthorizationControllerTest {
                 "http://app/callback",
                 "launch",
                 "state",
-                null,
-                null,
+                "http://localhost/fhir",
+                "launch-1",
                 null,
                 "S256");
 

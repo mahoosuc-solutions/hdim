@@ -22,6 +22,7 @@ Operational runbooks for the HealthData Intelligence Platform (HDIM).
 | [Session Flow Release Readiness Evidence](./SESSION_FLOW_RELEASE_READINESS_EVIDENCE.md) | High | Fill-in template for final validation evidence and Go/No-Go sign-off |
 | [CDS Hooks Care Gap Validation](./CDS_HOOKS_CARE_GAP_VALIDATION.md) | High | Local validation flow for CDS Hooks care-gap integration and deterministic fixture coverage |
 | [SMART Opaque Launch Context](./SMART_OPAQUE_LAUNCH_CONTEXT.md) | High | Opaque launch ID storage, TTL/cleanup policy, and fallback behavior for SMART launch flows |
+| [SMART Security Hardening](./SMART_SECURITY_HARDENING.md) | High | Required `state`/`aud`, launch scope consistency, and S256 PKCE enforcement for SMART OAuth flows |
 
 ## Severity Levels
 

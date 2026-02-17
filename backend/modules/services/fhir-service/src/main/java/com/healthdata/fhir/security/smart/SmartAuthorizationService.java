@@ -106,18 +106,27 @@ public class SmartAuthorizationService {
             throw new SmartAuthorizationException("Redirect URI mismatch");
         }
 
-        // Validate PKCE if code challenge was provided
-        if (codeData.getCodeChallenge() != null) {
-            if (codeVerifier == null) {
+        SmartClient client = clientRepository.findByClientIdAndActiveTrue(clientId)
+            .orElseThrow(() -> new SmartAuthorizationException("Client not found"));
+
+        boolean pkceRequired = client.isPublicClient() || client.isRequirePkce();
+        boolean hasCodeChallenge = codeData.getCodeChallenge() != null && !codeData.getCodeChallenge().isBlank();
+
+        if (pkceRequired && !hasCodeChallenge) {
+            throw new SmartAuthorizationException("invalid_grant", "PKCE is required for this client");
+        }
+
+        if (hasCodeChallenge) {
+            if (!"S256".equals(codeData.getCodeChallengeMethod())) {
+                throw new SmartAuthorizationException("invalid_grant", "Only S256 PKCE is supported");
+            }
+            if (codeVerifier == null || codeVerifier.isBlank()) {
                 throw new SmartAuthorizationException("Code verifier required");
             }
             if (!validatePkce(codeVerifier, codeData.getCodeChallenge(), codeData.getCodeChallengeMethod())) {
                 throw new SmartAuthorizationException("Invalid code verifier");
             }
         }
-
-        SmartClient client = clientRepository.findByClientIdAndActiveTrue(clientId)
-            .orElseThrow(() -> new SmartAuthorizationException("Client not found"));
 
         // Generate tokens
         String accessToken = generateAccessToken(client, codeData.getScopes(), codeData.getLaunchContext());

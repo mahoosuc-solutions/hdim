@@ -81,6 +81,10 @@ public class SmartAuthorizationController {
                     "Only 'code' response type is supported", state);
             }
 
+            if (!StringUtils.hasText(state)) {
+                return errorRedirect(redirectUri, "invalid_request", "State parameter is required", null);
+            }
+
             // Parse and validate scopes
             Set<String> requestedScopes = parseScopes(scope);
             for (String s : requestedScopes) {
@@ -88,6 +92,29 @@ public class SmartAuthorizationController {
                     return errorRedirect(redirectUri, "invalid_scope",
                         "Scope not allowed: " + s, state);
                 }
+            }
+
+            if (requestedScopes.contains("launch") && !StringUtils.hasText(launch)) {
+                return errorRedirect(redirectUri, "invalid_request",
+                    "Launch parameter is required when launch scope is requested", state);
+            }
+
+            if (!StringUtils.hasText(audience)) {
+                return errorRedirect(redirectUri, "invalid_request", "Audience parameter is required", state);
+            }
+            if (!isValidAudience(audience)) {
+                return errorRedirect(redirectUri, "invalid_request", "Audience must be an absolute http(s) URL", state);
+            }
+
+            if (StringUtils.hasText(codeChallengeMethod) && !StringUtils.hasText(codeChallenge)) {
+                return errorRedirect(redirectUri, "invalid_request",
+                    "code_challenge is required when code_challenge_method is provided", state);
+            }
+            if (StringUtils.hasText(codeChallenge) && !"S256".equals(codeChallengeMethod)) {
+                return errorRedirect(redirectUri, "invalid_request", "Only S256 code_challenge_method is supported", state);
+            }
+            if ((client.isPublicClient() || client.isRequirePkce()) && !StringUtils.hasText(codeChallenge)) {
+                return errorRedirect(redirectUri, "invalid_request", "PKCE code_challenge is required for this client", state);
             }
 
             // Build launch context
@@ -442,6 +469,14 @@ public class SmartAuthorizationController {
             return b;
         }
         return Boolean.parseBoolean(String.valueOf(value));
+    }
+
+    private boolean isValidAudience(String audience) {
+        String candidate = audience == null ? "" : audience.trim();
+        if (candidate.isEmpty()) {
+            return false;
+        }
+        return candidate.startsWith("http://") || candidate.startsWith("https://");
     }
 
     /**

@@ -38,10 +38,13 @@ class SmartAuthorizationControllerTest {
     @Mock
     private SmartClientRepository clientRepository;
 
+    @Mock
+    private SmartLaunchContextStore launchContextStore;
+
     @Test
     @DisplayName("Should authorize and redirect with code")
     void shouldAuthorize() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -73,7 +76,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error redirect for unsupported response type")
     void shouldReturnErrorRedirect() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -100,7 +103,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error redirect for invalid redirect URI")
     void shouldReturnErrorRedirectForInvalidRedirectUri() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -127,7 +130,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error redirect for invalid scope")
     void shouldReturnErrorRedirectForInvalidScope() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -154,7 +157,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error redirect when client missing")
     void shouldReturnErrorRedirectWhenClientMissing() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         when(clientRepository.findByClientIdAndActiveTrue("missing")).thenReturn(Optional.empty());
 
         RedirectView view = controller.authorize(
@@ -174,7 +177,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should include launch context from scopes")
     void shouldIncludeLaunchContextFromScopes() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -215,7 +218,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should extract EHR launch context from base64url launch payload")
     void shouldExtractLaunchContextFromPayload() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -228,6 +231,7 @@ class SmartAuthorizationControllerTest {
                 eq("client-1"), eq("http://app/callback"), any(), eq("state"),
                 eq(null), eq("S256"), any()))
             .thenReturn("auth-code");
+        when(launchContextStore.storeLaunchContext(any())).thenReturn("lc-test-123");
 
         String launchPayloadJson = "{\"patient\":\"ehr-patient-42\",\"encounter\":\"ehr-enc-7\",\"fhirUser\":\"Practitioner/abc\",\"tenant\":\"acme-health\",\"intent\":\"chart-review\",\"need_patient_banner\":true}";
         String launchToken = Base64.getUrlEncoder().withoutPadding().encodeToString(launchPayloadJson.getBytes(StandardCharsets.UTF_8));
@@ -248,6 +252,7 @@ class SmartAuthorizationControllerTest {
                 eq("client-1"), eq("http://app/callback"), any(), eq("state"),
                 eq(null), eq("S256"), captor.capture());
         SmartLaunchContext context = captor.getValue();
+        assertThat(context.getLaunch()).isEqualTo("lc-test-123");
         assertThat(context.getPatient()).isEqualTo("ehr-patient-42");
         assertThat(context.getEncounter()).isEqualTo("ehr-enc-7");
         assertThat(context.getFhirUser()).isEqualTo("Practitioner/abc");
@@ -258,9 +263,55 @@ class SmartAuthorizationControllerTest {
     }
 
     @Test
+    @DisplayName("Should resolve opaque launch ID from server-side launch context store")
+    void shouldResolveOpaqueLaunchIdFromStore() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.PUBLIC)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch/patient", "launch/encounter", "fhirUser"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+        when(authorizationService.generateAuthorizationCode(
+                eq("client-1"), eq("http://app/callback"), any(), eq("state"),
+                eq(null), eq("S256"), any()))
+            .thenReturn("auth-code");
+        when(launchContextStore.resolveLaunchContext("opaque-launch-id")).thenReturn(Optional.of(Map.of(
+            "patient", "ehr-patient-777",
+            "encounter", "ehr-enc-777",
+            "fhirUser", "Practitioner/opaque",
+            "tenant", "acme"
+        )));
+
+        controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch/patient launch/encounter fhirUser",
+                "state",
+                "aud",
+                "opaque-launch-id",
+                null,
+                "S256");
+
+        ArgumentCaptor<SmartLaunchContext> captor = ArgumentCaptor.forClass(SmartLaunchContext.class);
+        verify(authorizationService).generateAuthorizationCode(
+                eq("client-1"), eq("http://app/callback"), any(), eq("state"),
+                eq(null), eq("S256"), captor.capture());
+        SmartLaunchContext context = captor.getValue();
+        assertThat(context.getLaunch()).isEqualTo("opaque-launch-id");
+        assertThat(context.getPatient()).isEqualTo("ehr-patient-777");
+        assertThat(context.getEncounter()).isEqualTo("ehr-enc-777");
+        assertThat(context.getFhirUser()).isEqualTo("Practitioner/opaque");
+        assertThat(context.getTenant()).isEqualTo("acme");
+    }
+
+    @Test
     @DisplayName("Should return server error redirect on exception")
     void shouldReturnServerErrorRedirect() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         SmartClient client = SmartClient.builder()
                 .clientId("client-1")
                 .clientName("Test")
@@ -291,7 +342,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should exchange authorization code for token")
     void shouldExchangeToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         TokenResponse token = TokenResponse.builder()
                 .accessToken("token")
                 .tokenType("Bearer")
@@ -318,7 +369,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error for missing auth code params")
     void shouldReturnErrorForMissingAuthCodeParams() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
 
         ResponseEntity<?> response = controller.token(
                 "authorization_code",
@@ -338,7 +389,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should refresh access token")
     void shouldRefreshToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         TokenResponse token = TokenResponse.builder()
                 .accessToken("token")
                 .tokenType("Bearer")
@@ -364,7 +415,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error for missing refresh token")
     void shouldReturnErrorForMissingRefreshToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
 
         ResponseEntity<?> response = controller.token(
                 "refresh_token",
@@ -384,7 +435,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error for missing client credentials")
     void shouldReturnErrorForMissingClientCredentials() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
 
         ResponseEntity<?> response = controller.token(
                 "client_credentials",
@@ -404,7 +455,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should handle authorization service errors in token endpoint")
     void shouldHandleAuthorizationServiceErrorsInTokenEndpoint() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         doThrow(new SmartAuthorizationException("invalid_grant", "bad grant"))
                 .when(authorizationService).exchangeAuthorizationCode("code", "client-1", "http://app/callback", "verifier");
 
@@ -426,7 +477,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return server error on token exception")
     void shouldReturnServerErrorOnTokenException() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         doThrow(new RuntimeException("boom"))
                 .when(authorizationService).exchangeAuthorizationCode("code", "client-1", "http://app/callback", null);
 
@@ -448,7 +499,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should handle invalid grant type")
     void shouldHandleInvalidGrantType() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
 
         ResponseEntity<?> response = controller.token(
                 "unknown",
@@ -468,7 +519,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return userinfo for valid token")
     void shouldReturnUserinfo() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         Claims claims = Mockito.mock(Claims.class);
         when(claims.getSubject()).thenReturn("user-1");
         when(claims.containsKey("patient")).thenReturn(true);
@@ -487,7 +538,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error for missing bearer token")
     void shouldReturnErrorForMissingBearerToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
 
         ResponseEntity<?> response = controller.userinfo("Token token");
 
@@ -498,7 +549,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return error for invalid userinfo token")
     void shouldReturnErrorForInvalidUserinfoToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         doThrow(new IllegalArgumentException("bad")).when(authorizationService).validateAccessToken("token");
 
         ResponseEntity<?> response = controller.userinfo("Bearer token");
@@ -510,7 +561,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should introspect token")
     void shouldIntrospectToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         Claims claims = Mockito.mock(Claims.class);
         when(claims.getSubject()).thenReturn("user-1");
         when(claims.get("client_id")).thenReturn("client-1");
@@ -530,7 +581,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should return inactive on introspect error")
     void shouldReturnInactiveOnIntrospectError() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         doThrow(new IllegalArgumentException("bad")).when(authorizationService).validateAccessToken("token");
 
         ResponseEntity<?> response = controller.introspect("token", null);
@@ -542,7 +593,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should revoke token")
     void shouldRevokeToken() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
 
         ResponseEntity<Void> response = controller.revoke("token", null);
 
@@ -553,7 +604,7 @@ class SmartAuthorizationControllerTest {
     @Test
     @DisplayName("Should parse basic auth credentials")
     void shouldParseBasicAuthCredentials() {
-        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository, launchContextStore);
         TokenResponse token = TokenResponse.builder().accessToken("token").tokenType("Bearer").build();
         when(authorizationService.clientCredentialsGrant("client-1", "secret", Set.of()))
                 .thenReturn(token);

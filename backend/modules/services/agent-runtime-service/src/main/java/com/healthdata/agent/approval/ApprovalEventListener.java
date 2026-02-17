@@ -66,6 +66,7 @@ public class ApprovalEventListener {
 
         } catch (Exception e) {
             log.error("Failed to process approval event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process approval event", e);
         }
     }
 

@@ -56,6 +56,7 @@ public class AgentConfigEventListener {
 
         } catch (Exception e) {
             log.error("Failed to process agent config event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process agent config event", e);
         }
     }
 

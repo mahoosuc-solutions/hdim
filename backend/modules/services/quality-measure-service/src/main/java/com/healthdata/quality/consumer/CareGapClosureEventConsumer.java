@@ -74,7 +74,7 @@ public class CareGapClosureEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing procedure created event", e);
-            // Don't rethrow - we don't want to block the Kafka consumer
+            throw new RuntimeException("Failed to process procedure created event", e);
         }
     }
 
@@ -117,7 +117,7 @@ public class CareGapClosureEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing observation created event", e);
-            // Don't rethrow - we don't want to block the Kafka consumer
+            throw new RuntimeException("Failed to process observation created event", e);
         }
     }
 

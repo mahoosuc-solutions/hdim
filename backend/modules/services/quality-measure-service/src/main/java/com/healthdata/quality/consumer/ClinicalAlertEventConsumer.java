@@ -73,6 +73,7 @@ public class ClinicalAlertEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing mental health assessment event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process mental health assessment event", e);
         }
     }
 
@@ -119,6 +120,7 @@ public class ClinicalAlertEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing risk assessment event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process risk assessment event", e);
         }
     }
 
@@ -164,6 +166,7 @@ public class ClinicalAlertEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing health score change event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process health score change event", e);
         }
     }
 
@@ -208,6 +211,7 @@ public class ClinicalAlertEventConsumer {
         } catch (Exception e) {
             log.error("Error processing chronic disease deterioration event: {}",
                 e.getMessage(), e);
+            throw new RuntimeException("Failed to process chronic disease deterioration event", e);
         }
     }
 
@@ -262,6 +266,7 @@ public class ClinicalAlertEventConsumer {
 
         } catch (Exception e) {
             log.error("Error processing alert triggered event: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to process alert triggered event", e);
         }
     }
 

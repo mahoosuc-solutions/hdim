@@ -92,6 +92,18 @@
   - .env.production
   - prometheus-prod.yml
   - alerts.yml
+- [ ] **MCP context-aware release gate** executed for deployment context
+  ```bash
+  # Staging / pre-prod iteration (warn-only tenant policy)
+  npm run mcp:release-gate -- --mode permissive
+
+  # Production promotion decision (blocking tenant policy)
+  npm run mcp:release-gate -- --mode strict
+  ```
+  - Review artifacts:
+    - `logs/mcp-reports/release-gate-<timestamp>.json`
+    - `logs/mcp-reports/release-gate-<timestamp>.md`
+  - Policy details: `docs/runbooks/MCP_CONTEXT_AWARE_RELEASE_GATE.md`
 
 ### Security
 
@@ -377,7 +389,16 @@ ws.onopen = () => console.log('WebSocket connected');
 ws.onmessage = (e) => console.log('Received:', e.data);
 ```
 
-**7. Monitoring Validation**
+**7. Run MCP Release Gate (Strict for Production)**
+
+```bash
+npm run mcp:release-gate -- --mode strict --include-logs
+
+# Expected: exit code 0 and pass=true
+# Artifacts written to logs/mcp-reports/
+```
+
+**8. Monitoring Validation**
 
 ```bash
 # Check Prometheus targets
@@ -455,6 +476,8 @@ npm run test:e2e:prod
 - [ ] **CPU usage** under 50%
 - [ ] **Disk space** sufficient (>20% free)
 - [ ] License compliance verified (docs/compliance/THIRD_PARTY_NOTICES.md)
+- [ ] MCP strict release gate passed (`pass=true`)
+- [ ] MCP gate artifacts archived with deployment evidence
 
 ### Performance Baseline
 

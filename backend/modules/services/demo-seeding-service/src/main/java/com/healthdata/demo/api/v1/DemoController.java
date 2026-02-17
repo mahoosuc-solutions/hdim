@@ -20,7 +20,10 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -401,6 +404,28 @@ public class DemoController {
         return result.isSuccess() ?
             ResponseEntity.ok(response) :
             ResponseEntity.internalServerError().body(response);
+    }
+
+    /**
+     * Test webhook endpoint for sandbox integrations.
+     *
+     * Accepts arbitrary JSON payloads and returns an echo response with receipt metadata.
+     */
+    @PostMapping("/webhooks/test")
+    public ResponseEntity<Map<String, Object>> testWebhook(
+            @RequestBody(required = false) Map<String, Object> payload,
+            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @RequestHeader(value = "X-Webhook-Event", required = false) String eventType) {
+        logger.info("POST /api/v1/demo/webhooks/test - tenant={}, event={}", tenantId, eventType);
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("received", true);
+        response.put("receivedAt", Instant.now().toString());
+        response.put("tenantId", tenantId != null && !tenantId.isBlank() ? tenantId : "sandbox");
+        response.put("eventType", eventType != null && !eventType.isBlank() ? eventType : "sandbox.webhook.test");
+        response.put("payload", payload != null ? payload : Map.of());
+
+        return ResponseEntity.ok(response);
     }
 
     /**

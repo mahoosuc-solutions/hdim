@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(DemoController.class)
 @ContextConfiguration(classes = DemoControllerTest.TestConfig.class)
@@ -95,5 +96,22 @@ class DemoControllerTest {
 
         mockMvc.perform(get("/api/v1/demo/sessions/current/progress/stream"))
             .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testWebhook_EchoesPayloadAndHeaders() throws Exception {
+        String payload = "{\"integration\":\"sandbox\",\"status\":\"ok\"}";
+
+        mockMvc.perform(post("/api/v1/demo/webhooks/test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Tenant-Id", "sandbox-tenant")
+                .header("X-Webhook-Event", "integration.test")
+                .content(payload))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.received").value(true))
+            .andExpect(jsonPath("$.tenantId").value("sandbox-tenant"))
+            .andExpect(jsonPath("$.eventType").value("integration.test"))
+            .andExpect(jsonPath("$.payload.integration").value("sandbox"))
+            .andExpect(jsonPath("$.payload.status").value("ok"));
     }
 }

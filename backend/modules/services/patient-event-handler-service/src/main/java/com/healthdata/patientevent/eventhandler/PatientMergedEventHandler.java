@@ -60,7 +60,7 @@ public class PatientMergedEventHandler {
      * @param ack Manual acknowledgment handler
      */
     @KafkaListener(topics = "patient.merged", groupId = "${spring.kafka.consumer.group-id}")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handlePatientMerged(
             @Payload PatientMergedEvent mergedEvent,
             Acknowledgment ack) {

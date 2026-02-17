@@ -37,7 +37,7 @@ public class MeasureEvaluationEventListener {
         groupId = "quality-measure-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onMeasureEvaluated(String tenantId, String measureId, UUID patientId, Double score,
                                    String complianceStatus, Integer numerator, Integer denominator,
                                    Integer exclusions, String measureName, String measureVersion) {
@@ -78,7 +78,7 @@ public class MeasureEvaluationEventListener {
         groupId = "quality-measure-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onScoreUpdated(String tenantId, String measureId, UUID patientId, Double newScore,
                                String newComplianceStatus) {
         log.debug("Processing measure.score.updated for measure {} (patient: {}, new score: {})",
@@ -109,7 +109,7 @@ public class MeasureEvaluationEventListener {
         groupId = "quality-measure-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onComplianceChanged(String tenantId, String measureId, Double newComplianceRate) {
         log.debug("Processing measure.compliance.changed for measure {}: new rate={}",
             measureId, newComplianceRate);
@@ -129,7 +129,7 @@ public class MeasureEvaluationEventListener {
         groupId = "quality-measure-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onNumeratorUpdated(String tenantId, String measureId, UUID patientId, Integer newNumerator) {
         log.debug("Processing measure.numerator.updated for measure {} (patient: {}, numerator: {})",
             measureId, patientId, newNumerator);
@@ -160,7 +160,7 @@ public class MeasureEvaluationEventListener {
         groupId = "quality-measure-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onDenominatorUpdated(String tenantId, String measureId, UUID patientId, Integer newDenominator) {
         log.debug("Processing measure.denominator.updated for measure {} (patient: {}, denominator: {})",
             measureId, patientId, newDenominator);
@@ -191,7 +191,7 @@ public class MeasureEvaluationEventListener {
         groupId = "quality-measure-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onExclusionUpdated(String tenantId, String measureId, UUID patientId, Integer newExclusions) {
         log.debug("Processing measure.exclusion.updated for measure {} (patient: {}, exclusions: {})",
             measureId, patientId, newExclusions);

@@ -43,7 +43,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onPatientCreated(String tenantId, UUID patientId, String firstName, String lastName) {
         log.debug("Processing patient.created event for patient {} in tenant {}", patientId, tenantId);
 
@@ -78,7 +78,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onPatientUpdated(String tenantId, UUID patientId, String firstName, String lastName,
                                  String email, String phoneNumber) {
         log.debug("Processing patient.updated event for patient {}", patientId);
@@ -110,7 +110,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onPatientStatusChanged(String tenantId, UUID patientId, String status) {
         log.debug("Processing patient.status.changed event for patient {}: status={}", patientId, status);
 
@@ -132,7 +132,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapIdentified(String tenantId, UUID patientId, String priority) {
         log.debug("Processing care-gap.identified event for patient {}: priority={}", patientId, priority);
 
@@ -157,7 +157,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapClosed(String tenantId, UUID patientId, String priority) {
         log.debug("Processing care-gap.closed event for patient {}: priority={}", patientId, priority);
 
@@ -182,7 +182,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onRiskAssessmentUpdated(String tenantId, UUID patientId, Double riskScore, String riskLevel) {
         log.debug("Processing risk-assessment.updated for patient {}: score={}, level={}",
             patientId, riskScore, riskLevel);
@@ -206,7 +206,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onMentalHealthUpdated(String tenantId, UUID patientId, Integer score) {
         log.debug("Processing mental-health.updated for patient {}: score={}", patientId, score);
 
@@ -229,7 +229,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onClinicalAlertTriggered(String tenantId, UUID patientId, String severity) {
         log.debug("Processing clinical-alert.triggered for patient {}: severity={}", patientId, severity);
 
@@ -254,7 +254,7 @@ public class PatientEventListener {
         groupId = "patient-event-service",
         containerFactory = "kafkaListenerContainerFactory"
     )
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onClinicalAlertResolved(String tenantId, UUID patientId) {
         log.debug("Processing clinical-alert.resolved for patient {}", patientId);
 

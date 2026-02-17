@@ -52,7 +52,7 @@ public class PatientHealthSummaryProjection {
      * Handle health score updated event
      */
     @KafkaListener(topics = "health-score.updated", groupId = "patient-health-summary-projection")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onHealthScoreUpdated(String tenantId, UUID patientId, Double score, String trend) {
         log.debug("Processing health score update for patient {}: score={}, trend={}",
             patientId, score, trend);
@@ -97,7 +97,7 @@ public class PatientHealthSummaryProjection {
      * Handle care gap auto-closed event
      */
     @KafkaListener(topics = "care-gap.auto-closed", groupId = "patient-health-summary-projection")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onCareGapAutoClosed(String tenantId, UUID patientId, String gapId) {
         log.debug("Processing care gap closure for patient {}: gapId={}", patientId, gapId);
 
@@ -119,7 +119,7 @@ public class PatientHealthSummaryProjection {
      * Handle risk assessment updated event
      */
     @KafkaListener(topics = "risk-assessment.updated", groupId = "patient-health-summary-projection")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onRiskAssessmentUpdated(String tenantId, UUID patientId, String riskLevel, Double riskScore) {
         log.debug("Processing risk assessment update for patient {}: level={}, score={}",
             patientId, riskLevel, riskScore);
@@ -138,7 +138,7 @@ public class PatientHealthSummaryProjection {
      * Handle clinical alert triggered event
      */
     @KafkaListener(topics = "clinical-alert.triggered", groupId = "patient-health-summary-projection")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void onClinicalAlertTriggered(String tenantId, UUID patientId, String severity, String message) {
         log.debug("Processing clinical alert for patient {}: severity={}", patientId, severity);
 

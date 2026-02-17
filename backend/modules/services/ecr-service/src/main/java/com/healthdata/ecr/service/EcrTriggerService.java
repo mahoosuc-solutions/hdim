@@ -45,7 +45,7 @@ public class EcrTriggerService {
      * Listen for new Condition (diagnosis) events
      */
     @KafkaListener(topics = "clinical.condition.created", groupId = "ecr-service")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleConditionCreated(Map<String, Object> event) {
         String tenantId = (String) event.get("tenantId");
         UUID patientId = UUID.fromString((String) event.get("patientId"));
@@ -66,7 +66,7 @@ public class EcrTriggerService {
      * Listen for lab result events
      */
     @KafkaListener(topics = "clinical.observation.created", groupId = "ecr-service")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleObservationCreated(Map<String, Object> event) {
         String tenantId = (String) event.get("tenantId");
         UUID patientId = UUID.fromString((String) event.get("patientId"));
@@ -92,7 +92,7 @@ public class EcrTriggerService {
      * Listen for medication administration events
      */
     @KafkaListener(topics = "clinical.medicationadministration.created", groupId = "ecr-service")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleMedicationAdministered(Map<String, Object> event) {
         String tenantId = (String) event.get("tenantId");
         UUID patientId = UUID.fromString((String) event.get("patientId"));
@@ -112,7 +112,7 @@ public class EcrTriggerService {
      * Listen for procedure events
      */
     @KafkaListener(topics = "clinical.procedure.created", groupId = "ecr-service")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleProcedureCreated(Map<String, Object> event) {
         String tenantId = (String) event.get("tenantId");
         UUID patientId = UUID.fromString((String) event.get("patientId"));

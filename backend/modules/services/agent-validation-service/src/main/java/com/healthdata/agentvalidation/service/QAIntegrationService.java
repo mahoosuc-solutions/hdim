@@ -197,7 +197,7 @@ public class QAIntegrationService {
      * Handle QA decision from approval service.
      */
     @KafkaListener(topics = QA_DECISION_TOPIC, groupId = "agent-validation-service")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void handleQADecision(QADecisionEvent event) {
         log.info("Received QA decision for execution {}: {}", event.executionId(), event.decision());
 

@@ -47,7 +47,8 @@ class CareGapAutoClosureUnitTest {
             careGapServiceMock,
             matchingServiceMock,
             kafkaTemplateMock,
-            mapper
+            mapper,
+            mock(com.healthdata.audit.service.AuditService.class)
         );
 
         Map<String, Object> message = new HashMap<>();
@@ -73,7 +74,8 @@ class CareGapAutoClosureUnitTest {
             careGapServiceMock,
             matchingServiceMock,
             kafkaTemplateMock,
-            mapper
+            mapper,
+            mock(com.healthdata.audit.service.AuditService.class)
         );
 
         Map<String, Object> message = new HashMap<>();
@@ -108,7 +110,8 @@ class CareGapAutoClosureUnitTest {
             careGapServiceMock,
             matchingServiceMock,
             kafkaTemplateMock,
-            mapper
+            mapper,
+            mock(com.healthdata.audit.service.AuditService.class)
         );
 
         Map<String, Object> message = new HashMap<>();
@@ -154,7 +157,8 @@ class CareGapAutoClosureUnitTest {
             careGapServiceMock,
             matchingServiceMock,
             kafkaTemplateMock,
-            mapper
+            mapper,
+            mock(com.healthdata.audit.service.AuditService.class)
         );
 
         Map<String, Object> message = new HashMap<>();

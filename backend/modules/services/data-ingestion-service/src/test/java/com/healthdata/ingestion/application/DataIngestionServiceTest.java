@@ -3,7 +3,9 @@ package com.healthdata.ingestion.application;
 import com.healthdata.ingestion.api.v1.IngestionProgressResponse;
 import com.healthdata.ingestion.api.v1.IngestionRequest;
 import com.healthdata.ingestion.api.v1.IngestionResponse;
+import com.healthdata.ingestion.client.CareGapIngestionClient;
 import com.healthdata.ingestion.client.FhirIngestionClient;
+import com.healthdata.ingestion.client.QualityMeasureIngestionClient;
 import com.healthdata.ingestion.generator.SyntheticPatientGenerator;
 import org.hl7.fhir.r4.model.Bundle;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +39,12 @@ class DataIngestionServiceTest {
     private FhirIngestionClient fhirClient;
 
     @Mock
+    private CareGapIngestionClient careGapClient;
+
+    @Mock
+    private QualityMeasureIngestionClient qualityMeasureClient;
+
+    @Mock
     private ProgressTrackingService progressTrackingService;
 
     private DataIngestionService dataIngestionService;
@@ -48,6 +56,8 @@ class DataIngestionServiceTest {
         dataIngestionService = new DataIngestionService(
                 patientGenerator,
                 fhirClient,
+                careGapClient,
+                qualityMeasureClient,
                 progressTrackingService
         );
     }
@@ -165,7 +175,7 @@ class DataIngestionServiceTest {
         void shouldReturnNoSessionWhenNoSessionsExist() {
             // Given - Create fresh service with no sessions
             DataIngestionService freshService = new DataIngestionService(
-                    patientGenerator, fhirClient, progressTrackingService);
+                    patientGenerator, fhirClient, careGapClient, qualityMeasureClient, progressTrackingService);
 
             // When
             IngestionProgressResponse result = freshService.getProgress(null);

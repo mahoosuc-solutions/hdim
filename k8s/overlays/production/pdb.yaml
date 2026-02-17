@@ -132,3 +132,123 @@ spec:
   selector:
     matchLabels:
       app: ehr-connector-service
+
+# Agent Runtime Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agent-runtime-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: agent-runtime-service
+
+# AI Assistant Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ai-assistant-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ai-assistant-service
+
+# Agent Builder Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: agent-builder-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: agent-builder-service
+
+# Analytics Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: analytics-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+
+# SDOH Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sdoh-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: sdoh-service
+
+# Approval Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: approval-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: approval-service
+
+# Payer Workflows Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payer-workflows-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: payer-workflows-service
+
+# CDR Processor Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cdr-processor-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: cdr-processor-service
+
+# Data Enrichment Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: data-enrichment-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: data-enrichment-service
+
+# Documentation Service PDB
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: documentation-service-pdb
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: documentation-service

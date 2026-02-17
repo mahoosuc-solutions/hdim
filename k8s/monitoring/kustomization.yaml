@@ -12,6 +12,7 @@ resources:
   - prometheus.yaml
   - grafana.yaml
   - jaeger.yaml
+  - alertmanager.yaml
 
 labels:
   - pairs:
@@ -19,4 +20,4 @@ labels:
       app.kubernetes.io/part-of: hdim-monitoring
 
 commonAnnotations:
-  monitoring.hdim.io/stack: "prometheus-grafana-jaeger"
+  monitoring.hdim.io/stack: "prometheus-alertmanager-grafana-jaeger"

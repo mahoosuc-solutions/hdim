@@ -1,0 +1,157 @@
+# Alertmanager Deployment for HDIM Production Monitoring
+#
+# Reads notification channel credentials from 'alertmanager-credentials' Secret.
+# Configuration is mounted from 'alertmanager-config' ConfigMap (contains alertmanager-production.yml).
+#
+# Prerequisites:
+#   1. Create credentials secret:
+#      kubectl create secret generic alertmanager-credentials \
+#        --from-env-file=monitoring/.env.alertmanager \
+#        -n hdim-production
+#
+#   2. Create config ConfigMap:
+#      kubectl create configmap alertmanager-config \
+#        --from-file=alertmanager.yml=monitoring/alertmanager-production.yml \
+#        -n hdim-production
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: hdim-production
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: hdim-platform
+data:
+  # alertmanager.yml is populated by the deploy script from monitoring/alertmanager-production.yml
+  # The ConfigMap is created/updated as part of deployment:
+  #   kubectl create configmap alertmanager-config \
+  #     --from-file=alertmanager.yml=monitoring/alertmanager-production.yml \
+  #     -n hdim-production --dry-run=client -o yaml | kubectl apply -f -
+  alertmanager.yml: |
+    # See monitoring/alertmanager-production.yml for the full configuration.
+    # This placeholder is replaced at deploy time.
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: 'default'
+    receivers:
+      - name: 'default'
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: hdim-production
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: hdim-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: alertmanager
+  template:
+    metadata:
+      labels:
+        app: alertmanager
+        app.kubernetes.io/name: alertmanager
+        app.kubernetes.io/component: monitoring
+    spec:
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          args:
+            - --config.file=/etc/alertmanager/alertmanager.yml
+            - --storage.path=/alertmanager
+            - --web.external-url=http://alertmanager:9093
+            - --cluster.listen-address=  # Disable clustering for single-replica pilot
+          ports:
+            - containerPort: 9093
+              name: http
+          env:
+            # Notification credentials injected from Secret as env vars.
+            # alertmanager.yml references these as ${VAR_NAME}.
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-credentials
+                  key: SLACK_WEBHOOK_URL
+            - name: PAGERDUTY_INTEGRATION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-credentials
+                  key: PAGERDUTY_INTEGRATION_KEY
+            - name: PAGERDUTY_SECURITY_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-credentials
+                  key: PAGERDUTY_SECURITY_KEY
+            - name: PAGERDUTY_COMPLIANCE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-credentials
+                  key: PAGERDUTY_COMPLIANCE_KEY
+            - name: EMAIL_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-credentials
+                  key: EMAIL_USERNAME
+            - name: EMAIL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: alertmanager-credentials
+                  key: EMAIL_PASSWORD
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+            - name: storage
+              mountPath: /alertmanager
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9093
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9093
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+        - name: storage
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: hdim-production
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: hdim-platform
+spec:
+  selector:
+    app: alertmanager
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093
+  type: ClusterIP

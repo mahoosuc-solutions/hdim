@@ -1,5 +1,8 @@
 package com.healthdata.quality.consumer;
 
+import com.healthdata.audit.models.AuditAction;
+import com.healthdata.audit.models.AuditOutcome;
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.persistence.MentalHealthAssessmentEntity;
 import com.healthdata.quality.persistence.MentalHealthAssessmentRepository;
@@ -36,6 +39,7 @@ public class ClinicalAlertEventConsumer {
     private final NotificationService notificationService;
     private final MentalHealthAssessmentRepository mentalHealthAssessmentRepository;
     private final RiskAssessmentRepository riskAssessmentRepository;
+    private final AuditService auditService;
 
     /**
      * Listen for mental health assessment events
@@ -51,6 +55,9 @@ public class ClinicalAlertEventConsumer {
 
             String tenantId = (String) event.get("tenantId");
             String assessmentId = (String) event.get("assessmentId");
+
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "MentalHealthAssessment", assessmentId, AuditOutcome.SUCCESS);
 
             // Fetch full assessment from database
             MentalHealthAssessmentEntity assessment = mentalHealthAssessmentRepository
@@ -92,6 +99,9 @@ public class ClinicalAlertEventConsumer {
             String tenantId = (String) event.get("tenantId");
             String assessmentId = (String) event.get("assessmentId");
             String riskLevel = (String) event.get("riskLevel");
+
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "RiskAssessment", assessmentId, AuditOutcome.SUCCESS);
 
             // Only alert on VERY_HIGH risk
             if (!"VERY_HIGH".equals(riskLevel)) {
@@ -146,6 +156,9 @@ public class ClinicalAlertEventConsumer {
                 return;
             }
 
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "HealthScore", patientId.toString(), AuditOutcome.SUCCESS);
+
             // Only alert on decline (not improvement)
             if (currentScore >= previousScore) {
                 log.debug("Health score improved or stable, no alert needed");
@@ -193,6 +206,9 @@ public class ClinicalAlertEventConsumer {
                 return;
             }
 
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "ChronicDiseaseDeterioration", patientId.toString(), AuditOutcome.SUCCESS);
+
             // Evaluate for chronic deterioration alert
             ClinicalAlertDTO alert = clinicalAlertService.evaluateChronicDiseaseDeterioration(
                 tenantId, patientId, condition, metric, severity
@@ -239,9 +255,8 @@ public class ClinicalAlertEventConsumer {
                 return;
             }
 
-            // Log to audit trail
-            log.info("AUDIT: Clinical alert triggered - Alert ID: {}, Patient: {}, Type: {}, Severity: {}, Timestamp: {}",
-                alertId, patientId, alertType, severity, triggeredAt);
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "ClinicalAlert", alertId, AuditOutcome.SUCCESS);
 
             // Send notifications to external systems
             // Note: NotificationService already handles the primary notification channels

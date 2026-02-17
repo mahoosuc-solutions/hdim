@@ -1,5 +1,8 @@
 package com.healthdata.quality.consumer;
 
+import com.healthdata.audit.models.AuditAction;
+import com.healthdata.audit.models.AuditOutcome;
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.quality.service.RiskCalculationService;
 import com.healthdata.quality.service.ChronicDiseaseMonitoringService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,7 @@ public class RiskAssessmentEventConsumer {
 
     private final RiskCalculationService riskCalculationService;
     private final ChronicDiseaseMonitoringService chronicDiseaseMonitoringService;
+    private final AuditService auditService;
 
     /**
      * Listen to condition created events
@@ -55,6 +59,9 @@ public class RiskAssessmentEventConsumer {
                 log.warn("Missing required fields in condition created event");
                 return;
             }
+
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "Condition", patientId.toString(), AuditOutcome.SUCCESS);
 
             // Only process encounter-diagnosis conditions (chronic diseases)
             if (!isChronicCondition(conditionData)) {
@@ -96,6 +103,9 @@ public class RiskAssessmentEventConsumer {
                 return;
             }
 
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "Condition", patientId.toString(), AuditOutcome.SUCCESS);
+
             if (!isChronicCondition(conditionData)) {
                 log.debug("Condition is not a chronic disease, skipping risk recalculation");
                 return;
@@ -136,6 +146,9 @@ public class RiskAssessmentEventConsumer {
                 log.warn("Missing required fields in observation created event");
                 return;
             }
+
+            auditService.logEvent(tenantId, "SYSTEM", AuditAction.EXECUTE,
+                "Observation", patientId.toString(), AuditOutcome.SUCCESS);
 
             // Check if this is a relevant lab result
             if (!isMonitoredLabResult(observationData)) {

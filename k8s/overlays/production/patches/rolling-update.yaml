@@ -1,0 +1,296 @@
+# Rolling update strategy patch for production environment
+# Ensures zero-downtime deployments across all services
+
+# Gateway Service - max 1 unavailable (critical entry point)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# FHIR Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fhir-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Patient Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Care Gap Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: care-gap-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Quality Measure Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: quality-measure-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# CQL Engine Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cql-engine-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Consent Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: consent-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Event Processing Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-processing-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Event Router Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-router-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Agent Runtime Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-runtime-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# AI Assistant Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-assistant-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Agent Builder Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-builder-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Analytics Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Predictive Analytics Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: predictive-analytics-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# SDOH Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sdoh-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Approval Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: approval-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Payer Workflows Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payer-workflows-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# CDR Processor Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cdr-processor-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Data Enrichment Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-enrichment-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# EHR Connector Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehr-connector-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+# Documentation Service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: documentation-service
+  namespace: hdim
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1

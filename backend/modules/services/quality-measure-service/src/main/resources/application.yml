@@ -228,6 +228,57 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
+# Enable Feign's Resilience4j circuit breaker integration
+feign:
+  circuitbreaker:
+    enabled: true
+
+# Resilience4j Circuit Breaker Configuration
+# Prevents cascading failures when downstream services degrade
+resilience4j:
+  circuitbreaker:
+    instances:
+      patient-service:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 5s
+        slowCallRateThreshold: 50
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+      care-gap-service:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slowCallDurationThreshold: 5s
+        slowCallRateThreshold: 50
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+  retry:
+    instances:
+      patient-service:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.RetryableException
+      care-gap-service:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+          - java.io.IOException
+          - feign.RetryableException
+
 ---
 # Development Profile - 100% Trace Sampling
 spring:

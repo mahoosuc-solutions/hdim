@@ -1,5 +1,9 @@
 package com.healthdata.fhir.security.smart;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -7,6 +11,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -17,7 +22,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service for SMART on FHIR Authorization.
@@ -31,6 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SmartAuthorizationService {
 
     private final SmartClientRepository clientRepository;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${smart.issuer:http://localhost:8085/fhir}")
     private String issuer;
@@ -41,11 +47,13 @@ public class SmartAuthorizationService {
     @Value("${smart.authorization-code.lifetime:600}")
     private int authorizationCodeLifetime; // 10 minutes
 
-    // In-memory storage for authorization codes (use Redis in production)
-    private final Map<String, AuthorizationCodeData> authorizationCodes = new ConcurrentHashMap<>();
+    private static final String AUTH_CODE_KEY_PREFIX = "smart:auth-code:";
+    private static final String REFRESH_TOKEN_KEY_PREFIX = "smart:refresh-token:";
 
-    // In-memory storage for refresh tokens (use database in production)
-    private final Map<String, RefreshTokenData> refreshTokens = new ConcurrentHashMap<>();
+    // Jackson mapper with Java time support for Redis serialization
+    private static final ObjectMapper MAPPER = new ObjectMapper()
+        .registerModule(new JavaTimeModule())
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     /**
      * Generate authorization code for the given request.
@@ -73,7 +81,13 @@ public class SmartAuthorizationService {
             .expiresAt(Instant.now().plus(authorizationCodeLifetime, ChronoUnit.SECONDS))
             .build();
 
-        authorizationCodes.put(code, codeData);
+        try {
+            String json = MAPPER.writeValueAsString(codeData);
+            redisTemplate.opsForValue().set(
+                AUTH_CODE_KEY_PREFIX + code, json, authorizationCodeLifetime, TimeUnit.SECONDS);
+        } catch (JsonProcessingException e) {
+            throw new SmartAuthorizationException("server_error", "Failed to store authorization code");
+        }
         log.debug("Generated authorization code for client: {}", clientId);
 
         return code;
@@ -88,14 +102,25 @@ public class SmartAuthorizationService {
             String redirectUri,
             String codeVerifier) {
 
-        AuthorizationCodeData codeData = authorizationCodes.remove(code);
+        String redisKey = AUTH_CODE_KEY_PREFIX + code;
+        String json = redisTemplate.opsForValue().get(redisKey);
 
-        if (codeData == null) {
-            throw new SmartAuthorizationException("Invalid authorization code");
+        if (json == null) {
+            throw new SmartAuthorizationException("invalid_grant", "Authorization code is invalid or expired");
+        }
+
+        // Atomic delete — prevents replay attacks (authorization code can only be used once)
+        redisTemplate.delete(redisKey);
+
+        AuthorizationCodeData codeData;
+        try {
+            codeData = MAPPER.readValue(json, AuthorizationCodeData.class);
+        } catch (JsonProcessingException e) {
+            throw new SmartAuthorizationException("server_error", "Failed to read authorization code");
         }
 
         if (Instant.now().isAfter(codeData.getExpiresAt())) {
-            throw new SmartAuthorizationException("Authorization code expired");
+            throw new SmartAuthorizationException("invalid_grant", "Authorization code expired");
         }
 
         if (!codeData.getClientId().equals(clientId)) {
@@ -154,15 +179,23 @@ public class SmartAuthorizationService {
      * Refresh access token using refresh token.
      */
     public TokenResponse refreshAccessToken(String refreshToken, String clientId) {
-        RefreshTokenData tokenData = refreshTokens.get(refreshToken);
+        String redisKey = REFRESH_TOKEN_KEY_PREFIX + refreshToken;
+        String json = redisTemplate.opsForValue().get(redisKey);
 
-        if (tokenData == null) {
-            throw new SmartAuthorizationException("Invalid refresh token");
+        if (json == null) {
+            throw new SmartAuthorizationException("invalid_grant", "Refresh token is invalid or expired");
+        }
+
+        RefreshTokenData tokenData;
+        try {
+            tokenData = MAPPER.readValue(json, RefreshTokenData.class);
+        } catch (JsonProcessingException e) {
+            throw new SmartAuthorizationException("server_error", "Failed to read refresh token");
         }
 
         if (Instant.now().isAfter(tokenData.getExpiresAt())) {
-            refreshTokens.remove(refreshToken);
-            throw new SmartAuthorizationException("Refresh token expired");
+            redisTemplate.delete(redisKey);
+            throw new SmartAuthorizationException("invalid_grant", "Refresh token expired");
         }
 
         if (!tokenData.getClientId().equals(clientId)) {
@@ -218,8 +251,9 @@ public class SmartAuthorizationService {
      * Revoke a token.
      */
     public void revokeToken(String token, String tokenTypeHint) {
-        // Try to revoke as refresh token
-        if (refreshTokens.remove(token) != null) {
+        // Try to revoke as refresh token from Redis
+        Boolean deleted = redisTemplate.delete(REFRESH_TOKEN_KEY_PREFIX + token);
+        if (Boolean.TRUE.equals(deleted)) {
             log.debug("Revoked refresh token");
             return;
         }
@@ -282,7 +316,13 @@ public class SmartAuthorizationService {
             .expiresAt(Instant.now().plus(client.getRefreshTokenLifetime(), ChronoUnit.SECONDS))
             .build();
 
-        refreshTokens.put(token, tokenData);
+        try {
+            String json = MAPPER.writeValueAsString(tokenData);
+            redisTemplate.opsForValue().set(
+                REFRESH_TOKEN_KEY_PREFIX + token, json, client.getRefreshTokenLifetime(), TimeUnit.SECONDS);
+        } catch (JsonProcessingException e) {
+            throw new SmartAuthorizationException("server_error", "Failed to store refresh token");
+        }
         return token;
     }
 
@@ -327,11 +367,13 @@ public class SmartAuthorizationService {
     }
 
     /**
-     * Authorization code data structure.
+     * Authorization code data structure. Public for Jackson deserialization.
      */
     @lombok.Data
     @lombok.Builder
-    private static class AuthorizationCodeData {
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class AuthorizationCodeData {
         private String clientId;
         private String redirectUri;
         private Set<String> scopes;
@@ -344,11 +386,13 @@ public class SmartAuthorizationService {
     }
 
     /**
-     * Refresh token data structure.
+     * Refresh token data structure. Public for Jackson deserialization.
      */
     @lombok.Data
     @lombok.Builder
-    private static class RefreshTokenData {
+    @lombok.NoArgsConstructor
+    @lombok.AllArgsConstructor
+    public static class RefreshTokenData {
         private String clientId;
         private Set<String> scopes;
         private SmartLaunchContext launchContext;

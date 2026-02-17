@@ -69,11 +69,11 @@ feign:
         readTimeout: 15000
         loggerLevel: basic
       quality-measure-service:
-        url: ${QUALITY_MEASURE_SERVICE_URL:http://localhost:8087}
+        url: ${QUALITY_MEASURE_SERVICE_URL:http://quality-measure-service:8087}
       hcc-service:
-        url: ${HCC_SERVICE_URL:http://localhost:8091}
+        url: ${HCC_SERVICE_URL:http://hcc-service:8091}
       care-gap-service:
-        url: ${CARE_GAP_SERVICE_URL:http://localhost:8086}
+        url: ${CARE_GAP_SERVICE_URL:http://care-gap-service:8086}
 
 # Resilience4j Configuration
 resilience4j:

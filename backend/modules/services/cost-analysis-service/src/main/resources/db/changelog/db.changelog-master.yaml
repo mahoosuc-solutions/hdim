@@ -1,4 +1,9 @@
 databaseChangeLog:
   - include:
-      file: changes/001-initial-schema.sql
-      relativeToChangelogFile: true
+      file: db/changelog/migrations/0001-create-cost-tracking-table.yaml
+  - include:
+      file: db/changelog/migrations/0002-create-cost-daily-summary-table.yaml
+  - include:
+      file: db/changelog/migrations/0003-create-cost-analysis-cache-table.yaml
+  - include:
+      file: db/changelog/migrations/0004-create-optimization-recommendation-table.yaml

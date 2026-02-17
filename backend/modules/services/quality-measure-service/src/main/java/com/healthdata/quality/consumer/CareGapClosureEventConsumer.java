@@ -1,6 +1,9 @@
 package com.healthdata.quality.consumer;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.audit.models.AuditAction;
+import com.healthdata.audit.models.AuditOutcome;
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.quality.dto.CareGapClosureEvent;
 import com.healthdata.quality.dto.FhirResourceEvent;
 import com.healthdata.quality.persistence.CareGapEntity;
@@ -32,6 +35,7 @@ public class CareGapClosureEventConsumer {
     private final CareGapMatchingService matchingService;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private final AuditService auditService;
 
     private static final String CARE_GAP_CLOSURE_TOPIC = "care-gap.auto-closed";
 
@@ -54,6 +58,9 @@ public class CareGapClosureEventConsumer {
                 log.warn("Invalid procedure event - missing tenant or patient ID");
                 return;
             }
+
+            auditService.logEvent(event.getTenantId(), "SYSTEM", AuditAction.EXECUTE,
+                "Procedure", event.getResourceId(), AuditOutcome.SUCCESS);
 
             // Find matching care gaps
             List<CareGapEntity> matchingGaps = matchingService.findMatchingCareGaps(
@@ -97,6 +104,9 @@ public class CareGapClosureEventConsumer {
                 log.warn("Invalid observation event - missing tenant or patient ID");
                 return;
             }
+
+            auditService.logEvent(event.getTenantId(), "SYSTEM", AuditAction.EXECUTE,
+                "Observation", event.getResourceId(), AuditOutcome.SUCCESS);
 
             // Find matching care gaps
             List<CareGapEntity> matchingGaps = matchingService.findMatchingCareGaps(

@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -37,6 +39,7 @@ public class SmartAuthorizationController {
 
     private final SmartAuthorizationService authorizationService;
     private final SmartClientRepository clientRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Operation(
         summary = "OAuth 2.0 Authorization",
@@ -316,7 +319,7 @@ public class SmartAuthorizationController {
             // EHR launch - decode launch parameter
             builder.launch(launch);
             builder.standalone(false);
-            // In a real implementation, decode the launch context from EHR
+            applyLaunchParameterContext(launch, builder);
         } else {
             // Standalone launch
             builder.standalone(true);
@@ -337,6 +340,91 @@ public class SmartAuthorizationController {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Apply launch context values if the launch parameter is decodable.
+     * Supported formats:
+     * - raw JSON object string
+     * - base64url-encoded JSON object
+     * - JWT/JWS where payload is base64url-encoded JSON object
+     */
+    private void applyLaunchParameterContext(String launch, SmartLaunchContext.SmartLaunchContextBuilder builder) {
+        try {
+            Map<String, Object> launchContext = parseLaunchParameter(launch);
+            if (launchContext == null || launchContext.isEmpty()) {
+                return;
+            }
+
+            builder.patient(asString(launchContext.get("patient")));
+            builder.encounter(asString(launchContext.get("encounter")));
+            builder.fhirUser(asString(launchContext.get("fhirUser")));
+            builder.tenant(asString(launchContext.get("tenant")));
+            builder.intent(asString(launchContext.get("intent")));
+            builder.smartStyleUrl(asString(launchContext.get("smart_style_url")));
+            builder.needPatientBanner(asBoolean(launchContext.get("need_patient_banner")));
+        } catch (Exception e) {
+            log.debug("Launch parameter could not be decoded as context payload; falling back to scope-based context. launch={}", launch);
+        }
+    }
+
+    private Map<String, Object> parseLaunchParameter(String launch) {
+        String raw = launch == null ? "" : launch.trim();
+        if (raw.isEmpty()) {
+            return Map.of();
+        }
+
+        // 1) Plain JSON object
+        if (raw.startsWith("{") && raw.endsWith("}")) {
+            return parseJsonObject(raw);
+        }
+
+        // 2) JWT/JWS token -> parse payload segment
+        String[] jwtParts = raw.split("\\.");
+        if (jwtParts.length == 3 && StringUtils.hasText(jwtParts[1])) {
+            String payloadJson = decodeBase64Url(jwtParts[1]);
+            if (payloadJson.startsWith("{") && payloadJson.endsWith("}")) {
+                return parseJsonObject(payloadJson);
+            }
+        }
+
+        // 3) Base64url JSON object
+        String decoded = decodeBase64Url(raw);
+        if (decoded.startsWith("{") && decoded.endsWith("}")) {
+            return parseJsonObject(decoded);
+        }
+
+        return Map.of();
+    }
+
+    private Map<String, Object> parseJsonObject(String json) {
+        try {
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    private String decodeBase64Url(String value) {
+        try {
+            return new String(Base64.getUrlDecoder().decode(value));
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+    private String asString(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Boolean asBoolean(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        return Boolean.parseBoolean(String.valueOf(value));
     }
 
     /**

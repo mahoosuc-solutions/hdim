@@ -2,21 +2,31 @@ package com.healthdata.fhir.security.smart;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.time.Instant;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,6 +35,25 @@ class SmartAuthorizationServiceTest {
 
     @Mock
     private SmartClientRepository clientRepository;
+
+    @Mock
+    private StringRedisTemplate redisTemplate;
+
+    private final Map<String, String> redisStore = new HashMap<>();
+
+    @BeforeEach
+    void setUpRedis() {
+        redisStore.clear();
+        @SuppressWarnings("unchecked")
+        ValueOperations<String, String> ops = mock(ValueOperations.class);
+        lenient().when(redisTemplate.opsForValue()).thenReturn(ops);
+        lenient().doAnswer(inv -> {
+            redisStore.put(inv.getArgument(0), inv.getArgument(1));
+            return null;
+        }).when(ops).set(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+        lenient().when(ops.get(anyString())).thenAnswer(inv -> redisStore.get(inv.getArgument(0)));
+        lenient().doAnswer(inv -> redisStore.remove(inv.getArgument(0)) != null).when(redisTemplate).delete(anyString());
+    }
 
     @Test
     @DisplayName("Should exchange authorization code with PKCE")
@@ -345,7 +374,7 @@ class SmartAuthorizationServiceTest {
 
         assertThatThrownBy(() -> service.refreshAccessToken("missing", "client-1"))
             .isInstanceOf(SmartAuthorizationException.class)
-            .hasMessageContaining("Invalid refresh token");
+            .hasMessageContaining("invalid or expired");
     }
 
     @Test
@@ -365,6 +394,19 @@ class SmartAuthorizationServiceTest {
                 .build();
         when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
 
+        // Use a negative refreshTokenLifetime so the stored token has expiresAt in the past
+        SmartClient expiredClient = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.CONFIDENTIAL)
+                .clientSecret("secret")
+                .accessTokenLifetime(3600)
+                .refreshTokenLifetime(-1)
+                .allowedScopes(Set.of("offline_access"))
+                .redirectUris(Set.of("http://app/callback"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(expiredClient));
+
         String code = service.generateAuthorizationCode(
                 "client-1",
                 "http://app/callback",
@@ -375,11 +417,6 @@ class SmartAuthorizationServiceTest {
                 SmartLaunchContext.builder().build());
         TokenResponse initial = service.exchangeAuthorizationCode(
                 code, "client-1", "http://app/callback", null);
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> refreshTokens = (Map<String, Object>) ReflectionTestUtils.getField(service, "refreshTokens");
-        Object tokenData = refreshTokens.get(initial.getRefreshToken());
-        ReflectionTestUtils.setField(tokenData, "expiresAt", Instant.now().minusSeconds(5));
 
         assertThatThrownBy(() -> service.refreshAccessToken(initial.getRefreshToken(), "client-1"))
             .isInstanceOf(SmartAuthorizationException.class)
@@ -520,13 +557,12 @@ class SmartAuthorizationServiceTest {
         TokenResponse initial = service.exchangeAuthorizationCode(
                 code, "client-1", "http://app/callback", null);
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> refreshTokens = (Map<String, Object>) ReflectionTestUtils.getField(service, "refreshTokens");
-        assertThat(refreshTokens).containsKey(initial.getRefreshToken());
+        String refreshTokenKey = "smart:refresh-token:" + initial.getRefreshToken();
+        assertThat(redisStore).containsKey(refreshTokenKey);
 
         service.revokeToken(initial.getRefreshToken(), null);
 
-        assertThat(refreshTokens).doesNotContainKey(initial.getRefreshToken());
+        assertThat(redisStore).doesNotContainKey(refreshTokenKey);
     }
 
     @Test
@@ -640,7 +676,7 @@ class SmartAuthorizationServiceTest {
     }
 
     private SmartAuthorizationService buildService() {
-        SmartAuthorizationService service = new SmartAuthorizationService(clientRepository);
+        SmartAuthorizationService service = new SmartAuthorizationService(clientRepository, redisTemplate);
         ReflectionTestUtils.setField(service, "issuer", "http://example.com/fhir");
         ReflectionTestUtils.setField(service, "jwtSecret", "smart-on-fhir-secret-key-minimum-256-bits-required");
         ReflectionTestUtils.setField(service, "authorizationCodeLifetime", 600);

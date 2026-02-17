@@ -11,6 +11,7 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -209,6 +210,51 @@ class SmartAuthorizationControllerTest {
         assertThat(context.getEncounter()).isEqualTo("demo-encounter-001");
         assertThat(context.getFhirUser()).isEqualTo("Practitioner/demo-practitioner-001");
         assertThat(context.getAudience()).isEqualTo("aud");
+    }
+
+    @Test
+    @DisplayName("Should extract EHR launch context from base64url launch payload")
+    void shouldExtractLaunchContextFromPayload() {
+        SmartAuthorizationController controller = new SmartAuthorizationController(authorizationService, clientRepository);
+        SmartClient client = SmartClient.builder()
+                .clientId("client-1")
+                .clientName("Test")
+                .clientType(SmartClient.ClientType.PUBLIC)
+                .redirectUris(Set.of("http://app/callback"))
+                .allowedScopes(Set.of("launch/patient", "launch/encounter", "fhirUser"))
+                .build();
+        when(clientRepository.findByClientIdAndActiveTrue("client-1")).thenReturn(Optional.of(client));
+        when(authorizationService.generateAuthorizationCode(
+                eq("client-1"), eq("http://app/callback"), any(), eq("state"),
+                eq(null), eq("S256"), any()))
+            .thenReturn("auth-code");
+
+        String launchPayloadJson = "{\"patient\":\"ehr-patient-42\",\"encounter\":\"ehr-enc-7\",\"fhirUser\":\"Practitioner/abc\",\"tenant\":\"acme-health\",\"intent\":\"chart-review\",\"need_patient_banner\":true}";
+        String launchToken = Base64.getUrlEncoder().withoutPadding().encodeToString(launchPayloadJson.getBytes(StandardCharsets.UTF_8));
+
+        controller.authorize(
+                "code",
+                "client-1",
+                "http://app/callback",
+                "launch/patient launch/encounter fhirUser",
+                "state",
+                "aud",
+                launchToken,
+                null,
+                "S256");
+
+        ArgumentCaptor<SmartLaunchContext> captor = ArgumentCaptor.forClass(SmartLaunchContext.class);
+        verify(authorizationService).generateAuthorizationCode(
+                eq("client-1"), eq("http://app/callback"), any(), eq("state"),
+                eq(null), eq("S256"), captor.capture());
+        SmartLaunchContext context = captor.getValue();
+        assertThat(context.getPatient()).isEqualTo("ehr-patient-42");
+        assertThat(context.getEncounter()).isEqualTo("ehr-enc-7");
+        assertThat(context.getFhirUser()).isEqualTo("Practitioner/abc");
+        assertThat(context.getTenant()).isEqualTo("acme-health");
+        assertThat(context.getIntent()).isEqualTo("chart-review");
+        assertThat(context.getNeedPatientBanner()).isTrue();
+        assertThat(Boolean.FALSE.equals(context.getStandalone())).isTrue();
     }
 
     @Test

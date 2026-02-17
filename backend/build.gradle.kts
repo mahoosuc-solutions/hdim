@@ -377,13 +377,13 @@ subprojects {
         annotationProcessor("org.projectlombok:lombok:1.18.34")
 
         // Testing for all modules
-        testImplementation("org.junit.jupiter:junit-jupiter:5.14.2")
+        testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
         testImplementation("org.mockito:mockito-core:5.2.0")
         testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
         testImplementation("org.mockito:mockito-inline:5.2.0")
         testImplementation("org.assertj:assertj-core:3.27.7")
         testImplementation("org.springframework.kafka:spring-kafka-test:3.3.12")
-        mockitoAgent("net.bytebuddy:byte-buddy-agent:1.18.3")
+        mockitoAgent("net.bytebuddy:byte-buddy-agent:1.18.5")
     }
 }
 

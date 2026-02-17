@@ -1,0 +1,19 @@
+version: 3
+name: hdim
+displayName: HDIM MCP Catalog
+registry:
+  hdim-platform:
+    title: HDIM Platform
+    description: Manage and inspect the HDIM platform gateway (health, FHIR metadata, raw GET).
+    type: server
+    image: hdim-platform-mcp:local
+    env:
+      - name: HDIM_BASE_URL
+        value: http://host.docker.internal:18080
+    metadata:
+      category: developer-tools
+      tags:
+        - hdim
+        - platform
+        - health
+        - fhir

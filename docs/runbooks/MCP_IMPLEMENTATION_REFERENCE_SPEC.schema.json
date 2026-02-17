@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hdim.local/specs/mcp-implementation-reference-examples.schema.json",
+  "title": "MCP Implementation Reference Example Schema",
+  "type": "object",
+  "required": ["version", "examples"],
+  "properties": {
+    "version": { "type": "string" },
+    "examples": {
+      "type": "object",
+      "required": [
+        "hdim_docker_ps",
+        "hdim_service_operate",
+        "hdim_gateway_validate",
+        "hdim_release_gate",
+        "hdim_release_evidence_pack"
+      ],
+      "properties": {
+        "hdim_docker_ps": { "$ref": "#/$defs/hdim_docker_ps_example" },
+        "hdim_service_operate": { "$ref": "#/$defs/hdim_service_operate_example" },
+        "hdim_gateway_validate": { "$ref": "#/$defs/hdim_gateway_validate_example" },
+        "hdim_release_gate": { "$ref": "#/$defs/hdim_release_gate_example" },
+        "hdim_release_evidence_pack": { "$ref": "#/$defs/hdim_release_evidence_pack_example" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "exampleEnvelope": {
+      "type": "object",
+      "required": ["request", "response"],
+      "properties": {
+        "request": { "type": "object" },
+        "response": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "hdim_docker_ps_example": {
+      "allOf": [
+        { "$ref": "#/$defs/exampleEnvelope" },
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "required": ["name", "arguments"],
+              "properties": {
+                "name": { "const": "hdim_docker_ps" },
+                "arguments": {
+                  "type": "object",
+                  "required": ["composeFile"],
+                  "properties": {
+                    "composeFile": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "response": {
+              "type": "object",
+              "required": ["dockerBin", "composeFile", "command", "ok", "exitCode"],
+              "properties": {
+                "dockerBin": { "type": "string" },
+                "composeFile": { "type": "string" },
+                "command": { "type": "string" },
+                "ok": { "type": "boolean" },
+                "exitCode": { "type": "integer" }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "hdim_service_operate_example": {
+      "allOf": [
+        { "$ref": "#/$defs/exampleEnvelope" },
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "required": ["name", "arguments"],
+              "properties": {
+                "name": { "const": "hdim_service_operate" },
+                "arguments": {
+                  "type": "object",
+                  "required": ["composeFile", "action", "services", "dryRun"],
+                  "properties": {
+                    "composeFile": { "type": "string" },
+                    "action": { "enum": ["start", "stop", "restart"] },
+                    "services": {
+                      "type": "array",
+                      "items": { "type": "string" },
+                      "minItems": 1
+                    },
+                    "dryRun": { "type": "boolean" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "response": {
+              "type": "object",
+              "required": ["action", "services", "dryRun", "commandPreview"],
+              "properties": {
+                "action": { "enum": ["start", "stop", "restart"] },
+                "services": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "minItems": 1
+                },
+                "dryRun": { "type": "boolean" },
+                "commandPreview": { "type": "string" }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "hdim_gateway_validate_example": {
+      "allOf": [
+        { "$ref": "#/$defs/exampleEnvelope" },
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "required": ["name", "arguments"],
+              "properties": {
+                "name": { "const": "hdim_gateway_validate" },
+                "arguments": {
+                  "type": "object",
+                  "required": [
+                    "baseUrl",
+                    "requestTimeoutSecs",
+                    "warmupTimeoutSecs",
+                    "pollIntervalMs",
+                    "stablePasses"
+                  ],
+                  "properties": {
+                    "baseUrl": { "type": "string" },
+                    "requestTimeoutSecs": { "type": "integer" },
+                    "warmupTimeoutSecs": { "type": "integer" },
+                    "pollIntervalMs": { "type": "integer" },
+                    "stablePasses": { "type": "integer" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "response": {
+              "type": "object",
+              "required": ["allHealthy", "checks", "warmup"],
+              "properties": {
+                "allHealthy": { "type": "boolean" },
+                "checks": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": ["endpoint", "status", "ok"],
+                    "properties": {
+                      "endpoint": { "type": "string" },
+                      "status": { "type": ["integer", "null"] },
+                      "ok": { "type": "boolean" }
+                    },
+                    "additionalProperties": true
+                  }
+                },
+                "warmup": {
+                  "type": "object",
+                  "required": ["attempts", "achievedStablePasses", "stablePassesRequired"],
+                  "properties": {
+                    "attempts": { "type": "integer" },
+                    "achievedStablePasses": { "type": "boolean" },
+                    "stablePassesRequired": { "type": "integer" }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "hdim_release_gate_example": {
+      "allOf": [
+        { "$ref": "#/$defs/exampleEnvelope" },
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "required": ["name", "arguments"],
+              "properties": {
+                "name": { "const": "hdim_release_gate" },
+                "arguments": {
+                  "type": "object",
+                  "required": ["composeFile", "gatewayUrl", "policyMode", "requestTimeoutSecs"],
+                  "properties": {
+                    "composeFile": { "type": "string" },
+                    "gatewayUrl": { "type": "string" },
+                    "policyMode": { "enum": ["strict", "permissive"] },
+                    "requestTimeoutSecs": { "type": "integer" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "response": {
+              "type": "object",
+              "required": ["pass", "summary"],
+              "properties": {
+                "pass": { "type": "boolean" },
+                "summary": {
+                  "type": "object",
+                  "required": ["runningServices", "tenantPolicyMode", "tenantPolicyPass", "readiness"],
+                  "properties": {
+                    "runningServices": { "type": "integer" },
+                    "tenantPolicyMode": { "type": "string" },
+                    "tenantPolicyPass": { "type": "boolean" },
+                    "readiness": { "type": "boolean" }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "hdim_release_evidence_pack_example": {
+      "allOf": [
+        { "$ref": "#/$defs/exampleEnvelope" },
+        {
+          "properties": {
+            "request": {
+              "type": "object",
+              "required": ["name", "arguments"],
+              "properties": {
+                "name": { "const": "hdim_release_evidence_pack" },
+                "arguments": {
+                  "type": "object",
+                  "required": ["reportDir", "outputDir", "includeDiff"],
+                  "properties": {
+                    "reportDir": { "type": "string" },
+                    "outputDir": { "type": "string" },
+                    "includeDiff": { "type": "boolean" }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "response": {
+              "type": "object",
+              "required": ["latestReportPath", "evidencePackJson", "evidencePackMarkdown", "includeDiff"],
+              "properties": {
+                "latestReportPath": { "type": "string" },
+                "evidencePackJson": { "type": "string" },
+                "evidencePackMarkdown": { "type": "string" },
+                "includeDiff": { "type": "boolean" }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    }
+  }
+}

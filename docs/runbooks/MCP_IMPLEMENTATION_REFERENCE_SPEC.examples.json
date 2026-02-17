@@ -1,0 +1,97 @@
+{
+  "version": "1.0",
+  "examples": {
+    "hdim_docker_ps": {
+      "request": {
+        "name": "hdim_docker_ps",
+        "arguments": {
+          "composeFile": "docker-compose.demo.yml"
+        }
+      },
+      "response": {
+        "dockerBin": "docker",
+        "composeFile": "docker-compose.demo.yml",
+        "command": "docker compose -f docker-compose.demo.yml ps",
+        "ok": true,
+        "exitCode": 0
+      }
+    },
+    "hdim_service_operate": {
+      "request": {
+        "name": "hdim_service_operate",
+        "arguments": {
+          "composeFile": "docker-compose.demo.yml",
+          "action": "restart",
+          "services": ["gateway-edge"],
+          "dryRun": true
+        }
+      },
+      "response": {
+        "action": "restart",
+        "services": ["gateway-edge"],
+        "dryRun": true,
+        "commandPreview": "docker compose -f docker-compose.demo.yml restart gateway-edge"
+      }
+    },
+    "hdim_gateway_validate": {
+      "request": {
+        "name": "hdim_gateway_validate",
+        "arguments": {
+          "baseUrl": "http://localhost:18080",
+          "requestTimeoutSecs": 5,
+          "warmupTimeoutSecs": 120,
+          "pollIntervalMs": 1000,
+          "stablePasses": 1
+        }
+      },
+      "response": {
+        "allHealthy": true,
+        "checks": [
+          { "endpoint": "/actuator/health", "status": 200, "ok": true },
+          { "endpoint": "/fhir/metadata", "status": 200, "ok": true }
+        ],
+        "warmup": {
+          "attempts": 1,
+          "achievedStablePasses": true,
+          "stablePassesRequired": 1
+        }
+      }
+    },
+    "hdim_release_gate": {
+      "request": {
+        "name": "hdim_release_gate",
+        "arguments": {
+          "composeFile": "docker-compose.demo.yml",
+          "gatewayUrl": "http://localhost:18080",
+          "policyMode": "strict",
+          "requestTimeoutSecs": 8
+        }
+      },
+      "response": {
+        "pass": false,
+        "summary": {
+          "runningServices": 19,
+          "tenantPolicyMode": "strict",
+          "tenantPolicyPass": false,
+          "readiness": true
+        }
+      }
+    },
+    "hdim_release_evidence_pack": {
+      "request": {
+        "name": "hdim_release_evidence_pack",
+        "arguments": {
+          "reportDir": "logs/mcp-reports",
+          "outputDir": "logs/mcp-reports",
+          "includeDiff": true
+        }
+      },
+      "response": {
+        "latestReportPath": "logs/mcp-reports/release-gate-20260216-193559.json",
+        "evidencePackJson": "logs/mcp-reports/release-evidence-pack-20260216-193559.json",
+        "evidencePackMarkdown": "logs/mcp-reports/release-evidence-pack-20260216-193559.md",
+        "includeDiff": true
+      }
+    }
+  }
+}

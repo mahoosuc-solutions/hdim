@@ -1,9 +1,19 @@
 {
   "mcpServers": {
+    "MCP_DOCKER": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["scripts/mcp/hdim-docker-mcp.mjs"]
+    },
     "nx-mcp": {
       "type": "stdio",
       "command": "node",
       "args": ["scripts/mcp/nx-mcp.mjs"]
+    },
+    "hdim-platform": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["scripts/mcp/hdim-platform-mcp.mjs"]
     }
   }
 }

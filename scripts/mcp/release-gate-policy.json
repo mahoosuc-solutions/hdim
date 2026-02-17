@@ -1,0 +1,27 @@
+{
+  "profiles": {
+    "local-dev": {
+      "policyMode": "permissive",
+      "requestTimeoutSecs": 8,
+      "runSystemValidate": false,
+      "skipFrontend": false,
+      "skipFhirQuery": false,
+      "noHeaderAllowlist": []
+    },
+    "staging": {
+      "policyMode": "permissive",
+      "requestTimeoutSecs": 12,
+      "runSystemValidate": true,
+      "noHeaderAllowlist": [
+        "/fhir/metadata",
+        "/actuator/health"
+      ]
+    },
+    "production": {
+      "policyMode": "strict",
+      "requestTimeoutSecs": 20,
+      "runSystemValidate": true,
+      "noHeaderAllowlist": []
+    }
+  }
+}

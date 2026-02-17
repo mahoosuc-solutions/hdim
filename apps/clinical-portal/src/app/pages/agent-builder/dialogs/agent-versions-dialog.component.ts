@@ -18,6 +18,7 @@ import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
 import { VersionCompareDialogComponent } from './version-compare-dialog.component';
+import { VersionDetailDialogComponent } from './version-detail-dialog.component';
 
 export interface AgentVersionsDialogData {
   agent: AgentConfiguration;
@@ -449,8 +450,23 @@ export class AgentVersionsDialogComponent implements OnInit, OnDestroy, AfterVie
 
   viewVersion(version: AgentVersion): void {
     this.logger.info('Viewing version', { versionId: version.id });
-    // Will open version detail dialog or expand inline
-    this.toast.info('Version detail view coming soon');
+    this.agentService
+      .getVersion(this.data.agent.id, version.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (versionDetail) => {
+          this.dialog.open(VersionDetailDialogComponent, {
+            width: '95vw',
+            maxWidth: '1000px',
+            height: '85vh',
+            data: { version: versionDetail },
+          });
+        },
+        error: (err) => {
+          this.logger.error('Failed to load version details', err);
+          this.toast.error('Failed to load version details');
+        },
+      });
   }
 
   compareVersions(version: AgentVersion): void {

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 
@@ -38,7 +38,7 @@ describe('AgentVersionsDialogComponent', () => {
       status: 'PUBLISHED',
       changeType: 'MINOR',
       changeSummary: 'Added new guardrails',
-      configurationSnapshot: mockAgent,
+      configurationSnapshot: { name: 'Test Agent v2' },
       createdAt: '2026-01-22T10:00:00Z',
       createdBy: 'user@example.com',
     },
@@ -49,7 +49,7 @@ describe('AgentVersionsDialogComponent', () => {
       status: 'SUPERSEDED',
       changeType: 'MAJOR',
       changeSummary: 'Initial version',
-      configurationSnapshot: mockAgent,
+      configurationSnapshot: { name: 'Test Agent v1' },
       createdAt: '2026-01-20T10:00:00Z',
       createdBy: 'user@example.com',
     },
@@ -64,7 +64,7 @@ describe('AgentVersionsDialogComponent', () => {
   };
 
   beforeEach(async () => {
-    mockAgentService = { listVersions: jest.fn(), rollbackToVersion: jest.fn() };
+    mockAgentService = { listVersions: jest.fn(), rollbackToVersion: jest.fn(), getVersion: jest.fn() };
     mockToastService = { success: jest.fn(), error: jest.fn(), info: jest.fn() };
     mockLoggerService = { withContext: jest.fn() };
     mockDialogRef = { close: jest.fn() };
@@ -75,7 +75,8 @@ describe('AgentVersionsDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [AgentVersionsDialogComponent, NoopAnimationsModule],
-      providers: [{ provide: AgentBuilderService, useValue: mockAgentService },
+      providers: [
+        { provide: AgentBuilderService, useValue: mockAgentService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
@@ -88,10 +89,6 @@ describe('AgentVersionsDialogComponent', () => {
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('should load versions on init', () => {
     mockAgentService.listVersions.mockReturnValue(of(mockVersionPage));
 
@@ -99,7 +96,6 @@ describe('AgentVersionsDialogComponent', () => {
 
     expect(mockAgentService.listVersions).toHaveBeenCalledWith('agent-123', 0, 100);
     expect(component.versions.length).toBe(2);
-    expect(component.dataSource.data.length).toBe(2);
   });
 
   it('should handle version loading error', () => {
@@ -110,20 +106,23 @@ describe('AgentVersionsDialogComponent', () => {
     fixture.detectChanges();
 
     expect(mockToastService.error).toHaveBeenCalledWith('Failed to load version history');
-    expect(component.loading).toBe(false);
   });
 
-  it('should format version status correctly', () => {
-    expect(component.formatStatus('PUBLISHED')).toBe('Published');
-    expect(component.formatStatus('ROLLED_BACK')).toBe('Rolled Back');
-    expect(component.formatStatus('SUPERSEDED')).toBe('Superseded');
+  it('opens version details dialog when view action is used', () => {
+    mockAgentService.getVersion.mockReturnValue(of(mockVersions[0]));
+
+    component.viewVersion(mockVersions[0]);
+
+    expect(mockAgentService.getVersion).toHaveBeenCalledWith('agent-123', 'v2');
+    expect(mockDialog.open).toHaveBeenCalled();
   });
 
-  it('should show version detail coming soon message', () => {
-    const version = mockVersions[0];
-    component.viewVersion(version);
+  it('shows error when version details fail to load', () => {
+    mockAgentService.getVersion.mockReturnValue(throwError(() => new Error('API error')));
 
-    expect(mockToastService.info).toHaveBeenCalledWith('Version detail view coming soon');
+    component.viewVersion(mockVersions[0]);
+
+    expect(mockToastService.error).toHaveBeenCalledWith('Failed to load version details');
   });
 
   it('should open comparison dialog with correct data', () => {

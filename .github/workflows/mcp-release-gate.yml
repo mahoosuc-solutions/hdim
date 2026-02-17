@@ -1,0 +1,73 @@
+name: MCP Release Gate
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/mcp/**'
+      - 'docker-compose*.yml'
+      - 'validate-system.sh'
+      - 'scripts/seed-all-demo-data.sh'
+      - 'mcp.json'
+      - '.mcp.json'
+      - '.vscode/mcp.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'docs/runbooks/MCP_CONTEXT_AWARE_RELEASE_GATE.md'
+      - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.md'
+      - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.schema.json'
+      - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.examples.json'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'scripts/mcp/**'
+      - 'docker-compose*.yml'
+      - 'validate-system.sh'
+      - 'scripts/seed-all-demo-data.sh'
+      - 'mcp.json'
+      - '.mcp.json'
+      - '.vscode/mcp.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'docs/runbooks/MCP_CONTEXT_AWARE_RELEASE_GATE.md'
+      - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.md'
+      - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.schema.json'
+      - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.examples.json'
+
+jobs:
+  mcp-release-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: MCP test suite
+        run: npm run test:mcp
+
+      - name: MCP spec consistency check
+        run: npm run mcp:spec:check
+
+      - name: Controlled restart dry-run contract check
+        run: npm run mcp:controlled-restart -- --service gateway-edge --dry-run --skip-runtime-checks
+
+      - name: Run release gate (permissive, code-change validation)
+        run: npm run mcp:release-gate -- --mode permissive --out-dir logs/mcp-reports
+
+      - name: Upload release-gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-release-gate-report
+          path: logs/mcp-reports/*
+          if-no-files-found: ignore

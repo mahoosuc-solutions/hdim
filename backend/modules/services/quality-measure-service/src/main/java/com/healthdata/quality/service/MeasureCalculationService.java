@@ -100,7 +100,7 @@ public class MeasureCalculationService {
                 .measureCategory(extractMeasureCategory(measureId))
                 .measureYear(LocalDate.now().getYear())
                 .numeratorCompliant(extractNumeratorCompliance(result))
-                .denominatorElligible(extractDenominatorEligibility(result))
+                .denominatorEligible(extractDenominatorEligibility(result))
                 .complianceRate(extractComplianceRate(result))
                 .score(extractScore(result))
                 .calculationDate(LocalDate.now())

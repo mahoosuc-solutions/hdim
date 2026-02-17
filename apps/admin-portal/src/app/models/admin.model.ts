@@ -135,6 +135,10 @@ export interface ServiceHealth {
   instances?: number;
   endpoint?: string;
   lastError?: string;
+  version?: string;
+  lastDeploymentAt?: Date;
+  logsUrl?: string;
+  metricsUrl?: string;
 }
 
 export interface SystemMetrics {

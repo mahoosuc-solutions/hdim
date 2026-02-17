@@ -1,4 +1,5 @@
 # Playwright generated files
 playwright-report/
+playwright-report-session-flow/
 test-results/
 .playwright/

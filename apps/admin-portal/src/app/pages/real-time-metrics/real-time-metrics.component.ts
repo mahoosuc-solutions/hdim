@@ -195,6 +195,7 @@ export class RealTimeMetricsComponent implements OnInit, OnDestroy {
         requestsPerSecond: Math.random() * 100 + 5, // 5-105 req/s
         errorsPerSecond: Math.random() * 2, // 0-2 err/s
         p95LatencyMs: Math.random() * 500 + 50, // 50-550 ms
+        p99LatencyMs: Math.random() * 700 + 100, // 100-800 ms
       };
       this.serviceMetrics.set(service.id, mockMetrics);
     });
@@ -278,7 +279,7 @@ export class RealTimeMetricsComponent implements OnInit, OnDestroy {
   /**
    * Format number to fixed decimal places
    */
-  formatNumber(value: number, decimals: number = 2): string {
+  formatNumber(value: number, decimals = 2): string {
     return value.toFixed(decimals);
   }
 }

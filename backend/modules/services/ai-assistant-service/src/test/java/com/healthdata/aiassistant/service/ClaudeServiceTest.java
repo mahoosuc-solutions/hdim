@@ -198,7 +198,8 @@ class ClaudeServiceTest {
         config.setModel("test-model");
         config.setMaxTokens(256);
         config.setTemperature(0.2);
-        config.setTimeoutSeconds(1);
+        // Keep this comfortably above cold-JVM Jackson/classloading overhead to avoid flaky timeouts.
+        config.setTimeoutSeconds(5);
         return new ClaudeService(config, new ObjectMapper());
     }
 

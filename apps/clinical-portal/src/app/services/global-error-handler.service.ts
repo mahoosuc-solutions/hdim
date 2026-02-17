@@ -2,6 +2,7 @@ import { ErrorHandler, Injectable, Injector } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { LoggerService } from './logger.service';
 import { AuditService, AuditAction, AuditOutcome } from './audit.service';
+import { SentryService } from './sentry.service';
 import { environment } from '../../environments/environment';
 
 /**
@@ -172,34 +173,12 @@ export class GlobalErrorHandler implements ErrorHandler {
    * Placeholder for integration with Sentry, LogRocket, Datadog, etc.
    */
   private sendToErrorTrackingService(error: Error | HttpErrorResponse): void {
-    // Example Sentry integration:
-    // if (typeof Sentry !== 'undefined') {
-    //   Sentry.captureException(error, {
-    //     level: 'error',
-    //     tags: {
-    //       errorType: error instanceof HttpErrorResponse ? 'HTTP' : 'Application',
-    //     },
-    //     extra: {
-    //       url: window.location.href,
-    //       httpStatus: error instanceof HttpErrorResponse ? error.status : undefined,
-    //     },
-    //   });
-    // }
-
-    // Example LogRocket integration:
-    // if (typeof LogRocket !== 'undefined') {
-    //   LogRocket.captureException(error, {
-    //     tags: {
-    //       errorType: error instanceof HttpErrorResponse ? 'HTTP' : 'Application',
-    //     },
-    //   });
-    // }
-
-    // For now, just log that we would send to external service
-    if (!environment.production) {
-      // eslint-disable-next-line no-console
-      console.log('[Global Error Handler] Would send to external error tracking service:', error.message);
-    }
+    const sentry = this.injector.get(SentryService);
+    sentry.captureException(error, {
+      errorType: error instanceof HttpErrorResponse ? 'HTTP' : 'Application',
+      url: window.location.href,
+      httpStatus: error instanceof HttpErrorResponse ? error.status : undefined,
+    });
   }
 
   /**

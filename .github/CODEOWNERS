@@ -1,0 +1,15 @@
+# Default owners
+* @webemo-aaron
+
+# Frontend session/auth critical paths
+frontend/src/components/LoginPage.tsx @webemo-aaron
+frontend/src/components/ConnectionStatus.tsx @webemo-aaron
+frontend/src/components/AppShell.tsx @webemo-aaron
+frontend/src/app/integrations/* @webemo-aaron
+frontend/e2e/tests/session-expiry*.spec.ts @webemo-aaron
+frontend/e2e/playwright.session*.config.ts @webemo-aaron
+
+# Session flow merge gates and policy docs
+.github/workflows/frontend-session-flow-e2e.yml @webemo-aaron
+docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md @webemo-aaron
+.github/pull_request_template.md @webemo-aaron

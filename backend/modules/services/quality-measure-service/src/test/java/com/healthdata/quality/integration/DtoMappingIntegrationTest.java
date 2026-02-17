@@ -64,7 +64,7 @@ class DtoMappingIntegrationTest {
         assertEquals(entity.getMeasureCategory(), dto.getMeasureCategory());
         assertEquals(entity.getMeasureYear(), dto.getMeasureYear());
         assertEquals(entity.getNumeratorCompliant(), dto.getNumeratorCompliant());
-        assertEquals(entity.getDenominatorElligible(), dto.getDenominatorElligible());
+        assertEquals(entity.getDenominatorEligible(), dto.getDenominatorEligible());
         assertEquals(entity.getComplianceRate(), dto.getComplianceRate());
         assertEquals(entity.getScore(), dto.getScore());
         assertEquals(entity.getCalculationDate(), dto.getCalculationDate());
@@ -146,7 +146,7 @@ class DtoMappingIntegrationTest {
                 .measureCategory("HEDIS")
                 .measureYear(2024)
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .complianceRate(95.0)
                 .score(90.0)
                 .calculationDate(LocalDate.now())
@@ -164,7 +164,7 @@ class DtoMappingIntegrationTest {
         assertEquals(dto.getMeasureCategory(), entity.getMeasureCategory());
         assertEquals(dto.getMeasureYear(), entity.getMeasureYear());
         assertEquals(dto.getNumeratorCompliant(), entity.getNumeratorCompliant());
-        assertEquals(dto.getDenominatorElligible(), entity.getDenominatorElligible());
+        assertEquals(dto.getDenominatorEligible(), entity.getDenominatorEligible());
         assertEquals(dto.getComplianceRate(), entity.getComplianceRate());
         assertEquals(dto.getScore(), entity.getScore());
         assertEquals(dto.getCalculationDate(), entity.getCalculationDate());
@@ -182,7 +182,7 @@ class DtoMappingIntegrationTest {
                 .measureName("Test")
                 .measureYear(2024)
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 // Leave optional fields null
                 .measureCategory(null)
@@ -216,7 +216,7 @@ class DtoMappingIntegrationTest {
         assertEquals(85.5, dto.getComplianceRate(), 0.001);
         assertEquals(92.3, dto.getScore(), 0.001);
         assertTrue(dto.getNumeratorCompliant());
-        assertTrue(dto.getDenominatorElligible());
+        assertTrue(dto.getDenominatorEligible());
     }
 
     @Test
@@ -233,7 +233,7 @@ class DtoMappingIntegrationTest {
                 .measureName("Test")
                 .measureYear(2024)
                 .numeratorCompliant(true)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .calculationDate(LocalDate.now())
                 .cqlResult("{}")
                 .build();
@@ -283,7 +283,7 @@ class DtoMappingIntegrationTest {
         assertEquals(originalEntity.getMeasureName(), mappedEntity.getMeasureName());
         assertEquals(originalEntity.getMeasureCategory(), mappedEntity.getMeasureCategory());
         assertEquals(originalEntity.getNumeratorCompliant(), mappedEntity.getNumeratorCompliant());
-        assertEquals(originalEntity.getDenominatorElligible(), mappedEntity.getDenominatorElligible());
+        assertEquals(originalEntity.getDenominatorEligible(), mappedEntity.getDenominatorEligible());
     }
 
     // Helper method to create test measure result
@@ -301,7 +301,7 @@ class DtoMappingIntegrationTest {
                 .measureCategory("HEDIS")
                 .measureYear(LocalDate.now().getYear())
                 .numeratorCompliant(compliant)
-                .denominatorElligible(true)
+                .denominatorEligible(true)
                 .complianceRate(compliant ? 100.0 : 0.0)
                 .score(compliant ? 95.0 : 50.0)
                 .calculationDate(LocalDate.now())

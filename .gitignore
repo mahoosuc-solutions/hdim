@@ -24,6 +24,7 @@ logs/
 .env
 .env.local
 .env.*.local
+monitoring/.env.alertmanager
 
 # Build artifacts
 .gradle/

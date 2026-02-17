@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -22,7 +22,8 @@ export interface ReportMetrics {
     <div class="reports-dashboard">
       <h2>Care Readiness Dashboard</h2>
 
-      <div *ngIf="metrics$ | async as metrics; else loading" class="metrics-grid">
+      @if (metrics$ | async; as metrics) {
+      <div class="metrics-grid">
         <!-- Care Readiness Score -->
         <div class="metric-card score-card">
           <h3>Care Readiness Score</h3>
@@ -67,9 +68,20 @@ export interface ReportMetrics {
           <button class="drill-down-btn">Drill Down</button>
         </div>
       </div>
+      } @else {
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <h3>Loading...</h3>
+          <div class="metric-stat">
+            <span class="label">Fetching metrics</span>
+          </div>
+        </div>
+      </div>
+      }
 
       <!-- Summary Table -->
-      <div *ngIf="metrics$ | async as metrics" class="summary-section">
+      @if (metrics$ | async; as metrics) {
+      <div class="summary-section">
         <h3>Performance Summary</h3>
         <table class="summary-table">
           <tr>
@@ -90,6 +102,7 @@ export interface ReportMetrics {
           </tr>
         </table>
       </div>
+      }
 
       <!-- Export Section -->
       <div class="export-section">
@@ -298,10 +311,8 @@ export interface ReportMetrics {
 export class ReportsDashboardComponent implements OnInit {
   metrics$: Observable<ReportMetrics> | undefined;
 
-  constructor(
-    private pipeline: Clinical360PipelineService,
-    private eventBus: EventBusService
-  ) {}
+  private readonly pipeline = inject(Clinical360PipelineService);
+  private readonly eventBus = inject(EventBusService);
 
   ngOnInit() {
     // Listen for patient selection events

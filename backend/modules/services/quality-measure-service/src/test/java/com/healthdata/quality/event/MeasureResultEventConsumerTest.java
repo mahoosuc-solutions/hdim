@@ -34,7 +34,7 @@ class MeasureResultEventConsumerTest {
             .measureId("m-1")
             .measureName("Measure")
             .numeratorCompliant(true)
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .calculationDate(LocalDate.now())
             .createdBy("system")
             .build();
@@ -49,7 +49,7 @@ class MeasureResultEventConsumerTest {
                 result.getMeasureId(),
                 result.getMeasureName(),
                 result.getNumeratorCompliant(),
-                result.getDenominatorElligible()
+                result.getDenominatorEligible()
             );
 
         consumer.handleMeasureCalculatedEvent(event, "topic", 0, 1L);
@@ -72,7 +72,7 @@ class MeasureResultEventConsumerTest {
             .measureId("m-1")
             .measureName("Measure")
             .numeratorCompliant(true)
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .calculationDate(LocalDate.now())
             .createdBy("system")
             .build();
@@ -87,7 +87,7 @@ class MeasureResultEventConsumerTest {
                 result.getMeasureId(),
                 result.getMeasureName(),
                 result.getNumeratorCompliant(),
-                result.getDenominatorElligible()
+                result.getDenominatorEligible()
             );
 
         consumer.handleMeasureCalculatedEvent(event, "topic", 0, 1L);
@@ -136,7 +136,7 @@ class MeasureResultEventConsumerTest {
             .measureId("m-1")
             .measureName("Measure")
             .numeratorCompliant(true)
-            .denominatorElligible(true)
+            .denominatorEligible(true)
             .calculationDate(LocalDate.now())
             .createdBy("system")
             .build();
@@ -153,7 +153,7 @@ class MeasureResultEventConsumerTest {
                 result.getMeasureId(),
                 result.getMeasureName(),
                 result.getNumeratorCompliant(),
-                result.getDenominatorElligible()
+                result.getDenominatorEligible()
             );
 
         assertThatCode(() -> consumer.handleMeasureCalculatedEvent(event, "topic", 0, 1L))

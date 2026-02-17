@@ -1,0 +1,204 @@
+name: Frontend Session Flow E2E
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-session-flow-e2e.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-session-flow-e2e.yml'
+  workflow_dispatch:
+    inputs:
+      gate_mode:
+        description: 'Manual run mode: all, base, or auth'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - base
+          - auth
+
+jobs:
+  detect-session-auth-changes:
+    name: Detect auth/login changes
+    runs-on: ubuntu-latest
+    outputs:
+      run_external_auth: ${{ steps.filter.outputs.external_auth }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect external-auth related changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            external_auth:
+              - 'frontend/src/components/LoginPage.tsx'
+              - 'frontend/src/components/ExternalAuthMockPage.tsx'
+              - 'frontend/src/main.tsx'
+              - 'frontend/.env.example'
+              - 'frontend/e2e/tests/session-expiry-external-auth.spec.ts'
+              - 'frontend/e2e/playwright.session.external-auth.config.ts'
+              - 'frontend/package.json'
+              - '.github/workflows/frontend-session-flow-e2e.yml'
+
+      - name: Publish gate decision summary
+        run: |
+          echo "## Frontend Session Flow Gate Decision" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Manual gate mode: \`${{ github.event.inputs.gate_mode || 'n/a' }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- External auth related files changed: \`${{ steps.filter.outputs.external_auth }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- `session-flow`: runs for frontend changes by workflow trigger" >> "$GITHUB_STEP_SUMMARY"
+          echo "- `session-flow-external-auth`: runs on manual dispatch (`all`/`auth`) or when external auth files changed" >> "$GITHUB_STEP_SUMMARY"
+
+  session-flow:
+    name: Session expiry e2e (Chromium)
+    needs: [detect-session-auth-changes]
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.gate_mode != 'auth'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run session flow e2e
+        run: npm run e2e:session-flow
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-session-flow-playwright-report
+          path: frontend/playwright-report-session-flow
+          if-no-files-found: ignore
+
+  session-flow-external-auth:
+    name: Session expiry external auth e2e (Chromium)
+    needs: [detect-session-auth-changes]
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.gate_mode != 'base') || (github.event_name != 'workflow_dispatch' && needs.detect-session-auth-changes.outputs.run_external_auth == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run session flow external auth e2e
+        run: npm run e2e:session-flow:external-auth
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-session-flow-external-auth-playwright-report
+          path: frontend/playwright-report-session-flow-external-auth
+          if-no-files-found: ignore
+
+      - name: Publish external-auth execution summary
+        if: always()
+        run: |
+          echo "## External Auth Gate Execution" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Job executed: \`true\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Trigger condition: manual dispatch or auth/login file change" >> "$GITHUB_STEP_SUMMARY"
+
+  auth-callback:
+    name: Auth callback e2e (Chromium)
+    needs: [detect-session-auth-changes]
+    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.gate_mode != 'base') || (github.event_name != 'workflow_dispatch' && needs.detect-session-auth-changes.outputs.run_external_auth == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run auth callback e2e
+        run: npm run e2e:auth-callback
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-auth-callback-playwright-report
+          path: frontend/playwright-report-auth-callback
+          if-no-files-found: ignore
+
+  gate-status-summary:
+    name: Session flow gate status summary
+    needs: [detect-session-auth-changes, session-flow, session-flow-external-auth, auth-callback]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish final gate status
+        run: |
+          echo "## Final Session Flow Gate Status" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- session-flow result: \`${{ needs.session-flow.result }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- external-auth change detected: \`${{ needs.detect-session-auth-changes.outputs.run_external_auth }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- session-flow-external-auth result: \`${{ needs.session-flow-external-auth.result }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- auth-callback result: \`${{ needs.auth-callback.result }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ needs.session-flow-external-auth.result }}" = "skipped" ]; then
+            echo "- session-flow-external-auth skip reason: no auth/login related file changes in this run" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${{ needs.auth-callback.result }}" = "skipped" ]; then
+            echo "- auth-callback skip reason: no auth/login related file changes in this run" >> "$GITHUB_STEP_SUMMARY"
+          fi

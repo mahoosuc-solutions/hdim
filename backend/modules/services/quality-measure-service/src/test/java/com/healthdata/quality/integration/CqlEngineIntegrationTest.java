@@ -125,7 +125,7 @@ class CqlEngineIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.measureName").value("Comprehensive Diabetes Care"))
                 .andExpect(jsonPath("$.numeratorCompliant").value(true))
-                .andExpect(jsonPath("$.denominatorElligible").value(true))
+                .andExpect(jsonPath("$.denominatorEligible").value(true))
                 .andExpect(jsonPath("$.complianceRate").value(92.5))
                 .andExpect(jsonPath("$.score").value(88.3));
     }
@@ -152,7 +152,7 @@ class CqlEngineIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
-                .andExpect(jsonPath("$.denominatorElligible").value(true));
+                .andExpect(jsonPath("$.denominatorEligible").value(true));
     }
 
     @Test
@@ -382,7 +382,7 @@ class CqlEngineIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.numeratorCompliant").value(false))
-                .andExpect(jsonPath("$.denominatorElligible").value(true));
+                .andExpect(jsonPath("$.denominatorEligible").value(true));
     }
 
     @Test

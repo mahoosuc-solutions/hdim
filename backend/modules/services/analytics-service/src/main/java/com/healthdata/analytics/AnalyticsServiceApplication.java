@@ -4,6 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Analytics Service - Dashboards, KPIs, Reports, and Alerts
@@ -23,6 +24,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 })
 @EntityScan(basePackages = "com.healthdata.analytics.persistence")
 @EnableJpaRepositories(basePackages = "com.healthdata.analytics.repository")
+@EnableScheduling
 public class AnalyticsServiceApplication {
 
     public static void main(String[] args) {

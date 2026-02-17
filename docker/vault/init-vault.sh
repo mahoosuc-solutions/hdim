@@ -144,7 +144,7 @@ EOF
 
 echo "Enabling authentication methods..."
 
-# Enable AppRole for service authentication
+# Enable AppRole for service authentication (Docker Compose / local dev)
 vault auth enable approle
 
 # Create role for backend services
@@ -158,6 +158,39 @@ vault write auth/approle/role/hdim-backend \
 # Get role ID and secret ID for configuration
 ROLE_ID=$(vault read -field=role_id auth/approle/role/hdim-backend/role-id)
 vault write -f -field=secret_id auth/approle/role/hdim-backend/secret-id > /vault/backend-secret-id
+
+# Enable Kubernetes auth for pod-level secret access (Kubernetes deployments)
+# Services authenticate using their K8s ServiceAccount JWT — no static credentials required
+if [ "${ENABLE_K8S_AUTH:-false}" = "true" ]; then
+    echo "Enabling Kubernetes authentication method..."
+    vault auth enable kubernetes
+
+    # Configure Kubernetes auth with cluster API and CA cert
+    # K8s_HOST and K8S_CA_CERT are injected by the Vault agent or set as env vars
+    vault write auth/kubernetes/config \
+        kubernetes_host="${KUBERNETES_SERVICE_HOST:-https://kubernetes.default.svc}" \
+        kubernetes_ca_cert="${KUBERNETES_CA_CERT:-@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt}" \
+        issuer="${K8S_TOKEN_ISSUER:-https://kubernetes.default.svc.cluster.local}"
+
+    # Create Kubernetes role for HDIM backend services
+    # Bound to the hdim-services ServiceAccount in the hdim namespace
+    vault write auth/kubernetes/role/hdim-backend \
+        bound_service_account_names="hdim-services" \
+        bound_service_account_namespaces="hdim,hdim-production,hdim-staging" \
+        token_policies="hdim-backend" \
+        token_ttl=1h \
+        token_max_ttl=4h
+
+    # Create Kubernetes role for CI/CD jobs
+    vault write auth/kubernetes/role/hdim-cicd \
+        bound_service_account_names="hdim-cicd" \
+        bound_service_account_namespaces="hdim,hdim-production,hdim-staging" \
+        token_policies="hdim-cicd" \
+        token_ttl=30m \
+        token_max_ttl=1h
+
+    echo "Kubernetes auth method configured."
+fi
 
 echo "==================================="
 echo "Vault initialization complete!"

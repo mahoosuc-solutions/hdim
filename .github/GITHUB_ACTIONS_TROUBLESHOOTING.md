@@ -82,3 +82,40 @@ cd backend
 ## Related Issues
 - PR #390: Deployment console MFE + infrastructure enhancements
 - Status: Code ready, infrastructure issue separable
+
+---
+
+## Session Flow Gate Troubleshooting
+
+Workflow: `.github/workflows/frontend-session-flow-e2e.yml`
+
+### Why `session-flow-external-auth` may be skipped
+
+`session-flow-external-auth` runs only when:
+- event is `workflow_dispatch`, or
+- auth/login related files changed (detected by `detect-session-auth-changes`).
+
+`auth-callback` follows the same conditional trigger.
+
+If skipped, check:
+1. `detect-session-auth-changes` job output (`run_external_auth`)
+2. `gate-status-summary` job in the same run
+3. Local predictor output:
+
+```bash
+npm --prefix frontend run detect:session-flow-checks
+```
+
+### Common mismatch causes
+
+- File changed is outside the auth/login filter list.
+- Workflow file changed but not yet pushed to branch.
+- PR base branch differs from expected compare target.
+- Job skipped intentionally due to conditional trigger (confirm in `gate-status-summary` output).
+
+### Manual override
+
+Run the workflow via **Actions → Frontend Session Flow E2E → Run workflow** (`workflow_dispatch`) and choose:
+- `all` → base + auth-related gates
+- `base` → base session-flow only
+- `auth` → auth-related gates only

@@ -51,6 +51,21 @@ git switch -c release/vX.Y.Z-rc1
      - excluded items (explicitly)
      - acceptance criteria
 
+## RC Stages (What Each Version Is Allowed To Contain)
+
+This keeps releases predictable and prevents “RC drift”.
+
+- `vX.Y.Z-rc1`
+  - Primary goal: make the demo + release workflow deterministic.
+  - Allowed: demo seeding/validation fixes, local CI improvements, scope docs, MCP/tooling stabilization, must-fix bug fixes.
+  - Not allowed: new product surface area unless explicitly required for the demo readiness gate.
+- `vX.Y.Z-rc2` (and higher)
+  - Primary goal: polish and fix bugs found during recording/validation.
+  - Allowed: targeted bug fixes, performance tuning, copy/UI polish for recorded flows, release docs updates.
+  - Not allowed: architecture rewrites, broad dependency upgrades, new features.
+- `vX.Y.Z` (tag)
+  - Only after: `./scripts/ci/local-ci.sh pr` passes, demo readiness gate passes, and media is captured.
+
 ## Scope Rules (to avoid RC drift)
 
 - Allowed:
@@ -81,4 +96,3 @@ When ready to cut the release tag:
 git tag -a vX.Y.Z -m "Release vX.Y.Z"
 git push origin vX.Y.Z
 ```
-

@@ -8,6 +8,10 @@ import com.healthdata.cql.entity.CqlLibrary;
 import com.healthdata.cql.measure.MeasureResult;
 import com.healthdata.cql.repository.CqlEvaluationRepository;
 import com.healthdata.cql.repository.CqlLibraryRepository;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -41,18 +45,21 @@ public class CqlEvaluationService {
     private final MeasureTemplateEngine templateEngine;
     private final ObjectMapper objectMapper;
     private final CqlAuditIntegration cqlAuditIntegration;
+    private final Tracer tracer;
 
     public CqlEvaluationService(
             CqlEvaluationRepository evaluationRepository,
             CqlLibraryRepository libraryRepository,
             MeasureTemplateEngine templateEngine,
             ObjectMapper objectMapper,
-            CqlAuditIntegration cqlAuditIntegration) {
+            CqlAuditIntegration cqlAuditIntegration,
+            Tracer tracer) {
         this.evaluationRepository = evaluationRepository;
         this.libraryRepository = libraryRepository;
         this.templateEngine = templateEngine;
         this.objectMapper = objectMapper;
         this.cqlAuditIntegration = cqlAuditIntegration;
+        this.tracer = tracer;
     }
 
     /**
@@ -90,13 +97,21 @@ public class CqlEvaluationService {
             throw new IllegalArgumentException("Evaluation tenant mismatch");
         }
 
+        Span span = tracer.spanBuilder("cql.evaluate_measure")
+                .setAttribute("evaluation.id", evaluationId.toString())
+                .setAttribute("tenant.id", tenantId)
+                .startSpan();
+
         long startTime = System.currentTimeMillis();
 
-        try {
+        try (Scope scope = span.makeCurrent()) {
             // Get the library information
             CqlLibrary library = evaluation.getLibrary();
             String measureId = library.getLibraryName();
             UUID patientId = evaluation.getPatientId();
+
+            span.setAttribute("measure.id", measureId);
+            span.setAttribute("patient.id", patientId.toString());
 
             logger.info("Evaluating measure {} for patient {} using template engine", measureId, patientId);
 
@@ -111,6 +126,11 @@ public class CqlEvaluationService {
             evaluation.setStatus("SUCCESS");
             long durationMs = System.currentTimeMillis() - startTime;
             evaluation.setDurationMs(durationMs);
+
+            span.setAttribute("result.in_denominator", result.isInDenominator());
+            span.setAttribute("result.in_numerator", result.isInNumerator());
+            span.setAttribute("duration_ms", durationMs);
+            span.setStatus(StatusCode.OK);
 
             logger.info("Evaluation completed successfully: measure={}, patient={}, inDenominator={}, inNumerator={}",
                     measureId, patientId, result.isInDenominator(), result.isInNumerator());
@@ -129,14 +149,20 @@ public class CqlEvaluationService {
 
         } catch (JsonProcessingException e) {
             logger.error("Error serializing evaluation result: {}", e.getMessage(), e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, "Result serialization error");
             evaluation.setStatus("FAILED");
             evaluation.setErrorMessage("Result serialization error: " + e.getMessage());
             evaluation.setDurationMs(System.currentTimeMillis() - startTime);
         } catch (Exception e) {
             logger.error("Evaluation failed: {}", e.getMessage(), e);
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, e.getMessage());
             evaluation.setStatus("FAILED");
             evaluation.setErrorMessage(e.getMessage());
             evaluation.setDurationMs(System.currentTimeMillis() - startTime);
+        } finally {
+            span.end();
         }
 
         CqlEvaluation updatedEvaluation = evaluationRepository.save(evaluation);

@@ -3,6 +3,7 @@ package com.healthdata.tracing;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -149,6 +150,16 @@ public class TracingAutoConfiguration {
             .setTracerProvider(tracerProvider)
             .setPropagators(contextPropagators)
             .build();
+    }
+
+    /**
+     * Tracer bean for creating custom spans in service code.
+     * Uses the service name from spring.application.name for proper attribution.
+     */
+    @Bean
+    @ConditionalOnMissingBean(Tracer.class)
+    public Tracer tracer(OpenTelemetry openTelemetry) {
+        return openTelemetry.getTracer(serviceName);
     }
 
     /**

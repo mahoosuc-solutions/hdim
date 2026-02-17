@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -87,29 +86,31 @@ class ChannelRouterTest {
         }
 
         @Test
-        @DisplayName("should throw exception for unsupported channel")
-        void throwExceptionForUnsupportedChannel() {
+        @DisplayName("should return null and log warning for unsupported channel")
+        void returnNullForUnsupportedChannel() {
             // Given
             NotificationProvider emailProvider = createMockProvider(Set.of(NotificationChannel.EMAIL));
             ChannelRouter router = new ChannelRouter(List.of(emailProvider));
 
-            // When/Then
-            assertThatThrownBy(() -> router.getProvider(NotificationChannel.SMS))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("No provider registered for channel: SMS");
+            // When
+            NotificationProvider result = router.getProvider(NotificationChannel.SMS);
+
+            // Then
+            assertThat(result).isNull();
         }
 
         @Test
-        @DisplayName("should throw exception for PUSH channel when not registered")
-        void throwExceptionForPushChannelWhenNotRegistered() {
+        @DisplayName("should return null and log warning for PUSH channel when not registered")
+        void returnNullForPushChannelWhenNotRegistered() {
             // Given
             NotificationProvider emailProvider = createMockProvider(Set.of(NotificationChannel.EMAIL));
             ChannelRouter router = new ChannelRouter(List.of(emailProvider));
 
-            // When/Then
-            assertThatThrownBy(() -> router.getProvider(NotificationChannel.PUSH))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessageContaining("PUSH");
+            // When
+            NotificationProvider result = router.getProvider(NotificationChannel.PUSH);
+
+            // Then
+            assertThat(result).isNull();
         }
     }
 

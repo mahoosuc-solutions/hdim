@@ -34,9 +34,8 @@ public class ChannelRouter {
     public NotificationProvider getProvider(NotificationChannel channel) {
         NotificationProvider provider = providers.get(channel);
         if (provider == null) {
-            throw new UnsupportedOperationException(
-                "No provider registered for channel: " + channel
-            );
+            log.warn("No provider registered for notification channel: {}. Skipping.", channel);
+            return null;
         }
         return provider;
     }

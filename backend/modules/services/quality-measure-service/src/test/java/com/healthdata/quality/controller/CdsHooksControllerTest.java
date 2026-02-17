@@ -73,6 +73,8 @@ class CdsHooksControllerTest {
         assertThat(response.getBody().getCards()).hasSize(1);
         assertThat(response.getBody().getCards().get(0).getSummary()).isEqualTo("Close diabetes gap");
         assertThat(response.getBody().getCards().get(0).getIndicator()).isEqualTo("critical");
+        assertThat(response.getBody().getCards().get(0).getLinks()).hasSize(1);
+        assertThat(response.getBody().getCards().get(0).getLinks().get(0).getType()).isEqualTo("smart");
     }
 
     @Test
@@ -125,6 +127,12 @@ class CdsHooksControllerTest {
         assertThat(response.getBody().getCards().get(0).getSuggestions().get(0).getActions()).hasSize(1);
         assertThat(response.getBody().getCards().get(0).getSuggestions().get(0).getActions().get(0).getType())
             .isEqualTo("create");
+        assertThat(response.getBody().getCards().get(0).getSuggestions().get(0).getActions().get(0).getResource())
+            .isNotNull();
+        assertThat(response.getBody().getCards().get(0).getSuggestions().get(0).getActions().get(0).getResource().getResourceType())
+            .isEqualTo("ServiceRequest");
+        assertThat(response.getBody().getCards().get(0).getLinks()).hasSize(1);
+        assertThat(response.getBody().getCards().get(0).getLinks().get(0).getType()).isEqualTo("smart");
     }
 
     @Test

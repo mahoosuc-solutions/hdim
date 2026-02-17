@@ -103,6 +103,7 @@ public class CdsHooksController {
                     .label("HDIM Care Gap Engine")
                     .url("https://github.com/webemo-aaron/hdim")
                     .build())
+                .links(List.of(buildSmartLink(tenantId, patientId, recommendation)))
                 .build());
         }
 
@@ -146,8 +147,16 @@ public class CdsHooksController {
                         .actions(List.of(CdsAction.builder()
                             .type("create")
                             .description("Create order to address recommendation: " + recommendation.getTitle())
+                            .resource(CdsActionResource.builder()
+                                .resourceType("ServiceRequest")
+                                .status("draft")
+                                .intent("order")
+                                .subjectReference("Patient/" + patientId)
+                                .codeText(recommendation.getTitle())
+                                .build())
                             .build()))
                         .build()))
+                .links(List.of(buildSmartLink(tenantId, patientId, recommendation)))
                 .build());
         }
 
@@ -186,6 +195,17 @@ public class CdsHooksController {
             ? ""
             : " Due: " + recommendation.getDueDate().toString() + ".";
         return description + dueDate;
+    }
+
+    private CdsLink buildSmartLink(String tenantId, UUID patientId, CdsRecommendationDTO recommendation) {
+        String recommendationTitle = recommendation.getTitle() == null ? "care-gap" : recommendation.getTitle();
+        return CdsLink.builder()
+            .label("Open SMART care-gap view")
+            .url("/launch/smart?tenant=" + tenantId + "&patient=" + patientId)
+            .type("smart")
+            .appContext("{\"patient\":\"" + patientId + "\",\"tenant\":\"" + tenantId
+                + "\",\"recommendation\":\"" + recommendationTitle + "\"}")
+            .build();
     }
 
     @Data
@@ -250,6 +270,7 @@ public class CdsHooksController {
         private String indicator;
         private CdsCardSource source;
         private List<CdsSuggestion> suggestions;
+        private List<CdsLink> links;
     }
 
     @Data
@@ -280,5 +301,31 @@ public class CdsHooksController {
     public static class CdsAction {
         private String type;
         private String description;
+        private CdsActionResource resource;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class CdsActionResource {
+        private String resourceType;
+        private String status;
+        private String intent;
+        private String subjectReference;
+        private String codeText;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class CdsLink {
+        private String label;
+        private String url;
+        private String type;
+        private String appContext;
     }
 }

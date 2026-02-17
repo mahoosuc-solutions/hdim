@@ -31,7 +31,7 @@ public class CqlEvaluation {
     @Column(name = "tenant_id", nullable = false, length = 64)
     private String tenantId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "library_id", nullable = false,
                 foreignKey = @ForeignKey(name = "fk_evaluation_library"))
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})

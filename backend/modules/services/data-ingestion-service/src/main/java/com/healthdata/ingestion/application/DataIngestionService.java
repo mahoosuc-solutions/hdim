@@ -3,7 +3,9 @@ package com.healthdata.ingestion.application;
 import com.healthdata.ingestion.api.v1.IngestionProgressResponse;
 import com.healthdata.ingestion.api.v1.IngestionRequest;
 import com.healthdata.ingestion.api.v1.IngestionResponse;
+import com.healthdata.ingestion.client.CareGapIngestionClient;
 import com.healthdata.ingestion.client.FhirIngestionClient;
+import com.healthdata.ingestion.client.QualityMeasureIngestionClient;
 import com.healthdata.ingestion.generator.SyntheticPatientGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,8 @@ public class DataIngestionService {
 
     private final SyntheticPatientGenerator patientGenerator;
     private final FhirIngestionClient fhirClient;
+    private final CareGapIngestionClient careGapClient;
+    private final QualityMeasureIngestionClient qualityMeasureClient;
     private final ProgressTrackingService progressTrackingService;
 
     // In-memory session storage (for simplicity - could be Redis in production)
@@ -169,16 +173,16 @@ public class DataIngestionService {
             // Stage 3: Create care gaps (70-90%) - Optional
             if (request.getIncludeCareGaps()) {
                 progressTrackingService.updateProgress(sessionId, "CARE_GAPS", 70);
-                // TODO: Call care gap service
-                log.info("[{}] Care gap creation not yet implemented", sessionId);
+                int gapsCreated = careGapClient.createCareGaps(request.getTenantId());
+                log.info("[{}] Created {} care gaps for tenant {}", sessionId, gapsCreated, request.getTenantId());
                 progressTrackingService.updateProgress(sessionId, "CARE_GAPS", 90);
             }
 
             // Stage 4: Seed measures (90-100%) - Optional
             if (request.getIncludeQualityMeasures()) {
                 progressTrackingService.updateProgress(sessionId, "MEASURES", 90);
-                // TODO: Call quality measure service
-                log.info("[{}] Quality measure seeding not yet implemented", sessionId);
+                int measuresSeeded = qualityMeasureClient.seedMeasures(request.getTenantId());
+                log.info("[{}] Seeded {} quality measures for tenant {}", sessionId, measuresSeeded, request.getTenantId());
                 progressTrackingService.updateProgress(sessionId, "MEASURES", 100);
             }
 

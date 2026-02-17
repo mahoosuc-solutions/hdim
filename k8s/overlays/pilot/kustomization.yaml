@@ -1,0 +1,121 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Pilot customer environment overlay for HDIM Platform
+# Deploys the 10-service core subset required for HEDIS quality measure evaluation.
+# Excludes AI/agent, predictive analytics, SDOH, and workflow services (Phase 2+).
+#
+# Deploy with: kubectl apply -k k8s/overlays/pilot/
+# Namespace:   hdim-pilot-<customer-id>  (set PILOT_NAMESPACE before deploying)
+#
+# Services included (10 core):
+#   gateway-service       - API entry point, JWT validation
+#   fhir-service          - FHIR R4 resource store + SMART on FHIR
+#   patient-service       - Patient demographics, multi-tenant records
+#   care-gap-service      - Care gap detection and tracking
+#   quality-measure-service - HEDIS measure evaluation
+#   cql-engine-service    - CQL clinical logic execution
+#   consent-service       - Patient consent management
+#   event-processing-service - Audit event ingestion
+#   event-router-service  - Event routing and fanout
+#   cdr-processor-service - Clinical Document Registry processing
+#
+# See: docs/runbooks/PILOT_SERVICE_SUBSET.md for full rationale
+
+namespace: hdim-pilot
+
+resources:
+  # Pilot-specific namespace
+  - namespace.yaml
+
+  # Base resources (secrets and configmap)
+  - ../../base
+
+  # Infrastructure
+  - ../../infrastructure/postgres.yaml
+  - ../../infrastructure/redis.yaml
+  - ../../infrastructure/kafka.yaml
+
+  # === PILOT CORE SERVICES (10) ===
+  # Tier 1: Entry point & FHIR foundation
+  - ../../services/gateway-service.yaml
+  - ../../services/fhir-service.yaml
+
+  # Tier 2: Patient & clinical data
+  - ../../services/patient-service.yaml
+  - ../../services/consent-service.yaml
+
+  # Tier 3: Quality measure pipeline
+  - ../../services/cql-engine-service.yaml
+  - ../../services/quality-measure-service.yaml
+  - ../../services/care-gap-service.yaml
+
+  # Tier 4: Event & audit infrastructure
+  - ../../services/event-processing-service.yaml
+  - ../../services/event-router-service.yaml
+
+  # Tier 5: Data ingestion
+  - ../../services/cdr-processor-service.yaml
+
+  # === EXCLUDED FROM PILOT (deferred to GA) ===
+  # agent-runtime-service       - AI agents (Phase 2)
+  # ai-assistant-service        - AI assistant UI (Phase 2)
+  # agent-builder-service       - Agent authoring (Phase 2)
+  # analytics-service           - Historical analytics (Phase 2)
+  # predictive-analytics-service - ML predictions (Phase 2)
+  # sdoh-service                - Social determinants (Phase 2)
+  # approval-service            - Workflow approvals (Phase 2)
+  # payer-workflows-service     - Payer-specific workflows (Phase 2)
+  # data-enrichment-service     - Data quality enrichment (Phase 2)
+  # ehr-connector-service       - EHR direct integration (Phase 2)
+  # documentation-service       - Internal docs (Phase 2)
+
+patches:
+  - path: patches/resources.yaml
+  - path: patches/replicas.yaml
+
+configMapGenerator:
+  - name: hdim-environment-config
+    literals:
+      - SPRING_PROFILES_ACTIVE=kubernetes,pilot
+      - LOG_LEVEL=INFO
+      - ENABLE_DEMO_DATA=false
+      - ENABLE_SWAGGER_UI=false
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4317
+      - OTEL_SERVICE_NAME_PREFIX=pilot-
+      - CACHE_TTL_SECONDS=120
+      - CONNECTION_POOL_SIZE=10
+
+labels:
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+      app.kubernetes.io/part-of: hdim-platform
+      environment: pilot
+
+commonAnnotations:
+  deployment.kubernetes.io/environment: pilot
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8080"
+  prometheus.io/path: "/actuator/prometheus"
+
+images:
+  - name: hdim/gateway-service
+    newTag: latest
+  - name: hdim/fhir-service
+    newTag: latest
+  - name: hdim/patient-service
+    newTag: latest
+  - name: hdim/care-gap-service
+    newTag: latest
+  - name: hdim/quality-measure-service
+    newTag: latest
+  - name: hdim/cql-engine-service
+    newTag: latest
+  - name: hdim/consent-service
+    newTag: latest
+  - name: hdim/event-processing-service
+    newTag: latest
+  - name: hdim/event-router-service
+    newTag: latest
+  - name: hdim/cdr-processor-service
+    newTag: latest

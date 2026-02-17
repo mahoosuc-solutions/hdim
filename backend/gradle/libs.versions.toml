@@ -95,7 +95,7 @@ opentelemetry = "1.38.0"
 
 # Build Tools
 openapi-generator = "7.18.0"
-gradle-versions-plugin = "0.51.0"
+gradle-versions-plugin = "0.53.0"
 
 # AI/ML SDKs
 aws-sdk = "2.25.0"

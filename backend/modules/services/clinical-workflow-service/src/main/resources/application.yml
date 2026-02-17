@@ -111,6 +111,14 @@ springdoc:
     enabled: true
   show-actuator: true
 
+# Service client URLs (Docker Compose DNS names as defaults)
+patient:
+  service:
+    url: ${PATIENT_SERVICE_URL:http://patient-service:8084}
+fhir:
+  service:
+    url: ${FHIR_SERVICE_URL:http://fhir-service:8085}
+
 # Application-specific Configuration
 clinical-workflow:
   vitals:

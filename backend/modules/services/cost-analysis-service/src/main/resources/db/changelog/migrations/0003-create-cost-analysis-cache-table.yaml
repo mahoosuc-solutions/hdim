@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0003-create-cost-analysis-cache-table
+      author: hdim
+      changes:
+        - createTable:
+            tableName: cost_analysis_cache
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: analysis_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: analysis_period
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_name
+                  type: varchar(128)
+              - column:
+                  name: result_data
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cache_hits
+                  type: integer
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_cache_tenant_type_period
+            tableName: cost_analysis_cache
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: analysis_type
+              - column:
+                  name: analysis_period
+        - createIndex:
+            indexName: idx_cache_expires_at
+            tableName: cost_analysis_cache
+            columns:
+              - column:
+                  name: expires_at
+      rollback:
+        - dropTable:
+            tableName: cost_analysis_cache

@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0001-create-cost-tracking-table
+      author: hdim
+      changes:
+        - createTable:
+            tableName: cost_tracking
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: metric_type
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: metric_value
+                  type: numeric(16, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cost_amount
+                  type: numeric(16, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: timestamp_utc
+                  type: timestamptz
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_id
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: feature_key
+                  type: varchar(128)
+              - column:
+                  name: request_id
+                  type: varchar(128)
+        - createIndex:
+            indexName: idx_cost_tracking_service_time
+            tableName: cost_tracking
+            columns:
+              - column:
+                  name: service_id
+              - column:
+                  name: timestamp_utc
+        - createIndex:
+            indexName: idx_cost_tracking_tenant_time
+            tableName: cost_tracking
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: timestamp_utc
+        - createIndex:
+            indexName: idx_cost_tracking_metric_type
+            tableName: cost_tracking
+            columns:
+              - column:
+                  name: metric_type
+      rollback:
+        - dropTable:
+            tableName: cost_tracking

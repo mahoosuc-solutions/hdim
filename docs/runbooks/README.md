@@ -20,6 +20,7 @@ Operational runbooks for the HealthData Intelligence Platform (HDIM).
 | [Session Flow PR Rehearsal Checklist](./SESSION_FLOW_PR_REHEARSAL_CHECKLIST.md) | High | Step-by-step validation for conditional session-flow CI gates |
 | [Session Flow Handoff Summary](./SESSION_FLOW_HANDOFF_SUMMARY.md) | High | Consolidated commands, CI gates, and final verification sequence |
 | [Session Flow Release Readiness Evidence](./SESSION_FLOW_RELEASE_READINESS_EVIDENCE.md) | High | Fill-in template for final validation evidence and Go/No-Go sign-off |
+| [CDS Hooks Care Gap Validation](./CDS_HOOKS_CARE_GAP_VALIDATION.md) | High | Local validation flow for CDS Hooks care-gap integration and deterministic fixture coverage |
 
 ## Severity Levels
 

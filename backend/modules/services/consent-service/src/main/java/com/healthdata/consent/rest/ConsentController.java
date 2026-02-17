@@ -14,6 +14,7 @@ import com.healthdata.consent.persistence.ConsentEntity;
 import com.healthdata.consent.service.ConsentService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import com.healthdata.audit.annotations.Audited;
 import com.healthdata.audit.models.AuditAction;
 
@@ -28,6 +29,7 @@ public class ConsentController {
      * Create a new consent
      * POST /api/consents
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping
     public ResponseEntity<ConsentEntity> createConsent(
@@ -46,6 +48,7 @@ public class ConsentController {
      * Get consent by ID
      * GET /api/consents/{id}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/{id}")
     public ResponseEntity<ConsentEntity> getConsent(
@@ -60,6 +63,7 @@ public class ConsentController {
      * Update consent
      * PUT /api/consents/{id}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping("/{id}")
     public ResponseEntity<ConsentEntity> updateConsent(
@@ -81,6 +85,7 @@ public class ConsentController {
      * Delete consent
      * DELETE /api/consents/{id}
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteConsent(
@@ -99,6 +104,7 @@ public class ConsentController {
      * Revoke consent
      * POST /api/consents/{id}/revoke
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/{id}/revoke")
     public ResponseEntity<ConsentEntity> revokeConsent(
@@ -118,6 +124,7 @@ public class ConsentController {
      * Get all consents for a patient
      * GET /api/consents/patient/{patientId}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}")
     public ResponseEntity<List<ConsentEntity>> getConsentsByPatient(
@@ -131,6 +138,7 @@ public class ConsentController {
      * Get consents for a patient with pagination
      * GET /api/consents/patient/{patientId}/page
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/page")
     public ResponseEntity<Page<ConsentEntity>> getConsentsByPatientPaginated(
@@ -145,6 +153,7 @@ public class ConsentController {
      * Get active consents for a patient
      * GET /api/consents/patient/{patientId}/active
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatient(
@@ -158,6 +167,7 @@ public class ConsentController {
      * Get active consents for a patient and scope
      * GET /api/consents/patient/{patientId}/active/scope/{scope}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active/scope/{scope}")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatientAndScope(
@@ -172,6 +182,7 @@ public class ConsentController {
      * Get active consents for a patient and category
      * GET /api/consents/patient/{patientId}/active/category/{category}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active/category/{category}")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatientAndCategory(
@@ -186,6 +197,7 @@ public class ConsentController {
      * Get active consents for a patient and data class
      * GET /api/consents/patient/{patientId}/active/data-class/{dataClass}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/active/data-class/{dataClass}")
     public ResponseEntity<List<ConsentEntity>> getActiveConsentsByPatientAndDataClass(
@@ -200,6 +212,7 @@ public class ConsentController {
      * Get revoked consents for a patient
      * GET /api/consents/patient/{patientId}/revoked
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/revoked")
     public ResponseEntity<List<ConsentEntity>> getRevokedConsentsByPatient(
@@ -213,6 +226,7 @@ public class ConsentController {
      * Get expired consents for a patient
      * GET /api/consents/patient/{patientId}/expired
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/expired")
     public ResponseEntity<List<ConsentEntity>> getExpiredConsentsByPatient(
@@ -226,6 +240,7 @@ public class ConsentController {
      * Get consents expiring soon
      * GET /api/consents/patient/{patientId}/expiring-soon?days={days}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/expiring-soon")
     public ResponseEntity<List<ConsentEntity>> getConsentsExpiringSoon(
@@ -240,6 +255,7 @@ public class ConsentController {
      * Check if patient has active consent for scope
      * GET /api/consents/patient/{patientId}/check/scope/{scope}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/scope/{scope}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForScope(
@@ -254,6 +270,7 @@ public class ConsentController {
      * Check if patient has active consent for category
      * GET /api/consents/patient/{patientId}/check/category/{category}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/category/{category}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForCategory(
@@ -268,6 +285,7 @@ public class ConsentController {
      * Check if patient has active consent for data class
      * GET /api/consents/patient/{patientId}/check/data-class/{dataClass}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/data-class/{dataClass}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForDataClass(
@@ -282,6 +300,7 @@ public class ConsentController {
      * Check if authorized party has consent to access patient data
      * GET /api/consents/patient/{patientId}/check/authorized-party/{authorizedPartyId}
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping("/patient/{patientId}/check/authorized-party/{authorizedPartyId}")
     public ResponseEntity<ConsentCheckResponse> checkConsentForAuthorizedParty(
@@ -296,6 +315,7 @@ public class ConsentController {
      * Validate data access request
      * POST /api/consents/validate-access
      */
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping("/validate-access")
     public ResponseEntity<ConsentValidationResponse> validateDataAccess(

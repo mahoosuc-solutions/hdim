@@ -39,6 +39,7 @@ import com.healthdata.fhir.service.PatientService;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import com.healthdata.auth.context.ScopedTenant;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 /**
  * FHIR R4 Patient Resource Controller.
@@ -79,6 +80,7 @@ public class PatientController {
         @ApiResponse(responseCode = "403", description = "Forbidden - insufficient permissions")
     })
     @PostMapping(consumes = "application/fhir+json")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Audited(
             action = AuditAction.CREATE,
             resourceType = "Patient",
@@ -122,6 +124,7 @@ public class PatientController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(
             action = AuditAction.READ,
             resourceType = "Patient",
@@ -157,6 +160,7 @@ public class PatientController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(
             action = AuditAction.SEARCH,
             resourceType = "Patient",
@@ -198,6 +202,7 @@ public class PatientController {
         @ApiResponse(responseCode = "403", description = "Forbidden")
     })
     @GetMapping("/_batch")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
     @Audited(
             action = AuditAction.READ,
             resourceType = "Patient",
@@ -249,6 +254,7 @@ public class PatientController {
         @ApiResponse(responseCode = "409", description = "Version conflict")
     })
     @PutMapping(value = "/{id}", consumes = "application/fhir+json")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Audited(
             action = AuditAction.UPDATE,
             resourceType = "Patient",
@@ -286,6 +292,7 @@ public class PatientController {
         @ApiResponse(responseCode = "404", description = "Patient not found")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Audited(
             action = AuditAction.DELETE,
             resourceType = "Patient",

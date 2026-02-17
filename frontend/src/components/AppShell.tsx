@@ -5,7 +5,7 @@
  * Includes navigation between Evaluations and Approvals dashboards.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { DarkModeToggle } from './DarkModeToggle';
 import { useDarkMode } from '../hooks/useDarkMode';
+import { shouldRequireSessionReauth } from '../app/integrations/sessionExpiry';
 
 const DRAWER_WIDTH = 240;
 
@@ -100,6 +101,12 @@ export function AppShell() {
       setDrawerOpen(false);
     }
   };
+
+  useEffect(() => {
+    if (shouldRequireSessionReauth()) {
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
 
   // Get current page title
   const currentPage = navItems.find(item => location.pathname.startsWith(item.path));

@@ -42,6 +42,7 @@ docker run --rm -d \
 | GET | `/demo/api/v1/demo/status` | Get demo environment status |
 | GET | `/demo/api/v1/demo/scenarios` | List available scenarios |
 | POST | `/demo/api/v1/demo/scenarios/{name}` | Load a scenario |
+| POST | `/demo/api/v1/demo/webhooks/test` | Webhook testing endpoint (echo payload + metadata) |
 | GET | `/demo/actuator/health` | Health check |
 
 ### Load a Scenario
@@ -60,6 +61,45 @@ Response:
   "loadTimeMs": 8209,
   "success": true
 }
+```
+
+### Webhook Testing (Sandbox)
+
+```bash
+curl -X POST http://localhost:8098/demo/api/v1/demo/webhooks/test \
+  -H "Content-Type: application/json" \
+  -H "X-Tenant-Id: sandbox-tenant" \
+  -H "X-Webhook-Event: integration.test" \
+  -d '{"source":"postman","status":"ok"}'
+```
+
+## Developer Portal Sandbox Workflow
+
+The platform already includes the core pieces required for a developer sandbox lane:
+
+1. Generate sandbox API key (Gateway API key management):
+```bash
+curl -X POST http://localhost:8080/api/v1/api-keys \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Sandbox Key",
+    "description": "Developer portal sandbox access",
+    "tenantId": "sandbox-tenant",
+    "scopes": ["fhir:read","fhir:write"],
+    "rateLimitPerMinute": 100
+  }'
+```
+2. Seed synthetic data (non-PHI demo patients):
+```bash
+NON_INTERACTIVE=1 SEED_PROFILE=smoke ./scripts/seed-all-demo-data.sh
+```
+3. Reset data between validation runs:
+```bash
+curl -X POST http://localhost:8098/demo/api/v1/demo/reset/current-tenant
+```
+4. Validate webhook integrations:
+```bash
+curl -X POST http://localhost:8098/demo/api/v1/demo/webhooks/test -d '{}'
 ```
 
 ## Available Scenarios

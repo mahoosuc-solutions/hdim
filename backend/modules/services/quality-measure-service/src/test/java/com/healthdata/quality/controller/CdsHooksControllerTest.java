@@ -32,9 +32,15 @@ class CdsHooksControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getServices()).hasSize(1);
-        assertThat(response.getBody().getServices().get(0).getId()).isEqualTo("patient-view");
-        assertThat(response.getBody().getServices().get(0).getHook()).isEqualTo("patient-view");
+        assertThat(response.getBody().getServices()).hasSize(2);
+        assertThat(response.getBody().getServices()).anySatisfy(service -> {
+            assertThat(service.getId()).isEqualTo("patient-view");
+            assertThat(service.getHook()).isEqualTo("patient-view");
+        });
+        assertThat(response.getBody().getServices()).anySatisfy(service -> {
+            assertThat(service.getId()).isEqualTo("order-select");
+            assertThat(service.getHook()).isEqualTo("order-select");
+        });
     }
 
     @Test
@@ -85,5 +91,57 @@ class CdsHooksControllerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getCards()).hasSize(1);
         assertThat(response.getBody().getCards().get(0).getSummary()).contains("Invalid CDS Hooks request");
+    }
+
+    @Test
+    @DisplayName("Should return cards with suggestions for order-select")
+    void shouldReturnCardsForOrderSelect() {
+        CdsHooksController controller = new CdsHooksController(cdsService);
+        UUID patientId = UUID.randomUUID();
+
+        when(cdsService.getActiveRecommendations("acme-health", patientId))
+            .thenReturn(List.of(
+                CdsRecommendationDTO.builder()
+                    .title("Annual wellness visit")
+                    .description("Patient is due for annual wellness visit.")
+                    .urgency("SOON")
+                    .build()
+            ));
+
+        CdsHooksController.CdsHooksRequest request = CdsHooksController.CdsHooksRequest.builder()
+            .hook("order-select")
+            .context(CdsHooksController.CdsContext.builder()
+                .patientId(patientId.toString())
+                .build())
+            .build();
+
+        var response = controller.orderSelect("acme-health", request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCards()).hasSize(1);
+        assertThat(response.getBody().getCards().get(0).getIndicator()).isEqualTo("warning");
+        assertThat(response.getBody().getCards().get(0).getSuggestions()).hasSize(1);
+        assertThat(response.getBody().getCards().get(0).getSuggestions().get(0).getActions()).hasSize(1);
+        assertThat(response.getBody().getCards().get(0).getSuggestions().get(0).getActions().get(0).getType())
+            .isEqualTo("create");
+    }
+
+    @Test
+    @DisplayName("Should return warning card when order-select patientId missing")
+    void shouldHandleMissingPatientIdForOrderSelect() {
+        CdsHooksController controller = new CdsHooksController(cdsService);
+
+        CdsHooksController.CdsHooksRequest request = CdsHooksController.CdsHooksRequest.builder()
+            .hook("order-select")
+            .context(CdsHooksController.CdsContext.builder().build())
+            .build();
+
+        var response = controller.orderSelect("acme-health", request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getCards()).hasSize(1);
+        assertThat(response.getBody().getCards().get(0).getDetail()).contains("context.patientId is required");
     }
 }

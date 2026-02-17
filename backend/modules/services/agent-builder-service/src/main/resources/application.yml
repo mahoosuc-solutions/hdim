@@ -100,12 +100,12 @@ feign:
 # Agent Runtime Service
 hdim:
   agent-runtime:
-    url: ${HDIM_AGENT_RUNTIME_URL:http://localhost:8095}
+    url: ${HDIM_AGENT_RUNTIME_URL:http://agent-runtime-service:8088}
     timeout: 120000
 
   services:
     agent-runtime:
-      url: ${HDIM_AGENT_RUNTIME_URL:http://localhost:8095}
+      url: ${HDIM_AGENT_RUNTIME_URL:http://agent-runtime-service:8088}
 
   agent-builder:
     # Maximum agents per tenant

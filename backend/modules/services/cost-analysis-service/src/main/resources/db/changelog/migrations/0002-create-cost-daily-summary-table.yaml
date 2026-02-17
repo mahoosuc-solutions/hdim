@@ -1,0 +1,61 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0002-create-cost-daily-summary-table
+      author: hdim
+      changes:
+        - createTable:
+            tableName: cost_daily_summary
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: summary_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: service_id
+                  type: varchar(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: feature_key
+                  type: varchar(128)
+              - column:
+                  name: total_cost
+                  type: numeric(16, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sample_count
+                  type: bigint
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_cost_daily_summary_tenant_date
+            tableName: cost_daily_summary
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: summary_date
+        - createIndex:
+            indexName: idx_cost_daily_summary_service_date
+            tableName: cost_daily_summary
+            columns:
+              - column:
+                  name: service_id
+              - column:
+                  name: summary_date
+      rollback:
+        - dropTable:
+            tableName: cost_daily_summary

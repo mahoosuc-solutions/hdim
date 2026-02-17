@@ -129,6 +129,37 @@ public class TenantRateLimitService {
     }
 
     /**
+     * Check API key-specific rate limit (requests per minute).
+     */
+    public RateLimitResult tryConsumeApiKey(String apiKeyId, int requestsPerMinute) {
+        if (!rateLimitEnabled) {
+            return RateLimitResult.allowed();
+        }
+        if (apiKeyId == null || apiKeyId.isBlank() || requestsPerMinute <= 0) {
+            return RateLimitResult.allowed();
+        }
+
+        String bucketKey = "api-key:" + apiKeyId;
+        Bucket bucket = localBuckets.computeIfAbsent(bucketKey, key ->
+            Bucket.builder()
+                .addLimit(Bandwidth.classic(
+                    requestsPerMinute,
+                    Refill.greedy(requestsPerMinute, Duration.ofMinutes(1))
+                ))
+                .build()
+        );
+
+        if (bucket.tryConsume(1)) {
+            return RateLimitResult.allowed(bucket.getAvailableTokens(), requestsPerMinute);
+        }
+
+        long waitTimeNanos = bucket.estimateAbilityToConsume(1).getNanosToWaitForRefill();
+        long retryAfterSeconds = Duration.ofNanos(waitTimeNanos).toSeconds() + 1;
+        log.warn("API key rate limit exceeded: apiKeyId={}, limit={}rpm", apiKeyId, requestsPerMinute);
+        return RateLimitResult.rejected(retryAfterSeconds, requestsPerMinute);
+    }
+
+    /**
      * Get or create a rate limit bucket
      */
     private Bucket getOrCreateBucket(String key, RateLimitTier tier, EndpointType endpointType) {

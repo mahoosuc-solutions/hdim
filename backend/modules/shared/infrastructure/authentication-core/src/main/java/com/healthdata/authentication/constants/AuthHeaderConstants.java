@@ -79,6 +79,18 @@ public final class AuthHeaderConstants {
     public static final String HEADER_TOKEN_EXPIRES = "X-Auth-Token-Expires";
 
     /**
+     * Header containing authenticated API key identifier when API key auth is used.
+     * Example: X-Auth-Api-Key-Id: 550e8400-e29b-41d4-a716-446655440000
+     */
+    public static final String HEADER_API_KEY_ID = "X-Auth-Api-Key-Id";
+
+    /**
+     * Header containing API key-specific rate limit (requests per minute).
+     * Example: X-Auth-Api-Key-Rate-Limit: 100
+     */
+    public static final String HEADER_API_KEY_RATE_LIMIT = "X-Auth-Api-Key-Rate-Limit";
+
+    /**
      * Header containing client IP address (for audit logging).
      * Example: X-Auth-Client-IP: 192.168.1.100
      */
@@ -147,6 +159,8 @@ public final class AuthHeaderConstants {
             HEADER_VALIDATED,
             HEADER_TOKEN_ID,
             HEADER_TOKEN_EXPIRES,
+            HEADER_API_KEY_ID,
+            HEADER_API_KEY_RATE_LIMIT,
             HEADER_CLIENT_IP,
             HEADER_USER_AGENT
         };

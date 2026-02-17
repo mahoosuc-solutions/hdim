@@ -1,5 +1,6 @@
 package com.healthdata.gateway.ratelimit;
 
+import com.healthdata.authentication.constants.AuthHeaderConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,6 +71,19 @@ public class TenantRateLimitFilter extends OncePerRequestFilter {
         // Determine endpoint type
         TenantRateLimitService.EndpointType endpointType =
                 rateLimitService.determineEndpointType(request.getMethod(), path);
+
+        // Enforce API key-specific rate limit when API key auth is used.
+        String apiKeyId = request.getHeader(AuthHeaderConstants.HEADER_API_KEY_ID);
+        int apiKeyRateLimit = parsePositiveInt(request.getHeader(AuthHeaderConstants.HEADER_API_KEY_RATE_LIMIT));
+        if (apiKeyId != null && !apiKeyId.isBlank() && apiKeyRateLimit > 0) {
+            TenantRateLimitService.RateLimitResult apiKeyResult =
+                    rateLimitService.tryConsumeApiKey(apiKeyId, apiKeyRateLimit);
+            if (!apiKeyResult.isAllowed()) {
+                handleRateLimitExceeded(response, apiKeyResult, "api_key");
+                return;
+            }
+            addRateLimitHeaders(response, apiKeyResult);
+        }
 
         // Check per-user rate limit
         TenantRateLimitService.RateLimitResult userResult =
@@ -165,5 +179,17 @@ public class TenantRateLimitFilter extends OncePerRequestFilter {
         // Reset time is approximately 1 second from now
         response.setHeader(RATE_LIMIT_RESET_HEADER,
                 String.valueOf(System.currentTimeMillis() / 1000 + 1));
+    }
+
+    private int parsePositiveInt(String value) {
+        if (value == null || value.isBlank()) {
+            return -1;
+        }
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            return parsed > 0 ? parsed : -1;
+        } catch (NumberFormatException ignored) {
+            return -1;
+        }
     }
 }

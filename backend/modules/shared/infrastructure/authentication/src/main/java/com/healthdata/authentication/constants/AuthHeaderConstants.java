@@ -76,6 +76,18 @@ public final class AuthHeaderConstants {
     public static final String HEADER_TOKEN_EXPIRES = "X-Auth-Token-Expires";
 
     /**
+     * Header containing authenticated API key identifier when API key auth is used.
+     * Example: X-Auth-Api-Key-Id: 550e8400-e29b-41d4-a716-446655440000
+     */
+    public static final String HEADER_API_KEY_ID = "X-Auth-Api-Key-Id";
+
+    /**
+     * Header containing API key-specific rate limit (requests per minute).
+     * Example: X-Auth-Api-Key-Rate-Limit: 100
+     */
+    public static final String HEADER_API_KEY_RATE_LIMIT = "X-Auth-Api-Key-Rate-Limit";
+
+    /**
      * Request attribute key for storing extracted tenant IDs.
      * Used by TenantAccessFilter for tenant isolation.
      */
@@ -130,7 +142,9 @@ public final class AuthHeaderConstants {
             HEADER_ROLES,
             HEADER_VALIDATED,
             HEADER_TOKEN_ID,
-            HEADER_TOKEN_EXPIRES
+            HEADER_TOKEN_EXPIRES,
+            HEADER_API_KEY_ID,
+            HEADER_API_KEY_RATE_LIMIT
         };
     }
 }

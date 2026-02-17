@@ -1,6 +1,8 @@
 package com.healthdata.gateway.auth;
 
 import com.healthdata.authentication.constants.AuthHeaderConstants;
+import com.healthdata.authentication.entity.ApiKey;
+import com.healthdata.authentication.service.ApiKeyService;
 import com.healthdata.authentication.service.CookieService;
 import com.healthdata.authentication.service.JwtTokenService;
 import com.healthdata.gateway.config.GatewayAuthProperties;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -64,6 +67,7 @@ import java.util.stream.Collectors;
 public class GatewayAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String API_KEY_HEADER = "X-API-Key";
     private static final String BEARER_PREFIX = "Bearer ";
     private static final int BEARER_PREFIX_LENGTH = 7;
     private static final String HMAC_ALGORITHM = "HmacSHA256";
@@ -72,6 +76,7 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
     private final GatewayAuthProperties authProperties;
     private final PublicPathRegistry publicPathRegistry;
     private final CookieService cookieService;
+    private final ObjectProvider<ApiKeyService> apiKeyServiceProvider;
 
     @Override
     protected void doFilterInternal(
@@ -105,6 +110,13 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
             String jwt = extractJwtFromRequest(sanitizedRequest);
 
             if (jwt == null || jwt.isBlank()) {
+                String rawApiKey = extractApiKeyFromRequest(sanitizedRequest);
+                if (rawApiKey != null && !rawApiKey.isBlank()) {
+                    if (!handleApiKeyAuthentication(sanitizedRequest, response, filterChain, path, method, rawApiKey)) {
+                        return;
+                    }
+                    return;
+                }
                 handleMissingToken(sanitizedRequest, response, filterChain, path);
                 return;
             }
@@ -144,6 +156,52 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
             log.error("Authentication error for path {}: {}", path, e.getMessage());
             handleAuthenticationError(response, e);
         }
+    }
+
+    private boolean handleApiKeyAuthentication(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        FilterChain filterChain,
+        String path,
+        String method,
+        String rawApiKey
+    ) throws IOException, ServletException {
+        ApiKeyService apiKeyService = apiKeyServiceProvider.getIfAvailable();
+        if (apiKeyService == null) {
+            log.warn("API key provided but ApiKeyService is not available");
+            handleInvalidToken(response, path);
+            return false;
+        }
+
+        String clientIp = extractClientIp(request);
+        Optional<ApiKey> apiKeyOpt = apiKeyService.validateApiKey(rawApiKey, clientIp);
+        if (apiKeyOpt.isEmpty()) {
+            log.debug("Invalid API key for path: {}", path);
+            handleInvalidToken(response, path);
+            return false;
+        }
+
+        ApiKey apiKey = apiKeyOpt.get();
+        String username = "api-key:" + apiKey.getKeyPrefix();
+        Set<String> roles = Set.of("API_CLIENT");
+        Set<String> tenantIds = Set.of(apiKey.getTenantId());
+        String tokenId = "api-key-" + apiKey.getId();
+        Date tokenExpires = apiKey.getExpiresAt() != null
+            ? Date.from(apiKey.getExpiresAt())
+            : new Date(System.currentTimeMillis() + 31536000000L);
+
+        HttpServletRequest authenticatedRequest = injectApiKeyAuthHeaders(
+            request, apiKey, username, tenantIds, roles, tokenId, tokenExpires
+        );
+        setSecurityContext(username, roles, authenticatedRequest);
+
+        if (authProperties.getAuditLogging()) {
+            log.info("AUTH_EVENT: user={}, userId={}, path={}, method={}, result=API_KEY_SUCCESS",
+                username, apiKey.getCreatedBy(), path, method);
+        }
+
+        filterChain.doFilter(authenticatedRequest, response);
+        return true;
     }
 
     /**
@@ -212,6 +270,62 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
         injectedHeaders.put(AuthHeaderConstants.HEADER_VALIDATED, signature);
         injectedHeaders.put(AuthHeaderConstants.HEADER_TOKEN_ID, tokenId);
         injectedHeaders.put(AuthHeaderConstants.HEADER_TOKEN_EXPIRES, String.valueOf(tokenExpires.getTime() / 1000));
+
+        return new HttpServletRequestWrapper(request) {
+            @Override
+            public String getHeader(String name) {
+                if (injectedHeaders.containsKey(name)) {
+                    return injectedHeaders.get(name);
+                }
+                return super.getHeader(name);
+            }
+
+            @Override
+            public Enumeration<String> getHeaders(String name) {
+                if (injectedHeaders.containsKey(name)) {
+                    return Collections.enumeration(List.of(injectedHeaders.get(name)));
+                }
+                return super.getHeaders(name);
+            }
+
+            @Override
+            public Enumeration<String> getHeaderNames() {
+                Set<String> names = new LinkedHashSet<>();
+                Enumeration<String> originalNames = super.getHeaderNames();
+                while (originalNames.hasMoreElements()) {
+                    names.add(originalNames.nextElement());
+                }
+                names.addAll(injectedHeaders.keySet());
+                return Collections.enumeration(names);
+            }
+        };
+    }
+
+    private HttpServletRequest injectApiKeyAuthHeaders(
+        HttpServletRequest request,
+        ApiKey apiKey,
+        String username,
+        Set<String> tenantIds,
+        Set<String> roles,
+        String tokenId,
+        Date tokenExpires
+    ) {
+        long timestamp = System.currentTimeMillis() / 1000;
+        String signature = generateValidationSignature(apiKey.getCreatedBy().toString(), timestamp);
+
+        Map<String, String> injectedHeaders = new HashMap<>();
+        injectedHeaders.put(AuthHeaderConstants.HEADER_USER_ID, apiKey.getCreatedBy().toString());
+        injectedHeaders.put(AuthHeaderConstants.HEADER_USERNAME, username);
+        injectedHeaders.put(AuthHeaderConstants.HEADER_TENANT_IDS, String.join(",", tenantIds));
+        injectedHeaders.put(AuthHeaderConstants.HEADER_ROLES, String.join(",", roles));
+        injectedHeaders.put(AuthHeaderConstants.HEADER_VALIDATED, signature);
+        injectedHeaders.put(AuthHeaderConstants.HEADER_TOKEN_ID, tokenId);
+        injectedHeaders.put(AuthHeaderConstants.HEADER_TOKEN_EXPIRES, String.valueOf(tokenExpires.getTime() / 1000));
+        injectedHeaders.put(AuthHeaderConstants.HEADER_API_KEY_ID, apiKey.getId().toString());
+        if (apiKey.getRateLimitPerMinute() != null && apiKey.getRateLimitPerMinute() > 0) {
+            injectedHeaders.put(AuthHeaderConstants.HEADER_API_KEY_RATE_LIMIT,
+                String.valueOf(apiKey.getRateLimitPerMinute()));
+        }
 
         return new HttpServletRequestWrapper(request) {
             @Override
@@ -314,6 +428,27 @@ public class GatewayAuthenticationFilter extends OncePerRequestFilter {
                 return token;
             })
             .orElse(null);
+    }
+
+    private String extractApiKeyFromRequest(HttpServletRequest request) {
+        String apiKey = request.getHeader(API_KEY_HEADER);
+        if (apiKey != null && !apiKey.isBlank()) {
+            return apiKey.trim();
+        }
+        return null;
+    }
+
+    private String extractClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (forwardedFor != null && !forwardedFor.isBlank()) {
+            int commaIndex = forwardedFor.indexOf(',');
+            return commaIndex > 0 ? forwardedFor.substring(0, commaIndex).trim() : forwardedFor.trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
     }
 
     /**

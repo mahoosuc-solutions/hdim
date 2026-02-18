@@ -13,6 +13,7 @@
 # Usage:
 #   ./load-tests/run-smoke-all.sh                          # All services
 #   ./load-tests/run-smoke-all.sh --service fhir-service   # One service
+#   ./load-tests/run-smoke-all.sh --running-only           # Skip unreachable services
 #
 # Prerequisites:
 #   - Demo containers running (hdim-demo-patient etc.)
@@ -27,13 +28,15 @@ RESULTS_DIR="${REPO_ROOT}/validation/results"
 TIMESTAMP="$(date +%Y-%m-%d-%H%M%S)"
 RESULTS_FILE="${RESULTS_DIR}/${TIMESTAMP}-smoke.md"
 SERVICE_FILTER=""
+RUNNING_ONLY=false
 EXIT_CODE=0
 
 # ── Parse args ────────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --service) SERVICE_FILTER="${2:-}"; shift 2 ;;
-    --help|-h) sed -n '2,20p' "$0" | sed 's/^# //'; exit 0 ;;
+    --service)      SERVICE_FILTER="${2:-}"; shift 2 ;;
+    --running-only) RUNNING_ONLY=true; shift ;;
+    --help|-h)      sed -n '2,20p' "$0" | sed 's/^# //'; exit 0 ;;
     *) echo "Unknown argument: $1. Use --help." >&2; exit 1 ;;
   esac
 done
@@ -101,8 +104,22 @@ run_smoke() {
   local smoke_file="${SCRIPT_DIR}/scenarios/smoke/${service}.js"
   if [[ ! -f "${smoke_file}" ]]; then
     log_warn "No smoke test for ${service} — skipping"
-    RESULTS+=("⏭  ${service} | SKIPPED | no smoke test file")
+    RESULTS+=("⏭  | ${service} | — | no smoke test file")
     return 0
+  fi
+
+  # TCP reachability check — extract host:port from base_url_val
+  local host port
+  host="$(echo "${base_url_val}" | sed -E 's|https?://||' | cut -d: -f1)"
+  port="$(echo "${base_url_val}" | sed -E 's|https?://||' | cut -d: -f2 | cut -d/ -f1)"
+  if [[ -n "${port}" ]] && ! timeout 1 bash -c ">/dev/tcp/${host}/${port}" 2>/dev/null; then
+    if [[ "${RUNNING_ONLY}" == "true" ]]; then
+      log_warn "${service} — not reachable (skipping)"
+      RESULTS+=("⏭  | ${service} | — | not running")
+      return 0
+    else
+      log_warn "${service} — not reachable (will fail)"
+    fi
   fi
 
   local tmp_out

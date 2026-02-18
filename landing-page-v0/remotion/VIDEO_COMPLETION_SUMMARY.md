@@ -142,7 +142,7 @@ Successfully implemented and deployed the Care Gap Closure demo video for the HD
   - "48% Success Rate" (green)
   - "30-Day Avg Closure" (blue)
 - Call to action: "Try the Interactive Demo"
-- URL: hdim-landing-page.vercel.app
+- URL: www.healthdatainmotion.com
 
 ## Verification
 

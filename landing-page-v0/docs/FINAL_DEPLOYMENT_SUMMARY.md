@@ -8,7 +8,7 @@
 ## 🎯 Deployment Overview
 
 ### Production URL
-**https://hdim-landing-page.vercel.app**
+**https://www.healthdatainmotion.com**
 
 ### Latest Deployment
 - **Deployment ID:** 6pCKTMizzJqocageL79kzs74gzgU
@@ -73,7 +73,7 @@ Functional Coverage: 100% for deployed features
 
 ### Homepage Status
 ```bash
-curl -I https://hdim-landing-page.vercel.app
+curl -I https://www.healthdatainmotion.com
 ```
 **Response:** HTTP/2 200 ✅
 
@@ -274,7 +274,7 @@ Destination: /public/images/dashboard/
 
 | Resource | URL |
 |----------|-----|
-| **Production Site** | https://hdim-landing-page.vercel.app |
+| **Production Site** | https://www.healthdatainmotion.com |
 | **Vercel Dashboard** | https://vercel.com/mahooosuc-solutions/hdim-landing-page |
 | **Latest Deployment** | https://vercel.com/mahooosuc-solutions/hdim-landing-page/6pCKTMizzJqocageL79kzs74gzgU |
 | **Previous Deployment** | https://vercel.com/mahooosuc-solutions/hdim-landing-page/AMtGAynv9Ap8tddkHUEwVPkfcZTQ |
@@ -318,7 +318,7 @@ The HDIM landing page is now live with **real Angular Clinical Portal screenshot
 ✅ Secured with HIPAA/SOC 2/HITRUST messaging
 ✅ Enhanced with real clinical data showcasing actual HEDIS quality measures
 
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com
 **Deployment ID:** 6pCKTMizzJqocageL79kzs74gzgU
 **Build Status:** ✅ Successful
 **Deployment Date:** January 24, 2026

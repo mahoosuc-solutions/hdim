@@ -23,7 +23,7 @@ Video review identified 3 critical text visibility issues:
    - Contrast ratio: ~2.5:1 (FAIL)
    - Result: Text not readable
 
-3. **URL "hdim-landing-page.vercel.app"** (Outcome Scene, 70s)
+3. **URL "www.healthdatainmotion.com"** (Outcome Scene, 70s)
    - Color: Light green (#00CC88)
    - Background: Teal gradient
    - Contrast ratio: ~3.2:1 (FAIL)
@@ -82,7 +82,7 @@ Video review identified 3 critical text visibility issues:
 **Before:**
 ```typescript
 <div style={{ fontSize: '2.5rem', color: '#00CC88' }}>
-  hdim-landing-page.vercel.app
+  www.healthdatainmotion.com
 </div>
 ```
 
@@ -97,7 +97,7 @@ Video review identified 3 critical text visibility issues:
   display: 'inline-block',
 }}>
   <div style={{ fontSize: '2.5rem', color: 'white' }}>
-    hdim-landing-page.vercel.app
+    www.healthdatainmotion.com
   </div>
 </div>
 ```

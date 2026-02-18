@@ -2,7 +2,7 @@
 
 **Analysis Date**: December 30, 2025
 **Analyzed By**: 5 Specialized AI Agents
-**Current Live URL**: https://hdim-landing-page.vercel.app
+**Current Live URL**: https://www.healthdatainmotion.com
 
 ---
 

@@ -14,6 +14,17 @@ import {
   Building2
 } from 'lucide-react'
 
+declare global {
+  interface Window {
+    grecaptcha: {
+      execute: (siteKey: string, options: { action: string }) => Promise<string>
+    }
+    gtag: (...args: unknown[]) => void
+  }
+}
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''
+
 export default function SchedulePage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -61,10 +72,15 @@ export default function SchedulePage() {
     setError('')
 
     try {
+      let recaptchaToken = ''
+      if (typeof window !== 'undefined' && window.grecaptcha && RECAPTCHA_SITE_KEY) {
+        recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'schedule_page' })
+      }
+
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, source: 'schedule_page' }),
+        body: JSON.stringify({ ...formData, source: 'schedule_page', recaptchaToken }),
       })
 
       if (!res.ok) {
@@ -73,6 +89,10 @@ export default function SchedulePage() {
       }
 
       setIsSubmitted(true)
+
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'generate_lead', { source: 'schedule_page' })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
     } finally {

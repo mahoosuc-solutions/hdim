@@ -129,7 +129,7 @@ npm run build
 vercel --prod
 # ✅ Uploaded 538.9KB in 496 files
 # ✅ Build completed in 36s
-# ✅ Deployed to https://hdim-landing-page.vercel.app
+# ✅ Deployed to https://www.healthdatainmotion.com
 # Deployment ID: AMtGAynv9Ap8tddkHUEwVPkfcZTQ
 ```
 
@@ -200,7 +200,7 @@ vercel --prod
 
 **All 4 dashboard screenshots successfully replaced with real Angular Clinical Portal production screenshots.**
 
-✅ **Deployment:** Live in production at https://hdim-landing-page.vercel.app
+✅ **Deployment:** Live in production at https://www.healthdatainmotion.com
 ✅ **Build:** Successful (36s build time)
 ✅ **Testing:** Mobile viewport verified
 ✅ **Documentation:** Updated DEPLOYMENT.md with screenshot details
@@ -211,4 +211,4 @@ vercel --prod
 **Completed By:** AI Assistant (Claude Code)
 **Deployment Date:** January 24, 2026
 **Deployment ID:** AMtGAynv9Ap8tddkHUEwVPkfcZTQ
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com

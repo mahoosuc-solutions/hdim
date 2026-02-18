@@ -6,7 +6,7 @@
 **Status:** ✅ LIVE IN PRODUCTION
 **Platform:** Vercel
 **Build Time:** 47 seconds
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com
 
 ## Git Commits
 
@@ -35,7 +35,7 @@
 ## Production Assets
 
 ### Video File
-- **URL:** https://hdim-landing-page.vercel.app/videos/care-gap-closure.mp4
+- **URL:** https://www.healthdatainmotion.com/videos/care-gap-closure.mp4
 - **Size:** 9.3 MB (9,476 KB)
 - **Format:** H.264, 1920x1080, 30fps
 - **Duration:** 80.04 seconds (2400 frames)
@@ -44,7 +44,7 @@
 - **Status:** ✅ Accessible (HTTP 200)
 
 ### Thumbnail
-- **URL:** https://hdim-landing-page.vercel.app/videos/care-gap-closure-thumb.png
+- **URL:** https://www.healthdatainmotion.com/videos/care-gap-closure-thumb.png
 - **Size:** 426 KB
 - **Format:** PNG, 1920x1080
 - **Status:** ✅ Accessible
@@ -106,7 +106,7 @@
 - "60 days overdue" metric: White on dark background (>15:1)
 - "44 Total Gaps" overlay: White on dark background (>15:1)
 - "8 High Urgency" overlay: White on dark background (>15:1)
-- URL "hdim-landing-page.vercel.app": White on dark (>12:1)
+- URL "www.healthdatainmotion.com": White on dark (>12:1)
 - Main headline "Close Care Gaps in Seconds": White with shadow (>8:1)
 
 ## Documentation
@@ -188,7 +188,7 @@
 
 ## Conclusion
 
-The Care Gap Closure video is now live in production at **https://hdim-landing-page.vercel.app**. The video successfully demonstrates HDIM's care gap workflow using authentic Clinical Portal screenshots and Eleanor Anderson's patient story. All text visibility issues have been resolved, achieving WCAG AAA accessibility compliance with contrast ratios exceeding 15:1.
+The Care Gap Closure video is now live in production at **https://www.healthdatainmotion.com**. The video successfully demonstrates HDIM's care gap workflow using authentic Clinical Portal screenshots and Eleanor Anderson's patient story. All text visibility issues have been resolved, achieving WCAG AAA accessibility compliance with contrast ratios exceeding 15:1.
 
 **Status:** ✅ PRODUCTION READY & DEPLOYED
 
@@ -196,6 +196,6 @@ The Care Gap Closure video is now live in production at **https://hdim-landing-p
 
 **Deployed:** January 24, 2026 15:47 EST
 **Vercel Build:** 7LcN6gVnq8gT8tQcJUJgdqM8sKnA
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com
 **Deployment:** Automatic via GitHub push to master branch
 **Developer:** Claude Sonnet 4.5 with Aaron (@mahoosuc-solutions)

@@ -50,7 +50,7 @@ HDIM is a FHIR-native platform for healthcare quality excellence. This demo show
 - Quick action workflows
 - Care gap closure tracking
 
-Learn more: https://hdim-landing-page.vercel.app
+Learn more: https://www.healthdatainmotion.com
 
 #HealthIT #HEDIS #FHIR #QualityMeasures #ValueBasedCare
 ```
@@ -77,8 +77,8 @@ This 80-second demo shows the complete care gap closure workflow:
 
 HDIM is a FHIR-native platform that helps healthcare organizations identify and close care gaps quickly.
 
-Learn more: https://hdim-landing-page.vercel.app
-Try interactive demo: https://hdim-landing-page.vercel.app/demo
+Learn more: https://www.healthdatainmotion.com
+Try interactive demo: https://www.healthdatainmotion.com/demo
 
 #HealthIT #HEDIS #FHIR #QualityMeasures #CareGaps #ValueBasedCare #HealthcareAnalytics
 ```

@@ -252,7 +252,7 @@ vercel --prod
 ### 4. Verify Production
 
 After deployment:
-- Navigate to `https://hdim-landing-page.vercel.app`
+- Navigate to `https://www.healthdatainmotion.com`
 - Scroll to "See It In Action" section
 - Click video thumbnail
 - Verify video plays correctly

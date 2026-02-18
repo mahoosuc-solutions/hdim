@@ -115,7 +115,7 @@
 - All images referenced exist under `public/`.
 - ✨ Dashboard screenshots are real Angular Clinical Portal production images (captured January 21, 2026, deployed January 24, 2026)
 - All dashboard data is authentic clinical data (HEDIS measures, care gaps, ROI metrics, patient MRNs)
-- Production deployment: https://hdim-landing-page.vercel.app (Vercel, iad1 region)
+- Production deployment: https://www.healthdatainmotion.com (Vercel, iad1 region)
 - E2E test coverage: 54/54 core tests passing, 100% functional coverage for deployed features
 
 ---

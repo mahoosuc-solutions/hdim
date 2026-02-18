@@ -327,7 +327,7 @@ See how HDIM transforms healthcare quality measurement from fragmented to connec
 • Real-Time CQL Engine - Evaluate HEDIS measures instantly
 • AI-Powered Care Gaps - Identify interventions with proven ROI
 
-Try the interactive demo: https://hdim-landing-page.vercel.app
+Try the interactive demo: https://www.healthdatainmotion.com
 ```
 
 ### Tags

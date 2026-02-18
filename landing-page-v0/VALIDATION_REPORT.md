@@ -1,7 +1,7 @@
 # HDIM Landing Page - Validation & Catalog Report
 
 **Report Date**: December 30, 2025
-**Live URL**: https://hdim-landing-page.vercel.app
+**Live URL**: https://www.healthdatainmotion.com
 **Validation Status**: ✅ **PASSED**
 
 ---
@@ -306,7 +306,7 @@ No external HTTP/HTTPS links found in navigation. All external references are:
 ```typescript
 // Recommended: Add to app/layout.tsx
 export const metadata = {
-  metadataBase: new URL('https://hdim-landing-page.vercel.app'),
+  metadataBase: new URL('https://www.healthdatainmotion.com'),
   openGraph: {
     images: ['/images/social/linkedin.png'],
   },
@@ -451,7 +451,7 @@ The HDIM landing page is **complete, validated, and ready for production use**.
 
 **Validation Status**: ✅ **PRODUCTION READY**
 
-**Deployment URL**: https://hdim-landing-page.vercel.app
+**Deployment URL**: https://www.healthdatainmotion.com
 
 **Last Validated**: December 30, 2025
 

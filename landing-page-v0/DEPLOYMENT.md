@@ -9,9 +9,9 @@
 ## 🌐 Production URL
 
 ### Primary Domain
-**https://hdim-landing-page.vercel.app**
+**https://www.healthdatainmotion.com**
 
-Visit the live site: [HDIM Landing Page](https://hdim-landing-page.vercel.app)
+Visit the live site: [HDIM Landing Page](https://www.healthdatainmotion.com)
 
 ---
 
@@ -70,7 +70,7 @@ All tests passed before deployment:
 
 ### Homepage Status
 ```bash
-curl -I https://hdim-landing-page.vercel.app
+curl -I https://www.healthdatainmotion.com
 ```
 **Response:** HTTP/2 200 ✅
 
@@ -136,7 +136,7 @@ Expected performance (based on static generation):
 
 Test performance:
 ```
-https://pagespeed.web.dev/analysis?url=https://hdim-landing-page.vercel.app
+https://pagespeed.web.dev/analysis?url=https://www.healthdatainmotion.com
 ```
 
 ---
@@ -258,4 +258,4 @@ The HDIM landing page is now **live in production** and ready for users!
 
 **Deployed By:** Automated CI/CD via Vercel CLI
 **Last Updated:** January 24, 2026
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com

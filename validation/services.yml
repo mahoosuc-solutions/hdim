@@ -175,3 +175,577 @@ services:
     unique_requirements:
       - Health endpoint returns UP status
       - Demo session status = READY after seeding
+
+  # ── Phase 3: Additional Services (smoke) ────────────────────────────────────
+
+  - name: analytics-service
+    port: 8092
+    context_path: /analytics
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /analytics/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: approval-service
+    port: 8097
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: care-gap-event-service
+    port: 8111
+    context_path: /care-gap-event
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /care-gap-event/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: clinical-workflow-event-service
+    port: 8113
+    context_path: /clinical-workflow-event
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /clinical-workflow-event/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: clinical-workflow-service
+    port: 8110
+    context_path: /clinical-workflow
+    category: clinical-core
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /clinical-workflow/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: cms-connector-service
+    port: 8080
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: consent-service
+    port: 8082
+    context_path: /consent
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /consent/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: cost-analysis-service
+    port: 8096
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: data-enrichment-service
+    port: 8089
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: data-ingestion-service
+    port: 8080
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: ecr-service
+    port: 8101
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: ehr-connector-service
+    port: 8100
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: event-processing-service
+    port: 8083
+    context_path: /events
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /events/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: event-router-service
+    port: 8095
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: event-store-service
+    port: 8090
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: gateway-admin-service
+    port: 8080
+    context_path: /
+    category: infrastructure
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: gateway-clinical-service
+    port: 8080
+    context_path: /
+    category: infrastructure
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: gateway-fhir-service
+    port: 8080
+    context_path: /
+    category: infrastructure
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: investor-dashboard-service
+    port: 8120
+    context_path: /investor
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /investor/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: migration-workflow-service
+    port: 8103
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: notification-service
+    port: 8107
+    context_path: /notification
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /notification/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: nurse-workflow-service
+    port: 8093
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: patient-event-service
+    port: 8110
+    context_path: /patient-event
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /patient-event/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: payer-workflows-service
+    port: 8098
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: predictive-analytics-service
+    port: 8093
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: prior-auth-service
+    port: 8102
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: qrda-export-service
+    port: 8104
+    context_path: /qrda-export
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /qrda-export/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: quality-measure-event-service
+    port: 8112
+    context_path: /quality-measure-event
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /quality-measure-event/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: query-api-service
+    port: 8090
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: sales-automation-service
+    port: 8106
+    context_path: /sales-automation
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /sales-automation/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: sdoh-service
+    port: 8094
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: cdr-processor-service
+    port: 8099
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: agent-builder-service
+    port: 8096
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: agent-validation-service
+    port: 8114
+    context_path: /agent-validation
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /agent-validation/actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: ai-assistant-service
+    port: 8090
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: documentation-service
+    port: 8091
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  - name: devops-agent-service
+    port: 8090
+    context_path: /
+    category: supporting
+    tier: smoke
+    slo:
+      p95_ms: 5000
+      error_rate_pct: 5
+    smoke_endpoints:
+      - GET /actuator/health
+    unique_requirements:
+      - Health endpoint returns UP
+
+  # ── Pending-container: no application.yml found ──────────────────────────────
+
+  - name: admin-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: ai-sales-agent
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: care-gap-event-handler-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: clinical-workflow-event-handler-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: cqrs-query-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: demo-orchestrator-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: event-replay-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: fhir-event-bridge-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: live-call-sales-agent
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: patient-event-handler-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+
+  - name: quality-measure-event-handler-service
+    port: null
+    context_path: null
+    category: supporting
+    tier: pending-container
+    unique_requirements:
+      - No application.yml found — awaiting container configuration
+

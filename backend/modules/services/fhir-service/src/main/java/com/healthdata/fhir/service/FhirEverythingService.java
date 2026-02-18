@@ -66,8 +66,10 @@ public class FhirEverythingService {
         bundle.getMeta().setLastUpdated(new Date());
 
         // Patient must exist — throws PatientNotFoundException if absent
-        patientService.getPatient(tenantId, patientId)
-                .ifPresent(patient -> addEntry(bundle, patient, "Patient/" + patientId));
+        // Patient must exist — throws PatientNotFoundException if absent
+        org.hl7.fhir.r4.model.Patient foundPatient = patientService.getPatient(tenantId, patientId)
+                .orElseThrow(() -> new PatientService.PatientNotFoundException(patientId));
+        addEntry(bundle, foundPatient, "Patient/" + patientId);
 
         Pageable page = PageRequest.of(0, MAX_RESOURCES_PER_TYPE);
         UUID patientUuid = parseUuid(patientId);

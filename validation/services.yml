@@ -1,0 +1,177 @@
+# HDIM Service Validation Registry
+# Source of truth for all service requirements, SLOs, and test tiers.
+#
+# tier:
+#   smoke-only       — HTTP contract checks only (1 VU × 3 iterations)
+#   smoke+functional — Contract checks + Gradle integration tests
+
+services:
+  # ── Clinical Core ────────────────────────────────────────────────────────────
+
+  - name: patient-service
+    port: 8084
+    context_path: /patient
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 200
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /patient/api/v1/patients?page=0&size=20
+        expect_status: 200
+        expect_body_field: content
+        check_hipaa_headers: true
+    unique_requirements:
+      - Multi-tenant isolation — tenant A cannot see tenant B data
+      - HIPAA Cache-Control no-store on all PHI responses
+      - Pagination correct (page/size params respected)
+
+  - name: fhir-service
+    port: 8085
+    context_path: /fhir
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 500
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /fhir/Patient
+        expect_status: 200
+        expect_body_field: resourceType
+        expect_body_value: Bundle
+        accept_header: application/fhir+json
+        check_hipaa_headers: true
+    unique_requirements:
+      - FHIR R4 Bundle resourceType = "Bundle" in all list responses
+      - Patient/$everything returns all 14 resource types
+      - Content-Type application/fhir+json on FHIR endpoints
+
+  - name: care-gap-service
+    port: 8086
+    context_path: /care-gap
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 200
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /care-gap/api/v1/care-gaps?page=0&size=20
+        expect_status: 200
+        expect_body_field: content
+        check_hipaa_headers: true
+    unique_requirements:
+      - OPEN/CLOSED gap status transitions correctly
+      - Care gap closure creates an audit event
+      - Gaps filterable by measure and status
+
+  - name: quality-measure-service
+    port: 8087
+    context_path: /quality-measure
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 200
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /quality-measure/api/v1/measures/results?page=0&size=20
+        expect_status: 200
+        expect_body_field: content
+        check_hipaa_headers: true
+    unique_requirements:
+      - HEDIS numerator/denominator counts correct for test cohort
+      - Measure score (0–100) within expected range
+      - Multi-tenant measure isolation
+
+  - name: audit-query-service
+    port: 8088
+    context_path: /
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 500
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /api/v1/audit/logs/statistics
+        expect_status: 200
+        check_hipaa_headers: true
+    unique_requirements:
+      - PHI access events queryable within 1s of write
+      - Audit log immutable — no delete or update endpoints exposed
+      - Events queryable by user, resource type, and time range
+
+  - name: hcc-service
+    port: 8105
+    context_path: /hcc
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 500
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /hcc/api/v1/hcc/crosswalk
+        expect_status: 200
+        check_hipaa_headers: false
+    unique_requirements:
+      - HCC risk score in valid range (0.0–10.0)
+      - RAF score computed for test cohort
+      - Hierarchical condition categories applied correctly
+
+  - name: cql-engine-service
+    port: 8081
+    context_path: /cql-engine
+    category: clinical-core
+    tier: smoke+functional
+    slo:
+      p95_ms: 2000
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /cql-engine/api/v1/cql/evaluations
+        expect_status: 200
+        check_hipaa_headers: false
+    unique_requirements:
+      - CQL measure evaluates to known result for test patient
+      - HEDIS measure library loads without error
+      - Evaluation idempotent (same input → same output)
+
+  # ── Supporting / Infrastructure ──────────────────────────────────────────────
+
+  - name: events-service
+    port: 8083
+    context_path: /events
+    category: supporting
+    tier: smoke-only
+    slo:
+      p95_ms: 1000
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /events/actuator/health
+        expect_status: 200
+        check_hipaa_headers: false
+    unique_requirements:
+      - Health endpoint returns UP status
+      - Kafka consumer group registered and lag = 0 at rest
+
+  - name: demo-seeding-service
+    port: 8098
+    context_path: /
+    category: supporting
+    tier: smoke-only
+    slo:
+      p95_ms: 2000
+      error_rate_pct: 1
+    smoke_endpoints:
+      - method: GET
+        path: /actuator/health
+        expect_status: 200
+        check_hipaa_headers: false
+    unique_requirements:
+      - Health endpoint returns UP status
+      - Demo session status = READY after seeding

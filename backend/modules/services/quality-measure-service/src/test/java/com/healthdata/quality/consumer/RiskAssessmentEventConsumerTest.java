@@ -1,12 +1,14 @@
 package com.healthdata.quality.consumer;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.quality.service.ChronicDiseaseMonitoringService;
 import com.healthdata.quality.service.RiskCalculationService;
 import java.util.List;
@@ -28,6 +30,9 @@ class RiskAssessmentEventConsumerTest {
 
     @Mock
     private ChronicDiseaseMonitoringService chronicDiseaseMonitoringService;
+
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private RiskAssessmentEventConsumer consumer;
@@ -322,7 +327,7 @@ class RiskAssessmentEventConsumerTest {
     }
 
     @Test
-    @DisplayName("Should swallow exceptions during condition processing")
+    @DisplayName("Should propagate exceptions during condition processing for DLT routing")
     void shouldSwallowExceptionsDuringConditionProcessing() {
         UUID patientId = UUID.randomUUID();
         Map<String, Object> conditionData = Map.of(
@@ -334,15 +339,16 @@ class RiskAssessmentEventConsumerTest {
             .when(riskCalculationService)
             .recalculateRiskOnCondition(eq("tenant-1"), eq(patientId), eq(conditionData));
 
-        assertThatCode(() -> consumer.onConditionCreated(Map.of(
+        assertThatThrownBy(() -> consumer.onConditionCreated(Map.of(
             "tenantId", "tenant-1",
             "patientId", patientId.toString(),
             "resource", conditionData
-        ))).doesNotThrowAnyException();
+        ))).isInstanceOf(RuntimeException.class)
+           .hasMessageContaining("Failed to process condition created event");
     }
 
     @Test
-    @DisplayName("Should swallow exceptions during observation processing")
+    @DisplayName("Should propagate exceptions during observation processing for DLT routing")
     void shouldSwallowExceptionsDuringObservationProcessing() {
         UUID patientId = UUID.randomUUID();
         Map<String, Object> observationData = Map.of(
@@ -353,11 +359,12 @@ class RiskAssessmentEventConsumerTest {
             .when(chronicDiseaseMonitoringService)
             .processLabResult(eq("tenant-1"), eq(patientId), eq(observationData));
 
-        assertThatCode(() -> consumer.onObservationCreated(Map.of(
+        assertThatThrownBy(() -> consumer.onObservationCreated(Map.of(
             "tenantId", "tenant-1",
             "patientId", patientId.toString(),
             "resource", observationData
-        ))).doesNotThrowAnyException();
+        ))).isInstanceOf(RuntimeException.class)
+           .hasMessageContaining("Failed to process observation created event");
 
         verify(riskCalculationService, never())
             .recalculateRiskOnObservation(any(), any(), any());

@@ -2,12 +2,17 @@ package com.healthdata.quality.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.metrics.HealthcareMetrics;
 import com.healthdata.quality.audit.QualityMeasureAuditIntegration;
 import com.healthdata.quality.client.CareGapServiceClient;
 import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.quality.client.PatientServiceClient;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -36,6 +41,8 @@ public class MeasureCalculationService {
     private final CqlEngineServiceClient cqlEngineServiceClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final QualityMeasureAuditIntegration auditIntegration;
+    private final Tracer tracer;
+    private final HealthcareMetrics healthcareMetrics;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
@@ -48,9 +55,15 @@ public class MeasureCalculationService {
             String measureId,
             String createdBy
     ) {
-        log.info("Calculating measure {} for patient: {}", measureId, patientId);
+        Span span = tracer.spanBuilder("quality_measure.calculate")
+                .setAttribute("tenant.id", tenantId)
+                .setAttribute("patient.id", patientId.toString())
+                .setAttribute("measure.id", measureId)
+                .startSpan();
+        long calcStartTime = System.currentTimeMillis();
+        try (Scope scope = span.makeCurrent()) {
+            log.info("Calculating measure {} for patient: {}", measureId, patientId);
 
-        try {
             // Evaluate CQL library (external I/O - no transaction needed)
             String cqlResult = cqlEngineServiceClient.evaluateCql(
                     tenantId, measureId, patientId, "{}");
@@ -73,10 +86,17 @@ public class MeasureCalculationService {
                     measureMet, measureResultMap, 0, createdBy
             );
 
+            healthcareMetrics.recordEvaluation(measureId, true, java.time.Duration.ofMillis(System.currentTimeMillis() - calcStartTime));
+            span.setStatus(StatusCode.OK);
             return saved;
         } catch (Exception e) {
+            healthcareMetrics.recordEvaluation(measureId, false, java.time.Duration.ofMillis(System.currentTimeMillis() - calcStartTime));
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, e.getMessage());
             log.error("Error calculating measure {}: {}", measureId, e.getMessage());
             throw new RuntimeException("Measure calculation failed", e);
+        } finally {
+            span.end();
         }
     }
 

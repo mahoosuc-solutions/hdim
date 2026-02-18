@@ -1,9 +1,14 @@
 package com.healthdata.patient.service;
 
+import com.healthdata.metrics.HealthcareMetrics;
 import com.healthdata.patient.client.CareGapServiceClient;
 import com.healthdata.patient.client.HccServiceClient;
 import com.healthdata.patient.dto.PatientRiskAssessmentResponse;
 import com.healthdata.patient.dto.PatientRiskAssessmentResponse.RiskLevel;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -12,6 +17,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.lenient;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -38,6 +47,21 @@ class PatientRiskAssessmentServiceTest {
     @Mock
     private CareGapServiceClient careGapServiceClient;
 
+    @Mock
+    private HealthcareMetrics healthcareMetrics;
+
+    @Mock
+    private Tracer tracer;
+
+    @Mock
+    private SpanBuilder spanBuilder;
+
+    @Mock
+    private Span mockSpan;
+
+    @Mock
+    private Scope mockScope;
+
     private PatientRiskAssessmentService riskAssessmentService;
 
     private static final String TENANT_ID = "tenant-123";
@@ -47,7 +71,13 @@ class PatientRiskAssessmentServiceTest {
 
     @BeforeEach
     void setUp() {
-        riskAssessmentService = new PatientRiskAssessmentService(hccServiceClient, careGapServiceClient);
+        // Wire up tracer mock chain so spanBuilder().setAttribute().startSpan() doesn't NPE
+        lenient().when(tracer.spanBuilder(anyString())).thenReturn(spanBuilder);
+        lenient().when(spanBuilder.setAttribute(anyString(), anyString())).thenReturn(spanBuilder);
+        lenient().when(spanBuilder.startSpan()).thenReturn(mockSpan);
+        lenient().when(mockSpan.makeCurrent()).thenReturn(mockScope);
+
+        riskAssessmentService = new PatientRiskAssessmentService(hccServiceClient, careGapServiceClient, healthcareMetrics, tracer);
     }
 
     @Nested

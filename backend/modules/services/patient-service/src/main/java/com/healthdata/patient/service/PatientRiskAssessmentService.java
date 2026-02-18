@@ -1,10 +1,15 @@
 package com.healthdata.patient.service;
 
+import com.healthdata.metrics.HealthcareMetrics;
 import com.healthdata.patient.client.CareGapServiceClient;
 import com.healthdata.patient.client.HccServiceClient;
 import com.healthdata.patient.dto.PatientRiskAssessmentResponse;
 import com.healthdata.patient.dto.PatientRiskAssessmentResponse.DataAvailability;
 import com.healthdata.patient.dto.PatientRiskAssessmentResponse.RiskLevel;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,6 +43,8 @@ public class PatientRiskAssessmentService {
 
     private final HccServiceClient hccServiceClient;
     private final CareGapServiceClient careGapServiceClient;
+    private final HealthcareMetrics healthcareMetrics;
+    private final Tracer tracer;
 
     /**
      * HCC code to human-readable condition mapping.
@@ -97,23 +104,42 @@ public class PatientRiskAssessmentService {
     @Cacheable(value = "patientRiskAssessment", key = "#tenantId + ':' + #patientId",
                unless = "#result == null")
     public PatientRiskAssessmentResponse getRiskAssessment(String tenantId, String patientId) {
-        log.info("Calculating risk assessment for patient {} in tenant {}", patientId, tenantId);
+        Span span = tracer.spanBuilder("patient.get_risk_assessment")
+                .setAttribute("tenant.id", tenantId)
+                .setAttribute("patient.id", patientId)
+                .startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            log.info("Calculating risk assessment for patient {} in tenant {}", patientId, tenantId);
+            long queryStartTime = System.currentTimeMillis();
 
-        UUID patientUuid;
-        try {
-            patientUuid = UUID.fromString(patientId);
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid patient ID format: {}", patientId);
-            return buildEmptyResponse(patientId);
+            UUID patientUuid;
+            try {
+                patientUuid = UUID.fromString(patientId);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid patient ID format: {}", patientId);
+                span.setStatus(StatusCode.OK);
+                return buildEmptyResponse(patientId);
+            }
+
+            int currentYear = LocalDate.now().getYear();
+
+            // Fetch data from services (with graceful fallbacks)
+            HccServiceClient.HccProfileResponse hccProfile = fetchHccProfile(tenantId, patientUuid, currentYear);
+            CareGapServiceClient.CareGapCountResponse careGapCounts = fetchCareGapCounts(tenantId, patientId);
+
+            PatientRiskAssessmentResponse response = buildRiskAssessment(
+                    patientId, hccProfile, careGapCounts, currentYear);
+
+            healthcareMetrics.recordPatientQuery("risk-assessment", java.time.Duration.ofMillis(System.currentTimeMillis() - queryStartTime));
+            span.setStatus(StatusCode.OK);
+            return response;
+        } catch (Exception e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, e.getMessage());
+            throw e;
+        } finally {
+            span.end();
         }
-
-        int currentYear = LocalDate.now().getYear();
-
-        // Fetch data from services (with graceful fallbacks)
-        HccServiceClient.HccProfileResponse hccProfile = fetchHccProfile(tenantId, patientUuid, currentYear);
-        CareGapServiceClient.CareGapCountResponse careGapCounts = fetchCareGapCounts(tenantId, patientId);
-
-        return buildRiskAssessment(patientId, hccProfile, careGapCounts, currentYear);
     }
 
     /**

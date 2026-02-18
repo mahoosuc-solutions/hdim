@@ -1,0 +1,312 @@
+name: Load Tests — SLO Validation
+
+on:
+  # Nightly full suite against staging (no build overhead — staging is always running)
+  schedule:
+    - cron: '0 6 * * *'  # 06:00 UTC daily (01:00 EST)
+
+  # Smoke mode on PRs touching load tests or the 3 core services
+  pull_request:
+    branches: [master, develop]
+    paths:
+      - 'load-tests/**'
+      - 'backend/modules/services/patient-service/**'
+      - 'backend/modules/services/care-gap-service/**'
+      - 'backend/modules/services/quality-measure-service/**'
+
+  # Manual trigger with scenario selector
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type'
+        required: true
+        default: 'smoke'
+        type: choice
+        options:
+          - smoke
+          - load
+      scenario:
+        description: 'Scenario to run (leave empty for all)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - patient
+          - care-gap
+          - quality-measure
+          - pipeline
+      base_url_override:
+        description: 'Base URL override (e.g. https://staging.hdim.io)'
+        required: false
+        default: ''
+
+env:
+  # Default base URLs — point at services started in this workflow.
+  # Override via workflow_dispatch or BASE_URL_* secrets for staging.
+  BASE_URL_PATIENT: ${{ secrets.BASE_URL_PATIENT || 'http://localhost:8084' }}
+  BASE_URL_CARE_GAP: ${{ secrets.BASE_URL_CARE_GAP || 'http://localhost:8086' }}
+  BASE_URL_QUALITY: ${{ secrets.BASE_URL_QUALITY || 'http://localhost:8087' }}
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # PR smoke job — spins up services locally, runs 1 VU × 1 iteration per
+  # scenario to validate connectivity and script correctness only (not perf).
+  # ─────────────────────────────────────────────────────────────────────────────
+  smoke-pr:
+    name: Smoke (PR)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: gradle
+
+      - name: Start infrastructure
+        run: |
+          docker compose up -d postgres redis kafka
+          for i in {1..30}; do
+            docker compose exec -T postgres pg_isready -U healthdata && break
+            sleep 2
+          done
+
+      - name: Build core services (skip tests)
+        run: |
+          cd backend
+          ./gradlew \
+            :modules:services:patient-service:bootJar \
+            :modules:services:care-gap-service:bootJar \
+            :modules:services:quality-measure-service:bootJar \
+            -x test --parallel
+
+      - name: Start core services
+        run: |
+          docker compose up -d patient-service care-gap-service quality-measure-service
+          for svc_url in \
+            "http://localhost:8084/patient/actuator/health" \
+            "http://localhost:8086/care-gap/actuator/health" \
+            "http://localhost:8087/quality-measure/actuator/health"; do
+            for i in {1..30}; do
+              curl -sf "$svc_url" >/dev/null 2>&1 && break
+              echo "Waiting for $svc_url ($i/30)..."
+              sleep 2
+            done
+          done
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run smoke tests
+        env:
+          TEST_TYPE: smoke
+          AUTH_TOKEN: ${{ secrets.LOAD_TEST_AUTH_TOKEN || 'test-token' }}
+        run: |
+          chmod +x load-tests/run-load-tests.sh
+          ./load-tests/run-load-tests.sh --smoke 2>&1 | tee smoke-output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Upload smoke results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results-pr-${{ github.run_number }}
+          path: |
+            load-tests/results/
+            smoke-output.txt
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Nightly full load test — assumes staging is already running.
+  # Runs all 4 scenarios at 100 VUs, enforces P95 < 200ms SLO thresholds.
+  # ─────────────────────────────────────────────────────────────────────────────
+  load-nightly:
+    name: Full Load Test (Nightly)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name == 'schedule'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run full load test suite
+        env:
+          TEST_TYPE: load
+          AUTH_TOKEN: ${{ secrets.LOAD_TEST_AUTH_TOKEN }}
+          TENANT_ID: ${{ secrets.LOAD_TEST_TENANT_ID || 'test-tenant-perf' }}
+          BASE_URL_PATIENT: ${{ secrets.BASE_URL_PATIENT }}
+          BASE_URL_CARE_GAP: ${{ secrets.BASE_URL_CARE_GAP }}
+          BASE_URL_QUALITY: ${{ secrets.BASE_URL_QUALITY }}
+        run: |
+          chmod +x load-tests/run-load-tests.sh
+          ./load-tests/run-load-tests.sh 2>&1 | tee load-output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Parse SLO results
+        if: always()
+        run: |
+          echo "## Load Test SLO Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Scenario | P95 | Error Rate | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-----|------------|--------|" >> $GITHUB_STEP_SUMMARY
+
+          for result_file in load-tests/results/*.json; do
+            [ -f "$result_file" ] || continue
+            scenario=$(basename "$result_file" .json | sed 's/hdim-load-[0-9]*T[0-9]*-//')
+            p95=$(jq -r '.metrics["http_req_duration{expected_response:true}"].values["p(95)"] // "N/A"' \
+              "$result_file" 2>/dev/null || echo "N/A")
+            error_rate=$(jq -r '.metrics.http_req_failed.values.rate // "N/A"' \
+              "$result_file" 2>/dev/null || echo "N/A")
+            if [ "$p95" != "N/A" ]; then
+              p95_ms=$(echo "$p95" | awk '{printf "%.0fms", $1}')
+              if (( $(echo "$p95 >= 200" | bc -l 2>/dev/null || echo 0) )); then
+                status="❌ BREACH"
+              else
+                status="✅ OK"
+              fi
+            else
+              p95_ms="N/A"
+              status="⚠️ No data"
+            fi
+            echo "| $scenario | $p95_ms | $error_rate | $status |" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload load test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results-${{ github.run_number }}
+          path: |
+            load-tests/results/
+            load-output.txt
+          retention-days: 30
+
+      - name: Notify on SLO breach
+        if: failure()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "🚨 *HDIM Load Test SLO Breach* — nightly run failed P95 < 200ms threshold.\nWorkflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        continue-on-error: true  # Don't fail the job if Slack isn't configured
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Manual / workflow_dispatch — flexible scenario + type selection.
+  # Workflow inputs go through env: vars to avoid injection risk.
+  # ─────────────────────────────────────────────────────────────────────────────
+  load-manual:
+    name: Load Test (Manual)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve base URLs
+        env:
+          URL_OVERRIDE: ${{ github.event.inputs.base_url_override }}
+          SECRET_PATIENT: ${{ secrets.BASE_URL_PATIENT }}
+          SECRET_CARE_GAP: ${{ secrets.BASE_URL_CARE_GAP }}
+          SECRET_QUALITY: ${{ secrets.BASE_URL_QUALITY }}
+        run: |
+          if [ -n "$URL_OVERRIDE" ]; then
+            echo "BASE_URL_PATIENT=${URL_OVERRIDE}:8084" >> $GITHUB_ENV
+            echo "BASE_URL_CARE_GAP=${URL_OVERRIDE}:8086" >> $GITHUB_ENV
+            echo "BASE_URL_QUALITY=${URL_OVERRIDE}:8087" >> $GITHUB_ENV
+          else
+            echo "BASE_URL_PATIENT=${SECRET_PATIENT:-http://localhost:8084}" >> $GITHUB_ENV
+            echo "BASE_URL_CARE_GAP=${SECRET_CARE_GAP:-http://localhost:8086}" >> $GITHUB_ENV
+            echo "BASE_URL_QUALITY=${SECRET_QUALITY:-http://localhost:8087}" >> $GITHUB_ENV
+          fi
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Run load test
+        env:
+          TEST_TYPE: ${{ github.event.inputs.test_type }}
+          INPUT_SCENARIO: ${{ github.event.inputs.scenario }}
+          AUTH_TOKEN: ${{ secrets.LOAD_TEST_AUTH_TOKEN }}
+          TENANT_ID: ${{ secrets.LOAD_TEST_TENANT_ID || 'test-tenant-perf' }}
+        run: |
+          chmod +x load-tests/run-load-tests.sh
+
+          SMOKE_FLAG=""
+          [ "$TEST_TYPE" = "smoke" ] && SMOKE_FLAG="--smoke"
+
+          SCENARIO_FLAG=""
+          [ -n "$INPUT_SCENARIO" ] && SCENARIO_FLAG="--scenario $INPUT_SCENARIO"
+
+          # shellcheck disable=SC2086
+          ./load-tests/run-load-tests.sh $SMOKE_FLAG $SCENARIO_FLAG 2>&1 | tee load-output.txt
+          exit ${PIPESTATUS[0]}
+
+      - name: Parse SLO results
+        if: always()
+        env:
+          INPUT_TEST_TYPE: ${{ github.event.inputs.test_type }}
+          INPUT_SCENARIO: ${{ github.event.inputs.scenario }}
+        run: |
+          echo "## Load Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** $INPUT_TEST_TYPE | **Scenario:** ${INPUT_SCENARIO:-all}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          for result_file in load-tests/results/*.json; do
+            [ -f "$result_file" ] || continue
+            scenario=$(basename "$result_file" .json | sed 's/hdim-load-[0-9]*T[0-9]*-//')
+            p95=$(jq -r '.metrics["http_req_duration{expected_response:true}"].values["p(95)"] // "N/A"' \
+              "$result_file" 2>/dev/null || echo "N/A")
+            echo "**$scenario** — P95: ${p95}ms" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-manual-${{ github.run_number }}
+          path: |
+            load-tests/results/
+            load-output.txt
+          retention-days: 14

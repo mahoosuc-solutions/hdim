@@ -20,6 +20,8 @@ import org.springframework.context.annotation.Primary;
 /**
  * Test configuration that uses in-memory caching to avoid Redis connection issues in tests.
  * Uses SimpleCacheManager with ConcurrentMapCache and provides a CacheErrorHandler that ignores all cache errors.
+ *
+ * Cache names must match exactly what the service code uses (CACHE_NAME constants and @Cacheable values).
  */
 @TestConfiguration
 @EnableCaching
@@ -45,31 +47,46 @@ public class TestCacheConfiguration implements CachingConfigurer {
             // Procedure caches
             new ConcurrentMapCache("procedures"),
             new ConcurrentMapCache("proceduresByPatient"),
-            // Goal caches
+            // Goal caches — GoalService uses CACHE_NAME = "fhir-goals"
             new ConcurrentMapCache("fhir-goals"),
             new ConcurrentMapCache("goals"),
-            // CarePlan caches
+            // CarePlan caches — CarePlanService uses CACHE_NAME = "fhir-care-plans"
             new ConcurrentMapCache("fhir-care-plans"),
             new ConcurrentMapCache("fhir-careplans"),
             new ConcurrentMapCache("careplans"),
-            // Coverage caches
+            // Coverage caches — CoverageService uses CACHE_NAME = "fhir-coverages"
             new ConcurrentMapCache("fhir-coverages"),
             new ConcurrentMapCache("coverages"),
-            // DiagnosticReport caches
+            // DiagnosticReport caches — DiagnosticReportService uses CACHE_NAME = "fhir-diagnostic-reports"
             new ConcurrentMapCache("fhir-diagnostic-reports"),
             new ConcurrentMapCache("fhir-diagnosticreports"),
             new ConcurrentMapCache("diagnosticreports"),
-            // DocumentReference caches
+            // DocumentReference caches — DocumentReferenceService uses CACHE_NAME = "fhir-document-references"
             new ConcurrentMapCache("fhir-document-references"),
             new ConcurrentMapCache("fhir-documentreferences"),
             new ConcurrentMapCache("documentreferences"),
-            // Other common caches
+            // MedicationRequest caches — MedicationRequestService uses CACHE_NAME = "fhir-medication-requests"
+            new ConcurrentMapCache("fhir-medication-requests"),
+            new ConcurrentMapCache("medicationrequests"),
+            // MedicationAdministration caches — MedicationAdministrationService uses CACHE_NAME = "fhir-medication-administrations"
+            new ConcurrentMapCache("fhir-medication-administrations"),
+            new ConcurrentMapCache("medicationadministrations"),
+            // Patient caches — PatientService uses CACHE_NAME = "fhir-patients"
             new ConcurrentMapCache("patients"),
             new ConcurrentMapCache("fhir-patients"),
+            // Observation caches — ObservationService uses CACHE_NAME = "fhir-observations"
             new ConcurrentMapCache("observations"),
             new ConcurrentMapCache("fhir-observations"),
+            // Condition caches — ConditionService uses CACHE_NAME = "fhir-conditions"
             new ConcurrentMapCache("conditions"),
             new ConcurrentMapCache("fhir-conditions"),
+            // Task caches
+            new ConcurrentMapCache("tasks"),
+            new ConcurrentMapCache("tasksByPatient"),
+            // Appointment caches
+            new ConcurrentMapCache("appointments"),
+            new ConcurrentMapCache("appointmentsByPatient"),
+            // General FHIR resources cache
             new ConcurrentMapCache("fhirResources")
         ));
         return cacheManager;

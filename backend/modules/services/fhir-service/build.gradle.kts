@@ -86,10 +86,44 @@ tasks.bootJar {
 }
 
 tasks.withType<Test> {
+    val taskNames = gradle.startParameter.taskNames
     useJUnitPlatform {
-        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+        when {
+            taskNames.any { it.contains("testUnit") } -> {
+                excludeTags("slow", "heavyweight", "integration", "e2e", "contract", "entity-migration-validation")
+            }
+            taskNames.any { it.contains("testFast") } -> {
+                excludeTags("slow", "heavyweight", "e2e", "contract", "entity-migration-validation")
+            }
+            taskNames.any { it.contains("testIntegration") } -> {
+                includeTags("integration")
+                excludeTags("slow", "heavyweight", "e2e", "contract")
+            }
+            taskNames.any { it.contains("testSlow") } -> {
+                includeTags("slow", "heavyweight", "e2e", "contract", "entity-migration-validation")
+            }
+            else -> {
+                // Default: exclude integration, e2e, heavyweight, slow, contract (unit tests only)
+                excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+            }
+        }
     }
     // Testcontainers system properties disabled - using running Docker PostgreSQL
     // Configuration now managed in src/test/resources/application-test.yml
+    systemProperty("spring.profiles.active", "test")
+}
+
+// Dedicated integration test task for FHIR service
+// Named "testIntegrationFhir" so the root build's task-name-detection includes integration tags
+// Usage: ./gradlew :modules:services:fhir-service:testIntegrationFhir
+tasks.register<Test>("testIntegrationFhir") {
+    group = "verification"
+    description = "Run FHIR service integration tests (requires Docker for Testcontainers)"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+        excludeTags("slow", "heavyweight", "e2e", "contract")
+    }
     systemProperty("spring.profiles.active", "test")
 }

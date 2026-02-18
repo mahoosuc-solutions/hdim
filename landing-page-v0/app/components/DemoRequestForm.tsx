@@ -3,6 +3,17 @@
 import { useState } from 'react'
 import { X, Send, CheckCircle, Loader2 } from 'lucide-react'
 
+declare global {
+  interface Window {
+    grecaptcha: {
+      execute: (siteKey: string, options: { action: string }) => Promise<string>
+    }
+    gtag: (...args: unknown[]) => void
+  }
+}
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''
+
 interface DemoRequestFormProps {
   onClose: () => void
 }
@@ -79,19 +90,16 @@ export default function DemoRequestForm({ onClose }: DemoRequestFormProps) {
     setError('')
 
     try {
-      // Track form submission
-      if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', 'demo_request', {
-          company: formData.company,
-          population: formData.patientPopulation,
-          timeline: formData.timeline,
-        })
+      // Get reCAPTCHA v3 token before submitting
+      let recaptchaToken = ''
+      if (typeof window !== 'undefined' && window.grecaptcha && RECAPTCHA_SITE_KEY) {
+        recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'demo_modal' })
       }
 
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, source: 'demo_modal' }),
+        body: JSON.stringify({ ...formData, source: 'demo_modal', recaptchaToken }),
       })
 
       if (!res.ok) {
@@ -100,6 +108,11 @@ export default function DemoRequestForm({ onClose }: DemoRequestFormProps) {
       }
 
       setIsSubmitted(true)
+
+      // GA4 conversion event
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'generate_lead', { source: 'demo_modal' })
+      }
     } catch (err) {
       setError('Something went wrong. Please try again.')
     } finally {

@@ -88,11 +88,16 @@ export default function DemoRequestForm({ onClose }: DemoRequestFormProps) {
         })
       }
 
-      // Simulate API call (replace with actual endpoint)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, source: 'demo_modal' }),
+      })
 
-      // In production, send to your CRM or email service:
-      // await fetch('/api/leads', { method: 'POST', body: JSON.stringify(formData) })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Submission failed')
+      }
 
       setIsSubmitted(true)
     } catch (err) {

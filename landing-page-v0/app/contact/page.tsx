@@ -4,8 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import {
   Mail,
-  Phone,
-  MapPin,
   Send,
   CheckCircle2,
   ArrowLeft,
@@ -26,35 +24,47 @@ export default function ContactPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError('')
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, source: 'contact_page' }),
+      })
 
-    // In production, this would send to your backend or CRM
-    console.log('Contact form submission:', formData)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Submission failed')
+      }
 
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+      setIsSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const contactMethods = [
     {
       icon: Mail,
-      title: 'Email Us',
-      detail: 'info@healthdatainmotion.com',
-      description: 'General inquiries and support',
-      action: 'mailto:info@healthdatainmotion.com'
+      title: 'General Inquiries',
+      detail: 'info@mahoosuc.solutions',
+      description: 'General questions and support',
+      action: 'mailto:info@mahoosuc.solutions'
     },
     {
-      icon: Phone,
-      title: 'Call Us',
-      detail: '+1 (555) 123-4567',
-      description: 'Monday-Friday, 9am-5pm EST',
-      action: 'tel:+15551234567'
+      icon: Mail,
+      title: 'Sales',
+      detail: 'sales@mahoosuc.solutions',
+      description: 'Pricing and partnership questions',
+      action: 'mailto:sales@mahoosuc.solutions'
     },
     {
       icon: Calendar,
@@ -65,25 +75,10 @@ export default function ContactPage() {
     },
     {
       icon: MessageSquare,
-      title: 'Sales Inquiries',
-      detail: 'sales@healthdatainmotion.com',
-      description: 'Pricing and partnership questions',
-      action: 'mailto:sales@healthdatainmotion.com'
-    }
-  ]
-
-  const offices = [
-    {
-      city: 'Boston, MA',
-      address: '123 Innovation Drive, Suite 400',
-      postal: 'Boston, MA 02115',
-      phone: '+1 (555) 123-4567'
-    },
-    {
-      city: 'San Francisco, CA',
-      address: '456 Market Street, Floor 12',
-      postal: 'San Francisco, CA 94102',
-      phone: '+1 (555) 987-6543'
+      title: 'Send a Message',
+      detail: 'Use the form below',
+      description: 'We respond within 24 hours',
+      action: '#contact-form'
     }
   ]
 
@@ -122,7 +117,7 @@ export default function ContactPage() {
               Get In Touch
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Have questions about HDIM? We're here to help. Reach out to our team for demos, 
+              Have questions about HDIM? We're here to help. Reach out to our team for demos,
               pricing information, or technical support.
             </p>
           </div>
@@ -157,7 +152,7 @@ export default function ContactPage() {
 
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Form */}
-            <div>
+            <div id="contact-form">
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
                 Send Us a Message
               </h2>
@@ -252,6 +247,12 @@ export default function ContactPage() {
                   />
                 </div>
 
+                {error && (
+                  <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -269,49 +270,54 @@ export default function ContactPage() {
               </form>
             </div>
 
-            {/* Office Locations */}
+            {/* Connect With Us */}
             <div>
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Our Offices
+                Connect With Us
               </h2>
-              <div className="space-y-6 mb-12">
-                {offices.map((office, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-xl p-6">
-                    <div className="flex items-start mb-4">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
-                        <MapPin className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          {office.city}
-                        </h3>
-                        <p className="text-gray-700 mb-1">{office.address}</p>
-                        <p className="text-gray-700 mb-2">{office.postal}</p>
-                        <p className="text-gray-600 text-sm">{office.phone}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 mb-8">
+                <p className="text-gray-700 mb-6">
+                  We're a remote-first team building the future of healthcare quality measurement. Reach us at:
+                </p>
+                <div className="space-y-3">
+                  <a
+                    href="mailto:sales@mahoosuc.solutions"
+                    className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
+                    sales@mahoosuc.solutions
+                  </a>
+                  <a
+                    href="mailto:info@mahoosuc.solutions"
+                    className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
+                    info@mahoosuc.solutions
+                  </a>
+                </div>
               </div>
 
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8">
+              <div className="bg-gray-50 rounded-xl p-8">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">
-                  Connect With Us
+                  Follow Our Work
                 </h3>
                 <div className="flex gap-4">
                   <a
-                    href="https://linkedin.com/company/hdim"
+                    href="https://www.linkedin.com/company/mahoosuc-solutions"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-white rounded-lg flex items-center justify-center hover:shadow-md transition-shadow"
+                    aria-label="LinkedIn"
                   >
                     <Linkedin className="w-6 h-6 text-blue-600" />
                   </a>
                   <a
-                    href="https://github.com/hdim"
+                    href="https://github.com/webemo-aaron"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-12 h-12 bg-white rounded-lg flex items-center justify-center hover:shadow-md transition-shadow"
+                    aria-label="GitHub"
                   >
                     <Github className="w-6 h-6 text-gray-900" />
                   </a>

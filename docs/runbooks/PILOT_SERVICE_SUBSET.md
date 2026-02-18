@@ -191,3 +191,135 @@ For service-specific issues during pilot, see the relevant runbooks:
 - [Performance Degradation](./performance-degradation.md)
 - [High Error Rate](./high-error-rate.md)
 - [Incident Response](./INCIDENT_RESPONSE.md)
+
+---
+
+## Alertmanager Credentials Setup
+
+**Audience:** DevOps / operator deploying monitoring for the first time
+**Required before:** Running `kubectl apply -k k8s/overlays/pilot/` or `k8s/overlays/production/`
+
+Alertmanager reads notification channel credentials (Slack, PagerDuty, email SMTP) from a
+Kubernetes Secret named `alertmanager-credentials` in the `hdim-production` namespace. The
+Deployment in `k8s/monitoring/alertmanager.yaml` injects each value as an environment variable;
+`monitoring/alertmanager-production.yml` references them as `${VAR_NAME}`. **The Secret must
+exist before the Alertmanager pod starts — it is not created automatically.**
+
+### Step 1: Copy and fill in the credentials file
+
+```bash
+# From the repository root
+cp monitoring/.env.alertmanager.example monitoring/.env.alertmanager
+```
+
+Open `monitoring/.env.alertmanager` and replace every placeholder value. The required variables
+are:
+
+| Variable | Where to get it |
+|---|---|
+| `SLACK_WEBHOOK_URL` | Slack App console (see Step 2 below) |
+| `PAGERDUTY_INTEGRATION_KEY` | PagerDuty > Services > \<General on-call service\> > Integrations > Prometheus |
+| `PAGERDUTY_SECURITY_KEY` | PagerDuty > Services > \<Security service\> > Integrations > Prometheus |
+| `PAGERDUTY_COMPLIANCE_KEY` | PagerDuty > Services > \<Compliance service\> > Integrations > Prometheus |
+| `EMAIL_USERNAME` | SMTP account address (e.g. `alerts@your-domain.com`) |
+| `EMAIL_PASSWORD` | App password for the SMTP account (not your login password) |
+
+> `ONCALL_EMAIL`, `LEADERSHIP_EMAIL`, `COMPLIANCE_EMAIL`, `DATABASE_TEAM_EMAIL`, and
+> `DEVOPS_EMAIL` are only needed for Docker Compose local testing (the `docker compose up alertmanager`
+> workflow documented inside `.env.alertmanager.example`). They are **not** mounted into the
+> Kubernetes pod and do not need to be set for Kubernetes deployments.
+
+### Step 2: Get a Slack Webhook URL
+
+Create a Slack App at <https://api.slack.com/apps>, enable **Incoming Webhooks**, install it to
+your workspace, and copy the generated `https://hooks.slack.com/services/…` URL into
+`SLACK_WEBHOOK_URL`.
+
+### Step 3: Create the Kubernetes Secret
+
+Run the following command from the repository root **with the filled-in** `.env.alertmanager` file:
+
+```bash
+kubectl create secret generic alertmanager-credentials \
+  --from-literal=SLACK_WEBHOOK_URL="${SLACK_WEBHOOK_URL}" \
+  --from-literal=PAGERDUTY_INTEGRATION_KEY="${PAGERDUTY_INTEGRATION_KEY}" \
+  --from-literal=PAGERDUTY_SECURITY_KEY="${PAGERDUTY_SECURITY_KEY}" \
+  --from-literal=PAGERDUTY_COMPLIANCE_KEY="${PAGERDUTY_COMPLIANCE_KEY}" \
+  --from-literal=EMAIL_USERNAME="${EMAIL_USERNAME}" \
+  --from-literal=EMAIL_PASSWORD="${EMAIL_PASSWORD}" \
+  -n hdim-production
+```
+
+Or, using the `--from-env-file` shorthand (reads from the file directly without needing the vars
+exported into your shell):
+
+```bash
+kubectl create secret generic alertmanager-credentials \
+  --from-env-file=monitoring/.env.alertmanager \
+  -n hdim-production
+```
+
+> **Note:** `--from-env-file` only picks up lines in `KEY=VALUE` format and silently ignores
+> comment lines and blank lines, so the example file format is compatible as-is.
+
+To update an existing Secret after rotating credentials, delete and re-create it, then restart
+the pod:
+
+```bash
+kubectl delete secret alertmanager-credentials -n hdim-production
+kubectl create secret generic alertmanager-credentials \
+  --from-env-file=monitoring/.env.alertmanager \
+  -n hdim-production
+kubectl rollout restart deployment/alertmanager -n hdim-production
+```
+
+### Step 4: Verify the Secret was applied
+
+```bash
+# Confirm all 6 keys exist and are non-empty
+kubectl describe secret alertmanager-credentials -n hdim-production
+```
+
+Expected output (values are redacted by Kubernetes):
+
+```
+Name:         alertmanager-credentials
+Namespace:    hdim-production
+Type:         Opaque
+
+Data
+====
+EMAIL_PASSWORD:             <N bytes>
+EMAIL_USERNAME:             <N bytes>
+PAGERDUTY_COMPLIANCE_KEY:   32 bytes
+PAGERDUTY_INTEGRATION_KEY:  32 bytes
+PAGERDUTY_SECURITY_KEY:     32 bytes
+SLACK_WEBHOOK_URL:          <N bytes>
+```
+
+If any key is missing, delete the secret and re-create it (see above).
+
+To confirm the running pod has picked up the values:
+
+```bash
+# Pod must be Running before this works
+kubectl exec deployment/alertmanager -n hdim-production -- \
+  sh -c 'echo "Slack URL prefix: ${SLACK_WEBHOOK_URL:0:30}…"'
+```
+
+Check the Alertmanager API for a clean config load:
+
+```bash
+kubectl exec deployment/alertmanager -n hdim-production -- \
+  wget -qO- http://localhost:9093/-/ready && echo "Alertmanager is ready"
+```
+
+### What happens if the Secret is missing
+
+If the `alertmanager-credentials` Secret does not exist when the Deployment starts, Kubernetes
+will refuse to schedule the Alertmanager pod — it enters `CreateContainerConfigError` and never
+reaches `Running`. Prometheus will continue to fire alerts and evaluate rules normally, but
+**all notifications are silently dropped**: no Slack messages, no PagerDuty pages, and no emails
+are delivered. On-call engineers will not receive any alert for production incidents or SLO
+breaches until the Secret is created and the pod is restarted.
+

@@ -123,7 +123,7 @@ else
 fi
 
 echo "📊 Total assets deployed: $(find public/images -type f | wc -l) files"
-echo "🚀 Live URL: https://hdim-landing-page.vercel.app"
+echo "🚀 Live URL: https://www.healthdatainmotion.com"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 

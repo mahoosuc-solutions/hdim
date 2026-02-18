@@ -207,7 +207,7 @@ export const OutcomeScene: React.FC<OutcomeSceneProps> = ({ variant = 'default' 
                   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                 }}
               >
-                hdim-landing-page.vercel.app
+                www.healthdatainmotion.com
               </div>
             </div>
           )}

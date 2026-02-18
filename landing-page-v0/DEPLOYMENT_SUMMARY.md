@@ -1,7 +1,7 @@
 # HDIM Landing Page - Visual Asset Deployment Summary
 
 **Deployed**: December 30, 2025
-**Live URL**: https://hdim-landing-page.vercel.app
+**Live URL**: https://www.healthdatainmotion.com
 **Build Status**: ✓ Successful (28s)
 **Assets Deployed**: 26 images across 10 categories
 
@@ -334,7 +334,7 @@ Verified all 26 assets return HTTP 200:
 ```
 
 ### Live URL
-**Production**: https://hdim-landing-page.vercel.app
+**Production**: https://www.healthdatainmotion.com
 
 ### Vercel Project
 - **Project ID**: `prj_zgvGbQ8KLRILBwwAyz76yNay2PHD`

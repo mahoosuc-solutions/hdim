@@ -107,8 +107,8 @@ ffmpeg -i input.mp4 \
 **Status:** ✅ Live on production
 
 **Production URLs:**
-- 30s video: https://hdim-landing-page.vercel.app/videos/care-gap-closure-30s.mp4
-- 80s video: https://hdim-landing-page.vercel.app/videos/care-gap-closure.mp4
+- 30s video: https://www.healthdatainmotion.com/videos/care-gap-closure-30s.mp4
+- 80s video: https://www.healthdatainmotion.com/videos/care-gap-closure.mp4
 
 ## Verification
 

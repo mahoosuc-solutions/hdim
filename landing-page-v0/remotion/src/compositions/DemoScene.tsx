@@ -409,7 +409,7 @@ export const DemoScene: React.FC<DemoSceneProps> = ({ variant = 'default' }) => 
                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
                   }}
                 >
-                  hdim-landing-page.vercel.app
+                  www.healthdatainmotion.com
                 </div>
               )}
             </div>

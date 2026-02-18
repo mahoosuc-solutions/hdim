@@ -387,7 +387,7 @@ landing-page-v0/
 - **Color:** White with subtle glow
 
 **89s:**
-- **URL:** "hdim-landing-page.vercel.app"
+- **URL:** "www.healthdatainmotion.com"
 - **Animation:** Fade in
 - **Style:** Sans-serif, clean, professional
 - **Color:** Light teal (#00CC88)
@@ -1030,10 +1030,10 @@ See how HDIM transforms healthcare quality measurement from fragmented to connec
 • HEDIS Quality Measures (BCS, COL, CBP, CDC, EED, SPC)
 • Mobile care gap alerts with priority scoring
 
-🔗 Try the interactive demo: https://hdim-landing-page.vercel.app
+🔗 Try the interactive demo: https://www.healthdatainmotion.com
 
 📧 Contact: sales@hdim.io
-🌐 Website: https://hdim-landing-page.vercel.app
+🌐 Website: https://www.healthdatainmotion.com
 
 ---
 
@@ -1121,7 +1121,7 @@ Close care gaps 40% faster
 
 16
 00:01:28,000 --> 00:01:30,000
-Try the interactive demo at hdim-landing-page.vercel.app
+Try the interactive demo at www.healthdatainmotion.com
 ```
 
 ### Render Settings
@@ -1353,7 +1353,7 @@ ls -lh ../public/videos/
    - Category: Science & Technology
    - Visibility: Public
 5. Add to end screen:
-   - CTA: "Try Interactive Demo" → https://hdim-landing-page.vercel.app
+   - CTA: "Try Interactive Demo" → https://www.healthdatainmotion.com
    - Subscribe button
    - Related video (upload 60s version as well)
 6. Upload closed captions (SRT file)
@@ -1391,7 +1391,7 @@ npm run start
 # Deploy to production
 vercel --prod
 
-# Deployment URL: https://hdim-landing-page.vercel.app
+# Deployment URL: https://www.healthdatainmotion.com
 ```
 
 #### 10. Update Documentation

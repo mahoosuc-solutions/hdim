@@ -1,7 +1,7 @@
 # HDIM Landing Page - Live Site Review Summary
 
 **Date:** January 24, 2026
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com
 **Review Status:** ✅ **PASSED - ALL SYSTEMS OPERATIONAL**
 
 ---
@@ -330,7 +330,7 @@ All screenshots saved to `.playwright-mcp/`:
 
 The HDIM landing page production deployment is **fully successful** with all real Angular Clinical Portal screenshots displaying correctly. The site is:
 
-- ✅ **Live and operational** at https://hdim-landing-page.vercel.app
+- ✅ **Live and operational** at https://www.healthdatainmotion.com
 - ✅ **Displaying authentic clinical data** in all dashboard screenshots
 - ✅ **Responsive** across desktop and mobile viewports
 - ✅ **High-quality** visual presentation with professional UI
@@ -344,5 +344,5 @@ The HDIM landing page production deployment is **fully successful** with all rea
 
 **Review Completed:** January 24, 2026
 **Reviewer:** AI Assistant (Claude Code)
-**Production URL:** https://hdim-landing-page.vercel.app
+**Production URL:** https://www.healthdatainmotion.com
 **Deployment ID:** 6pCKTMizzJqocageL79kzs74gzgU

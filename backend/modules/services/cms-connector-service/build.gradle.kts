@@ -56,6 +56,7 @@ dependencies {
 
     // Database
     implementation(libs.postgresql)
+    implementation(libs.liquibase)
 
     // OpenAPI/Swagger
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
@@ -75,6 +76,7 @@ dependencies {
     implementation(libs.guava)
 
     // Testing
+    testImplementation(project(":platform:test-fixtures"))
     testImplementation(libs.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)

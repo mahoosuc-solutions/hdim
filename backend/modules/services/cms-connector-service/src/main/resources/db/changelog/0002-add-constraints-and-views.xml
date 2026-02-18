@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ============================================================================
+         Unique constraint for deduplication tracking
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-dedup-unique-constraint" author="hdim">
+        <comment>Add unique constraint on (content_hash, tenant_id) for deduplication</comment>
+        <addUniqueConstraint
+            tableName="cms_claims"
+            columnNames="content_hash, tenant_id"
+            constraintName="uq_claims_content_hash_tenant"/>
+        <rollback>
+            <dropUniqueConstraint tableName="cms_claims" constraintName="uq_claims_content_hash_tenant"/>
+        </rollback>
+    </changeSet>
+
+    <!-- Partial unique index for exact-match deduplication -->
+    <changeSet id="cms-connector-0002-dedup-partial-index" author="hdim">
+        <comment>Add partial unique index for exact-match deduplication lookup</comment>
+        <sql>
+            CREATE UNIQUE INDEX idx_claims_exact_dedup
+                ON cms_claims(claim_id, tenant_id, data_source)
+                WHERE deduplication_status = 'EXACT_MATCH';
+        </sql>
+        <rollback>
+            <sql>DROP INDEX IF EXISTS idx_claims_exact_dedup;</sql>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Foreign key: matched_claim_id self-referential
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-fk-matched-claim" author="hdim">
+        <comment>Add self-referential FK on matched_claim_id for duplicate tracking</comment>
+        <addForeignKeyConstraint
+            baseTableName="cms_claims"
+            baseColumnNames="matched_claim_id"
+            referencedTableName="cms_claims"
+            referencedColumnNames="id"
+            constraintName="fk_cms_claims_matched_claim"
+            onDelete="SET NULL"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="cms_claims" constraintName="fk_cms_claims_matched_claim"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Foreign keys referencing tenant_config
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-fk-validation-errors-tenant" author="hdim">
+        <comment>Add FK from claim_validation_errors to tenant_config</comment>
+        <addForeignKeyConstraint
+            baseTableName="claim_validation_errors"
+            baseColumnNames="tenant_id"
+            referencedTableName="tenant_config"
+            referencedColumnNames="id"
+            constraintName="fk_validation_errors_tenant"
+            onDelete="RESTRICT"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="claim_validation_errors" constraintName="fk_validation_errors_tenant"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0002-fk-sync-audit-tenant" author="hdim">
+        <comment>Add FK from sync_audit_log to tenant_config</comment>
+        <addForeignKeyConstraint
+            baseTableName="sync_audit_log"
+            baseColumnNames="tenant_id"
+            referencedTableName="tenant_config"
+            referencedColumnNames="id"
+            constraintName="fk_sync_audit_tenant"
+            onDelete="SET NULL"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="sync_audit_log" constraintName="fk_sync_audit_tenant"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0002-fk-import-session-tenant" author="hdim">
+        <comment>Add FK from import_session to tenant_config</comment>
+        <addForeignKeyConstraint
+            baseTableName="import_session"
+            baseColumnNames="tenant_id"
+            referencedTableName="tenant_config"
+            referencedColumnNames="id"
+            constraintName="fk_import_session_tenant"
+            onDelete="RESTRICT"/>
+        <rollback>
+            <dropForeignKeyConstraint baseTableName="import_session" constraintName="fk_import_session_tenant"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Check constraints for data quality
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-check-claim-amounts" author="hdim">
+        <comment>Add check constraint: claim amounts must be non-negative</comment>
+        <sql>
+            ALTER TABLE cms_claims
+                ADD CONSTRAINT check_claim_amounts_positive
+                CHECK (total_charge_amount >= 0 AND total_allowed_amount >= 0);
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE cms_claims DROP CONSTRAINT IF EXISTS check_claim_amounts_positive;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0002-check-sync-stats" author="hdim">
+        <comment>Add check constraint: sync statistics must be non-negative</comment>
+        <sql>
+            ALTER TABLE sync_audit_log
+                ADD CONSTRAINT check_sync_stats_non_negative
+                CHECK (total_claims >= 0 AND successful_claims >= 0 AND failed_claims >= 0);
+
+            ALTER TABLE sync_audit_log
+                ADD CONSTRAINT check_sync_timing
+                CHECK (completed_at IS NULL OR completed_at >= started_at);
+        </sql>
+        <rollback>
+            <sql>
+                ALTER TABLE sync_audit_log DROP CONSTRAINT IF EXISTS check_sync_stats_non_negative;
+                ALTER TABLE sync_audit_log DROP CONSTRAINT IF EXISTS check_sync_timing;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Views for reporting and monitoring
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-view-claim-validation-summary" author="hdim">
+        <comment>Create claim_validation_summary view for reporting validation errors per claim</comment>
+        <createView viewName="claim_validation_summary">
+            SELECT
+                c.id,
+                c.tenant_id,
+                c.claim_id,
+                c.beneficiary_id,
+                c.data_source,
+                c.has_validation_errors,
+                COUNT(ve.id) as error_count,
+                COUNT(CASE WHEN ve.error_severity = 'ERROR' THEN 1 END) as critical_error_count,
+                COUNT(CASE WHEN ve.error_severity = 'WARNING' THEN 1 END) as warning_count,
+                MAX(ve.detected_at) as last_error_at,
+                c.last_validation_at
+            FROM cms_claims c
+            LEFT JOIN claim_validation_errors ve ON c.id = ve.claim_id
+            GROUP BY c.id, c.tenant_id, c.claim_id, c.beneficiary_id, c.data_source, c.has_validation_errors, c.last_validation_at
+        </createView>
+        <rollback>
+            <dropView viewName="claim_validation_summary"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0002-view-sync-operation-metrics" author="hdim">
+        <comment>Create sync_operation_metrics view for daily sync operation monitoring</comment>
+        <createView viewName="sync_operation_metrics">
+            SELECT
+                DATE(sal.started_at) as sync_date,
+                sal.sync_source,
+                sal.sync_type,
+                sal.sync_status,
+                COUNT(*) as operation_count,
+                SUM(sal.total_claims) as total_claims_processed,
+                SUM(sal.successful_claims) as total_claims_successful,
+                SUM(sal.failed_claims) as total_claims_failed,
+                SUM(sal.duplicate_claims) as total_duplicates,
+                AVG(sal.duration_seconds) as avg_duration_seconds,
+                MAX(sal.duration_seconds) as max_duration_seconds,
+                MIN(sal.duration_seconds) as min_duration_seconds
+            FROM sync_audit_log sal
+            GROUP BY DATE(sal.started_at), sal.sync_source, sal.sync_type, sal.sync_status
+        </createView>
+        <rollback>
+            <dropView viewName="sync_operation_metrics"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0002-view-tenant-import-activity" author="hdim">
+        <comment>Create tenant_import_activity view for per-tenant SLA monitoring</comment>
+        <createView viewName="tenant_import_activity">
+            SELECT
+                sal.tenant_id,
+                tc.tenant_name,
+                COUNT(DISTINCT sal.id) as total_syncs,
+                SUM(sal.total_claims) as total_claims,
+                SUM(CASE WHEN sal.sync_status = 'COMPLETED' THEN 1 ELSE 0 END) as successful_syncs,
+                SUM(CASE WHEN sal.sync_status = 'FAILED' THEN 1 ELSE 0 END) as failed_syncs,
+                MAX(sal.completed_at) as last_sync_completed,
+                AVG(sal.duration_seconds) FILTER (WHERE sal.sync_status = 'COMPLETED') as avg_sync_duration_seconds
+            FROM sync_audit_log sal
+            LEFT JOIN tenant_config tc ON sal.tenant_id = tc.id
+            GROUP BY sal.tenant_id, tc.tenant_name
+        </createView>
+        <rollback>
+            <dropView viewName="tenant_import_activity"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         AUDIT_LOG_ACCESS - HIPAA compliance tracking
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-audit-log-access" author="hdim">
+        <comment>Create audit_log_access table: tracks who accesses sync audit logs for HIPAA compliance</comment>
+
+        <createTable tableName="audit_log_access">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="audit_log_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accessed_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accessed_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="action" type="varchar(50)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="audit_log_access"
+            baseColumnNames="audit_log_id"
+            referencedTableName="sync_audit_log"
+            referencedColumnNames="id"
+            constraintName="fk_audit_log_access_sync_audit"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="audit_log_access"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Materialized view for dashboard performance
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-materialized-view-claim-metrics" author="hdim">
+        <comment>Create claim_metrics_by_source_daily materialized view for fast dashboard queries</comment>
+        <sql>
+            CREATE MATERIALIZED VIEW IF NOT EXISTS claim_metrics_by_source_daily AS
+            SELECT
+                DATE(c.imported_at) as import_date,
+                c.data_source,
+                c.tenant_id,
+                COUNT(*) as claim_count,
+                COUNT(CASE WHEN c.has_validation_errors THEN 1 END) as claims_with_errors,
+                COUNT(CASE WHEN c.deduplication_status != 'NEW' THEN 1 END) as duplicate_claims,
+                COUNT(CASE WHEN c.is_processed THEN 1 END) as processed_claims
+            FROM cms_claims c
+            GROUP BY DATE(c.imported_at), c.data_source, c.tenant_id;
+
+            CREATE UNIQUE INDEX idx_claim_metrics_unique
+                ON claim_metrics_by_source_daily (import_date, data_source, tenant_id);
+        </sql>
+        <rollback>
+            <sql>DROP MATERIALIZED VIEW IF EXISTS claim_metrics_by_source_daily;</sql>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Stored procedure for claim retention cleanup
+         ============================================================================ -->
+    <changeSet id="cms-connector-0002-cleanup-function" author="hdim">
+        <comment>Create cleanup_old_claims stored procedure for data retention per tenant policy</comment>
+        <sql splitStatements="false">
+            CREATE OR REPLACE FUNCTION cleanup_old_claims()
+            RETURNS TABLE(deleted_count INTEGER, deleted_errors_count INTEGER) AS $$
+            DECLARE
+              v_deleted_count INTEGER := 0;
+              v_deleted_errors_count INTEGER := 0;
+            BEGIN
+              WITH retention_settings AS (
+                SELECT
+                  tc.id,
+                  CURRENT_TIMESTAMP - (tc.claim_retention_days || ' days')::INTERVAL as cutoff_date
+                FROM tenant_config tc
+                WHERE tc.claim_retention_days > 0
+              )
+              DELETE FROM cms_claims c
+              USING retention_settings rs
+              WHERE c.tenant_id = rs.id
+                AND c.imported_at &lt; rs.cutoff_date
+                AND c.is_processed = true
+              RETURNING 1;
+
+              GET DIAGNOSTICS v_deleted_count = ROW_COUNT;
+
+              WITH old_errors AS (
+                SELECT cve.id
+                FROM claim_validation_errors cve
+                WHERE NOT EXISTS (
+                  SELECT 1 FROM cms_claims c WHERE c.id = cve.claim_id
+                )
+              )
+              DELETE FROM claim_validation_errors
+              WHERE id IN (SELECT id FROM old_errors);
+
+              GET DIAGNOSTICS v_deleted_errors_count = ROW_COUNT;
+
+              RETURN QUERY SELECT v_deleted_count, v_deleted_errors_count;
+            END;
+            $$ LANGUAGE plpgsql;
+        </sql>
+        <rollback>
+            <sql>DROP FUNCTION IF EXISTS cleanup_old_claims();</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

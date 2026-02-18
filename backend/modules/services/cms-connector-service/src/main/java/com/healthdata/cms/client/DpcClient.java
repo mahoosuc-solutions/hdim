@@ -4,6 +4,7 @@ import com.healthdata.cms.auth.OAuth2Manager;
 import com.healthdata.cms.exception.CmsApiException;
 import com.healthdata.cms.model.CmsApiProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,7 @@ public class DpcClient {
     private final boolean isSandbox;
 
     public DpcClient(OAuth2Manager oauth2Manager,
-                     RestTemplate restTemplate,
+                     @Qualifier("cmsRestTemplate") RestTemplate restTemplate,
                      @Value("${cms.dpc.base-url:https://sandbox.dpc.cms.gov}") String baseUrl,
                      @Value("${cms.sandbox-mode:true}") boolean isSandbox) {
         this.oauth2Manager = oauth2Manager;

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -166,7 +167,7 @@ public class CmsEobService {
         claim.setClaimId(eob.getIdElement().getIdPart());
         claim.setBeneficiaryId(patientId);
         claim.setDataSource("DPC");
-        claim.setImportedAt(LocalDateTime.now());
+        claim.setImportedAt(Instant.now());
         claim.setIsProcessed(false);
         claim.setHasValidationErrors(false);
         claim.setDeduplicationStatus("PENDING");
@@ -177,10 +178,11 @@ public class CmsEobService {
                 String category = total.getCategory().getCodingFirstRep().getCode();
                 Money amount = total.getAmount();
 
+                // HAPI FHIR Money.getValue() returns BigDecimal — matches entity field type
                 if ("submitted".equalsIgnoreCase(category) && amount != null) {
-                    claim.setTotalChargeAmount(amount.getValue().doubleValue());
+                    claim.setTotalChargeAmount(amount.getValue());
                 } else if ("benefit".equalsIgnoreCase(category) && amount != null) {
-                    claim.setTotalAllowedAmount(amount.getValue().doubleValue());
+                    claim.setTotalAllowedAmount(amount.getValue());
                 }
             }
         }
@@ -218,12 +220,12 @@ public class CmsEobService {
 
         double totalCharges = claims.stream()
                 .filter(c -> c.getTotalChargeAmount() != null)
-                .mapToDouble(CmsClaim::getTotalChargeAmount)
+                .mapToDouble(c -> c.getTotalChargeAmount().doubleValue())
                 .sum();
 
         double totalAllowed = claims.stream()
                 .filter(c -> c.getTotalAllowedAmount() != null)
-                .mapToDouble(CmsClaim::getTotalAllowedAmount)
+                .mapToDouble(c -> c.getTotalAllowedAmount().doubleValue())
                 .sum();
 
         return EobSummary.builder()

@@ -21,6 +21,10 @@ spring:
     password: dev_password_change_me
     driver-class-name: org.postgresql.Driver
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -80,6 +84,10 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
   jpa:
     hibernate:
       ddl-auto: validate
@@ -126,6 +134,9 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
+
+  liquibase:
+    enabled: false
 
   jpa:
     hibernate:

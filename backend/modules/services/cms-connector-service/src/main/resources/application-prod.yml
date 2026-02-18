@@ -21,19 +21,10 @@ spring:
       idle-timeout: 600000
       leak-detection-threshold: 60000
 
-  # Flyway Database Migration
-  flyway:
+  # Liquibase Database Migration
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
-    baseline-on-migrate: false
-    validate-on-migrate: true
-    out-of-order: false
-    locations: classpath:/db/migration
-    sql-migration-prefix: V
-    sql-migration-separator: __
-    sql-migration-suffixes: .sql
-    placeholders:
-      app_role: cms_service
-      audit_role: cms_auditor
 
   jpa:
     hibernate:

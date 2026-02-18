@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ============================================================================
+         DATA_ACCESS_AUDIT - HIPAA compliance audit table
+         ============================================================================ -->
+    <changeSet id="cms-connector-0003-data-access-audit" author="hdim">
+        <comment>Create data_access_audit table for tracking all data access for HIPAA compliance</comment>
+
+        <createTable tableName="data_access_audit">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="accessed_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="accessed_table" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="access_type" type="varchar(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="row_count" type="integer"/>
+            <column name="accessed_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <rollback>
+            <dropTable tableName="data_access_audit"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Database roles and permissions (production/staging only)
+         NOTE: Role creation and GRANT statements are environment-specific and are
+         executed only when the database user has superuser or CREATEROLE privileges.
+         These changesets use failOnError="false" to allow test environments to
+         proceed without dedicated roles.
+         ============================================================================ -->
+    <changeSet id="cms-connector-0003-create-roles" author="hdim" failOnError="false">
+        <comment>Create database roles for role-based access control (production environments)</comment>
+        <sql>
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'cms_service') THEN
+                    CREATE ROLE cms_service WITH LOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'cms_analytics') THEN
+                    CREATE ROLE cms_analytics WITH NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'cms_auditor') THEN
+                    CREATE ROLE cms_auditor WITH NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'cms_clinician') THEN
+                    CREATE ROLE cms_clinician WITH NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'cms_admin') THEN
+                    CREATE ROLE cms_admin WITH NOLOGIN;
+                END IF;
+            END
+            $$;
+        </sql>
+        <rollback>
+            <!-- Roles are shared resources; do not drop on rollback to avoid breaking other sessions -->
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0003-grant-schema-permissions" author="hdim" failOnError="false">
+        <comment>Grant schema-level permissions to database roles</comment>
+        <sql>
+            GRANT USAGE ON SCHEMA public TO cms_service;
+            GRANT CREATE ON SCHEMA public TO cms_service;
+            GRANT USAGE ON SCHEMA public TO cms_analytics, cms_auditor, cms_clinician, cms_admin;
+        </sql>
+        <rollback>
+            <!-- Revoke grants on rollback if roles exist -->
+            <sql>
+                REVOKE ALL ON SCHEMA public FROM cms_analytics, cms_auditor, cms_clinician, cms_admin, cms_service;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="cms-connector-0003-grant-table-permissions" author="hdim" failOnError="false">
+        <comment>Grant table-level permissions to database roles</comment>
+        <sql>
+            -- cms_claims
+            GRANT SELECT, INSERT, UPDATE, DELETE ON cms_claims TO cms_service;
+            GRANT SELECT ON cms_claims TO cms_analytics;
+            GRANT SELECT ON cms_claims TO cms_auditor;
+            GRANT SELECT ON cms_claims TO cms_clinician;
+            GRANT SELECT, UPDATE ON cms_claims TO cms_admin;
+
+            -- claim_validation_errors
+            GRANT SELECT, INSERT ON claim_validation_errors TO cms_service;
+            GRANT SELECT ON claim_validation_errors TO cms_analytics;
+            GRANT SELECT ON claim_validation_errors TO cms_auditor;
+            GRANT SELECT ON claim_validation_errors TO cms_clinician;
+            GRANT SELECT, UPDATE ON claim_validation_errors TO cms_admin;
+
+            -- sync_audit_log
+            GRANT SELECT, INSERT, UPDATE ON sync_audit_log TO cms_service;
+            GRANT SELECT ON sync_audit_log TO cms_analytics;
+            GRANT SELECT ON sync_audit_log TO cms_auditor;
+            GRANT SELECT, UPDATE ON sync_audit_log TO cms_admin;
+
+            -- sync_status
+            GRANT SELECT, INSERT, UPDATE, DELETE ON sync_status TO cms_service;
+            GRANT SELECT ON sync_status TO cms_analytics;
+            GRANT SELECT ON sync_status TO cms_auditor;
+            GRANT SELECT ON sync_status TO cms_admin;
+
+            -- tenant_config
+            GRANT SELECT, INSERT, UPDATE ON tenant_config TO cms_service;
+            GRANT SELECT ON tenant_config TO cms_analytics;
+            GRANT SELECT ON tenant_config TO cms_auditor;
+            GRANT SELECT ON tenant_config TO cms_clinician;
+            GRANT SELECT, UPDATE ON tenant_config TO cms_admin;
+
+            -- import_session
+            GRANT SELECT, INSERT, UPDATE, DELETE ON import_session TO cms_service;
+            GRANT SELECT ON import_session TO cms_analytics;
+            GRANT SELECT ON import_session TO cms_auditor;
+            GRANT SELECT ON import_session TO cms_admin;
+
+            -- import_session_file
+            GRANT SELECT, INSERT, UPDATE, DELETE ON import_session_file TO cms_service;
+            GRANT SELECT ON import_session_file TO cms_analytics;
+            GRANT SELECT ON import_session_file TO cms_auditor;
+            GRANT SELECT ON import_session_file TO cms_admin;
+
+            -- audit_log_access
+            GRANT SELECT, INSERT ON audit_log_access TO cms_service;
+            GRANT SELECT, INSERT ON audit_log_access TO cms_auditor;
+
+            -- Views
+            GRANT SELECT ON claim_validation_summary TO cms_analytics, cms_auditor, cms_clinician, cms_admin;
+            GRANT SELECT ON sync_operation_metrics TO cms_analytics, cms_auditor, cms_admin;
+            GRANT SELECT ON tenant_import_activity TO cms_analytics, cms_auditor, cms_admin;
+            GRANT SELECT ON claim_metrics_by_source_daily TO cms_analytics, cms_auditor;
+
+            -- Functions
+            GRANT EXECUTE ON FUNCTION update_updated_at_column TO cms_service;
+            GRANT EXECUTE ON FUNCTION cleanup_old_claims TO cms_admin;
+        </sql>
+        <rollback>
+            <!-- Revoke grants on rollback -->
+            <sql>
+                REVOKE ALL ON ALL TABLES IN SCHEMA public FROM cms_service, cms_analytics, cms_auditor, cms_clinician, cms_admin;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         Row-Level Security for tenant isolation
+         ============================================================================ -->
+    <changeSet id="cms-connector-0003-rls-policies" author="hdim" failOnError="false">
+        <comment>Enable Row-Level Security on cms_claims and claim_validation_errors for tenant isolation</comment>
+        <sql>
+            -- Enable RLS on cms_claims
+            ALTER TABLE cms_claims ENABLE ROW LEVEL SECURITY;
+
+            -- Policy: clinicians can only see their own tenant's claims
+            DROP POLICY IF EXISTS cms_claims_tenant_isolation ON cms_claims;
+            CREATE POLICY cms_claims_tenant_isolation ON cms_claims
+                FOR ALL
+                TO cms_clinician
+                USING (tenant_id = current_setting('app.current_tenant_id')::UUID);
+
+            -- Policy: clinicians are read-only
+            DROP POLICY IF EXISTS cms_claims_clinician_readonly ON cms_claims;
+            CREATE POLICY cms_claims_clinician_readonly ON cms_claims
+                FOR UPDATE
+                TO cms_clinician
+                USING (false);
+
+            -- Policy: analytics sees all claims
+            DROP POLICY IF EXISTS cms_claims_analytics_all ON cms_claims;
+            CREATE POLICY cms_claims_analytics_all ON cms_claims
+                FOR SELECT
+                TO cms_analytics
+                USING (true);
+
+            -- Enable RLS on claim_validation_errors
+            ALTER TABLE claim_validation_errors ENABLE ROW LEVEL SECURITY;
+
+            DROP POLICY IF EXISTS claim_validation_errors_tenant_isolation ON claim_validation_errors;
+            CREATE POLICY claim_validation_errors_tenant_isolation ON claim_validation_errors
+                FOR ALL
+                TO cms_clinician
+                USING (tenant_id = current_setting('app.current_tenant_id')::UUID);
+        </sql>
+        <rollback>
+            <sql>
+                ALTER TABLE cms_claims DISABLE ROW LEVEL SECURITY;
+                ALTER TABLE claim_validation_errors DISABLE ROW LEVEL SECURITY;
+                DROP POLICY IF EXISTS cms_claims_tenant_isolation ON cms_claims;
+                DROP POLICY IF EXISTS cms_claims_clinician_readonly ON cms_claims;
+                DROP POLICY IF EXISTS cms_claims_analytics_all ON cms_claims;
+                DROP POLICY IF EXISTS claim_validation_errors_tenant_isolation ON claim_validation_errors;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

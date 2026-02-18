@@ -4,6 +4,7 @@ import com.healthdata.cms.dto.OAuth2TokenResponse;
 import com.healthdata.cms.exception.CmsApiException;
 import com.healthdata.cms.model.CmsApiProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -56,7 +57,7 @@ public class OAuth2Manager {
     // Provider-specific configuration
     private final Map<CmsApiProvider, ProviderConfig> providerConfigs = new ConcurrentHashMap<>();
 
-    public OAuth2Manager(RestTemplate restTemplate) {
+    public OAuth2Manager(@Qualifier("oauth2RestTemplate") RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
         initializeProviderConfigs();
     }

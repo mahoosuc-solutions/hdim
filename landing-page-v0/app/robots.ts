@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: ['/api/', '/_next/'],
     },
-    sitemap: 'https://hdim-landing-page.vercel.app/sitemap.xml',
+    sitemap: 'https://www.healthdatainmotion.com/sitemap.xml',
   }
 }

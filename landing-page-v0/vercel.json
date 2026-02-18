@@ -40,6 +40,20 @@
       ]
     }
   ],
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "hdim-landing-page.vercel.app" }],
+      "destination": "https://www.healthdatainmotion.com/$1",
+      "permanent": true
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "healthdatainmotion.com" }],
+      "destination": "https://www.healthdatainmotion.com/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/demo",

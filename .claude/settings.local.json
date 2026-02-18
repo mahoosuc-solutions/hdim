@@ -114,7 +114,9 @@
       "Bash(xargs:*)",
       "Bash(ls:*)",
       "Bash(npx nx lint:*)",
-      "Bash(tee:*)"
+      "Bash(tee:*)",
+      "Bash(for svc in event-store-service ecr-service nurse-workflow-service qrda-export-service analytics-service data-ingestion-service)",
+      "Bash(do echo '=== $svc ===' grep -i \"security\\\\|spring-web\\\\|spring-boot-starter-web\" /mnt/wdblack/dev/projects/hdim-master/backend/modules/services/$svc/build.gradle.kts)"
     ],
     "deny": [],
     "ask": []

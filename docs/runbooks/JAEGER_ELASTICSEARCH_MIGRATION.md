@@ -200,3 +200,43 @@ Elasticsearch cluster (or use the ECK Operator for Kubernetes). Key steps:
 ---
 
 _Last updated: February 2026_
+
+---
+
+## Pilot Launch Activation Checklist
+
+Complete before onboarding the first customer:
+
+```bash
+# 1. Switch from Badger to Elasticsearch (Docker Compose pilot host)
+docker compose -f docker-compose.observability.yml down
+docker compose -f docker-compose.observability-production.yml up -d
+
+# 2. Wait for Elasticsearch to be healthy
+for i in {1..30}; do
+  curl -sf http://localhost:9200/_cluster/health | jq -r .status | grep -q "green\|yellow" && break
+  echo "Waiting for Elasticsearch ($i/30)..."
+  sleep 5
+done
+
+# 3. Verify Jaeger can write traces
+curl -sf http://localhost:16686/api/services | jq '.data | length'
+# Expected: > 0 after a few minutes of traffic (services report to Jaeger)
+
+# 4. Confirm hdim-* indices exist after first traces arrive
+curl -s "http://localhost:9200/_cat/indices?v&index=hdim-*"
+# Expected: jaeger-span-* and jaeger-service-* indices under hdim- prefix
+
+# 5. Confirm traces are persisted across container restart
+docker compose -f docker-compose.observability-production.yml restart jaeger
+sleep 10
+curl -sf http://localhost:16686/api/services | jq '.data | length'
+# Expected: same count as step 3 (data survived restart)
+```
+
+**K8s pilot:**
+```bash
+kubectl apply -f k8s/monitoring/jaeger-elasticsearch.yaml
+kubectl rollout status statefulset/elasticsearch -n hdim-production
+kubectl rollout status deployment/jaeger-collector -n hdim-production
+```

@@ -1,5 +1,6 @@
 package com.healthdata.notification.application;
 
+import com.healthdata.metrics.HealthcareMetrics;
 import com.healthdata.notification.domain.model.*;
 import com.healthdata.notification.domain.repository.NotificationPreferenceRepository;
 import com.healthdata.notification.domain.repository.NotificationRepository;
@@ -41,6 +42,9 @@ class NotificationServiceTest {
     private ChannelRouter channelRouter;
 
     @Mock
+    private HealthcareMetrics healthcareMetrics;
+
+    @Mock
     private NotificationProvider emailProvider;
 
     @Captor
@@ -56,7 +60,8 @@ class NotificationServiceTest {
             notificationRepository,
             preferenceRepository,
             templateService,
-            channelRouter
+            channelRouter,
+            healthcareMetrics
         );
     }
 

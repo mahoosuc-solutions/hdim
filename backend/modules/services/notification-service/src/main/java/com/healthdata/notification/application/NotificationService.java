@@ -1,5 +1,6 @@
 package com.healthdata.notification.application;
 
+import com.healthdata.metrics.HealthcareMetrics;
 import com.healthdata.notification.domain.model.*;
 import com.healthdata.notification.domain.repository.NotificationRepository;
 import com.healthdata.notification.domain.repository.NotificationPreferenceRepository;
@@ -27,6 +28,7 @@ public class NotificationService {
     private final NotificationPreferenceRepository preferenceRepository;
     private final TemplateService templateService;
     private final ChannelRouter channelRouter;
+    private final HealthcareMetrics healthcareMetrics;
 
     /**
      * Send a notification using a template.
@@ -101,10 +103,13 @@ public class NotificationService {
             notificationRepository.save(notification);
             
             log.info("Notification {} sent successfully via {}", notification.getId(), notification.getChannel());
+            healthcareMetrics.recordMessageProcessed(notification.getChannel().name(), true);
         } catch (Exception e) {
             log.error("Failed to send notification {}: {}", notification.getId(), e.getMessage());
             notification.markAsFailed(e.getMessage());
             notificationRepository.save(notification);
+            healthcareMetrics.recordMessageProcessed(
+                notification.getChannel() != null ? notification.getChannel().name() : "UNKNOWN", false);
         }
     }
 

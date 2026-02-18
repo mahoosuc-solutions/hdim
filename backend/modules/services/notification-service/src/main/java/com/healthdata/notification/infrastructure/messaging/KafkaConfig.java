@@ -1,6 +1,7 @@
 package com.healthdata.notification.infrastructure.messaging;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
@@ -21,6 +24,9 @@ import java.util.Map;
  *
  * Configures the JsonDeserializer to handle messages without type headers,
  * which is common when messages are produced by other services or testing tools.
+ *
+ * Failed messages are routed to a Dead Letter Topic (DLT) after 2 retries
+ * using the naming convention: {original-topic}.DLT
  */
 @Configuration
 public class KafkaConfig {
@@ -52,16 +58,26 @@ public class KafkaConfig {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+            DefaultErrorHandler errorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory =
             new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-
-        // Configure error handler to skip bad messages after 3 retries
-        factory.setCommonErrorHandler(new DefaultErrorHandler(
-            new FixedBackOff(1000L, 2L) // 1 second interval, 2 retries
-        ));
-
+        factory.setCommonErrorHandler(errorHandler);
         return factory;
+    }
+
+    /**
+     * Error handler that retries failed messages up to 2 times (1-second interval)
+     * then publishes unrecoverable messages to a Dead Letter Topic (DLT).
+     *
+     * DLT naming convention: {original-topic}.DLT
+     * Partition -1 lets Kafka choose the partition via the standard partitioner.
+     */
+    @Bean
+    public DefaultErrorHandler errorHandler(KafkaTemplate<String, Object> kafkaTemplate) {
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate,
+            (record, ex) -> new TopicPartition(record.topic() + ".DLT", -1));
+        return new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 2L));
     }
 }

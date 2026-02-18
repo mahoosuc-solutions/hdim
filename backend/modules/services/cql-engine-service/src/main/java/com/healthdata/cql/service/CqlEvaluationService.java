@@ -11,6 +11,7 @@ import com.healthdata.cql.repository.CqlLibraryRepository;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
+import com.healthdata.metrics.HealthcareMetrics;
 import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ public class CqlEvaluationService {
     private final ObjectMapper objectMapper;
     private final CqlAuditIntegration cqlAuditIntegration;
     private final Tracer tracer;
+    private final HealthcareMetrics healthcareMetrics;
 
     public CqlEvaluationService(
             CqlEvaluationRepository evaluationRepository,
@@ -53,13 +55,15 @@ public class CqlEvaluationService {
             MeasureTemplateEngine templateEngine,
             ObjectMapper objectMapper,
             CqlAuditIntegration cqlAuditIntegration,
-            Tracer tracer) {
+            Tracer tracer,
+            HealthcareMetrics healthcareMetrics) {
         this.evaluationRepository = evaluationRepository;
         this.libraryRepository = libraryRepository;
         this.templateEngine = templateEngine;
         this.objectMapper = objectMapper;
         this.cqlAuditIntegration = cqlAuditIntegration;
         this.tracer = tracer;
+        this.healthcareMetrics = healthcareMetrics;
     }
 
     /**
@@ -103,11 +107,12 @@ public class CqlEvaluationService {
                 .startSpan();
 
         long startTime = System.currentTimeMillis();
+        // Extract measureId before try block so it's accessible in catch blocks
+        CqlLibrary library = evaluation.getLibrary();
+        String measureId = library.getLibraryName();
 
         try (Scope scope = span.makeCurrent()) {
-            // Get the library information
-            CqlLibrary library = evaluation.getLibrary();
-            String measureId = library.getLibraryName();
+            // Library and measureId extracted before try block
             UUID patientId = evaluation.getPatientId();
 
             span.setAttribute("measure.id", measureId);
@@ -126,6 +131,7 @@ public class CqlEvaluationService {
             evaluation.setStatus("SUCCESS");
             long durationMs = System.currentTimeMillis() - startTime;
             evaluation.setDurationMs(durationMs);
+            healthcareMetrics.recordEvaluation(measureId, true, java.time.Duration.ofMillis(durationMs));
 
             span.setAttribute("result.in_denominator", result.isInDenominator());
             span.setAttribute("result.in_numerator", result.isInNumerator());
@@ -154,6 +160,7 @@ public class CqlEvaluationService {
             evaluation.setStatus("FAILED");
             evaluation.setErrorMessage("Result serialization error: " + e.getMessage());
             evaluation.setDurationMs(System.currentTimeMillis() - startTime);
+            healthcareMetrics.recordEvaluation(measureId, false, java.time.Duration.ofMillis(System.currentTimeMillis() - startTime));
         } catch (Exception e) {
             logger.error("Evaluation failed: {}", e.getMessage(), e);
             span.recordException(e);
@@ -161,6 +168,7 @@ public class CqlEvaluationService {
             evaluation.setStatus("FAILED");
             evaluation.setErrorMessage(e.getMessage());
             evaluation.setDurationMs(System.currentTimeMillis() - startTime);
+            healthcareMetrics.recordEvaluation(measureId, false, java.time.Duration.ofMillis(System.currentTimeMillis() - startTime));
         } finally {
             span.end();
         }

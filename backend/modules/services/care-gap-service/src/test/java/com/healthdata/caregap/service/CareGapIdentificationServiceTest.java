@@ -5,6 +5,11 @@ import com.healthdata.caregap.client.CqlEngineServiceClient;
 import com.healthdata.caregap.client.PatientServiceClient;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.persistence.CareGapRepository;
+import com.healthdata.metrics.HealthcareMetrics;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,6 +20,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
+
 
 import org.junit.jupiter.api.Tag;
 import java.time.LocalDate;
@@ -50,6 +56,21 @@ class CareGapIdentificationServiceTest {
     @Mock
     private CareGapAuditIntegration careGapAuditIntegration;
 
+    @Mock
+    private Tracer tracer;
+
+    @Mock
+    private SpanBuilder spanBuilder;
+
+    @Mock
+    private Span mockSpan;
+
+    @Mock
+    private Scope mockScope;
+
+    @Mock
+    private HealthcareMetrics healthcareMetrics;
+
     @Captor
     private ArgumentCaptor<CareGapEntity> gapCaptor;
 
@@ -64,12 +85,20 @@ class CareGapIdentificationServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Wire up tracer mock chain so spanBuilder().setAttribute().startSpan() doesn't NPE
+        lenient().when(tracer.spanBuilder(anyString())).thenReturn(spanBuilder);
+        lenient().when(spanBuilder.setAttribute(anyString(), anyString())).thenReturn(spanBuilder);
+        lenient().when(spanBuilder.startSpan()).thenReturn(mockSpan);
+        lenient().when(mockSpan.makeCurrent()).thenReturn(mockScope);
+
         service = new CareGapIdentificationService(
                 careGapRepository,
                 patientServiceClient,
                 cqlEngineServiceClient,
                 kafkaTemplate,
-                careGapAuditIntegration
+                careGapAuditIntegration,
+                tracer,
+                healthcareMetrics
         );
     }
 

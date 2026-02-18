@@ -19,11 +19,29 @@ import { getTlsOptions } from '../../config/options.js';
 
 export const options = { ...smokeContractOptions, ...getTlsOptions() };
 
-const BASE_URL   = __ENV.BASE_URL_FHIR || 'https://localhost:8085';
-const TENANT     = __ENV.TENANT_ID     || 'acme-health';
-const PATIENT_ID = __ENV.PATIENT_ID    || 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+const BASE_URL = __ENV.BASE_URL_FHIR || 'https://localhost:8085';
+const TENANT   = __ENV.TENANT_ID     || 'acme-health';
 
-export default function () {
+// setup() runs once before VUs start — discovers a real patient ID from the
+// FHIR Patient list so $everything uses a known-existing ID.
+// If no patients are seeded, patientId is null and $everything check is skipped.
+export function setup() {
+  const headers = {
+    ...getDemoAuthHeaders(TENANT),
+    Accept: 'application/fhir+json',
+  };
+  const r = http.get(`${BASE_URL}/fhir/Patient?_count=1`, { headers, ...getTlsOptions() });
+  try {
+    const body = JSON.parse(r.body);
+    const entry = body.entry;
+    if (Array.isArray(entry) && entry.length > 0) {
+      return { patientId: entry[0].resource.id };
+    }
+  } catch (_) {}
+  return { patientId: null };
+}
+
+export default function (data) {
   const headers = {
     ...getDemoAuthHeaders(TENANT),
     Accept: 'application/fhir+json',
@@ -39,11 +57,13 @@ export default function () {
     '[fhir] response time < 5s':        (r) => r.timings.duration < 5000,
   });
 
-  // Check 2: Patient/$everything returns entry array
-  const r2 = http.get(`${BASE_URL}/fhir/Patient/${PATIENT_ID}/$everything`, { headers });
-  check(r2, {
-    '[$everything] status 200':          (r) => r.status === 200,
-    '[$everything] resourceType Bundle': (r) => { try { return JSON.parse(r.body).resourceType === 'Bundle'; } catch (_) { return false; } },
-    '[$everything] entry array present': (r) => { try { return Array.isArray(JSON.parse(r.body).entry); } catch (_) { return false; } },
-  });
+  // Check 2: Patient/$everything — only run if a real patient ID was found in setup()
+  if (data.patientId) {
+    const r2 = http.get(`${BASE_URL}/fhir/Patient/${data.patientId}/$everything`, { headers });
+    check(r2, {
+      '[$everything] status 200':          (r) => r.status === 200,
+      '[$everything] resourceType Bundle': (r) => { try { return JSON.parse(r.body).resourceType === 'Bundle'; } catch (_) { return false; } },
+      '[$everything] entry array present': (r) => { try { return Array.isArray(JSON.parse(r.body).entry); } catch (_) { return false; } },
+    });
+  }
 }

@@ -24,7 +24,8 @@ export default function () {
   const headers = getDemoAuthHeaders(TENANT);
 
   // Crosswalk is reference data (ICD-10 → HCC mapping) — no PHI
-  const r = http.get(`${BASE_URL}/hcc/api/v1/hcc/crosswalk`, { headers });
+  // icd10Codes is a required @RequestParam — endpoint returns 400 without it
+  const r = http.get(`${BASE_URL}/hcc/api/v1/hcc/crosswalk?icd10Codes=E11.9&icd10Codes=I10`, { headers });
   check(r, {
     '[hcc] crosswalk status 200':  (r) => r.status === 200,
     '[hcc] body is non-empty':     (r) => r.body && r.body.length > 2,

@@ -26,18 +26,18 @@ export const defaultOptions = {
 
   thresholds: {
     // SLO: 95th percentile must be under 200ms
-    'http_req_duration{p(95)}': ['p(95)<200'],
+    http_req_duration: ['p(95)<200'],
     // SLO: error rate must be under 1%
     http_req_failed: ['rate<0.01'],
     // Per-group thresholds (applied when groups are used)
-    'http_req_duration{group:::patient}':       ['p(95)<200'],
-    'http_req_duration{group:::health-record}': ['p(95)<200'],
+    'http_req_duration{group:::patient}':        ['p(95)<200'],
+    'http_req_duration{group:::health-record}':  ['p(95)<200'],
     'http_req_duration{group:::risk-assessment}':['p(95)<200'],
-    'http_req_duration{group:::care-gaps}':     ['p(95)<200'],
-    'http_req_duration{group:::care-gap-count}':['p(95)<200'],
+    'http_req_duration{group:::care-gaps}':      ['p(95)<200'],
+    'http_req_duration{group:::care-gap-count}': ['p(95)<200'],
     'http_req_duration{group:::measure-results}':['p(95)<200'],
-    'http_req_duration{group:::measure-score}': ['p(95)<200'],
-    'http_req_duration{group:::pipeline}':      ['p(95)<500'],
+    'http_req_duration{group:::measure-score}':  ['p(95)<200'],
+    'http_req_duration{group:::pipeline}':       ['p(95)<500'],
   },
 
   tags: {
@@ -66,7 +66,7 @@ export const smokeOptions = {
   iterations: 1,
 
   thresholds: {
-    'http_req_duration{p(95)}': ['p(95)<2000'],
+    http_req_duration: ['p(95)<2000'],
     http_req_failed: ['rate<0.05'],
   },
 

@@ -46,9 +46,6 @@ export const defaultOptions = {
     slo_target: 'p95_200ms',
   },
 
-  // Graceful stop: allow in-flight requests to finish
-  gracefulStop: '10s',
-
   // Batch concurrent connections limit per VU
   batch: 10,
   batchPerHost: 4,
@@ -88,4 +85,35 @@ export function getOptions() {
     return smokeOptions;
   }
   return defaultOptions;
+}
+
+/**
+ * Returns k6 TLS options for mTLS connections when TLS_CA_CERT env var is set.
+ * Merges with scenario options to enable certificate-authenticated connections
+ * to the HDIM demo services.
+ *
+ * @returns {Object} k6-compatible tlsAuth block, or {} if certs not configured
+ */
+export function getTlsOptions() {
+  const clientCert = __ENV.TLS_CLIENT_CERT || '';
+  const clientKey  = __ENV.TLS_CLIENT_KEY  || '';
+
+  if (!clientCert || !clientKey) {
+    return {};
+  }
+
+  return {
+    // Provide client certificate for mTLS
+    tlsAuth: [
+      {
+        cert: clientCert,
+        key:  clientKey,
+        domains: ['localhost', '127.0.0.1'],
+      },
+    ],
+    // The demo services use a self-signed CA (hdim-local-ca) that k6 does not
+    // have in its trust store. Skip server cert verification while still
+    // presenting our client certificate for mTLS.
+    insecureSkipTLSVerify: true,
+  };
 }

@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.healthdata.fhir.service.FhirEverythingService;
 import com.healthdata.fhir.service.PatientService;
 
 import ca.uhn.fhir.context.FhirContext;
@@ -56,10 +57,12 @@ public class PatientController {
     private static final String DEFAULT_ACTOR = "admin-portal";
 
     private final PatientService patientService;
+    private final FhirEverythingService everythingService;
     private final IParser parser;
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService, FhirEverythingService everythingService) {
         this.patientService = patientService;
+        this.everythingService = everythingService;
         this.parser = FhirContext.forR4().newJsonParser().setPrettyPrint(false);
     }
 
@@ -307,6 +310,46 @@ public class PatientController {
 
         patientService.deletePatient(resolveTenant(tenantId), id, DEFAULT_ACTOR);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+        summary = "Patient $everything",
+        description = "Returns a Bundle containing the Patient resource and all associated clinical resources " +
+                      "(Encounters, Conditions, Observations, Procedures, MedicationRequests, MedicationAdministrations, " +
+                      "Immunizations, AllergyIntolerances, DiagnosticReports, CarePlans, Goals, Tasks, and Appointments). " +
+                      "Implements HL7 FHIR R4 Patient/$everything operation. " +
+                      "Bundle type is 'collection'; the total field reflects the number of resources included.",
+        operationId = "patientEverything"
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "Bundle containing all patient resources",
+            content = @Content(mediaType = "application/fhir+json", schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(responseCode = "404", description = "Patient not found"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @GetMapping("/{id}/$everything")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST', 'VIEWER')")
+    @Audited(
+            action = AuditAction.READ,
+            resourceType = "Patient",
+            purposeOfUse = "TREATMENT",
+            description = "Patient $everything — aggregate all clinical resources"
+    )
+    public ResponseEntity<String> getEverything(
+            @Parameter(description = "Tenant ID for multi-tenant isolation")
+            @RequestHeader(value = "X-Tenant-Id", required = false) String tenantId,
+            @Parameter(description = "Logical ID of the Patient resource", required = true,
+                       example = "123e4567-e89b-12d3-a456-426614174000")
+            @PathVariable("id") String id) {
+
+        Bundle bundle = everythingService.getEverything(resolveTenant(tenantId), id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.valueOf("application/fhir+json"))
+                .body(parser.encodeResourceToString(bundle));
     }
 
     @ExceptionHandler(PatientService.PatientValidationException.class)

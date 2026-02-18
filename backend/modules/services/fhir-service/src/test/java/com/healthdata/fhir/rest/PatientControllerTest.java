@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import com.healthdata.fhir.service.FhirEverythingService;
 import com.healthdata.fhir.service.PatientService;
 
 import ca.uhn.fhir.context.FhirContext;
@@ -39,11 +40,14 @@ class PatientControllerTest {
     @Mock
     private PatientService patientService;
 
+    @Mock
+    private FhirEverythingService everythingService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        PatientController controller = new PatientController(patientService);
+        PatientController controller = new PatientController(patientService, everythingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -113,5 +117,62 @@ class PatientControllerTest {
         ArgumentCaptor<String> filterCaptor = ArgumentCaptor.forClass(String.class);
         verify(patientService).searchPatients(eq("tenant-1"), filterCaptor.capture(), eq(20));
         org.assertj.core.api.Assertions.assertThat(filterCaptor.getValue()).isEqualTo("Chen");
+    }
+
+    // ─── Patient/$everything ──────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("$everything returns collection bundle with all patient resources")
+    void everythingReturnsBundleForKnownPatient() throws Exception {
+        UUID patientId = UUID.randomUUID();
+
+        org.hl7.fhir.r4.model.Bundle expectedBundle = new org.hl7.fhir.r4.model.Bundle();
+        expectedBundle.setType(org.hl7.fhir.r4.model.Bundle.BundleType.COLLECTION);
+        Patient patient = new Patient();
+        patient.setId(patientId.toString());
+        org.hl7.fhir.r4.model.Bundle.BundleEntryComponent entry = new org.hl7.fhir.r4.model.Bundle.BundleEntryComponent();
+        entry.setResource(patient);
+        expectedBundle.addEntry(entry);
+        expectedBundle.setTotal(1);
+
+        when(everythingService.getEverything(eq("tenant-1"), eq(patientId.toString())))
+                .thenReturn(expectedBundle);
+
+        mockMvc.perform(get("/Patient/{id}/$everything", patientId))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("\"resourceType\":\"Bundle\"")))
+                .andExpect(content().string(containsString("collection")));
+    }
+
+    @Test
+    @DisplayName("$everything returns 404 when patient not found")
+    void everythingReturnsNotFoundForUnknownPatient() throws Exception {
+        UUID patientId = UUID.randomUUID();
+
+        when(everythingService.getEverything(eq("tenant-1"), eq(patientId.toString())))
+                .thenThrow(new PatientService.PatientNotFoundException(patientId.toString()));
+
+        mockMvc.perform(get("/Patient/{id}/$everything", patientId))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("$everything respects tenant header for multi-tenant isolation")
+    void everythingRespectsExplicitTenantHeader() throws Exception {
+        UUID patientId = UUID.randomUUID();
+        String tenantB = "tenant-b";
+
+        org.hl7.fhir.r4.model.Bundle bundle = new org.hl7.fhir.r4.model.Bundle();
+        bundle.setType(org.hl7.fhir.r4.model.Bundle.BundleType.COLLECTION);
+        bundle.setTotal(0);
+
+        when(everythingService.getEverything(eq(tenantB), eq(patientId.toString())))
+                .thenReturn(bundle);
+
+        mockMvc.perform(get("/Patient/{id}/$everything", patientId)
+                        .header("X-Tenant-Id", tenantB))
+                .andExpect(status().isOk());
+
+        verify(everythingService).getEverything(eq(tenantB), eq(patientId.toString()));
     }
 }

@@ -142,7 +142,6 @@ class PayerWorkflowsControllerTest {
 
     @Test
     @DisplayName("POST /api/v1/payer/medicare/star-rating/calculate - Should calculate star rating from request")
-    @org.junit.jupiter.api.Disabled("Requires StarRatingCalculationRequest DTO with proper enum deserialization")
     void shouldCalculateStarRatingFromRequest() throws Exception {
         // Given
         StarRatingReport report = createSampleStarRatingReport("H1234-001");
@@ -210,7 +209,6 @@ class PayerWorkflowsControllerTest {
 
     @Test
     @DisplayName("POST /api/v1/payer/medicaid/compliance/calculate - Should calculate compliance from request")
-    @org.junit.jupiter.api.Disabled("Requires MedicaidComplianceRequest DTO with proper enum deserialization")
     void shouldCalculateComplianceFromRequest() throws Exception {
         // Given
         MedicaidComplianceReport report = createSampleComplianceReport("NY");
@@ -335,7 +333,6 @@ class PayerWorkflowsControllerTest {
 
     @Test
     @DisplayName("GET /api/v1/payer/dashboard/financial - Should return financial impact summary")
-    @org.junit.jupiter.api.Disabled("Dashboard financial endpoint not yet implemented")
     void shouldReturnFinancialImpact() throws Exception {
         // Given
         PayerDashboardMetrics metrics = createDashboardWithFinancials();

@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- ============================================================================
+         CMS_CONDITIONS - Clinical conditions from CMS DPC data
+         Maps to CmsCondition JPA entity (FHIR R4 Condition resource)
+         ============================================================================ -->
+    <changeSet id="cms-connector-0004-cms-conditions" author="hdim">
+        <comment>Create cms_conditions table: clinical conditions/diagnoses from CMS DPC API (FHIR R4 Condition)</comment>
+
+        <createTable tableName="cms_conditions">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="condition_id" type="varchar(255)"/>
+            <column name="patient_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(50)"/>
+            <column name="code_system" type="varchar(255)"/>
+            <column name="code_value" type="varchar(255)"/>
+            <column name="code_display" type="varchar(500)"/>
+            <column name="clinical_status" type="varchar(100)"/>
+            <column name="verification_status" type="varchar(100)"/>
+            <column name="category" type="varchar(100)"/>
+            <column name="severity" type="varchar(50)"/>
+            <column name="onset_date" type="date"/>
+            <column name="abatement_date" type="date"/>
+            <column name="recorded_date" type="date"/>
+            <column name="body_site" type="varchar(255)"/>
+            <column name="content_hash" type="varchar(255)"/>
+            <column name="imported_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="is_processed" type="boolean" defaultValueBoolean="false"/>
+            <column name="has_validation_errors" type="boolean" defaultValueBoolean="false"/>
+        </createTable>
+
+        <createIndex indexName="idx_cms_conditions_tenant" tableName="cms_conditions">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_conditions_patient" tableName="cms_conditions">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_conditions_code" tableName="cms_conditions">
+            <column name="code_system"/>
+            <column name="code_value"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cms_conditions"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         CMS_MEDICATION_REQUESTS - Medication prescriptions from CMS DPC Part D data
+         Maps to CmsMedicationRequest JPA entity (FHIR R4 MedicationRequest resource)
+         ============================================================================ -->
+    <changeSet id="cms-connector-0004-cms-medication-requests" author="hdim">
+        <comment>Create cms_medication_requests table: medication prescriptions from CMS Part D data (FHIR R4 MedicationRequest)</comment>
+
+        <createTable tableName="cms_medication_requests">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="medication_request_id" type="varchar(255)"/>
+            <column name="patient_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(50)"/>
+            <column name="medication_code_system" type="varchar(255)"/>
+            <column name="medication_code_value" type="varchar(255)"/>
+            <column name="medication_code_display" type="varchar(500)"/>
+            <column name="status" type="varchar(100)"/>
+            <column name="intent" type="varchar(100)"/>
+            <column name="category" type="varchar(100)"/>
+            <column name="priority" type="varchar(50)"/>
+            <column name="authored_on" type="date"/>
+            <column name="requester_reference" type="varchar(255)"/>
+            <column name="reason_code" type="varchar(255)"/>
+            <column name="dosage_instruction" type="text"/>
+            <column name="dispense_quantity" type="double precision"/>
+            <column name="dispense_quantity_unit" type="varchar(100)"/>
+            <column name="number_of_refills" type="integer"/>
+            <column name="days_supply" type="integer"/>
+            <column name="substitution_allowed" type="boolean"/>
+            <column name="content_hash" type="varchar(255)"/>
+            <column name="imported_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="is_processed" type="boolean" defaultValueBoolean="false"/>
+            <column name="has_validation_errors" type="boolean" defaultValueBoolean="false"/>
+        </createTable>
+
+        <createIndex indexName="idx_cms_med_requests_tenant" tableName="cms_medication_requests">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_med_requests_patient" tableName="cms_medication_requests">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_med_requests_code" tableName="cms_medication_requests">
+            <column name="medication_code_system"/>
+            <column name="medication_code_value"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cms_medication_requests"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         CMS_OBSERVATIONS - Clinical observations/lab results from CMS DPC data
+         Maps to CmsObservation JPA entity (FHIR R4 Observation resource)
+         ============================================================================ -->
+    <changeSet id="cms-connector-0004-cms-observations" author="hdim">
+        <comment>Create cms_observations table: clinical observations and lab results from CMS DPC API (FHIR R4 Observation)</comment>
+
+        <createTable tableName="cms_observations">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="observation_id" type="varchar(255)"/>
+            <column name="patient_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(50)"/>
+            <column name="code_system" type="varchar(255)"/>
+            <column name="code_value" type="varchar(255)"/>
+            <column name="code_display" type="varchar(500)"/>
+            <column name="status" type="varchar(100)"/>
+            <column name="category" type="varchar(100)"/>
+            <column name="effective_datetime" type="timestamp"/>
+            <column name="issued" type="timestamp"/>
+            <column name="value_quantity" type="double precision"/>
+            <column name="value_unit" type="varchar(100)"/>
+            <column name="value_system" type="varchar(255)"/>
+            <column name="value_code" type="varchar(255)"/>
+            <column name="value_string" type="varchar(500)"/>
+            <column name="value_codeable_concept" type="varchar(500)"/>
+            <column name="reference_range_low" type="double precision"/>
+            <column name="reference_range_high" type="double precision"/>
+            <column name="interpretation" type="varchar(100)"/>
+            <column name="body_site" type="varchar(255)"/>
+            <column name="method" type="varchar(255)"/>
+            <column name="performer_reference" type="varchar(255)"/>
+            <column name="note" type="text"/>
+            <column name="content_hash" type="varchar(255)"/>
+            <column name="imported_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="is_processed" type="boolean" defaultValueBoolean="false"/>
+            <column name="has_validation_errors" type="boolean" defaultValueBoolean="false"/>
+        </createTable>
+
+        <createIndex indexName="idx_cms_observations_tenant" tableName="cms_observations">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_observations_patient" tableName="cms_observations">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_observations_code" tableName="cms_observations">
+            <column name="code_system"/>
+            <column name="code_value"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cms_observations"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         CMS_PROCEDURES - Clinical procedures from CMS DPC data
+         Maps to CmsProcedure JPA entity (FHIR R4 Procedure resource)
+         ============================================================================ -->
+    <changeSet id="cms-connector-0004-cms-procedures" author="hdim">
+        <comment>Create cms_procedures table: clinical procedures from CMS DPC API (FHIR R4 Procedure)</comment>
+
+        <createTable tableName="cms_procedures">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="procedure_id" type="varchar(255)"/>
+            <column name="patient_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(50)"/>
+            <column name="code_system" type="varchar(255)"/>
+            <column name="code_value" type="varchar(255)"/>
+            <column name="code_display" type="varchar(500)"/>
+            <column name="status" type="varchar(100)"/>
+            <column name="category" type="varchar(100)"/>
+            <column name="performed_date" type="date"/>
+            <column name="performed_date_end" type="date"/>
+            <column name="location" type="varchar(255)"/>
+            <column name="performer_reference" type="varchar(255)"/>
+            <column name="body_site" type="varchar(255)"/>
+            <column name="outcome" type="varchar(255)"/>
+            <column name="reason_code" type="varchar(255)"/>
+            <column name="content_hash" type="varchar(255)"/>
+            <column name="imported_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="is_processed" type="boolean" defaultValueBoolean="false"/>
+            <column name="has_validation_errors" type="boolean" defaultValueBoolean="false"/>
+        </createTable>
+
+        <createIndex indexName="idx_cms_procedures_tenant" tableName="cms_procedures">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_procedures_patient" tableName="cms_procedures">
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_procedures_code" tableName="cms_procedures">
+            <column name="code_system"/>
+            <column name="code_value"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cms_procedures"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         CMS_INTEGRATION_CONFIG - CMS API integration configuration per tenant
+         Maps to CmsIntegrationConfig JPA entity
+         ============================================================================ -->
+    <changeSet id="cms-connector-0004-cms-integration-config" author="hdim">
+        <comment>Create cms_integration_config table: CMS API integration settings per tenant (BCDA, DPC, multi-API)</comment>
+
+        <createTable tableName="cms_integration_config">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="api_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="oauth_client_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="oauth_client_secret" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cms_organization_id" type="varchar(255)"/>
+            <column name="organization_name" type="varchar(255)"/>
+            <column name="is_sandbox" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bcda_base_url" type="varchar(500)"/>
+            <column name="dpc_base_url" type="varchar(500)"/>
+            <column name="blue_button_base_url" type="varchar(500)"/>
+            <column name="ab2d_base_url" type="varchar(500)"/>
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_sync_timestamp" type="timestamp"/>
+            <column name="bcda_sync_interval_hours" type="integer" defaultValueNumeric="24"/>
+            <column name="dpc_real_time_enabled" type="boolean" defaultValueBoolean="true"/>
+            <column name="dpc_cache_ttl_minutes" type="integer" defaultValueNumeric="5"/>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp"/>
+            <column name="verified_at" type="timestamp"/>
+            <column name="created_by" type="uuid"/>
+            <column name="verified_by" type="uuid"/>
+            <column name="notes" type="text"/>
+            <column name="is_active" type="boolean" defaultValueBoolean="true"/>
+        </createTable>
+
+        <createIndex indexName="idx_tenant_id" tableName="cms_integration_config" unique="true">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_status" tableName="cms_integration_config">
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_api_type" tableName="cms_integration_config">
+            <column name="api_type"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="cms_integration_config"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

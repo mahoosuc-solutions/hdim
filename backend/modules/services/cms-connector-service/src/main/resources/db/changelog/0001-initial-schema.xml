@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- Enable required PostgreSQL extensions -->
+    <changeSet id="cms-connector-0001-extensions" author="hdim">
+        <comment>Enable required PostgreSQL extensions for UUID generation and indexing</comment>
+        <sql>
+            CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+            CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+            CREATE EXTENSION IF NOT EXISTS "btree_gin";
+        </sql>
+        <rollback>
+            <!-- Extensions are shared resources; do not drop them on rollback -->
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         CMS_CLAIMS - Main claims table
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-cms-claims" author="hdim">
+        <comment>Create cms_claims table: primary claims data from CMS APIs (BCDA, DPC, AB2D). HIPAA-protected.</comment>
+
+        <createTable tableName="cms_claims">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="claim_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="beneficiary_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="claim_type" type="varchar(100)"/>
+            <column name="claim_date" type="date"/>
+            <column name="processing_date" type="date"/>
+            <column name="total_charge_amount" type="numeric(15,2)"/>
+            <column name="total_allowed_amount" type="numeric(15,2)"/>
+            <column name="fhir_resource" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_processed" type="boolean" defaultValueBoolean="false"/>
+            <column name="has_validation_errors" type="boolean" defaultValueBoolean="false"/>
+            <column name="content_hash" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="imported_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="imported_by" type="varchar(255)"/>
+            <column name="deduplication_status" type="varchar(50)" defaultValue="NEW"/>
+            <column name="deduplication_confidence" type="numeric(3,2)"/>
+            <column name="matched_claim_id" type="uuid"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="validation_run_count" type="integer" defaultValueNumeric="0"/>
+            <column name="last_validation_at" type="timestamp with time zone"/>
+        </createTable>
+
+        <sql>
+            ALTER TABLE cms_claims
+                ADD CONSTRAINT chk_cms_claims_data_source
+                CHECK (data_source IN ('BCDA', 'DPC', 'AB2D'));
+
+            ALTER TABLE cms_claims
+                ADD CONSTRAINT chk_cms_claims_dedup_status
+                CHECK (deduplication_status IN ('NEW', 'EXACT_MATCH', 'CONTENT_MATCH', 'BENEFICIARY_DATE_MATCH', 'UNIQUE'));
+        </sql>
+
+        <createIndex indexName="idx_cms_claims_tenant_id" tableName="cms_claims">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_claim_id" tableName="cms_claims">
+            <column name="claim_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_beneficiary_id" tableName="cms_claims">
+            <column name="beneficiary_id"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_data_source" tableName="cms_claims">
+            <column name="data_source"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_imported_at" tableName="cms_claims">
+            <column name="imported_at" descending="true"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_content_hash" tableName="cms_claims">
+            <column name="content_hash"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_dedup_status" tableName="cms_claims">
+            <column name="deduplication_status"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_tenant_source_date" tableName="cms_claims">
+            <column name="tenant_id"/>
+            <column name="data_source"/>
+            <column name="claim_date" descending="true"/>
+        </createIndex>
+        <createIndex indexName="idx_cms_claims_tenant_beneficiary" tableName="cms_claims">
+            <column name="tenant_id"/>
+            <column name="beneficiary_id"/>
+        </createIndex>
+
+        <!-- GIN index for FHIR JSONB queries -->
+        <sql>
+            CREATE INDEX idx_cms_claims_fhir_gin ON cms_claims USING GIN (fhir_resource);
+        </sql>
+
+        <!-- updated_at trigger function (splitStatements=false required for dollar-quoted PL/pgSQL) -->
+        <sql splitStatements="false">
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS $$
+            BEGIN
+              NEW.updated_at = CURRENT_TIMESTAMP;
+              RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql
+        </sql>
+
+        <!-- updated_at trigger for cms_claims -->
+        <sql>
+            CREATE TRIGGER cms_claims_update_trigger
+            BEFORE UPDATE ON cms_claims
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column()
+        </sql>
+
+        <rollback>
+            <sql>DROP TRIGGER IF EXISTS cms_claims_update_trigger ON cms_claims;</sql>
+            <sql>DROP FUNCTION IF EXISTS update_updated_at_column();</sql>
+            <dropTable tableName="cms_claims"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         CLAIM_VALIDATION_ERRORS - Validation failure details
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-claim-validation-errors" author="hdim">
+        <comment>Create claim_validation_errors table for detailed validation error logs</comment>
+
+        <createTable tableName="claim_validation_errors">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="claim_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_id" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_message" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_severity" type="varchar(20)"/>
+            <column name="field_name" type="varchar(255)"/>
+            <column name="field_value" type="text"/>
+            <column name="detected_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="resolved" type="boolean" defaultValueBoolean="false"/>
+            <column name="resolved_at" type="timestamp with time zone"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="claim_validation_errors"
+            baseColumnNames="claim_id"
+            referencedTableName="cms_claims"
+            referencedColumnNames="id"
+            constraintName="fk_validation_errors_claim_id"
+            onDelete="CASCADE"/>
+
+        <sql>
+            ALTER TABLE claim_validation_errors
+                ADD CONSTRAINT chk_validation_errors_severity
+                CHECK (error_severity IN ('ERROR', 'WARNING'));
+        </sql>
+
+        <createIndex indexName="idx_validation_errors_claim_id" tableName="claim_validation_errors">
+            <column name="claim_id"/>
+        </createIndex>
+        <createIndex indexName="idx_validation_errors_tenant_id" tableName="claim_validation_errors">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_validation_errors_rule_id" tableName="claim_validation_errors">
+            <column name="rule_id"/>
+        </createIndex>
+        <createIndex indexName="idx_validation_errors_resolved" tableName="claim_validation_errors">
+            <column name="resolved"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="claim_validation_errors"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         SYNC_AUDIT_LOG - Sync operation tracking
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-sync-audit-log" author="hdim">
+        <comment>Create sync_audit_log table: complete audit trail of all CMS data sync operations</comment>
+
+        <createTable tableName="sync_audit_log">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="sync_source" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sync_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sync_status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid"/>
+            <column name="total_claims" type="integer" defaultValueNumeric="0"/>
+            <column name="successful_claims" type="integer" defaultValueNumeric="0"/>
+            <column name="failed_claims" type="integer" defaultValueNumeric="0"/>
+            <column name="duplicate_claims" type="integer" defaultValueNumeric="0"/>
+            <column name="error_message" type="text"/>
+            <column name="started_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="timestamp with time zone"/>
+            <column name="duration_seconds" type="integer"/>
+            <column name="export_id" type="varchar(255)"/>
+            <column name="created_by" type="varchar(255)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <sql>
+            ALTER TABLE sync_audit_log
+                ADD CONSTRAINT chk_sync_audit_source
+                CHECK (sync_source IN ('BCDA', 'DPC', 'AB2D'));
+            ALTER TABLE sync_audit_log
+                ADD CONSTRAINT chk_sync_audit_type
+                CHECK (sync_type IN ('BULK_EXPORT', 'POINT_OF_CARE', 'MANUAL'));
+            ALTER TABLE sync_audit_log
+                ADD CONSTRAINT chk_sync_audit_status
+                CHECK (sync_status IN ('INITIATED', 'IN_PROGRESS', 'COMPLETED', 'FAILED'));
+        </sql>
+
+        <createIndex indexName="idx_sync_audit_source" tableName="sync_audit_log">
+            <column name="sync_source"/>
+        </createIndex>
+        <createIndex indexName="idx_sync_audit_status" tableName="sync_audit_log">
+            <column name="sync_status"/>
+        </createIndex>
+        <createIndex indexName="idx_sync_audit_created_at" tableName="sync_audit_log">
+            <column name="created_at" descending="true"/>
+        </createIndex>
+        <createIndex indexName="idx_sync_audit_tenant_id" tableName="sync_audit_log">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="sync_audit_log"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         SYNC_STATUS - Track in-progress sync operations
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-sync-status" author="hdim">
+        <comment>Create sync_status table: real-time status tracking for long-running sync operations</comment>
+
+        <createTable tableName="sync_status">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="sync_audit_log_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_phase" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phase_start_time" type="timestamp with time zone"/>
+            <column name="total_files" type="integer" defaultValueNumeric="0"/>
+            <column name="processed_files" type="integer" defaultValueNumeric="0"/>
+            <column name="current_file_name" type="varchar(255)"/>
+            <column name="last_message" type="text"/>
+            <column name="last_updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="sync_status"
+            baseColumnNames="sync_audit_log_id"
+            referencedTableName="sync_audit_log"
+            referencedColumnNames="id"
+            constraintName="fk_sync_status_audit_log"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="sync_status"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         TENANT_CONFIG - Multi-tenant configuration
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-tenant-config" author="hdim">
+        <comment>Create tenant_config table: multi-tenant configuration for data isolation and retention</comment>
+
+        <createTable tableName="tenant_config">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_name" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="tenant_type" type="varchar(50)"/>
+            <column name="primary_data_sources" type="varchar(500)"/>
+            <column name="claim_retention_days" type="integer" defaultValueNumeric="2555"/>
+            <column name="sync_enabled" type="boolean" defaultValueBoolean="true"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <sql>
+            CREATE TRIGGER tenant_config_update_trigger
+            BEFORE UPDATE ON tenant_config
+            FOR EACH ROW
+            EXECUTE FUNCTION update_updated_at_column();
+        </sql>
+
+        <rollback>
+            <sql>DROP TRIGGER IF EXISTS tenant_config_update_trigger ON tenant_config;</sql>
+            <dropTable tableName="tenant_config"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         IMPORT_SESSION - Track multi-file imports
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-import-session" author="hdim">
+        <comment>Create import_session table: parent record for tracking multi-file import operations</comment>
+
+        <createTable tableName="import_session">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="data_source" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="session_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_files" type="integer" defaultValueNumeric="0"/>
+            <column name="processed_files" type="integer" defaultValueNumeric="0"/>
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_message" type="text"/>
+            <column name="started_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="timestamp with time zone"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <sql>
+            ALTER TABLE import_session
+                ADD CONSTRAINT chk_import_session_status
+                CHECK (status IN ('IN_PROGRESS', 'COMPLETED', 'FAILED', 'PAUSED'));
+        </sql>
+
+        <createIndex indexName="idx_import_session_tenant_id" tableName="import_session">
+            <column name="tenant_id"/>
+        </createIndex>
+        <createIndex indexName="idx_import_session_status" tableName="import_session">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="import_session"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================================
+         IMPORT_SESSION_FILE - Track individual files in import session
+         ============================================================================ -->
+    <changeSet id="cms-connector-0001-import-session-file" author="hdim">
+        <comment>Create import_session_file table: granular tracking of individual files within import sessions</comment>
+
+        <createTable tableName="import_session_file">
+            <column name="id" type="uuid" defaultValueComputed="uuid_generate_v4()">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="import_session_id" type="uuid">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="varchar(500)"/>
+            <column name="file_size_bytes" type="integer"/>
+            <column name="status" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="claims_in_file" type="integer" defaultValueNumeric="0"/>
+            <column name="claims_processed" type="integer" defaultValueNumeric="0"/>
+            <column name="claims_failed" type="integer" defaultValueNumeric="0"/>
+            <column name="error_message" type="text"/>
+            <column name="started_at" type="timestamp with time zone"/>
+            <column name="completed_at" type="timestamp with time zone"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="import_session_file"
+            baseColumnNames="import_session_id"
+            referencedTableName="import_session"
+            referencedColumnNames="id"
+            constraintName="fk_import_session_file_session"
+            onDelete="CASCADE"/>
+
+        <rollback>
+            <dropTable tableName="import_session_file"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

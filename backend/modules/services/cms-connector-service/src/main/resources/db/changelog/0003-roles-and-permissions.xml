@@ -42,7 +42,7 @@
          ============================================================================ -->
     <changeSet id="cms-connector-0003-create-roles" author="hdim" failOnError="false">
         <comment>Create database roles for role-based access control (production environments)</comment>
-        <sql>
+        <sql splitStatements="false">
             DO $$
             BEGIN
                 IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'cms_service') THEN

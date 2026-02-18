@@ -24,7 +24,7 @@ const TENANT   = __ENV.TENANT_ID        || 'acme-health';
 export default function () {
   const headers = getDemoAuthHeaders(TENANT);
 
-  const r = http.get(`${BASE_URL}/quality-measure/api/v1/measures/results?page=0&size=20`, { headers });
+  const r = http.get(`${BASE_URL}/quality-measure/results?page=0&size=20`, { headers });
   check(r, {
     '[quality-measure] status 200':             (r) => r.status === 200,
     '[quality-measure] body has content field': (r) => { try { return JSON.parse(r.body).content !== undefined; } catch (_) { return false; } },

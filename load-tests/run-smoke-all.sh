@@ -150,9 +150,9 @@ write_results() {
   local pass_count=0 fail_count=0 skip_count=0
   for r in "${RESULTS[@]}"; do
     case "${r}" in
-      ✅*) (( pass_count++ )) ;;
-      ❌*) (( fail_count++ )) ;;
-      ⏭*) (( skip_count++ )) ;;
+      ✅*) pass_count=$(( pass_count + 1 )) ;;
+      ❌*) fail_count=$(( fail_count + 1 )) ;;
+      ⏭*) skip_count=$(( skip_count + 1 )) ;;
     esac
   done
   local total_count="${#RESULTS[@]}"

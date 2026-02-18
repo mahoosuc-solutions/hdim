@@ -19,7 +19,7 @@ const inter = localFont({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://hdim-landing-page.vercel.app'),
+  metadataBase: new URL('https://www.healthdatainmotion.com'),
   title: 'HDIM - FHIR-Native Healthcare Quality Platform',
   description: 'The FHIR-native platform for HEDIS and quality programs. Automate measure evaluation, detect care gaps, and improve quality performance with interoperable workflows.',
   keywords: 'HEDIS, FHIR, healthcare interoperability, care gaps, quality measures, CQL, value-based care, Star Ratings, Medicare Advantage',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'HDIM - Healthcare Quality Measurement Platform',
     description: 'Automate quality measure evaluation and close care gaps with a FHIR-native platform.',
-    url: 'https://hdim-landing-page.vercel.app',
+    url: 'https://www.healthdatainmotion.com',
     siteName: 'HDIM',
     images: [
       {

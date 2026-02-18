@@ -68,3 +68,6 @@ tools/demo-control/
 # Git worktrees for isolated development
 .worktrees/
 load-tests/results/*.json
+
+# Smoke test raw output — commit only .md summaries
+validation/results/*.json

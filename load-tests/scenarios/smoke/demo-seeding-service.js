@@ -4,6 +4,10 @@
  * NOTE: demo-seeding-service runs on plain HTTP (port 8098), NOT mTLS.
  * No TLS options are applied — uses smokeContractOptions only.
  *
+ * Context path: demo-seeding-service is deployed under /demo
+ * (SERVER_SERVLET_CONTEXT_PATH=/demo per application config).
+ * Docker HEALTHCHECK confirms: wget .../demo/actuator/health
+ *
  * Unique requirements validated:
  *   - Health endpoint returns HTTP 200
  *   - Actuator status = "UP"
@@ -22,7 +26,9 @@ export const options = smokeContractOptions;
 const BASE_URL = __ENV.BASE_URL_SEEDING || 'http://localhost:8098';
 
 export default function () {
-  const r = http.get(`${BASE_URL}/actuator/health`);
+  // Context path is /demo — confirmed via Docker HEALTHCHECK:
+  //   wget http://localhost:8098/demo/actuator/health
+  const r = http.get(`${BASE_URL}/demo/actuator/health`);
   check(r, {
     '[seeding] health status 200':  (r) => r.status === 200,
     '[seeding] status UP':          (r) => { try { return JSON.parse(r.body).status === 'UP'; } catch (_) { return false; } },

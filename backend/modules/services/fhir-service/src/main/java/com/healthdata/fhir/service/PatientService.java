@@ -360,6 +360,7 @@ public class PatientService {
 
         org.hl7.fhir.r4.model.Bundle bundle = new org.hl7.fhir.r4.model.Bundle();
         bundle.setType(org.hl7.fhir.r4.model.Bundle.BundleType.SEARCHSET);
+        bundle.setEntry(new java.util.ArrayList<>()); // Always include entry array (FHIR R4 Bundle spec)
         bundle.setTotal(entities.size());
 
         entities.stream()

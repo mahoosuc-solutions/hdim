@@ -182,7 +182,10 @@ public class PatientController {
 
         String filter = family != null ? family : name;
         Bundle bundle = patientService.searchPatients(resolveTenant(tenantId), filter, count);
+        // ⚠️ HIPAA COMPLIANCE: Cache-Control required on all PHI search endpoints
+        // §164.312(a)(2)(i) - Prevents browser/proxy caching of patient data
         return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate, private")
                 .contentType(MediaType.valueOf("application/fhir+json"))
                 .body(parser.encodeResourceToString(bundle));
     }

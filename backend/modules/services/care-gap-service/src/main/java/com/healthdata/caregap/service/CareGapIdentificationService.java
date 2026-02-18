@@ -8,6 +8,10 @@ import com.healthdata.caregap.client.CqlEngineServiceClient;
 import com.healthdata.caregap.client.PatientServiceClient;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.persistence.CareGapRepository;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -15,6 +19,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.healthdata.metrics.HealthcareMetrics;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -41,6 +46,8 @@ public class CareGapIdentificationService {
     private final CqlEngineServiceClient cqlEngineServiceClient;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final CareGapAuditIntegration careGapAuditIntegration;
+    private final Tracer tracer;
+    private final HealthcareMetrics healthcareMetrics;
     private final FhirContext fhirContext = FhirContext.forR4();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -56,31 +63,45 @@ public class CareGapIdentificationService {
      */
     @Transactional
     public List<CareGapEntity> identifyAllCareGaps(String tenantId, UUID patientId, String createdBy) {
-        log.info("Identifying all care gaps for patient: {} in tenant: {}", patientId, tenantId);
+        Span span = tracer.spanBuilder("care_gap.identify_all")
+                .setAttribute("tenant.id", tenantId)
+                .setAttribute("patient.id", patientId.toString())
+                .startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            log.info("Identifying all care gaps for patient: {} in tenant: {}", patientId, tenantId);
 
-        List<CareGapEntity> gaps = new ArrayList<>();
+            List<CareGapEntity> gaps = new ArrayList<>();
 
-        // Get available CQL libraries
-        String librariesJson = cqlEngineServiceClient.getAvailableLibraries();
-        List<String> libraries = parseLibraryNames(librariesJson);
+            // Get available CQL libraries
+            String librariesJson = cqlEngineServiceClient.getAvailableLibraries();
+            List<String> libraries = parseLibraryNames(librariesJson);
 
-        // Evaluate each library
-        for (String library : libraries) {
-            try {
-                List<CareGapEntity> libraryGaps = identifyCareGapsForLibrary(
-                        tenantId, patientId, library, createdBy);
-                gaps.addAll(libraryGaps);
-            } catch (Exception e) {
-                log.error("Error evaluating library {} for patient {}: {}",
-                        library, patientId, e.getMessage());
+            // Evaluate each library
+            for (String library : libraries) {
+                try {
+                    List<CareGapEntity> libraryGaps = identifyCareGapsForLibrary(
+                            tenantId, patientId, library, createdBy);
+                    gaps.addAll(libraryGaps);
+                } catch (Exception e) {
+                    log.error("Error evaluating library {} for patient {}: {}",
+                            library, patientId, e.getMessage());
+                }
             }
+
+            // Publish gap identification event
+            publishGapIdentificationEvent(tenantId, patientId, gaps.size());
+
+            span.setAttribute("gaps.identified", gaps.size());
+            span.setStatus(StatusCode.OK);
+            log.info("Identified {} care gaps for patient: {}", gaps.size(), patientId);
+            return gaps;
+        } catch (Exception e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, e.getMessage());
+            throw e;
+        } finally {
+            span.end();
         }
-
-        // Publish gap identification event
-        publishGapIdentificationEvent(tenantId, patientId, gaps.size());
-
-        log.info("Identified {} care gaps for patient: {}", gaps.size(), patientId);
-        return gaps;
     }
 
     /**
@@ -121,6 +142,7 @@ public class CareGapIdentificationService {
             // Save gap
             CareGapEntity saved = careGapRepository.save(gap);
             gaps.add(saved);
+            healthcareMetrics.recordCareGapDetected(libraryName);
 
             log.info("Created care gap: {} for measure: {}", saved.getId(), libraryName);
 
@@ -201,37 +223,52 @@ public class CareGapIdentificationService {
             String closureReason,
             String closureAction
     ) {
-        log.info("Closing care gap: {} by: {}", gapId, closedBy);
+        Span span = tracer.spanBuilder("care_gap.close")
+                .setAttribute("tenant.id", tenantId)
+                .setAttribute("gap.id", gapId.toString())
+                .startSpan();
+        try (Scope scope = span.makeCurrent()) {
+            log.info("Closing care gap: {} by: {}", gapId, closedBy);
 
-        CareGapEntity gap = careGapRepository.findByIdAndTenantId(gapId, tenantId)
-                .orElseThrow(() -> new RuntimeException("Care gap not found: " + gapId));
+            CareGapEntity gap = careGapRepository.findByIdAndTenantId(gapId, tenantId)
+                    .orElseThrow(() -> new RuntimeException("Care gap not found: " + gapId));
 
-        gap.setGapStatus("CLOSED");
-        gap.setClosedDate(Instant.now());
-        gap.setClosedBy(closedBy);
-        gap.setClosureReason(closureReason);
-        gap.setClosureAction(closureAction);
-        gap.setUpdatedBy(closedBy);
+            gap.setGapStatus("CLOSED");
+            gap.setClosedDate(Instant.now());
+            gap.setClosedBy(closedBy);
+            gap.setClosureReason(closureReason);
+            gap.setClosureAction(closureAction);
+            gap.setUpdatedBy(closedBy);
 
-        CareGapEntity saved = careGapRepository.save(gap);
+            CareGapEntity saved = careGapRepository.save(gap);
+        healthcareMetrics.recordCareGapClosed(
+                gap.getMeasureId() != null ? gap.getMeasureId() : gapId.toString(), closureReason);
 
-        // Publish gap closure event
-        publishGapClosureEvent(tenantId, gapId.toString(), closedBy);
+            // Publish gap closure event
+            publishGapClosureEvent(tenantId, gapId.toString(), closedBy);
 
-        // Publish audit event for care gap closure
-        if (gap.getPatientId() != null && gap.getMeasureId() != null) {
-            careGapAuditIntegration.publishCareGapClosureEvent(
-                    tenantId,
-                    gap.getPatientId().toString(),
-                    gap.getMeasureId(),
-                    gapId.toString(),
-                    closedBy,
-                    closureReason,
-                    closureAction
-            );
+            // Publish audit event for care gap closure
+            if (gap.getPatientId() != null && gap.getMeasureId() != null) {
+                careGapAuditIntegration.publishCareGapClosureEvent(
+                        tenantId,
+                        gap.getPatientId().toString(),
+                        gap.getMeasureId(),
+                        gapId.toString(),
+                        closedBy,
+                        closureReason,
+                        closureAction
+                );
+            }
+
+            span.setStatus(StatusCode.OK);
+            return saved;
+        } catch (Exception e) {
+            span.recordException(e);
+            span.setStatus(StatusCode.ERROR, e.getMessage());
+            throw e;
+        } finally {
+            span.end();
         }
-
-        return saved;
     }
 
     /**

@@ -10,10 +10,12 @@ import com.healthdata.auditquery.repository.AuditUserActivityDailyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.HashSet;
@@ -45,6 +47,10 @@ public class AuditEventProjectionConsumer {
 
     private final AuditUserActivityDailyRepository userActivityRepository;
     private final AuditResourceAccessDailyRepository resourceAccessRepository;
+    private final StringRedisTemplate redisTemplate;
+
+    // Redis key TTL: 25 hours covers timezone edge cases across midnight boundaries
+    private static final Duration UNIQUE_SET_TTL = Duration.ofHours(25);
 
     // PHI resource types for classification
     private static final Set<String> PHI_RESOURCE_TYPES = Set.of(
@@ -117,11 +123,17 @@ public class AuditEventProjectionConsumer {
 
         projection.incrementCounters(isPhiAccess, isFailed);
 
-        // TODO: Track unique resources (requires caching or separate tracking)
-        // For now, this is a placeholder - full implementation would need:
-        // 1. Cache of resource IDs seen today per user
-        // 2. Periodic reset of cache at midnight
-        // 3. Count distinct resources from cache
+        // Track unique resources accessed by this user today using a Redis Set.
+        // Key pattern: audit:unique_resources:{userId}:{date}
+        // TTL of 25 hours ensures the set expires shortly after the calendar day rolls over,
+        // covering timezone differences without leaving stale data.
+        if (auditEvent.getResourceId() != null) {
+            String resourceSetKey = "audit:unique_resources:" + userId + ":" + activityDate;
+            redisTemplate.opsForSet().add(resourceSetKey, auditEvent.getResourceId());
+            redisTemplate.expire(resourceSetKey, UNIQUE_SET_TTL);
+            Long uniqueCount = redisTemplate.opsForSet().size(resourceSetKey);
+            projection.setUniqueResources(uniqueCount != null ? uniqueCount.intValue() : 0);
+        }
 
         userActivityRepository.save(projection);
 
@@ -156,11 +168,18 @@ public class AuditEventProjectionConsumer {
         // Increment access count
         projection.incrementAccessCount();
 
-        // TODO: Track unique users (requires caching or separate tracking)
-        // For now, this is a placeholder - full implementation would need:
-        // 1. Cache of user IDs seen today per resource
-        // 2. Periodic reset of cache at midnight
-        // 3. Count distinct users from cache
+        // Track unique users accessing this resource today using a Redis Set.
+        // Key pattern: audit:unique_users:{resourceId}:{date}
+        // TTL of 25 hours ensures the set expires shortly after the calendar day rolls over,
+        // covering timezone differences without leaving stale data.
+        String userId = auditEvent.getUserId();
+        if (userId != null) {
+            String userSetKey = "audit:unique_users:" + resourceId + ":" + accessDate;
+            redisTemplate.opsForSet().add(userSetKey, userId);
+            redisTemplate.expire(userSetKey, UNIQUE_SET_TTL);
+            Long uniqueCount = redisTemplate.opsForSet().size(userSetKey);
+            projection.setUniqueUsers(uniqueCount != null ? uniqueCount.intValue() : 0);
+        }
 
         resourceAccessRepository.save(projection);
 

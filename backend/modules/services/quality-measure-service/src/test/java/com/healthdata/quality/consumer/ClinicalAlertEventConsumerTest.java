@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.healthdata.audit.service.AuditService;
 import com.healthdata.quality.dto.ClinicalAlertDTO;
 import com.healthdata.quality.persistence.MentalHealthAssessmentEntity;
 import com.healthdata.quality.persistence.MentalHealthAssessmentRepository;
@@ -39,6 +40,9 @@ class ClinicalAlertEventConsumerTest {
 
     @Mock
     private RiskAssessmentRepository riskAssessmentRepository;
+
+    @Mock
+    private AuditService auditService;
 
     @InjectMocks
     private ClinicalAlertEventConsumer consumer;
@@ -81,15 +85,18 @@ class ClinicalAlertEventConsumerTest {
     }
 
     @Test
-    @DisplayName("Should handle missing assessment without throwing")
+    @DisplayName("Should throw when assessment not found for DLT routing")
     void shouldHandleMissingAssessment() {
         UUID assessmentId = UUID.randomUUID();
         when(mentalHealthAssessmentRepository.findById(assessmentId)).thenReturn(Optional.empty());
 
-        consumer.handleMentalHealthAssessment(Map.of(
-            "tenantId", "tenant-1",
-            "assessmentId", assessmentId.toString()
-        ));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            consumer.handleMentalHealthAssessment(Map.of(
+                "tenantId", "tenant-1",
+                "assessmentId", assessmentId.toString()
+            ))
+        ).isInstanceOf(RuntimeException.class)
+         .hasMessageContaining("Failed to process mental health assessment event");
 
         verify(notificationService, never()).sendNotification(any(), any(ClinicalAlertDTO.class));
     }
@@ -130,16 +137,19 @@ class ClinicalAlertEventConsumerTest {
     }
 
     @Test
-    @DisplayName("Should handle missing risk assessment without throwing")
+    @DisplayName("Should throw when risk assessment not found for DLT routing")
     void shouldHandleMissingRiskAssessment() {
         UUID assessmentId = UUID.randomUUID();
         when(riskAssessmentRepository.findById(assessmentId)).thenReturn(Optional.empty());
 
-        consumer.handleRiskAssessmentUpdate(Map.of(
-            "tenantId", "tenant-1",
-            "assessmentId", assessmentId.toString(),
-            "riskLevel", "VERY_HIGH"
-        ));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+            consumer.handleRiskAssessmentUpdate(Map.of(
+                "tenantId", "tenant-1",
+                "assessmentId", assessmentId.toString(),
+                "riskLevel", "VERY_HIGH"
+            ))
+        ).isInstanceOf(RuntimeException.class)
+         .hasMessageContaining("Failed to process risk assessment event");
 
         verify(notificationService, never()).sendNotification(any(), any(ClinicalAlertDTO.class));
     }

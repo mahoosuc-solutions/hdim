@@ -1,31 +1,42 @@
 /**
  * k6 Load Test — quality-measure-service
  *
- * Targets: http://localhost:8087 (or BASE_URL_QUALITY_MEASURE env var)
+ * Targets: https://localhost:8087 (or BASE_URL_QUALITY_MEASURE env var)
  * Context path: /quality-measure
  *
  * Endpoints exercised:
- *   GET /quality-measure/api/v1/measures/results?patientId={patientId}
- *   GET /quality-measure/api/v1/measures/score?patientId={patientId}
+ *   GET /quality-measure/results?patient={patientId}   (patient measure results)
+ *   GET /quality-measure/score?patient={patientId}     (patient quality score)
+ *
+ * Note: The QualityMeasureController is a @RestController without a
+ * @RequestMapping prefix — its endpoints live directly under /quality-measure
+ * (the servlet context path), not under /api/v1/measures.
+ *
+ * mTLS: pass TLS_CA_CERT, TLS_CLIENT_CERT, TLS_CLIENT_KEY env vars.
+ * Auth: gateway-trust headers (GATEWAY_AUTH_DEV_MODE=true in demo containers).
  *
  * Run:
  *   k6 run load-tests/scenarios/quality-measure-service.js
  *   k6 run -e TEST_TYPE=smoke load-tests/scenarios/quality-measure-service.js
- *   k6 run -e AUTH_TOKEN=<real-token> load-tests/scenarios/quality-measure-service.js
+ *   ./load-tests/run-demo-load-tests.sh --smoke --scenario quality
  */
 
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
-import { getOptions } from '../config/options.js';
-import { getAuthHeaders } from '../config/auth.js';
+import { getOptions, getTlsOptions } from '../config/options.js';
+import { getDemoAuthHeaders } from '../config/tls.js';
 
 // ── Service configuration ────────────────────────────────────────────────────
-const BASE_URL = __ENV.BASE_URL_QUALITY_MEASURE || 'http://localhost:8087';
-const PATIENT_ID = __ENV.PATIENT_ID || 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+const BASE_URL   = __ENV.BASE_URL_QUALITY_MEASURE || 'https://localhost:8087';
+const PATIENT_ID = __ENV.PATIENT_ID               || 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+const TENANT_ID  = __ENV.TENANT_ID                || 'acme-health';
 
-// ── k6 options ───────────────────────────────────────────────────────────────
-export const options = getOptions();
+// ── k6 options (merged with mTLS config) ─────────────────────────────────────
+export const options = {
+  ...getOptions(),
+  ...getTlsOptions(),
+};
 
 // ── Custom metrics ───────────────────────────────────────────────────────────
 const measureResultsDuration = new Trend('measure_results_duration', true);
@@ -34,13 +45,13 @@ const errorRate              = new Rate('quality_measure_service_errors');
 
 // ── Main VU function ─────────────────────────────────────────────────────────
 export default function () {
-  const headers = getAuthHeaders();
+  const headers = getDemoAuthHeaders(TENANT_ID);
   const params = { headers, tags: { service: 'quality-measure-service' } };
 
   // --- Group 1: Get measure results for patient ---
   group('measure-results', function () {
     const res = http.get(
-      `${BASE_URL}/quality-measure/api/v1/measures/results?patientId=${PATIENT_ID}`,
+      `${BASE_URL}/quality-measure/results?patient=${PATIENT_ID}`,
       { ...params, tags: { endpoint: 'get_measure_results' } }
     );
 
@@ -59,7 +70,7 @@ export default function () {
   // --- Group 2: Get quality score for patient ---
   group('measure-score', function () {
     const res = http.get(
-      `${BASE_URL}/quality-measure/api/v1/measures/score?patientId=${PATIENT_ID}`,
+      `${BASE_URL}/quality-measure/score?patient=${PATIENT_ID}`,
       { ...params, tags: { endpoint: 'get_measure_score' } }
     );
 
@@ -78,9 +89,8 @@ export default function () {
 
 // ── Setup ────────────────────────────────────────────────────────────────────
 export function setup() {
-  const res = http.get(`${BASE_URL}/quality-measure/actuator/health`, {
-    headers: { Accept: 'application/json' },
-  });
+  const headers = getDemoAuthHeaders(TENANT_ID);
+  const res = http.get(`${BASE_URL}/quality-measure/actuator/health`, { headers });
   if (res.status !== 200) {
     console.warn(
       `quality-measure-service health check returned ${res.status}. ` +

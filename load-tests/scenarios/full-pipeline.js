@@ -23,28 +23,31 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
-import { defaultOptions } from '../config/options.js';
-import { getAuthHeaders } from '../config/auth.js';
+import { getOptions, getTlsOptions } from '../config/options.js';
+import { getDemoAuthHeaders } from '../config/tls.js';
 
 // ── Service base URLs ────────────────────────────────────────────────────────
-const PATIENT_URL       = __ENV.BASE_URL_PATIENT        || 'http://localhost:8084';
-const CARE_GAP_URL      = __ENV.BASE_URL_CARE_GAP       || 'http://localhost:8086';
-const QUALITY_URL       = __ENV.BASE_URL_QUALITY_MEASURE || 'http://localhost:8087';
+const PATIENT_URL       = __ENV.BASE_URL_PATIENT         || 'https://localhost:8084';
+const CARE_GAP_URL      = __ENV.BASE_URL_CARE_GAP        || 'https://localhost:8086';
+const QUALITY_URL       = __ENV.BASE_URL_QUALITY_MEASURE || 'https://localhost:8087';
 
 const PATIENT_ID = __ENV.PATIENT_ID || 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
-// ── k6 options — use the standard 100-VU profile ─────────────────────────────
+const TENANT_ID  = __ENV.TENANT_ID  || 'acme-health';
+
+// ── k6 options — use the standard 100-VU profile, merged with mTLS ───────────
 export const options = {
-  ...defaultOptions,
+  ...getOptions(),
+  ...getTlsOptions(),
   thresholds: {
     // Individual request SLO: P95 < 200ms
-    'http_req_duration{p(95)}': ['p(95)<200'],
+    http_req_duration: ['p(95)<200'],
     // Pipeline SLO: individual calls in p95 under 500ms
     'http_req_duration{group:::pipeline}': ['p(95)<500'],
     // Error rate
     http_req_failed: ['rate<0.01'],
-    // Pipeline-level custom metrics
-    'pipeline_total_duration': ['p(95)<1500'],
+    // Pipeline-level custom metrics (3s think-time included → SLO = 3000ms think + 200ms × 4 steps)
+    'pipeline_total_duration': ['p(95)<4000'],
     'pipeline_errors':         ['rate<0.01'],
   },
 };
@@ -60,31 +63,31 @@ const pipelineCompletions    = new Counter('pipeline_completions');
 
 // ── Main VU function ─────────────────────────────────────────────────────────
 export default function () {
-  const headers = getAuthHeaders();
+  const headers = getDemoAuthHeaders(TENANT_ID);
   const pipelineStart = Date.now();
   let allOk = true;
 
   group('pipeline', function () {
 
-    // -- Step 1: Retrieve patient health record --
+    // -- Step 1: Retrieve patient list (simulates clinician opening patient panel) --
     group('step1-health-record', function () {
       const res = http.get(
-        `${PATIENT_URL}/patient/api/v1/patients/${PATIENT_ID}/health-record`,
+        `${PATIENT_URL}/patient/api/v1/patients?page=0&size=20`,
         { headers, tags: { step: '1', service: 'patient-service' } }
       );
 
       const ok = check(res, {
-        'Step 1 - health record: status 200':       (r) => r.status === 200,
-        'Step 1 - health record: response time OK': (r) => r.timings.duration < 500,
+        'Step 1 - patient list: status 200':       (r) => r.status === 200,
+        'Step 1 - patient list: response time OK': (r) => r.timings.duration < 500,
       });
 
       step1Duration.add(res.timings.duration);
       if (!ok) allOk = false;
     });
 
-    sleep(1); // Clinician reviews health record summary
+    sleep(1); // Clinician selects patient
 
-    // -- Step 2: Retrieve care gaps --
+    // -- Step 2: Retrieve care gaps for patient --
     group('step2-care-gaps', function () {
       const res = http.get(
         `${CARE_GAP_URL}/care-gap/api/v1/care-gaps?patientId=${PATIENT_ID}`,
@@ -102,28 +105,28 @@ export default function () {
 
     sleep(1); // Clinician reviews open care gaps
 
-    // -- Step 3: Retrieve risk assessment --
+    // -- Step 3: Retrieve quality measure results --
     group('step3-risk-assessment', function () {
       const res = http.get(
-        `${PATIENT_URL}/patient/api/v1/patients/${PATIENT_ID}/risk-assessment`,
-        { headers, tags: { step: '3', service: 'patient-service' } }
+        `${QUALITY_URL}/quality-measure/results?patient=${PATIENT_ID}`,
+        { headers, tags: { step: '3', service: 'quality-measure-service' } }
       );
 
       const ok = check(res, {
-        'Step 3 - risk assessment: status 200':       (r) => r.status === 200,
-        'Step 3 - risk assessment: response time OK': (r) => r.timings.duration < 500,
+        'Step 3 - measure results: status 200':       (r) => r.status === 200,
+        'Step 3 - measure results: response time OK': (r) => r.timings.duration < 500,
       });
 
       step3Duration.add(res.timings.duration);
       if (!ok) allOk = false;
     });
 
-    sleep(1); // Clinician reviews risk stratification
+    sleep(1); // Clinician reviews quality measures
 
     // -- Step 4: Retrieve quality score --
     group('step4-quality-score', function () {
       const res = http.get(
-        `${QUALITY_URL}/quality-measure/api/v1/measures/score?patientId=${PATIENT_ID}`,
+        `${QUALITY_URL}/quality-measure/score?patient=${PATIENT_ID}`,
         { headers, tags: { step: '4', service: 'quality-measure-service' } }
       );
 
@@ -153,6 +156,7 @@ export default function () {
 
 // ── Setup: verify all services are reachable ─────────────────────────────────
 export function setup() {
+  const headers = getDemoAuthHeaders(TENANT_ID);
   const services = [
     { name: 'patient-service',        url: `${PATIENT_URL}/patient/actuator/health` },
     { name: 'care-gap-service',       url: `${CARE_GAP_URL}/care-gap/actuator/health` },
@@ -160,7 +164,7 @@ export function setup() {
   ];
 
   services.forEach(({ name, url }) => {
-    const res = http.get(url, { headers: { Accept: 'application/json' } });
+    const res = http.get(url, { headers });
     if (res.status !== 200) {
       console.warn(`${name} health check returned ${res.status} at ${url}`);
     } else {

@@ -1,0 +1,324 @@
+---
+# =============================================================================
+# Jaeger with Elasticsearch Backend — Production Storage
+# Namespace: hdim-production
+#
+# NOTE: This file replaces jaeger.yaml for production/pilot deployments.
+#       jaeger.yaml (Badger storage) should only be used for local development.
+#
+# Deploy:
+#   kubectl apply -f k8s/monitoring/jaeger-elasticsearch.yaml
+#
+# Verify:
+#   kubectl rollout status deployment/elasticsearch -n hdim-production
+#   kubectl rollout status deployment/jaeger-collector -n hdim-production
+#   kubectl rollout status deployment/jaeger-query -n hdim-production
+#   kubectl port-forward svc/jaeger-query 16686:16686 -n hdim-production
+#   open http://localhost:16686
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Elasticsearch — persistent span storage
+# NOTE: Single-node topology is suitable for pilot / initial GA.
+#       For multi-tenant high availability, replace with a 3-node cluster or
+#       use Elastic Cloud (ECK operator) before scaling beyond 10 customers.
+# -----------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  namespace: hdim-production
+  labels:
+    app: elasticsearch
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: hdim-observability
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  serviceName: elasticsearch
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+        app.kubernetes.io/name: elasticsearch
+        app.kubernetes.io/component: storage
+        app.kubernetes.io/part-of: hdim-observability
+    spec:
+      initContainers:
+        # Required: Elasticsearch needs vm.max_map_count >= 262144
+        - name: sysctl
+          image: busybox:1.35
+          command: ["sysctl", "-w", "vm.max_map_count=262144"]
+          securityContext:
+            privileged: true
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+          env:
+            - name: discovery.type
+              value: single-node
+            - name: xpack.security.enabled
+              value: "false"
+            - name: ES_JAVA_OPTS
+              value: "-Xms512m -Xmx1g"
+            - name: cluster.name
+              value: hdim-traces
+          ports:
+            - containerPort: 9200
+              name: http
+              protocol: TCP
+            - containerPort: 9300
+              name: transport
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "1Gi"
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+          volumeMounts:
+            - name: elasticsearch-data
+              mountPath: /usr/share/elasticsearch/data
+          livenessProbe:
+            httpGet:
+              path: /_cluster/health
+              port: 9200
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /_cluster/health?wait_for_status=yellow&timeout=5s
+              port: 9200
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: elasticsearch-data
+        labels:
+          app: elasticsearch
+          app.kubernetes.io/part-of: hdim-observability
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  namespace: hdim-production
+  labels:
+    app: elasticsearch
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: hdim-observability
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9200
+      targetPort: 9200
+      protocol: TCP
+      name: http
+    - port: 9300
+      targetPort: 9300
+      protocol: TCP
+      name: transport
+  selector:
+    app: elasticsearch
+---
+# -----------------------------------------------------------------------------
+# Jaeger Collector — receives spans from HDIM services via OTLP
+# -----------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger-collector
+  namespace: hdim-production
+  labels:
+    app: jaeger-collector
+    app.kubernetes.io/name: jaeger-collector
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/part-of: hdim-observability
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger-collector
+  template:
+    metadata:
+      labels:
+        app: jaeger-collector
+        app.kubernetes.io/name: jaeger-collector
+        app.kubernetes.io/component: collector
+        app.kubernetes.io/part-of: hdim-observability
+    spec:
+      containers:
+        - name: jaeger-collector
+          image: jaegertracing/jaeger-collector:1.53
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: elasticsearch
+            - name: ES_SERVER_URLS
+              value: http://elasticsearch:9200
+            - name: ES_INDEX_PREFIX
+              value: hdim
+            - name: COLLECTOR_OTLP_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 4317
+              name: otlp-grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: otlp-http
+              protocol: TCP
+            - containerPort: 14268
+              name: collector-http
+              protocol: TCP
+            - containerPort: 14269
+              name: admin-http
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-collector
+  namespace: hdim-production
+  labels:
+    app: jaeger-collector
+    app.kubernetes.io/name: jaeger-collector
+    app.kubernetes.io/component: collector
+    app.kubernetes.io/part-of: hdim-observability
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4317
+      targetPort: 4317
+      protocol: TCP
+      name: otlp-grpc
+    - port: 4318
+      targetPort: 4318
+      protocol: TCP
+      name: otlp-http
+    - port: 14268
+      targetPort: 14268
+      protocol: TCP
+      name: collector-http
+  selector:
+    app: jaeger-collector
+---
+# -----------------------------------------------------------------------------
+# Jaeger Query — serves the Jaeger UI and query API
+# -----------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger-query
+  namespace: hdim-production
+  labels:
+    app: jaeger-query
+    app.kubernetes.io/name: jaeger-query
+    app.kubernetes.io/component: query
+    app.kubernetes.io/part-of: hdim-observability
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger-query
+  template:
+    metadata:
+      labels:
+        app: jaeger-query
+        app.kubernetes.io/name: jaeger-query
+        app.kubernetes.io/component: query
+        app.kubernetes.io/part-of: hdim-observability
+    spec:
+      containers:
+        - name: jaeger-query
+          image: jaegertracing/jaeger-query:1.53
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: elasticsearch
+            - name: ES_SERVER_URLS
+              value: http://elasticsearch:9200
+            - name: ES_INDEX_PREFIX
+              value: hdim
+            - name: QUERY_BASE_PATH
+              value: /jaeger
+          ports:
+            - containerPort: 16686
+              name: query-http
+              protocol: TCP
+            - containerPort: 16687
+              name: admin-http
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 16687
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 16687
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query
+  namespace: hdim-production
+  labels:
+    app: jaeger-query
+    app.kubernetes.io/name: jaeger-query
+    app.kubernetes.io/component: query
+    app.kubernetes.io/part-of: hdim-observability
+    app.kubernetes.io/managed-by: kubectl
+spec:
+  type: ClusterIP
+  ports:
+    - port: 16686
+      targetPort: 16686
+      protocol: TCP
+      name: query-http
+  selector:
+    app: jaeger-query

@@ -70,8 +70,8 @@ class CmsEobServiceTest {
         assertThat(claim.getBeneficiaryId()).isEqualTo(patientId);
         assertThat(claim.getClaimId()).isEqualTo("eob-1");
         assertThat(claim.getDataSource()).isEqualTo("DPC");
-        assertThat(claim.getTotalChargeAmount()).isEqualTo(1200.50);
-        assertThat(claim.getTotalAllowedAmount()).isEqualTo(800.25);
+        assertThat(claim.getTotalChargeAmount()).isEqualByComparingTo(BigDecimal.valueOf(1200.50));
+        assertThat(claim.getTotalAllowedAmount()).isEqualByComparingTo(BigDecimal.valueOf(800.25));
         assertThat(claim.getContentHash()).isNotBlank();
     }
 

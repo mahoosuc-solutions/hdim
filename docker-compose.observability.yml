@@ -2,9 +2,15 @@ version: '3.8'
 
 # Observability Stack: Distributed Tracing, Metrics, and Logging
 # Includes Jaeger for tracing, enhanced Prometheus, and Grafana dashboards
+#
+# NOTE: This uses Jaeger all-in-one with Badger on-disk storage (dev/test only).
+# Badger is ephemeral in practice and NOT suitable for production pilot workloads.
+# For production/pilot, use: docker-compose.observability-production.yml
+# which replaces Badger with Elasticsearch-backed persistent storage.
 
 services:
   # Jaeger All-in-One for distributed tracing
+  # Storage backend: Badger (on-disk, ephemeral — dev/test only, data lost on container removal)
   jaeger:
     image: jaegertracing/all-in-one:1.53
     container_name: jaeger

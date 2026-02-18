@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <!-- 0001: Initial schema (tables, indexes, triggers) — converted from V1__Initial_Schema.sql -->
+    <include file="db/changelog/0001-initial-schema.xml"/>
+
+    <!-- 0002: Constraints, views, materialized views, functions — converted from V2__Add_Constraints_And_Partitioning.sql -->
+    <include file="db/changelog/0002-add-constraints-and-views.xml"/>
+
+    <!-- 0003: Database roles, permissions, RLS — converted from V3__Add_Database_Roles_And_Permissions.sql -->
+    <include file="db/changelog/0003-roles-and-permissions.xml"/>
+
+    <!-- 0004: CMS clinical entity tables (cms_conditions, cms_medication_requests, cms_observations, cms_procedures, cms_integration_config) -->
+    <include file="db/changelog/0004-cms-clinical-entities.xml"/>
+
+</databaseChangeLog>

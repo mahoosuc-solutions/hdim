@@ -21,13 +21,16 @@
     "next": "^16.1.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "tailwind-merge": "^2.2.2"
+    "resend": "^6.9.2",
+    "tailwind-merge": "^2.2.2",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0",
     "@types/node": "^20",
     "@types/react": "^19.2.9",
     "@types/react-dom": "^19.2.3",
+    "@types/uuid": "^10.0.0",
     "autoprefixer": "^10.4.19",
     "glob": "^11.0.0",
     "postcss": "^8.4.38",

@@ -39,6 +39,7 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)
+    testImplementation("org.springframework.security:spring-security-test")
 }
 
 tasks.withType<Test> {

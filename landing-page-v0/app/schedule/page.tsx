@@ -25,6 +25,7 @@ export default function SchedulePage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
   // Google Calendar appointment scheduling URL
   const GOOGLE_CALENDAR_BOOKING_URL = 'https://calendar.app.google/zKDs6ZdXW7V61c7i7'
@@ -57,15 +58,26 @@ export default function SchedulePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError('')
 
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, source: 'schedule_page' }),
+      })
 
-    // In production, this would send to your backend or CRM
-    console.log('Booking request:', formData)
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Submission failed')
+      }
 
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+      setIsSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   if (isSubmitted) {
@@ -309,6 +321,12 @@ export default function SchedulePage() {
                   />
                 </div>
 
+                {error && (
+                  <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={isSubmitting}
@@ -331,7 +349,7 @@ export default function SchedulePage() {
             <div className="mt-6 text-center">
               <p className="text-gray-600">
                 Prefer to talk now?{' '}
-                <a href="mailto:sales@hdim.io" className="text-primary hover:underline font-medium">
+                <a href="mailto:sales@mahoosuc.solutions" className="text-primary hover:underline font-medium">
                   Email us directly
                 </a>
               </p>

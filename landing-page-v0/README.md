@@ -2,6 +2,17 @@
 
 Modern, conversion-optimized landing page for HealthData-in-Motion (HDIM) healthcare quality platform.
 
+## Validation Status
+
+[![Landing Page Validation](https://github.com/webemo-aaron/hdim/actions/workflows/landing-page-validation.yml/badge.svg?branch=master)](https://github.com/webemo-aaron/hdim/actions/workflows/landing-page-validation.yml)
+
+This repo enforces landing-page quality checks for changes under `landing-page-v0/`:
+
+- `npm run validate:content` (includes `/sales` metadata contract checks)
+- `npm run validate:links`
+- `npm run lint`
+- `npm run build`
+
 ## Features
 
 - **Modern Design**: Gradient hero, animated elements, responsive layout

@@ -64,7 +64,7 @@ export const adminConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/admin/admin-03-user-management.png',
       narrativeCaption:
-        'User management lists 47 active accounts across 6 roles with last-login timestamps',
+        'HIPAA-compliant user management lists 47 active accounts across 6 roles with last-login timestamps',
       panDirection: 'left',
       zoomLevel: 1.02,
       overlays: [
@@ -134,7 +134,7 @@ export const adminConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/admin/admin-06-audit-search.png',
       narrativeCaption:
-        'Audit search filters 12,847 events by 5 criteria: user, patient, date range, action type, and resource',
+        'Audit search filters 12,847 PHI access events by 5 criteria: user, patient, date range, action type, and resource',
       panDirection: 'left',
       zoomLevel: 1.03,
       overlays: [
@@ -190,7 +190,7 @@ export const adminConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/admin/admin-09-deployment-monitor.png',
       narrativeCaption:
-        'Deployment monitor tracks 51 microservices via Prometheus — 99.9% uptime across all nodes',
+        'Deployment monitor tracks 51 HIPAA-regulated microservices via Prometheus — 99.9% uptime across all nodes',
       panDirection: 'right',
       zoomLevel: 1.04,
       overlays: [
@@ -207,7 +207,7 @@ export const adminConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/admin/admin-10-live-monitor.png',
       narrativeCaption:
-        'Live heartbeat visualizes 51 services at 5-second intervals — SLO breach triggers alert in 30 seconds',
+        'Live heartbeat visualizes 51 HIPAA-compliant services at 5-second intervals — SLO breach triggers alert in 30 seconds',
       panDirection: 'none',
       zoomLevel: 1.0,
       overlays: [

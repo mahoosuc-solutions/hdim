@@ -71,7 +71,7 @@ export const dataAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/data-analyst/data-analyst-03-high-risk-cohort.png',
       narrativeCaption:
-        'High-risk cohort drills into 578 members by demographics, top 5 conditions, and utilization rates',
+        'Analyst drills into the 578-member high-risk cohort by demographics, top 5 clinical conditions, and utilization rates',
       panDirection: 'left',
       zoomLevel: 1.02,
       overlays: [
@@ -151,7 +151,7 @@ export const dataAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/data-analyst/data-analyst-07-evaluation-results.png',
       narrativeCaption:
-        'Evaluation results table exports 2,847 records as CSV with 14 sortable and filterable columns',
+        'HEDIS evaluation results table exports 2,847 records as CSV with 14 sortable and filterable columns',
       panDirection: 'right',
       zoomLevel: 1.05,
       overlays: [
@@ -168,7 +168,7 @@ export const dataAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/data-analyst/data-analyst-08-scheduled-reports.png',
       narrativeCaption:
-        'Report scheduler delivers 4 automated reports weekly to 12 stakeholders via email',
+        'Report scheduler delivers 4 automated quality measure reports weekly to 12 stakeholders via email',
       panDirection: 'left',
       zoomLevel: 1.02,
       overlays: [
@@ -190,7 +190,7 @@ export const dataAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/data-analyst/data-analyst-09-report-builder.png',
       narrativeCaption:
-        'Report builder assembles 6 visualizations from 24 measures using drag-and-drop configuration',
+        'Report builder assembles 6 HEDIS visualizations from 24 measures using drag-and-drop configuration',
       panDirection: 'right',
       zoomLevel: 1.04,
       overlays: [

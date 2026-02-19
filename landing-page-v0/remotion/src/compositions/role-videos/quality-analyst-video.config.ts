@@ -59,7 +59,7 @@ export const qualityAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/quality-analyst/quality-analyst-03-measure-detail.png',
       narrativeCaption:
-        'Measure detail shows numerator/denominator definitions with CQL logic auto-generated from HEDIS specs',
+        'Measure detail shows numerator/denominator definitions with CQL logic auto-generated from 24 HEDIS specs',
       panDirection: 'left',
       zoomLevel: 1.02,
       overlays: [
@@ -105,7 +105,7 @@ export const qualityAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/quality-analyst/quality-analyst-05-batch-processing.png',
       narrativeCaption:
-        'Engine evaluates 2,847 patients across 6 sub-measures simultaneously in 4.2 seconds',
+        'CQL engine evaluates 2,847 patients across 6 CDC sub-measures simultaneously in 4.2 seconds',
       panDirection: 'none',
       zoomLevel: 1.04,
       overlays: [
@@ -190,7 +190,7 @@ export const qualityAnalystConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/quality-analyst/quality-analyst-09-report-builder.png',
       narrativeCaption:
-        'Report builder configures 4 scheduled reports for weekly stakeholder delivery via email',
+        'Report builder configures 4 scheduled HEDIS reports for weekly stakeholder delivery via email',
       panDirection: 'right',
       zoomLevel: 1.04,
       overlays: [
@@ -261,7 +261,7 @@ export const qualityAnalystConfig: RoleStoryConfig = {
         glowColor: 'rgba(34, 197, 94, 0.6)',
       },
       {
-        value: '1-Click CMS Export',
+        value: '24-Measure QRDA III',
         backgroundColor: 'rgba(59, 130, 246, 0.95)',
         borderColor: 'rgba(59, 130, 246, 1)',
         textColor: 'white',

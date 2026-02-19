@@ -71,7 +71,7 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-03-high-urgency-filter.png',
       narrativeCaption:
-        'One-click filter isolates the 9 high-urgency gaps for immediate action',
+        'One-click filter isolates 9 high-urgency HEDIS gaps for immediate clinical action',
       panDirection: 'left',
       zoomLevel: 1.02,
       overlays: [
@@ -158,7 +158,7 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-07-gap-closed.png',
       narrativeCaption:
-        'Gap closed in 8 seconds — total gaps drop from 45 to 44, high-urgency from 9 to 8',
+        'Care manager closes BCS gap in 8 seconds — total gaps drop from 45 to 44, high-urgency from 9 to 8',
       panDirection: 'right',
       zoomLevel: 1.05,
       overlays: [
@@ -211,7 +211,7 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-09-outreach-campaigns.png',
       narrativeCaption:
-        'Outreach campaigns target 36 remaining open gaps via 3 channels: email, SMS, and letter',
+        'Outreach campaigns target 36 remaining open HEDIS gaps via 3 channels: email, SMS, and letter',
       panDirection: 'right',
       zoomLevel: 1.04,
       overlays: [
@@ -228,7 +228,7 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-10-dashboard-updated.png',
       narrativeCaption:
-        'Real-time impact — compliance rate improves 2.1% from a single gap closure',
+        'HEDIS compliance rate improves 2.1% in real time from a single BCS gap closure',
       panDirection: 'none',
       zoomLevel: 1.0,
       overlays: [
@@ -282,7 +282,7 @@ export const careManagerConfig: RoleStoryConfig = {
         glowColor: 'rgba(34, 197, 94, 0.6)',
       },
       {
-        value: '30-Day Avg Closure',
+        value: '8-Second Gap Closure',
         backgroundColor: 'rgba(59, 130, 246, 0.95)',
         borderColor: 'rgba(59, 130, 246, 1)',
         textColor: 'white',

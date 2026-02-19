@@ -219,7 +219,7 @@ export const aiUserConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/ai-user/ai-user-10-pre-visit-summary.png',
       narrativeCaption:
-        'AI generates 1-page pre-visit summary in 30 seconds — replacing 15 minutes of manual chart review',
+        'AI generates 1-page FHIR-based pre-visit summary in 30 seconds — replacing 15 minutes of manual chart review',
       panDirection: 'none',
       zoomLevel: 1.0,
       overlays: [

@@ -247,7 +247,7 @@ export const cmoConfig: RoleStoryConfig = {
         glowColor: 'rgba(59, 130, 246, 0.6)',
       },
       {
-        value: '1-Click Export',
+        value: '90% Faster Reporting',
         backgroundColor: 'rgba(34, 197, 94, 0.95)',
         borderColor: 'rgba(34, 197, 94, 1)',
         textColor: 'white',

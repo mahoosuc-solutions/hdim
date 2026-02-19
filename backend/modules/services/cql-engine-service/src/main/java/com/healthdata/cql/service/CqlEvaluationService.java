@@ -430,6 +430,7 @@ public class CqlEvaluationService {
         long duration = System.currentTimeMillis() - startTime;
         logger.info("Completed concurrent batch evaluation: {} successful out of {} patients in {}ms",
                 evaluations.size(), patientIds.size(), duration);
+        healthcareMetrics.recordBatchEvaluation(measureId, evaluations.size(), java.time.Duration.ofMillis(duration));
 
         return evaluations;
     }

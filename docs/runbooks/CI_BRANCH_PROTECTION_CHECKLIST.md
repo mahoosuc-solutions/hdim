@@ -28,6 +28,9 @@ Use the exact job/check names from GitHub Actions UI after first successful run.
 - `Frontend Session Flow E2E / session-flow`
 - `Frontend Session Flow E2E / session-flow-external-auth` (required for auth/login-related PRs; workflow runs conditionally)
 - `Frontend Session Flow E2E / auth-callback` (required for auth/login-related PRs; workflow runs conditionally)
+- `Landing Page Validation / content-validation` (required for `landing-page-v0/**` PRs)
+- `Landing Page Validation / link-check` (required for `landing-page-v0/**` PRs)
+- `Landing Page Validation / lint-and-build` (required for `landing-page-v0/**` PRs)
 - Existing backend CI checks already required by your policy (`backend-ci*` workflows)
 
 ## Frontend Session Flow Gate
@@ -51,8 +54,9 @@ Expected behavior:
 3. Confirm all settings above are enabled.
 4. Confirm required checks include session-flow and release gate checks.
 5. Open a PR touching `frontend/**` and verify `Frontend Session Flow E2E` appears and must pass.
-6. Confirm PR checklist references this runbook (`.github/pull_request_template.md`).
-7. Confirm CODEOWNERS requests review for auth/session files (`.github/CODEOWNERS`).
+6. Open a PR touching `landing-page-v0/**` and verify `Landing Page Validation` core checks appear and must pass.
+7. Confirm PR checklist references this runbook (`.github/pull_request_template.md`).
+8. Confirm CODEOWNERS requests review for auth/session files (`.github/CODEOWNERS`).
 
 ## Rollback (If Misconfigured)
 

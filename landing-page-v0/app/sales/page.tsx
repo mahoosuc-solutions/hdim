@@ -22,6 +22,57 @@ export const metadata = {
 }
 
 export default function SalesPage() {
+  const steps = [
+    {
+      number: '01',
+      icon: Search,
+      name: 'Discovery',
+      headline: 'We listen first',
+      duration: '30-minute call',
+      description:
+        'We ask about your current quality program, HEDIS targets, gap closure workflow, and tech stack. No pitch deck. No slides. Just an honest conversation about where you are today.',
+      youDo: 'Share your current state and goals',
+      weDo: 'Ask the right questions and take notes',
+      youGet: 'A conversation partner who actually listens',
+    },
+    {
+      number: '02',
+      icon: FileCheck,
+      name: 'Fit Assessment',
+      headline: "We tell you honestly if we're the right fit",
+      duration: 'Within 48 hours',
+      description:
+        "We send a written summary of what we heard, where HDIM can help, and where it can't. If we're not the right fit for your situation, we'll say so — and point you toward what might be.",
+      youDo: 'Review our written assessment',
+      weDo: 'Deliver an honest fit analysis in writing',
+      youGet: 'Clarity — no wasted time on either side',
+    },
+    {
+      number: '03',
+      icon: Rocket,
+      name: 'Pilot',
+      headline: 'See real results with your data',
+      duration: '60–90 day structured pilot',
+      description:
+        'Defined success criteria before you sign. Observable SLO contracts so you verify our performance in real time via live dashboards — not in a quarterly report we control. First results in 30 days.',
+      youDo: 'Provide FHIR data access and success criteria',
+      weDo: 'Deploy, configure measures, and show results',
+      youGet: 'Live HEDIS baselines and care gap data in 30 days',
+    },
+    {
+      number: '04',
+      icon: Handshake,
+      name: 'Partnership',
+      headline: 'We grow with you',
+      duration: 'Ongoing',
+      description:
+        'Pilot results become your contract baseline. You get a dedicated customer success contact, onboarding training, and a roadmap built around your specific measure priorities.',
+      youDo: 'Define priorities for the next 12 months',
+      weDo: 'Deliver, support, and iterate alongside you',
+      youGet: 'A long-term partner invested in your quality outcomes',
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -68,6 +119,67 @@ export default function SalesPage() {
             <p className="text-blue-200 text-sm mt-4">
               30 minutes · No pitch deck · No obligation
             </p>
+          </div>
+        </section>
+
+        {/* ── SECTION 2: 4-Step Process ── */}
+        <section className="py-24 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                The Partnership Process
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Four steps from first conversation to measurable results. Every step has defined outputs — no ambiguity.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {steps.map((step, idx) => {
+                const Icon = step.icon
+                return (
+                  <div key={idx} className="bg-white rounded-2xl p-8 border border-gray-200 hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-4 mb-6">
+                      <div className="text-5xl font-black text-gray-100 leading-none select-none">
+                        {step.number}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-8 h-8 bg-[#0D4F8B] rounded-lg flex items-center justify-center">
+                            <Icon className="w-4 h-4 text-white" />
+                          </div>
+                          <span className="text-sm font-semibold text-[#0D4F8B] uppercase tracking-wide">
+                            {step.name}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">{step.headline}</h3>
+                        <span className="inline-flex items-center gap-1 text-xs text-gray-500 mt-1">
+                          <Clock className="w-3 h-3" />
+                          {step.duration}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-gray-600 mb-6 leading-relaxed">{step.description}</p>
+
+                    <div className="grid grid-cols-3 gap-3 text-sm">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-xs font-semibold text-gray-400 uppercase mb-1">You do</div>
+                        <div className="text-gray-700">{step.youDo}</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-xs font-semibold text-gray-400 uppercase mb-1">We do</div>
+                        <div className="text-gray-700">{step.weDo}</div>
+                      </div>
+                      <div className="bg-[#0D4F8B]/5 rounded-lg p-3 border border-[#0D4F8B]/10">
+                        <div className="text-xs font-semibold text-[#0D4F8B] uppercase mb-1">You get</div>
+                        <div className="text-gray-700">{step.youGet}</div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </section>
 

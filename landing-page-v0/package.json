@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint . --max-warnings=0",
     "validate:content": "tsx tests/validation/content-validator.ts",
+    "validate:docs": "tsx tests/validation/readme-badge-validator.ts",
     "validate:links": "tsx tests/validation/link-checker.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

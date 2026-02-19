@@ -19,12 +19,12 @@ This repo enforces landing-page quality checks for changes under `landing-page-v
 - **Modern Design**: Gradient hero, animated elements, responsive layout
 - **Conversion-Optimized**: Multiple CTAs, social proof, trust badges
 - **Healthcare-Focused**: Compliance badges (HIPAA, SOC2, HITRUST), industry terminology
-- **Performance**: Next.js 14, optimized images, lazy loading
+- **Performance**: Next.js 16, optimized images, lazy loading
 - **Analytics Ready**: Vercel Analytics integration, Drift chat placeholder
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 - **Analytics**: Vercel Analytics
@@ -34,7 +34,7 @@ This repo enforces landing-page quality checks for changes under `landing-page-v
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - npm or yarn
 
 ### Installation

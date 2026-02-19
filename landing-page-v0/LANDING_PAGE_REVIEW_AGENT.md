@@ -19,7 +19,7 @@ Conduct a comprehensive external review of the HDIM landing page (`landing-page-
 - **Audience**: Healthcare organizations (Health Plans, ACOs, Health Systems, Medicaid MCOs)
 - **Quality Tier**: Enterprise/Production - Pre-launch validation
 - **Compliance Requirements**: HIPAA awareness, WCAG 2.1 AA accessibility, healthcare marketing compliance
-- **Technology Stack**: Next.js 14+, React, TypeScript, Tailwind CSS
+- **Technology Stack**: Next.js 16+, React, TypeScript, Tailwind CSS
 
 ## CRITICAL KNOWN ISSUES TO INVESTIGATE
 

@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Clock,
   HeartPulse,
-  MessageSquare,
   Search,
   FileCheck,
   Rocket,
@@ -13,7 +12,6 @@ import {
   Building2,
   Users,
   Shield,
-  ChevronDown,
 } from 'lucide-react'
 
 export const metadata = {

@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -81,6 +83,7 @@ public class HealthScoreService {
      * Calculate health score from component scores
      */
     @Transactional
+    @CacheEvict(value = "healthScores", key = "#tenantId + ':' + #patientId")
     public HealthScoreDTO calculateHealthScore(
         String tenantId,
         UUID patientId,
@@ -458,6 +461,7 @@ public class HealthScoreService {
      * Get current health score for a patient
      */
     @Transactional(readOnly = true)
+    @Cacheable(value = "healthScores", key = "#tenantId + ':' + #patientId", unless = "#result == null")
     public Optional<HealthScoreDTO> getCurrentHealthScore(String tenantId, UUID patientId) {
         return healthScoreRepository.findLatestByPatientId(tenantId, patientId)
             .map(HealthScoreDTO::fromEntity);

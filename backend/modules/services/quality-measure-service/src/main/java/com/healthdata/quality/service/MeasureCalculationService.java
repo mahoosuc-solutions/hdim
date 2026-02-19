@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -101,9 +102,12 @@ public class MeasureCalculationService {
     }
 
     /**
-     * Save calculation result in a separate transaction (optimized for minimal transaction duration)
+     * Save calculation result in a separate transaction (optimized for minimal transaction duration).
+     * Evicts measureResults and qualityScore caches for this patient so the next read
+     * reflects the freshly stored result.
      */
     @Transactional
+    @CacheEvict(value = {"measureResults", "qualityScore"}, key = "#tenantId + ':' + #patientId")
     private QualityMeasureResultEntity saveCalculationResult(
             String tenantId,
             UUID patientId,
@@ -133,8 +137,11 @@ public class MeasureCalculationService {
     }
 
     /**
-     * Get measure results for a patient
+     * Get measure results for a patient.
+     * Cached in Redis with a 2-minute HIPAA-compliant TTL (see spring.cache.redis.time-to-live).
+     * unless = "#result == null" prevents caching empty/null responses.
      */
+    @Cacheable(value = "measureResults", key = "#tenantId + ':' + #patientId", unless = "#result == null")
     public List<QualityMeasureResultEntity> getPatientMeasureResults(
             String tenantId,
             UUID patientId
@@ -156,13 +163,20 @@ public class MeasureCalculationService {
     }
 
     /**
-     * Get quality score for a patient (percentage of compliant measures)
+     * Get quality score for a patient (percentage of compliant measures).
+     * Cached in Redis with a 2-minute HIPAA-compliant TTL.
+     * Derives the compliant count in-memory from the already-loaded results list,
+     * eliminating the redundant countCompliantMeasures DB roundtrip.
      */
+    @Cacheable(value = "qualityScore", key = "#tenantId + ':' + #patientId", unless = "#result == null")
     public QualityScore getQualityScore(String tenantId, UUID patientId) {
         List<QualityMeasureResultEntity> results = getPatientMeasureResults(tenantId, patientId);
 
         long total = results.size();
-        long compliant = repository.countCompliantMeasures(tenantId, patientId);
+        // Derive compliant count in-memory — avoids a redundant DB COUNT query
+        long compliant = results.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getNumeratorCompliant()))
+                .count();
 
         double score = total > 0 ? (double) compliant / total * 100 : 0.0;
 

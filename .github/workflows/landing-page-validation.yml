@@ -5,10 +5,12 @@ on:
     branches: [main, master, develop]
     paths:
       - 'landing-page-v0/**'
+      - '.github/workflows/landing-page-validation.yml'
   pull_request:
     branches: [main, master, develop]
     paths:
       - 'landing-page-v0/**'
+      - '.github/workflows/landing-page-validation.yml'
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -37,6 +39,9 @@ jobs:
 
       - name: Run content validation
         run: npm run validate:content
+
+      - name: Validate README workflow badge
+        run: npm run validate:docs
 
   link-check:
     name: Link Validation

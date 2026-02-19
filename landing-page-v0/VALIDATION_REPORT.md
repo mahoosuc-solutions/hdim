@@ -396,15 +396,19 @@ export const metadata = {
 ### Run Validation
 
 ```bash
-# Run complete validation
+# Run CI-aligned validation gate
+npm run validate:ci
+
+# Run complete validation (includes E2E)
 npm run validate:all
 
 # Run individual checks
 ./validate-catalog.sh
+npm run validate:docs
 npm run validate:links
 npm run validate:content
 npm run test:e2e
-npm run test:lighthouse
+npx lhci autorun
 ```
 
 ---

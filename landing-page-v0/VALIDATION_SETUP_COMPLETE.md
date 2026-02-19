@@ -64,9 +64,10 @@ A comprehensive validation infrastructure for the HDIM landing page, ensuring:
 ### CI/CD Pipeline
 
 6. **`.github/workflows/landing-page-validation.yml`** (123 lines)
-   - **4 parallel jobs**:
+   - **5 jobs**:
      - Content validation
      - Link checking
+     - Lint and build
      - E2E tests (all browsers)
      - Lighthouse performance audits
    - **Triggers**:
@@ -79,14 +80,15 @@ A comprehensive validation infrastructure for the HDIM landing page, ensuring:
 ### Package Configuration
 
 7. **`package.json`** (Updated)
-   - Added 6 new scripts:
+   - Validation/testing scripts include:
+     - `validate:docs` - Verify README badge/workflow references
      - `validate:content` - Run content validation
      - `validate:links` - Check external links
+     - `validate:ci` - Aggregated CI quality gate (docs + content + links + lint + build)
      - `test:e2e` - Run Playwright tests
      - `test:e2e:ui` - Interactive test debugging
-     - `test:lighthouse` - Performance audits
-     - `validate:all` - Run all validations
-   - Added 5 new dependencies:
+     - `validate:all` - Run CI gate + E2E suite
+   - Added dependencies for validation tooling:
      - `@playwright/test` - E2E testing
      - `@lhci/cli` - Lighthouse CI
      - `tsx` - TypeScript execution
@@ -126,14 +128,15 @@ This installs:
 ### 2. Run Validation Locally
 
 ```bash
-# Run all validations
-npm run validate:all
+# Run CI-aligned quality gate
+npm run validate:ci
 
 # Or run individually
+npm run validate:docs     # README/workflow contract
 npm run validate:content  # Content check
 npm run validate:links    # Link check
 npm run test:e2e          # E2E tests
-npm run test:lighthouse   # Performance
+npx lhci autorun          # Lighthouse (manual)
 ```
 
 ### 3. View Results
@@ -232,7 +235,7 @@ cd landing-page-v0
 npm install
 
 # Run first validation
-npm run validate:all
+npm run validate:ci
 ```
 
 **Expected**: May find issues (placeholders, broken links, missing content)
@@ -251,12 +254,15 @@ Review validation output and fix:
 Once all validations pass:
 
 ```bash
-# Run full validation suite
+# Run CI-aligned validation
+npm run validate:ci
+
+# Optionally run full validation suite (includes E2E)
 npm run validate:all
 
 # Commit validation infrastructure
 git add landing-page-v0/tests/
-git add landing-page-v0/.github/workflows/
+git add .github/workflows/landing-page-validation.yml
 git add landing-page-v0/playwright.config.ts
 git add landing-page-v0/lighthouserc.json
 git add landing-page-v0/package.json
@@ -350,7 +356,7 @@ BASE_URL=http://localhost:3001 npm run test:e2e
 ✅ **4 parallel CI jobs**
 ✅ **Comprehensive documentation**
 
-**Next**: Run `npm install && npm run validate:all` to start validating!
+**Next**: Run `npm install && npm run validate:ci` to start validating!
 
 ---
 

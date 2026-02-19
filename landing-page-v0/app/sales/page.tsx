@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import {
   ArrowRight,
@@ -14,9 +15,21 @@ import {
   Shield,
 } from 'lucide-react'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'How We Work With You | HDIM',
   description: 'Learn how HDIM partners with health plans, hospitals, and provider groups — from discovery call to pilot results in 30 days.',
+  alternates: {
+    canonical: '/sales',
+  },
+  openGraph: {
+    title: 'How We Work With You | HDIM',
+    description: 'Learn how HDIM partners with health plans, hospitals, and provider groups — from discovery call to pilot results in 30 days.',
+    url: '/sales',
+  },
+  twitter: {
+    title: 'How We Work With You | HDIM',
+    description: 'Learn how HDIM partners with health plans, hospitals, and provider groups — from discovery call to pilot results in 30 days.',
+  },
 }
 
 export default function SalesPage() {

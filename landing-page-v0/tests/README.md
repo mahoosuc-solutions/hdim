@@ -21,7 +21,13 @@ cd landing-page-v0
 npm install
 ```
 
-### Run All Validations
+### Run CI Gate (Recommended)
+
+```bash
+npm run validate:ci
+```
+
+### Run Full Validation Suite
 
 ```bash
 npm run validate:all
@@ -39,8 +45,8 @@ npm run validate:links
 # E2E tests
 npm run test:e2e
 
-# Lighthouse performance
-npm run test:lighthouse
+# Full validation (includes E2E)
+npm run validate:all
 ```
 
 ## Validation Scripts
@@ -127,7 +133,7 @@ npx playwright test tests/e2e/landing-page.spec.ts
 - Screenshots: Captured on failure
 - Videos: Recorded on failure
 
-### 4. Lighthouse Performance (`test:lighthouse`)
+### 4. Lighthouse Performance (CI Job)
 
 **Purpose**: Validates performance, SEO, accessibility, and best practices using Lighthouse CI.
 
@@ -145,9 +151,9 @@ npx playwright test tests/e2e/landing-page.spec.ts
 - `/about` - About
 - `/contact` - Contact
 
-**Run**:
+**Run (manual)**:
 ```bash
-npm run test:lighthouse
+npx lhci autorun
 ```
 
 **Results**:
@@ -167,10 +173,11 @@ The validation suite runs automatically on:
 **Workflow file**: `.github/workflows/landing-page-validation.yml`
 
 **Jobs**:
-1. **content-validation** - Checks content completeness
+1. **content-validation** - Checks content completeness and README badge/workflow contract
 2. **link-check** - Validates external links
-3. **e2e-tests** - Runs Playwright tests
-4. **lighthouse** - Runs performance audits
+3. **lint-and-build** - Enforces lint and production build pass
+4. **e2e-tests** - Runs Playwright tests
+5. **lighthouse** - Runs performance audits
 
 **Artifacts**:
 - Playwright reports (30 days retention)
@@ -329,10 +336,11 @@ Performance: 75/100
 ### Before Committing
 
 ```bash
-# Always run validation before committing
-npm run validate:all
+# Always run the CI gate before committing
+npm run validate:ci
 
-# If any validation fails, fix before committing
+# Optionally run full suite including E2E
+npm run validate:all
 ```
 
 ### Before Merging PR

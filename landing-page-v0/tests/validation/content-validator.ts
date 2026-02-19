@@ -50,6 +50,7 @@ const REQUIRED_PAGES = [
   'pricing',            // Pricing page
   'about',              // About page
   'contact',            // Contact page
+  'sales',              // Sales page
 ];
 
 const REQUIRED_SECTIONS_HOME = [
@@ -85,6 +86,9 @@ async function validateContent(): Promise<ValidationResult> {
 
   // 5. Check for broken internal links
   await checkInternalLinks(result);
+
+  // 6. Validate page metadata contracts
+  await validatePageMetadata(result);
 
   return result;
 }
@@ -268,6 +272,37 @@ async function checkInternalLinks(result: ValidationResult): Promise<void> {
   }
 
   console.log(`   ✅ Checked ${internalLinks.length} internal links (${brokenLinks} warnings)\n`);
+}
+
+async function validatePageMetadata(result: ValidationResult): Promise<void> {
+  console.log('🏷️  Validating page metadata contracts...');
+
+  const salesPath = path.join(process.cwd(), 'app', 'sales', 'page.tsx');
+  if (!fs.existsSync(salesPath)) {
+    result.errors.push('❌ Missing file for metadata validation: app/sales/page.tsx');
+    result.passed = false;
+    console.log('   ❌ Sales page file missing\n');
+    return;
+  }
+
+  const salesContent = fs.readFileSync(salesPath, 'utf-8');
+  const checks: Array<{ label: string; pass: boolean }> = [
+    { label: 'canonical /sales', pass: /canonical:\s*['"]\/sales['"]/.test(salesContent) },
+    { label: 'openGraph url /sales', pass: /openGraph:\s*\{[\s\S]*url:\s*['"]\/sales['"]/.test(salesContent) },
+    { label: 'sales page title', pass: /title:\s*['"]How We Work With You \| HDIM['"]/.test(salesContent) },
+  ];
+
+  const failed = checks.filter((check) => !check.pass);
+  if (failed.length > 0) {
+    failed.forEach((check) => {
+      result.errors.push(`❌ Sales metadata contract missing: ${check.label}`);
+    });
+    result.passed = false;
+    console.log(`   ❌ ${failed.length} metadata checks failed\n`);
+    return;
+  }
+
+  console.log('   ✅ Sales metadata contracts are present\n');
 }
 
 // Run validation

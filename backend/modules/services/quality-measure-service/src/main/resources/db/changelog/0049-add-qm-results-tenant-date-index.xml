@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0049-add-qm-results-tenant-date-index" author="healthdata-team">
+        <comment>
+            Performance: Add composite index on (tenant_id, calculation_date DESC) for
+            quality_measure_results. The getAllMeasureResults paginated query sorts by
+            calculation_date without index support, causing seq scans under load.
+            This index targets the HIGH traffic-tier service's most common read pattern.
+        </comment>
+
+        <createIndex indexName="idx_qm_results_tenant_date" tableName="quality_measure_results">
+            <column name="tenant_id"/>
+            <column name="calculation_date" descending="true"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_qm_results_tenant_date" tableName="quality_measure_results"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

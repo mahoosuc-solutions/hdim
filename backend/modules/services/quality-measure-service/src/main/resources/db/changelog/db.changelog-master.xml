@@ -105,4 +105,7 @@
     <!-- Fix quality measure uniqueness to allow per-tenant seeding -->
     <include file="db/changelog/0048-fix-quality-measure-uniqueness.xml"/>
 
+    <!-- Performance: composite index on (tenant_id, calculation_date DESC) for paginated all-results query -->
+    <include file="db/changelog/0049-add-qm-results-tenant-date-index.xml"/>
+
 </databaseChangeLog>

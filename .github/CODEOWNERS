@@ -13,3 +13,7 @@ frontend/e2e/playwright.session*.config.ts @webemo-aaron
 .github/workflows/frontend-session-flow-e2e.yml @webemo-aaron
 docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md @webemo-aaron
 .github/pull_request_template.md @webemo-aaron
+
+# Landing page ownership and quality gates
+landing-page-v0/** @webemo-aaron
+.github/workflows/landing-page-validation.yml @webemo-aaron

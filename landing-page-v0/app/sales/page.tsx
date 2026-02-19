@@ -101,6 +101,42 @@ export default function SalesPage() {
     },
   ]
 
+  const segments = [
+    {
+      icon: Shield,
+      title: 'Health Plans',
+      subtitle: 'Medicare Advantage · Commercial · Medicaid',
+      points: [
+        'HEDIS Stars improvement and quality bonus capture',
+        'Member outreach automation at scale',
+        'Risk adjustment and care gap prioritization',
+        'Observable SLOs aligned to your measure targets',
+      ],
+    },
+    {
+      icon: Building2,
+      title: 'Hospitals & Health Systems',
+      subtitle: 'Academic Medical Centers · Regional Health Systems',
+      points: [
+        'Transitions of care and 30-day readmission prevention',
+        'MIPS quality measure optimization',
+        'Inpatient + outpatient + post-acute data integration',
+        'Care manager prioritization and workflow automation',
+      ],
+    },
+    {
+      icon: Users,
+      title: 'Provider Groups',
+      subtitle: 'Multi-Specialty Practices · ACOs · FQHCs',
+      points: [
+        'Annual wellness visit scheduling and gap closure',
+        'Chronic care management workflows',
+        'Value-based contract performance tracking',
+        'Population-level quality reporting',
+      ],
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -294,7 +330,71 @@ export default function SalesPage() {
           </div>
         </section>
 
-        {/* rest of sections go here */}
+        {/* ── SECTION 5: Who This Is For ── */}
+        <section className="py-24 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Who We Work With
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                HDIM is purpose-built for organizations where quality measurement directly impacts revenue and patient outcomes.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {segments.map((seg, idx) => {
+                const Icon = seg.icon
+                return (
+                  <div key={idx} className="border border-gray-200 rounded-2xl p-8 hover:border-[#0D4F8B] hover:shadow-md transition-all">
+                    <div className="w-12 h-12 bg-[#0D4F8B]/10 rounded-xl flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-[#0D4F8B]" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">{seg.title}</h3>
+                    <p className="text-sm text-gray-500 mb-5">{seg.subtitle}</p>
+                    <ul className="space-y-3">
+                      {seg.points.map((point, pidx) => (
+                        <li key={pidx} className="flex items-start gap-2 text-sm text-gray-700">
+                          <CheckCircle2 className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 6: Final CTA ── */}
+        <section className="py-24 bg-gray-900 text-white">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-4xl font-bold mb-4">
+              Ready to Start the Conversation?
+            </h2>
+            <p className="text-xl text-gray-300 mb-10">
+              30 minutes. No pitch deck. Just an honest conversation about your quality program.
+            </p>
+            <Link
+              href="/schedule"
+              className="inline-flex items-center gap-2 bg-white text-gray-900 px-10 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors"
+            >
+              <Calendar className="w-5 h-5" />
+              Schedule Your Discovery Call
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+            <p className="text-gray-400 mt-6 text-sm">
+              Prefer email?{' '}
+              <a
+                href="mailto:sales@mahoosuc.solutions"
+                className="text-gray-200 hover:text-white underline"
+              >
+                sales@mahoosuc.solutions
+              </a>
+            </p>
+          </div>
+        </section>
 
       </main>
     </div>

@@ -63,6 +63,9 @@ export async function setupDemoAuthViaStorage(
       localStorage.setItem('healthdata_tenant', tenantId);
       localStorage.removeItem('healthdata-demo-mode');
       sessionStorage.removeItem('healthdata-demo-mode');
+      // Suppress guided tour and first-visit prompts for screenshot capture
+      localStorage.setItem('hdim_first_visit_complete', 'true');
+      localStorage.setItem('hdim_tour_dashboard_complete', 'true');
     },
     { user: DEMO_USER, tenantId }
   );

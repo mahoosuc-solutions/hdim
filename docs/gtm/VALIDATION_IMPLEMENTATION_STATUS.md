@@ -66,7 +66,7 @@ The comprehensive landing page validation plan outlined in `LANDING_PAGE_VALIDAT
   - Alt text validation
   - ARIA attribute verification
 
-**Run**: `npm run test:lighthouse`
+**Run (manual)**: `npx lhci autorun`
 
 ### Phase 4: Deployment & Post-Launch ⏳ READY FOR DEPLOYMENT
 
@@ -86,7 +86,7 @@ The comprehensive landing page validation plan outlined in `LANDING_PAGE_VALIDAT
 
 **Implemented**:
 - ✅ GitHub Actions workflow (`.github/workflows/landing-page-validation.yml`)
-  - 4 parallel validation jobs
+  - Core validation jobs + E2E + Lighthouse
   - Runs on push/PR to main/master/develop
   - Daily scheduled runs (6 AM UTC)
   - Manual workflow dispatch option
@@ -122,7 +122,7 @@ The comprehensive landing page validation plan outlined in `LANDING_PAGE_VALIDAT
 | `tests/e2e/landing-page.spec.ts` | 313 | E2E functional testing | ✅ Complete |
 | `playwright.config.ts` | 42 | Playwright configuration | ✅ Complete |
 | `lighthouserc.json` | 57 | Lighthouse CI config | ✅ Complete |
-| `.github/workflows/landing-page-validation.yml` | 123 | CI/CD pipeline | ✅ Complete |
+| `.github/workflows/landing-page-validation.yml` | Active | CI/CD pipeline | ✅ Complete |
 
 ### Documentation
 
@@ -137,7 +137,7 @@ The comprehensive landing page validation plan outlined in `LANDING_PAGE_VALIDAT
 
 | File | Changes | Status |
 |------|---------|--------|
-| `package.json` | Added 6 validation scripts | ✅ Complete |
+| `package.json` | Validation scripts (`validate:docs`, `validate:content`, `validate:links`, `validate:ci`, `validate:all`) | ✅ Complete |
 | `package.json` | Added 5 dev dependencies | ✅ Complete |
 
 **Total**: 11 files created/modified, ~1,900 lines of code
@@ -206,14 +206,15 @@ The comprehensive landing page validation plan outlined in `LANDING_PAGE_VALIDAT
 cd landing-page-v0
 npm install
 
-# Run all validations
-npm run validate:all
+# Run CI-aligned quality gate
+npm run validate:ci
 
 # Run individual validations
 npm run validate:content
 npm run validate:links
+npm run validate:docs
 npm run test:e2e
-npm run test:lighthouse
+npx lhci autorun
 ```
 
 ### CI/CD Pipeline
@@ -243,7 +244,7 @@ npm run test:lighthouse
 
 2. **Run first validation**
    ```bash
-   npm run validate:all
+   npm run validate:ci
    ```
 
 3. **Fix any issues found**
@@ -255,7 +256,7 @@ npm run test:lighthouse
 4. **Commit validation infrastructure**
    ```bash
    git add landing-page-v0/tests/
-   git add landing-page-v0/.github/workflows/
+   git add .github/workflows/landing-page-validation.yml
    git commit -m "feat: Add landing page validation suite"
    git push
    ```
@@ -314,7 +315,7 @@ npm run test:lighthouse
 | Accessibility Score | ≥95 | TBD | ⏳ Pending first run |
 | SEO Score | ≥95 | TBD | ⏳ Pending first run |
 
-**Action**: Run `npm run validate:all` to establish baseline
+**Action**: Run `npm run validate:ci` to establish baseline
 
 ### Continuous Monitoring
 
@@ -373,7 +374,7 @@ The landing page now has:
 
 **Ready for**: Production deployment with confidence in quality and reliability
 
-**Next action**: `cd landing-page-v0 && npm install && npm run validate:all`
+**Next action**: `cd landing-page-v0 && npm install && npm run validate:ci`
 
 ---
 

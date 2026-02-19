@@ -1,5 +1,7 @@
 # Landing Page & GTM Validation Plan
 
+> Note: Historical planning snapshot. For current operational commands and workflow paths, use `landing-page-v0/README.md`, `landing-page-v0/tests/README.md`, and `.github/workflows/landing-page-validation.yml`.
+
 ## Executive Summary
 
 This plan provides a comprehensive, fully-automated validation strategy for the HDIM landing page deployment on Vercel. It covers functionality, content completeness, marketing materials, integrations, SEO, performance, accessibility, and mobile responsiveness.
@@ -1146,12 +1148,12 @@ mkdir -p scripts tests
 npx playwright install
 
 # 6. Run initial validation
-npm run validate:all
+npm run validate:ci
 
 # 7. Fix any issues found
 
 # 8. Set up GitHub Actions
-# Copy .github/workflows/landing-page-ci.yml
+# Use .github/workflows/landing-page-validation.yml
 
 # 9. Deploy to Vercel
 vercel --prod

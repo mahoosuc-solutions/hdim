@@ -2,6 +2,17 @@
 
 import { useState } from 'react'
 import PortalNav from '../../components/PortalNav'
+
+declare global {
+  interface Window {
+    grecaptcha: {
+      execute: (siteKey: string, options: { action: string }) => Promise<string>
+    }
+    gtag: (...args: unknown[]) => void
+  }
+}
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''
 import {
   Download,
   FileJson,
@@ -101,11 +112,50 @@ export default function DownloadsPage() {
     return `${GCP_BUCKET_URL}/${dataset.filePrefix}-${sizeSuffix}`
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // In production, this would submit to your CRM/backend
-    console.log('Lead captured:', formData, 'Dataset:', selectedDataset, 'Size:', selectedSize)
-    setSubmitted(true)
+    setIsSubmitting(true)
+    setSubmitError('')
+
+    try {
+      let recaptchaToken = ''
+      if (typeof window !== 'undefined' && window.grecaptcha && RECAPTCHA_SITE_KEY) {
+        recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'downloads_page' })
+      }
+
+      const dataset = datasets.find(d => d.id === selectedDataset)
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          company: formData.company,
+          title: formData.role,
+          message: `Use case: ${formData.useCase || 'not specified'} | Dataset: ${dataset?.name ?? selectedDataset} | Size: ${selectedSize}`,
+          source: 'downloads_page',
+          recaptchaToken,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error((data as { error?: string }).error || 'Submission failed')
+      }
+
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'generate_lead', { source: 'downloads_page' })
+      }
+
+      setSubmitted(true)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -331,13 +381,20 @@ export default function DownloadsPage() {
                   </p>
                 </div>
 
+                {submitError && (
+                  <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+                    {submitError}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-70 transition-colors"
                 >
                   <Download className="w-5 h-5 mr-2" />
-                  Get Sample Data
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  {isSubmitting ? 'Submitting...' : 'Get Sample Data'}
+                  {!isSubmitting && <ArrowRight className="w-5 h-5 ml-2" />}
                 </button>
               </form>
             </div>

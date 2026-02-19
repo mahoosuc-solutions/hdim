@@ -8,6 +8,7 @@ Modern, conversion-optimized landing page for HealthData-in-Motion (HDIM) health
 
 This repo enforces landing-page quality checks for changes under `landing-page-v0/`:
 
+- `npm run validate:ci` (aggregated CI gate)
 - `npm run validate:content` (includes `/sales` metadata contract checks)
 - `npm run validate:links`
 - `npm run lint`

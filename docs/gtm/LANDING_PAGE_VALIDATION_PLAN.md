@@ -691,7 +691,7 @@ PLAYWRIGHT_BASE_URL=https://hdim.example.com npx playwright test smoke
 
 ### 5.1 GitHub Actions Workflow
 
-**File**: `.github/workflows/landing-page-ci.yml`
+**File**: `.github/workflows/landing-page-validation.yml`
 
 ```yaml
 name: Landing Page CI/CD
@@ -849,7 +849,7 @@ jobs:
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings=0",
     "type-check": "tsc --noEmit",
     "test": "jest",
     "test:e2e": "playwright test",

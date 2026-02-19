@@ -256,6 +256,94 @@ export default function FeaturesPage() {
         </div>
       </section>
 
+      {/* Performance Validated Section */}
+      <section className="py-20 bg-gray-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Performance Validated, Not Estimated
+            </h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Healthcare IT buyers hear a lot of promises. We did something different:
+              we ran 261,764 real requests against our production stack and published the results.
+            </p>
+          </div>
+
+          {/* Full comparison table */}
+          <div className="overflow-x-auto mb-12">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-700">
+                  <th className="text-left py-4 pr-8 text-gray-400 font-semibold uppercase tracking-wider w-1/3">Capability Layer</th>
+                  <th className="text-left py-4 pr-8 text-red-400 font-semibold uppercase tracking-wider w-1/3">Traditional Build</th>
+                  <th className="text-left py-4 text-green-400 font-semibold uppercase tracking-wider w-1/3">HDIM — Validated Today</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800">
+                {[
+                  {
+                    layer: 'HEDIS Measure Engine',
+                    traditional: '12–18 months to build, certify, and stress-test a CQL execution engine from scratch',
+                    hdim: 'CQL engine live and load-tested at 100 VUs — P95 = 92ms, SLO PASS'
+                  },
+                  {
+                    layer: 'FHIR R4 Compliance',
+                    traditional: '6–12 month consulting engagement; specialist team to implement resources, bundles, and search parameters',
+                    hdim: 'FHIR R4 native; $everything operation live returning 14 resource types per patient'
+                  },
+                  {
+                    layer: 'HIPAA Audit Trail',
+                    traditional: 'Separate compliance engagement ($100K–$200K+); often retrofitted after launch',
+                    hdim: '100% PHI access logged at the HTTP layer — automatic, not bolted on'
+                  },
+                  {
+                    layer: 'Multi-Tenant Isolation',
+                    traditional: 'Architecture decision takes 3–6 months; frequently gets deferred or under-engineered',
+                    hdim: 'Database-level tenant separation confirmed in dry-run Feb 19 — cross-tenant access returns 403'
+                  },
+                  {
+                    layer: 'Load Testing',
+                    traditional: 'Manual QA cycles; weeks per round; often skipped pre-launch due to cost and timeline pressure',
+                    hdim: 'Automated k6 SLO suite — 3 rounds completed, 261,764 requests, 0% HTTP errors'
+                  },
+                  {
+                    layer: 'Observable SLOs',
+                    traditional: '"We\'ll add monitoring in Phase 2" — rarely delivers verifiable customer-facing SLOs',
+                    hdim: 'Distributed tracing via Jaeger; SLO thresholds enforced in automated tests; customer-verifiable'
+                  },
+                  {
+                    layer: 'Deployment Reproducibility',
+                    traditional: 'Weeks of staging and production environment setup; snowflake servers; manual runbooks',
+                    hdim: '20-service stack cold-starts in ~8 minutes via Docker Compose; automated dry-run procedure documented'
+                  },
+                  {
+                    layer: 'Security Architecture',
+                    traditional: 'JWT + RBAC implementation: 3–6 months; gateway trust pattern often skipped',
+                    hdim: 'Gateway trust pattern live — direct service calls rejected without gateway auth headers'
+                  },
+                ].map((row, i) => (
+                  <tr key={i}>
+                    <td className="py-5 pr-8 text-white font-medium align-top">{row.layer}</td>
+                    <td className="py-5 pr-8 text-red-300 align-top">{row.traditional}</td>
+                    <td className="py-5 text-green-300 align-top">{row.hdim}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="text-center">
+            <a
+              href="/performance"
+              className="inline-flex items-center justify-center px-8 py-4 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              Read the full test methodology
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-blue-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

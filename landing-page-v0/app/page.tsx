@@ -746,6 +746,114 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Tested at Scale Section */}
+      <section className="py-20 bg-gray-900 text-white" id="performance">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-accent font-semibold text-sm uppercase tracking-wider">
+              Tested at Scale. Validated Before You Sign.
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold mt-2 mb-4">
+              Performance Numbers. Not Marketing Numbers.
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+              Every claim below came from an actual load test against running infrastructure.
+              Zero simulations. Zero estimates. We ran the numbers before we put them on a page.
+            </p>
+          </div>
+
+          {/* 3-stat row */}
+          <div className="grid md:grid-cols-3 gap-8 mb-16">
+            <div className="bg-gray-800 rounded-2xl p-8 text-center border border-gray-700">
+              <div className="text-5xl font-bold text-accent mb-2">261,764</div>
+              <div className="text-white font-semibold text-lg mb-1">Requests Executed</div>
+              <div className="text-gray-400 text-sm">3 load test rounds — 0% HTTP errors across all runs</div>
+            </div>
+            <div className="bg-gray-800 rounded-2xl p-8 text-center border border-gray-700">
+              <div className="text-5xl font-bold text-green-400 mb-2">92ms</div>
+              <div className="text-white font-semibold text-lg mb-1">P95 Quality Measure Eval</div>
+              <div className="text-gray-400 text-sm">At 100 concurrent users — SLO target is &lt;200ms</div>
+            </div>
+            <div className="bg-gray-800 rounded-2xl p-8 text-center border border-gray-700">
+              <div className="text-5xl font-bold text-blue-400 mb-2">20 Services</div>
+              <div className="text-white font-semibold text-lg mb-1">Dry-Run Validated</div>
+              <div className="text-gray-400 text-sm">Full stack deployed and verified — Feb 19, 2026</div>
+            </div>
+          </div>
+
+          {/* Traditional vs HDIM comparison */}
+          <div className="bg-gray-800 rounded-2xl p-8 border border-gray-700 mb-12">
+            <h3 className="text-xl font-bold text-white mb-2 text-center">
+              What Getting Here Looks Like the Traditional Way
+            </h3>
+            <p className="text-gray-400 text-center mb-8 max-w-2xl mx-auto">
+              Building a healthcare quality platform from scratch is one of the most complex problems in enterprise software.
+              Here&apos;s what the traditional path requires — and what we&apos;ve already delivered.
+            </p>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Traditional */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-3 h-3 bg-red-400 rounded-full" />
+                  <span className="font-semibold text-gray-300 uppercase text-sm tracking-wider">Traditional Approach</span>
+                </div>
+                {[
+                  { label: 'Timeline to production', value: '18–24 months' },
+                  { label: 'Team required', value: '15–20 specialists' },
+                  { label: 'Budget to reach this validation level', value: '$2M–$5M' },
+                  { label: 'FHIR R4 compliance', value: '6–12 mo. consulting engagement' },
+                  { label: 'HEDIS measure engine', value: 'Build, certify, test: 12–18 months' },
+                  { label: 'HIPAA audit trail', value: 'Separate compliance engagement ($200K+)' },
+                  { label: 'Load testing at 100 VUs', value: 'QA cycles: weeks per round' },
+                  { label: 'Multi-tenant isolation verified', value: 'Architecture decision: 3–6 months' },
+                  { label: 'Observable SLOs', value: 'Add monitoring later' },
+                  { label: 'Deployment reproducibility', value: 'Weeks of staging/prod setup' },
+                ].map((row, i) => (
+                  <div key={i} className="flex justify-between items-start border-b border-gray-700 pb-3">
+                    <span className="text-gray-400 text-sm">{row.label}</span>
+                    <span className="text-red-400 text-sm font-medium text-right ml-4">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+              {/* HDIM */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-3 h-3 bg-green-400 rounded-full" />
+                  <span className="font-semibold text-gray-300 uppercase text-sm tracking-wider">HDIM — Today</span>
+                </div>
+                {[
+                  { label: 'Timeline to this validation state', value: 'Done ✓' },
+                  { label: 'Team', value: 'Lean, purpose-built' },
+                  { label: 'Investment at this validation level', value: 'Fraction of traditional cost' },
+                  { label: 'FHIR R4 + $everything endpoint', value: 'Live ✓' },
+                  { label: 'CQL measure engine', value: '261,764 requests tested ✓' },
+                  { label: 'HIPAA audit trail', value: '100% PHI access logged ✓' },
+                  { label: 'Load testing', value: 'k6 SLO suite, 3 rounds automated ✓' },
+                  { label: 'Multi-tenant isolation', value: 'Confirmed Feb 19 dry run ✓' },
+                  { label: 'Observable SLOs', value: 'Verifiable via Jaeger — today ✓' },
+                  { label: 'Full stack deployment', value: '20 services up in 8 minutes ✓' },
+                ].map((row, i) => (
+                  <div key={i} className="flex justify-between items-start border-b border-gray-700 pb-3">
+                    <span className="text-gray-400 text-sm">{row.label}</span>
+                    <span className="text-green-400 text-sm font-medium text-right ml-4">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <a
+              href="/performance"
+              className="inline-flex items-center justify-center px-8 py-3 border border-accent text-accent font-semibold rounded-lg hover:bg-accent hover:text-white transition-colors"
+            >
+              See the full load test methodology
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Compliance & Trust Section */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -942,6 +1050,7 @@ export default function LandingPage() {
                 <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
                 <li><a href="/schedule" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
                 <li><a href="#compliance" className="text-gray-400 hover:text-white transition-colors">Security</a></li>
+                <li><a href="/performance" className="text-gray-400 hover:text-white transition-colors">Performance</a></li>
               </ul>
             </div>
           </div>

@@ -13,6 +13,7 @@ declare global {
 }
 
 const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''
+import Link from 'next/link'
 import {
   Download,
   FileJson,
@@ -22,7 +23,8 @@ import {
   Shield,
   CheckCircle2,
   ArrowRight,
-  Lock
+  Lock,
+  Calendar
 } from 'lucide-react'
 
 const GCP_BUCKET_URL = 'https://storage.googleapis.com/hdim-platform-test-data/datasets'
@@ -437,6 +439,21 @@ export default function DownloadsPage() {
                     1,000 patients
                   </a>
                 </div>
+
+                {/* Next step CTA */}
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Ready to see HDIM run against this data in a live environment?
+                  </p>
+                  <Link
+                    href="/schedule"
+                    className="inline-flex items-center justify-center w-full px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Schedule a Demo
+                  </Link>
+                </div>
+
                 <button
                   onClick={() => {
                     setSubmitted(false)

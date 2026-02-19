@@ -183,6 +183,63 @@ export default function SalesPage() {
           </div>
         </section>
 
+        {/* ── SECTION 3: What to Expect ── */}
+        <section className="py-24 bg-white">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                What to Expect, and When
+              </h2>
+              <p className="text-xl text-gray-600">
+                Concrete commitments at every stage — not &quot;it depends.&quot;
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                {
+                  timeframe: '48 hours',
+                  label: 'After discovery call',
+                  deliverable: 'Written fit assessment delivered to your inbox',
+                  detail: "A clear summary of what we heard, where we fit, and recommended next steps — or an honest explanation of why we're not the right solution.",
+                  color: 'blue',
+                },
+                {
+                  timeframe: '2 weeks',
+                  label: 'Pilot kickoff',
+                  deliverable: 'Live environment with your FHIR data ingested',
+                  detail: 'FHIR data pipeline connected, HEDIS measures configured for your population, and your team trained on the platform.',
+                  color: 'teal',
+                },
+                {
+                  timeframe: '30 days',
+                  label: 'Into the pilot',
+                  deliverable: 'First real results: care gap data + HEDIS baselines',
+                  detail: 'Live care gap detection running against your population, baseline HEDIS measure scores, and an ROI model built from your actual numbers.',
+                  color: 'green',
+                },
+              ].map((item, idx) => (
+                <div key={idx} className="text-center">
+                  <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
+                    item.color === 'blue' ? 'bg-blue-100' :
+                    item.color === 'teal' ? 'bg-teal-100' : 'bg-green-100'
+                  }`}>
+                    <span className={`text-2xl font-black ${
+                      item.color === 'blue' ? 'text-blue-700' :
+                      item.color === 'teal' ? 'text-teal-700' : 'text-green-700'
+                    }`}>
+                      {item.timeframe}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-500 mb-2">{item.label}</div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">{item.deliverable}</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* rest of sections go here */}
 
       </main>

@@ -73,6 +73,34 @@ export default function SalesPage() {
     },
   ]
 
+
+  const faqs = [
+    {
+      q: 'We already have a quality vendor.',
+      a: "Most of our customers did too. We work alongside existing tools or replace them depending on what's actually working. The discovery call is designed to answer that question honestly — we'll look at what you have and tell you whether switching makes sense.",
+    },
+    {
+      q: "What's the implementation timeline?",
+      a: 'Pilot environment up in 2 weeks. First HEDIS measure baselines and care gap data in 30 days. Full pilot readout at 60–90 days. These are commitments, not estimates.',
+    },
+    {
+      q: "How do we know the ROI is real?",
+      a: "Observable SLO contracts. You see our performance metrics in real time via live dashboards — not in a quarterly report we control. If we miss an SLO, automatic service credits kick in. We put it in writing before you sign.",
+    },
+    {
+      q: 'Is our data secure?',
+      a: "HIPAA-aligned controls, configurable PHI cache policies, full audit trail, role-based access control, and encryption at rest and in transit. The pilot can run on synthetic data until your security team signs off on the full integration.",
+    },
+    {
+      q: "What happens if the pilot doesn't perform?",
+      a: "The SLO contract specifies automatic service credits for underperformance. We define success criteria together before the pilot starts, measure against them continuously, and you have the data to hold us accountable.",
+    },
+    {
+      q: 'How does pricing work?',
+      a: "Member-volume based. We build a model for your specific population after the discovery call — no surprises. Pilot pricing is structured to give you a real result without a full enterprise commitment.",
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -234,6 +262,32 @@ export default function SalesPage() {
                   <div className="text-sm text-gray-500 mb-2">{item.label}</div>
                   <h3 className="text-lg font-bold text-gray-900 mb-3">{item.deliverable}</h3>
                   <p className="text-gray-600 text-sm leading-relaxed">{item.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 4: FAQ ── */}
+        <section className="py-24 bg-gray-50">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Questions We Hear Every Time
+              </h2>
+              <p className="text-xl text-gray-600">
+                Honest answers — not marketing copy.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {faqs.map((faq, idx) => (
+                <div key={idx} className="bg-white rounded-xl border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-start gap-3">
+                    <span className="text-[#0D4F8B] font-black text-xl leading-none mt-0.5">Q</span>
+                    {faq.q}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed pl-8">{faq.a}</p>
                 </div>
               ))}
             </div>

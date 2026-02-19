@@ -254,7 +254,7 @@ export const providerConfig: RoleStoryConfig = {
         glowColor: 'rgba(59, 130, 246, 0.6)',
       },
       {
-        value: 'FHIR R4 Native',
+        value: '30-Second Prep Time',
         backgroundColor: 'rgba(34, 197, 94, 0.95)',
         borderColor: 'rgba(34, 197, 94, 1)',
         textColor: 'white',

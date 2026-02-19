@@ -9,6 +9,7 @@
 - [ ] Relevant local tests run and passing
 - [ ] If frontend session/auth code changed, ran `npm --prefix frontend run test:session-flow`
 - [ ] If session flow UI changed, ran `npm --prefix frontend run e2e:session-flow` (or attached reason if not run)
+- [ ] If `landing-page-v0/**` changed, ran `npm --prefix landing-page-v0 run validate:ci`
 
 ## Merge Gate Checklist
 
@@ -16,6 +17,7 @@
 - [ ] Required checks are green, including:
   - [ ] `MCP Release Gate / release-gate`
   - [ ] `Frontend Session Flow E2E / session-flow` (when `frontend/**` is affected)
+  - [ ] `Landing Page Validation` (when `landing-page-v0/**` is affected)
   - [ ] `Frontend Session Flow E2E / session-flow-external-auth` (for auth/login config changes; CI runs this conditionally)
   - [ ] `Frontend Session Flow E2E / auth-callback` (for auth/login config changes; CI runs this conditionally)
 - [ ] Branch protection expectations verified against `docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md`

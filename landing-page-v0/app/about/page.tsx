@@ -126,7 +126,7 @@ export default function AboutPage() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold text-gray-900 mb-6">
               We Build Healthcare Software<br />
-              <span className="text-blue-600">As If Patients' Lives Depend On It</span>
+              <span className="text-blue-600">As If Patients&apos; Lives Depend On It</span>
             </h1>
             <p className="text-xl text-gray-600 mb-4">
               Because they do.
@@ -204,7 +204,7 @@ export default function AboutPage() {
                       {value.title}
                     </h3>
                     <p className="text-gray-600 italic mb-4">
-                      "{value.description}"
+                      &ldquo;{value.description}&rdquo;
                     </p>
                     <p className="text-gray-700 font-medium">
                       {value.commitment}

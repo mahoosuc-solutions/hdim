@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 
+const WORDS = ['care gaps', 'HEDIS scores', 'Star Ratings', 'quality bonuses']
+
 export function CyclingText() {
-  const words = ['care gaps', 'HEDIS scores', 'Star Ratings', 'quality bonuses']
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
 
@@ -11,7 +12,7 @@ export function CyclingText() {
     const interval = setInterval(() => {
       setIsVisible(false)
       setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % words.length)
+        setCurrentIndex((prev) => (prev + 1) % WORDS.length)
         setIsVisible(true)
       }, 300)
     }, 3000)
@@ -25,7 +26,7 @@ export function CyclingText() {
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
       }`}
     >
-      {words[currentIndex]}
+      {WORDS[currentIndex]}
     </span>
   )
 }

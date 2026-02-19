@@ -8,7 +8,9 @@ import {
   Lightbulb,
   Target,
   Award,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2,
+  Clock
 } from 'lucide-react'
 
 export const metadata = {
@@ -66,89 +68,53 @@ const team = [
 
 const roadmap = [
   {
-    title: 'High-Priority TODO Remediation',
-    description: 'Implementation of 16 high-priority TODOs across CMS Connector, security tenant isolation, and feature completeness.',
-    dueOn: 'Feb 2, 2026',
-    openIssues: 0,
-    closedIssues: 0
+    quarter: 'Q1 2026 — Pilot Launch',
+    status: 'in_progress' as const,
+    milestones: [
+      'FHIR R4 core platform with CQL-native measure execution',
+      'HEDIS 2026 measure library (key measures)',
+      'Care gap detection and closure workflows',
+      'Multi-tenant security with HIPAA-aligned controls',
+      'Observable SLO contracts with real-time performance monitoring',
+      'Pilot customer onboarding and deployment',
+    ]
   },
   {
-    title: 'Q1-2026-Infrastructure',
-    description: 'CI/CD pipelines and monitoring setup.',
-    dueOn: 'Mar 4, 2026',
-    openIssues: 4,
-    closedIssues: 0
+    quarter: 'Q2 2026 — Clinical Depth',
+    status: 'planned' as const,
+    milestones: [
+      'Full HEDIS 2026 measure library coverage',
+      'Clinical portal: patient search, risk stratification, care gap management',
+      'Provider notification and outreach automation',
+      'EHR integrations: Epic, Cerner (bi-directional FHIR)',
+      'Developer portal with API docs and sandbox',
+      'SSO, MFA, and enterprise RBAC',
+    ]
   },
   {
-    title: 'Q1-2026-Auth',
-    description: 'SSO, MFA, RBAC, and session management.',
-    dueOn: 'Mar 9, 2026',
-    openIssues: 6,
-    closedIssues: 0
+    quarter: 'Q3 2026 — Scale & Intelligence',
+    status: 'planned' as const,
+    milestones: [
+      'AI-powered care gap prioritization (predictive, 30-60 day lead time)',
+      'Population health cohort builder and analytics',
+      'Claims data ingestion (837/835) and pharmacy data (NCPDP)',
+      'QRDA I/III export for CMS quality reporting',
+      'Social determinants of health (SDOH) integration',
+      'Multi-region deployment and enterprise SLA tiers',
+    ]
   },
   {
-    title: 'Q1-2026-Clinical-Portal',
-    description: 'Complete Clinical User Portal with patient search, care gaps, quality measures, and AI assistant.',
-    dueOn: 'Mar 14, 2026',
-    openIssues: 9,
-    closedIssues: 0
+    quarter: 'Q4 2026 — Enterprise GA',
+    status: 'planned' as const,
+    milestones: [
+      'General availability with full enterprise feature set',
+      'CMS Stars optimization dashboards',
+      'Custom measure builder for organization-specific measures',
+      'Advanced analytics and ROI reporting',
+      'Partner ecosystem and marketplace integrations',
+      'Series A funded — accelerated roadmap',
+    ]
   },
-  {
-    title: 'Q1-2026-Admin-Portal',
-    description: 'Enhanced Admin Portal with service monitoring, audit logs, and user/tenant management.',
-    dueOn: 'Mar 19, 2026',
-    openIssues: 5,
-    closedIssues: 0
-  },
-  {
-    title: 'Q1-2026-Agent-Studio',
-    description: 'AI Agent Studio for no-code agent creation and testing.',
-    dueOn: 'Mar 24, 2026',
-    openIssues: 4,
-    closedIssues: 0
-  },
-  {
-    title: 'Q1-2026-Testing',
-    description: 'E2E and performance testing.',
-    dueOn: 'Mar 25, 2026',
-    openIssues: 3,
-    closedIssues: 0
-  },
-  {
-    title: 'Q1-2026-Documentation',
-    description: 'User guides and API documentation.',
-    dueOn: 'Mar 26, 2026',
-    openIssues: 2,
-    closedIssues: 0
-  },
-  {
-    title: 'Q1-2026-Developer-Portal',
-    description: 'Developer Portal with API docs, sandbox, and webhook configuration.',
-    dueOn: 'Mar 27, 2026',
-    openIssues: 4,
-    closedIssues: 0
-  },
-  {
-    title: 'Q1-2026-Backend-Endpoints',
-    description: 'Critical backend endpoint completions for Q1 2026.',
-    dueOn: 'Mar 31, 2026',
-    openIssues: 2,
-    closedIssues: 11
-  },
-  {
-    title: 'Q1-2026-HIPAA-Compliance',
-    description: 'HIPAA compliance issues for Q1 2026.',
-    dueOn: 'Mar 31, 2026',
-    openIssues: 0,
-    closedIssues: 1
-  },
-  {
-    title: 'Q2-2026-Strategic-Integrations',
-    description: 'Strategic EHR integrations, patient engagement, and SDOH tools.',
-    dueOn: 'Jun 30, 2026',
-    openIssues: 3,
-    closedIssues: 0
-  }
 ]
 
 export default function AboutPage() {
@@ -280,38 +246,52 @@ export default function AboutPage() {
 
       {/* Roadmap */}
       <section className="py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Roadmap
+              Product Roadmap
             </h2>
-            <p className="text-lg text-gray-600">
-              Sourced from GitHub milestones, updated January 24, 2026.
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Our path from pilot to enterprise general availability. Built iteratively with customer feedback at every stage.
             </p>
           </div>
 
-          <div className="space-y-8">
-            {roadmap.map((milestone, idx) => (
-              <div key={idx} className="flex items-start">
-                <div className="flex-1 bg-white border border-gray-200 rounded-xl p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {milestone.title}
-                  </h3>
-                  <p className="text-gray-700">
-                    {milestone.description}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-3 text-sm text-gray-600">
-                    <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
-                      Target: {milestone.dueOn}
+          <div className="grid md:grid-cols-2 gap-6">
+            {roadmap.map((phase, idx) => (
+              <div
+                key={idx}
+                className={`bg-white rounded-xl p-6 border-2 ${
+                  phase.status === 'in_progress'
+                    ? 'border-blue-500 shadow-md'
+                    : 'border-gray-200'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  {phase.status === 'in_progress' ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+                      <span className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-pulse" />
+                      In Progress
                     </span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
-                      Open issues: {milestone.openIssues}
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                      <Clock className="w-3 h-3" />
+                      Planned
                     </span>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full">
-                      Closed issues: {milestone.closedIssues}
-                    </span>
-                  </div>
+                  )}
                 </div>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">
+                  {phase.quarter}
+                </h3>
+                <ul className="space-y-2.5">
+                  {phase.milestones.map((milestone, midx) => (
+                    <li key={midx} className="flex items-start gap-2 text-sm text-gray-700">
+                      <CheckCircle2 className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                        phase.status === 'in_progress' ? 'text-blue-500' : 'text-gray-300'
+                      }`} />
+                      {milestone}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
@@ -329,10 +309,10 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/demo"
+              href="/schedule"
               className="inline-flex items-center justify-center px-8 py-4 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 transition-colors"
             >
-              Request Demo
+              Schedule a Demo
               <ArrowRight className="ml-2 w-5 h-5" />
             </Link>
             <Link

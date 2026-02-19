@@ -15,6 +15,10 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: landing-page-validation-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   content-validation:
     name: Content Validation
@@ -96,6 +100,7 @@ jobs:
 
   e2e-tests:
     name: E2E Tests
+    needs: [content-validation, link-check, lint-and-build]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -136,6 +141,7 @@ jobs:
 
   lighthouse:
     name: Lighthouse Performance
+    needs: [content-validation, link-check, lint-and-build]
     runs-on: ubuntu-latest
     defaults:
       run:

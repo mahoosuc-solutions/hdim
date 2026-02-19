@@ -71,7 +71,7 @@
 4. **Run Lighthouse audit**
    ```bash
    cd landing-page-v0
-   npm run test:lighthouse
+   npx lhci autorun
    ```
    Target: Performance ≥90%, SEO ≥95%
 
@@ -91,7 +91,7 @@
 # Landing Page
 cd landing-page-v0
 vercel --prod                    # Deploy to production
-npm run validate:all             # Run all validations
+npm run validate:ci              # Run CI-aligned validations
 
 # Backend
 cd backend
@@ -115,7 +115,7 @@ curl -I https://hdim-landing-page.vercel.app
 
 ## 📊 Performance Baseline
 
-Next run of `npm run test:lighthouse` will establish:
+Next run of `npx lhci autorun` will establish:
 - Performance score
 - SEO score
 - Accessibility score

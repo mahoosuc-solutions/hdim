@@ -163,7 +163,7 @@ export default function SchedulePage() {
             </div>
 
             <p className="text-lg text-gray-600 mb-8">
-              Book a personalized demo with our healthcare quality experts. We'll show you how HDIM can transform your quality program and close care gaps faster.
+              Book a personalized demo with our healthcare quality experts. We&apos;ll show you how HDIM can transform your quality program and close care gaps faster.
             </p>
 
             {/* Meeting Options */}
@@ -206,7 +206,7 @@ export default function SchedulePage() {
 
             {/* Benefits */}
             <div className="bg-gray-50 rounded-xl p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">What We'll Cover</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">What We&apos;ll Cover</h2>
               <ul className="space-y-3">
                 {benefits.map((benefit, index) => (
                   <li key={index} className="flex items-start gap-3">

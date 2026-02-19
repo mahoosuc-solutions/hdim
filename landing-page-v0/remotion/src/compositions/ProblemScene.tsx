@@ -232,7 +232,7 @@ export const ProblemScene: React.FC<ProblemSceneProps> = ({ variant = 'default' 
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             }}
           >
-            There's a better way...
+            There&apos;s a better way...
           </h2>
         </AbsoluteFill>
       )}

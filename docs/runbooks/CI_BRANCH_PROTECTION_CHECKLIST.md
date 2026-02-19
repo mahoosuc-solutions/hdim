@@ -31,6 +31,7 @@ Use the exact job/check names from GitHub Actions UI after first successful run.
 - `Landing Page Validation / content-validation` (required for `landing-page-v0/**` PRs)
 - `Landing Page Validation / link-check` (required for `landing-page-v0/**` PRs)
 - `Landing Page Validation / lint-and-build` (required for `landing-page-v0/**` PRs)
+- `Landing Page Core Validation / validate-ci` (optional fallback gate for `landing-page-v0/**` PRs when heavy jobs are queued)
 - Existing backend CI checks already required by your policy (`backend-ci*` workflows)
 
 ## Frontend Session Flow Gate

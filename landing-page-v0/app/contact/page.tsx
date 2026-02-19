@@ -137,7 +137,7 @@ export default function ContactPage() {
               Get In Touch
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Have questions about HDIM? We're here to help. Reach out to our team for demos,
+              Have questions about HDIM? We&apos;re here to help. Reach out to our team for demos,
               pricing information, or technical support.
             </p>
           </div>
@@ -298,7 +298,7 @@ export default function ContactPage() {
 
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 mb-8">
                 <p className="text-gray-700 mb-6">
-                  We're a remote-first team building the future of healthcare quality measurement. Reach us at:
+                  We&apos;re a remote-first team building the future of healthcare quality measurement. Reach us at:
                 </p>
                 <div className="space-y-3">
                   <a

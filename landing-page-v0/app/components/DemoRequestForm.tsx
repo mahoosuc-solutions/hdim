@@ -143,7 +143,7 @@ export default function DemoRequestForm({ onClose }: DemoRequestFormProps) {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">Thank You!</h3>
             <p className="text-gray-600 mb-6">
-              We've received your demo request. A member of our team will reach out within 24 hours.
+              We&apos;ve received your demo request. A member of our team will reach out within 24 hours.
             </p>
             <button
               onClick={onClose}

@@ -495,7 +495,7 @@ export default function DemoPage() {
                     </ul>
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-900 mb-3">What You'll See</h3>
+                    <h3 className="font-semibold text-gray-900 mb-3">What You&apos;ll See</h3>
                     <ul className="space-y-2 text-sm text-gray-600">
                       <li className="flex items-center">
                         <CheckCircle2 className="w-4 h-4 text-green-600 mr-2" />
@@ -678,7 +678,7 @@ export default function DemoPage() {
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">Is this real patient data?</h4>
                 <p className="text-sm text-gray-600">
-                  No. All data is 100% synthetic and HIPAA-safe. It's designed to be realistic for evaluation purposes.
+                  No. All data is 100% synthetic and HIPAA-safe. It&apos;s designed to be realistic for evaluation purposes.
                 </p>
               </div>
               <div>

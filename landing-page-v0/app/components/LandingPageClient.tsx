@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useEffect, ReactNode } from 'react'
 import {
   HeartPulse,
@@ -52,14 +53,14 @@ export function LandingPageClient({ children }: LandingPageClientProps) {
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
             <div className="flex items-center">
-              <a href="/" className="flex items-center space-x-2">
+              <Link href="/" className="flex items-center space-x-2">
                 <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
                   <HeartPulse className="w-6 h-6 text-white" />
                 </div>
                 <span className={`text-xl font-bold ${scrolled ? 'text-gray-900' : 'text-white'}`}>
                   HDIM
                 </span>
-              </a>
+              </Link>
             </div>
 
             {/* Desktop Navigation */}

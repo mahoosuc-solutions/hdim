@@ -67,7 +67,7 @@ export default function VideoPlayer({
               aria-label={`${title} - ${description}`}
             >
               <track kind="captions" />
-              Your browser doesn't support video playback.
+              Your browser doesn&apos;t support video playback.
             </video>
           )}
         </div>

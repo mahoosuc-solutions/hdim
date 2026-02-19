@@ -21,14 +21,13 @@ const CONFIG_MAP: Record<RoleType, RoleStoryConfig> = {
   'ai-user': aiUserConfig,
 };
 
-// Props must all be optional for Remotion's Composition defaultProps to work
 interface RoleStoryWrapperProps {
-  role?: RoleType;
+  role: RoleType;
   variant?: VideoVariant;
 }
 
 export const RoleStoryWrapper: React.FC<RoleStoryWrapperProps> = ({
-  role = 'care-manager',
+  role,
   variant = 'default',
 }) => {
   const config = CONFIG_MAP[role];

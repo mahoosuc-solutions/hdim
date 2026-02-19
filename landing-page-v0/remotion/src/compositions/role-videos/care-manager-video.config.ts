@@ -25,14 +25,16 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-01-dashboard-overview.png',
       narrativeCaption:
-        'Morning overview — summary cards show today\'s care gap priorities at a glance',
+        'Dashboard displays 45 open care gaps across 6 HEDIS measures for today\'s priorities',
+      panDirection: 'left',
+      zoomLevel: 1.03,
       overlays: [
         {
           type: 'glow-highlight',
           startFrame: 30,
           duration: 140,
           position: { x: 14, y: 25 },
-          props: { width: 380, height: 120, borderColor: 'green', pulseCount: 2 },
+          props: { width: 380, height: 120, borderColor: 'blue', pulseCount: 2 },
         },
         {
           type: 'text',
@@ -47,7 +49,9 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-02-care-gaps-table.png',
       narrativeCaption:
-        'Full gap table sorted by urgency — highest-impact patients surface first',
+        'Care gap table ranks 45 patients by urgency, surfacing 9 high-priority cases first',
+      panDirection: 'right',
+      zoomLevel: 1.05,
       overlays: [
         {
           type: 'badge',
@@ -68,6 +72,8 @@ export const careManagerConfig: RoleStoryConfig = {
       screenshot: 'screenshots/care-manager/care-manager-03-high-urgency-filter.png',
       narrativeCaption:
         'One-click filter isolates the 9 high-urgency gaps for immediate action',
+      panDirection: 'left',
+      zoomLevel: 1.02,
       overlays: [
         {
           type: 'glow-highlight',
@@ -82,12 +88,14 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-04-eleanor-row.png',
       narrativeCaption:
-        'Eleanor Anderson, age 63 — mammogram overdue 60 days (Breast Cancer Screening measure)',
+        'BCS-E measure flags Eleanor Anderson, age 63, with mammogram 60 days overdue',
+      panDirection: 'right',
+      zoomLevel: 1.06,
       overlays: [
         {
           type: 'glow-highlight',
-          startFrame: 15,
-          duration: 155,
+          startFrame: 20,
+          duration: 150,
           position: { x: 5, y: 42 },
           props: { width: 900, height: 48, borderColor: 'red', pulseCount: 3 },
         },
@@ -104,7 +112,9 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-05-gap-detail.png',
       narrativeCaption:
-        'Gap detail shows clinical context — measure rationale, evidence period, and intervention options',
+        'Gap detail reveals BCS measure rationale, 12-month evidence period, and 3 intervention paths',
+      panDirection: 'none',
+      zoomLevel: 1.04,
       overlays: [
         {
           type: 'text',
@@ -119,7 +129,9 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-06-intervention-dialog.png',
       narrativeCaption:
-        'One-click intervention: schedule screening, mark complete, or document patient refusal',
+        'Care manager selects 1 of 3 interventions: schedule mammogram, record result, or log refusal',
+      panDirection: 'left',
+      zoomLevel: 1.03,
       overlays: [
         {
           type: 'glow-highlight',
@@ -147,11 +159,13 @@ export const careManagerConfig: RoleStoryConfig = {
       screenshot: 'screenshots/care-manager/care-manager-07-gap-closed.png',
       narrativeCaption:
         'Gap closed in 8 seconds — total gaps drop from 45 to 44, high-urgency from 9 to 8',
+      panDirection: 'right',
+      zoomLevel: 1.05,
       overlays: [
         {
           type: 'badge',
-          startFrame: 10,
-          duration: 160,
+          startFrame: 20,
+          duration: 150,
           position: { x: 55, y: 8 },
           props: {
             text: 'Gap Closed!',
@@ -180,7 +194,9 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-08-patient-detail.png',
       narrativeCaption:
-        'Patient health record confirms closure — CLOSED status on BCS gap with timestamp',
+        'Patient record confirms BCS gap closure — status changes from OPEN to CLOSED in 8 seconds',
+      panDirection: 'left',
+      zoomLevel: 1.02,
       overlays: [
         {
           type: 'glow-highlight',
@@ -195,7 +211,9 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-09-outreach-campaigns.png',
       narrativeCaption:
-        'Automated outreach campaigns handle remaining gaps — email, SMS, and letter reminders',
+        'Outreach campaigns target 36 remaining open gaps via 3 channels: email, SMS, and letter',
+      panDirection: 'right',
+      zoomLevel: 1.04,
       overlays: [
         {
           type: 'text',
@@ -210,7 +228,9 @@ export const careManagerConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/care-manager/care-manager-10-dashboard-updated.png',
       narrativeCaption:
-        'Real-time impact — compliance rate improved 2.1% from a single gap closure',
+        'Real-time impact — compliance rate improves 2.1% from a single gap closure',
+      panDirection: 'none',
+      zoomLevel: 1.0,
       overlays: [
         {
           type: 'metric',

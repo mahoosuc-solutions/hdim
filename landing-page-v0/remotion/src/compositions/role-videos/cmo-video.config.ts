@@ -10,14 +10,14 @@ export const cmoConfig: RoleStoryConfig = {
   titleSlide: {
     headline: '"How Are Our\nStar Ratings?"',
     subheadline:
-      'Real-time HEDIS measure visibility — from board room to bedside',
+      'A CMO sees Star Rating impact in 5 seconds — not after next quarter\'s 90-day lag',
     durationFrames: 90,
   },
 
   problemSlide: {
     statement:
-      'Health plan executives wait quarters for quality data — by then it\'s too late to course-correct',
-    metric: '$millions in lost Medicare Advantage bonus payments from delayed visibility',
+      'Health plan executives wait 90+ days for quality data — by then it\'s too late to course-correct',
+    metric: 'Plans forfeit $1,200 per member annually from 90-day quality data lag',
     durationFrames: 120,
   },
 
@@ -25,7 +25,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-01-dashboard.png',
       narrativeCaption:
-        'Executive dashboard — organization-wide quality performance at a glance',
+        'Executive dashboard aggregates 24 HEDIS measures across 4,821 members in real time',
+      panDirection: 'left',
+      zoomLevel: 1.03,
       overlays: [
         {
           type: 'text',
@@ -40,7 +42,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-02-quality-measures.png',
       narrativeCaption:
-        'All HEDIS measures with pass/fail rates — CDC, BCS, CBP, and 20+ more',
+        'Measure catalog lists 24 active HEDIS measures with pass rates from 62% to 94%',
+      panDirection: 'right',
+      zoomLevel: 1.05,
       overlays: [
         {
           type: 'badge',
@@ -60,7 +64,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-03-cdc-measure-detail.png',
       narrativeCaption:
-        'CDC measure detail — numerator/denominator breakdown, performance against benchmark',
+        'CDC detail shows 412/487 members compliant, yielding 84.6% against the 80% benchmark',
+      panDirection: 'left',
+      zoomLevel: 1.02,
       overlays: [
         {
           type: 'glow-highlight',
@@ -75,7 +81,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-04-evaluation-results.png',
       narrativeCaption:
-        'CQL evaluation results — automated clinical logic replaces weeks of manual chart review',
+        'CQL engine evaluates 487 eligible members in 4.2 seconds, replacing weeks of chart review',
+      panDirection: 'right',
+      zoomLevel: 1.06,
       overlays: [
         {
           type: 'metric',
@@ -90,7 +98,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-05-measure-comparison.png',
       narrativeCaption:
-        'Side-by-side measure comparison — identify underperforming measures instantly',
+        'Side-by-side comparison reveals CDC at 84.6% outperforms BCS at 72.1% by 12.5 points',
+      panDirection: 'none',
+      zoomLevel: 1.04,
       overlays: [
         {
           type: 'text',
@@ -105,14 +115,16 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-06-care-gap-summary.png',
       narrativeCaption:
-        'Care gap summary by measure — see exactly where quality improvement efforts should focus',
+        'Gap summary flags BCS with 45 open gaps — the largest quality improvement opportunity',
+      panDirection: 'left',
+      zoomLevel: 1.03,
       overlays: [
         {
           type: 'glow-highlight',
           startFrame: 20,
           duration: 150,
           position: { x: 8, y: 35 },
-          props: { width: 500, height: 60, borderColor: 'red', pulseCount: 2 },
+          props: { width: 500, height: 60, borderColor: 'green', pulseCount: 2 },
         },
         {
           type: 'badge',
@@ -132,7 +144,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-07-risk-stratification.png',
       narrativeCaption:
-        'Risk stratification — high-risk cohorts identified for targeted interventions',
+        'Risk engine identifies 142 high-risk members from 4,821 for targeted clinical outreach',
+      panDirection: 'right',
+      zoomLevel: 1.05,
       overlays: [
         {
           type: 'metric',
@@ -147,7 +161,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-08-reports.png',
       narrativeCaption:
-        'QRDA III reports ready for CMS submission — compliant export in one click',
+        'QRDA III export packages 24 measures into 1 CMS-compliant XML file in a single click',
+      panDirection: 'left',
+      zoomLevel: 1.02,
       overlays: [
         {
           type: 'badge',
@@ -167,7 +183,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-09-quality-constellation.png',
       narrativeCaption:
-        'Quality constellation — visual map of all measures showing relative performance',
+        'Quality constellation maps 24 measures by performance, projecting Star Rating from 3.5 to 4.0',
+      panDirection: 'right',
+      zoomLevel: 1.04,
       overlays: [
         {
           type: 'text',
@@ -182,7 +200,9 @@ export const cmoConfig: RoleStoryConfig = {
     {
       screenshot: 'screenshots/cmo/cmo-10-ai-insights.png',
       narrativeCaption:
-        'AI-powered insights surface hidden patterns and recommend priority interventions',
+        'AI analysis surfaces 3 priority interventions targeting BCS, CBP, and CDC for Star Rating lift',
+      panDirection: 'none',
+      zoomLevel: 1.0,
       overlays: [
         {
           type: 'badge',
@@ -209,7 +229,7 @@ export const cmoConfig: RoleStoryConfig = {
   ],
 
   cta: {
-    headline: 'Real-Time Quality Visibility',
+    headline: 'See Star Ratings Move in Real Time',
     highlightText: 'Not Quarterly Spreadsheets',
     stats: [
       {
@@ -227,7 +247,7 @@ export const cmoConfig: RoleStoryConfig = {
         glowColor: 'rgba(59, 130, 246, 0.6)',
       },
       {
-        value: 'CMS-Ready Reports',
+        value: '1-Click Export',
         backgroundColor: 'rgba(34, 197, 94, 0.95)',
         borderColor: 'rgba(34, 197, 94, 1)',
         textColor: 'white',

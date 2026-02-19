@@ -2,6 +2,17 @@
 
 import { useState } from 'react'
 import PortalNav from '../../components/PortalNav'
+
+declare global {
+  interface Window {
+    grecaptcha: {
+      execute: (siteKey: string, options: { action: string }) => Promise<string>
+    }
+    gtag: (...args: unknown[]) => void
+  }
+}
+
+const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ''
 import VideoPlayer from '../../components/VideoPlayer'
 import {
   Play,
@@ -131,10 +142,38 @@ export default function DemoPage() {
     company: ''
   })
 
-  const handleStartDemo = () => {
+  const handleStartDemo = async () => {
     if (!selectedCustomerType || !selectedScenario) return
 
     setDemoState('loading')
+
+    // Fire-and-forget lead capture (optional registration — never blocks demo launch)
+    if (formData.email) {
+      try {
+        let recaptchaToken = ''
+        if (typeof window !== 'undefined' && window.grecaptcha && RECAPTCHA_SITE_KEY) {
+          recaptchaToken = await window.grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: 'demo_page' })
+        }
+        await fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            company: formData.company,
+            source: 'demo_page',
+            message: `Customer type: ${selectedCustomerType} | Scenario: ${selectedScenario}`,
+            recaptchaToken,
+          }),
+        })
+        if (typeof window !== 'undefined' && window.gtag) {
+          window.gtag('event', 'generate_lead', { source: 'demo_page' })
+        }
+      } catch {
+        // Silently ignore — registration is optional, demo must proceed
+      }
+    }
+
     // Simulate demo environment provisioning
     setTimeout(() => {
       setDemoState('ready')

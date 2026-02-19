@@ -16,6 +16,8 @@ Thank you for contributing to HealthData-in-Motion.
   - `npm --prefix frontend run test:session-flow`
 - For browser validation of session expiry flow, run:
   - `npm --prefix frontend run e2e:session-flow`
+- For `landing-page-v0/**` changes, run:
+  - `npm --prefix landing-page-v0 run validate:ci`
 
 ## Merge Gates and Branch Protection
 
@@ -23,6 +25,7 @@ Before merge, ensure branch protection and required checks are satisfied:
 
 - `MCP Release Gate / release-gate`
 - `Frontend Session Flow E2E / session-flow` (for `frontend/**` changes)
+- `Landing Page Validation` (for `landing-page-v0/**` changes)
 
 Reference: `docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md`
 

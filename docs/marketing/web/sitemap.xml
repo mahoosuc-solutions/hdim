@@ -69,5 +69,103 @@
         <changefreq>monthly</changefreq>
         <priority>0.8</priority>
     </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/race-track-fhir-pipeline</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/race-track-fhir-pipeline-print.html</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/race-track-fhir-evidence.html</loc>
+        <lastmod>2026-02-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
     
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/cms-vision.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/platform-architecture.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/performance-benchmarking.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/vision-deck.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/origin-story.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/ai-solutioning-whitepaper.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/sales-narrative.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/blog-post-ai-solutioning.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/kill-tony-vision-deck.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/speech-final.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
+    <url>
+        <loc>https://web-gamma-snowy-38.vercel.app/validation-report.html</loc>
+        <lastmod>2026-02-22</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+
 </urlset>

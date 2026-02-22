@@ -32,7 +32,7 @@
     <section class="hero">
       <h1>Race Track FHIR: Evidence and Validation</h1>
       <p>Branch-isolated evidence for web routing/telemetry/performance and backend one-patient-to-N-measures execution.</p>
-      <div class="meta">Latest publication timestamp (UTC): 2026-02-22T13:24:34Z</div>
+      <div class="meta">Latest publication timestamp (UTC): 2026-02-22T13:48:02Z</div>
     </section>
 
     <section class="card">
@@ -49,9 +49,9 @@
           <tr><th>Artifact</th><th>File</th></tr>
         </thead>
         <tbody>
-          <tr><td>Web validation report</td><td><a href="evidence/web-validation-20260222T131952Z.md">web-validation-20260222T131952Z.md</a></td></tr>
-          <tr><td>Web performance CSV</td><td><a href="evidence/web-performance-20260222T131952Z.csv">web-performance-20260222T131952Z.csv</a></td></tr>
-          <tr><td>Web vitals CSV</td><td><a href="evidence/web-vitals-20260222T131952Z.csv">web-vitals-20260222T131952Z.csv</a></td></tr>
+          <tr><td>Web validation report</td><td><a href="evidence/web-validation-20260222T134504Z.md">web-validation-20260222T134504Z.md</a></td></tr>
+          <tr><td>Web performance CSV</td><td><a href="evidence/web-performance-20260222T134504Z.csv">web-performance-20260222T134504Z.csv</a></td></tr>
+          <tr><td>Web vitals CSV</td><td><a href="evidence/web-vitals-20260222T134504Z.csv">web-vitals-20260222T134504Z.csv</a></td></tr>
         </tbody>
       </table>
     </section>
@@ -59,7 +59,7 @@
     <section class="card">
       <h2>Backend Claim Execution Validation</h2>
       <p class="status-pass">PASS samples captured for N=5 and N=10.</p>
-      <p class="status-warn">Stress failure evidence also captured for broader N=10 measure set (three measure IDs returned 500).</p>
+      <p class="status-warn">Broad N=10 rerun still fails for three measure IDs; linked bug tickets are open.</p>
       <table>
         <thead>
           <tr><th>Run</th><th>Result</th><th>Artifacts</th></tr>
@@ -82,23 +82,28 @@
             </td>
           </tr>
           <tr>
-            <td>Stress N=10 (broad sample)</td>
+            <td>Stress N=10 (broad sample, latest rerun)</td>
             <td class="status-fail">FAIL</td>
             <td>
-              <a href="evidence/one-patient-n-measures-20260222T132419Z.md">one-patient-n-measures-20260222T132419Z.md</a><br>
-              <a href="evidence/one-patient-n-measures-20260222T132419Z.json">one-patient-n-measures-20260222T132419Z.json</a>
+              <a href="evidence/one-patient-n-measures-20260222T134802Z.md">one-patient-n-measures-20260222T134802Z.md</a><br>
+              <a href="evidence/one-patient-n-measures-20260222T134802Z.json">one-patient-n-measures-20260222T134802Z.json</a>
             </td>
           </tr>
         </tbody>
       </table>
       <p>Failure detail (broad sample): <code>HEDIS-COU</code>, <code>HEDIS-FMC</code>, and <code>HEDIS-AAB</code> returned HTTP 500.</p>
+      <ul>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/466">Issue #466: HEDIS-COU fails in broad N=10 run</a></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/467">Issue #467: HEDIS-FMC fails in broad N=10 run</a></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/468">Issue #468: HEDIS-AAB fails in broad N=10 run</a></li>
+      </ul>
     </section>
 
     <section class="card">
       <h2>Unified Summary</h2>
       <p>Latest consolidated summary:</p>
       <ul>
-        <li><a href="evidence/validation-summary-20260222T132434Z.md">validation-summary-20260222T132434Z.md</a></li>
+        <li><a href="evidence/validation-summary-20260222T134802Z.md">validation-summary-20260222T134802Z.md</a></li>
       </ul>
       <p>Validation scripts:</p>
       <ul>

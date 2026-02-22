@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080">
+  <rect width="1800" height="1080" fill="#f5f8f4"/>
+  <text x="60" y="70" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="#163942">Event-Driven FHIR Processing Internals</text>
+  <text x="60" y="108" font-family="Arial, sans-serif" font-size="22" fill="#3f6168">Technical view: producer-consumer topology, cache roles, reliability, and tenant-safe observability</text>
+
+  <rect x="60" y="150" width="520" height="230" rx="12" fill="#fff" stroke="#bfd7d2"/>
+  <text x="84" y="190" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#1f4f58">Ingestion + Canonicalization</text>
+  <text x="84" y="226" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Producers: Customer FHIR server, customer CDR feeds, subscription triggers</text>
+  <text x="84" y="258" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Canonical event envelope from FHIR payloads</text>
+  <text x="84" y="290" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Tenant auth + boundary enforcement at gateway</text>
+  <text x="84" y="322" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Internal FHIR server as normalized source-of-truth</text>
+
+  <rect x="640" y="150" width="520" height="230" rx="12" fill="#fff" stroke="#bfd7d2"/>
+  <text x="664" y="190" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#1f4f58">Kafka Topology</text>
+  <text x="664" y="226" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Topics: hdim.patient.events.v1, hdim.care_gap.events.v1, hdim.quality.events.v1, hdim.actions.events.v1</text>
+  <text x="664" y="258" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Consumer groups: hdim.patient-service.cg.v1, hdim.care-gap-service.cg.v1, hdim.quality-measure-service.cg.v1, hdim.action-service.cg.v1</text>
+  <text x="664" y="290" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Retry pipeline: hdim.patient.events.retry.v1 -> bounded attempts -> hdim.patient.events.dlq.v1</text>
+  <text x="664" y="322" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Partition strategy per tenant + patient key</text>
+
+  <rect x="1220" y="150" width="520" height="230" rx="12" fill="#fff" stroke="#bfd7d2"/>
+  <text x="1244" y="190" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#1f4f58">Redis State Layer</text>
+  <text x="1244" y="226" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Patient Snapshot Cache for low-latency context</text>
+  <text x="1244" y="258" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Rule Context Cache for policy/guideline lookup</text>
+  <text x="1244" y="290" font-family="Arial, sans-serif" font-size="20" fill="#274a52">Idempotency Keys to prevent duplicate actions</text>
+  <text x="1244" y="322" font-family="Arial, sans-serif" font-size="20" fill="#274a52">TTL and PHI-safe key/value design</text>
+
+  <rect x="60" y="440" width="1680" height="250" rx="14" fill="#ffffff" stroke="#bfd7d2"/>
+  <text x="84" y="482" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f4f58">Deterministic Processing and Delivery</text>
+  <text x="84" y="522" font-family="Arial, sans-serif" font-size="22" fill="#274a52">FHIR ingestion -> canonical event -> topic fan-out -> state-aware rule evaluation -> action publish</text>
+  <text x="84" y="556" font-family="Arial, sans-serif" font-size="22" fill="#274a52">Write-back targets: Task, CarePlan, Communication with idempotent guardrails</text>
+  <text x="84" y="590" font-family="Arial, sans-serif" font-size="22" fill="#274a52">Observability: consumer lag, trace propagation, audit stream, error-class dashboards</text>
+  <text x="84" y="624" font-family="Arial, sans-serif" font-size="22" fill="#274a52">Security: tenant context propagation, PHI-safe logging boundaries, API auth controls</text>
+
+  <rect x="60" y="740" width="1680" height="280" rx="14" fill="#e7f2ef" stroke="#bfd7d2"/>
+  <text x="84" y="782" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f4f58">Canonical Journey (unchanged from other tabs)</text>
+  <text x="84" y="822" font-family="Arial, sans-serif" font-size="21" fill="#274a52">1 Patient Event Created | 2 Data Ingested | 3 Kafka Stream Routed | 4 Service Processing | 5 Redis Context Lookup</text>
+  <text x="84" y="856" font-family="Arial, sans-serif" font-size="21" fill="#274a52">6 Care Rule Evaluation | 7 Action Generated | 8 Consumer Delivery | 9 Outcome + Audit</text>
+  <text x="84" y="904" font-family="Arial, sans-serif" font-size="21" fill="#2b555f">Real-world reference framing: Healthix, HealthInfoNet, Verato</text>
+</svg>

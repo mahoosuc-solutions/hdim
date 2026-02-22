@@ -90,25 +90,38 @@ jobs:
           fi
 
       - name: Validate protected preview behavior (expected 401)
-        if: ${{ steps.preview_policy.outputs.status_code == '401' && secrets.VERCEL_AUTOMATION_BYPASS_SECRET == '' }}
+        env:
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          echo "Preview is protected (401) and bypass secret is not configured. Policy check passed."
+          if [[ "${{ steps.preview_policy.outputs.status_code }}" == "401" && -z "$BYPASS_SECRET" ]]; then
+            echo "Preview is protected (401) and bypass secret is not configured. Policy check passed."
+          else
+            echo "Protected-preview check not applicable for this run."
+          fi
 
       - name: Install jq for preview audit
-        if: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
+        env:
+          BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
+          if [[ -n "$BYPASS_SECRET" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          else
+            echo "No bypass secret configured; skipping authenticated preview dependencies."
+          fi
 
       - name: Run authenticated preview link audit
-        if: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
         env:
           BASE_URL: ${{ inputs.preview_url }}
           AUTH_HEADER_NAME: x-vercel-protection-bypass
           AUTH_HEADER_VALUE: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
           AUTH_SET_BYPASS_COOKIE: "true"
         run: |
-          bash docs/marketing/web/scripts/validate-portal-links.sh
+          if [[ -n "$AUTH_HEADER_VALUE" ]]; then
+            bash docs/marketing/web/scripts/validate-portal-links.sh
+          else
+            echo "No bypass secret configured; skipping authenticated preview link audit."
+          fi
 
       - name: Upload preview audit artifacts
         if: always()

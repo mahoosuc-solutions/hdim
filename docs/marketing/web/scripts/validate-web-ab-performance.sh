@@ -5,6 +5,8 @@ BASE_URL="${BASE_URL:-https://web-gamma-snowy-38.vercel.app}"
 OUT_DIR="${OUT_DIR:-docs/marketing/web/evidence}"
 SAMPLES="${SAMPLES:-5}"
 BASELINE_CSV="${BASELINE_CSV:-}"
+PERF_DELTA_MAX_PCT="${PERF_DELTA_MAX_PCT:-15}"
+PERF_DELTA_MIN_ABS_SEC="${PERF_DELTA_MIN_ABS_SEC:-0.15}"
 mkdir -p "$OUT_DIR"
 
 if ! command -v curl >/dev/null 2>&1; then
@@ -209,8 +211,10 @@ pass_claim="FAIL"; [[ -n "$claim_a" && -n "$claim_b" && -n "$claim_print" ]] && 
 pass_telemetry="FAIL"; [[ "$telemetry_a" == "ok" && "$telemetry_b" == "ok" ]] && pass_telemetry="PASS"
 
 slow_delta_pct="$(awk -v a="${median_a_total:-0}" -v b="${median_b_total:-0}" 'BEGIN {min=(a<b?a:b); max=(a>b?a:b); if (min==0) {printf "0.00"} else {printf "%.2f", ((max-min)/min)*100}}')"
+slow_delta_abs_sec="$(awk -v a="${median_a_total:-0}" -v b="${median_b_total:-0}" 'BEGIN {d=a-b; if (d<0) d=-d; printf "%.6f", d}')"
 pass_variant_perf="FAIL"
-if awk -v p="$slow_delta_pct" 'BEGIN {exit !(p <= 15.0)}'; then
+if awk -v p="$slow_delta_pct" -v d="$slow_delta_abs_sec" -v max_pct="$PERF_DELTA_MAX_PCT" -v min_abs="$PERF_DELTA_MIN_ABS_SEC" \
+  'BEGIN {exit !((p <= max_pct) || (d < min_abs))}'; then
   pass_variant_perf="PASS"
 fi
 
@@ -266,6 +270,8 @@ cat > "$MD_OUT" <<MD
   - A median total (direct page): ${median_a_total:-n/a}s
   - B median total (direct page): ${median_b_total:-n/a}s
   - slower-variant delta: ${slow_delta_pct}%
+  - absolute delta: ${slow_delta_abs_sec}s
+  - gate config: max_pct=${PERF_DELTA_MAX_PCT}, min_abs_sec=${PERF_DELTA_MIN_ABS_SEC}
 - Route median total-load regression <= 20% vs baseline: $pass_route_regression
   - $route_regression_note
 

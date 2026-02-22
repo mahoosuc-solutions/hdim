@@ -29,6 +29,13 @@ CSV_OUT="$OUT_DIR/web-performance-$STAMP.csv"
 VITALS_OUT="$OUT_DIR/web-vitals-$STAMP.csv"
 MD_OUT="$OUT_DIR/web-validation-$STAMP.md"
 
+ROUTE_PATH="/race-track-fhir-pipeline"
+route_probe_code="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL$ROUTE_PATH" || true)"
+if [[ "$route_probe_code" != "200" ]]; then
+  # Local dev servers may expose the experiment page without rewrite support.
+  ROUTE_PATH="/race-track-fhir-experiment.html"
+fi
+
 extract_variant() {
   local url="$1"
   local profile="$2"
@@ -131,16 +138,16 @@ pct_delta() {
 }
 
 # Functional checks
-forced_a="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline?ab=a" "$PROFILE_BASE/a")"
-forced_b="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline?ab=b" "$PROFILE_BASE/b")"
+forced_a="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH?ab=a" "$PROFILE_BASE/a")"
+forced_b="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH?ab=b" "$PROFILE_BASE/b")"
 
-sticky_1="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline" "$PROFILE_BASE/sticky")"
-sticky_2="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline" "$PROFILE_BASE/sticky")"
+sticky_1="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH" "$PROFILE_BASE/sticky")"
+sticky_2="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH" "$PROFILE_BASE/sticky")"
 
-flip_b="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline?ab=b" "$PROFILE_BASE/flip")"
-flip_after_b="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline" "$PROFILE_BASE/flip")"
-flip_a="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline?ab=a" "$PROFILE_BASE/flip")"
-flip_after_a="$(extract_variant_with_retry "$BASE_URL/race-track-fhir-pipeline" "$PROFILE_BASE/flip")"
+flip_b="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH?ab=b" "$PROFILE_BASE/flip")"
+flip_after_b="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH" "$PROFILE_BASE/flip")"
+flip_a="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH?ab=a" "$PROFILE_BASE/flip")"
+flip_after_a="$(extract_variant_with_retry "$BASE_URL$ROUTE_PATH" "$PROFILE_BASE/flip")"
 
 claim_a="$(claim_hits "$BASE_URL/race-track-fhir-pipeline.html" "$PROFILE_BASE/claim-a")"
 claim_b="$(claim_hits "$BASE_URL/race-track-fhir-pipeline-b.html" "$PROFILE_BASE/claim-b")"
@@ -159,9 +166,9 @@ run_perf() {
   done
 }
 
-run_perf "$BASE_URL/race-track-fhir-pipeline?ab=a"
-run_perf "$BASE_URL/race-track-fhir-pipeline?ab=b"
-run_perf "$BASE_URL/race-track-fhir-pipeline"
+run_perf "$BASE_URL$ROUTE_PATH?ab=a"
+run_perf "$BASE_URL$ROUTE_PATH?ab=b"
+run_perf "$BASE_URL$ROUTE_PATH"
 run_perf "$BASE_URL/race-track-fhir-pipeline.html"
 run_perf "$BASE_URL/race-track-fhir-pipeline-b.html"
 
@@ -185,17 +192,17 @@ collect_vitals() {
   done
 }
 
-collect_vitals "A" "$BASE_URL/race-track-fhir-pipeline?ab=a"
-collect_vitals "B" "$BASE_URL/race-track-fhir-pipeline?ab=b"
+collect_vitals "A" "$BASE_URL$ROUTE_PATH?ab=a"
+collect_vitals "B" "$BASE_URL$ROUTE_PATH?ab=b"
 
 # Summaries and gates
-median_forced_a_total="$(median_total_for_url "$BASE_URL/race-track-fhir-pipeline?ab=a")"
-median_forced_b_total="$(median_total_for_url "$BASE_URL/race-track-fhir-pipeline?ab=b")"
+median_forced_a_total="$(median_total_for_url "$BASE_URL$ROUTE_PATH?ab=a")"
+median_forced_b_total="$(median_total_for_url "$BASE_URL$ROUTE_PATH?ab=b")"
 median_a_ttfb="$(median_ttfb_for_url "$BASE_URL/race-track-fhir-pipeline.html")"
 median_a_total="$(median_total_for_url "$BASE_URL/race-track-fhir-pipeline.html")"
 median_b_ttfb="$(median_ttfb_for_url "$BASE_URL/race-track-fhir-pipeline-b.html")"
 median_b_total="$(median_total_for_url "$BASE_URL/race-track-fhir-pipeline-b.html")"
-median_route_total="$(median_total_for_url "$BASE_URL/race-track-fhir-pipeline")"
+median_route_total="$(median_total_for_url "$BASE_URL$ROUTE_PATH")"
 
 a_dcl="$(median_vital_for_variant A 5)"
 a_lcp="$(median_vital_for_variant A 6)"

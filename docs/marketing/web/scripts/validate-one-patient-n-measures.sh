@@ -158,21 +158,27 @@ for measure_id in "${ids[@]}"; do
 done
 
 patient_evals_raw="$(curl -sS "${HEADERS[@]}" "$PATIENT_EVALS_URL" || true)"
-patient_eval_count="$(echo "$patient_evals_raw" | jq -r '
+patient_eval_count="$(
+  printf '%s' "${patient_evals_raw:-null}" | jq -r '
   if .totalCount then .totalCount
   elif .evaluations then (.evaluations|length)
   elif type=="array" then length
   else 0 end
-' 2>/dev/null || echo 0)"
+' 2>/dev/null || echo 0
+)"
+patient_eval_count="${patient_eval_count:-0}"
 
 if [[ "$api_mode" == "b" ]]; then
   patient_evals_raw="$(curl -sS "${HEADERS[@]}" "$BASE_URL/results?patient=$PATIENT_ID" || true)"
-  patient_eval_count="$(echo "$patient_evals_raw" | jq -r '
+  patient_eval_count="$(
+    printf '%s' "${patient_evals_raw:-null}" | jq -r '
     if type=="array" then length
     elif .results then (.results|length)
     elif .content then (.content|length)
     else 0 end
-  ' 2>/dev/null || echo 0)"
+  ' 2>/dev/null || echo 0
+  )"
+  patient_eval_count="${patient_eval_count:-0}"
 fi
 
 total_end_ms="$(now_ms)"

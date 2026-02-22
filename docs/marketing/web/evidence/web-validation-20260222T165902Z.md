@@ -1,7 +1,7 @@
 # Web A/B + Performance Validation
 
-- Timestamp (UTC): 2026-02-22T15:11:09Z
-- Base URL: https://web-gamma-snowy-38.vercel.app
+- Timestamp (UTC): 2026-02-22T16:59:02Z
+- Base URL: http://localhost:4174
 - Samples per URL: 5
 - Overall gate result: PASS
 
@@ -24,39 +24,41 @@
 ## Performance Gates
 
 - Variant median total-load delta <= 15%: PASS
-  - A median total (direct page): 0.144876s
-  - B median total (direct page): 0.147382s
-  - slower-variant delta: 1.73%
+  - A median total (direct page): 0.020017s
+  - B median total (direct page): 0.021817s
+  - slower-variant delta: 8.99%
+  - absolute delta: 0.001800s
+  - gate config: max_pct=15, min_abs_sec=0.15
 - Route median total-load regression <= 20% vs baseline: N/A
   - N/A (BASELINE_CSV not provided)
 
 ## Performance Summary (median)
 
 - Variant A
-  - median TTFB: 0.143353s
-  - median total: 0.144876s
+  - median TTFB: 0.017697s
+  - median total: 0.020017s
   - median DOMContentLoaded: n/a ms
   - median LCP proxy: n/a ms
   - median interaction readiness (tab switch): n/a ms
 - Variant B
-  - median TTFB: 0.144965s
-  - median total: 0.147382s
+  - median TTFB: 0.021389s
+  - median total: 0.021817s
   - median DOMContentLoaded: n/a ms
   - median LCP proxy: n/a ms
   - median interaction readiness (tab switch): n/a ms
 - Router forced path (with redirect)
-  - median total (?ab=a): 0.150365s
-  - median total (?ab=b): 0.141237s
+  - median total (?ab=a): 0.016192s
+  - median total (?ab=b): 0.016710s
 
 ## Claim Evidence Snippets
 
 ### Variant A
 
 ```
-869:              <div class="node"><strong>Measure Fan-Out</strong>One patient event fans out to N active quality measures for the tenant</div>
-883:      <div class="callout">Presenter script: Customer FHIR/CDR data crosses a standards boundary into internal FHIR, one patient event fans out to N active measures, then results are returned as FHIR-native actions.</div>
-902:              <div class="node"><strong>Per-Patient Fan-Out</strong>One canonical patient event triggers measure evaluations across N configured measure definitions</div>
-925:      <div class="callout">Presenter script: This is deterministic producer-consumer processing where one patient event is calculated against N measures, with explicit cache roles, idempotent action publishing, retry/DLQ controls, and tenant-safe observability.</div>
+892:              <div class="node"><strong>Measure Fan-Out</strong>One patient event fans out to N active quality measures for the tenant</div>
+906:      <div class="callout">Presenter script: Customer FHIR/CDR data crosses a standards boundary into internal FHIR, one patient event fans out to N active measures, then results are returned as FHIR-native actions.</div>
+925:              <div class="node"><strong>Per-Patient Fan-Out</strong>One canonical patient event triggers measure evaluations across N configured measure definitions</div>
+948:      <div class="callout">Presenter script: This is deterministic producer-consumer processing where one patient event is calculated against N measures, with explicit cache roles, idempotent action publishing, retry/DLQ controls, and tenant-safe observability.</div>
 ```
 
 ### Variant B
@@ -78,6 +80,6 @@
 
 ## Artifacts
 
-- CSV: web-performance-20260222T151109Z.csv
-- Vitals CSV: web-vitals-20260222T151109Z.csv
-- Report: web-validation-20260222T151109Z.md
+- CSV: web-performance-20260222T165902Z.csv
+- Vitals CSV: web-vitals-20260222T165902Z.csv
+- Report: web-validation-20260222T165902Z.md

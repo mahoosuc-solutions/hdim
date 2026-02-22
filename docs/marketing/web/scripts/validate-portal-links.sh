@@ -3,6 +3,9 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-https://web-gamma-snowy-38.vercel.app}"
 OUT_DIR="${OUT_DIR:-docs/marketing/web/evidence}"
+AUTH_HEADER_NAME="${AUTH_HEADER_NAME:-}"
+AUTH_HEADER_VALUE="${AUTH_HEADER_VALUE:-}"
+AUTH_SET_BYPASS_COOKIE="${AUTH_SET_BYPASS_COOKIE:-}"
 mkdir -p "$OUT_DIR"
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
@@ -11,7 +14,7 @@ HOST_SLUG="$(echo "$BASE_URL" | sed -E 's#https?://##; s#[^A-Za-z0-9]+#-#g; s#-+
 CSV_OUT="$OUT_DIR/portal-link-audit-$HOST_SLUG-$STAMP.csv"
 MD_OUT="$OUT_DIR/portal-link-audit-$HOST_SLUG-$STAMP.md"
 
-python3 - "$BASE_URL" "$CSV_OUT" "$MD_OUT" "$TS_UTC" <<'PY'
+python3 - "$BASE_URL" "$CSV_OUT" "$MD_OUT" "$TS_UTC" "$AUTH_HEADER_NAME" "$AUTH_HEADER_VALUE" "$AUTH_SET_BYPASS_COOKIE" <<'PY'
 import csv
 import pathlib
 import re
@@ -25,6 +28,9 @@ base_url = sys.argv[1].rstrip('/')
 csv_out = pathlib.Path(sys.argv[2])
 md_out = pathlib.Path(sys.argv[3])
 ts_utc = sys.argv[4]
+auth_header_name = sys.argv[5].strip()
+auth_header_value = sys.argv[6].strip()
+auth_set_bypass_cookie = sys.argv[7].strip()
 
 ctx = ssl.create_default_context()
 ctx.check_hostname = False
@@ -86,8 +92,14 @@ add_source('/sitemap.xml', '/seed')
 
 rows = []
 
+request_headers = {'User-Agent': 'Mozilla/5.0'}
+if auth_header_name and auth_header_value:
+    request_headers[auth_header_name] = auth_header_value
+if auth_set_bypass_cookie:
+    request_headers['x-vercel-set-bypass-cookie'] = auth_set_bypass_cookie
+
 def fetch_status(url):
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    req = urllib.request.Request(url, headers=request_headers)
     try:
         with urllib.request.urlopen(req, context=ctx, timeout=25) as r:
             return r.getcode(), r.geturl(), ''

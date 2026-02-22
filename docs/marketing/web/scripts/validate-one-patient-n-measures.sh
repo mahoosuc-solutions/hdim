@@ -65,7 +65,7 @@ measure_ids="$(echo "$measures_raw" | jq -r '
 ' | head -n "$N_MEASURES")"
 
 if [[ -z "$measure_ids" ]]; then
-  measure_ids="$(echo "${DEFAULT_MEASURE_IDS:-HEDIS-BCS,HEDIS-CBP,HEDIS-CCS,HEDIS-CDC,HEDIS-COL,HEDIS-COU,HEDIS-IMA,HEDIS-SPD,HEDIS-FMC,HEDIS-AAB}" | tr ',' '\n' | head -n "$N_MEASURES")"
+  measure_ids="$(echo "${DEFAULT_MEASURE_IDS:-HEDIS-BCS,HEDIS-CBP,HEDIS-CCS,HEDIS-CDC,HEDIS-COL,HEDIS-EED,HEDIS-IET,HEDIS-KED,HEDIS-LBP,HEDIS-IMA,HEDIS-SPD,HEDIS-URI}" | tr ',' '\n' | head -n "$N_MEASURES")"
   if [[ -z "$measure_ids" ]]; then
     echo "No active measure IDs found from $MEASURES_URL and no defaults available" >&2
     exit 3

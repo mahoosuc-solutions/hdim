@@ -496,6 +496,38 @@
             text-decoration: underline;
         }
 
+        .related-resource {
+            margin: 1.5rem 2rem 0;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            background: rgba(6, 182, 212, 0.08);
+        }
+
+        .related-resource h3 {
+            margin-bottom: 0.4rem;
+            color: var(--accent-cyan);
+            font-size: 1rem;
+        }
+
+        .related-resource p {
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .related-resource a {
+            display: inline-block;
+            text-decoration: none;
+            color: var(--bg-primary);
+            background: var(--accent-cyan);
+            font-weight: 700;
+            padding: 0.5rem 0.9rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .domain-row {
@@ -520,6 +552,9 @@
     </style>
 </head>
 <body>
+  <div id="hdim-shared-nav-root"></div>
+  <script defer src="/assets/js/shared-nav-loader.js"></script>
+
     <div class="bg-animation"></div>
 
     <header class="header">
@@ -1580,6 +1615,12 @@
             </div>
         </section>
     </main>
+
+    <section class="related-resource">
+        <h3>Related Architecture Narrative</h3>
+        <p>Use the FHIR Race Track Pipeline for audience-specific storytelling across non-technical, mixed, and technical views.</p>
+        <a href="race-track-fhir-pipeline">Open FHIR Race Track Pipeline</a>
+    </section>
 
     <footer class="footer">
         <p>HDIM Platform Architecture - 36 Microservices</p>

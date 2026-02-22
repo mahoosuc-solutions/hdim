@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700">
+  <rect width="1400" height="700" fill="#f5f8f4"/>
+  <text x="50" y="70" font-family="Arial, sans-serif" font-size="36" font-weight="700" fill="#163942">Race Track FHIR Pipeline Legend</text>
+
+  <rect x="50" y="120" width="1300" height="520" rx="14" fill="#fff" stroke="#bfd7d2"/>
+
+  <rect x="90" y="170" width="44" height="44" rx="8" fill="#1f4f58"/>
+  <text x="160" y="200" font-family="Arial, sans-serif" font-size="24" fill="#2f5962">Track lane: patient journey through process stages</text>
+
+  <rect x="90" y="240" width="44" height="44" rx="8" fill="#0f8b8d"/>
+  <text x="160" y="270" font-family="Arial, sans-serif" font-size="24" fill="#2f5962">Data lane: event payload and clinical context movement</text>
+
+  <rect x="90" y="310" width="44" height="44" rx="8" fill="#d1495b"/>
+  <text x="160" y="340" font-family="Arial, sans-serif" font-size="24" fill="#2f5962">Kafka lane: producer/consumer stream routing and fan-out</text>
+
+  <rect x="90" y="380" width="44" height="44" rx="8" fill="#efb11d"/>
+  <text x="160" y="410" font-family="Arial, sans-serif" font-size="24" fill="#2f5962">Redis lane: snapshot, rule context, and idempotency state</text>
+
+  <rect x="90" y="450" width="44" height="44" rx="8" fill="#eb6f2d"/>
+  <text x="160" y="480" font-family="Arial, sans-serif" font-size="24" fill="#2f5962">Outcome lane: care actions, delivery, and audit outcomes</text>
+
+  <text x="90" y="550" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f4f58">Boundary labels</text>
+  <text x="90" y="584" font-family="Arial, sans-serif" font-size="22" fill="#335861">Customer Domain: Customer FHIR Server + Customer CDR/EHR</text>
+  <text x="90" y="614" font-family="Arial, sans-serif" font-size="22" fill="#335861">Internal Domain: Internal FHIR + Kafka + Services + Redis</text>
+</svg>

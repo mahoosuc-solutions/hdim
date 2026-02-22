@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Routing Experiment</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f5f8f4; color: #163942; }
+    .card { max-width: 680px; margin: 12vh auto; background: #fff; border: 1px solid #c7d9d4; border-radius: 12px; padding: 20px; }
+    h1 { margin: 0 0 8px; font-size: 1.3rem; }
+    p { margin: 0; color: #365861; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Loading the Race Track FHIR experience…</h1>
+    <p>Assigning your A/B variant and redirecting.</p>
+  </main>
+  <script>
+    (function () {
+      var cookieName = 'ab_rtfp';
+      var maxAge = 60 * 60 * 24 * 60; // 60 days
+      var params = new URLSearchParams(window.location.search);
+      var override = (params.get('ab') || '').toLowerCase();
+
+      function getCookie(name) {
+        var match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? decodeURIComponent(match[2]) : '';
+      }
+
+      function setCookie(name, value) {
+        document.cookie = name + '=' + encodeURIComponent(value) + '; Path=/; Max-Age=' + maxAge + '; SameSite=Lax; Secure';
+      }
+
+      var variant;
+      if (override === 'a' || override === 'b') {
+        variant = override;
+      } else {
+        var existing = (getCookie(cookieName) || '').toLowerCase();
+        variant = (existing === 'a' || existing === 'b') ? existing : (Math.random() < 0.5 ? 'a' : 'b');
+      }
+
+      setCookie(cookieName, variant);
+
+      params.delete('ab');
+      var search = params.toString();
+      var suffix = search ? ('?' + search) : '';
+      var target = variant === 'b' ? '/race-track-fhir-pipeline-b.html' : '/race-track-fhir-pipeline.html';
+
+      window.location.replace(target + suffix);
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race Track FHIR Pipeline | 3 Audience Views</title>
+  <meta name="description" content="Interactive architecture diagram: non-technical, mixed, and technical tabs for FHIR, Kafka, and Redis pipeline understanding.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f6ef;
+      --panel: #ffffff;
+      --ink: #132a2f;
+      --ink-soft: #4a6168;
+      --track: #1f4f58;
+      --accent: #eb6f2d;
+      --teal: #0f8b8d;
+      --gold: #efb11d;
+      --rose: #d1495b;
+      --line: #d7e2de;
+      --shadow: 0 16px 38px rgba(14, 44, 53, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Source Sans 3', sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(239, 177, 29, 0.2), transparent 35%),
+        radial-gradient(circle at 90% 20%, rgba(235, 111, 45, 0.14), transparent 30%),
+        var(--bg);
+      line-height: 1.55;
+    }
+
+    .wrap {
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #0f2f37 0%, #144850 65%, #1c626c 100%);
+      border-radius: 22px;
+      color: #f7faf9;
+      padding: 26px 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      font-weight: 700;
+      font-size: 0.75rem;
+      color: #f6cf6a;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2.3rem);
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      margin: 12px 0 0;
+      color: #dcebea;
+      max-width: 920px;
+      font-size: 1.12rem;
+    }
+
+    .proof {
+      margin-top: 14px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 1rem;
+    }
+
+    .tabs {
+      margin-top: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab {
+      border: 1px solid #2c727d;
+      background: #1a5962;
+      color: #d9eff1;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.98rem;
+    }
+
+    .tab[aria-selected="true"] {
+      background: #f6cf6a;
+      color: #163740;
+      border-color: #f6cf6a;
+    }
+
+    .journey {
+      margin-top: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .journey h2,
+    .panel h2 {
+      margin: 0 0 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(165px, 1fr));
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      background: #f1f7f5;
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 74px;
+      font-size: 0.98rem;
+    }
+
+    .step strong {
+      display: block;
+      color: var(--track);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+    }
+
+    .panel {
+      display: none;
+      margin-top: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .panel.active { display: block; }
+
+    .diagram {
+      border: 2px solid #9ab8b1;
+      border-radius: 14px;
+      padding: 14px;
+      background: linear-gradient(180deg, #fbfdfc 0%, #f2f7f5 100%);
+    }
+
+    .lane-grid {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .lane {
+      border: 1px solid #c8dbd6;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .lane .label {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-soft);
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .nodes {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nodes.compact {
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    }
+
+    .node {
+      border: 1px solid #d2e2de;
+      background: #f5faf8;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    .node strong {
+      color: var(--track);
+      display: block;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.88rem;
+      margin-bottom: 2px;
+    }
+
+    .legend {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .c-track { background: rgba(31, 79, 88, 0.12); color: var(--track); }
+    .c-data { background: rgba(15, 139, 141, 0.12); color: #0b6869; }
+    .c-kafka { background: rgba(209, 73, 91, 0.14); color: #a53747; }
+    .c-redis { background: rgba(239, 177, 29, 0.2); color: #8f6800; }
+    .c-outcome { background: rgba(235, 111, 45, 0.13); color: #9f4718; }
+
+    .exports {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .exports a {
+      text-decoration: none;
+      border: 1px solid #b6cbc6;
+      background: #ffffff;
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+
+    .callout {
+      margin-top: 12px;
+      background: #f5fbf8;
+      border: 1px solid #c9ddd7;
+      border-left: 5px solid #1f6770;
+      border-radius: 10px;
+      padding: 10px;
+      color: #21464d;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 760px) {
+      .wrap { padding: 14px 10px 34px; }
+      .hero { padding: 18px 14px; border-radius: 14px; }
+      .tab { width: 100%; text-align: left; }
+      .journey, .panel { border-radius: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Product + Architecture Narrative | Variant A</div>
+      <h1>Race Track FHIR Pipeline: One Journey, Three Views</h1>
+      <p class="subtitle">
+        Patients "drive" through one canonical workflow while their data moves through FHIR, Kafka, services, and Redis.
+        Switch tabs to compare non-technical, mixed, and technical explanations without changing the underlying flow.
+      </p>
+      <div class="proof">
+        Built from real-world HIE operating patterns (Healthix, HealthInfoNet) and modern identity strategy (Verato)
+        to remove custom-interface bottlenecks and activate FHIR-native, event-driven workflows.
+      </div>
+      <div class="tabs" role="tablist" aria-label="Audience views">
+        <button class="tab" role="tab" id="tab-1" aria-controls="panel-1" aria-selected="true">Non-Technical View</button>
+        <button class="tab" role="tab" id="tab-2" aria-controls="panel-2" aria-selected="false">Mixed View</button>
+        <button class="tab" role="tab" id="tab-3" aria-controls="panel-3" aria-selected="false">Technical View</button>
+      </div>
+      <div class="proof" style="margin-top: 10px;">
+        Review override:
+        <a href="/race-track-fhir-pipeline?ab=a" style="color: #fff; font-weight: 700;">Force A</a> |
+        <a href="/race-track-fhir-pipeline?ab=b" style="color: #fff; font-weight: 700;">Force B</a>
+      </div>
+    </section>
+
+    <section class="journey">
+      <h2>Canonical Journey (Same Across All Tabs)</h2>
+      <div class="steps">
+        <article class="step"><strong>1</strong>Patient Event Created</article>
+        <article class="step"><strong>2</strong>Data Ingested</article>
+        <article class="step"><strong>3</strong>Kafka Stream Routed</article>
+        <article class="step"><strong>4</strong>Service Processing</article>
+        <article class="step"><strong>5</strong>Redis Context Lookup</article>
+        <article class="step"><strong>6</strong>Care Rule Evaluation (1 Patient -> N Measures)</article>
+        <article class="step"><strong>7</strong>Action Generated</article>
+        <article class="step"><strong>8</strong>Consumer Delivery</article>
+        <article class="step"><strong>9</strong>Outcome + Audit</article>
+      </div>
+      <div class="legend">
+        <span class="chip c-track">Track lane</span>
+        <span class="chip c-data">Data lane</span>
+        <span class="chip c-kafka">Kafka lane</span>
+        <span class="chip c-redis">Redis lane</span>
+        <span class="chip c-outcome">Outcome lane</span>
+      </div>
+    </section>
+
+    <section class="panel active" id="panel-1" role="tabpanel" aria-labelledby="tab-1">
+      <h2>Tab 1: Story-First View (Fully Illustrative)</h2>
+      <div class="diagram">
+        <div class="lane-grid">
+          <div class="lane">
+            <div class="label">Track Lane</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Race Start</strong>Patient event created in customer systems</div>
+              <div class="node"><strong>Pit Stop A</strong>Customer FHIR + CDR provide source data</div>
+              <div class="node"><strong>Pit Stop B</strong>Standards-based processing routes events</div>
+              <div class="node"><strong>Pit Stop C</strong>Care decision checkpoint applies context</div>
+              <div class="node"><strong>Finish</strong>Action delivered and outcome tracked</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">Audience Language</div>
+            <div class="nodes compact">
+              <div class="node"><strong>FHIR standards integration</strong>Plug in to existing customer systems</div>
+              <div class="node"><strong>Events move in real time</strong>No custom one-off interfaces</div>
+              <div class="node"><strong>Clinical context applied</strong>Data is interpreted before action</div>
+              <div class="node"><strong>Standard actions back</strong>Care teams get tasks and guidance</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">Presenter script: Patients follow one continuous workflow. Data moves with them end-to-end, so onboarding does not require custom interfaces.</div>
+    </section>
+
+    <section class="panel" id="panel-2" role="tabpanel" aria-labelledby="tab-2">
+      <h2>Tab 2: Hybrid View (Metaphor + Architecture)</h2>
+      <div class="diagram">
+        <div class="lane-grid">
+          <div class="lane">
+            <div class="label">Customer Domain</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Customer FHIR Server</strong>FHIR R4 APIs</div>
+              <div class="node"><strong>Customer CDR/EHR</strong>Historical + current records</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">Interoperability + Internal FHIR</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Interoperability Gateway</strong>Normalize customer data into internal FHIR model</div>
+              <div class="node"><strong>Internal FHIR Server</strong>Longitudinal record source-of-truth</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">Streaming + Services</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Kafka Topics</strong>hdim.patient.events.v1, hdim.care_gap.events.v1, hdim.quality.events.v1, hdim.actions.events.v1</div>
+              <div class="node"><strong>Measure Fan-Out</strong>One patient event fans out to N active quality measures for the tenant</div>
+              <div class="node"><strong>Services</strong>Patient Service, Care Gap Service, Quality Measure Service, Event Service</div>
+              <div class="node"><strong>Redis</strong>Patient Snapshot Cache, Rule Context Cache, Idempotency Keys</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">Write-Back</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Action APIs</strong>Task, CarePlan, Communication</div>
+              <div class="node"><strong>Consumer Delivery</strong>Care teams and downstream systems</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">Presenter script: Customer FHIR/CDR data crosses a standards boundary into internal FHIR, one patient event fans out to N active measures, then results are returned as FHIR-native actions.</div>
+    </section>
+
+    <section class="panel" id="panel-3" role="tabpanel" aria-labelledby="tab-3">
+      <h2>Tab 3: Technical View (Full Internals)</h2>
+      <div class="diagram">
+        <div class="lane-grid">
+          <div class="lane">
+            <div class="label">Ingestion + Canonicalization</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Producers</strong>Customer FHIR Server, customer CDR feeds, subscription triggers</div>
+              <div class="node"><strong>Canonical Event Builder</strong>FHIR ingestion -> canonical event envelope</div>
+              <div class="node"><strong>Tenant Boundary</strong>Tenant context and auth enforced at interoperability layer</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">Kafka Processing Topology</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Topics</strong>hdim.patient.events.v1, hdim.care_gap.events.v1, hdim.quality.events.v1, hdim.actions.events.v1</div>
+              <div class="node"><strong>Per-Patient Fan-Out</strong>One canonical patient event triggers measure evaluations across N configured measure definitions</div>
+              <div class="node"><strong>Consumer Groups</strong>hdim.patient-service.cg.v1, hdim.care-gap-service.cg.v1, hdim.quality-measure-service.cg.v1, hdim.action-service.cg.v1</div>
+              <div class="node"><strong>Resilience</strong>hdim.patient.events.retry.v1, hdim.patient.events.dlq.v1, bounded retries and deterministic replay</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">State + Decisioning</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Redis Patient Snapshot Cache</strong>Low-latency clinical context read</div>
+              <div class="node"><strong>Redis Rule Context Cache</strong>Guideline and threshold lookup</div>
+              <div class="node"><strong>Redis Idempotency Keys</strong>Exactly-once style action protection</div>
+            </div>
+          </div>
+          <div class="lane">
+            <div class="label">Delivery + Observability</div>
+            <div class="nodes compact">
+              <div class="node"><strong>Action Publisher</strong>FHIR-native Task, CarePlan, Communication write-back</div>
+              <div class="node"><strong>Observability</strong>consumer lag, distributed traces, audit event stream</div>
+              <div class="node"><strong>PHI Safety</strong>PHI-safe logging boundaries + restricted payload traces</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout">Presenter script: This is deterministic producer-consumer processing where one patient event is calculated against N measures, with explicit cache roles, idempotent action publishing, retry/DLQ controls, and tenant-safe observability.</div>
+    </section>
+
+    <section class="journey">
+      <h2>Static Export Assets</h2>
+      <div class="exports">
+        <a href="race-track-fhir-pipeline-print.html">Print Edition HTML</a>
+        <a href="race-track-fhir-evidence.html">Evidence and Validation</a>
+        <a href="assets/race-track-fhir/view-non-technical.svg">Non-technical SVG</a>
+        <a href="assets/race-track-fhir/view-mixed.svg">Mixed SVG</a>
+        <a href="assets/race-track-fhir/view-technical.svg">Technical SVG</a>
+        <a href="assets/race-track-fhir/comparison-3-views.svg">Comparison SVG</a>
+        <a href="assets/race-track-fhir/legend.svg">Legend SVG</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const variant = document.title.includes('Variant B') ? 'B' : 'A';
+    const telemetryKey = 'rtfp_ab_metrics';
+    const nowIso = () => new Date().toISOString();
+    const params = new URLSearchParams(window.location.search);
+
+    function track(eventName, payload = {}) {
+      const event = {
+        event: eventName,
+        variant,
+        timestamp: nowIso(),
+        path: window.location.pathname,
+        ...payload
+      };
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push(event);
+      try {
+        const current = JSON.parse(localStorage.getItem(telemetryKey) || '[]');
+        current.push(event);
+        localStorage.setItem(telemetryKey, JSON.stringify(current.slice(-300)));
+      } catch (_) {}
+    }
+
+    track('rtfp_view', { forced: params.get('ab') || null });
+
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+    const exports = document.querySelectorAll('.exports a');
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('aria-controls');
+
+        tabs.forEach((t) => t.setAttribute('aria-selected', 'false'));
+        tab.setAttribute('aria-selected', 'true');
+
+        panels.forEach((panel) => {
+          panel.classList.toggle('active', panel.id === target);
+        });
+        track('rtfp_tab_click', { tab: target });
+      });
+    });
+
+    exports.forEach((link) => {
+      link.addEventListener('click', () => {
+        track('rtfp_export_click', { href: link.getAttribute('href') });
+      });
+    });
+
+    // Perf probe is only enabled for automated validation runs.
+    if (params.get('perf_probe') === '1') {
+      let lcp = null;
+      let lcpObserver = null;
+      if ('PerformanceObserver' in window) {
+        try {
+          lcpObserver = new PerformanceObserver((entryList) => {
+            const entries = entryList.getEntries();
+            if (entries.length > 0) {
+              lcp = entries[entries.length - 1].startTime;
+            }
+          });
+          lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+        } catch (_) {}
+      }
+
+      const nextFrame = () => new Promise((resolve) => requestAnimationFrame(() => resolve(performance.now())));
+
+      const measureTabSwitch = async () => {
+        const tabDurations = [];
+        const active = document.querySelector('.tab[aria-selected="true"]');
+        for (const tab of tabs) {
+          if (tab === active) {
+            continue;
+          }
+          const start = performance.now();
+          tab.click();
+          await nextFrame();
+          tabDurations.push(performance.now() - start);
+        }
+        if (active) {
+          active.click();
+          await nextFrame();
+        }
+        if (tabDurations.length === 0) {
+          return null;
+        }
+        tabDurations.sort((a, b) => a - b);
+        return tabDurations[Math.floor(tabDurations.length / 2)];
+      };
+
+      window.addEventListener('load', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        const nav = performance.getEntriesByType('navigation')[0];
+        const interactionReadyMs = await measureTabSwitch();
+        if (lcpObserver) {
+          try { lcpObserver.disconnect(); } catch (_) {}
+        }
+
+        const probe = {
+          variant,
+          domContentLoadedMs: nav ? nav.domContentLoadedEventEnd : null,
+          lcpProxyMs: lcp,
+          interactionReadyMs
+        };
+        const node = document.createElement('script');
+        node.id = 'rtfp-perf-probe';
+        node.type = 'application/json';
+        node.textContent = JSON.stringify(probe);
+        document.body.appendChild(node);
+      }, { once: true });
+    }
+  </script>
+</body>
+</html>

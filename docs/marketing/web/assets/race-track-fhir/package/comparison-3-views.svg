@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080">
+  <rect width="1800" height="1080" fill="#f5f8f4"/>
+  <text x="60" y="70" font-family="Arial, sans-serif" font-size="40" font-weight="700" fill="#163942">Comparison: Same Journey, Three Levels of Detail</text>
+
+  <rect x="60" y="120" width="540" height="900" rx="14" fill="#fff" stroke="#bfd7d2"/>
+  <text x="86" y="164" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f4f58">1) Non-technical</text>
+  <text x="86" y="205" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Illustrative race track story</text>
+  <text x="86" y="238" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Simple pit stops and outcomes</text>
+  <text x="86" y="271" font-family="Arial, sans-serif" font-size="21" fill="#274a52">No topic/group internals</text>
+  <text x="86" y="335" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Customer FHIR + CDR</text>
+  <text x="86" y="366" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Smart processing engine</text>
+  <text x="86" y="397" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Action delivered</text>
+
+  <rect x="630" y="120" width="540" height="900" rx="14" fill="#fff" stroke="#bfd7d2"/>
+  <text x="656" y="164" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f4f58">2) Mixed</text>
+  <text x="656" y="205" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Architecture + metaphor hybrid</text>
+  <text x="656" y="238" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Shows services, topics, Redis</text>
+  <text x="656" y="271" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Keeps presenter-friendly narrative</text>
+  <text x="656" y="335" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Customer FHIR/CDR -> Internal FHIR</text>
+  <text x="656" y="366" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">hdim.patient.events.v1, hdim.care_gap.events.v1</text>
+  <text x="656" y="397" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Task/CarePlan/Communication</text>
+
+  <rect x="1200" y="120" width="540" height="900" rx="14" fill="#fff" stroke="#bfd7d2"/>
+  <text x="1226" y="164" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f4f58">3) Technical</text>
+  <text x="1226" y="205" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Full producer-consumer internals</text>
+  <text x="1226" y="238" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Consumer groups, hdim.patient.events.retry.v1, hdim.patient.events.dlq.v1</text>
+  <text x="1226" y="271" font-family="Arial, sans-serif" font-size="21" fill="#274a52">Observability + tenant-safe controls</text>
+  <text x="1226" y="335" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Idempotency + rule-context cache</text>
+  <text x="1226" y="366" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">Deterministic action publishing</text>
+  <text x="1226" y="397" font-family="Arial, sans-serif" font-size="20" fill="#2f535a">PHI-safe logging boundaries</text>
+
+  <rect x="60" y="760" width="1680" height="220" rx="14" fill="#e7f2ef" stroke="#bfd7d2"/>
+  <text x="90" y="806" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#1f4f58">Shared canonical journey across all three views</text>
+  <text x="90" y="842" font-family="Arial, sans-serif" font-size="20" fill="#274a52">1 Event -> 2 Ingest -> 3 Kafka Route -> 4 Service -> 5 Redis -> 6 Rules -> 7 Action -> 8 Delivery -> 9 Outcome/Audit</text>
+  <text x="90" y="892" font-family="Arial, sans-serif" font-size="20" fill="#2a555f">Proof framing: Healthix + HealthInfoNet + Verato</text>
+</svg>

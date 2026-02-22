@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FHIR Race Track Pipeline | Print Edition</title>
+  <meta name="description" content="Print-optimized architecture narrative with non-technical, mixed, and technical views.">
+  <style>
+    :root {
+      --ink: #102e34;
+      --ink-soft: #32535b;
+      --line: #b8ccc7;
+      --panel: #ffffff;
+      --bg: #f3f7f4;
+      --accent: #0f6f7a;
+      --muted: #e9f2ef;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 20px auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 22px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 1.3rem;
+    }
+
+    h3 {
+      margin: 0 0 7px;
+      color: var(--accent);
+      font-size: 1.05rem;
+    }
+
+    .lede {
+      font-size: 1.03rem;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+    }
+
+    .proof {
+      border: 1px solid var(--line);
+      background: var(--muted);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+
+    .print-btn {
+      border: 1px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .print-btn:hover {
+      filter: brightness(0.95);
+    }
+
+    .journey {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .journey table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .journey th,
+    .journey td {
+      border-bottom: 1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .journey th {
+      width: 110px;
+      background: var(--muted);
+    }
+
+    .view {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px;
+      background: #f9fcfb;
+    }
+
+    .box p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 0.94rem;
+    }
+
+    .box strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .script {
+      margin-top: 8px;
+      padding: 8px;
+      border-left: 4px solid var(--accent);
+      background: #f2f9fa;
+      font-size: 0.94rem;
+    }
+
+    .footer {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      text-align: right;
+    }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .page { margin: 0; border-radius: 0; }
+    }
+
+    @media print {
+      @page { size: A4 portrait; margin: 10mm; }
+      body { background: #fff; }
+      .page { margin: 0; border: none; max-width: none; border-radius: 0; padding: 0; }
+      .view { break-inside: avoid; }
+      .print-break { page-break-before: always; }
+      .actions { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="hdim-shared-nav-root"></div>
+  <script defer src="/assets/js/shared-nav-loader.js"></script>
+
+  <main class="page">
+    <div class="actions">
+      <button type="button" class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+    <h1>FHIR Race Track Pipeline: Print Edition</h1>
+    <p class="lede">One canonical patient journey shown at three detail levels for non-technical, mixed, and technical audiences.</p>
+    <div class="proof">Built from real-world HIE operating patterns (Healthix, HealthInfoNet) and modern identity strategy (Verato).</div>
+
+    <section class="journey">
+      <table>
+        <tr><th>Step 1</th><td>Patient Event Created</td><th>Step 2</th><td>Data Ingested</td></tr>
+        <tr><th>Step 3</th><td>Kafka Stream Routed</td><th>Step 4</th><td>Service Processing</td></tr>
+        <tr><th>Step 5</th><td>Redis Context Lookup</td><th>Step 6</th><td>Care Rule Evaluation (1 Patient -> N Measures)</td></tr>
+        <tr><th>Step 7</th><td>Action Generated</td><th>Step 8</th><td>Consumer Delivery</td></tr>
+        <tr><th>Step 9</th><td colspan="3">Outcome + Audit</td></tr>
+      </table>
+    </section>
+
+    <section class="view">
+      <h2>View 1: Non-Technical</h2>
+      <div class="grid">
+        <div class="box"><strong>Customer Data Sources</strong><p>Customer FHIR server and CDR provide the starting point.</p></div>
+        <div class="box"><strong>Standards-Based Processing</strong><p>Events move in real time through standards-based workflows.</p></div>
+        <div class="box"><strong>Care Decision Checkpoint</strong><p>Clinical context is applied before action recommendation.</p></div>
+        <div class="box"><strong>Action Delivered</strong><p>Standardized actions return to care teams and systems.</p></div>
+      </div>
+      <div class="script">Presenter line: Patients follow one continuous workflow. Data moves with them end-to-end, so onboarding does not require custom interfaces.</div>
+    </section>
+
+    <section class="view print-break">
+      <h2>View 2: Mixed</h2>
+      <div class="grid">
+        <div class="box"><strong>Customer Domain</strong><p>Customer FHIR Server and Customer CDR/EHR.</p></div>
+        <div class="box"><strong>Interoperability Boundary</strong><p>FHIR R4 normalization from customer data into an internal FHIR longitudinal model.</p></div>
+        <div class="box"><strong>Pipeline Core</strong><p>Kafka topics: hdim.patient.events.v1, hdim.care_gap.events.v1, hdim.quality.events.v1, hdim.actions.events.v1, with one-patient-to-N-measure fan-out.</p></div>
+        <div class="box"><strong>Services + Cache</strong><p>Patient/Care Gap/Quality Measure/Event services with Redis patient snapshot, rule context, and idempotency keys.</p></div>
+      </div>
+      <div class="script">Presenter line: Customer FHIR/CDR data crosses a standards boundary into internal FHIR, one patient event fans out to N active measures, then results are returned as FHIR-native actions.</div>
+    </section>
+
+    <section class="view print-break">
+      <h2>View 3: Technical</h2>
+      <div class="grid">
+        <div class="box"><strong>Producers + Canonicalization</strong><p>Customer FHIR and CDR feeds create canonical events with tenant context controls.</p></div>
+        <div class="box"><strong>Kafka Topology</strong><p>Versioned topics and consumer groups with one-patient-to-N-measure evaluation fan-out, partition strategy, hdim.patient.events.retry.v1, and hdim.patient.events.dlq.v1.</p></div>
+        <div class="box"><strong>Redis Roles</strong><p>Patient Snapshot Cache, Rule Context Cache, Idempotency Keys.</p></div>
+        <div class="box"><strong>Delivery + Observability</strong><p>FHIR-native write-back plus consumer lag, distributed tracing, and PHI-safe logging boundaries.</p></div>
+      </div>
+      <div class="script">Presenter line: This is deterministic producer-consumer processing where one patient event is calculated against N measures, with explicit cache roles, idempotent action publishing, retry/DLQ controls, and tenant-safe observability.</div>
+    </section>
+
+    <div class="footer">Related interactive: race-track-fhir-pipeline | Evidence: race-track-fhir-evidence.html</div>
+  </main>
+</body>
+</html>

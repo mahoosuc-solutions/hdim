@@ -1,0 +1,121 @@
+name: Portal Deployment Validation
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'docs/marketing/web/**'
+      - '.github/workflows/portal-deployment-validation.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'docs/marketing/web/**'
+      - '.github/workflows/portal-deployment-validation.yml'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Base URL for production validation'
+        required: false
+        default: 'https://web-gamma-snowy-38.vercel.app'
+      preview_url:
+        description: 'Optional preview URL to validate'
+        required: false
+        default: ''
+
+jobs:
+  production-validation:
+    name: Production Link + A/B Validation
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: ${{ inputs.base_url || 'https://web-gamma-snowy-38.vercel.app' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies for validators
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Ensure google-chrome command exists
+        run: |
+          if ! command -v google-chrome >/dev/null 2>&1; then
+            sudo ln -sf "$(command -v chrome)" /usr/local/bin/google-chrome
+          fi
+          google-chrome --version
+
+      - name: Run portal link audit
+        run: |
+          bash docs/marketing/web/scripts/validate-portal-links.sh
+
+      - name: Run web A/B validation
+        run: |
+          bash docs/marketing/web/scripts/validate-web-ab-performance.sh
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-production-validation-artifacts
+          path: |
+            docs/marketing/web/evidence/portal-link-audit-*.md
+            docs/marketing/web/evidence/portal-link-audit-*.csv
+            docs/marketing/web/evidence/web-validation-*.md
+            docs/marketing/web/evidence/web-performance-*.csv
+            docs/marketing/web/evidence/web-vitals-*.csv
+          retention-days: 14
+
+  preview-policy-validation:
+    name: Preview Policy Validation
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.preview_url != '' }}
+    env:
+      PREVIEW_URL: ${{ inputs.preview_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check preview accessibility policy
+        id: preview_policy
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$PREVIEW_URL")
+          echo "status_code=$code" >> "$GITHUB_OUTPUT"
+          echo "Preview status code: $code"
+          if [[ "$code" != "200" && "$code" != "401" ]]; then
+            echo "Unexpected preview status: $code"
+            exit 1
+          fi
+
+      - name: Validate protected preview behavior (expected 401)
+        if: ${{ steps.preview_policy.outputs.status_code == '401' && secrets.VERCEL_AUTOMATION_BYPASS_SECRET == '' }}
+        run: |
+          echo "Preview is protected (401) and bypass secret is not configured. Policy check passed."
+
+      - name: Install jq for preview audit
+        if: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Run authenticated preview link audit
+        if: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
+        env:
+          BASE_URL: ${{ inputs.preview_url }}
+          AUTH_HEADER_NAME: x-vercel-protection-bypass
+          AUTH_HEADER_VALUE: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          AUTH_SET_BYPASS_COOKIE: "true"
+        run: |
+          bash docs/marketing/web/scripts/validate-portal-links.sh
+
+      - name: Upload preview audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-preview-validation-artifacts
+          path: |
+            docs/marketing/web/evidence/portal-link-audit-*.md
+            docs/marketing/web/evidence/portal-link-audit-*.csv
+          retention-days: 14

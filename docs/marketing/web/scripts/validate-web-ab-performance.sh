@@ -48,7 +48,7 @@ extract_variant_with_retry() {
   local profile="$2"
   local result=""
   for attempt in 1 2 3; do
-    result="$(extract_variant "$url" "$profile-$attempt")"
+    result="$(extract_variant "$url" "$profile")"
     if [[ -n "$result" ]]; then
       echo "$result"
       return

@@ -1,16 +1,9 @@
 name: Portal Deployment Validation
 
+# Validation is run locally via docs/marketing/web/scripts/.
+# Automatic push/PR triggers are disabled to prevent queue buildup on GitHub-hosted runners.
+# Trigger manually via workflow_dispatch if a one-off remote run is needed.
 on:
-  push:
-    branches: [main, master, develop]
-    paths:
-      - 'docs/marketing/web/**'
-      - '.github/workflows/portal-deployment-validation.yml'
-  pull_request:
-    branches: [main, master, develop]
-    paths:
-      - 'docs/marketing/web/**'
-      - '.github/workflows/portal-deployment-validation.yml'
   workflow_dispatch:
     inputs:
       base_url:
@@ -21,6 +14,10 @@ on:
         description: 'Optional preview URL to validate'
         required: false
         default: ''
+
+concurrency:
+  group: portal-deployment-validation-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   production-validation:

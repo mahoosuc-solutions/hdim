@@ -1,7 +1,7 @@
 ---
 date: 2026-02-21
 plan_id: race-track-fhir-pipeline-visualization
-status: in-progress
+status: complete
 owner: codex
 ---
 

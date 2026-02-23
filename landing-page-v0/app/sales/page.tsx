@@ -378,7 +378,41 @@ export default function SalesPage() {
           </div>
         </section>
 
-        {/* ── SECTION 6: Final CTA ── */}
+        {/* ── SECTION 6: Care Transitions Pilot Offer ── */}
+        <section className="py-20 bg-[#0D4F8B]/5">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-2xl border border-[#0D4F8B]/15 p-8 md:p-10">
+              <p className="text-[#0D4F8B] text-sm font-semibold uppercase tracking-widest mb-3">
+                Focused Pilot Option
+              </p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Care Transitions Pilot for Post-Discharge Engagement
+              </h2>
+              <p className="text-gray-700 text-lg mb-6">
+                If your immediate priority is transitions of care, we offer a
+                structured 90-day pilot blueprint with clear Phase 1 scope,
+                security baseline, deployment model options, and KPI governance.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/solutions/transitions-of-care"
+                  className="inline-flex items-center justify-center gap-2 bg-[#0D4F8B] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0A3D6E] transition-colors"
+                >
+                  Review Pilot Blueprint
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/schedule"
+                  className="inline-flex items-center justify-center gap-2 border border-[#0D4F8B]/30 text-[#0D4F8B] px-6 py-3 rounded-lg font-semibold hover:bg-[#0D4F8B]/5 transition-colors"
+                >
+                  Schedule Architecture Workshop
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 7: Final CTA ── */}
         <section className="py-24 bg-gray-900 text-white">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 className="text-4xl font-bold mb-4">

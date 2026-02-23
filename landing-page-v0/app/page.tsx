@@ -466,10 +466,19 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-10">
-                <a href="#demo" className="btn-primary">
-                  See HDIM in Action
-                  <ChevronRight className="w-5 h-5 ml-2" />
-                </a>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <a href="#demo" className="btn-primary">
+                    See HDIM in Action
+                    <ChevronRight className="w-5 h-5 ml-2" />
+                  </a>
+                  <a
+                    href="/solutions/transitions-of-care"
+                    className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-all duration-200"
+                  >
+                    Explore Care Transitions Pilot
+                    <ChevronRight className="w-5 h-5 ml-2" />
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -735,13 +744,22 @@ export default function LandingPage() {
 
           {/* More case studies link */}
           <div className="text-center mt-10">
-            <a
-              href="/research"
-              className="inline-flex items-center text-primary font-medium hover:underline"
-            >
-              Read more customer stories
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </a>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <a
+                href="/research"
+                className="inline-flex items-center justify-center text-primary font-medium hover:underline"
+              >
+                Read more customer stories
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+              <a
+                href="/solutions/transitions-of-care"
+                className="inline-flex items-center justify-center text-primary font-medium hover:underline"
+              >
+                Review the care transitions pilot
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -1034,6 +1052,7 @@ export default function LandingPage() {
             <div>
               <h3 className="font-semibold text-sm uppercase tracking-wider mb-4">Solutions</h3>
               <ul className="space-y-3">
+                <li><a href="/solutions/transitions-of-care" className="text-gray-400 hover:text-white transition-colors">Care Transitions Pilot</a></li>
                 <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For Health Plans</a></li>
                 <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For ACOs</a></li>
                 <li><a href="/research" className="text-gray-400 hover:text-white transition-colors">For Health Systems</a></li>

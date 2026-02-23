@@ -15,6 +15,9 @@ Last Updated: 2026-02-23
 - [x] PatientEngagement full test coverage — PR #489 merged 2026-02-23 (28 unit tests, 10 integration tests; nurse-workflow-service)
 - [x] FHIR Encounter `participant` field added to `scheduling.service.ts` (FHIR R4 interface completeness)
 - [x] Landing page Node engine constraint + Vercel output config cleaned (`landing-page-v0/`)
+- [x] A-003: Deployment model decision one-pager created (`32-deployment-model-decision-onepager.md`) — workshop-ready artifact
+- [x] A-004: Source-system interface inventory template created (`33-source-system-interface-inventory-template.md`) — 6-system inventory, FHIR R4 field map, sign-off section
+- [x] A-005: KPI baseline definition sheet created (`37-kpi-baseline-definition-sheet.md`) — all 4 KPIs defined with targets, data owner placeholders for human assignment
 
 ## Pending Human Inputs (Required)
 

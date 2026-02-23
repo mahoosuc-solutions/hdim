@@ -68,9 +68,7 @@ Purpose: pre-filled operational artifacts for Week 1 mobilization and decision g
 22. Run `31-placeholder-resolution-checklist.md` before sending any external communication.
 23. Complete `32-enterprise-security-addendum.md` for enterprise security sign-off.
 24. Complete `33-onprem-change-control-addendum.md` for on-prem change governance (if applicable).
-32. `32-enterprise-security-addendum.md`
-33. `33-onprem-change-control-addendum.md`
-23. Fill `00-account-variables.md` first to speed placeholder resolution.
-24. Review `34-placeholder-scan-report.md` and clear high-priority placeholders.
-25. Track overall status in `35-current-tasks-completion-board.md`.
-26. Use `36-account-variables-fill-now.md` for a guided one-pass completion of all human-required fields.
+25. Fill `00-account-variables.md` first to speed placeholder resolution.
+26. Review `34-placeholder-scan-report.md` and clear high-priority placeholders.
+27. Track overall status in `35-current-tasks-completion-board.md`.
+28. Use `36-account-variables-fill-now.md` for a guided one-pass completion of all human-required fields.

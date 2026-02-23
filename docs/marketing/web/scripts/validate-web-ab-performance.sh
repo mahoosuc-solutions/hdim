@@ -35,6 +35,13 @@ if [[ "$route_probe_code" != "200" ]]; then
   ROUTE_PATH="/race-track-fhir-experiment.html"
 fi
 
+ROUTE_PATH="/race-track-fhir-pipeline"
+route_probe_code="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL$ROUTE_PATH" || true)"
+if [[ "$route_probe_code" != "200" ]]; then
+  # Local dev servers may expose the experiment page without rewrite support.
+  ROUTE_PATH="/race-track-fhir-experiment.html"
+fi
+
 extract_variant() {
   local url="$1"
   local profile="$2"

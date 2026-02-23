@@ -6,6 +6,7 @@ import com.healthdata.quality.persistence.QualityMeasureEntity;
 import com.healthdata.quality.persistence.QualityMeasureRepository;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
+import com.healthdata.quality.service.MeasureCalculationService;
 import com.healthdata.quality.service.MeasureDefinitionSeedingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Controller for demo seeding of quality measures and evaluation results.
@@ -29,6 +34,7 @@ import java.util.*;
 public class MeasureSeedingController {
 
     private final MeasureDefinitionSeedingService seedingService;
+    private final MeasureCalculationService calculationService;
     private final QualityMeasureRepository measureRepository;
     private final QualityMeasureResultRepository resultRepository;
 
@@ -121,6 +127,83 @@ public class MeasureSeedingController {
 
         log.info("Generated {} demo results ({} compliant, {} non-compliant) for tenant: {}",
             resultsGenerated, compliantCount, nonCompliantCount, tenantId);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Evaluate quality measures for a batch of patients using real CQL evaluation.
+     * Calls MeasureCalculationService which delegates to the CQL Engine Service.
+     * Used by demo-seeding-service when cql-engine-service is available.
+     */
+    @PostMapping(value = "/demo/evaluate-cql", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+    @Audited(action = AuditAction.CREATE)
+    public ResponseEntity<DemoResultsResponse> evaluateWithCql(
+            @RequestHeader("X-Tenant-ID") String tenantId,
+            @RequestBody DemoResultsRequest request) {
+        log.info("POST /demo/evaluate-cql - tenant: {}, patients: {}, measures: {}",
+            tenantId, request.getPatientIds().size(), request.getMeasureIds().size());
+
+        AtomicInteger resultsGenerated = new AtomicInteger(0);
+        AtomicInteger compliantCount = new AtomicInteger(0);
+        AtomicInteger nonCompliantCount = new AtomicInteger(0);
+
+        int threadCount = Math.min(Runtime.getRuntime().availableProcessors() * 2, 16);
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+        try {
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+            for (String patientIdStr : request.getPatientIds()) {
+                UUID patientId;
+                try {
+                    patientId = UUID.fromString(patientIdStr);
+                } catch (IllegalArgumentException e) {
+                    log.debug("Invalid patient ID format: {}", patientIdStr);
+                    continue;
+                }
+
+                for (String measureId : request.getMeasureIds()) {
+                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                        try {
+                            QualityMeasureResultEntity result =
+                                calculationService.calculateMeasure(
+                                    tenantId, patientId, measureId, "demo-seeding-service");
+
+                            resultsGenerated.incrementAndGet();
+                            if (Boolean.TRUE.equals(result.getNumeratorCompliant())) {
+                                compliantCount.incrementAndGet();
+                            } else {
+                                nonCompliantCount.incrementAndGet();
+                            }
+                        } catch (Exception e) {
+                            log.debug("CQL evaluation failed for patient {} measure {}: {}",
+                                patientIdStr, measureId, e.getMessage());
+                        }
+                    }, executor);
+
+                    futures.add(future);
+                }
+            }
+
+            // Wait for all evaluations to complete (5 minute timeout for large batches)
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .get(5, java.util.concurrent.TimeUnit.MINUTES);
+
+        } catch (Exception e) {
+            log.warn("CQL batch evaluation partially completed: {}", e.getMessage());
+        } finally {
+            executor.shutdown();
+        }
+
+        DemoResultsResponse response = new DemoResultsResponse();
+        response.setResultsGenerated(resultsGenerated.get());
+        response.setCompliantCount(compliantCount.get());
+        response.setNonCompliantCount(nonCompliantCount.get());
+
+        log.info("CQL evaluation complete: {} results ({} compliant, {} non-compliant) for tenant: {}",
+            resultsGenerated.get(), compliantCount.get(), nonCompliantCount.get(), tenantId);
 
         return ResponseEntity.ok(response);
     }

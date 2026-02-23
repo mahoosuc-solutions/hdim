@@ -25,6 +25,10 @@
   ],
   "rewrites": [
     {
+      "source": "/race-track-fhir-pipeline",
+      "destination": "/race-track-fhir-experiment.html"
+    },
+    {
       "source": "/",
       "destination": "/ai-solutioning-index.html"
     }

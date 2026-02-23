@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { v4 as uuidv4 } from 'uuid'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const NOTIFICATION_EMAIL = process.env.LEAD_NOTIFICATION_EMAIL || 'sales@mahoosuc.solutions'
+const RESEND_API_KEY = process.env.RESEND_API_KEY
 
 type LeadSource = 'demo_modal' | 'contact_page' | 'schedule_page'
 
@@ -44,6 +44,13 @@ function buildEmailHtml(lead: LeadPayload & { id: string; timestamp: string }): 
       Reply-To is set to the lead's email address for one-click follow-up.
     </p>
   `
+}
+
+function getResendClient(): Resend | null {
+  if (!RESEND_API_KEY) {
+    return null
+  }
+  return new Resend(RESEND_API_KEY)
 }
 
 export async function POST(req: Request) {
@@ -120,44 +127,49 @@ export async function POST(req: Request) {
   // Structured log — captured by Vercel Logs (zero-drop audit trail)
   console.log(JSON.stringify(logEntry))
 
-  // Send notification to sales team
-  try {
-    await resend.emails.send({
-      from: 'HDIM Leads <no-reply@mahoosuc.solutions>',
-      to: NOTIFICATION_EMAIL,
-      replyTo: email,
-      subject: `🎯 New Lead: ${company || name} — ${source}`,
-      html: buildEmailHtml({ ...logEntry }),
-    })
-  } catch (emailErr) {
-    console.error(
-      JSON.stringify({ event: 'lead_email_failed', id, source, error: String(emailErr) })
-    )
-  }
+  const resend = getResendClient()
+  if (!resend) {
+    console.warn(JSON.stringify({ event: 'lead_email_skipped', reason: 'missing_resend_api_key', id, source }))
+  } else {
+    // Send notification to sales team
+    try {
+      await resend.emails.send({
+        from: 'HDIM Leads <no-reply@mahoosuc.solutions>',
+        to: NOTIFICATION_EMAIL,
+        replyTo: email,
+        subject: `🎯 New Lead: ${company || name} — ${source}`,
+        html: buildEmailHtml({ ...logEntry }),
+      })
+    } catch (emailErr) {
+      console.error(
+        JSON.stringify({ event: 'lead_email_failed', id, source, error: String(emailErr) })
+      )
+    }
 
-  // Send confirmation to the lead
-  try {
-    await resend.emails.send({
-      from: 'HDIM <no-reply@mahoosuc.solutions>',
-      to: email,
-      replyTo: NOTIFICATION_EMAIL,
-      subject: `Thanks for reaching out, ${name.split(' ')[0]}!`,
-      html: `
-        <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-          <h2 style="color:#0D4F8B">Thanks for your interest in HDIM</h2>
-          <p>Hi ${name.split(' ')[0]},</p>
-          <p>We received your request and a member of our team will be in touch within <strong>24 hours</strong>.</p>
-          <p>In the meantime, feel free to reply to this email with any questions.</p>
-          <br/>
-          <p style="color:#6b7280;font-size:13px">— The HDIM Team<br/>
-          <a href="mailto:sales@mahoosuc.solutions" style="color:#0D4F8B">sales@mahoosuc.solutions</a></p>
-        </div>
-      `,
-    })
-  } catch (emailErr) {
-    console.error(
-      JSON.stringify({ event: 'lead_confirmation_email_failed', id, source, error: String(emailErr) })
-    )
+    // Send confirmation to the lead
+    try {
+      await resend.emails.send({
+        from: 'HDIM <no-reply@mahoosuc.solutions>',
+        to: email,
+        replyTo: NOTIFICATION_EMAIL,
+        subject: `Thanks for reaching out, ${name.split(' ')[0]}!`,
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+            <h2 style="color:#0D4F8B">Thanks for your interest in HDIM</h2>
+            <p>Hi ${name.split(' ')[0]},</p>
+            <p>We received your request and a member of our team will be in touch within <strong>24 hours</strong>.</p>
+            <p>In the meantime, feel free to reply to this email with any questions.</p>
+            <br/>
+            <p style="color:#6b7280;font-size:13px">— The HDIM Team<br/>
+            <a href="mailto:sales@mahoosuc.solutions" style="color:#0D4F8B">sales@mahoosuc.solutions</a></p>
+          </div>
+        `,
+      })
+    } catch (emailErr) {
+      console.error(
+        JSON.stringify({ event: 'lead_confirmation_email_failed', id, source, error: String(emailErr) })
+      )
+    }
   }
 
   return NextResponse.json({ success: true, id }, { status: 201 })

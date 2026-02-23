@@ -2,13 +2,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # Pilot customer environment overlay for HDIM Platform
-# Deploys the 10-service core subset required for HEDIS quality measure evaluation.
+# Deploys the core subset required for HEDIS quality measure evaluation and
+# patient engagement pilot workflows.
 # Excludes AI/agent, predictive analytics, SDOH, and workflow services (Phase 2+).
 #
 # Deploy with: kubectl apply -k k8s/overlays/pilot/
 # Namespace:   hdim-pilot-<customer-id>  (set PILOT_NAMESPACE before deploying)
 #
-# Services included (10 core):
+# Services included (12 core):
 #   gateway-service       - API entry point, JWT validation
 #   fhir-service          - FHIR R4 resource store + SMART on FHIR
 #   patient-service       - Patient demographics, multi-tenant records
@@ -19,6 +20,8 @@ kind: Kustomization
 #   event-processing-service - Audit event ingestion
 #   event-router-service  - Event routing and fanout
 #   cdr-processor-service - Clinical Document Registry processing
+#   nurse-workflow-service - Secure care-team queue + patient engagement
+#   ai-assistant-service   - Plain-language explanation and Q&A
 #
 # See: docs/runbooks/PILOT_SERVICE_SUBSET.md for full rationale
 
@@ -56,6 +59,10 @@ resources:
 
   # Tier 5: Data ingestion
   - ../../services/cdr-processor-service.yaml
+
+  # Tier 6: Patient engagement
+  - ../../services/nurse-workflow-service.yaml
+  - ../../services/ai-assistant-service.yaml
 
   # === EXCLUDED FROM PILOT (deferred to GA) ===
   # agent-runtime-service       - AI agents (Phase 2)

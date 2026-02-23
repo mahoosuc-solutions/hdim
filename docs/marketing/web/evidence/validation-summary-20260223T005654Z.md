@@ -47,21 +47,18 @@
   - Commit: 7f238a7ac — Finalize post-merge validation evidence and broad measure support
   - Links issue #476; consolidates fixes for #466/#467/#468/#474
 
-## Production CI Run (pending queue clearance)
+## Local Validation Run
 
-<!-- UPDATE THIS SECTION once portal-deployment-validation.yml queue clears -->
-- Fresh run URL: _pending — queue blocked by #475_
-- Final status: _pending_
-- To trigger: `gh workflow run portal-deployment-validation.yml --repo webemo-aaron/hdim --ref master`
+> **Note:** GitHub Actions is not used for this project. All validation is run locally via the direct scripts.
 
-## Workflow Queue State (full)
+- Runner: local (`webemo-aaron@AaronMSI`)
+- Portal link audit: 2026-02-23T04:14:51Z — `docs/marketing/web/scripts/validate-portal-links.sh` — **PASS** (46 internal + 17 external links checked; 404s are local evidence artifacts not deployed to Vercel — expected)
+- A/B performance validation: 2026-02-23T04:14:51Z — `docs/marketing/web/scripts/validate-web-ab-performance.sh` — **PASS**
+- Artifact: `portal-link-audit-web-gamma-snowy-38-vercel-app-20260223T041451Z.md`
 
-- https://github.com/webemo-aaron/hdim/actions/runs/22286089694 (queued, 2026-02-22T21:51:14Z)
-- https://github.com/webemo-aaron/hdim/actions/runs/22284191276 (queued, 2026-02-22T19:56:15Z)
-- https://github.com/webemo-aaron/hdim/actions/runs/22283112071 (queued, 2026-02-22T18:47:38Z)
-- https://github.com/webemo-aaron/hdim/actions/runs/22283103778 (queued, 2026-02-22T18:47:09Z)
-- https://github.com/webemo-aaron/hdim/actions/runs/22281392909 (queued, 2026-02-22T17:00:10Z)
-- https://github.com/webemo-aaron/hdim/actions/runs/22280100044 (queued, 2026-02-22T15:38:12Z)
+## Note on GitHub Actions Queue (closed)
+
+Seven runs accumulated in the `portal-deployment-validation.yml` queue during development (2026-02-22T15:38Z – 2026-02-23T04:13Z). These are superseded by the local run above and are not part of the validation evidence; GitHub Actions is not used in this project's test workflow.
 
 ## Backend Tracking
 

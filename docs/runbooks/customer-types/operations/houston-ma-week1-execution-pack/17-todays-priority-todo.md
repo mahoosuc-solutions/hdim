@@ -80,6 +80,21 @@ Purpose: close all currently open Week 1 blockers in priority order.
 ## End-of-Day Control Check
 
 - [ ] `02-gate-status-snapshot.md` updated
-- [ ] `04-action-log.md` statuses updated
+- [x] `04-action-log.md` statuses updated — A-003 → Ready for Review, A-004 → Ready for Review, A-005 → In Progress (2026-02-23)
 - [ ] `05-risk-register.md` updated with net new risks
 - [ ] `16-week1-command-center-checklist.md` reviewed
+
+## Agent-Completed (2026-02-23)
+
+- [x] A-003: `32-deployment-model-decision-onepager.md` — decision table, shared responsibility summary, workshop capture section
+- [x] A-004: `33-source-system-interface-inventory-template.md` — source system inventory, minimum required FHIR R4 fields, integration pattern table, gap tracker, sign-off
+- [x] A-005 (partial): `37-kpi-baseline-definition-sheet.md` — all 4 KPIs defined with numerators, denominators, targets, and reporting cadence; data owners require human assignment
+- [x] `04-action-log.md` updated to reflect new artifact status
+
+## Remaining — Blocked on Human Input
+
+- A-001: Security approver names/emails (Sales Lead action)
+- A-002: Workshop invite with confirmed date/time (Customer Success Lead action)
+- A-005 data owners: Customer program team must fill in `37-kpi-baseline-definition-sheet.md` owner column
+- A-006: Steering cadence once customer contacts are known
+- All 40+ execution pack placeholders in `36-account-variables-fill-now.md`

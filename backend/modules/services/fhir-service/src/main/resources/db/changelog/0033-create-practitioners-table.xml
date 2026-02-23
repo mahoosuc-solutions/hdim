@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0033-create-practitioners-table" author="hdim">
+        <createTable tableName="practitioners">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="family_name" type="varchar(255)"/>
+            <column name="given_name" type="varchar(255)"/>
+            <column name="prefix" type="varchar(64)"/>
+            <column name="identifier_value" type="varchar(255)"/>
+            <column name="active" type="boolean" defaultValueBoolean="true"/>
+            <column name="qualification_code" type="varchar(128)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>CREATE INDEX idx_practitioners_resource_json_gin ON practitioners USING gin (resource_json);</sql>
+
+        <createIndex indexName="idx_practitioners_tenant" tableName="practitioners">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_practitioners_tenant_family" tableName="practitioners">
+            <column name="tenant_id"/>
+            <column name="family_name"/>
+        </createIndex>
+
+        <createIndex indexName="idx_practitioners_tenant_identifier" tableName="practitioners">
+            <column name="tenant_id"/>
+            <column name="identifier_value"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="practitioners"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

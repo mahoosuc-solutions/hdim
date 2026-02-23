@@ -1,6 +1,10 @@
 # Web A/B + Performance Validation
 
+<<<<<<<< HEAD:docs/marketing/web/evidence/archive/20260222-superseded-local/web-validation-20260222T225443Z.md
 - Timestamp (UTC): 2026-02-22T22:54:43Z
+========
+- Timestamp (UTC): 2026-02-22T16:59:02Z
+>>>>>>>> origin/master:docs/marketing/web/evidence/web-validation-20260222T165902Z.md
 - Base URL: http://localhost:4174
 - Samples per URL: 5
 - Overall gate result: PASS
@@ -11,8 +15,8 @@
   - A result: Variant A
   - B result: Variant B
 - Sticky behavior (no query repeat): PASS
-  - run1: Variant A
-  - run2: Variant A
+  - run1: Variant B
+  - run2: Variant B
 - Override updates sticky assignment: PASS
   - force-b -> Variant B
   - after-b -> Variant B
@@ -24,10 +28,17 @@
 ## Performance Gates
 
 - Variant median total-load delta <= 15%: PASS
+<<<<<<<< HEAD:docs/marketing/web/evidence/archive/20260222-superseded-local/web-validation-20260222T225443Z.md
   - A median total (direct page): 0.016731s
   - B median total (direct page): 0.018409s
   - slower-variant delta: 10.03%
   - absolute delta: 0.001678s
+========
+  - A median total (direct page): 0.020017s
+  - B median total (direct page): 0.021817s
+  - slower-variant delta: 8.99%
+  - absolute delta: 0.001800s
+>>>>>>>> origin/master:docs/marketing/web/evidence/web-validation-20260222T165902Z.md
   - gate config: max_pct=15, min_abs_sec=0.15
 - Route median total-load regression <= 20% vs baseline: N/A
   - N/A (BASELINE_CSV not provided)
@@ -35,20 +46,35 @@
 ## Performance Summary (median)
 
 - Variant A
+<<<<<<<< HEAD:docs/marketing/web/evidence/archive/20260222-superseded-local/web-validation-20260222T225443Z.md
   - median TTFB: 0.016140s
   - median total: 0.016731s
+========
+  - median TTFB: 0.017697s
+  - median total: 0.020017s
+>>>>>>>> origin/master:docs/marketing/web/evidence/web-validation-20260222T165902Z.md
   - median DOMContentLoaded: n/a ms
   - median LCP proxy: n/a ms
   - median interaction readiness (tab switch): n/a ms
 - Variant B
+<<<<<<<< HEAD:docs/marketing/web/evidence/archive/20260222-superseded-local/web-validation-20260222T225443Z.md
   - median TTFB: 0.017779s
   - median total: 0.018409s
+========
+  - median TTFB: 0.021389s
+  - median total: 0.021817s
+>>>>>>>> origin/master:docs/marketing/web/evidence/web-validation-20260222T165902Z.md
   - median DOMContentLoaded: n/a ms
   - median LCP proxy: n/a ms
   - median interaction readiness (tab switch): n/a ms
 - Router forced path (with redirect)
+<<<<<<<< HEAD:docs/marketing/web/evidence/archive/20260222-superseded-local/web-validation-20260222T225443Z.md
   - median total (?ab=a): 0.017450s
   - median total (?ab=b): 0.015960s
+========
+  - median total (?ab=a): 0.016192s
+  - median total (?ab=b): 0.016710s
+>>>>>>>> origin/master:docs/marketing/web/evidence/web-validation-20260222T165902Z.md
 
 ## Claim Evidence Snippets
 
@@ -80,6 +106,12 @@
 
 ## Artifacts
 
+<<<<<<<< HEAD:docs/marketing/web/evidence/archive/20260222-superseded-local/web-validation-20260222T225443Z.md
 - CSV: web-performance-20260222T225443Z.csv
 - Vitals CSV: web-vitals-20260222T225443Z.csv
 - Report: web-validation-20260222T225443Z.md
+========
+- CSV: web-performance-20260222T165902Z.csv
+- Vitals CSV: web-vitals-20260222T165902Z.csv
+- Report: web-validation-20260222T165902Z.md
+>>>>>>>> origin/master:docs/marketing/web/evidence/web-validation-20260222T165902Z.md

@@ -642,6 +642,10 @@ services:
                 proxy_pass http://gateway_clinical;
             }
 
+            location ~ ^/nurse-workflow/ {
+                proxy_pass http://gateway_clinical;
+            }
+
             location ~ ^/api/consent/ {
                 proxy_pass http://gateway_clinical;
             }

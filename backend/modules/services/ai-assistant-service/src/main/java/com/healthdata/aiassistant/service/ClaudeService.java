@@ -143,6 +143,10 @@ public class ClaudeService {
      * Generate a clinical summary for a patient.
      */
     public ChatResponse generatePatientSummary(String patientId, String patientData) {
+        return generatePatientSummary(patientId, patientData, "unknown-tenant");
+    }
+
+    public ChatResponse generatePatientSummary(String patientId, String patientData, String tenantId) {
         String prompt = String.format("""
             Generate a concise clinical summary for the patient with the following data.
             Focus on:
@@ -162,7 +166,7 @@ public class ClaudeService {
         ChatRequest request = ChatRequest.builder()
             .queryType("patient_summary")
             .query(prompt)
-            .tenantId("system")
+            .tenantId(tenantId)
             .build();
 
         return chat(request);
@@ -172,6 +176,10 @@ public class ClaudeService {
      * Analyze care gaps for a patient panel.
      */
     public ChatResponse analyzeCareGaps(String gapData) {
+        return analyzeCareGaps(gapData, "unknown-tenant");
+    }
+
+    public ChatResponse analyzeCareGaps(String gapData, String tenantId) {
         String prompt = String.format("""
             Analyze the following care gap data and provide insights:
             1. Prioritize gaps by clinical urgency
@@ -188,7 +196,7 @@ public class ClaudeService {
         ChatRequest request = ChatRequest.builder()
             .queryType("care_gaps")
             .query(prompt)
-            .tenantId("system")
+            .tenantId(tenantId)
             .build();
 
         return chat(request);
@@ -198,6 +206,10 @@ public class ClaudeService {
      * Answer a natural language clinical query.
      */
     public ChatResponse answerClinicalQuery(String query, String context) {
+        return answerClinicalQuery(query, context, "unknown-tenant");
+    }
+
+    public ChatResponse answerClinicalQuery(String query, String context, String tenantId) {
         String prompt = String.format("""
             Answer the following clinical query using the provided context.
 
@@ -212,7 +224,7 @@ public class ClaudeService {
         ChatRequest request = ChatRequest.builder()
             .queryType("quality_measures")
             .query(prompt)
-            .tenantId("system")
+            .tenantId(tenantId)
             .build();
 
         return chat(request);

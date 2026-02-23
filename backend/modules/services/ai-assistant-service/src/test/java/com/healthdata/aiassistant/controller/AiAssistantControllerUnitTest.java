@@ -33,7 +33,7 @@ class AiAssistantControllerUnitTest {
             .tenantId("tenant-1")
             .build();
 
-        ResponseEntity<ChatResponse> response = controller.chat(request, null);
+        ResponseEntity<ChatResponse> response = controller.chat(request, "tenant-1", null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -57,7 +57,7 @@ class AiAssistantControllerUnitTest {
             .tenantId("tenant-1")
             .build();
 
-        ResponseEntity<ChatResponse> response = controller.chat(request, null);
+        ResponseEntity<ChatResponse> response = controller.chat(request, "tenant-1", null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
@@ -72,17 +72,17 @@ class AiAssistantControllerUnitTest {
         config.setEnabled(true);
         ClaudeService service = mock(ClaudeService.class);
         ChatResponse serviceResponse = ChatResponse.builder().response("summary").build();
-        when(service.generatePatientSummary(eq("patient-123"), eq("payload")))
+        when(service.generatePatientSummary(eq("patient-123"), eq("payload"), eq("tenant-1")))
             .thenReturn(serviceResponse);
 
         AiAssistantController controller = new AiAssistantController(Optional.of(service), config);
 
-        ResponseEntity<ChatResponse> response = controller.generatePatientSummary("patient-123", "payload", null);
+        ResponseEntity<ChatResponse> response = controller.generatePatientSummary("patient-123", "payload", "tenant-1", null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResponse()).isEqualTo("summary");
-        verify(service).generatePatientSummary(eq("patient-123"), eq("payload"));
+        verify(service).generatePatientSummary(eq("patient-123"), eq("payload"), eq("tenant-1"));
     }
 
     @Test
@@ -92,16 +92,16 @@ class AiAssistantControllerUnitTest {
         config.setEnabled(true);
         ClaudeService service = mock(ClaudeService.class);
         ChatResponse serviceResponse = ChatResponse.builder().response("analysis").build();
-        when(service.analyzeCareGaps(eq("gaps"))).thenReturn(serviceResponse);
+        when(service.analyzeCareGaps(eq("gaps"), eq("tenant-1"))).thenReturn(serviceResponse);
 
         AiAssistantController controller = new AiAssistantController(Optional.of(service), config);
 
-        ResponseEntity<ChatResponse> response = controller.analyzeCareGaps("gaps", null);
+        ResponseEntity<ChatResponse> response = controller.analyzeCareGaps("gaps", "tenant-1", null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResponse()).isEqualTo("analysis");
-        verify(service).analyzeCareGaps(eq("gaps"));
+        verify(service).analyzeCareGaps(eq("gaps"), eq("tenant-1"));
     }
 
     @Test
@@ -111,16 +111,16 @@ class AiAssistantControllerUnitTest {
         config.setEnabled(true);
         ClaudeService service = mock(ClaudeService.class);
         ChatResponse serviceResponse = ChatResponse.builder().response("answer").build();
-        when(service.answerClinicalQuery(eq(longQuery()), eq(""))).thenReturn(serviceResponse);
+        when(service.answerClinicalQuery(eq(longQuery()), eq(""), eq("tenant-1"))).thenReturn(serviceResponse);
 
         AiAssistantController controller = new AiAssistantController(Optional.of(service), config);
 
-        ResponseEntity<ChatResponse> response = controller.answerQuery(longQuery(), null, null);
+        ResponseEntity<ChatResponse> response = controller.answerQuery(longQuery(), null, "tenant-1", null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getResponse()).isEqualTo("answer");
-        verify(service).answerClinicalQuery(eq(longQuery()), eq(""));
+        verify(service).answerClinicalQuery(eq(longQuery()), eq(""), eq("tenant-1"));
     }
 
     private static String longQuery() {

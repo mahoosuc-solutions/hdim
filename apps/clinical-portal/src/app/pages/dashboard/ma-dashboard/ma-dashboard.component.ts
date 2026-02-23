@@ -41,6 +41,8 @@ export interface MATaskItem {
   status: 'pending' | 'in-progress' | 'completed';
   priority: 'high' | 'normal' | 'low';
   room?: string;
+  ownerName?: string;
+  practitionerName?: string;
 }
 
 export interface PreVisitTask {
@@ -94,7 +96,7 @@ export interface OutreachItem {
 export class MADashboardComponent implements OnInit, OnDestroy {
   loading = true;
   todaySchedule: MATaskItem[] = [];
-  displayedColumns = ['time', 'patient', 'task', 'room', 'status', 'actions'];
+  displayedColumns = ['time', 'patient', 'provider', 'task', 'room', 'status', 'actions'];
 
   // Dashboard metrics
   patientsScheduledToday = 0;
@@ -183,7 +185,9 @@ export class MADashboardComponent implements OnInit, OnDestroy {
         taskType: this.mapTaskType(task.type),
         status: this.mapTaskStatus(task.status),
         priority: task.priority,
-        room: appointment ? this.assignRoomFromTime(appointment.start) : undefined
+        room: appointment ? this.assignRoomFromTime(appointment.start) : undefined,
+        ownerName: task.ownerName,
+        practitionerName: appointment?.practitionerName,
       };
     });
 
@@ -199,7 +203,8 @@ export class MADashboardComponent implements OnInit, OnDestroy {
       taskType: 'check-in',
       status: this.mapAppointmentStatus(appointment.status),
       priority: index === 0 ? 'high' : 'normal',
-      room: this.assignRoomFromTime(appointment.start)
+      room: this.assignRoomFromTime(appointment.start),
+      practitionerName: appointment.practitionerName,
     }));
   }
 

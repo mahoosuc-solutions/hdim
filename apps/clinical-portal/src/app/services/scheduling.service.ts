@@ -73,6 +73,9 @@ export interface ScheduleAppointment {
   end: Date;
   type: string;
   status: string;
+  practitionerName?: string;
+  practitionerId?: string;
+  locationName?: string;
 }
 
 export interface ScheduleTask {
@@ -84,6 +87,8 @@ export interface ScheduleTask {
   status: string;
   priority: 'high' | 'normal' | 'low';
   scheduledStart?: Date;
+  ownerName?: string;
+  ownerId?: string;
 }
 
 @Injectable({
@@ -185,6 +190,7 @@ export class SchedulingService {
           const patient = patientId ? patientMap.get(patientId) : undefined;
           const start = encounter.period?.start ? new Date(encounter.period.start) : new Date();
           const end = encounter.period?.end ? new Date(encounter.period.end) : new Date(start.getTime() + 30 * 60000);
+          const practitioner = encounter.participant?.[0];
           return {
             id: encounter.id || `enc-${start.getTime()}`,
             patientId: patientId || 'unknown',
@@ -194,6 +200,8 @@ export class SchedulingService {
             end,
             type: this.getEncounterType(encounter),
             status: encounter.status || 'planned',
+            practitionerName: (practitioner as any)?.individual?.display || undefined,
+            practitionerId: this.getReferenceId((practitioner as any)?.individual?.reference) || undefined,
           };
         });
       })
@@ -222,6 +230,12 @@ export class SchedulingService {
           const patient = patientId ? patientMap.get(patientId) : undefined;
           const start = appointment.start ? new Date(appointment.start) : new Date();
           const end = appointment.end ? new Date(appointment.end) : new Date(start.getTime() + 30 * 60000);
+          const practitionerParticipant = appointment.participant?.find((p) =>
+            p.actor?.reference?.startsWith('PractitionerRole/')
+          );
+          const locationParticipant = appointment.participant?.find((p) =>
+            p.actor?.reference?.startsWith('Location/')
+          );
           return {
             id: appointment.id || `appt-${start.getTime()}`,
             patientId: patientId || 'unknown',
@@ -231,6 +245,9 @@ export class SchedulingService {
             end,
             type: this.getAppointmentType(appointment),
             status: appointment.status || 'booked',
+            practitionerName: practitionerParticipant?.actor?.display || undefined,
+            practitionerId: this.getReferenceId(practitionerParticipant?.actor?.reference) || undefined,
+            locationName: locationParticipant?.actor?.display || undefined,
           };
         });
       })
@@ -258,6 +275,8 @@ export class SchedulingService {
             status: task.status || 'requested',
             priority: this.mapTaskPriority(task.priority),
             scheduledStart: scheduledStart ? new Date(scheduledStart) : undefined,
+            ownerName: task.owner?.display || undefined,
+            ownerId: this.getReferenceId(task.owner?.reference) || undefined,
           };
         });
       })

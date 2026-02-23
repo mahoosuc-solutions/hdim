@@ -44,4 +44,9 @@
     <!-- Align users table with User entity (remove VARCHAR columns, use junction tables) -->
     <include file="db/changelog/0032-align-users-table-with-entity.xml"/>
 
+    <!-- FHIR Practitioner/PractitionerRole/Organization resource tables -->
+    <include file="db/changelog/0033-create-practitioners-table.xml"/>
+    <include file="db/changelog/0034-create-practitioner-roles-table.xml"/>
+    <include file="db/changelog/0035-create-organizations-table.xml"/>
+
 </databaseChangeLog>

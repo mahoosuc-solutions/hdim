@@ -86,6 +86,15 @@ public class TestCacheConfiguration implements CachingConfigurer {
             // Appointment caches
             new ConcurrentMapCache("appointments"),
             new ConcurrentMapCache("appointmentsByPatient"),
+            // Practitioner caches — PractitionerService uses CACHE_NAME = "fhir-practitioners"
+            new ConcurrentMapCache("fhir-practitioners"),
+            new ConcurrentMapCache("practitioners"),
+            // PractitionerRole caches — PractitionerRoleService uses CACHE_NAME = "fhir-practitioner-roles"
+            new ConcurrentMapCache("fhir-practitioner-roles"),
+            new ConcurrentMapCache("practitionerroles"),
+            // Organization caches — OrganizationService uses CACHE_NAME = "fhir-organizations"
+            new ConcurrentMapCache("fhir-organizations"),
+            new ConcurrentMapCache("organizations"),
             // General FHIR resources cache
             new ConcurrentMapCache("fhirResources")
         ));

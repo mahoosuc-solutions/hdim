@@ -8,7 +8,7 @@ Purpose: ensure all materials are ready before sending invite and pre-read.
 - [ ] `02-gate-status-snapshot.md`
 - [ ] `05-risk-register.md`
 - [ ] `07-gate-evidence-g1-architecture-security.md`
-- [ ] Deployment model matrix from customer package
+- [x] `32-deployment-model-decision-onepager.md` — decision-ready workshop one-pager (A-003 complete)
 
 ## Validation Checks
 

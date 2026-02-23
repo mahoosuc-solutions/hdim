@@ -9,5 +9,6 @@
     <include file="db/changelog/0002-create-medication-reconciliations-table.xml"/>
     <include file="db/changelog/0003-create-patient-education-logs-table.xml"/>
     <include file="db/changelog/0004-create-referral-coordinations-table.xml"/>
+    <include file="db/changelog/0005-create-patient-engagement-tables.xml"/>
 
 </databaseChangeLog>

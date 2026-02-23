@@ -2,7 +2,7 @@
 
 **Status:** ✅ **LIVE IN PRODUCTION**
 **Deployment Date:** January 24, 2026
-**Last Updated:** January 24, 2026 - Real Clinical Portal Screenshots
+**Last Updated:** February 23, 2026 - Node engine constraint, vercel.json cleanup, re-deploy via CLI
 
 ---
 

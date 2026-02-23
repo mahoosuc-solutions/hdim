@@ -12,6 +12,7 @@ import com.healthdata.quality.service.ClinicalAlertService;
 import com.healthdata.quality.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +32,7 @@ import java.util.UUID;
  * notifications to appropriate channels.
  */
 @Component
+@ConditionalOnBean(AuditService.class)
 @RequiredArgsConstructor
 @Slf4j
 public class ClinicalAlertEventConsumer {

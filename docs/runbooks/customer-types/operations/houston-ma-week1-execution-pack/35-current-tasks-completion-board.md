@@ -12,6 +12,9 @@ Last Updated: 2026-02-23
 - [x] Metro ACO pre-staged execution pack added
 - [x] Account variable source file added (`00-account-variables.md`)
 - [x] Placeholder scan report generated (`34-placeholder-scan-report.md`)
+- [x] PatientEngagement full test coverage — PR #489 merged 2026-02-23 (28 unit tests, 10 integration tests; nurse-workflow-service)
+- [x] FHIR Encounter `participant` field added to `scheduling.service.ts` (FHIR R4 interface completeness)
+- [x] Landing page Node engine constraint + Vercel output config cleaned (`landing-page-v0/`)
 
 ## Pending Human Inputs (Required)
 

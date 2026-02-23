@@ -16,6 +16,16 @@ Audience: Prospective Medicare Advantage customer sponsor and clinical leadershi
 8. `08-stakeholder-messaging-map.md`
 9. `09-internal-talk-track-and-objections.md`
 
+## Public Share Pack
+
+Public-safe bundle for web sharing:
+
+1. `public-share-pack/00-publish-manifest.md`
+2. `public-share-pack/01-public-summary-page.md`
+3. `public-share-pack/02-public-pilot-brief.md`
+4. `public-share-pack/03-public-deployment-options.md`
+5. `public-share-pack/04-public-publish-checklist.md`
+
 ## Purpose
 
 This package converts the discovery conversation into a concrete Phase 1 pilot proposal for a 90-day care transitions program covering 200-500 discharges.

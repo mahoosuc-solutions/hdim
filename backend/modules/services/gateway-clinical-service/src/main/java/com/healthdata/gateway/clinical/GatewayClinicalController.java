@@ -49,6 +49,9 @@ public class GatewayClinicalController {
     @Value("${backend.services.notification.url}")
     private String notificationUrl;
 
+    @Value("${backend.services.nurse-workflow.url}")
+    private String nurseWorkflowUrl;
+
     @RequestMapping(value = "/api/care-gaps/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToCareGap(
         HttpServletRequest request,
@@ -175,5 +178,13 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, notificationUrl, "/notification");
+    }
+
+    @RequestMapping(value = "/nurse-workflow/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToNurseWorkflow(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, nurseWorkflowUrl, "/nurse-workflow");
     }
 }

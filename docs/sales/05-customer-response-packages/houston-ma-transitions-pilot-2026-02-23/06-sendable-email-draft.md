@@ -51,5 +51,5 @@ If this direction is approved, we propose:
 
 Best,
 
-Aaron [Last Name]
+Aaron Bentley
 Founder, HDIM

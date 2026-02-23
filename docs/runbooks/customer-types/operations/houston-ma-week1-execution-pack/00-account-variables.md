@@ -12,7 +12,7 @@ Purpose: fill these once, then apply across all Week 1 artifacts.
 - CUSTOMER_PROCUREMENT_LEAD:
 
 ## HDIM Team
-- HDIM_SALES_LEAD:
+- HDIM_SALES_LEAD: Aaron Bentley
 - HDIM_SOLUTION_ARCHITECT:
 - HDIM_ENGINEERING_LEAD:
 - HDIM_CUSTOMER_SUCCESS_LEAD:

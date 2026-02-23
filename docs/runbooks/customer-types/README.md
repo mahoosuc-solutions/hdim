@@ -4,11 +4,16 @@ Purpose: execution-ready runbooks for customer onboarding and 90-day pilot deliv
 
 ## Scope
 
-Priority v1 customer types:
+Customer segments covered:
 
-1. Medicare Advantage plan
-2. Small/Midsize ACO
-3. IPA network
+1. Solo practice
+2. Small practice
+3. FQHC
+4. Rural hospital
+5. Small ACO
+6. Midsize ACO
+7. Large health system
+8. IPA network
 
 ## Runbook Index
 
@@ -16,13 +21,19 @@ Priority v1 customer types:
 2. `small-midsize-aco-runbook.md`
 3. `ipa-network-runbook.md`
 4. `RUNBOOK_LAUNCH_CHECKLIST_7_DAYS.md`
-5. `operations/houston-ma-week1-execution-pack/README.md`
-6. `operations/houston-ma-week1-execution-pack/09-workshop-agenda.md`
-7. `operations/houston-ma-week1-execution-pack/10-workshop-pre-read-email.md`
-8. `operations/README.md`
-9. `operations/metro-aco-week1-execution-pack/README.md`
-10. `operations/PARALLEL_ACCOUNT_CONTROL_BOARD.md`
-11. `operations/FRIDAY_LEADERSHIP_REVIEW_TEMPLATE.md`
+5. `operations/README.md`
+6. `operations/houston-ma-week1-execution-pack/README.md`
+7. `operations/metro-aco-week1-execution-pack/README.md`
+8. `operations/solo-practice-week1-execution-pack/README.md`
+9. `operations/small-practice-week1-execution-pack/README.md`
+10. `operations/fqhc-week1-execution-pack/README.md`
+11. `operations/rural-hospital-week1-execution-pack/README.md`
+12. `operations/small-aco-week1-execution-pack/README.md`
+13. `operations/midsize-aco-week1-execution-pack/README.md`
+14. `operations/large-health-system-week1-execution-pack/README.md`
+15. `operations/ipa-network-week1-execution-pack/README.md`
+16. `operations/PARALLEL_ACCOUNT_CONTROL_BOARD.md`
+17. `operations/FRIDAY_LEADERSHIP_REVIEW_TEMPLATE.md`
 
 ## Required Runbook Sections
 
@@ -51,11 +62,10 @@ Priority v1 customer types:
 3. `operations/HANDOFF_MATRIX_TEMPLATE.md`
 4. `operations/ACTION_LOG_TEMPLATE.md`
 5. `operations/RUNBOOK_READINESS_MEMO_TEMPLATE.md`
-6. `operations/houston-ma-week1-execution-pack/` (pre-filled draft for immediate execution)
-7. `operations/30-account-pack-bootstrap-template.md`
-8. `operations/QUICK_CLONE_COMMANDS.md`
-9. `operations/PARALLEL_ACCOUNT_CONTROL_BOARD.md`
-10. `operations/FRIDAY_LEADERSHIP_REVIEW_TEMPLATE.md`
+6. `operations/30-account-pack-bootstrap-template.md`
+7. `operations/QUICK_CLONE_COMMANDS.md`
+8. `operations/PARALLEL_ACCOUNT_CONTROL_BOARD.md`
+9. `operations/FRIDAY_LEADERSHIP_REVIEW_TEMPLATE.md`
 
 ## Related References
 

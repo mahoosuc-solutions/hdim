@@ -1,7 +1,6 @@
 {
   "name": "hdim-landing-page",
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
   "framework": "nextjs",
   "regions": ["iad1"],
   "headers": [

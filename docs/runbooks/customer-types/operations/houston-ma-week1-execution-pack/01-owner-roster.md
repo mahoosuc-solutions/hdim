@@ -10,7 +10,7 @@
 |---|---|---|---|---|
 | Executive Sponsor | TBD (Customer) | Executive Decision Owner | TBD | TBD |
 | Clinical Sponsor | TBD (Customer) | Clinical Workflow Owner | TBD | TBD |
-| Sales Lead | Aaron [Last Name] | Commercial Lead | TBD | TBD |
+| Sales Lead | Aaron Bentley | Commercial Lead | TBD | TBD |
 | Solution Architect | TBD | Architecture + Security Lead | TBD | TBD |
 | Engineering Lead | TBD | Integration + Delivery Lead | TBD | TBD |
 | Customer Success Lead | TBD | Pilot Ops + Governance Lead | TBD | TBD |

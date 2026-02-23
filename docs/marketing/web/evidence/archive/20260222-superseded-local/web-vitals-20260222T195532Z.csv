@@ -1,0 +1,11 @@
+timestamp,variant,url,sample,dom_content_loaded_ms,lcp_proxy_ms,interaction_ready_ms
+2026-02-22T19:55:32Z,A,http://localhost:4174/race-track-fhir-pipeline?ab=a,1,,,
+2026-02-22T19:55:32Z,A,http://localhost:4174/race-track-fhir-pipeline?ab=a,2,,,
+2026-02-22T19:55:32Z,A,http://localhost:4174/race-track-fhir-pipeline?ab=a,3,,,
+2026-02-22T19:55:32Z,A,http://localhost:4174/race-track-fhir-pipeline?ab=a,4,,,
+2026-02-22T19:55:32Z,A,http://localhost:4174/race-track-fhir-pipeline?ab=a,5,,,
+2026-02-22T19:55:32Z,B,http://localhost:4174/race-track-fhir-pipeline?ab=b,1,,,
+2026-02-22T19:55:32Z,B,http://localhost:4174/race-track-fhir-pipeline?ab=b,2,,,
+2026-02-22T19:55:32Z,B,http://localhost:4174/race-track-fhir-pipeline?ab=b,3,,,
+2026-02-22T19:55:32Z,B,http://localhost:4174/race-track-fhir-pipeline?ab=b,4,,,
+2026-02-22T19:55:32Z,B,http://localhost:4174/race-track-fhir-pipeline?ab=b,5,,,

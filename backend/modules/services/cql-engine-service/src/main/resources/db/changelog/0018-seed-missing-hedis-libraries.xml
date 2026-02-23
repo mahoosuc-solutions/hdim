@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0018-seed-missing-hedis-libraries" author="healthdata-system">
+        <comment>Seed missing HEDIS libraries needed by broad/default evaluation runs (demo tenant)</comment>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-SPC"/>
+            <column name="library_name" value="HEDIS-SPC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Java implementation bridge for SPC"/>
+            <column name="description" value="Statin Therapy for Patients With Cardiovascular Disease"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="measure_class" value="com.healthdata.cql.measure.SPDMeasure"/>
+            <column name="category" value="CHRONIC_DISEASE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-AAB"/>
+            <column name="library_name" value="HEDIS-AAB"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Template-backed library for AAB"/>
+            <column name="description" value="Avoidance of Antibiotic Treatment for Acute Bronchitis/Bronchiolitis"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="category" value="APPROPRIATE_USE"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-COU"/>
+            <column name="library_name" value="HEDIS-COU"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Template-backed library for COU"/>
+            <column name="description" value="Risk of Continued Opioid Use"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <insert tableName="cql_libraries">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="tenant_id" value="demo-tenant"/>
+            <column name="name" value="HEDIS-FMC"/>
+            <column name="library_name" value="HEDIS-FMC"/>
+            <column name="version" value="2024"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="cql_content" value="-- Template-backed library for FMC"/>
+            <column name="description" value="Follow-Up after Mental Health Encounter"/>
+            <column name="publisher" value="NCQA"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="category" value="BEHAVIORAL_HEALTH"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_by" value="system"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="cql_libraries">
+                <where>tenant_id = 'demo-tenant' AND library_name IN ('HEDIS-SPC','HEDIS-AAB','HEDIS-COU','HEDIS-FMC')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

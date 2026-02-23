@@ -86,17 +86,14 @@ docker compose restart <service-name>
 
 Use customer-type runbooks for pre-sale through pilot execution:
 
-1. `customer-types/ma-plan-pilot-runbook.md`
-2. `customer-types/small-midsize-aco-runbook.md`
-3. `customer-types/ipa-network-runbook.md`
-4. `customer-types/operations/houston-ma-week1-execution-pack/README.md`
-5. `customer-types/operations/README.md`
-6. `customer-types/operations/metro-aco-week1-execution-pack/README.md`
-7. `customer-types/operations/PARALLEL_ACCOUNT_CONTROL_BOARD.md`
-8. `customer-types/operations/FRIDAY_LEADERSHIP_REVIEW_TEMPLATE.md`
+1. `customer-types/README.md`
+2. `customer-types/operations/README.md`
+3. `customer-types/operations/PARALLEL_ACCOUNT_CONTROL_BOARD.md`
+4. `customer-types/operations/FRIDAY_LEADERSHIP_REVIEW_TEMPLATE.md`
 
 Supporting assets:
 
 1. `templates/` for gate evidence, risk registers, weekly steering, and closeout.
 2. `sop/` for discovery, integration readiness, security readiness, kickoff, and weekly governance.
-3. `customer-types/operations/` for owner roster, gate snapshots, handoff matrix, action log, and readiness memo.
+3. `customer-types/operations/` for owner roster, gate snapshots, handoff matrix, action log, readiness memo, and account packs.
+

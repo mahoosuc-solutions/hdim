@@ -117,6 +117,8 @@ export interface ProviderAppointment {
   date: string;
   type: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  practitionerName?: string;
+  locationName?: string;
 }
 
 export interface BlockedTimeSlot {
@@ -1637,7 +1639,9 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       endTime: this.formatTime(appointment.end),
       date: dateStr,
       type: appointment.type,
-      status: this.mapAppointmentStatus(appointment.status)
+      status: this.mapAppointmentStatus(appointment.status),
+      practitionerName: appointment.practitionerName,
+      locationName: appointment.locationName,
     };
   }
 

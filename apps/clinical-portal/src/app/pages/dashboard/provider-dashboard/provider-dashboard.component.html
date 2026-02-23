@@ -145,6 +145,9 @@
                   <div class="patient-info">
                     <strong>{{ appointment.patientName }}</strong>
                     <span class="appointment-type">{{ appointment.type }}</span>
+                    @if (appointment.practitionerName) {
+                      <span class="practitioner-name">{{ appointment.practitionerName }}</span>
+                    }
                   </div>
                   @if (appointment.hasGaps) {
                     <div class="appointment-gaps">

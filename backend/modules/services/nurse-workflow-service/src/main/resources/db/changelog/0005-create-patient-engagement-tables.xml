@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="0005-create-patient-engagement-threads-table" author="hdim-nurse-workflow-team">
+        <createTable tableName="patient_engagement_threads">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_patient_engagement_threads"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="VARCHAR(300)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_clinician_id" type="VARCHAR(120)"/>
+            <column name="last_message_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_eng_thread_tenant_patient" tableName="patient_engagement_threads">
+            <column name="tenant_id"/>
+            <column name="patient_id"/>
+        </createIndex>
+        <createIndex indexName="idx_eng_thread_tenant_status" tableName="patient_engagement_threads">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_eng_thread_last_message" tableName="patient_engagement_threads">
+            <column name="last_message_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="0005-create-patient-engagement-messages-table" author="hdim-nurse-workflow-team">
+        <createTable tableName="patient_engagement_messages">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_patient_engagement_messages"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="thread_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sender_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sender_id" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message_text" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contains_phi" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="escalation_flag" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_eng_msg_tenant_thread" tableName="patient_engagement_messages">
+            <column name="tenant_id"/>
+            <column name="thread_id"/>
+        </createIndex>
+        <createIndex indexName="idx_eng_msg_created" tableName="patient_engagement_messages">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="0005-create-patient-engagement-escalations-table" author="hdim-nurse-workflow-team">
+        <createTable tableName="patient_engagement_escalations">
+            <column name="id" type="UUID" defaultValueComputed="gen_random_uuid()">
+                <constraints primaryKey="true" primaryKeyName="pk_patient_engagement_escalations"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="thread_id" type="UUID">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reason" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_id" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_email" type="VARCHAR(254)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="correlation_id" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resolved_at" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+
+        <createIndex indexName="idx_eng_esc_tenant_thread" tableName="patient_engagement_escalations">
+            <column name="tenant_id"/>
+            <column name="thread_id"/>
+        </createIndex>
+        <createIndex indexName="idx_eng_esc_status" tableName="patient_engagement_escalations">
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_eng_esc_created" tableName="patient_engagement_escalations">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

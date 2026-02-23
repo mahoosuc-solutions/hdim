@@ -49,6 +49,7 @@ public class AiAssistantController {
     @PostMapping("/chat")
     public ResponseEntity<ChatResponse> chat(
         @Valid @RequestBody ChatRequest request,
+        @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
         Authentication authentication
     ) {
         log.info("AI chat request: type={}, user={}",
@@ -69,6 +70,8 @@ public class AiAssistantController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "Query type not allowed: " + request.getQueryType());
         }
+
+        request.setTenantId(tenantId);
 
         // Send to Claude
         long startTime = System.currentTimeMillis();
@@ -95,6 +98,7 @@ public class AiAssistantController {
     public ResponseEntity<ChatResponse> generatePatientSummary(
         @PathVariable String patientId,
         @RequestBody String patientData,
+        @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
         Authentication authentication
     ) {
         log.info("Patient summary request: patientId={}, user={}",
@@ -109,7 +113,7 @@ public class AiAssistantController {
                 .build());
         }
 
-        ChatResponse response = claudeService.get().generatePatientSummary(patientId, patientData);
+        ChatResponse response = claudeService.get().generatePatientSummary(patientId, patientData, tenantId);
         return ResponseEntity.ok(response);
     }
 
@@ -123,6 +127,7 @@ public class AiAssistantController {
     @PostMapping("/care-gaps/analyze")
     public ResponseEntity<ChatResponse> analyzeCareGaps(
         @RequestBody String gapData,
+        @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
         Authentication authentication
     ) {
         log.info("Care gap analysis request: user={}",
@@ -136,7 +141,7 @@ public class AiAssistantController {
                 .build());
         }
 
-        ChatResponse response = claudeService.get().analyzeCareGaps(gapData);
+        ChatResponse response = claudeService.get().analyzeCareGaps(gapData, tenantId);
         return ResponseEntity.ok(response);
     }
 
@@ -152,6 +157,7 @@ public class AiAssistantController {
     public ResponseEntity<ChatResponse> answerQuery(
         @RequestParam String query,
         @RequestParam(required = false) String context,
+        @RequestHeader(value = "X-Tenant-ID", required = true) String tenantId,
         Authentication authentication
     ) {
         log.info("Clinical query: query='{}', user={}",
@@ -168,7 +174,8 @@ public class AiAssistantController {
 
         ChatResponse response = claudeService.get().answerClinicalQuery(
             query,
-            context != null ? context : ""
+            context != null ? context : "",
+            tenantId
         );
         return ResponseEntity.ok(response);
     }

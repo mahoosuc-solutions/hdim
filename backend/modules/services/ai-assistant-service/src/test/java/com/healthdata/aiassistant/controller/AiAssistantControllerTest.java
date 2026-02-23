@@ -16,8 +16,6 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Optional;
-
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -142,6 +140,7 @@ class AiAssistantControllerTest {
         // When/Then: Should return error response (not exception)
         mockMvc.perform(post("/api/v1/ai/chat")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -166,6 +165,7 @@ class AiAssistantControllerTest {
         // When/Then: Should return 400 Bad Request
         mockMvc.perform(post("/api/v1/ai/chat")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
@@ -200,6 +200,7 @@ class AiAssistantControllerTest {
         // When/Then: Should return successful response
         mockMvc.perform(post("/api/v1/ai/chat")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -230,6 +231,7 @@ class AiAssistantControllerTest {
         // When/Then: Should return 400 Bad Request due to validation failure
         mockMvc.perform(post("/api/v1/ai/chat")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
@@ -245,6 +247,7 @@ class AiAssistantControllerTest {
         // When/Then: Should return error response
         mockMvc.perform(post("/api/v1/ai/patient-summary/patient-123")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"patientId\":\"patient-123\"}"))
             .andExpect(status().isOk())
@@ -264,12 +267,13 @@ class AiAssistantControllerTest {
             .error(false)
             .build();
 
-        when(claudeService.generatePatientSummary(eq("patient-123"), anyString()))
+        when(claudeService.generatePatientSummary(eq("patient-123"), anyString(), eq("test-tenant")))
             .thenReturn(mockResponse);
 
         // When/Then: Should return summary
         mockMvc.perform(post("/api/v1/ai/patient-summary/patient-123")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"patientId\":\"patient-123\"}"))
             .andExpect(status().isOk())
@@ -277,7 +281,7 @@ class AiAssistantControllerTest {
             .andExpect(jsonPath("$.error").value(false));
 
         verify(claudeService, times(1))
-            .generatePatientSummary(eq("patient-123"), anyString());
+            .generatePatientSummary(eq("patient-123"), anyString(), eq("test-tenant"));
     }
 
     @Test
@@ -290,6 +294,7 @@ class AiAssistantControllerTest {
         // When/Then: Should return error response
         mockMvc.perform(post("/api/v1/ai/care-gaps/analyze")
                 .with(csrf())
+                .header("X-Tenant-ID", "test-tenant")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"gaps\":[]}"))
             .andExpect(status().isOk())
@@ -306,7 +311,8 @@ class AiAssistantControllerTest {
 
         // When/Then: Should return error response
         mockMvc.perform(get("/api/v1/ai/query")
-                .param("query", "What is diabetes?"))
+                .param("query", "What is diabetes?")
+                .header("X-Tenant-ID", "test-tenant"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.error").value(true))
             .andExpect(jsonPath("$.errorMessage").value("AI service disabled"));
@@ -324,18 +330,19 @@ class AiAssistantControllerTest {
             .error(false)
             .build();
 
-        when(claudeService.answerClinicalQuery(eq("What is diabetes?"), anyString()))
+        when(claudeService.answerClinicalQuery(eq("What is diabetes?"), anyString(), eq("test-tenant")))
             .thenReturn(mockResponse);
 
         // When/Then: Should return answer
         mockMvc.perform(get("/api/v1/ai/query")
-                .param("query", "What is diabetes?"))
+                .param("query", "What is diabetes?")
+                .header("X-Tenant-ID", "test-tenant"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.response").value(containsString("Diabetes")))
             .andExpect(jsonPath("$.error").value(false));
 
         verify(claudeService, times(1))
-            .answerClinicalQuery(eq("What is diabetes?"), anyString());
+            .answerClinicalQuery(eq("What is diabetes?"), anyString(), eq("test-tenant"));
     }
 
     @Test
@@ -371,6 +378,7 @@ class AiAssistantControllerTest {
 
             mockMvc.perform(post("/api/v1/ai/chat")
                     .with(csrf())
+                    .header("X-Tenant-ID", "test-tenant")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

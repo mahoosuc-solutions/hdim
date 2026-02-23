@@ -148,6 +148,9 @@ backend:
     notification:
       url: ${BACKEND_SERVICES_NOTIFICATION_URL:http://localhost:8107}
       timeout: 30000
+    nurse-workflow:
+      url: ${BACKEND_SERVICES_NURSE_WORKFLOW_URL:http://localhost:8093}
+      timeout: 30000
     demo-seeding:
       url: ${BACKEND_SERVICES_DEMO_SEEDING_URL:http://localhost:8108}
       timeout: 60000  # Longer timeout for data seeding operations

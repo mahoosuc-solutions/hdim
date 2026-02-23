@@ -211,6 +211,14 @@
       "testPath": "/api/v1/notifications"
     },
     {
+      "name": "nurse-workflow",
+      "port": 8093,
+      "critical": false,
+      "timeout": 30000,
+      "healthPath": "/nurse-workflow/actuator/health",
+      "testPath": "/nurse-workflow/api/v1/patient-engagement/threads"
+    },
+    {
       "name": "demo-seeding",
       "port": 8108,
       "critical": false,

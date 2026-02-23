@@ -50,6 +50,9 @@ interface FhirEncounter {
   type?: FhirCodeableConcept[];
   class?: FhirCoding;
   subject?: FhirReference;
+  participant?: Array<{
+    individual?: FhirReference;
+  }>;
 }
 
 interface FhirTask {

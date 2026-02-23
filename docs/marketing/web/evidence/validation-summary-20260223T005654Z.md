@@ -27,11 +27,9 @@
   - `portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.md`
   - `portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.csv`
 
-## Workflow Queue State
+## Workflow Queue State (summary)
 
-- https://github.com/webemo-aaron/hdim/actions/runs/22286089694 (queued)
-- https://github.com/webemo-aaron/hdim/actions/runs/22284191276 (queued)
-- https://github.com/webemo-aaron/hdim/actions/runs/22283112071 (queued)
+- 6 runs queued, none started — see full list in Pull Request section below
 - Queue blocker: https://github.com/webemo-aaron/hdim/issues/475
 
 ## Current Demo Stack Validation
@@ -42,6 +40,28 @@
   - Result: PASS (17 passed, 0 failed)
 - `VALIDATION_PROFILE=demo bash ./scripts/validate-all-services-data.sh`
   - Result: PASS with warnings (0 failures, some optional/empty endpoints)
+
+## Pull Request
+
+- PR #477: https://github.com/webemo-aaron/hdim/pull/477
+  - Commit: 7f238a7ac — Finalize post-merge validation evidence and broad measure support
+  - Links issue #476; consolidates fixes for #466/#467/#468/#474
+
+## Production CI Run (pending queue clearance)
+
+<!-- UPDATE THIS SECTION once portal-deployment-validation.yml queue clears -->
+- Fresh run URL: _pending — queue blocked by #475_
+- Final status: _pending_
+- To trigger: `gh workflow run portal-deployment-validation.yml --repo webemo-aaron/hdim --ref master`
+
+## Workflow Queue State (full)
+
+- https://github.com/webemo-aaron/hdim/actions/runs/22286089694 (queued, 2026-02-22T21:51:14Z)
+- https://github.com/webemo-aaron/hdim/actions/runs/22284191276 (queued, 2026-02-22T19:56:15Z)
+- https://github.com/webemo-aaron/hdim/actions/runs/22283112071 (queued, 2026-02-22T18:47:38Z)
+- https://github.com/webemo-aaron/hdim/actions/runs/22283103778 (queued, 2026-02-22T18:47:09Z)
+- https://github.com/webemo-aaron/hdim/actions/runs/22281392909 (queued, 2026-02-22T17:00:10Z)
+- https://github.com/webemo-aaron/hdim/actions/runs/22280100044 (queued, 2026-02-22T15:38:12Z)
 
 ## Backend Tracking
 

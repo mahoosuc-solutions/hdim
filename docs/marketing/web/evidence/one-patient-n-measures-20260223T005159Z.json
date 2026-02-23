@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-02-23T00:51:59Z",
+  "baseUrl": "http://localhost:18080/quality-measure",
+  "patientId": "96d946b2-98f8-4e1c-bf96-5592e3a2c94b",
+  "requestedMeasures": 10,
+  "successCount": 10,
+  "failCount": 0,
+  "patientEvalCount": 0,
+  "apiMode": "b",
+  "totalRuntimeMs": 1540,
+  "claimValidated": true,
+  "results": [
+    {
+      "measureId": "HEDIS-AAP",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "5d283d20-c5cb-44bb-9f8e-3799a9108e62",
+      "runtimeMs": 92,
+      "response": "{\"id\":\"5d283d20-c5cb-44bb-9f8e-3799a9108e62\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-AAP\",\"measureName\":\"HEDIS-AAP\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-AAP\",\"createdAt\":\"2026-02-23T00:51:59.816923573\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-ABA",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "73ecd233-60f3-481f-95ec-89cb0e54923c",
+      "runtimeMs": 106,
+      "response": "{\"id\":\"73ecd233-60f3-481f-95ec-89cb0e54923c\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-ABA\",\"measureName\":\"HEDIS-ABA\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-ABA\",\"createdAt\":\"2026-02-23T00:51:59.959939434\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-BCS",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "2d5103eb-2bdc-4af1-85d9-8805851f47f2",
+      "runtimeMs": 131,
+      "response": "{\"id\":\"2d5103eb-2bdc-4af1-85d9-8805851f47f2\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-BCS\",\"measureName\":\"HEDIS-BCS\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-BCS\",\"createdAt\":\"2026-02-23T00:52:00.119623412\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-CCS",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "074db662-0ba4-4f82-8714-7599335001f4",
+      "runtimeMs": 94,
+      "response": "{\"id\":\"074db662-0ba4-4f82-8714-7599335001f4\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-CCS\",\"measureName\":\"HEDIS-CCS\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-CCS\",\"createdAt\":\"2026-02-23T00:52:00.269093529\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-COL",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "21cf8257-3d86-4466-83ab-c7308923e55e",
+      "runtimeMs": 82,
+      "response": "{\"id\":\"21cf8257-3d86-4466-83ab-c7308923e55e\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-COL\",\"measureName\":\"HEDIS-COL\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-COL\",\"createdAt\":\"2026-02-23T00:52:00.395288662\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-W15",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "cd0ce943-14f4-4048-8902-c1fd5d707d27",
+      "runtimeMs": 86,
+      "response": "{\"id\":\"cd0ce943-14f4-4048-8902-c1fd5d707d27\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-W15\",\"measureName\":\"HEDIS-W15\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-W15\",\"createdAt\":\"2026-02-23T00:52:00.518258\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-CDC",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "aa80d920-e144-4c60-a141-596bf158f54f",
+      "runtimeMs": 89,
+      "response": "{\"id\":\"aa80d920-e144-4c60-a141-596bf158f54f\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-CDC\",\"measureName\":\"HEDIS-CDC\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-CDC\",\"createdAt\":\"2026-02-23T00:52:00.640755301\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-HBD",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "9a795404-76c9-42e7-8fc8-93310996c0bb",
+      "runtimeMs": 142,
+      "response": "{\"id\":\"9a795404-76c9-42e7-8fc8-93310996c0bb\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-HBD\",\"measureName\":\"HEDIS-HBD\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-HBD\",\"createdAt\":\"2026-02-23T00:52:00.7678238\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-HDO",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "d71cf41d-ac97-4a24-8aee-9b2b95d4093f",
+      "runtimeMs": 87,
+      "response": "{\"id\":\"d71cf41d-ac97-4a24-8aee-9b2b95d4093f\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-HDO\",\"measureName\":\"HEDIS-HDO\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-HDO\",\"createdAt\":\"2026-02-23T00:52:00.951235123\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    },
+    {
+      "measureId": "HEDIS-NCS",
+      "status": "pass",
+      "httpCode": "201",
+      "evaluationId": "5a5c5a60-98e2-4aa4-ba63-85b349ccf618",
+      "runtimeMs": 88,
+      "response": "{\"id\":\"5a5c5a60-98e2-4aa4-ba63-85b349ccf618\",\"tenantId\":\"demo-tenant\",\"patientId\":\"96d946b2-98f8-4e1c-bf96-5592e3a2c94b\",\"measureId\":\"HEDIS-NCS\",\"measureName\":\"HEDIS-NCS\",\"measureCategory\":\"custom\",\"measureYear\":2026,\"numeratorCompliant\":false,\"denominatorEligible\":false,\"complianceRate\":0.0,\"calculationDate\":\"2026-02-23\",\"cqlLibrary\":\"HEDIS-NCS\",\"createdAt\":\"2026-02-23T00:52:01.077039162\",\"createdBy\":\"marketing-validation\",\"version\":0,\"denominatorElligible\":false}"
+    }
+  ]
+}

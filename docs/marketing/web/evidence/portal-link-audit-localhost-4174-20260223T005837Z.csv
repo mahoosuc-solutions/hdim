@@ -1,0 +1,67 @@
+kind,target,status,final_url,sources,note
+internal,/,200,http://localhost:4174/,/seed,
+internal,/ai-native-vs-non-ai-native-comparison.html,200,http://localhost:4174/ai-native-vs-non-ai-native-comparison.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/ai-solutioning-index.html,200,http://localhost:4174/ai-solutioning-index.html,/ai-native-vs-non-ai-native-comparison.html;/ai-solutioning-journey.html;/ai-solutioning-metrics.html;/ai-solutioning-whitepaper.html;/architecture-evolution-timeline.html;/blog-post-ai-solutioning.html;/executive-summary.html;/java-rebuild-deep-dive.html;/origin-story.html;/performance-benchmarking.html;/platform-architecture.html;/sales-narrative.html;/shared-nav.html;/sitemap.xml;/spec-driven-development-analysis.html;/traditional-vs-ai-solutioning-comparison.html,
+internal,/ai-solutioning-journey.html,200,http://localhost:4174/ai-solutioning-journey.html,/ai-solutioning-index.html;/executive-summary.html;/shared-nav.html;/sitemap.xml,
+internal,/ai-solutioning-metrics.html,200,http://localhost:4174/ai-solutioning-metrics.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/ai-solutioning-whitepaper.html,200,http://localhost:4174/ai-solutioning-whitepaper.html,/ai-solutioning-index.html;/sitemap.xml,
+internal,/architecture-evolution-timeline.html,200,http://localhost:4174/architecture-evolution-timeline.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/assets/race-track-fhir/comparison-3-views.svg,200,http://localhost:4174/assets/race-track-fhir/comparison-3-views.svg,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,
+internal,/assets/race-track-fhir/legend.svg,200,http://localhost:4174/assets/race-track-fhir/legend.svg,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,
+internal,/assets/race-track-fhir/view-mixed.svg,200,http://localhost:4174/assets/race-track-fhir/view-mixed.svg,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,
+internal,/assets/race-track-fhir/view-non-technical.svg,200,http://localhost:4174/assets/race-track-fhir/view-non-technical.svg,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,
+internal,/assets/race-track-fhir/view-technical.svg,200,http://localhost:4174/assets/race-track-fhir/view-technical.svg,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,
+internal,/blog-post-ai-solutioning.html,200,http://localhost:4174/blog-post-ai-solutioning.html,/ai-solutioning-index.html;/sitemap.xml,
+internal,/cms-vision.html,200,http://localhost:4174/cms-vision.html,/kill-tony-vision-deck.html;/platform-architecture.html;/shared-nav.html;/sitemap.xml;/speech-final.html;/validation-report.html,
+internal,/evidence/one-patient-n-measures-20260223T005159Z.json,200,http://localhost:4174/evidence/one-patient-n-measures-20260223T005159Z.json,/race-track-fhir-evidence.html,
+internal,/evidence/one-patient-n-measures-20260223T005159Z.md,200,http://localhost:4174/evidence/one-patient-n-measures-20260223T005159Z.md,/race-track-fhir-evidence.html,
+internal,/evidence/one-patient-n-measures-20260223T005554Z.json,200,http://localhost:4174/evidence/one-patient-n-measures-20260223T005554Z.json,/race-track-fhir-evidence.html,
+internal,/evidence/one-patient-n-measures-20260223T005554Z.md,200,http://localhost:4174/evidence/one-patient-n-measures-20260223T005554Z.md,/race-track-fhir-evidence.html,
+internal,/evidence/one-patient-n-measures-20260223T005557Z.json,200,http://localhost:4174/evidence/one-patient-n-measures-20260223T005557Z.json,/race-track-fhir-evidence.html,
+internal,/evidence/one-patient-n-measures-20260223T005557Z.md,200,http://localhost:4174/evidence/one-patient-n-measures-20260223T005557Z.md,/race-track-fhir-evidence.html,
+internal,/evidence/portal-link-audit-localhost-4174-20260223T005607Z.csv,200,http://localhost:4174/evidence/portal-link-audit-localhost-4174-20260223T005607Z.csv,/race-track-fhir-evidence.html,
+internal,/evidence/portal-link-audit-localhost-4174-20260223T005607Z.md,200,http://localhost:4174/evidence/portal-link-audit-localhost-4174-20260223T005607Z.md,/race-track-fhir-evidence.html,
+internal,/evidence/validation-summary-20260223T005654Z.md,200,http://localhost:4174/evidence/validation-summary-20260223T005654Z.md,/race-track-fhir-evidence.html,
+internal,/evidence/web-performance-20260223T005654Z.csv,200,http://localhost:4174/evidence/web-performance-20260223T005654Z.csv,/race-track-fhir-evidence.html,
+internal,/evidence/web-validation-20260223T005654Z.md,200,http://localhost:4174/evidence/web-validation-20260223T005654Z.md,/race-track-fhir-evidence.html,
+internal,/evidence/web-vitals-20260223T005654Z.csv,200,http://localhost:4174/evidence/web-vitals-20260223T005654Z.csv,/race-track-fhir-evidence.html,
+internal,/executive-summary.html,200,http://localhost:4174/executive-summary.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/java-rebuild-deep-dive.html,200,http://localhost:4174/java-rebuild-deep-dive.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/kill-tony-vision-deck.html,200,http://localhost:4174/kill-tony-vision-deck.html,/ai-solutioning-index.html;/cms-vision.html;/shared-nav.html;/sitemap.xml,
+internal,/origin-story.html,200,http://localhost:4174/origin-story.html,/ai-solutioning-index.html;/sitemap.xml,
+internal,/performance-benchmarking.html,200,http://localhost:4174/performance-benchmarking.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/platform-architecture.html,200,http://localhost:4174/platform-architecture.html,/shared-nav.html;/sitemap.xml,
+internal,/race-track-fhir-evidence.html,200,http://localhost:4174/race-track-fhir-evidence.html,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html;/sitemap.xml,
+internal,/race-track-fhir-pipeline,404,http://localhost:4174/race-track-fhir-pipeline,/ai-solutioning-index.html;/platform-architecture.html;/shared-nav.html;/sitemap.xml,File not found
+internal,/race-track-fhir-pipeline-print.html,200,http://localhost:4174/race-track-fhir-pipeline-print.html,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html;/sitemap.xml,
+internal,/race-track-fhir-pipeline?ab=a,404,http://localhost:4174/race-track-fhir-pipeline?ab=a,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,File not found
+internal,/race-track-fhir-pipeline?ab=b,404,http://localhost:4174/race-track-fhir-pipeline?ab=b,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,File not found
+internal,/sales-narrative.html,200,http://localhost:4174/sales-narrative.html,/ai-solutioning-index.html;/sitemap.xml,
+internal,/sitemap.xml,200,http://localhost:4174/sitemap.xml,/seed,
+internal,/spec-driven-development-analysis.html,200,http://localhost:4174/spec-driven-development-analysis.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/speech-final.html,200,http://localhost:4174/speech-final.html,/ai-solutioning-index.html;/cms-vision.html;/shared-nav.html;/sitemap.xml,
+internal,/traditional-vs-ai-solutioning-comparison.html,200,http://localhost:4174/traditional-vs-ai-solutioning-comparison.html,/ai-solutioning-index.html;/shared-nav.html;/sitemap.xml,
+internal,/validation-report.html,200,http://localhost:4174/validation-report.html,/ai-solutioning-index.html;/cms-vision.html;/shared-nav.html;/sitemap.xml,
+internal,/vision-deck.html,200,http://localhost:4174/vision-deck.html,/platform-architecture.html;/shared-nav.html;/sitemap.xml,
+external,https://fonts.googleapis.com,404,https://fonts.googleapis.com,/ai-native-vs-non-ai-native-comparison.html;/ai-solutioning-index.html;/ai-solutioning-journey.html;/ai-solutioning-metrics.html;/architecture-evolution-timeline.html;/executive-summary.html;/java-rebuild-deep-dive.html;/performance-benchmarking.html;/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html;/spec-driven-development-analysis.html;/traditional-vs-ai-solutioning-comparison.html,Not Found
+external,https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap,200,https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap,/ai-native-vs-non-ai-native-comparison.html;/ai-solutioning-index.html;/ai-solutioning-journey.html;/ai-solutioning-metrics.html;/architecture-evolution-timeline.html;/executive-summary.html;/java-rebuild-deep-dive.html;/performance-benchmarking.html;/spec-driven-development-analysis.html;/traditional-vs-ai-solutioning-comparison.html,
+external,https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap,200,https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap,/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html,
+external,https://fonts.gstatic.com,404,https://fonts.gstatic.com,/ai-native-vs-non-ai-native-comparison.html;/ai-solutioning-index.html;/ai-solutioning-journey.html;/ai-solutioning-metrics.html;/architecture-evolution-timeline.html;/executive-summary.html;/java-rebuild-deep-dive.html;/performance-benchmarking.html;/race-track-fhir-pipeline-b.html;/race-track-fhir-pipeline.html;/spec-driven-development-analysis.html;/traditional-vs-ai-solutioning-comparison.html,Not Found
+external,https://github.com/webemo-aaron/hdim/actions/runs/22283112071,404,https://github.com/webemo-aaron/hdim/actions/runs/22283112071,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/actions/runs/22284191276,404,https://github.com/webemo-aaron/hdim/actions/runs/22284191276,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/actions/runs/22286089694,404,https://github.com/webemo-aaron/hdim/actions/runs/22286089694,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/issues/466,404,https://github.com/webemo-aaron/hdim/issues/466,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/issues/467,404,https://github.com/webemo-aaron/hdim/issues/467,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/issues/468,404,https://github.com/webemo-aaron/hdim/issues/468,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/issues/474,404,https://github.com/webemo-aaron/hdim/issues/474,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/issues/475,404,https://github.com/webemo-aaron/hdim/issues/475,/race-track-fhir-evidence.html,Not Found
+external,https://github.com/webemo-aaron/hdim/issues/476,404,https://github.com/webemo-aaron/hdim/issues/476,/race-track-fhir-evidence.html,Not Found
+external,https://web-gamma-snowy-38.vercel.app/ai-solutioning-whitepaper.html,200,https://web-gamma-snowy-38.vercel.app/ai-solutioning-whitepaper.html,/ai-solutioning-whitepaper.html,
+external,https://web-gamma-snowy-38.vercel.app/blog-post-ai-solutioning.html,200,https://web-gamma-snowy-38.vercel.app/blog-post-ai-solutioning.html,/blog-post-ai-solutioning.html,
+external,https://web-gamma-snowy-38.vercel.app/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.csv,200,https://web-gamma-snowy-38.vercel.app/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.csv,/race-track-fhir-evidence.html,
+external,https://web-gamma-snowy-38.vercel.app/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.md,200,https://web-gamma-snowy-38.vercel.app/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.md,/race-track-fhir-evidence.html,
+external,https://web-gamma-snowy-38.vercel.app/kill-tony-vision-deck.html,200,https://web-gamma-snowy-38.vercel.app/kill-tony-vision-deck.html,/kill-tony-vision-deck.html,
+external,https://web-gamma-snowy-38.vercel.app/origin-story.html,200,https://web-gamma-snowy-38.vercel.app/origin-story.html,/origin-story.html,
+external,https://web-gamma-snowy-38.vercel.app/sales-narrative.html,200,https://web-gamma-snowy-38.vercel.app/sales-narrative.html,/sales-narrative.html,
+external,https://web-gamma-snowy-38.vercel.app/speech-final.html,200,https://web-gamma-snowy-38.vercel.app/speech-final.html,/speech-final.html,
+external,https://web-gamma-snowy-38.vercel.app/validation-report.html,200,https://web-gamma-snowy-38.vercel.app/validation-report.html,/validation-report.html,

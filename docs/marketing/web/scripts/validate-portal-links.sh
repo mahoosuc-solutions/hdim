@@ -179,7 +179,7 @@ base_host = urllib.parse.urlparse(base_url).hostname or ''
 def is_expected_internal_status(row):
     target = row['target']
     status = row['status']
-    # Local dev may serve the experiment file directly without rewrite support.
+    # Local dev/static servers may expose the experiment page without rewrite support.
     if base_host in ('localhost', '127.0.0.1'):
         if target in ('/race-track-fhir-pipeline', '/race-track-fhir-pipeline?ab=a', '/race-track-fhir-pipeline?ab=b') and status == 404:
             return True

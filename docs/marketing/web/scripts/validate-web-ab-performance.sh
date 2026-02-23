@@ -28,6 +28,12 @@ PROFILE_BASE="/tmp/rtfp-ab-validate-$STAMP"
 CSV_OUT="$OUT_DIR/web-performance-$STAMP.csv"
 VITALS_OUT="$OUT_DIR/web-vitals-$STAMP.csv"
 MD_OUT="$OUT_DIR/web-validation-$STAMP.md"
+ROUTE_PATH="/race-track-fhir-pipeline"
+route_probe_code="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL$ROUTE_PATH" || true)"
+if [[ "$route_probe_code" != "200" ]]; then
+  # Local static servers may expose the experiment page without rewrite support.
+  ROUTE_PATH="/race-track-fhir-experiment.html"
+fi
 
 ROUTE_PATH="/race-track-fhir-pipeline"
 route_probe_code="$(curl -sS -o /dev/null -w "%{http_code}" "$BASE_URL$ROUTE_PATH" || true)"

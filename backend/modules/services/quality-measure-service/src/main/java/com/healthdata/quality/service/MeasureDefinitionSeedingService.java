@@ -227,6 +227,66 @@ public class MeasureDefinitionSeedingService {
             .effectivePeriodStart(effectiveStart)
             .build());
 
+        // AAB - Avoidance of Antibiotic Treatment for Acute Bronchitis/Bronchiolitis
+        measures.add(QualityMeasureEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(tenantId)
+            .measureId("AAB")
+            .measureName("Avoidance of Antibiotic Treatment for Acute Bronchitis/Bronchiolitis")
+            .measureSet("HEDIS")
+            .version("2024")
+            .domain("Appropriate Use")
+            .category("Antimicrobial Stewardship")
+            .measureType("proportion")
+            .description("Assesses avoidance of inappropriate antibiotic prescribing for acute bronchitis/bronchiolitis.")
+            .rationale("Reducing unnecessary antibiotic use improves care quality and helps prevent antimicrobial resistance.")
+            .guidance("Patient is compliant when no inappropriate antibiotic was dispensed for an acute bronchitis/bronchiolitis episode.")
+            .scoringMethod("proportion")
+            .improvementNotation("higher-is-better")
+            .active(true)
+            .effectivePeriodStart(effectiveStart)
+            .build());
+
+        // COU - Risk of Continued Opioid Use
+        measures.add(QualityMeasureEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(tenantId)
+            .measureId("COU")
+            .measureName("Risk of Continued Opioid Use")
+            .measureSet("HEDIS")
+            .version("2024")
+            .domain("Behavioral Health")
+            .category("Medication Safety")
+            .measureType("proportion")
+            .description("Assesses risk of prolonged opioid use following a new opioid prescribing event.")
+            .rationale("Early detection of continued opioid exposure supports safer prescribing and follow-up care.")
+            .guidance("Patient is compliant when follow-up and medication use patterns remain within safe thresholds.")
+            .scoringMethod("proportion")
+            .improvementNotation("higher-is-better")
+            .active(true)
+            .effectivePeriodStart(effectiveStart)
+            .build());
+
+        // FMC - Follow-Up after Mental Health Encounter
+        measures.add(QualityMeasureEntity.builder()
+            .id(UUID.randomUUID())
+            .tenantId(tenantId)
+            .measureId("FMC")
+            .measureName("Follow-Up after Mental Health Encounter")
+            .measureSet("HEDIS")
+            .version("2024")
+            .domain("Behavioral Health")
+            .category("Care Continuity")
+            .measureType("proportion")
+            .description("Assesses timely post-encounter follow-up for members with qualifying mental health visits.")
+            .rationale("Timely follow-up improves continuity, engagement, and outcomes in behavioral health care.")
+            .guidance("Patient is compliant when qualifying follow-up is completed within the measurement window.")
+            .scoringMethod("proportion")
+            .improvementNotation("higher-is-better")
+            .active(true)
+            .effectivePeriodStart(effectiveStart)
+            .build());
+
         return measures;
     }
 }

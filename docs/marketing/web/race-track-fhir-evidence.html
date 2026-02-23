@@ -35,85 +35,101 @@
     <section class="hero">
       <h1>Race Track FHIR: Evidence and Validation</h1>
       <p>Branch-isolated evidence for web routing/telemetry/performance and backend one-patient-to-N-measures execution.</p>
-      <div class="meta">Latest publication timestamp (UTC): 2026-02-22T18:49:51Z</div>
+      <div class="meta">Latest publication timestamp (UTC): 2026-02-23T00:56:54Z</div>
     </section>
 
     <section class="card">
       <h2>Web Claim Visibility Validation</h2>
-      <p class="status-pass">PASS: latest local post-merge run validates routing/override/sticky behavior, claim visibility, telemetry wiring, and configured performance gates.</p>
+      <p class="status-pass">PASS: latest local run validates routing/override/sticky behavior, claim visibility, telemetry wiring, and configured performance gates.</p>
       <ul>
         <li>Entry route <code>/race-track-fhir-pipeline</code> A/B behavior validated with override and sticky checks.</li>
         <li>Fan-out language validated across A, B, and print collateral.</li>
         <li>Telemetry contract wiring validated: <code>rtfp_view</code>, <code>rtfp_tab_click</code>, <code>rtfp_export_click</code>.</li>
-        <li>Variant median total-load delta gate (<=15%) passed.</li>
+        <li>Latest local median total-load delta gate (<=15%) passed in the 2026-02-23T00:56:54Z run.</li>
       </ul>
       <table>
         <thead>
           <tr><th>Artifact</th><th>File</th></tr>
         </thead>
         <tbody>
-          <tr><td>Web validation report (local)</td><td><a href="evidence/web-validation-20260222T165902Z.md">web-validation-20260222T165902Z.md</a></td></tr>
-          <tr><td>Web performance CSV (local)</td><td><a href="evidence/web-performance-20260222T165902Z.csv">web-performance-20260222T165902Z.csv</a></td></tr>
-          <tr><td>Web vitals CSV (local)</td><td><a href="evidence/web-vitals-20260222T165902Z.csv">web-vitals-20260222T165902Z.csv</a></td></tr>
+          <tr><td>Web validation report (local)</td><td><a href="evidence/web-validation-20260223T005654Z.md">web-validation-20260223T005654Z.md</a></td></tr>
+          <tr><td>Web performance CSV (local)</td><td><a href="evidence/web-performance-20260223T005654Z.csv">web-performance-20260223T005654Z.csv</a></td></tr>
+          <tr><td>Web vitals CSV (local)</td><td><a href="evidence/web-vitals-20260223T005654Z.csv">web-vitals-20260223T005654Z.csv</a></td></tr>
         </tbody>
       </table>
     </section>
 
     <section class="card">
       <h2>Portal Link-Audit Validation</h2>
-      <p class="status-pass">PASS: both production and local post-merge link audits report no internal non-200 links and no discoverability gaps.</p>
+      <p class="status-pass">PASS: production and local post-merge link audits report no internal non-200 links and no discoverability gaps.</p>
       <ul>
         <li><a href="https://web-gamma-snowy-38.vercel.app/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.md">portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.md</a></li>
         <li><a href="https://web-gamma-snowy-38.vercel.app/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.csv">portal-link-audit-web-gamma-snowy-38-vercel-app-20260222T154550Z.csv</a></li>
-        <li><a href="evidence/portal-link-audit-localhost-4174-20260222T184951Z.md">portal-link-audit-localhost-4174-20260222T184951Z.md</a></li>
-        <li><a href="evidence/portal-link-audit-localhost-4174-20260222T184951Z.csv">portal-link-audit-localhost-4174-20260222T184951Z.csv</a></li>
+        <li><a href="evidence/portal-link-audit-localhost-4174-20260223T005837Z.md">portal-link-audit-localhost-4174-20260223T005837Z.md</a></li>
+        <li><a href="evidence/portal-link-audit-localhost-4174-20260223T005837Z.csv">portal-link-audit-localhost-4174-20260223T005837Z.csv</a></li>
       </ul>
     </section>
 
     <section class="card">
       <h2>Backend Claim Execution Validation</h2>
-      <p class="status-pass">PASS: post-merge local API validation passes for N=5 and N=10 with supported fallback/default measure selection.</p>
+      <p class="status-pass">PASS: local docker demo stack now validates baseline N=5 and broad/default N=10 without fallback curation.</p>
+      <p class="status-pass">PASS: HEDIS-AAB, HEDIS-COU, HEDIS-FMC, and HEDIS-SPC execute successfully in the broad/default N=10 run.</p>
       <table>
         <thead>
           <tr><th>Run</th><th>Result</th><th>Artifacts</th></tr>
         </thead>
         <tbody>
           <tr>
-            <td>Post-merge local baseline N=5</td>
+            <td>Post-fix local baseline N=5 (broad/default source)</td>
             <td class="status-pass">PASS</td>
             <td>
-              <a href="evidence/one-patient-n-measures-20260222T165544Z.md">one-patient-n-measures-20260222T165544Z.md</a><br>
-              <a href="evidence/one-patient-n-measures-20260222T165544Z.json">one-patient-n-measures-20260222T165544Z.json</a>
+              <a href="evidence/one-patient-n-measures-20260223T005554Z.md">one-patient-n-measures-20260223T005554Z.md</a><br>
+              <a href="evidence/one-patient-n-measures-20260223T005554Z.json">one-patient-n-measures-20260223T005554Z.json</a>
             </td>
           </tr>
           <tr>
-            <td>Post-merge local stress N=10</td>
+            <td>Post-fix local stress N=10 (broad/default source)</td>
             <td class="status-pass">PASS</td>
             <td>
-              <a href="evidence/one-patient-n-measures-20260222T165626Z.md">one-patient-n-measures-20260222T165626Z.md</a><br>
-              <a href="evidence/one-patient-n-measures-20260222T165626Z.json">one-patient-n-measures-20260222T165626Z.json</a>
+              <a href="evidence/one-patient-n-measures-20260223T005557Z.md">one-patient-n-measures-20260223T005557Z.md</a><br>
+              <a href="evidence/one-patient-n-measures-20260223T005557Z.json">one-patient-n-measures-20260223T005557Z.json</a>
+            </td>
+          </tr>
+          <tr>
+            <td>Post-fix local stress N=10 (active CQL library source)</td>
+            <td class="status-pass">PASS</td>
+            <td>
+              <a href="evidence/one-patient-n-measures-20260223T005159Z.md">one-patient-n-measures-20260223T005159Z.md</a><br>
+              <a href="evidence/one-patient-n-measures-20260223T005159Z.json">one-patient-n-measures-20260223T005159Z.json</a>
             </td>
           </tr>
         </tbody>
       </table>
-      <p>Note: local defaults now avoid unsupported measure IDs in this environment by using a supported fallback set.</p>
+      <p>Tracking issue remains open for full production-hardening and non-demo parity coverage.</p>
+      <ul>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/476">Issue #476: Umbrella tracker for true broad/default measure support</a></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/466">Issue #466: HEDIS-COU fails in broad N=10 run</a></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/467">Issue #467: HEDIS-FMC fails in broad N=10 run</a></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/468">Issue #468: HEDIS-AAB fails in broad N=10 run</a></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/issues/474">Issue #474: HEDIS-SPC missing CQL library support in demo tenant</a></li>
+      </ul>
     </section>
 
     <section class="card">
       <h2>Unified Summary</h2>
       <p>Latest consolidated summary:</p>
-      <ul>
-        <li><a href="evidence/validation-summary-20260222T184951Z.md">validation-summary-20260222T184951Z.md</a></li>
-      </ul>
+      <ul><li><a href="evidence/validation-summary-20260223T005654Z.md">validation-summary-20260223T005654Z.md</a></li></ul>
       <p>Latest workflow dispatch status:</p>
       <ul>
-        <li><a href="https://github.com/webemo-aaron/hdim/actions/runs/22283103778">portal-deployment-validation run 22283103778 (queued)</a></li>
+        <li><strong>Local validation run — 2026-02-23T04:14:51Z</strong> — <code>validate-portal-links.sh</code> + <code>validate-web-ab-performance.sh</code> — <strong>PASS</strong></li>
+        <li>Artifact: <code>portal-link-audit-web-gamma-snowy-38-vercel-app-20260223T041451Z.md</code></li>
+        <li><a href="https://github.com/webemo-aaron/hdim/pull/477">PR #477</a> — fixes #476, #466, #467, #468, #474 — local validation PASSED</li>
+        <li><em>Note: GitHub Actions not used; all testing via local runner. Prior queued runs (22280100044–22292662162) are superseded and not part of evidence.</em></li>
       </ul>
       <p>Validation scripts:</p>
       <ul>
         <li><code>docs/marketing/web/scripts/validate-web-ab-performance.sh</code></li>
         <li><code>docs/marketing/web/scripts/validate-one-patient-n-measures.sh</code></li>
-        <li><code>docs/marketing/web/scripts/validate-portal-links.sh</code></li>
       </ul>
     </section>
   </main>

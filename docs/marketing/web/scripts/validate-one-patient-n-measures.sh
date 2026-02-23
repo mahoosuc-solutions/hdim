@@ -9,6 +9,11 @@ set -euo pipefail
 #   N_MEASURES (default: 5)
 #   TENANT_ID (adds X-Tenant-ID header)
 #   AUTH_TOKEN (adds Authorization: Bearer ...)
+#   AUTH_PERMISSIONS (adds X-Auth-Permissions header)
+#   AUTH_USER_ID / AUTH_USERNAME / AUTH_ROLES / AUTH_TENANT_IDS / AUTH_VALIDATED
+#     (optional trusted-auth headers for direct service calls)
+#   CQL_ENGINE_BASE_URL (example: http://localhost:8081/cql-engine)
+#   PREFER_CQL_LIBRARIES (default: true) - use active CQL libraries as measure source
 #   OUT_DIR (default: docs/marketing/web/evidence)
 #   API_MODE (auto|a|b)
 
@@ -38,12 +43,40 @@ MEASURES_URL="$BASE_URL/api/v1/measures?status=ACTIVE"
 EVALUATIONS_URL="$BASE_URL/api/v1/evaluations"
 PATIENT_EVALS_URL="$BASE_URL/api/v1/patients/$PATIENT_ID/evaluations"
 
+if [[ "$BASE_URL" == */quality-measure ]]; then
+  CQL_BASE_DEFAULT="${BASE_URL%/quality-measure}/cql-engine"
+else
+  CQL_BASE_DEFAULT=""
+fi
+CQL_ENGINE_BASE_URL="${CQL_ENGINE_BASE_URL:-$CQL_BASE_DEFAULT}"
+PREFER_CQL_LIBRARIES="${PREFER_CQL_LIBRARIES:-true}"
+
 HEADERS=(-H "Content-Type: application/json")
 if [[ -n "${TENANT_ID:-}" ]]; then
   HEADERS+=(-H "X-Tenant-ID: $TENANT_ID")
 fi
 if [[ -n "${AUTH_TOKEN:-}" ]]; then
   HEADERS+=(-H "Authorization: Bearer $AUTH_TOKEN")
+fi
+if [[ -n "${AUTH_PERMISSIONS:-}" ]]; then
+  HEADERS+=(-H "X-Auth-Permissions: $AUTH_PERMISSIONS")
+fi
+if [[ -n "${AUTH_USER_ID:-}" ]]; then
+  HEADERS+=(-H "X-Auth-User-Id: $AUTH_USER_ID")
+fi
+if [[ -n "${AUTH_USERNAME:-}" ]]; then
+  HEADERS+=(-H "X-Auth-Username: $AUTH_USERNAME")
+fi
+if [[ -n "${AUTH_ROLES:-}" ]]; then
+  HEADERS+=(-H "X-Auth-Roles: $AUTH_ROLES")
+fi
+if [[ -n "${AUTH_TENANT_IDS:-}" ]]; then
+  HEADERS+=(-H "X-Auth-Tenant-Ids: $AUTH_TENANT_IDS")
+elif [[ -n "${TENANT_ID:-}" ]]; then
+  HEADERS+=(-H "X-Auth-Tenant-Ids: $TENANT_ID")
+fi
+if [[ -n "${AUTH_VALIDATED:-}" ]]; then
+  HEADERS+=(-H "X-Auth-Validated: $AUTH_VALIDATED")
 fi
 
 now_ms() {
@@ -56,13 +89,37 @@ now_ms() {
 
 total_start_ms="$(now_ms)"
 
-measures_raw="$(curl -sS "${HEADERS[@]}" "$MEASURES_URL")"
-measure_ids="$(echo "$measures_raw" | jq -r '
+measure_ids=""
+
+if [[ "$PREFER_CQL_LIBRARIES" == "true" && -n "${CQL_ENGINE_BASE_URL:-}" ]]; then
+  cql_libraries_url="${CQL_ENGINE_BASE_URL%/}/api/v1/cql/libraries?size=500"
+  cql_raw="$(curl -sS "${HEADERS[@]}" "$cql_libraries_url" || true)"
+  measure_ids="$(echo "$cql_raw" | jq -r '
+    if type=="object" and (.content | type=="array") then
+      .content[]?
+      | select((.status // "") == "ACTIVE" and ((.active // true) == true))
+      | (.libraryName // .name // empty)
+    elif type=="array" then
+      .[]?
+      | select((.status // "") == "ACTIVE" and ((.active // true) == true))
+      | (.libraryName // .name // empty)
+    else empty end
+  ' 2>/dev/null \
+  | sed -E 's/^[[:space:]]+|[[:space:]]+$//g' \
+  | awk 'NF' \
+  | awk '!seen[$0]++' \
+  | head -n "$N_MEASURES")"
+fi
+
+if [[ -z "$measure_ids" ]]; then
+  measures_raw="$(curl -sS "${HEADERS[@]}" "$MEASURES_URL")"
+  measure_ids="$(echo "$measures_raw" | jq -r '
   if type=="object" and (.measures | type=="array") then .measures[]? | (.measureId // .id)
   elif type=="object" and (.content | type=="array") then .content[]? | (.measureId // .id)
   elif type=="array" then .[]? | (.measureId // .id)
   else empty end
 ' | head -n "$N_MEASURES")"
+fi
 
 if [[ -z "$measure_ids" ]]; then
   measure_ids="$(echo "${DEFAULT_MEASURE_IDS:-HEDIS-BCS,HEDIS-CBP,HEDIS-CCS,HEDIS-CDC,HEDIS-COL,HEDIS-EED,HEDIS-IET,HEDIS-KED,HEDIS-LBP,HEDIS-IMA,HEDIS-SPD,HEDIS-URI}" | tr ',' '\n' | head -n "$N_MEASURES")"
@@ -158,21 +215,27 @@ for measure_id in "${ids[@]}"; do
 done
 
 patient_evals_raw="$(curl -sS "${HEADERS[@]}" "$PATIENT_EVALS_URL" || true)"
-patient_eval_count="$(echo "$patient_evals_raw" | jq -r '
+patient_eval_count="$(
+  printf '%s' "${patient_evals_raw:-null}" | jq -r '
   if .totalCount then .totalCount
   elif .evaluations then (.evaluations|length)
   elif type=="array" then length
   else 0 end
-' 2>/dev/null || echo 0)"
+' 2>/dev/null || echo 0
+)"
+patient_eval_count="${patient_eval_count:-0}"
 
 if [[ "$api_mode" == "b" ]]; then
   patient_evals_raw="$(curl -sS "${HEADERS[@]}" "$BASE_URL/results?patient=$PATIENT_ID" || true)"
-  patient_eval_count="$(echo "$patient_evals_raw" | jq -r '
+  patient_eval_count="$(
+    printf '%s' "${patient_evals_raw:-null}" | jq -r '
     if type=="array" then length
     elif .results then (.results|length)
     elif .content then (.content|length)
     else 0 end
-  ' 2>/dev/null || echo 0)"
+  ' 2>/dev/null || echo 0
+  )"
+  patient_eval_count="${patient_eval_count:-0}"
 fi
 
 total_end_ms="$(now_ms)"

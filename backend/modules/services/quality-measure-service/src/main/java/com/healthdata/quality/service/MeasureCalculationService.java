@@ -9,6 +9,7 @@ import com.healthdata.quality.client.CqlEngineServiceClient;
 import com.healthdata.quality.client.PatientServiceClient;
 import com.healthdata.quality.persistence.QualityMeasureResultEntity;
 import com.healthdata.quality.persistence.QualityMeasureResultRepository;
+import feign.FeignException;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
@@ -65,9 +66,9 @@ public class MeasureCalculationService {
         try (Scope scope = span.makeCurrent()) {
             log.info("Calculating measure {} for patient: {}", measureId, patientId);
 
-            // Evaluate CQL library (external I/O - no transaction needed)
-            String cqlResult = cqlEngineServiceClient.evaluateCql(
-                    tenantId, measureId, patientId, "{}");
+            // Evaluate CQL library (external I/O - no transaction needed).
+            // Bridge raw measure IDs (e.g. "SPC") and canonical library IDs (e.g. "HEDIS-SPC").
+            String cqlResult = evaluateCqlWithLibraryFallback(tenantId, measureId, patientId);
 
             // Parse CQL result (in-memory - no transaction needed)
             JsonNode result = objectMapper.readTree(cqlResult);
@@ -240,6 +241,38 @@ public class MeasureCalculationService {
         } catch (Exception e) {
             log.error("Error publishing calculation event: {}", e.getMessage());
         }
+    }
+
+    private String evaluateCqlWithLibraryFallback(String tenantId, String measureId, UUID patientId) {
+        List<String> candidates = new ArrayList<>();
+        candidates.add(measureId);
+
+        if (measureId != null && !measureId.isBlank()) {
+            if (measureId.startsWith("HEDIS-")) {
+                candidates.add(measureId.substring("HEDIS-".length()));
+            } else {
+                candidates.add("HEDIS-" + measureId);
+            }
+        }
+
+        FeignException.NotFound lastNotFound = null;
+        for (String candidate : candidates) {
+            if (candidate == null || candidate.isBlank()) {
+                continue;
+            }
+            try {
+                return cqlEngineServiceClient.evaluateCql(tenantId, candidate, patientId, "{}");
+            } catch (FeignException.NotFound e) {
+                lastNotFound = e;
+                log.warn("CQL library not found for candidate '{}' (tenant={}, patient={})",
+                        candidate, tenantId, patientId);
+            }
+        }
+
+        if (lastNotFound != null) {
+            throw lastNotFound;
+        }
+        throw new RuntimeException("No valid CQL library candidates for measureId: " + measureId);
     }
 
     public record QualityScore(long totalMeasures, long compliantMeasures, double scorePercentage) {}

@@ -11,6 +11,7 @@ import com.healthdata.quality.service.CareGapMatchingService;
 import com.healthdata.quality.service.CareGapService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -27,6 +28,7 @@ import java.util.UUID;
  * Listens for FHIR resource events and automatically closes matching care gaps
  */
 @Component
+@ConditionalOnBean(AuditService.class)
 @RequiredArgsConstructor
 @Slf4j
 public class CareGapClosureEventConsumer {

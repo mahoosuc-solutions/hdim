@@ -7,6 +7,7 @@ import com.healthdata.quality.service.RiskCalculationService;
 import com.healthdata.quality.service.ChronicDiseaseMonitoringService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +30,7 @@ import java.util.UUID;
  * Part of Phase 4.1: Continuous Risk Assessment Event Listeners
  */
 @Component
+@ConditionalOnBean(AuditService.class)
 @RequiredArgsConstructor
 @Slf4j
 public class RiskAssessmentEventConsumer {

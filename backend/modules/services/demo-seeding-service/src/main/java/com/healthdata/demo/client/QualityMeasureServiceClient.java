@@ -147,17 +147,70 @@ public class QualityMeasureServiceClient {
     }
 
     /**
-     * Generate pre-computed evaluation results directly (for demo purposes).
-     * This creates results without running actual CQL evaluation.
+     * Generate evaluation results using real CQL evaluation first, with mock fallback.
+     * Tries the CQL engine endpoint which runs actual HEDIS measure logic.
+     * Falls back to mock random results if CQL engine is unavailable.
      */
     public int generateDemoResults(Bundle patientBundle, String tenantId, int careGapPercentage) {
+        List<String> patientIds = extractPatientIds(patientBundle);
+
+        // Try real CQL evaluation first
+        int cqlResults = evaluateWithCql(patientIds, tenantId);
+        if (cqlResults > 0) {
+            return cqlResults;
+        }
+
+        // Fallback: mock results (Random-based) if CQL engine is unavailable
+        log.warn("CQL evaluation unavailable, falling back to mock results for tenant: {}", tenantId);
+        return generateMockResults(patientIds, tenantId, careGapPercentage);
+    }
+
+    /**
+     * Evaluate patients using real CQL engine via quality-measure-service.
+     * Returns 0 if the CQL endpoint is unavailable (triggers mock fallback).
+     */
+    private int evaluateWithCql(List<String> patientIds, String tenantId) {
+        try {
+            String url = qualityMeasureServiceUrl + "/api/v1/demo/evaluate-cql";
+            HttpHeaders headers = createHeaders(tenantId);
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            DemoResultsRequest request = new DemoResultsRequest();
+            request.setPatientIds(patientIds);
+            request.setCareGapPercentage(0); // Not used by CQL endpoint
+            request.setMeasureIds(HEDIS_MEASURES);
+
+            log.info("Evaluating {} patients with real CQL engine for tenant: {}",
+                patientIds.size(), tenantId);
+
+            ResponseEntity<DemoResultsResponse> response = restTemplate.exchange(
+                url, HttpMethod.POST,
+                new HttpEntity<>(request, headers),
+                DemoResultsResponse.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                int results = response.getBody().getResultsGenerated();
+                log.info("CQL evaluation complete: {} results ({} compliant, {} non-compliant) for tenant: {}",
+                    results, response.getBody().getCompliantCount(),
+                    response.getBody().getNonCompliantCount(), tenantId);
+                return results;
+            }
+        } catch (Exception e) {
+            log.warn("CQL evaluation endpoint unavailable: {}", e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Generate mock evaluation results using Random (original behavior).
+     * Used as fallback when CQL engine is unavailable.
+     */
+    private int generateMockResults(List<String> patientIds, String tenantId, int careGapPercentage) {
         try {
             String url = qualityMeasureServiceUrl + "/api/v1/demo/generate-results";
             HttpHeaders headers = createHeaders(tenantId);
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // Build request with patient IDs and configuration
-            List<String> patientIds = extractPatientIds(patientBundle);
             DemoResultsRequest request = new DemoResultsRequest();
             request.setPatientIds(patientIds);
             request.setCareGapPercentage(careGapPercentage);
@@ -169,19 +222,30 @@ public class QualityMeasureServiceClient {
                 DemoResultsResponse.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                log.info("Generated {} demo evaluation results for tenant: {}",
+                log.info("Generated {} mock evaluation results for tenant: {}",
                     response.getBody().getResultsGenerated(), tenantId);
                 return response.getBody().getResultsGenerated();
             }
         } catch (Exception e) {
-            log.warn("Failed to generate demo results via API, falling back to batch evaluation: {}",
+            log.warn("Mock results endpoint also failed, trying individual evaluation: {}",
                 e.getMessage());
-
-            // Fall back to individual patient evaluation
-            return evaluatePatientsIndividually(patientBundle, tenantId);
+            return evaluatePatientsIndividually(
+                bundleFromPatientIds(patientIds), tenantId);
         }
-
         return 0;
+    }
+
+    /**
+     * Create a minimal Bundle from patient ID strings (for fallback paths).
+     */
+    private Bundle bundleFromPatientIds(List<String> patientIds) {
+        Bundle bundle = new Bundle();
+        for (String id : patientIds) {
+            Patient patient = new Patient();
+            patient.setId(id);
+            bundle.addEntry().setResource(patient);
+        }
+        return bundle;
     }
 
     /**

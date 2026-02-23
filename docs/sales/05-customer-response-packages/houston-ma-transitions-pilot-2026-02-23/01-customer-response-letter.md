@@ -70,5 +70,5 @@ If this aligns, we propose two immediate next steps:
 
 Sincerely,
 
-Aaron [Last Name]
+Aaron Bentley
 Founder, HDIM

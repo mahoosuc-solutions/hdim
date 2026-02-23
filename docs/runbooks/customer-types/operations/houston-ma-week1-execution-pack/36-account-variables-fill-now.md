@@ -42,7 +42,7 @@ Estimated completion time: 10-15 minutes
 ## Section B: HDIM Core Team
 
 7. Sales lead (name + email):
-- Value:
+- Value: Aaron Bentley
 
 8. Solution architect (name + email):
 - Value:

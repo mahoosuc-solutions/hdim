@@ -11,7 +11,7 @@
 #   Jaeger Tracing: http://localhost:16686
 #
 # Demo Users:
-#   demo_admin@hdim.ai / demo123    (ADMIN, EVALUATOR)
+#   demo_admin@hdim.ai / demo123    (EVALUATOR)
 #   demo_analyst@hdim.ai / demo123  (ANALYST, EVALUATOR)
 #   demo_viewer@hdim.ai / demo123   (VIEWER)
 
@@ -137,7 +137,6 @@ services:
         ON CONFLICT (id) DO NOTHING;
 
         INSERT INTO user_roles (user_id, role) VALUES
-        ('550e8400-e29b-41d4-a716-446655440010', 'ADMIN'),
         ('550e8400-e29b-41d4-a716-446655440010', 'EVALUATOR'),
         ('550e8400-e29b-41d4-a716-446655440011', 'ANALYST'),
         ('550e8400-e29b-41d4-a716-446655440011', 'EVALUATOR'),
@@ -1239,7 +1238,7 @@ services:
     container_name: hdim-demo-clinical-portal
     build:
       context: .
-      dockerfile: apps/clinical-portal/Dockerfile
+      dockerfile: apps/clinical-portal/Dockerfile.prebuilt
     depends_on:
       gateway-edge:
         condition: service_healthy

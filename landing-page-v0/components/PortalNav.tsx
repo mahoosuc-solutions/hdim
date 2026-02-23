@@ -11,11 +11,13 @@ import {
   Play,
   Home,
   Menu,
-  X
+  X,
+  Activity
 } from 'lucide-react'
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
+  { href: '/solutions/transitions-of-care', label: 'Transitions Pilot', icon: Activity },
   { href: '/research', label: 'Research & Outcomes', icon: BarChart3 },
   { href: '/downloads', label: 'Sample Data', icon: Download },
   { href: '/explorer', label: 'Data Explorer', icon: Search },

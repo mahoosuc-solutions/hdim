@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0035-create-organizations-table" author="hdim">
+        <createTable tableName="organizations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_json" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(512)"/>
+            <column name="identifier_value" type="varchar(255)"/>
+            <column name="active" type="boolean" defaultValueBoolean="true"/>
+            <column name="type_code" type="varchar(128)"/>
+            <column name="type_display" type="varchar(256)"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_modified_by" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="integer" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <sql>CREATE INDEX idx_organizations_resource_json_gin ON organizations USING gin (resource_json);</sql>
+
+        <createIndex indexName="idx_organizations_tenant" tableName="organizations">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_organizations_tenant_name" tableName="organizations">
+            <column name="tenant_id"/>
+            <column name="name"/>
+        </createIndex>
+
+        <createIndex indexName="idx_organizations_tenant_identifier" tableName="organizations">
+            <column name="tenant_id"/>
+            <column name="identifier_value"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="organizations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

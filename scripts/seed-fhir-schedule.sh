@@ -222,8 +222,8 @@ schedule_id=$(ensure_resource "Schedule" "${IDENTIFIER_SYSTEM}|schedule-provider
   \"identifier\": [{\"system\": \"${IDENTIFIER_SYSTEM}\", \"value\": \"schedule-provider-1\"}],
   \"active\": true,
   \"actor\": [
-    {\"reference\": \"PractitionerRole/${provider_role_id}\"},
-    {\"reference\": \"Location/${location_id}\"}
+    {\"reference\": \"PractitionerRole/${provider_role_id}\", \"display\": \"Dr. Sarah Chen\"},
+    {\"reference\": \"Location/${location_id}\", \"display\": \"Main Street Clinic - Suite 200\"}
   ]
 }")
 
@@ -290,8 +290,8 @@ for offset in $(seq 0 "$DAYS_AHEAD"); do
           \"appointmentType\": {\"text\": \"${appt_type}\"},
           \"participant\": [
             {\"actor\": {\"reference\": \"Patient/${patient_id}\"}, \"status\": \"accepted\"},
-            {\"actor\": {\"reference\": \"PractitionerRole/${provider_role_id}\"}, \"status\": \"accepted\"},
-            {\"actor\": {\"reference\": \"Location/${location_id}\"}, \"status\": \"accepted\"}
+            {\"actor\": {\"reference\": \"PractitionerRole/${provider_role_id}\", \"display\": \"Dr. Sarah Chen\"}, \"status\": \"accepted\"},
+            {\"actor\": {\"reference\": \"Location/${location_id}\", \"display\": \"Main Street Clinic - Suite 200\"}, \"status\": \"accepted\"}
           ]
         }" | jq -r '.id // empty')
       fi
@@ -309,7 +309,7 @@ for offset in $(seq 0 "$DAYS_AHEAD"); do
           \"priority\": \"routine\",
           \"code\": {\"text\": \"Check-in\"},
           \"for\": {\"reference\": \"Patient/${patient_id}\"},
-          \"owner\": {\"reference\": \"PractitionerRole/${ma_role_id}\"},
+          \"owner\": {\"reference\": \"PractitionerRole/${ma_role_id}\", \"display\": \"Jordan Lee (MA)\"},
           \"focus\": {\"reference\": \"Appointment/${appointment_id}\"},
           \"authoredOn\": \"${start_time}\",
           \"executionPeriod\": {\"start\": \"${start_time}\", \"end\": \"${start_time}\"}
@@ -329,7 +329,7 @@ for offset in $(seq 0 "$DAYS_AHEAD"); do
           \"priority\": \"routine\",
           \"code\": {\"text\": \"Vitals\"},
           \"for\": {\"reference\": \"Patient/${patient_id}\"},
-          \"owner\": {\"reference\": \"PractitionerRole/${nurse_role_id}\"},
+          \"owner\": {\"reference\": \"PractitionerRole/${nurse_role_id}\", \"display\": \"Maria Lopez (NP)\"},
           \"focus\": {\"reference\": \"Appointment/${appointment_id}\"},
           \"authoredOn\": \"${start_time}\",
           \"executionPeriod\": {\"start\": \"${start_time}\", \"end\": \"${start_time}\"}
@@ -349,7 +349,7 @@ for offset in $(seq 0 "$DAYS_AHEAD"); do
           \"subject\": {\"reference\": \"Patient/${patient_id}\"},
           \"period\": {\"start\": \"${start_time}\", \"end\": \"${end_time}\"},
           \"participant\": [
-            {\"individual\": {\"reference\": \"PractitionerRole/${provider_role_id}\"}}
+            {\"individual\": {\"reference\": \"PractitionerRole/${provider_role_id}\", \"display\": \"Dr. Sarah Chen\"}}
           ],
           \"location\": [
             {\"location\": {\"reference\": \"Location/${location_id}\"}}

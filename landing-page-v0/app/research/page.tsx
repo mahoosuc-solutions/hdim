@@ -262,6 +262,30 @@ export default function ResearchPage() {
             </div>
           </div>
 
+          {/* Care Transitions Pilot */}
+          <div className="bg-gradient-to-br from-[#0D4F8B] to-[#0A3D6E] rounded-xl p-8 mb-12 text-white">
+            <div className="md:flex md:items-center md:justify-between gap-8">
+              <div>
+                <h2 className="text-2xl font-bold mb-3">
+                  New: Care Transitions Pilot Blueprint
+                </h2>
+                <p className="text-blue-100 max-w-2xl">
+                  Review the public framework for a 90-day transitions-of-care pilot,
+                  including scope, security baseline, KPI model, and deployment options
+                  across vendor-hosted, customer-hosted cloud, and on-prem environments.
+                </p>
+              </div>
+              <div className="mt-6 md:mt-0">
+                <a
+                  href="/solutions/transitions-of-care"
+                  className="inline-flex items-center justify-center px-5 py-3 bg-white text-[#0D4F8B] rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors"
+                >
+                  View Pilot Blueprint
+                </a>
+              </div>
+            </div>
+          </div>
+
           {/* Technical Methodology */}
           <div className="bg-gray-100 rounded-xl p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Technical Methodology</h2>

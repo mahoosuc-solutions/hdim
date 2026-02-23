@@ -18,6 +18,29 @@ Purpose: reusable operational controls and account-specific execution packs.
 
 1. `houston-ma-week1-execution-pack/`
 2. `metro-aco-week1-execution-pack/`
+3. `solo-practice-week1-execution-pack/`
+4. `small-practice-week1-execution-pack/`
+5. `fqhc-week1-execution-pack/`
+6. `rural-hospital-week1-execution-pack/`
+7. `small-aco-week1-execution-pack/`
+8. `midsize-aco-week1-execution-pack/`
+9. `large-health-system-week1-execution-pack/`
+10. `ipa-network-week1-execution-pack/`
+
+## Validation Summary
+
+| Pack | File Count | Enterprise Addendum |
+|---|---:|---|
+| `houston-ma-week1-execution-pack/` | 36 | No |
+| `metro-aco-week1-execution-pack/` | 36 | No |
+| `solo-practice-week1-execution-pack/` | 36 | No |
+| `small-practice-week1-execution-pack/` | 36 | No |
+| `fqhc-week1-execution-pack/` | 36 | No |
+| `rural-hospital-week1-execution-pack/` | 36 | No |
+| `small-aco-week1-execution-pack/` | 36 | No |
+| `midsize-aco-week1-execution-pack/` | 36 | No |
+| `large-health-system-week1-execution-pack/` | 38 | Yes (`32`,`33`) |
+| `ipa-network-week1-execution-pack/` | 38 | Yes (`32`,`33`) |
 
 ## Replication Pattern
 

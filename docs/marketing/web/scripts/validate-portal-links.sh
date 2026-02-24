@@ -194,6 +194,8 @@ def is_expected_external_status(row):
         return True
     if '/issues/' in target and 'github.com/webemo-aaron/hdim/' in target and status in (401, 403, 404):
         return True
+    if '/pull/' in target and 'github.com/webemo-aaron/hdim/' in target and status in (401, 403, 404):
+        return True
     if '/actions/runs/' in target and 'github.com/webemo-aaron/hdim/' in target and status in (401, 403, 404):
         return True
     return False

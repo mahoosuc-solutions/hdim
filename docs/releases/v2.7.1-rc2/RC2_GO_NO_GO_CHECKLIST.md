@@ -3,6 +3,13 @@
 Date: 2026-02-24  
 Owner: Release coordination
 
+## Current RC2 Build State
+- [x] RC2 release branch prepared locally: `release/v2.7.1-rc2`
+- [x] RC2 release commit created locally: `e77a34c2b`
+- [x] RC2 tag created locally: `v2.7.1-rc2`
+- [ ] RC2 branch pushed to origin
+- [ ] RC2 tag pushed to origin
+
 ## Scope Locked
 - [x] Landing page modern screenshot integration completed.
 - [x] Blog includes build-sequence originals and architecture timeline.
@@ -51,3 +58,17 @@ Acceptance criteria:
 - [ ] Rollback deployment ID recorded
 - [ ] Tag created and pushed: `v2.7.1-rc2`
 
+## Final Execution Commands (Networked Runner)
+```bash
+git checkout release/v2.7.1-rc2
+git push origin release/v2.7.1-rc2
+git push origin v2.7.1-rc2
+
+# Staging link audit
+bash docs/marketing/web/scripts/validate-portal-links.sh \
+  BASE_URL="https://<staging-domain>"
+
+# Production candidate link audit
+bash docs/marketing/web/scripts/validate-portal-links.sh \
+  BASE_URL="https://web-gamma-snowy-38.vercel.app"
+```

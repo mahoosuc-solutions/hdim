@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build Story Evidence Index | HDIM</title>
+  <meta name="description" content="Commit-backed evidence index for HDIM architecture, validation, and release readiness.">
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f4f7fa; color: #1c2d3a; }
+    main { max-width: 980px; margin: 0 auto; padding: 110px 20px 60px; }
+    h1 { margin: 0 0 12px; font-size: 2rem; }
+    h2 { margin-top: 28px; }
+    p, li { line-height: 1.6; }
+    .meta { color: #577; }
+    .panel { background: #fff; border: 1px solid #d7e4ee; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    a { color: #0b5f6d; font-weight: 700; text-decoration: none; }
+    code { background: #eef4f8; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <div id="hdim-shared-nav-root"></div>
+  <script defer src="/assets/js/shared-nav-loader.js"></script>
+  <main>
+    <h1>Build Story Evidence Index</h1>
+    <p class="meta">Prepared for RC2 planning · Updated February 24, 2026</p>
+
+    <div class="panel">
+      <p>This index ties architecture claims to commits, validation outputs, and visual artifacts so release reviews can verify narrative and delivery alignment quickly.</p>
+    </div>
+
+    <h2>Architecture Timeline</h2>
+    <div class="panel">
+      <ul>
+        <li><code>0bb549d7c</code> (Jan 13, 2026): GTM landing production baseline and validation closure.</li>
+        <li><code>5d4ffea7c</code> (Feb 19, 2026): Performance page + traditional-vs-HDIM proof narrative.</li>
+        <li><code>3e24bec9f</code> (Feb 22, 2026): Race Track FHIR A/B validation and evidence publication.</li>
+        <li><code>4cb1a4bd9</code> (Feb 22, 2026): Automated portal deployment validation workflow.</li>
+        <li><code>bb422d3c7</code> (Feb 23, 2026): Public care transitions pilot and portal integration.</li>
+        <li><code>f2b52c9de</code> (Feb 23, 2026): Vercel cleanup and resilient lead API runtime behavior.</li>
+      </ul>
+    </div>
+
+    <h2>Validation Artifacts</h2>
+    <div class="panel">
+      <ul>
+        <li><a href="race-track-fhir-evidence.html">Race Track FHIR Evidence Page</a></li>
+        <li><a href="performance-benchmarking.html">Performance Benchmarking</a></li>
+        <li><a href="evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T225355Z.md">Latest Portal Link Audit (Feb 24, 2026)</a></li>
+        <li><a href="validation-report.html">Validation Report</a></li>
+      </ul>
+    </div>
+
+    <h2>Visual Build Evidence</h2>
+    <div class="panel grid">
+      <a href="assets/blog/system-coming-together/01-results-with-shell.jpg">Live Build Capture 01</a>
+      <a href="assets/blog/system-coming-together/02-care-gaps-with-shell.jpg">Live Build Capture 02</a>
+      <a href="assets/blog/system-coming-together/03-dashboard-with-shell.jpg">Live Build Capture 03</a>
+      <a href="assets/blog/system-coming-together/04-results-detail-with-shell.jpg">Live Build Capture 04</a>
+      <a href="assets/blog/system-coming-together/05-care-gaps-detail-with-shell.jpg">Live Build Capture 05</a>
+      <a href="assets/blog/system-coming-together/06-care-gaps-live-with-shell.jpg">Live Build Capture 06</a>
+    </div>
+
+    <h2>Release Point RC2 Checklist</h2>
+    <div class="panel">
+      <ul>
+        <li>Landing content + screenshot set frozen and reviewed.</li>
+        <li><code>validate:ci</code> green in <code>landing-page-v0</code>.</li>
+        <li>Portal link audit regenerated with fresh timestamp.</li>
+        <li>Release note references this evidence index directly.</li>
+      </ul>
+      <p><a href="blog-post-ai-solutioning.html">Read full architecture story</a></p>
+    </div>
+  </main>
+</body>
+</html>

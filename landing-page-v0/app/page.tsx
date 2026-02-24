@@ -625,14 +625,13 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* Main Dashboard */}
+          <div className="space-y-6">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <Image
-                src="/images/dashboard/main.png"
-                alt="HDIM Real-Time Care Gap Command Center Dashboard"
-                width={1920}
-                height={1080}
+                src="/images/dashboard-modern/01-dashboard-overview-clean.jpg"
+                alt="HDIM clinical portal dashboard overview"
+                width={1915}
+                height={939}
                 className="w-full h-auto"
                 loading="lazy"
               />
@@ -642,21 +641,37 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Mobile Dashboard */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative w-64 mx-auto">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="rounded-xl overflow-hidden shadow-lg bg-white">
                 <Image
-                  src="/images/dashboard/mobile.png"
-                  alt="HDIM Mobile Dashboard"
-                  width={640}
-                  height={1136}
-                  className="w-full h-auto rounded-3xl shadow-xl"
+                  src="/images/dashboard-modern/02-results-detail-clean.jpg"
+                  alt="Results and measure detail view"
+                  width={1915}
+                  height={938}
+                  className="w-full h-auto"
                   loading="lazy"
                 />
               </div>
-              <p className="text-center text-gray-600 mt-6">
-                <strong>Access anywhere.</strong> Full functionality on mobile devices for care teams in the field.
-              </p>
+              <div className="rounded-xl overflow-hidden shadow-lg bg-white">
+                <Image
+                  src="/images/dashboard-modern/03-care-gaps-detail-clean.jpg"
+                  alt="Care gaps workflow with detail pane"
+                  width={1915}
+                  height={938}
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
+              <div className="rounded-xl overflow-hidden shadow-lg bg-white">
+                <Image
+                  src="/images/dashboard-modern/04-care-gaps-live-clean.jpg"
+                  alt="Live care gaps command center"
+                  width={1913}
+                  height={936}
+                  className="w-full h-auto"
+                  loading="lazy"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -868,6 +883,73 @@ export default function LandingPage() {
               See the full load test methodology
               <ArrowRight className="w-4 h-4 ml-2" />
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Build Story Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider">
+              Architected in Public
+            </span>
+            <h2 className="section-heading mt-2 mb-4">
+              How This Platform Was Guided to Production
+            </h2>
+            <p className="section-subheading">
+              A commit-backed build story from architecture decisions to validated release outcomes.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              {
+                date: 'Jan 13, 2026',
+                title: 'Production Baseline',
+                detail: 'Landing foundation deployed with validation cleanup and release readiness controls.',
+              },
+              {
+                date: 'Feb 17-19, 2026',
+                title: 'Proof Pipeline',
+                detail: 'Load tests, SLO checks, and performance narrative linked to measurable artifacts.',
+              },
+              {
+                date: 'Feb 22, 2026',
+                title: 'Validation Automation',
+                detail: 'Race Track FHIR A/B validation and deployment evidence automated end-to-end.',
+              },
+              {
+                date: 'Feb 23, 2026',
+                title: 'Pilot Integration',
+                detail: 'Care transitions pilot integrated across landing, research, and sales surfaces.',
+              },
+            ].map((item) => (
+              <div key={item.title} className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">{item.date}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-600">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <a
+                href="/research"
+                className="inline-flex items-center justify-center text-primary font-medium hover:underline"
+              >
+                Read the full build story
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+              <a
+                href="/performance"
+                className="inline-flex items-center justify-center text-primary font-medium hover:underline"
+              >
+                Review performance methodology
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </a>
+            </div>
           </div>
         </div>
       </section>

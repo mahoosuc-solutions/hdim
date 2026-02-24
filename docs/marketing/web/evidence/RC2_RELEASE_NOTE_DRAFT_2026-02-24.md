@@ -6,6 +6,8 @@
   - Original live build screenshots (with browser shell) for build authenticity.
   - Commit-anchored architecture timeline for leadership narrative.
 - New release artifact hub: `build-story-evidence.html`.
+- RC2 packaging commit prepared locally: `e77a34c2b` on `release/v2.7.1-rc2`.
+- RC2 tag prepared locally: `v2.7.1-rc2`.
 
 ## Key Commits to Reference
 - `0bb549d7c`: GTM landing production baseline and validation closure.
@@ -41,7 +43,15 @@
 - [ ] Staging portal-link audit generated and attached
 - [ ] Release notes include commit anchors + evidence index link
 - [ ] Rollback target deployment ID recorded
+- [ ] Branch and tag pushed from a networked environment
 
 ## Latest Local Artifacts
 - `portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T225355Z.md`
 - `portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T225957Z.md` (DNS-constrained local run)
+
+## Remaining Release Commands
+```bash
+git checkout release/v2.7.1-rc2
+git push origin release/v2.7.1-rc2
+git push origin v2.7.1-rc2
+```

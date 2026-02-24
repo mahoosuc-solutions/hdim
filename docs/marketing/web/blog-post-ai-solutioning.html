@@ -17,6 +17,14 @@
     .meta { color: #577; margin-bottom: 22px; }
     p { line-height: 1.65; }
     .callout { background: #fff; border: 1px solid #d7e4ee; border-radius: 12px; padding: 14px; margin: 18px 0; }
+    .gallery { margin: 28px 0 16px; display: grid; gap: 18px; }
+    .gallery-item { background: #fff; border: 1px solid #d7e4ee; border-radius: 12px; padding: 10px; }
+    .gallery-item img { width: 100%; height: auto; border-radius: 8px; display: block; }
+    .gallery-item figcaption { margin-top: 8px; color: #456; font-size: 0.95rem; line-height: 1.45; }
+    .timeline { background: #fff; border: 1px solid #d7e4ee; border-radius: 12px; padding: 16px; margin: 18px 0; }
+    .timeline h3 { margin: 0 0 10px; font-size: 1.1rem; }
+    .timeline ul { margin: 0; padding-left: 20px; }
+    .timeline li { margin: 8px 0; line-height: 1.5; }
     a { color: #0b5f6d; font-weight: 700; text-decoration: none; }
   </style>
 </head>
@@ -37,6 +45,53 @@
     <p>HDIM applied this approach to a multi-service healthcare platform and demonstrated meaningful improvements in delivery speed, consistency, and validation readiness.</p>
     <p>The Race Track FHIR assets and evidence reports show how communication, architecture, and runtime validation can stay aligned from narrative to implementation.</p>
 
+    <h2>System Coming Together: Live Build Sequence</h2>
+    <p>These are original laptop captures from February 24, 2026, showing the platform taking shape in real time while logic and workflows were being validated.</p>
+
+    <div class="gallery">
+      <figure class="gallery-item">
+        <img src="assets/blog/system-coming-together/01-results-with-shell.jpg" alt="Results view during live build with browser shell visible">
+        <figcaption>10:30 AM - Results page with measure detail panel and non-compliant outcomes surfaced for review.</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="assets/blog/system-coming-together/02-care-gaps-with-shell.jpg" alt="Care gaps screen during live build with browser shell visible">
+        <figcaption>10:32 AM - Care gaps workflow with urgency, interventions, and close-gap actions visible in one view.</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="assets/blog/system-coming-together/03-dashboard-with-shell.jpg" alt="Clinical portal dashboard during live build with browser shell visible">
+        <figcaption>10:34 AM - Command center state as dashboard, patient navigation, and role tools converged.</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="assets/blog/system-coming-together/04-results-detail-with-shell.jpg" alt="Results drilldown during live build with browser shell visible">
+        <figcaption>10:39 AM - Result-level drilldown and panel logic in active verification.</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="assets/blog/system-coming-together/05-care-gaps-detail-with-shell.jpg" alt="Care gaps detail panel during live build with browser shell visible">
+        <figcaption>10:43 AM - Gap prioritization and intervention recommendations tuned in context.</figcaption>
+      </figure>
+      <figure class="gallery-item">
+        <img src="assets/blog/system-coming-together/06-care-gaps-live-with-shell.jpg" alt="Live care gaps screen during build with browser shell visible">
+        <figcaption>11:25 AM - Later pass showing stable navigation, active data, and end-to-end workflow continuity.</figcaption>
+      </figure>
+    </div>
+
+    <h2>Architectural Leadership Through Delivery</h2>
+    <p>This build was guided as an architecture program, not a design-only sprint. The sequence below shows how platform foundations, proof systems, and go-to-market surfaces were intentionally connected.</p>
+
+    <div class="timeline">
+      <h3>Release Storyline (January-February 2026)</h3>
+      <ul>
+        <li><strong>January 13, 2026:</strong> Production GTM landing baseline established with validation cleanup and deployment hardening (<code>0bb549d7c</code>).</li>
+        <li><strong>February 17-19, 2026:</strong> Performance and reliability narrative grounded in load tests, SLO workflows, and evidence-linked content (<code>e6f1531e1</code>, <code>15b66d20a</code>, <code>5d4ffea7c</code>).</li>
+        <li><strong>February 22, 2026:</strong> Race Track FHIR A/B proof loop operationalized with validators, timestamped artifacts, and deployment automation (<code>3e24bec9f</code>, <code>4cb1a4bd9</code>).</li>
+        <li><strong>February 23, 2026:</strong> Care transitions pilot integrated across landing and research surfaces to close architecture-to-commercial continuity (<code>bb422d3c7</code>).</li>
+        <li><strong>February 23, 2026:</strong> Vercel and lead API runtime hardening completed for cleaner production behavior (<code>f2b52c9de</code>).</li>
+      </ul>
+    </div>
+
+    <p>This is the core pattern: architecture decisions are published as verifiable product behavior, then reinforced by automated validation before each release point.</p>
+
+    <p><a href="build-story-evidence.html">Open Build Story Evidence Index</a></p>
     <p><a href="ai-solutioning-index.html">Back to AI Solutioning Index</a></p>
   </article>
 </body>

@@ -30,7 +30,12 @@
 - `landing-page-v0 npm run validate:ci` passed on 2026-02-24.
 - `landing-page-v0 npm run build` passed on 2026-02-24.
 - `docs/marketing/web/scripts/validate-portal-links.sh` executed and produced fresh audit artifacts.
-- Note: latest local sandbox run reports DNS resolution failures (`[Errno -3] Temporary failure in name resolution`) and must be re-run from a networked runner before final go/no-go.
+- Networked runner validation complete:
+  - Production deploy completed and aliased to `https://web-gamma-snowy-38.vercel.app`.
+  - Production audit (`20260224T234533Z`) reports:
+    - Internal Non-200: none
+    - External Non-200/3xx: none
+    - Discoverability gaps: none
 
 ## Release Notes Highlights (External-Facing)
 - Architecture decisions are now directly tied to reproducible evidence.
@@ -38,20 +43,23 @@
 - Performance claims remain grounded in measured validation artifacts.
 
 ## Go/No-Go Checklist for RC2
-- [ ] CI green on release branch
-- [ ] Staging deploy successful
-- [ ] Staging portal-link audit generated and attached
-- [ ] Release notes include commit anchors + evidence index link
-- [ ] Rollback target deployment ID recorded
-- [ ] Branch and tag pushed from a networked environment
+- [x] CI green on release branch
+- [x] Staging deploy successful
+- [x] Staging portal-link audit generated and attached
+- [x] Release notes include commit anchors + evidence index link
+- [x] Rollback target deployment ID recorded
+- [x] Branch and tag pushed from a networked environment
 
 ## Latest Local Artifacts
 - `portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T225355Z.md`
 - `portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T225957Z.md` (DNS-constrained local run)
+- `portal-link-audit-web-au6r5ywn9-mahooosuc-solutions-vercel-app-20260224T234251Z.md` (preview environment; auth-protected responses)
+- `portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T234533Z.md` (production clean run)
 
 ## Remaining Release Commands
 ```bash
-git checkout release/v2.7.1-rc2
-git push origin release/v2.7.1-rc2
-git push origin v2.7.1-rc2
+# Completed:
+# git checkout release/v2.7.1-rc2
+# git push origin release/v2.7.1-rc2
+# git push origin v2.7.1-rc2 --force
 ```

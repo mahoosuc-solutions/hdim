@@ -7,8 +7,8 @@ Owner: Release coordination
 - [x] RC2 release branch prepared locally: `release/v2.7.1-rc2`
 - [x] RC2 release commit created locally: `e77a34c2b`
 - [x] RC2 tag created locally: `v2.7.1-rc2`
-- [ ] RC2 branch pushed to origin
-- [ ] RC2 tag pushed to origin
+- [x] RC2 branch pushed to origin
+- [x] RC2 tag pushed to origin
 
 ## Scope Locked
 - [x] Landing page modern screenshot integration completed.
@@ -19,7 +19,7 @@ Owner: Release coordination
 ## Validation Status
 - [x] `landing-page-v0 npm run validate:ci` passed (local, 2026-02-24).
 - [x] `landing-page-v0 npm run build` passed (local, 2026-02-24).
-- [ ] Portal link audit against deployed URL verified from a networked runner.
+- [x] Portal link audit against deployed URL verified from a networked runner.
 
 ## Important Constraint
 - Local sandbox runs currently show DNS errors for external URLs:
@@ -52,11 +52,11 @@ Acceptance criteria:
 - RC2 draft: `docs/marketing/web/evidence/RC2_RELEASE_NOTE_DRAFT_2026-02-24.md`
 
 ## Final Go/No-Go
-- [ ] Staging deploy successful
-- [ ] Networked portal-link audit clean
-- [ ] RC2 release note finalized with artifact links
-- [ ] Rollback deployment ID recorded
-- [ ] Tag created and pushed: `v2.7.1-rc2`
+- [x] Staging deploy successful
+- [x] Networked portal-link audit clean
+- [x] RC2 release note finalized with artifact links
+- [x] Rollback deployment ID recorded
+- [x] Tag created and pushed: `v2.7.1-rc2`
 
 ## Final Execution Commands (Networked Runner)
 ```bash
@@ -72,3 +72,17 @@ bash docs/marketing/web/scripts/validate-portal-links.sh \
 bash docs/marketing/web/scripts/validate-portal-links.sh \
   BASE_URL="https://web-gamma-snowy-38.vercel.app"
 ```
+
+## Deployment Outcomes (2026-02-24)
+- Staging preview deployment: `https://web-au6r5ywn9-mahooosuc-solutions.vercel.app` (preview protection enabled, returns 401 to unauthenticated audit requests).
+- Production deployment: `https://web-9e4nmhltr-mahooosuc-solutions.vercel.app`
+- Production alias: `https://web-gamma-snowy-38.vercel.app`
+- Rollback target (previous production): `https://web-dgbqv5w81-mahooosuc-solutions.vercel.app`
+
+## Final Evidence Artifacts
+- Production clean audit:
+  - `docs/marketing/web/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T234533Z.md`
+  - `docs/marketing/web/evidence/portal-link-audit-web-gamma-snowy-38-vercel-app-20260224T234533Z.csv`
+- Staging/preview audit:
+  - `docs/marketing/web/evidence/portal-link-audit-web-au6r5ywn9-mahooosuc-solutions-vercel-app-20260224T234251Z.md`
+  - `docs/marketing/web/evidence/portal-link-audit-web-au6r5ywn9-mahooosuc-solutions-vercel-app-20260224T234251Z.csv`

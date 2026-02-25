@@ -236,6 +236,26 @@ Health systems are terrified of switching platforms because their custom measure
 
 ---
 
+## Fundraising strategy and investor fit (internal prep)
+
+We are targeting healthcare and healthtech investors that explicitly back:
+- Value-based care infrastructure
+- Interoperability / FHIR-native data platforms
+- AI-enabled workflow automation for payers/providers
+- Early commercial-stage teams with proven technical execution
+
+**Positioning for investor conversations:**
+- **Why now:** CMS/NCQA digital quality transition + provider margin pressure + AI cost collapse in software development
+- **Why us:** production-ready architecture and 37x build-cost efficiency with AI-assisted execution
+- **Why this segment:** underserved mid-market (faster cycles than enterprise, larger budgets than SMB)
+
+**Planned outreach sequence:**
+1. Healthcare-specialist seed/Series A funds (lead target)
+2. Platform investors with healthcare thesis (co-lead / follow)
+3. Strategic healthcare venture arms (distribution and pilot leverage)
+
+---
+
 ## Where do you see the company in 5 years?
 
 HDIM becomes the default quality measurement infrastructure for value-based care, similar to how Stripe became default payment infrastructure.
@@ -311,13 +331,16 @@ HDIM becomes the default quality measurement infrastructure for value-based care
 **Aaron Bentley**
 - Role: Founder & CEO
 
-**Career Arc (Factory Floor → Enterprise Architect → AI-Native Founder):**
-- Started on the factory floor at Borg Warner Automotive
-- Earned CS degree from Baker College Online while working full-time
-- Porous Material Inc.: Combined mechanical experience with software for automation
-- **HealthInfoNet (Maine's HIE):** Integration Architect, MPI Architect—built statewide healthcare connections
-- **Healthix (NY's largest HIE):** Enterprise Architect—designed interoperability infrastructure for millions
-- **Verato:** Integration Consultant—solved complex identity and matching challenges
+**Employment:**
+
+HDIM — Founder & CEO — [YEAR]–Present
+Verato — Integration Consultant — [YEAR]–[YEAR]
+Healthix (NY's largest HIE) — Enterprise Architect — [YEAR]–[YEAR]
+HealthInfoNet (Maine's HIE) — Integration Architect / MPI Architect — [YEAR]–[YEAR]
+Porous Material Inc. — Software Automation Engineer — [YEAR]–[YEAR]
+Borg Warner Automotive — Manufacturing / Factory Production — [YEAR]–[YEAR]
+
+**Education:** CS, Baker College Online (completed while working full-time)
 
 **Technical Depth:**
 - Deep expertise: FHIR R4, HL7v2, CQL, IHE profiles, MPI architecture

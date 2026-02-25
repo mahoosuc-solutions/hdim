@@ -1,0 +1,492 @@
+[
+  {
+    "name": "Define Ventures",
+    "domain": "definevc.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@definevc.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "Flare Capital Partners",
+    "domain": "flarecapital.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@flarecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "LRVHealth",
+    "domain": "lrvhealth.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@lrvhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "Rock Health Capital",
+    "domain": "rockhealth.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@rockhealth.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "General Catalyst",
+    "domain": "generalcatalyst.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@generalcatalyst.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "Andreessen Horowitz Bio + Health",
+    "domain": "a16z.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@a16z.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "Bessemer Venture Partners",
+    "domain": "bvp.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@bvp.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "F-Prime Capital",
+    "domain": "fprimecapital.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@fprimecapital.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "Oak HC/FT",
+    "domain": "oakhcft.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@oakhcft.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  },
+  {
+    "name": "Optum Ventures",
+    "domain": "optumventures.com",
+    "domainHasMx": true,
+    "validatedCandidates": [
+      {
+        "email": "investments@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "investorrelations@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partners@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "partnerships@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "contact@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "hello@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      },
+      {
+        "email": "info@optumventures.com",
+        "formatValid": true,
+        "domainHasMx": true,
+        "confidence": "medium"
+      }
+    ]
+  }
+]

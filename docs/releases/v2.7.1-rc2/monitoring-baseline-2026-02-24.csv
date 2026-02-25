@@ -1,0 +1,6 @@
+timestamp_utc,url,http_code,total_time,redirect_url
+2026-02-24T23:52:55Z,https://web-gamma-snowy-38.vercel.app/,200,0.180267,
+2026-02-24T23:52:55Z,https://web-gamma-snowy-38.vercel.app/ai-solutioning-index.html,200,0.125981,
+2026-02-24T23:52:55Z,https://web-gamma-snowy-38.vercel.app/build-story-evidence.html,200,0.145922,
+2026-02-24T23:52:55Z,https://web-gamma-snowy-38.vercel.app/blog-post-ai-solutioning.html,200,0.149339,
+2026-02-24T23:52:55Z,https://web-gamma-snowy-38.vercel.app/race-track-fhir-evidence.html,200,0.179419,

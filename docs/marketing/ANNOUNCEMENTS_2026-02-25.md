@@ -32,6 +32,26 @@ What I learned:
 
 If you are evaluating event-driven healthcare platforms or AI-native delivery workflows, I am open to connect.
 
+## LinkedIn Post (Short ~120 words)
+
+We just published a third-party-verifiable technical diligence package for HDIM.
+
+Instead of asking people to trust claims, we shipped:
+- an independent validation runbook,
+- automated pass/fail technical checks,
+- runtime-backed evidence snapshots,
+- and release-linked diligence artifacts.
+
+This project was architected through iterative AI-directed solutioning: clear constraints, measurable gates, fast execution loops, and evidence-first releases.
+
+Technical review release:
+https://github.com/webemo-aaron/hdim/releases/tag/v2.7.1-rc2
+
+Project domain:
+https://healthdatainmotion.com
+
+Key lesson: credibility compounds when architecture, delivery, and proof are all reproducible.
+
 ## GitHub Announcement
 
 Published: `v2.7.1-rc2` technical diligence package
@@ -54,4 +74,12 @@ Over many revisions, I architected this platform in partnership with AI: I set t
 Today we published evidence-backed technical diligence artifacts so anyone can verify what was built.
 
 https://github.com/webemo-aaron/hdim/releases/tag/v2.7.1-rc2
+https://healthdatainmotion.com
+
+## X/Twitter Variant (<=280 chars)
+
+Shipped: evidence-backed technical diligence for HDIM.  
+Independent runbook + automated pass/fail checks + runtime snapshots, all linked to release artifacts.  
+Proof over claims.  
+https://github.com/webemo-aaron/hdim/releases/tag/v2.7.1-rc2  
 https://healthdatainmotion.com

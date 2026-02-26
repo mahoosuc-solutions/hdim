@@ -1,0 +1,113 @@
+<div class="row mb-4">
+  <div class="col-12">
+    <h2 class="mb-1">Pipeline Overview</h2>
+    <p class="text-muted">Last updated: <%= new Date().toLocaleDateString() %></p>
+  </div>
+</div>
+
+<div class="row mb-4 g-3">
+  <div class="col-md-3">
+    <div class="card bg-primary bg-opacity-10 border-primary">
+      <div class="card-body text-center">
+        <h3 class="mb-0"><%= stats.total %></h3>
+        <small class="text-muted">Total Contacts</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-warning bg-opacity-10 border-warning">
+      <div class="card-body text-center">
+        <h3 class="mb-0"><%= stats.active %></h3>
+        <small class="text-muted">Active Pipeline</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-success bg-opacity-10 border-success">
+      <div class="card-body text-center">
+        <h3 class="mb-0"><%= stats.meetings %></h3>
+        <small class="text-muted">Meetings+</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-info bg-opacity-10 border-info">
+      <div class="card-body text-center">
+        <h3 class="mb-0"><%= stats.partnerships %></h3>
+        <small class="text-muted">Partner Targets</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-7">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-funnel me-2"></i>Pipeline Funnel</div>
+      <div class="card-body">
+        <canvas id="funnelChart" height="280"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-clock-history me-2"></i>Recent Activity</div>
+      <div class="card-body" style="max-height: 340px; overflow-y: auto;">
+        <% if (recentActivity.length === 0) { %>
+          <p class="text-muted">No activity yet. Start composing outreach!</p>
+        <% } else { %>
+          <% recentActivity.forEach(a => { %>
+            <div class="d-flex align-items-start mb-3">
+              <i class="bi bi-<%= a.action === 'email_sent' ? 'envelope-check' : a.action === 'call' ? 'telephone' : a.action === 'meeting' ? 'calendar-event' : 'sticky' %> me-2 mt-1 text-muted"></i>
+              <div>
+                <strong><%= a.contact_name || 'System' %></strong>
+                <span class="text-muted ms-1"><%= a.action.replace('_', ' ') %></span>
+                <br><small class="text-muted"><%= a.details || '' %> &middot; <%= a.created_at %></small>
+              </div>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-3 g-3">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-exclamation-triangle me-2"></i>Needs Follow-up</div>
+      <div class="card-body">
+        <% if (needsFollowUp.length === 0) { %>
+          <p class="text-muted">No overdue follow-ups.</p>
+        <% } else { %>
+          <table class="table table-sm table-hover mb-0">
+            <thead><tr><th>Name</th><th>Org</th><th>Next Action</th><th>Due</th></tr></thead>
+            <tbody>
+              <% needsFollowUp.forEach(c => { %>
+                <tr>
+                  <td><a href="/contacts/<%= c.id %>"><%= c.name %></a></td>
+                  <td><%= c.organization %></td>
+                  <td><%= c.next_action || '-' %></td>
+                  <td><%= c.next_action_date || '-' %></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header"><i class="bi bi-pie-chart me-2"></i>By Type</div>
+      <div class="card-body">
+        <canvas id="typeChart" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const funnelData = <%- JSON.stringify(funnel) %>;
+  const typeData = <%- JSON.stringify(byType) %>;
+</script>

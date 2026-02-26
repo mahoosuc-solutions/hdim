@@ -512,3 +512,40 @@ For issues with these scripts:
 
 **Last Updated**: January 14, 2026  
 **Version**: 1.0
+
+
+### 11. `validation/ensure-system-operational.sh`
+
+**Purpose**: Verify Nx runtime + service readiness before release tests.
+
+**What it does**:
+- Validates UI reachability on `PORT` (default `4210`)
+- Optionally auto-starts `clinical-portal`
+- Validates gateway health on `18080`
+- Validates quality/care-gap core API reachability
+- Emits classified failure reasons and remediation
+
+**Usage**:
+```bash
+npm run test:measure-builder:readiness
+
+# Existing server mode flow
+GROUP_B_SERVER_MODE=existing BASE_URL=http://localhost:4210 npm run test:measure-builder:group-b:local
+```
+
+### 12. Measure Builder Nx Release Workflow
+
+**Purpose**: Deterministic release-point gating with readiness-first execution.
+
+**Commands**:
+```bash
+npm run test:measure-builder:group-a
+npm run test:measure-builder:group-b:local
+npm run test:measure-builder:centralized:local
+npm run test:measure-builder:queue:local
+```
+
+**Artifacts**:
+- `reports/measure-builder/operational-readiness-*.log`
+- `reports/measure-builder/centralized-test-summary-*.md`
+- `reports/measure-builder/local-runner-queue-summary-*.md`

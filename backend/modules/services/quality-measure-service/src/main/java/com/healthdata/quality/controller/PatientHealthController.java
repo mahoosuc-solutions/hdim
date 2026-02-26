@@ -17,9 +17,9 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.UUID;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 /**
  * Patient Health Overview Controller
@@ -120,6 +120,23 @@ public class PatientHealthController {
         MentalHealthAssessmentService.AssessmentTrend trend =
             mentalHealthService.getAssessmentTrend(tenantId, patientId, type, startDate, endDate);
         return ResponseEntity.ok(trend);
+    }
+
+    /**
+     * Get tenant-level care gap trends for dashboard visualization.
+     *
+     * GET /patient-health/care-gaps/trends?days=30
+     */
+    @PreAuthorize("hasAnyRole('PROVIDER', 'NURSE', 'CARE_COORDINATOR', 'ANALYST', 'ADMIN', 'SUPER_ADMIN')")
+    @GetMapping(value = "/care-gaps/trends", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<CareGapService.CareGapTrendPoint>> getCareGapTrends(
+            @RequestHeader("X-Tenant-ID") @NotBlank String tenantId,
+            @RequestParam(defaultValue = "30") @Min(1) @Max(365) int days
+    ) {
+        log.info("GET /patient-health/care-gaps/trends - days: {}", days);
+
+        List<CareGapService.CareGapTrendPoint> trends = careGapService.getCareGapTrends(tenantId, days);
+        return ResponseEntity.ok(trends);
     }
 
     /**

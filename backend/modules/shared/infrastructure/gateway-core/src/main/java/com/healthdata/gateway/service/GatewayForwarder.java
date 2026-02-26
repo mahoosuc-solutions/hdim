@@ -119,6 +119,13 @@ public class GatewayForwarder {
                     .body("Missing required X-Tenant-ID header");
             }
 
+            // Downstream services should trust X-Auth-* headers injected by gateway.
+            // Forwarding Authorization alongside trusted headers can trigger inconsistent
+            // downstream auth parsing, so strip it once request is gateway-authenticated.
+            if (isAuthenticatedRequest(headers)) {
+                headers.remove("Authorization");
+            }
+
             // Create request entity
             HttpEntity<String> requestEntity = new HttpEntity<>(body, headers);
 

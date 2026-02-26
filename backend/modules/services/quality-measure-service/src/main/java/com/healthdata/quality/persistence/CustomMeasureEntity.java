@@ -55,6 +55,27 @@ public class CustomMeasureEntity implements Serializable {
     @Column(name = "`year`")
     private Integer year;
 
+    @Column(name = "owner", length = 150)
+    private String owner;
+
+    @Column(name = "clinical_focus", length = 150)
+    private String clinicalFocus;
+
+    @Column(name = "reporting_cadence", length = 30)
+    private String reportingCadence;
+
+    @Column(name = "target_threshold", length = 120)
+    private String targetThreshold;
+
+    @Column(name = "priority", length = 30)
+    private String priority;
+
+    @Column(name = "implementation_notes", columnDefinition = "TEXT")
+    private String implementationNotes;
+
+    @Column(name = "tags", columnDefinition = "TEXT")
+    private String tags;
+
     @JdbcTypeCode(SqlTypes.CLOB)
     @Column(name = "cql_text", columnDefinition = "TEXT")
     private String cqlText;

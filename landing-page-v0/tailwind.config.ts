@@ -46,6 +46,8 @@ const config: Config = {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.5s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'flow-down': 'flowDown 1.8s ease-in-out infinite',
+        'pulse-glow': 'pulseGlow 2.5s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -55,6 +57,15 @@ const config: Config = {
         slideUp: {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        flowDown: {
+          '0%': { transform: 'translateY(-8px)', opacity: '0' },
+          '50%': { opacity: '1' },
+          '100%': { transform: 'translateY(8px)', opacity: '0' },
+        },
+        pulseGlow: {
+          '0%, 100%': { opacity: '0.3' },
+          '50%': { opacity: '0.8' },
         },
       },
     },

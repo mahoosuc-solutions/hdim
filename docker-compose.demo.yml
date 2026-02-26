@@ -198,11 +198,11 @@ services:
     ports:
       - "9094:9092"
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:29092 || exit 1"]
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
       interval: 10s
-      timeout: 15s
+      timeout: 60s
       retries: 20
-      start_period: 60s
+      start_period: 150s
     networks:
       - hdim-demo-network
     deploy:
@@ -280,6 +280,9 @@ services:
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_5: "blue-shield-demo"
       GATEWAY_AUTH_DEMO_USER_TENANT_IDS_6: "united-demo"
       HEALTH_TENANT_ID: service-health-gateway-admin
+      OPERATIONS_EXECUTION_MODE: BRIDGE
+      OPERATIONS_BRIDGE_BASE_URL: http://ops-service:4710
+      OPERATIONS_BRIDGE_TIMEOUT_SECONDS: "3600"
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:8080/actuator/health"]
       interval: 15s
@@ -539,6 +542,11 @@ services:
             server demo-seeding-service:8098 resolve;
         }
 
+        map "$$http_authorization:$$cookie_hdim_access_token" $$hdim_missing_auth {
+            default 0;
+            ":" 1;
+        }
+
         server {
             listen 8080;
             client_max_body_size 50m;
@@ -583,18 +591,30 @@ services:
             }
 
             location ~ ^/api/fhir/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
+                proxy_pass http://gateway_fhir;
+            }
+
+            location = /fhir/metadata {
                 proxy_pass http://gateway_fhir;
             }
 
             location ~ ^/fhir/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_fhir;
             }
 
             location ~ ^/api/patients/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_fhir;
             }
 
             location ~ ^/patient/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_fhir;
             }
 
@@ -607,26 +627,38 @@ services:
             }
 
             location ~ ^/api/quality/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_fhir;
             }
 
             location ~ ^/api/v1/quality-measures {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_fhir;
             }
 
             location ~ ^/quality-measure/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_fhir;
             }
 
             location ~ ^/api/care-gaps/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_clinical;
             }
 
             location ~ ^/api/v1/care-gaps {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_clinical;
             }
 
             location ~ ^/care-gap/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_clinical;
             }
 
@@ -1186,11 +1218,11 @@ services:
     volumes:
       - demo_snapshots:/app/snapshots
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8098/demo/actuator/health"]
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8098/demo/actuator/health | grep -q '\"status\":\"UP\"'"]
       interval: 15s
-      timeout: 10s
+      timeout: 5s
       retries: 5
-      start_period: 600s
+      start_period: 300s
     networks:
       - hdim-demo-network
     deploy:
@@ -1218,10 +1250,15 @@ services:
       QUALITY_DIRECT_BASE: http://quality-measure-service:8087/quality-measure
       QUALITY_HEALTH_URL: http://quality-measure-service:8087/quality-measure/actuator/health
       FHIR_URL: http://fhir-service:8085/fhir
+      PATIENT_API_BASE: http://patient-service:8084/patient/api/v1
+      CARE_GAP_API_BASE: http://care-gap-service:8086/care-gap/api/v1
+      QUALITY_MEASURE_API_BASE: http://quality-measure-service:8087/quality-measure
+      FHIR_BASE_URL: http://fhir-service:8085/fhir
+      CARE_GAP_BASE_URL: http://care-gap-service:8086/care-gap
       AUDIT_DIRECT_URL: http://audit-query-service:8088/api/v1/audit/logs/statistics
       AUDIT_GATEWAY_URL: http://gateway-edge:8080/api/v1/audit/logs/statistics
       SKIP_FHIR_QUERY: "1"
-      CURL_MAX_TIME: "45"
+      CURL_MAX_TIME: "300"
       CURL_CONNECT_TIMEOUT: "5"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

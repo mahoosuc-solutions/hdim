@@ -16,7 +16,7 @@
   <!-- Loading Overlay -->
   <app-loading-overlay
     [isLoading]="loading"
-    message="Loading patient information..."
+    message="Loading patient record..."
     [spinnerSize]="64">
   </app-loading-overlay>
 
@@ -81,7 +81,17 @@
           <div class="tab-content">
             <h2>Quality Measure Results ({{ qualityResults.length }})</h2>
 
-            <div *ngIf="qualityResults.length === 0" class="empty-state">
+            <div *ngIf="qualityLoading" class="empty-state">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>Loading quality results...</p>
+            </div>
+
+            <div *ngIf="qualityResultsError" class="empty-state">
+              <mat-icon color="warn">warning</mat-icon>
+              <p>{{ qualityResultsError }}</p>
+            </div>
+
+            <div *ngIf="!qualityLoading && qualityResults.length === 0" class="empty-state">
               <mat-icon>info</mat-icon>
               <p>No quality measure results available for this patient.</p>
             </div>
@@ -125,7 +135,17 @@
           <div class="tab-content">
             <h3>Clinical Observations ({{ clinicalData?.observations?.length || 0 }})</h3>
 
-            <div *ngIf="(clinicalData?.observations?.length ?? 0) === 0" class="empty-state">
+            <div *ngIf="clinicalLoading" class="empty-state">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>Loading clinical observations...</p>
+            </div>
+
+            <div *ngIf="clinicalDataError" class="empty-state">
+              <mat-icon color="warn">warning</mat-icon>
+              <p>{{ clinicalDataError }}</p>
+            </div>
+
+            <div *ngIf="!clinicalLoading && (clinicalData?.observations?.length ?? 0) === 0" class="empty-state">
               <mat-icon>info</mat-icon>
               <p>No observations recorded for this patient.</p>
             </div>
@@ -163,7 +183,17 @@
           <div class="tab-content">
             <h3>Active Conditions ({{ clinicalData?.conditions?.length || 0 }})</h3>
 
-            <div *ngIf="(clinicalData?.conditions?.length ?? 0) === 0" class="empty-state">
+            <div *ngIf="clinicalLoading" class="empty-state">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>Loading clinical conditions...</p>
+            </div>
+
+            <div *ngIf="clinicalDataError" class="empty-state">
+              <mat-icon color="warn">warning</mat-icon>
+              <p>{{ clinicalDataError }}</p>
+            </div>
+
+            <div *ngIf="!clinicalLoading && (clinicalData?.conditions?.length ?? 0) === 0" class="empty-state">
               <mat-icon>info</mat-icon>
               <p>No conditions recorded for this patient.</p>
             </div>
@@ -201,7 +231,17 @@
           <div class="tab-content">
             <h3>Medical Procedures ({{ clinicalData?.procedures?.length || 0 }})</h3>
 
-            <div *ngIf="(clinicalData?.procedures?.length ?? 0) === 0" class="empty-state">
+            <div *ngIf="clinicalLoading" class="empty-state">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>Loading clinical procedures...</p>
+            </div>
+
+            <div *ngIf="clinicalDataError" class="empty-state">
+              <mat-icon color="warn">warning</mat-icon>
+              <p>{{ clinicalDataError }}</p>
+            </div>
+
+            <div *ngIf="!clinicalLoading && (clinicalData?.procedures?.length ?? 0) === 0" class="empty-state">
               <mat-icon>info</mat-icon>
               <p>No procedures recorded for this patient.</p>
             </div>

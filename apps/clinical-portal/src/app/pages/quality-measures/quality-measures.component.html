@@ -54,6 +54,28 @@
               <mat-option value="Retired">Retired</mat-option>
             </mat-select>
           </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Evaluation Patient</mat-label>
+            <input
+              matInput
+              [ngModel]="patientSearchTerm()"
+              (ngModelChange)="onPatientSearchChange($event)"
+              placeholder="Search patient name or MRN"
+              [matAutocomplete]="patientAutocomplete"
+            >
+            <mat-autocomplete
+              #patientAutocomplete="matAutocomplete"
+              [displayWith]="getPatientDisplay.bind(this)"
+              (optionSelected)="selectEvaluationPatient($event.option.value)"
+            >
+              @for (patient of filteredPatients(); track patient.id) {
+                <mat-option [value]="patient">
+                  {{ getPatientDisplay(patient) }}
+                </mat-option>
+              }
+            </mat-autocomplete>
+          </mat-form-field>
         </div>
       </mat-card>
 
@@ -195,7 +217,7 @@
 
               @if (!isEvaluating() && !evaluationResult()) {
                 <div class="action-buttons">
-                  <button mat-raised-button color="primary" (click)="runEvaluation()">
+                  <button mat-raised-button color="primary" [disabled]="!evaluationPatientId()" (click)="runEvaluation()">
                     <mat-icon>play_arrow</mat-icon>
                     Run Evaluation
                   </button>

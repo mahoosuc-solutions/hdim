@@ -86,3 +86,13 @@ screenshots/demo-portal/Screenshot *.jpg
 
 # Smoke test raw output — commit only .md summaries
 validation/results/*.json
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Generated reports
+reports/
+
+# Timestamped evidence files (one-off audit/review runs)
+docs/marketing/web/evidence/*.csv
+docs/review/evidence/

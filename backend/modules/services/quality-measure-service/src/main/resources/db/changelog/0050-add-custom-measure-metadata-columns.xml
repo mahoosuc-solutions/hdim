@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0050-add-custom-measure-metadata-columns" author="codex">
+        <addColumn tableName="custom_measures">
+            <column name="owner" type="VARCHAR(150)"/>
+            <column name="clinical_focus" type="VARCHAR(150)"/>
+            <column name="reporting_cadence" type="VARCHAR(30)"/>
+            <column name="target_threshold" type="VARCHAR(120)"/>
+            <column name="priority" type="VARCHAR(30)"/>
+            <column name="implementation_notes" type="TEXT"/>
+            <column name="tags" type="TEXT"/>
+        </addColumn>
+
+        <rollback>
+            <dropColumn tableName="custom_measures" columnName="tags"/>
+            <dropColumn tableName="custom_measures" columnName="implementation_notes"/>
+            <dropColumn tableName="custom_measures" columnName="priority"/>
+            <dropColumn tableName="custom_measures" columnName="target_threshold"/>
+            <dropColumn tableName="custom_measures" columnName="reporting_cadence"/>
+            <dropColumn tableName="custom_measures" columnName="clinical_focus"/>
+            <dropColumn tableName="custom_measures" columnName="owner"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -261,8 +262,8 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     @Query("SELECT COUNT(c) FROM CareGapEntity c WHERE c.tenantId = :tenantId AND c.gapStatus = 'CLOSED' AND c.closedDate >= :startDate AND c.closedDate <= :endDate")
     long countGapsClosedInRange(
         @Param("tenantId") String tenantId,
-        @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("startDate") Instant startDate,
+        @Param("endDate") Instant endDate
     );
 
     // ==================== Provider Queries (Issue #138) ====================

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -11,13 +11,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
+import { HttpClient } from '@angular/common/http';
+import { catchError, forkJoin, map, of } from 'rxjs';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
 import { LoggerService } from '../../services/logger.service';
+import { MeasureService } from '../../services/measure.service';
+import { EvaluationService } from '../../services/evaluation.service';
+import { API_CONFIG } from '../../config/api.config';
+import { MeasureInfo } from '../../models/cql-library.model';
+import { QualityMeasureResult } from '../../models/quality-result.model';
 
-/**
- * Quality Measure Model
- */
 interface QualityMeasure {
   id: string;
   code: string;
@@ -34,7 +38,6 @@ interface QualityMeasure {
   rate?: number;
   benchmark?: number;
   careGaps?: number;
-  // Additional details for detail view
   purpose?: string;
   improvementNotation?: string;
   riskAdjustment?: string;
@@ -43,9 +46,6 @@ interface QualityMeasure {
   definitions?: string;
 }
 
-/**
- * Patient Evaluation Result
- */
 interface PatientResult {
   patientId: string;
   patientName: string;
@@ -58,9 +58,6 @@ interface PatientResult {
   details?: string;
 }
 
-/**
- * Care Gap for Measure
- */
 interface CareGap {
   gapId: string;
   patientId: string;
@@ -73,9 +70,6 @@ interface CareGap {
   dueDate: string;
 }
 
-/**
- * Historical Trend Data Point
- */
 interface TrendDataPoint {
   date: string;
   rate: number;
@@ -83,26 +77,20 @@ interface TrendDataPoint {
   denominator: number;
 }
 
-/**
- * Quality Measure Detail Component
- *
- * Displays detailed information about a quality measure including:
- * - Overview (description, category, steward, star rating)
- * - Evaluation Results (patient-level results table)
- * - Care Gaps (linked care gaps for this measure)
- * - Historical Trends (rate over time chart)
- *
- * HIPAA Compliance:
- * - Uses LoggerService for audit logging
- * - PHI displayed with proper context
- *
- * Accessibility:
- * - ARIA labels on all sections
- * - Keyboard navigation support
- * - Tab-based navigation for content sections
- *
- * Sprint 1 - Issue #242: Quality Measure Viewer
- */
+interface CareGapApiResponse {
+  content: CareGapApiItem[];
+}
+
+interface CareGapApiItem {
+  id?: string;
+  patientId: string;
+  measureId: string;
+  gapDescription?: string;
+  priority?: string;
+  gapStatus?: string;
+  dueDate?: string;
+}
+
 @Component({
   selector: 'app-quality-measure-detail',
   standalone: true,
@@ -130,169 +118,25 @@ export class QualityMeasureDetailComponent implements OnInit {
   loading = true;
   error: string | null = null;
 
-  // Evaluation results
   patientResults: PatientResult[] = [];
   resultsColumns: string[] = ['patientName', 'mrn', 'compliant', 'evaluationDate', 'details', 'actions'];
 
-  // Care gaps
   careGaps: CareGap[] = [];
   careGapsColumns: string[] = ['patientName', 'mrn', 'gapType', 'gapDescription', 'daysOverdue', 'urgency', 'actions'];
 
-  // Historical trends
   historicalTrends: TrendDataPoint[] = [];
 
-  // Button loading states
   backButtonLoading = false;
 
-
-  // HEDIS Measures Database (matches quality-measures.component.ts)
-  private hedisMeasures: QualityMeasure[] = [
-    {
-      id: 'BCS',
-      code: 'BCS',
-      name: 'Breast Cancer Screening',
-      description: 'Women aged 50-74 who had a mammogram to screen for breast cancer in the past 27 months.',
-      category: 'screening',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 5,
-      status: 'Active',
-      lastEvaluated: '2025-12-15',
-      denominator: 1243,
-      numerator: 921,
-      rate: 74.1,
-      benchmark: 74.2,
-      careGaps: 322,
-      purpose: 'To identify the percentage of women who have received appropriate breast cancer screening.',
-      improvementNotation: 'Higher rate indicates better performance',
-      riskAdjustment: 'None',
-      rationale: 'Breast cancer is one of the most common types of cancer among women. Screening can detect breast cancer at an early stage when it is easier to treat.',
-      clinicalRecommendation: 'USPSTF recommends biennial screening mammography for women aged 50-74 years.',
-      definitions: 'Mammogram: Imaging study to screen for breast cancer using low-dose x-rays.'
-    },
-    {
-      id: 'COL',
-      code: 'COL',
-      name: 'Colorectal Cancer Screening',
-      description: 'Adults aged 45-75 who had appropriate screening for colorectal cancer.',
-      category: 'screening',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 5,
-      status: 'Active',
-      lastEvaluated: '2025-12-15',
-      denominator: 2156,
-      numerator: 1563,
-      rate: 72.5,
-      benchmark: 72.5,
-      careGaps: 593,
-      purpose: 'To identify the percentage of members who had appropriate screening for colorectal cancer.',
-      improvementNotation: 'Higher rate indicates better performance',
-      riskAdjustment: 'None',
-      rationale: 'Colorectal cancer is the third most common cancer and the second leading cause of cancer deaths. Early detection through screening can prevent most colorectal cancer deaths.',
-      clinicalRecommendation: 'USPSTF recommends screening for colorectal cancer starting at age 45 years and continuing until age 75 years.',
-      definitions: 'Appropriate screening includes colonoscopy, FIT, or other approved methods.'
-    },
-    {
-      id: 'CBP',
-      code: 'CBP',
-      name: 'Controlling High Blood Pressure',
-      description: 'Adults aged 18-85 with a diagnosis of hypertension whose blood pressure was adequately controlled.',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 4,
-      status: 'Active',
-      lastEvaluated: '2025-12-15',
-      denominator: 1876,
-      numerator: 1281,
-      rate: 68.3,
-      benchmark: 68.3,
-      careGaps: 595,
-      purpose: 'To identify the percentage of members with hypertension whose blood pressure was adequately controlled during the measurement year.',
-      improvementNotation: 'Higher rate indicates better performance',
-      riskAdjustment: 'None',
-      rationale: 'Controlling blood pressure prevents heart attacks, strokes, and kidney disease.',
-      clinicalRecommendation: 'Target blood pressure <140/90 mmHg for most adults with hypertension.',
-      definitions: 'Adequate control: Most recent BP reading <140/90 mmHg during the measurement year.'
-    },
-    {
-      id: 'CDC',
-      code: 'CDC',
-      name: 'Comprehensive Diabetes Care - HbA1c Control',
-      description: 'Adults aged 18-75 with diabetes whose HbA1c was at the controlled level (<8.0%).',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 5,
-      status: 'Active',
-      lastEvaluated: '2025-12-15',
-      denominator: 987,
-      numerator: 579,
-      rate: 58.7,
-      benchmark: 58.7,
-      careGaps: 408,
-      purpose: 'To identify the percentage of members with diabetes whose HbA1c was adequately controlled.',
-      improvementNotation: 'Higher rate indicates better performance',
-      riskAdjustment: 'None',
-      rationale: 'Maintaining good glycemic control prevents or delays complications of diabetes.',
-      clinicalRecommendation: 'Target HbA1c <8.0% for most adults with diabetes.',
-      definitions: 'HbA1c: Hemoglobin A1c test measuring average blood glucose over past 2-3 months.'
-    },
-    {
-      id: 'EED',
-      code: 'EED',
-      name: 'Eye Exam for Patients with Diabetes',
-      description: 'Adults aged 18-75 with diabetes who had a retinal eye exam.',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 4,
-      status: 'Active',
-      lastEvaluated: '2025-12-15',
-      denominator: 987,
-      numerator: 662,
-      rate: 67.1,
-      benchmark: 67.1,
-      careGaps: 325,
-      purpose: 'To identify the percentage of members with diabetes who had a retinal eye exam.',
-      improvementNotation: 'Higher rate indicates better performance',
-      riskAdjustment: 'None',
-      rationale: 'Diabetic retinopathy is a leading cause of blindness. Early detection and treatment can prevent vision loss.',
-      clinicalRecommendation: 'Annual dilated eye examination or retinal photography for all patients with diabetes.',
-      definitions: 'Retinal exam: Dilated eye exam or retinal photography by an eye care professional.'
-    },
-    {
-      id: 'SPC',
-      code: 'SPC',
-      name: 'Statin Therapy for Patients with Cardiovascular Disease',
-      description: 'Adults aged 21-75 with cardiovascular disease who were prescribed statin therapy.',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 3,
-      status: 'Active',
-      lastEvaluated: '2025-12-15',
-      denominator: 1452,
-      numerator: 1196,
-      rate: 82.4,
-      benchmark: 82.4,
-      careGaps: 256,
-      purpose: 'To identify the percentage of members with cardiovascular disease who were prescribed statin therapy.',
-      improvementNotation: 'Higher rate indicates better performance',
-      riskAdjustment: 'None',
-      rationale: 'Statin therapy reduces the risk of heart attack and stroke in patients with cardiovascular disease.',
-      clinicalRecommendation: 'High-intensity statin therapy for adults aged 21-75 with cardiovascular disease.',
-      definitions: 'Cardiovascular disease: History of MI, coronary revascularization, or atherosclerotic cardiovascular disease.'
-    }
-  ];
+  private http = inject(HttpClient);
+  private measureService = inject(MeasureService);
+  private evaluationService = inject(EvaluationService);
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private logger: LoggerService
-  ) {
-  }
+  ) {}
 
   ngOnInit(): void {
     this.measureId = this.route.snapshot.paramMap.get('id');
@@ -306,218 +150,236 @@ export class QualityMeasureDetailComponent implements OnInit {
     this.loadMeasureData();
   }
 
-  /**
-   * Load measure data from local database
-   * In production, this would call the backend API
-   */
   private loadMeasureData(): void {
     this.loading = true;
-    this.logger.info('Loading quality measure details', this.measureId);
+    this.error = null;
 
-    // Simulate API call delay
-    setTimeout(() => {
-      // Find measure by ID or code
-      this.measure = this.hedisMeasures.find(
-        m => m.id === this.measureId || m.code === this.measureId
-      ) || null;
+    forkJoin({
+      measures: this.measureService.getLocalMeasuresAsInfo().pipe(catchError(() => of([] as MeasureInfo[]))),
+      results: this.evaluationService.getAllResults(0, 5000).pipe(catchError(() => of([] as QualityMeasureResult[]))),
+      careGaps: this.http
+        .get<CareGapApiResponse>(`${API_CONFIG.CARE_GAP_URL}/api/v1/care-gaps`, {
+          headers: { 'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID },
+        })
+        .pipe(
+          map((resp) => resp.content || []),
+          catchError(() => of([] as CareGapApiItem[]))
+        ),
+    }).subscribe({
+      next: ({ measures, results, careGaps }) => {
+        const key = (this.measureId || '').toUpperCase();
+        const measureInfo = measures.find((m) => m.id.toUpperCase() === key || m.name.toUpperCase() === key);
 
-      if (!this.measure) {
-        this.error = `Quality measure "${this.measureId}" not found`;
+        if (!measureInfo) {
+          this.error = `Quality measure "${this.measureId}" not found`;
+          this.loading = false;
+          return;
+        }
+
+        const matchingResults = results.filter((r) => r.measureId.toUpperCase() === key);
+        this.measure = this.buildMeasure(measureInfo, matchingResults);
+        this.patientResults = this.buildPatientResults(matchingResults);
+        this.careGaps = this.buildCareGaps(careGaps, matchingResults, key);
+        this.historicalTrends = this.buildHistoricalTrends(matchingResults);
+
         this.loading = false;
-        return;
-      }
-
-      // Load patient results
-      this.loadPatientResults();
-
-      // Load care gaps
-      this.loadCareGaps();
-
-      // Load historical trends
-      this.loadHistoricalTrends();
-
-      this.loading = false;
-    }, 500);
+      },
+      error: (error) => {
+        this.logger.error('Failed to load quality measure detail', error);
+        this.error = 'Failed to load quality measure detail';
+        this.loading = false;
+      },
+    });
   }
 
-  /**
-   * Load patient evaluation results
-   */
-  private loadPatientResults(): void {
-    if (!this.measure) return;
+  private buildMeasure(measureInfo: MeasureInfo, results: QualityMeasureResult[]): QualityMeasure {
+    const denominator = results.filter((r) => r.denominatorEligible).length;
+    const numerator = results.filter((r) => r.denominatorEligible && r.numeratorCompliant).length;
+    const rate = denominator > 0 ? Math.round((numerator / denominator) * 1000) / 10 : 0;
+    const careGaps = denominator - numerator;
+    const benchmark = BENCHMARK_BY_MEASURE[measureInfo.id] ?? 70;
 
-    // Generate sample patient results
-    const sampleResults: PatientResult[] = [
-      {
-        patientId: '1',
-        patientName: 'Smith, Sarah',
-        mrn: 'MRN001',
-        compliant: true,
-        evaluationDate: '2025-12-15',
-        denominatorInclusion: true,
-        numeratorInclusion: true,
-        details: 'Mammogram performed 2025-10-15'
-      },
-      {
-        patientId: '2',
-        patientName: 'Martinez, Elena',
-        mrn: 'MRN002',
-        compliant: false,
-        evaluationDate: '2025-12-15',
-        denominatorInclusion: true,
-        numeratorInclusion: false,
-        details: 'No screening on record'
-      },
-      {
-        patientId: '3',
-        patientName: 'Johnson, Robert',
-        mrn: 'MRN003',
-        compliant: false,
-        evaluationDate: '2025-12-15',
-        denominatorInclusion: true,
-        numeratorInclusion: false,
-        details: 'Last screening 11 years ago'
-      }
-    ];
-
-    this.patientResults = sampleResults;
+    return {
+      id: measureInfo.id,
+      code: measureInfo.id,
+      name: measureInfo.description || measureInfo.name,
+      description: measureInfo.description || `${measureInfo.name} quality measure`,
+      category: measureInfo.category || 'HEDIS',
+      measureType: `HEDIS ${new Date().getFullYear()}`,
+      steward: 'NCQA',
+      starRating: STAR_RATING_BY_MEASURE[measureInfo.id] ?? 3,
+      status: 'Active',
+      lastEvaluated: results.map((r) => r.calculationDate || r.createdAt).sort().at(-1) ?? null,
+      denominator,
+      numerator,
+      rate,
+      benchmark,
+      careGaps,
+      purpose: `Evaluate ${measureInfo.id} compliance for attributed patients.`,
+      improvementNotation: 'Higher rate indicates better performance',
+      riskAdjustment: 'None',
+      rationale: 'Backed by quality-measure-service evaluation results.',
+      clinicalRecommendation: 'Address care gaps for non-compliant eligible patients.',
+      definitions: 'Denominator = eligible patients; Numerator = compliant patients.',
+    };
   }
 
-  /**
-   * Load care gaps for this measure
-   */
-  private loadCareGaps(): void {
-    if (!this.measure) return;
-
-    // Generate sample care gaps
-    const sampleGaps: CareGap[] = [
-      {
-        gapId: 'gap-1',
-        patientId: '2',
-        patientName: 'Martinez, Elena',
-        mrn: 'MRN002',
-        gapType: 'screening',
-        gapDescription: 'Mammogram needed - No screening on record',
-        daysOverdue: 180,
-        urgency: 'high',
-        dueDate: '2025-06-01'
-      },
-      {
-        gapId: 'gap-2',
-        patientId: '3',
-        patientName: 'Johnson, Robert',
-        mrn: 'MRN003',
-        gapType: 'screening',
-        gapDescription: 'Colonoscopy overdue - Last screening 11 years ago',
-        daysOverdue: 365,
-        urgency: 'high',
-        dueDate: '2024-12-01'
-      }
-    ];
-
-    this.careGaps = sampleGaps;
+  private buildPatientResults(results: QualityMeasureResult[]): PatientResult[] {
+    return results.slice(0, 200).map((result) => ({
+      patientId: result.patientId,
+      patientName: `Patient ${result.patientId.slice(0, 8)}`,
+      mrn: `MRN-${result.patientId.slice(0, 8).toUpperCase()}`,
+      compliant: result.denominatorEligible && result.numeratorCompliant,
+      evaluationDate: (result.calculationDate || result.createdAt).split('T')[0],
+      denominatorInclusion: result.denominatorEligible,
+      numeratorInclusion: result.numeratorCompliant,
+      details: result.denominatorEligible
+        ? (result.numeratorCompliant ? 'Meets numerator criteria' : 'Eligible but not numerator compliant')
+        : 'Not denominator eligible',
+    }));
   }
 
-  /**
-   * Load historical trend data
-   */
-  private loadHistoricalTrends(): void {
-    if (!this.measure) return;
+  private buildCareGaps(careGapItems: CareGapApiItem[], results: QualityMeasureResult[], measureId: string): CareGap[] {
+    const fromCareGapApi = careGapItems
+      .filter((gap) => gap.measureId.toUpperCase() === measureId)
+      .map((gap) => ({
+        gapId: gap.id || `${gap.patientId}-${measureId}`,
+        patientId: gap.patientId,
+        patientName: `Patient ${gap.patientId.slice(0, 8)}`,
+        mrn: `MRN-${gap.patientId.slice(0, 8).toUpperCase()}`,
+        gapType: gap.gapStatus || 'open',
+        gapDescription: gap.gapDescription || 'Quality measure care gap',
+        daysOverdue: this.daysOverdue(gap.dueDate),
+        urgency: this.mapUrgency(gap.priority),
+        dueDate: gap.dueDate || new Date().toISOString().split('T')[0],
+      }));
 
-    // Generate sample trend data (6 months)
-    const trends: TrendDataPoint[] = [];
-    const currentRate = this.measure.rate || 70;
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-
-      trends.push({
-        date: date.toISOString().split('T')[0],
-        rate: currentRate + (Math.random() * 4 - 2), // +/- 2% variance
-        numerator: Math.floor((this.measure.numerator || 900) * (0.95 + Math.random() * 0.1)),
-        denominator: this.measure.denominator || 1200
-      });
+    if (fromCareGapApi.length > 0) {
+      return fromCareGapApi;
     }
 
-    this.historicalTrends = trends;
+    return results
+      .filter((r) => r.denominatorEligible && !r.numeratorCompliant)
+      .slice(0, 200)
+      .map((result) => ({
+        gapId: `derived-${result.id}`,
+        patientId: result.patientId,
+        patientName: `Patient ${result.patientId.slice(0, 8)}`,
+        mrn: `MRN-${result.patientId.slice(0, 8).toUpperCase()}`,
+        gapType: 'compliance',
+        gapDescription: `No compliant ${result.measureName || result.measureId} evidence in numerator`,
+        daysOverdue: 30,
+        urgency: 'medium' as const,
+        dueDate: new Date().toISOString().split('T')[0],
+      }));
   }
 
-  /**
-   * Navigate back to quality measures list
-   */
+  private buildHistoricalTrends(results: QualityMeasureResult[]): TrendDataPoint[] {
+    const monthly = new Map<string, { denominator: number; numerator: number }>();
+
+    for (const result of results) {
+      const key = (result.calculationDate || result.createdAt).slice(0, 7);
+      const current = monthly.get(key) || { denominator: 0, numerator: 0 };
+      if (result.denominatorEligible) {
+        current.denominator += 1;
+        if (result.numeratorCompliant) {
+          current.numerator += 1;
+        }
+      }
+      monthly.set(key, current);
+    }
+
+    return Array.from(monthly.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-6)
+      .map(([date, stats]) => ({
+        date,
+        numerator: stats.numerator,
+        denominator: stats.denominator,
+        rate: stats.denominator === 0 ? 0 : Math.round((stats.numerator / stats.denominator) * 1000) / 10,
+      }));
+  }
+
+  private mapUrgency(priority?: string): 'high' | 'medium' | 'low' {
+    const normalized = (priority || '').toLowerCase();
+    if (normalized === 'high' || normalized === 'critical') return 'high';
+    if (normalized === 'low') return 'low';
+    return 'medium';
+  }
+
+  private daysOverdue(dueDate?: string): number {
+    if (!dueDate) return 0;
+    const due = new Date(dueDate).getTime();
+    const now = Date.now();
+    return Math.max(0, Math.floor((now - due) / (1000 * 60 * 60 * 24)));
+  }
+
   goBack(): void {
     this.backButtonLoading = true;
     this.router.navigate(['/quality-measures']);
   }
 
-  /**
-   * Navigate to patient detail with context
-   */
   viewPatientDetail(patientId: string): void {
     this.logger.info('Navigating to patient detail', patientId);
     this.router.navigate(['/patients', patientId], {
       queryParams: {
         tab: 'results',
-        source: 'quality-measure-detail'
-      }
+        source: 'quality-measure-detail',
+      },
     });
   }
 
-  /**
-   * Navigate to care gaps dashboard filtered by this measure
-   */
   viewCareGaps(): void {
     this.logger.info('Navigating to care gaps filtered by measure', this.measure?.code);
     this.router.navigate(['/care-gaps'], {
       queryParams: {
         measure: this.measure?.code,
-        source: 'quality-measure-detail'
-      }
+        source: 'quality-measure-detail',
+      },
     });
   }
 
-  /**
-   * Get star rating display
-   */
   getStarRatingArray(): number[] {
     return Array(this.measure?.starRating || 0).fill(0);
   }
 
-  /**
-   * Get status color
-   */
   getStatusColor(): string {
     return this.measure?.status === 'Active' ? 'primary' : 'warn';
   }
 
-  /**
-   * Get compliance status color
-   */
   getComplianceColor(compliant: boolean): string {
     return compliant ? 'primary' : 'warn';
   }
 
-  /**
-   * Get urgency badge class
-   */
   getUrgencyClass(urgency: string): string {
     return `urgency-badge urgency-${urgency}`;
   }
 
-  /**
-   * Calculate rate percentage
-   */
   getRatePercentage(): number {
     if (!this.measure || !this.measure.rate) return 0;
     return Math.round(this.measure.rate * 10) / 10;
   }
 
-  /**
-   * Get gap to benchmark
-   */
   getGapToBenchmark(): number {
     if (!this.measure || !this.measure.rate || !this.measure.benchmark) return 0;
     return Math.round((this.measure.benchmark - this.measure.rate) * 10) / 10;
   }
 }
+
+const BENCHMARK_BY_MEASURE: Record<string, number> = {
+  BCS: 74.2,
+  COL: 72.5,
+  CBP: 68.3,
+  CDC: 58.7,
+  EED: 67.1,
+  SPC: 82.4,
+};
+
+const STAR_RATING_BY_MEASURE: Record<string, number> = {
+  BCS: 5,
+  COL: 5,
+  CBP: 4,
+  CDC: 5,
+  EED: 4,
+  SPC: 3,
+};

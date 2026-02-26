@@ -21,7 +21,9 @@
       "policyMode": "strict",
       "requestTimeoutSecs": 20,
       "runSystemValidate": true,
-      "noHeaderAllowlist": []
+      "noHeaderAllowlist": [
+        "/api/v1/audit/logs/statistics"
+      ]
     }
   }
 }

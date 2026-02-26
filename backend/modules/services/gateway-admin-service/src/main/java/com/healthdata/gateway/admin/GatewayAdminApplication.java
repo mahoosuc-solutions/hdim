@@ -11,6 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import com.healthdata.gateway.admin.configversion.ConfigPromotionProperties;
+import com.healthdata.gateway.admin.operations.OperationsProperties;
 
 @SpringBootApplication(exclude = {
     RedisAutoConfiguration.class,
@@ -25,13 +26,13 @@ import com.healthdata.gateway.admin.configversion.ConfigPromotionProperties;
 @EntityScan(basePackages = {
     "com.healthdata.authentication.domain",
     "com.healthdata.authentication.entity",
-    "com.healthdata.gateway.admin.configversion"
+    "com.healthdata.gateway.admin"
 })
 @EnableJpaRepositories(basePackages = {
     "com.healthdata.authentication.repository",
-    "com.healthdata.gateway.admin.configversion"
+    "com.healthdata.gateway.admin"
 })
-@EnableConfigurationProperties(ConfigPromotionProperties.class)
+@EnableConfigurationProperties({ConfigPromotionProperties.class, OperationsProperties.class})
 public class GatewayAdminApplication {
 
     public static void main(String[] args) {

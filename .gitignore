@@ -11,6 +11,10 @@ dist/
 # IDE
 .idea/
 .vscode/
+*.factorypath
+.classpath
+.project
+.settings/
 
 # OS
 .DS_Store
@@ -36,12 +40,20 @@ build-user/
 META-INF/
 backend/modules/services/*/bin/
 backend/modules/shared/*/bin/
+backend/platform/*/bin/
+backend/tools/*/bin/
+healthdata-platform/bin/
 
 # Screenshots and test artifacts
 .playwright-mcp/
+test-safe.png
+
+# Abandoned starters
+servicehive-event-mfe-starter/
 
 # Zone.Identifier files (Windows)
 *.Zone.Identifier
+*:Zone.Identifier
 
 # Git worktrees (separate working directories for different branches)
 hdim-admin-portal/
@@ -69,5 +81,18 @@ tools/demo-control/
 .worktrees/
 load-tests/results/*.json
 
+# Raw screenshots — keep only cropped/clean versions
+screenshots/demo-portal/Screenshot *.jpg
+
 # Smoke test raw output — commit only .md summaries
 validation/results/*.json
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Generated reports
+reports/
+
+# Timestamped evidence files (one-off audit/review runs)
+docs/marketing/web/evidence/*.csv
+docs/review/evidence/

@@ -39,7 +39,21 @@ class CustomMeasureServiceTest {
             return e;
         });
 
-        CustomMeasureEntity saved = service.createDraft("tenant", "NAME", "desc", "CUSTOM", 2024, "tester");
+        CustomMeasureEntity saved = service.createDraft(
+                "tenant",
+                "NAME",
+                "desc",
+                "CUSTOM",
+                2024,
+                "Owner Team",
+                "Diabetes",
+                "MONTHLY",
+                "75%",
+                "HIGH",
+                "Rollout notes",
+                "diabetes,preventive",
+                "tester"
+        );
 
         assertThat(saved.getTenantId()).isEqualTo("tenant");
         assertThat(saved.getName()).isEqualTo("NAME");
@@ -60,7 +74,21 @@ class CustomMeasureServiceTest {
         when(repository.findByTenantIdAndId("tenant", id)).thenReturn(Optional.of(existing));
         when(repository.save(any(CustomMeasureEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CustomMeasureEntity updated = service.updateDraft("tenant", id, "NEW", "desc", "CUSTOM", 2025);
+        CustomMeasureEntity updated = service.updateDraft(
+                "tenant",
+                id,
+                "NEW",
+                "desc",
+                "CUSTOM",
+                2025,
+                "Owner Team",
+                "Diabetes",
+                "MONTHLY",
+                "75%",
+                "HIGH",
+                "Rollout notes",
+                "diabetes,preventive"
+        );
 
         assertThat(updated.getName()).isEqualTo("NEW");
         assertThat(updated.getCategory()).isEqualTo("CUSTOM");
@@ -81,12 +109,28 @@ class CustomMeasureServiceTest {
         when(repository.findByTenantIdAndId("tenant", id)).thenReturn(Optional.of(existing));
         when(repository.save(any(CustomMeasureEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CustomMeasureEntity updated = service.updateDraft("tenant", id, " ", "new", "NEWCAT", 2025);
+        CustomMeasureEntity updated = service.updateDraft(
+                "tenant",
+                id,
+                " ",
+                "new",
+                "NEWCAT",
+                2025,
+                "Owner Team",
+                "Diabetes",
+                "QUARTERLY",
+                "80%",
+                "MEDIUM",
+                "Updated notes",
+                "quality,care-gap"
+        );
 
         assertThat(updated.getName()).isEqualTo("EXISTING");
         assertThat(updated.getDescription()).isEqualTo("new");
         assertThat(updated.getCategory()).isEqualTo("NEWCAT");
         assertThat(updated.getYear()).isEqualTo(2025);
+        assertThat(updated.getOwner()).isEqualTo("Owner Team");
+        assertThat(updated.getReportingCadence()).isEqualTo("QUARTERLY");
     }
 
     @Test

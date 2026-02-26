@@ -49,6 +49,10 @@ AUTH_USER_ID="${AUTH_USER_ID:-00000000-0000-0000-0000-000000000001}"
 AUTH_USERNAME="${AUTH_USERNAME:-demo-seeder}"
 AUTH_ROLES="${AUTH_ROLES:-ADMIN,SYSTEM}"
 AUTH_VALIDATED="${AUTH_VALIDATED:-gateway-healthcheck}"
+DEMO_TENANT_SOURCE="${DEMO_TENANT_SOURCE:-demo-tenant}"
+POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-hdim-demo-postgres}"
+POSTGRES_USER="${POSTGRES_USER:-healthdata}"
+POSTGRES_CQL_DB="${POSTGRES_CQL_DB:-cql_db}"
 
 # If running under a non-tty (e.g., local CI), force non-interactive mode.
 if [[ ! -t 0 ]]; then
@@ -128,6 +132,70 @@ PY
     rm -f "${tmp}"
 }
 
+get_cql_library_count() {
+    local tenant="$1"
+    docker exec "${POSTGRES_CONTAINER}" psql -U "${POSTGRES_USER}" -d "${POSTGRES_CQL_DB}" -tA -c \
+        "SELECT COUNT(*) FROM cql_libraries WHERE tenant_id = '${tenant}';" 2>/dev/null | tr -d '[:space:]' || true
+}
+
+sync_cql_libraries_for_tenant() {
+    if [[ "${TENANT_ID}" == "${DEMO_TENANT_SOURCE}" ]]; then
+        echo -e "${GREEN}✓ CQL library sync not required for tenant ${TENANT_ID}${NC}"
+        return 0
+    fi
+
+    if ! command -v docker >/dev/null 2>&1; then
+        echo -e "${YELLOW}! Docker is unavailable; skipping CQL library sync${NC}"
+        return 0
+    fi
+
+    if ! docker ps --format '{{.Names}}' | grep -q "^${POSTGRES_CONTAINER}\$"; then
+        echo -e "${YELLOW}! Postgres container ${POSTGRES_CONTAINER} not found; skipping CQL library sync${NC}"
+        return 0
+    fi
+
+    local source_count target_count
+    source_count="$(get_cql_library_count "${DEMO_TENANT_SOURCE}")"
+    target_count="$(get_cql_library_count "${TENANT_ID}")"
+
+    if [[ ! "${source_count}" =~ ^[0-9]+$ ]]; then
+        echo -e "${YELLOW}! Unable to read source CQL library count; skipping sync${NC}"
+        return 0
+    fi
+
+    if [[ "${target_count}" =~ ^[0-9]+$ ]] && (( target_count > 0 )); then
+        echo -e "${GREEN}✓ CQL libraries already present for ${TENANT_ID} (${target_count})${NC}"
+        return 0
+    fi
+
+    echo -e "${CYAN}Syncing CQL libraries from ${DEMO_TENANT_SOURCE} to ${TENANT_ID}...${NC}"
+    docker exec "${POSTGRES_CONTAINER}" psql -U "${POSTGRES_USER}" -d "${POSTGRES_CQL_DB}" -c \
+        "INSERT INTO cql_libraries (
+            id, tenant_id, name, version, status, cql_content, elm_json, description, publisher,
+            created_at, updated_at, created_by, library_name, elm_xml, fhir_library_id, active,
+            measure_class, category
+        )
+        SELECT
+            gen_random_uuid(), '${TENANT_ID}', name, version, status, cql_content, elm_json, description, publisher,
+            created_at, updated_at, created_by, library_name, elm_xml, fhir_library_id, active,
+            measure_class, category
+        FROM cql_libraries source
+        WHERE source.tenant_id = '${DEMO_TENANT_SOURCE}'
+        AND NOT EXISTS (
+            SELECT 1 FROM cql_libraries target
+            WHERE target.tenant_id = '${TENANT_ID}'
+              AND target.name = source.name
+              AND target.version = source.version
+        );" >/dev/null
+
+    target_count="$(get_cql_library_count "${TENANT_ID}")"
+    if [[ "${target_count}" =~ ^[0-9]+$ ]] && (( target_count > 0 )); then
+        echo -e "${GREEN}✓ CQL library sync complete for ${TENANT_ID} (${target_count})${NC}"
+    else
+        echo -e "${YELLOW}! CQL library sync completed but target count is ${target_count:-unknown}${NC}"
+    fi
+}
+
 seed_data() {
     local name=$1
     local endpoint=$2
@@ -176,6 +244,8 @@ seed_data() {
 }
 
 # Seed data using scenarios
+sync_cql_libraries_for_tenant
+
 echo -e "${CYAN}=== Seeding Data Using Scenarios ===${NC}"
 echo ""
 
@@ -209,6 +279,7 @@ echo ""
 
 # In CI/non-interactive mode, stop here for determinism.
 if [[ "${NON_INTERACTIVE}" == "1" ]]; then
+    sync_cql_libraries_for_tenant
     echo -e "${GREEN}✓ Non-interactive mode (${SEED_PROFILE}): skipping optional scenarios${NC}"
     exit 0
 fi
@@ -249,6 +320,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # Summary
+sync_cql_libraries_for_tenant
+
 echo ""
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Seeding Summary${NC}"

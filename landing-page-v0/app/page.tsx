@@ -22,6 +22,7 @@ import { LandingPageClient } from './components/LandingPageClient'
 import { SegmentSelector } from './components/SegmentSelector'
 import VideoPlayer from '../components/VideoPlayer'
 import ScreenshotGallery from './components/ScreenshotLightbox'
+import IntegrationArchitectureDiagram from './components/IntegrationArchitectureDiagram'
 
 export default function LandingPage() {
   const features = [
@@ -644,7 +645,7 @@ export default function LandingPage() {
                     src: "/images/dashboard-modern/05-quality-measures-library.jpg",
                     alt: "HEDIS Quality Measures Library with benchmark scores and CMS impact ratings",
                     width: 1918,
-                    height: 937,
+                    height: 920,
                     title: "Quality Measures Library",
                     description: "6 HEDIS measures with national benchmarks, CMS star ratings, and compliance tracking",
                   },
@@ -652,17 +653,17 @@ export default function LandingPage() {
                     src: "/images/dashboard-modern/06-evaluation-results.jpg",
                     alt: "Evaluation Results dashboard showing severity distribution, compliance rates, and outcome charts",
                     width: 1916,
-                    height: 936,
+                    height: 919,
                     title: "Evaluation Results",
                     description: "Real-time compliance scoring with outcome distribution and category breakdowns",
                   },
                   {
-                    src: "/images/dashboard-modern/08-care-gap-management.png",
-                    alt: "Care Gap Management with priority cards, trend analysis, and recommended interventions with ROI",
-                    width: 1920,
-                    height: 1080,
+                    src: "/images/dashboard-modern/08-care-gap-management.jpg",
+                    alt: "High Priority Care Gaps dashboard showing patient worklist with risk levels, clinical context, and address actions",
+                    width: 1918,
+                    height: 917,
                     title: "Care Gap Management",
-                    description: "AI-recommended interventions with success rates, cost analysis, and ROI projections",
+                    description: "High-priority care gap worklist with patient names, risk badges, due dates, and one-click address actions",
                   },
                 ],
               },
@@ -678,7 +679,7 @@ export default function LandingPage() {
                     description: "Master Patient Index with duplicate detection, demographic search, and longitudinal records",
                   },
                   {
-                    src: "/images/dashboard-modern/03-care-gaps-detail-clean.jpg",
+                    src: "/images/dashboard-modern/03-risk-stratification.jpg",
                     alt: "Risk Stratification view with patient cards showing risk scores, conditions, and improvement trends",
                     width: 1915,
                     height: 938,
@@ -701,8 +702,8 @@ export default function LandingPage() {
                   {
                     src: "/images/dashboard-modern/10-care-gap-closure.jpg",
                     alt: "Care Gap Closure workflow showing patient detail slide-out, recommended interventions, and close gap dialog",
-                    width: 1918,
-                    height: 940,
+                    width: 1915,
+                    height: 921,
                     title: "Care Gap Closure Workflow",
                     description: "One-click gap closure with patient context, intervention recommendations, and audit documentation",
                   },
@@ -720,6 +721,9 @@ export default function LandingPage() {
           />
         </div>
       </section>
+
+      {/* Integration Architecture */}
+      <IntegrationArchitectureDiagram />
 
       {/* Social Proof Section */}
       <section className="py-20 bg-gray-50" id="customers">

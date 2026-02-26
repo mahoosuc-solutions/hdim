@@ -1,0 +1,13 @@
+{
+  "tenantId": "acme-health",
+  "selectedPatientId": "6decf048-c01e-4dd5-912e-e73abf68721e",
+  "selectedPatientStats": {
+    "observations": 142,
+    "conditions": 0,
+    "procedures": 3,
+    "results": 6
+  },
+  "totalResultsAtStart": 1,
+  "seededForResults": false,
+  "timestamp": "2026-02-24T15:19:59.426Z"
+}

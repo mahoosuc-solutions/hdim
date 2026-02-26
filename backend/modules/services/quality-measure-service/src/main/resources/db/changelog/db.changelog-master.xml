@@ -107,5 +107,6 @@
 
     <!-- Performance: composite index on (tenant_id, calculation_date DESC) for paginated all-results query -->
     <include file="db/changelog/0049-add-qm-results-tenant-date-index.xml"/>
+    <include file="db/changelog/0050-add-custom-measure-metadata-columns.xml"/>
 
 </databaseChangeLog>

@@ -7,8 +7,11 @@ import com.healthdata.quality.service.CustomMeasureService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -47,6 +50,13 @@ public class CustomMeasureController {
                 request.description(),
                 request.category(),
                 request.year(),
+                request.owner(),
+                request.clinicalFocus(),
+                request.reportingCadence(),
+                request.targetThreshold(),
+                request.priority(),
+                request.implementationNotes(),
+                request.tags(),
                 request.createdBy() != null ? request.createdBy() : "clinical-portal"
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
@@ -83,7 +93,14 @@ public class CustomMeasureController {
                 request.name(),
                 request.description(),
                 request.category(),
-                request.year()
+                request.year(),
+                request.owner(),
+                request.clinicalFocus(),
+                request.reportingCadence(),
+                request.targetThreshold(),
+                request.priority(),
+                request.implementationNotes(),
+                request.tags()
         ));
     }
 
@@ -299,7 +316,24 @@ public class CustomMeasureController {
             String name,
             String description,
             String category,
+            @Min(value = 2000, message = "Year must be >= 2000")
+            @Max(value = 2100, message = "Year must be <= 2100")
             Integer year,
+            String owner,
+            String clinicalFocus,
+            @Pattern(
+                    regexp = "^(MONTHLY|QUARTERLY|ANNUAL)$",
+                    message = "Reporting cadence must be one of: MONTHLY, QUARTERLY, ANNUAL"
+            )
+            String reportingCadence,
+            String targetThreshold,
+            @Pattern(
+                    regexp = "^(LOW|MEDIUM|HIGH)$",
+                    message = "Priority must be one of: LOW, MEDIUM, HIGH"
+            )
+            String priority,
+            String implementationNotes,
+            String tags,
             String createdBy
     ) {}
 
@@ -307,7 +341,24 @@ public class CustomMeasureController {
             String name,
             String description,
             String category,
-            Integer year
+            @Min(value = 2000, message = "Year must be >= 2000")
+            @Max(value = 2100, message = "Year must be <= 2100")
+            Integer year,
+            String owner,
+            String clinicalFocus,
+            @Pattern(
+                    regexp = "^(MONTHLY|QUARTERLY|ANNUAL)$",
+                    message = "Reporting cadence must be one of: MONTHLY, QUARTERLY, ANNUAL"
+            )
+            String reportingCadence,
+            String targetThreshold,
+            @Pattern(
+                    regexp = "^(LOW|MEDIUM|HIGH)$",
+                    message = "Priority must be one of: LOW, MEDIUM, HIGH"
+            )
+            String priority,
+            String implementationNotes,
+            String tags
     ) {}
 
     public record BatchPublishRequest(

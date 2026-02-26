@@ -7,14 +7,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 /**
@@ -144,7 +145,6 @@ public class CareGapReportService {
      * @param tenantId Tenant ID
      * @return Population gap report
      */
-    @Cacheable(value = "populationGapReport", key = "#tenantId")
     public PopulationGapReport getPopulationGapReport(String tenantId) {
         log.info("Generating population gap report for tenant: {}", tenantId);
 
@@ -192,8 +192,9 @@ public class CareGapReportService {
 
         // Count gaps closed this month
         LocalDate firstOfMonth = LocalDate.now().withDayOfMonth(1);
-        LocalDate today = LocalDate.now();
-        long closedThisMonth = careGapRepository.countGapsClosedInRange(tenantId, firstOfMonth, today);
+        Instant monthStart = firstOfMonth.atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant now = Instant.now();
+        long closedThisMonth = careGapRepository.countGapsClosedInRange(tenantId, monthStart, now);
 
         return new PopulationGapReport(
                 allOpenGaps.size(),

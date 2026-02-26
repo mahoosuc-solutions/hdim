@@ -95,16 +95,40 @@ async function handleCommand(payload) {
   } else if (action === 'capture-logs') {
     cmd = `bash ${WORKSPACE_DIR}/scripts/capture-compose-logs.sh`;
   } else if (action === 'seed') {
-    const tenantId = payload.tenantId || 'acme-health';
-    const count = Number(payload.patientCount || 200);
-    cmd = [
-      'curl -s -w "\\n%{http_code}"',
-      '-X POST',
-      `${DEMO_SEEDING_URL}/demo/api/v1/demo/patients/generate`,
-      `-H "X-Tenant-ID: ${tenantId}"`,
-      '-H "Content-Type: application/json"',
-      `-d '{"count": ${count}}'`,
-    ].join(' ');
+    const profile = payload.profile === 'full' ? 'full' : 'smoke';
+    const scheduleMode = normalizeScheduleMode(payload.scheduleMode || 'none');
+    const commands = [];
+
+    if (profile === 'full') {
+      commands.push(`SEED_PROFILE=full bash ${WORKSPACE_DIR}/scripts/seed-all-demo-data.sh`);
+    } else {
+      commands.push(`bash ${WORKSPACE_DIR}/scripts/seed-all-demo-data.sh`);
+    }
+
+    if (scheduleMode !== 'none') {
+      commands.push(`SEED_SCHEDULE_MODE=${scheduleMode} bash ${WORKSPACE_DIR}/scripts/seed-fhir-schedule.sh`);
+    }
+
+    if (!payload.profile && payload.patientCount) {
+      const tenantId = payload.tenantId || 'acme-health';
+      const count = Number(payload.patientCount || 200);
+      commands.push([
+        'curl -s -w "\\n%{http_code}"',
+        '-X POST',
+        `${DEMO_SEEDING_URL}/demo/api/v1/demo/patients/generate`,
+        `-H "X-Tenant-ID: ${tenantId}"`,
+        '-H "Content-Type: application/json"',
+        `-d \'{"count": ${count}}\'`,
+      ].join(' '));
+    }
+
+    cmd = commands.join(' && ');
+  } else if (action === 'seed-schedule') {
+    const scheduleMode = normalizeScheduleMode(payload.scheduleMode || 'both');
+    if (scheduleMode === 'none') {
+      return { error: 'scheduleMode must be one of appointment-task, encounter, both' };
+    }
+    cmd = `SEED_SCHEDULE_MODE=${scheduleMode} bash ${WORKSPACE_DIR}/scripts/seed-fhir-schedule.sh`;
   } else {
     return { error: `Unsupported action: ${action}` };
   }
@@ -117,6 +141,14 @@ async function handleCommand(payload) {
     outputTail: (result.stdout + '\n' + result.stderr).split('\n').filter(Boolean).slice(-80),
   };
   return lastCommand;
+}
+
+function normalizeScheduleMode(mode) {
+  if (!mode) return 'none';
+  if (mode === 'appointment-task' || mode === 'encounter' || mode === 'both' || mode === 'none') {
+    return mode;
+  }
+  return 'none';
 }
 
 const server = http.createServer(async (req, res) => {

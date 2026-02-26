@@ -13,6 +13,7 @@ import { LoggerService } from '../../services/logger.service';
 import { createMockMatDialog } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 import { provideMockStore } from '@ngrx/store/testing';
+import { Router } from '@angular/router';
 
 describe('MeasureBuilderComponent (TDD)', () => {
   let component: MeasureBuilderComponent;
@@ -22,6 +23,7 @@ describe('MeasureBuilderComponent (TDD)', () => {
   let mockToast: jest.Mocked<ToastService>;
   let mockDialogService: jest.Mocked<DialogService>;
   let mockAIAssistantService: jest.Mocked<AIAssistantService>;
+  let mockRouter: jest.Mocked<Router>;
 
   const mockDrafts: CustomMeasure[] = [
     {
@@ -79,6 +81,9 @@ describe('MeasureBuilderComponent (TDD)', () => {
     } as unknown as jest.Mocked<DialogService>;
 
     mockAIAssistantService = {} as jest.Mocked<AIAssistantService>;
+    mockRouter = {
+      navigate: jest.fn(),
+    } as unknown as jest.Mocked<Router>;
 
     await TestBed.configureTestingModule({
       imports: [MeasureBuilderComponent, NoopAnimationsModule],
@@ -89,6 +94,7 @@ describe('MeasureBuilderComponent (TDD)', () => {
         { provide: ToastService, useValue: mockToast },
         { provide: DialogService, useValue: mockDialogService },
         { provide: AIAssistantService, useValue: mockAIAssistantService },
+        { provide: Router, useValue: mockRouter },
         { provide: MatDialog, useValue: createMockMatDialog() },
     })
       .overrideProvider(MatDialog, { useValue: mockDialog })
@@ -162,40 +168,15 @@ describe('MeasureBuilderComponent (TDD)', () => {
       expect(typeof component.openNewMeasureDialog).toBe('function');
     });
 
-    it('should not create draft without user input', () => {
-      // Verify initial state - no drafts created yet
+    it('should not create a draft directly from list page', () => {
       expect(mockCustomMeasureService.createDraft).not.toHaveBeenCalled();
     });
 
-    it('creates a draft when dialog returns data', async () => {
-      const dialogRef = { afterClosed: () => of({ name: 'New Measure' }) } as any;
-      mockDialog.open.mockReturnValue(dialogRef);
-      mockCustomMeasureService.createDraft.mockReturnValue(of(mockDrafts[0]));
-
+    it('navigates to the full-page measure creation flow', async () => {
       await component.openNewMeasureDialog();
 
-      expect(mockCustomMeasureService.createDraft).toHaveBeenCalled();
-      expect(component.drafts[0].id).toBe('draft-1');
-      expect(mockToast.success).toHaveBeenCalledWith('Measure created successfully');
-    });
-
-    it('shows error when create draft fails', async () => {
-      const dialogRef = { afterClosed: () => of({ name: 'New Measure' }) } as any;
-      mockDialog.open.mockReturnValue(dialogRef);
-      mockCustomMeasureService.createDraft.mockReturnValue(throwError(() => new Error('fail')));
-
-      await component.openNewMeasureDialog();
-
-      expect(mockToast.error).toHaveBeenCalledWith('Failed to create measure');
-    });
-
-    it('does nothing when dialog closes without data', async () => {
-      const dialogRef = { afterClosed: () => of(undefined) } as any;
-      mockDialog.open.mockReturnValue(dialogRef);
-
-      await component.openNewMeasureDialog();
-
-      expect(mockCustomMeasureService.createDraft).not.toHaveBeenCalled();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/measure-builder/new']);
+      expect(mockDialog.open).not.toHaveBeenCalled();
     });
   });
 

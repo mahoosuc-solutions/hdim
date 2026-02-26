@@ -102,7 +102,7 @@
       "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "clinical-portal:build",
+        "buildTarget": "clinical-portal:build:development",
         "port": 4200,
         "staticFilePath": "dist/apps/clinical-portal/browser",
         "spa": true

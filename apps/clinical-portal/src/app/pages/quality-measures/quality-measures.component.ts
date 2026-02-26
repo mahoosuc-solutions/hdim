@@ -14,10 +14,18 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { catchError, firstValueFrom, forkJoin, map, of } from 'rxjs';
 import { API_CONFIG } from '../../config/api.config';
 import { LoggerService } from '../../services/logger.service';
+import { MeasureService } from '../../services/measure.service';
+import { EvaluationService } from '../../services/evaluation.service';
+import { PatientService } from '../../services/patient.service';
+import { MeasureInfo } from '../../models/cql-library.model';
+import { QualityMeasureResult } from '../../models/quality-result.model';
+import { PatientSummary } from '../../models/patient.model';
 
 interface QualityMeasure {
   id: string;
@@ -71,33 +79,45 @@ interface EvaluationResult {
     MatTooltipModule,
     MatBadgeModule,
     MatDividerModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './quality-measures.component.html',
   styleUrl: './quality-measures.component.scss',
 })
 export class QualityMeasuresComponent implements OnInit {
-  // Signals for reactive state
   searchTerm = signal('');
   selectedCategory = signal<string>('all');
   selectedStatus = signal<string>('all');
   selectedMeasure = signal<QualityMeasure | null>(null);
 
-  // Evaluation state
   isEvaluating = signal(false);
   evaluationProgress = signal(0);
   evaluationStatus = signal('');
   evaluationResult = signal<EvaluationResult | null>(null);
 
-  // Computed for template (avoid Math in templates)
-  estimatedTimeRemaining = computed(() => {
-    return Math.max(0, Math.floor((100 - this.evaluationProgress()) / 8));
+  estimatedTimeRemaining = computed(() => Math.max(0, Math.floor((100 - this.evaluationProgress()) / 25)));
+
+  totalPatients = signal(0);
+  lastEvaluationDate = signal<string | null>(null);
+  evaluationPatientId = signal<string | null>(null);
+  patientSearchTerm = signal('');
+  patients = signal<PatientSummary[]>([]);
+  loadingPatients = signal(false);
+
+  filteredPatients = computed(() => {
+    const term = this.patientSearchTerm().trim().toLowerCase();
+    const allPatients = this.patients();
+    if (!term) {
+      return allPatients.slice(0, 10);
+    }
+    return allPatients
+      .filter((patient) =>
+        patient.fullName.toLowerCase().includes(term) ||
+        (patient.mrn || '').toLowerCase().includes(term)
+      )
+      .slice(0, 10);
   });
 
-  // Population stats
-  totalPatients = signal(5000);
-  lastEvaluationDate = signal<string | null>(null);
-
-  // Categories for filter
   categories = [
     { value: 'all', label: 'All Categories' },
     { value: 'screening', label: 'Screening' },
@@ -106,110 +126,26 @@ export class QualityMeasuresComponent implements OnInit {
     { value: 'behavioral', label: 'Behavioral Health' },
   ];
 
-  // Sample HEDIS measures
-  measures = signal<QualityMeasure[]>([
-    {
-      id: '1',
-      code: 'BCS',
-      name: 'Breast Cancer Screening',
-      description: 'Women aged 50-74 who had a mammogram to screen for breast cancer in the past 27 months.',
-      category: 'screening',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 5,
-      status: 'Active',
-      lastEvaluated: null,
-      benchmark: 74.2,
-    },
-    {
-      id: '2',
-      code: 'COL',
-      name: 'Colorectal Cancer Screening',
-      description: 'Adults aged 45-75 who had appropriate screening for colorectal cancer.',
-      category: 'screening',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 5,
-      status: 'Active',
-      lastEvaluated: null,
-      benchmark: 72.5,
-    },
-    {
-      id: '3',
-      code: 'CBP',
-      name: 'Controlling High Blood Pressure',
-      description: 'Adults aged 18-85 with a diagnosis of hypertension whose blood pressure was adequately controlled.',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 4,
-      status: 'Active',
-      lastEvaluated: null,
-      benchmark: 68.3,
-    },
-    {
-      id: '4',
-      code: 'CDC',
-      name: 'Comprehensive Diabetes Care - HbA1c Control',
-      description: 'Adults aged 18-75 with diabetes whose HbA1c was at the controlled level (<8.0%).',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 5,
-      status: 'Active',
-      lastEvaluated: null,
-      benchmark: 58.7,
-    },
-    {
-      id: '5',
-      code: 'EED',
-      name: 'Eye Exam for Patients with Diabetes',
-      description: 'Adults aged 18-75 with diabetes who had a retinal eye exam.',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 4,
-      status: 'Active',
-      lastEvaluated: null,
-      benchmark: 67.1,
-    },
-    {
-      id: '6',
-      code: 'SPC',
-      name: 'Statin Therapy for Patients with Cardiovascular Disease',
-      description: 'Adults aged 21-75 with cardiovascular disease who were prescribed statin therapy.',
-      category: 'chronic',
-      measureType: 'HEDIS 2025',
-      steward: 'NCQA',
-      starRating: 3,
-      status: 'Active',
-      lastEvaluated: null,
-      benchmark: 82.4,
-    },
-  ]);
+  measures = signal<QualityMeasure[]>([]);
 
-  // Computed filtered measures
   filteredMeasures = computed(() => {
     let result = this.measures();
 
-    // Filter by search term
     const search = this.searchTerm().toLowerCase();
     if (search) {
-      result = result.filter(m =>
+      result = result.filter((m) =>
         m.name.toLowerCase().includes(search) ||
         m.code.toLowerCase().includes(search) ||
         m.description.toLowerCase().includes(search)
       );
     }
 
-    // Filter by category
     if (this.selectedCategory() !== 'all') {
-      result = result.filter(m => m.category === this.selectedCategory());
+      result = result.filter((m) => m.category === this.selectedCategory());
     }
 
-    // Filter by status
     if (this.selectedStatus() !== 'all') {
-      result = result.filter(m => m.status === this.selectedStatus());
+      result = result.filter((m) => m.status === this.selectedStatus());
     }
 
     return result;
@@ -217,12 +153,14 @@ export class QualityMeasuresComponent implements OnInit {
 
   displayedColumns = ['code', 'name', 'category', 'benchmark', 'status', 'lastEvaluated', 'actions'];
 
-  // Loading state
   isLoading = signal(false);
   loadError = signal<string | null>(null);
 
   private http = inject(HttpClient);
   private logger = inject(LoggerService).withContext('QualityMeasuresComponent');
+  private measureService = inject(MeasureService);
+  private evaluationService = inject(EvaluationService);
+  private patientService = inject(PatientService);
 
   constructor(
     private router: Router,
@@ -230,68 +168,128 @@ export class QualityMeasuresComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadCareGapStatistics();
-    this.loadPatientCount();
+    this.loadMeasureCatalog();
+    this.loadPatients();
+    this.loadPatientCountAndContext();
+    this.loadDefaultEvaluationPreset();
   }
 
-  /**
-   * Load care gap statistics from the Care Gap API
-   * Aggregates care gaps by measure to show counts per measure
-   */
-  private loadCareGapStatistics(): void {
+  private loadMeasureCatalog(): void {
     this.isLoading.set(true);
     this.loadError.set(null);
 
-    const careGapUrl = `${API_CONFIG.CARE_GAP_URL}/api/v1/care-gaps`;
-
-    this.http.get<CareGapApiResponse>(careGapUrl, {
-      headers: { 'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID }
+    forkJoin({
+      measures: this.measureService.getLocalMeasuresAsInfo().pipe(catchError(() => of([] as MeasureInfo[]))),
+      results: this.evaluationService.getAllResults(0, 5000).pipe(catchError(() => of([] as QualityMeasureResult[]))),
     }).subscribe({
-      next: (response) => {
-        // Aggregate care gaps by measure code
-        const careGapCounts = new Map<string, number>();
-        const gapList = response.content || [];
+      next: ({ measures, results }) => {
+        const mapped = measures.map((measure) => this.mapMeasureWithResults(measure, results));
+        this.measures.set(mapped);
 
-        gapList.forEach((gap: CareGapItem) => {
-          const measureId = gap.measureId;
-          careGapCounts.set(measureId, (careGapCounts.get(measureId) || 0) + 1);
-        });
+        const latest = mapped
+          .map((m) => m.lastEvaluated)
+          .filter((date): date is string => !!date)
+          .sort()
+          .at(-1) ?? null;
 
-        // Update measures with care gap counts
-        const updatedMeasures = this.measures().map(measure => ({
-          ...measure,
-          careGaps: careGapCounts.get(measure.code) || 0
-        }));
-
-        this.measures.set(updatedMeasures);
+        this.lastEvaluationDate.set(latest);
         this.isLoading.set(false);
+
+        if (mapped.length === 0) {
+          this.loadError.set('No quality measures were returned by the quality-measure service.');
+        }
       },
       error: (error) => {
-        this.logger.error('Failed to load care gap statistics', error);
-        this.loadError.set('Failed to load care gap data. Using default measures.');
+        this.logger.error('Failed to load quality measure catalog', error);
+        this.loadError.set('Failed to load quality measure data.');
         this.isLoading.set(false);
-      }
+      },
     });
   }
 
-  /**
-   * Load patient count from FHIR Patient API
-   */
-  private loadPatientCount(): void {
-    const fhirUrl = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
+  private loadPatientCountAndContext(): void {
+    const fhirUrl = `${API_CONFIG.FHIR_SERVER_URL}/Patient?_count=1`;
 
     this.http.get<FhirBundleResponse>(fhirUrl, {
-      headers: { 'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID }
+      headers: { 'X-Tenant-ID': API_CONFIG.DEFAULT_TENANT_ID },
     }).subscribe({
       next: (response) => {
         const total = response.total || (response.entry?.length || 0);
         this.totalPatients.set(total);
+
+        const fallbackPatientId = response.entry?.[0]?.resource?.id || null;
+        if (!this.evaluationPatientId() && fallbackPatientId) {
+          this.evaluationPatientId.set(fallbackPatientId);
+        }
       },
       error: (error) => {
         this.logger.error('Failed to load patient count', error);
-        // Keep default value
-      }
+      },
     });
+  }
+
+  private loadDefaultEvaluationPreset(): void {
+    this.evaluationService.getDefaultEvaluationPreset().subscribe({
+      next: (preset) => {
+        if (preset?.patientId) {
+          this.evaluationPatientId.set(preset.patientId);
+          this.syncPatientSearchFromSelection();
+        }
+      },
+      error: (error) => {
+        this.logger.warn('Unable to load default evaluation preset', error);
+      },
+    });
+  }
+
+  private loadPatients(): void {
+    this.loadingPatients.set(true);
+    this.patientService.getPatientsSummaryCached().pipe(
+      catchError((error) => {
+        this.logger.warn('Unable to load patient summaries for autocomplete', error);
+        return of([] as PatientSummary[]);
+      })
+    ).subscribe((patients) => {
+      this.patients.set(patients);
+      this.loadingPatients.set(false);
+      this.syncPatientSearchFromSelection();
+    });
+  }
+
+  onPatientSearchChange(value: string | PatientSummary): void {
+    if (typeof value !== 'string') {
+      this.selectEvaluationPatient(value);
+      return;
+    }
+
+    this.patientSearchTerm.set(value);
+
+    const selected = this.selectedEvaluationPatient();
+    if (selected && this.getPatientDisplay(selected) !== value) {
+      this.evaluationPatientId.set(null);
+    }
+  }
+
+  selectEvaluationPatient(patient: PatientSummary): void {
+    this.evaluationPatientId.set(patient.id);
+    this.patientSearchTerm.set(this.getPatientDisplay(patient));
+  }
+
+  getPatientDisplay(patient: PatientSummary): string {
+    return patient.mrn ? `${patient.fullName} (MRN: ${patient.mrn})` : patient.fullName;
+  }
+
+  private selectedEvaluationPatient(): PatientSummary | null {
+    const selectedId = this.evaluationPatientId();
+    if (!selectedId) return null;
+    return this.patients().find((patient) => patient.id === selectedId) || null;
+  }
+
+  private syncPatientSearchFromSelection(): void {
+    const selected = this.selectedEvaluationPatient();
+    if (selected) {
+      this.patientSearchTerm.set(this.getPatientDisplay(selected));
+    }
   }
 
   selectMeasure(measure: QualityMeasure): void {
@@ -312,82 +310,74 @@ export class QualityMeasuresComponent implements OnInit {
     const measure = this.selectedMeasure();
     if (!measure) return;
 
+    const patientId = this.evaluationPatientId();
+    if (!patientId) {
+      this.loadError.set('No patient context available. Set a default evaluation preset or load patient data first.');
+      return;
+    }
+
     this.isEvaluating.set(true);
-    this.evaluationProgress.set(0);
-    this.evaluationStatus.set(`Initializing evaluation for ${measure.code}...`);
+    this.evaluationProgress.set(20);
+    this.evaluationStatus.set(`Submitting ${measure.code} evaluation...`);
 
-    // Simulate evaluation progress
-    const totalPatients = this.totalPatients();
-    const evaluationTime = 12000; // 12 seconds
-    const startTime = Date.now();
+    const startedAt = performance.now();
 
-    const progressInterval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min((elapsed / evaluationTime) * 100, 99);
-      const patientsProcessed = Math.floor((progress / 100) * totalPatients);
+    try {
+      const localResult = await firstValueFrom(
+        this.evaluationService.calculateLocalMeasure(patientId, measure.code)
+      );
 
-      this.evaluationProgress.set(progress);
-      this.evaluationStatus.set(`Processing ${patientsProcessed.toLocaleString()} / ${totalPatients.toLocaleString()} patients...`);
+      this.evaluationProgress.set(85);
+      this.evaluationStatus.set('Finalizing quality measure result...');
 
-      if (progress >= 99) {
-        clearInterval(progressInterval);
-      }
-    }, 100);
+      const denominator = localResult.denominatorMembership ? 1 : 0;
+      const numerator = denominator === 1 && localResult.careGaps.length === 0 ? 1 : 0;
+      const rate = denominator === 0 ? 0 : 100 * (numerator / denominator);
+      const benchmark = measure.benchmark || 70;
+      const careGapsCount = localResult.careGaps.length;
+      const evaluationTime = Math.round((performance.now() - startedAt) / 100) / 10;
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, evaluationTime));
+      const result: EvaluationResult = {
+        measureId: measure.id,
+        measureCode: measure.code,
+        measureName: measure.name,
+        evaluationTime,
+        patientsEvaluated: 1,
+        denominator,
+        numerator,
+        rate,
+        benchmark,
+        gapToBenchmark: Math.round((rate - benchmark) * 10) / 10,
+        careGapsCount,
+      };
 
-    clearInterval(progressInterval);
-    this.evaluationProgress.set(100);
-    this.evaluationStatus.set('Evaluation complete!');
+      this.evaluationResult.set(result);
 
-    // Generate result based on measure
-    const result = this.generateEvaluationResult(measure);
-    this.evaluationResult.set(result);
-
-    // Update measure with result
-    const updatedMeasures = this.measures().map(m => {
-      if (m.id === measure.id) {
+      const updatedMeasures = this.measures().map((m) => {
+        if (m.id !== measure.id) return m;
         return {
           ...m,
-          lastEvaluated: new Date().toISOString(),
-          denominator: result.denominator,
-          numerator: result.numerator,
-          rate: result.rate,
-          careGaps: result.careGapsCount,
+          lastEvaluated: localResult.calculatedAt,
+          denominator,
+          numerator,
+          rate,
+          careGaps: careGapsCount,
         };
-      }
-      return m;
-    });
-    this.measures.set(updatedMeasures);
-    this.selectedMeasure.set(updatedMeasures.find(m => m.id === measure.id) || null);
+      });
 
-    this.isEvaluating.set(false);
-    this.lastEvaluationDate.set(new Date().toISOString());
-  }
-
-  private generateEvaluationResult(measure: QualityMeasure): EvaluationResult {
-    // Generate realistic results based on measure type
-    const totalPatients = this.totalPatients();
-    const eligiblePercent = 0.15 + Math.random() * 0.05; // 15-20% eligible
-    const denominator = Math.floor(totalPatients * eligiblePercent);
-    const rate = (measure.benchmark || 70) - 2 + Math.random() * 4; // Near benchmark
-    const numerator = Math.floor(denominator * (rate / 100));
-    const careGapsCount = denominator - numerator;
-
-    return {
-      measureId: measure.id,
-      measureCode: measure.code,
-      measureName: measure.name,
-      evaluationTime: 12.4,
-      patientsEvaluated: totalPatients,
-      denominator,
-      numerator,
-      rate: Math.round(rate * 10) / 10,
-      benchmark: measure.benchmark || 70,
-      gapToBenchmark: Math.round((rate - (measure.benchmark || 70)) * 10) / 10,
-      careGapsCount,
-    };
+      this.measures.set(updatedMeasures);
+      this.selectedMeasure.set(updatedMeasures.find((m) => m.id === measure.id) || null);
+      this.lastEvaluationDate.set(localResult.calculatedAt);
+      this.loadError.set(null);
+      this.evaluationProgress.set(100);
+      this.evaluationStatus.set('Evaluation complete');
+    } catch (error) {
+      this.logger.error('Failed to run quality measure evaluation', error);
+      this.loadError.set('Evaluation failed. Please retry or verify the quality-measure service is available.');
+      this.evaluationStatus.set('Evaluation failed');
+    } finally {
+      this.isEvaluating.set(false);
+    }
   }
 
   viewCareGaps(): void {
@@ -397,7 +387,7 @@ export class QualityMeasuresComponent implements OnInit {
         queryParams: {
           measureCode: result.measureCode,
           measureName: result.measureName,
-        }
+        },
       });
     }
   }
@@ -409,7 +399,7 @@ export class QualityMeasuresComponent implements OnInit {
         queryParams: {
           measureCode: result.measureCode,
           careGapsCount: result.careGapsCount,
-        }
+        },
       });
     }
   }
@@ -418,17 +408,17 @@ export class QualityMeasuresComponent implements OnInit {
     const measure = this.selectedMeasure();
     if (measure) {
       this.router.navigate(['/measure-builder'], {
-        queryParams: { measureId: measure.id }
+        queryParams: { measureId: measure.id },
       });
     }
   }
 
   getStarArray(rating: number): number[] {
-    return Array(5).fill(0).map((_, i) => i < rating ? 1 : 0);
+    return Array(5).fill(0).map((_, i) => (i < rating ? 1 : 0));
   }
 
   getCategoryLabel(category: string): string {
-    const cat = this.categories.find(c => c.value === category);
+    const cat = this.categories.find((c) => c.value === category);
     return cat?.label || category;
   }
 
@@ -442,28 +432,66 @@ export class QualityMeasuresComponent implements OnInit {
       minute: '2-digit',
     });
   }
-}
 
-// API Response Types
-interface CareGapApiResponse {
-  content: CareGapItem[];
-  totalElements: number;
-  totalPages: number;
-}
+  private mapMeasureWithResults(measure: MeasureInfo, results: QualityMeasureResult[]): QualityMeasure {
+    const matchingResults = results.filter((result) => result.measureId === measure.id);
+    const denominator = matchingResults.filter((result) => result.denominatorEligible).length;
+    const numerator = matchingResults.filter((result) => result.denominatorEligible && result.numeratorCompliant).length;
+    const rate = denominator > 0 ? Math.round((numerator / denominator) * 1000) / 10 : undefined;
+    const lastEvaluated = matchingResults
+      .map((result) => result.calculationDate || result.createdAt)
+      .sort()
+      .at(-1) ?? null;
 
-interface CareGapItem {
-  id: string;
-  patientId: string;
-  measureId: string;
-  measureName: string;
-  gapStatus: string;
-  priority: string;
-  gapDescription: string;
+    return {
+      id: measure.id,
+      code: measure.id,
+      name: measure.description || measure.name,
+      description: measure.description || `${measure.name} quality measure`,
+      category: this.mapCategory(measure.category),
+      measureType: `HEDIS ${new Date().getFullYear()}`,
+      steward: 'NCQA',
+      starRating: STAR_RATING_BY_MEASURE[measure.id] ?? 3,
+      status: 'Active',
+      lastEvaluated,
+      denominator: denominator || undefined,
+      numerator: numerator || undefined,
+      rate,
+      benchmark: BENCHMARK_BY_MEASURE[measure.id] ?? 70,
+      careGaps: denominator - numerator,
+    };
+  }
+
+  private mapCategory(category?: string): string {
+    const normalized = (category || '').toUpperCase();
+    if (normalized.includes('BEHAVIORAL')) return 'behavioral';
+    if (normalized.includes('CHRONIC')) return 'chronic';
+    if (normalized.includes('PREVENTIVE') || normalized.includes('SCREEN') || normalized.includes('WOMENS')) return 'screening';
+    return 'prevention';
+  }
 }
 
 interface FhirBundleResponse {
   resourceType: string;
   type: string;
   total?: number;
-  entry?: { resource: unknown }[];
+  entry?: { resource?: { id?: string } }[];
 }
+
+const BENCHMARK_BY_MEASURE: Record<string, number> = {
+  BCS: 74.2,
+  COL: 72.5,
+  CBP: 68.3,
+  CDC: 58.7,
+  EED: 67.1,
+  SPC: 82.4,
+};
+
+const STAR_RATING_BY_MEASURE: Record<string, number> = {
+  BCS: 5,
+  COL: 5,
+  CBP: 4,
+  CDC: 5,
+  EED: 4,
+  SPC: 3,
+};

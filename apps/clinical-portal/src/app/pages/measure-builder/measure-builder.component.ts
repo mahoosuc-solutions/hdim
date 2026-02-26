@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit, Optional } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -18,13 +18,13 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
+import { Router } from '@angular/router';
 import { ToastService } from '../../services/toast.service';
 import { DialogService } from '../../services/dialog.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
 import {
   CustomMeasureService,
   CustomMeasure,
-  CreateCustomMeasureRequest,
 } from '../../services/custom-measure.service';
 import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
@@ -34,13 +34,13 @@ import { Patient } from '../../models/patient.model';
 import { selectCurrentPatient } from '../../store/selectors/patient.selectors';
 
 // Import dialog components
-import { NewMeasureDialogComponent } from './dialogs/new-measure-dialog.component';
 import { CqlEditorDialogComponent } from './dialogs/cql-editor-dialog.component';
 import { ValueSetPickerDialogComponent } from './dialogs/value-set-picker-dialog.component';
 import { TestPreviewDialogComponent } from './dialogs/test-preview-dialog.component';
 import { PublishConfirmDialogComponent } from './dialogs/publish-confirm-dialog.component';
 import { VersionHistoryDialogComponent } from './dialogs/version-history-dialog.component';
 import { PerformanceDashboardDialogComponent } from './dialogs/performance-dashboard-dialog.component';
+import { MeasureMetadataDialogComponent } from './dialogs/measure-metadata-dialog.component';
 
 @Component({
   selector: 'app-measure-builder',
@@ -84,6 +84,8 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
     'select',
     'name',
     'category',
+    'ownerCadence',
+    'priority',
     'status',
     'version',
     'updatedAt',
@@ -105,6 +107,18 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
     ARCHIVED: 'warn',
   };
 
+  priorityClassMap: { [key: string]: string } = {
+    HIGH: 'priority-high',
+    MEDIUM: 'priority-medium',
+    LOW: 'priority-low',
+  };
+
+  private readonly prioritySortRank: { [key: string]: number } = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+  };
+
   // Current patient context from store (for patient-aware measure testing)
   currentPatient: Patient | null = null;
 
@@ -114,7 +128,8 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
     private toast: ToastService,
     private dialogService: DialogService,
     public aiAssistant: AIAssistantService,
-    private store: Store
+    private store: Store,
+    @Optional() private router?: Router
   ) {}
 
   ngOnInit(): void {
@@ -126,6 +141,23 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   ngAfterViewInit(): void {
+    this.dataSource.sortingDataAccessor = (item: CustomMeasure, property: string): string | number => {
+      switch (property) {
+        case 'ownerCadence':
+          return `${item.owner || ''} ${item.reportingCadence || ''}`.trim().toLowerCase();
+        case 'priority':
+          return this.prioritySortRank[(item.priority || '').toUpperCase()] || 0;
+        case 'updatedAt':
+          return item.updatedAt || item.createdAt || '';
+        default: {
+          const value = (item as unknown as Record<string, unknown>)[property];
+          if (typeof value === 'string') {
+            return value.toLowerCase();
+          }
+          return (value as number) || '';
+        }
+      }
+    };
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
   }
@@ -162,60 +194,11 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   /**
-   * Open dialog to create a new measure
+   * Navigate to full-page measure creation
    */
   @TrackInteraction('measure-builder', 'create-measure')
   openNewMeasureDialog(): void {
-    const dialogRef = this.dialog.open(NewMeasureDialogComponent, {
-      width: '900px',
-      maxHeight: '85vh',
-      disableClose: true,
-      autoFocus: true,
-    });
-
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((draft?: CreateCustomMeasureRequest & { cqlTemplate?: string }) => {
-      if (!draft) return;
-      this.loading = true;
-
-      // Extract cqlTemplate before sending to backend (it's not part of the DTO)
-      const cqlTemplate = draft.cqlTemplate;
-      delete draft.cqlTemplate;
-
-      this.customMeasureService.createDraft(draft).pipe(takeUntil(this.destroy$)).subscribe({
-        next: (saved) => {
-          // If created from template, also save the CQL
-          if (cqlTemplate) {
-            this.customMeasureService.updateCql(saved.id, cqlTemplate).pipe(takeUntil(this.destroy$)).subscribe({
-              next: (updatedMeasure) => {
-                this.drafts = [updatedMeasure, ...this.drafts];
-                this.measures = this.drafts;
-                this.dataSource.data = this.drafts;
-                this.toast.success('Measure created from template successfully');
-                this.loading = false;
-              },
-              error: () => {
-                // Measure created but CQL save failed - still add to list
-                this.drafts = [saved, ...this.drafts];
-                this.measures = this.drafts;
-                this.dataSource.data = this.drafts;
-                this.toast.warning('Measure created, but template CQL could not be saved');
-                this.loading = false;
-              },
-            });
-          } else {
-            this.drafts = [saved, ...this.drafts];
-            this.measures = this.drafts;
-            this.dataSource.data = this.drafts;
-            this.toast.success('Measure created successfully');
-            this.loading = false;
-          }
-        },
-        error: () => {
-          this.toast.error('Failed to create measure');
-          this.loading = false;
-        },
-      });
-    });
+    void this.router?.navigate(['/measure-builder/new']);
   }
 
   /**
@@ -357,6 +340,31 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
   }
 
   /**
+   * Edit measure metadata/details
+   */
+  editMetadata(measure: CustomMeasure): void {
+    const dialogRef = this.dialog.open(MeasureMetadataDialogComponent, {
+      width: '900px',
+      maxHeight: '85vh',
+      data: { measure },
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((updatedMeasure?: CustomMeasure) => {
+      if (!updatedMeasure) {
+        return;
+      }
+
+      const index = this.drafts.findIndex((m) => m.id === measure.id);
+      if (index !== -1) {
+        this.drafts[index] = updatedMeasure;
+      }
+      this.measures = [...this.drafts];
+      this.dataSource.data = [...this.drafts];
+      this.toast.success('Measure details updated');
+    });
+  }
+
+  /**
    * Open performance comparison dashboard
    */
   @TrackInteraction('measure-builder', 'view-performance-dashboard')
@@ -428,6 +436,13 @@ export class MeasureBuilderComponent implements OnInit, OnDestroy, AfterViewInit
    */
   getStatusColor(status: string): string {
     return this.statusColors[status] || 'primary';
+  }
+
+  getPriorityClass(priority?: string): string {
+    if (!priority) {
+      return 'priority-unspecified';
+    }
+    return this.priorityClassMap[priority.toUpperCase()] || 'priority-unspecified';
   }
 
   /**

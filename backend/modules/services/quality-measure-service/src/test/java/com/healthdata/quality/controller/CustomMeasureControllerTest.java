@@ -34,12 +34,16 @@ class CustomMeasureControllerTest {
     void shouldCreateDraft() {
         CustomMeasureEntity entity = new CustomMeasureEntity();
         when(customMeasureService.createDraft(
-            eq("tenant-1"), eq("Measure A"), eq("desc"), eq("HEDIS"), eq(2024), eq("user-1")))
+            eq("tenant-1"), eq("Measure A"), eq("desc"), eq("HEDIS"), eq(2024),
+            eq("Owner Team"), eq("Diabetes"), eq("MONTHLY"), eq("75%"),
+            eq("HIGH"), eq("Rollout notes"), eq("diabetes,preventive"), eq("user-1")))
             .thenReturn(entity);
 
         CustomMeasureController.CreateCustomMeasureRequest request =
             new CustomMeasureController.CreateCustomMeasureRequest(
-                "Measure A", "desc", "HEDIS", 2024, "user-1");
+                "Measure A", "desc", "HEDIS", 2024,
+                "Owner Team", "Diabetes", "MONTHLY", "75%",
+                "HIGH", "Rollout notes", "diabetes,preventive", "user-1");
 
         var response = controller.createDraft("tenant-1", request);
 
@@ -76,11 +80,16 @@ class CustomMeasureControllerTest {
         UUID id = UUID.randomUUID();
         CustomMeasureEntity measure = new CustomMeasureEntity();
         when(customMeasureService.updateDraft(
-            eq("tenant-1"), eq(id), eq("Measure B"), eq("desc2"), eq("CMS"), eq(2025)))
+            eq("tenant-1"), eq(id), eq("Measure B"), eq("desc2"), eq("CMS"), eq(2025),
+            eq("Owner Team"), eq("Cardiology"), eq("QUARTERLY"), eq("80%"),
+            eq("MEDIUM"), eq("Update notes"), eq("cardio,quality")))
             .thenReturn(measure);
 
         CustomMeasureController.UpdateCustomMeasureRequest request =
-            new CustomMeasureController.UpdateCustomMeasureRequest("Measure B", "desc2", "CMS", 2025);
+            new CustomMeasureController.UpdateCustomMeasureRequest(
+                "Measure B", "desc2", "CMS", 2025,
+                "Owner Team", "Cardiology", "QUARTERLY", "80%",
+                "MEDIUM", "Update notes", "cardio,quality");
 
         var response = controller.updateDraft("tenant-1", id, request);
 

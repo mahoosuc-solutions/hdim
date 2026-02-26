@@ -15,6 +15,7 @@ import com.healthdata.quality.service.CareGapService;
 import com.healthdata.quality.service.MentalHealthAssessmentService;
 import com.healthdata.quality.service.PatientHealthService;
 import com.healthdata.quality.service.RiskStratificationService;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -130,6 +131,28 @@ class PatientHealthControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody().getTrend()).isEqualTo("stable");
+    }
+
+    @Test
+    @DisplayName("Should return care gap trends")
+    void shouldReturnCareGapTrends() {
+        List<CareGapService.CareGapTrendPoint> points = List.of(
+            new CareGapService.CareGapTrendPoint(
+                Instant.parse("2026-02-24T00:00:00Z"),
+                12,
+                2,
+                1,
+                Map.of("high", 4, "medium", 5, "low", 3),
+                Map.of("screening", 3, "medication", 2, "followup", 4, "lab", 1, "assessment", 2)
+            )
+        );
+        when(careGapService.getCareGapTrends("tenant-1", 30)).thenReturn(points);
+
+        var response = controller.getCareGapTrends("tenant-1", 30);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).hasSize(1);
+        assertThat(response.getBody().get(0).totalGaps()).isEqualTo(12);
     }
 
     @Test

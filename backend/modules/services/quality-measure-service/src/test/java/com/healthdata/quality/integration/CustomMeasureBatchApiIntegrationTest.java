@@ -200,6 +200,103 @@ public class CustomMeasureBatchApiIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should create custom measure with metadata fields")
+    void testCreateCustomMeasureWithMetadata() throws Exception {
+        Map<String, Object> request = Map.ofEntries(
+                Map.entry("name", "Metadata Measure"),
+                Map.entry("description", "Measure with metadata"),
+                Map.entry("category", "CUSTOM"),
+                Map.entry("year", 2026),
+                Map.entry("owner", "Population Health Team"),
+                Map.entry("clinicalFocus", "Diabetes"),
+                Map.entry("reportingCadence", "MONTHLY"),
+                Map.entry("targetThreshold", "75%"),
+                Map.entry("priority", "HIGH"),
+                Map.entry("implementationNotes", "Pilot in Q2"),
+                Map.entry("tags", "diabetes,quality")
+        );
+
+        mockMvc.perform(post("/quality-measure/custom-measures")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Metadata Measure"))
+                .andExpect(jsonPath("$.owner").value("Population Health Team"))
+                .andExpect(jsonPath("$.clinicalFocus").value("Diabetes"))
+                .andExpect(jsonPath("$.reportingCadence").value("MONTHLY"))
+                .andExpect(jsonPath("$.targetThreshold").value("75%"))
+                .andExpect(jsonPath("$.priority").value("HIGH"))
+                .andExpect(jsonPath("$.implementationNotes").value("Pilot in Q2"))
+                .andExpect(jsonPath("$.tags").value("diabetes,quality"));
+    }
+
+    @Test
+    @DisplayName("Should update metadata fields on draft measure")
+    void testUpdateCustomMeasureMetadata() throws Exception {
+        Map<String, Object> request = Map.of(
+                "owner", "Care Management",
+                "clinicalFocus", "Hypertension",
+                "reportingCadence", "QUARTERLY",
+                "targetThreshold", "80%",
+                "priority", "MEDIUM",
+                "implementationNotes", "Expand in Q3",
+                "tags", "hypertension,preventive"
+        );
+
+        mockMvc.perform(put("/quality-measure/custom-measures/{id}", draftMeasure1Id)
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.owner").value("Care Management"))
+                .andExpect(jsonPath("$.clinicalFocus").value("Hypertension"))
+                .andExpect(jsonPath("$.reportingCadence").value("QUARTERLY"))
+                .andExpect(jsonPath("$.targetThreshold").value("80%"))
+                .andExpect(jsonPath("$.priority").value("MEDIUM"))
+                .andExpect(jsonPath("$.implementationNotes").value("Expand in Q3"))
+                .andExpect(jsonPath("$.tags").value("hypertension,preventive"));
+    }
+
+    @Test
+    @DisplayName("Should reject create with invalid metadata values")
+    void testCreateCustomMeasureWithInvalidMetadata() throws Exception {
+        Map<String, Object> request = Map.ofEntries(
+                Map.entry("name", "Invalid Metadata Measure"),
+                Map.entry("category", "CUSTOM"),
+                Map.entry("year", 1800),
+                Map.entry("reportingCadence", "WEEKLY"),
+                Map.entry("priority", "CRITICAL")
+        );
+
+        mockMvc.perform(post("/quality-measure/custom-measures")
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Should reject update with invalid metadata values")
+    void testUpdateCustomMeasureWithInvalidMetadata() throws Exception {
+        Map<String, Object> request = Map.of(
+                "year", 2201,
+                "reportingCadence", "BIWEEKLY",
+                "priority", "URGENT"
+        );
+
+        mockMvc.perform(put("/quality-measure/custom-measures/{id}", draftMeasure1Id)
+                        .header("X-Tenant-ID", TENANT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Should batch delete measures successfully")
     void testBatchDeleteMeasures() throws Exception {
         Map<String, Object> request = Map.of(

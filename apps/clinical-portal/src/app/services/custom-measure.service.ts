@@ -12,6 +12,13 @@ export interface CustomMeasure {
   description?: string;
   category?: string;
   year?: number;
+  owner?: string;
+  clinicalFocus?: string;
+  reportingCadence?: string;
+  targetThreshold?: string;
+  priority?: string;
+  implementationNotes?: string;
+  tags?: string;
   cqlText?: string;
   valueSets?: any;
   createdBy: string;
@@ -24,6 +31,13 @@ export interface CreateCustomMeasureRequest {
   description?: string;
   category?: string;
   year?: number;
+  owner?: string;
+  clinicalFocus?: string;
+  reportingCadence?: string;
+  targetThreshold?: string;
+  priority?: string;
+  implementationNotes?: string;
+  tags?: string;
   createdBy?: string;
 }
 
@@ -32,6 +46,13 @@ export interface UpdateCustomMeasureRequest {
   description?: string;
   category?: string;
   year?: number;
+  owner?: string;
+  clinicalFocus?: string;
+  reportingCadence?: string;
+  targetThreshold?: string;
+  priority?: string;
+  implementationNotes?: string;
+  tags?: string;
 }
 
 export interface MeasureVersion {

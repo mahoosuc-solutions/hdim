@@ -10,6 +10,14 @@ import {
   DemoSeedingService,
   DemoStatusResponse,
 } from '../../services/demo-seeding.service';
+import {
+  OperationRunDetail,
+  OperationRunSummary,
+  OperationsService,
+  OperationSystemStatus,
+  RunQueuedResponse,
+  ValidationGate,
+} from '../../services/operations.service';
 
 @Component({
   selector: 'app-admin-demo-seeding',
@@ -34,6 +42,152 @@ import {
           </button>
         </div>
       </header>
+
+      <section class="panel operations">
+        <div class="panel-header">
+          <h2>Operational Runs</h2>
+          <span class="hint">Run stack, seeding, and validation jobs with persisted history.</span>
+        </div>
+
+        <div class="ops-controls">
+          <button class="primary" type="button" (click)="runStackStart()" [disabled]="loading">
+            Start Stack
+          </button>
+          <button class="ghost" type="button" (click)="runStackRestart()" [disabled]="loading">
+            Restart Stack
+          </button>
+          <button class="danger" type="button" (click)="runStackStop()" [disabled]="loading">
+            Stop Stack
+          </button>
+          <button class="ghost" type="button" (click)="runValidate()" [disabled]="loading">
+            Validate System
+          </button>
+        </div>
+
+        <div class="ops-controls seed-config">
+          <label>
+            Seed Profile
+            <select [(ngModel)]="seedProfile">
+              <option value="smoke">Smoke</option>
+              <option value="full">Full</option>
+            </select>
+          </label>
+          <label>
+            Schedule Mode
+            <select [(ngModel)]="seedScheduleMode">
+              <option value="none">None</option>
+              <option value="appointment-task">Appointment + Task</option>
+              <option value="encounter">Encounter</option>
+              <option value="both">Both</option>
+            </select>
+          </label>
+          <button class="primary" type="button" (click)="runSeed()" [disabled]="loading">
+            Run Seed Job
+          </button>
+        </div>
+
+        <div class="status-row">
+          <div>
+            <p class="label">Running Jobs</p>
+            <p class="value">{{ operationsStatus?.runningCount ?? 0 }}</p>
+          </div>
+          <div>
+            <p class="label">Latest Validation</p>
+            <p class="value">{{ operationsStatus?.latestValidate?.status || '—' }}</p>
+          </div>
+          <div>
+            <p class="label">Latest Full Seed</p>
+            <p class="value">{{ operationsStatus?.latestSeedFull?.status || '—' }}</p>
+          </div>
+          <div>
+            <p class="label">Latest Stack Start</p>
+            <p class="value">{{ operationsStatus?.latestStackStart?.status || '—' }}</p>
+          </div>
+        </div>
+
+        <div class="run-history">
+          <h3>Recent Runs</h3>
+          @if (operationRuns.length === 0) {
+            <p class="hint">No runs recorded yet.</p>
+          } @else {
+            <div class="run-list">
+              @for (run of operationRuns; track run.id) {
+                <button
+                  type="button"
+                  class="run-item"
+                  [class.active]="selectedRunId === run.id"
+                  (click)="selectRun(run.id)"
+                >
+                  <span>{{ run.operationType }}</span>
+                  <span>{{ run.status }}</span>
+                  <span>{{ run.requestedAt | date:'short' }}</span>
+                </button>
+              }
+            </div>
+          }
+
+          @if (selectedRun) {
+            <div class="run-detail">
+              <h4>Run Detail</h4>
+              <p class="summary">{{ selectedRun.run.summary || 'No summary.' }}</p>
+              <p class="hint">Requested by {{ selectedRun.run.requestedBy }} at {{ selectedRun.run.requestedAt | date:'short' }}</p>
+              @if (canCancelSelectedRun()) {
+                <button type="button" class="danger" (click)="cancelSelectedRun()" [disabled]="loading">
+                  Cancel Run
+                </button>
+              }
+
+              @if (selectedRun.run.validation) {
+                <div class="validation-card">
+                  <div class="validation-header">
+                    <h5>Readiness Scorecard</h5>
+                    <span class="pill" [class.ready]="selectedRun.run.validation.passed">
+                      {{ selectedRun.run.validation.grade }} / {{ selectedRun.run.validation.score }}
+                    </span>
+                  </div>
+                  <p class="hint">
+                    Critical: {{ selectedRun.run.validation.criticalPass ? 'PASS' : 'FAIL' }} |
+                    Overall: {{ selectedRun.run.validation.passed ? 'PASS' : 'FAIL' }}
+                  </p>
+
+                  <label class="validation-filter">
+                    <input type="checkbox" [(ngModel)]="showFailedGatesOnly" />
+                    Show failed gates only
+                  </label>
+
+                  <div class="gate-list">
+                    @for (gate of visibleValidationGates(); track gate.gateKey) {
+                      <article class="gate-item" [class.fail]="gate.status === 'FAIL'">
+                        <div class="gate-main">
+                          <strong>{{ gate.gateName }}</strong>
+                          <span>{{ gate.status }} · {{ gate.weight }} pts{{ gate.critical ? ' · critical' : '' }}</span>
+                        </div>
+                        @if (gate.evidenceText) {
+                          <p>{{ gate.evidenceText }}</p>
+                        }
+                      </article>
+                    }
+                  </div>
+                </div>
+              }
+
+              <div class="scenario-list">
+                @for (step of selectedRun.steps; track step.id) {
+                  <article class="scenario-card">
+                    <div>
+                      <h3>{{ step.stepOrder }}. {{ step.stepName }}</h3>
+                      <p>{{ step.status }}{{ step.message ? ' - ' + step.message : '' }}</p>
+                    </div>
+                    @if (step.output) {
+                      <pre class="step-output">{{ step.output }}</pre>
+                    }
+                  </article>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </section>
 
       <div class="grid">
         <section class="panel status">
@@ -215,6 +369,132 @@ import {
         display: grid;
         gap: 24px;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      }
+
+      .operations {
+        margin-top: 24px;
+      }
+
+      .ops-controls {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+
+      .seed-config {
+        align-items: end;
+      }
+
+      .run-history {
+        margin-top: 18px;
+      }
+
+      .run-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .run-item {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 10px;
+        text-align: left;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+      }
+
+      .run-item.active {
+        border-color: #4338ca;
+        background: #eef2ff;
+      }
+
+      .run-detail {
+        margin-top: 14px;
+      }
+
+      .summary {
+        margin: 8px 0;
+        color: #334155;
+      }
+
+      .step-output {
+        margin: 0;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 10px;
+        max-height: 180px;
+        overflow: auto;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+
+      .validation-card {
+        margin: 14px 0;
+        border: 1px solid #dbeafe;
+        background: #f8fbff;
+        border-radius: 12px;
+        padding: 12px;
+      }
+
+      .validation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .validation-header h5 {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      .validation-filter {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 10px 0;
+        font-size: 12px;
+      }
+
+      .validation-filter input {
+        margin: 0;
+      }
+
+      .gate-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .gate-item {
+        border: 1px solid #d1fae5;
+        border-radius: 10px;
+        padding: 8px 10px;
+        background: #f0fdf4;
+      }
+
+      .gate-item.fail {
+        border-color: #fecaca;
+        background: #fef2f2;
+      }
+
+      .gate-main {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .gate-main span {
+        font-size: 12px;
+        color: #64748b;
+      }
+
+      .gate-item p {
+        margin: 6px 0 0;
+        font-size: 12px;
+        color: #475569;
       }
 
       .panel {
@@ -447,13 +727,23 @@ export class AdminDemoSeedingComponent implements OnInit, OnDestroy {
   progress: DemoProgressResponse | null = null;
   scenarios: DemoScenarioResponse[] = [];
   selectedScenario = '';
+  seedProfile: 'smoke' | 'full' = 'smoke';
+  seedScheduleMode: 'none' | 'appointment-task' | 'encounter' | 'both' = 'none';
+  operationsStatus: OperationSystemStatus | null = null;
+  operationRuns: OperationRunSummary[] = [];
+  selectedRun: OperationRunDetail | null = null;
+  selectedRunId: string | null = null;
+  showFailedGatesOnly = false;
   loading = false;
   errorMessage = '';
   actionMessage = '';
 
   private readonly destroy$ = new Subject<void>();
 
-  constructor(private readonly demoSeedingService: DemoSeedingService) {}
+  constructor(
+    private readonly demoSeedingService: DemoSeedingService,
+    private readonly operationsService: OperationsService
+  ) {}
 
   ngOnInit(): void {
     this.refreshAll();
@@ -461,6 +751,7 @@ export class AdminDemoSeedingComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         this.refreshStatus();
+        this.refreshOperations();
       });
   }
 
@@ -471,6 +762,7 @@ export class AdminDemoSeedingComponent implements OnInit, OnDestroy {
 
   refreshAll(): void {
     this.refreshStatus();
+    this.refreshOperations();
     this.demoSeedingService.listScenarios().subscribe({
       next: (scenarios) => {
         this.scenarios = scenarios;
@@ -504,6 +796,42 @@ export class AdminDemoSeedingComponent implements OnInit, OnDestroy {
     });
   }
 
+  refreshOperations(): void {
+    this.operationsService.getSystemStatus().subscribe({
+      next: (status) => {
+        this.operationsStatus = status;
+      },
+      error: (error) => {
+        this.errorMessage = this.formatError(error);
+      },
+    });
+
+    this.operationsService.listRuns(25).subscribe({
+      next: (runs) => {
+        this.operationRuns = runs;
+        if (this.selectedRunId && !runs.some((run) => run.id === this.selectedRunId)) {
+          this.selectedRunId = null;
+          this.selectedRun = null;
+        }
+      },
+      error: (error) => {
+        this.errorMessage = this.formatError(error);
+      },
+    });
+  }
+
+  selectRun(runId: string): void {
+    this.selectedRunId = runId;
+    this.operationsService.getRun(runId).subscribe({
+      next: (detail) => {
+        this.selectedRun = detail;
+      },
+      error: (error) => {
+        this.errorMessage = this.formatError(error);
+      },
+    });
+  }
+
   loadSelectedScenario(): void {
     if (!this.selectedScenario) return;
     this.loadScenario(this.selectedScenario);
@@ -529,6 +857,53 @@ export class AdminDemoSeedingComponent implements OnInit, OnDestroy {
     this.runAction(this.demoSeedingService.resetCurrentTenant(), 'Resetting demo data for current tenant.');
   }
 
+  runStackStart(): void {
+    this.runOperation(this.operationsService.startStack(), 'Stack start requested.');
+  }
+
+  runStackStop(): void {
+    this.runOperation(this.operationsService.stopStack(), 'Stack stop requested.');
+  }
+
+  runStackRestart(): void {
+    this.runOperation(this.operationsService.restartStack(), 'Stack restart requested.');
+  }
+
+  runSeed(): void {
+    this.runOperation(
+      this.operationsService.runSeed({
+        profile: this.seedProfile,
+        scheduleMode: this.seedScheduleMode,
+      }),
+      `Seed job requested (${this.seedProfile}, ${this.seedScheduleMode}).`
+    );
+  }
+
+  runValidate(): void {
+    this.runOperation(this.operationsService.runValidate(), 'Validation requested.');
+  }
+
+  canCancelSelectedRun(): boolean {
+    const status = this.selectedRun?.run?.status;
+    return status === 'QUEUED' || status === 'RUNNING';
+  }
+
+  cancelSelectedRun(): void {
+    if (!this.selectedRun?.run?.id) return;
+    this.runOperation(
+      this.operationsService.cancelRun(this.selectedRun.run.id),
+      'Cancellation requested.'
+    );
+  }
+
+  visibleValidationGates(): ValidationGate[] {
+    const gates = this.selectedRun?.run?.validation?.gates ?? [];
+    if (!this.showFailedGatesOnly) {
+      return gates;
+    }
+    return gates.filter((gate) => gate.status === 'FAIL');
+  }
+
   private runAction(action$: any, message: string): void {
     this.loading = true;
     this.errorMessage = '';
@@ -540,6 +915,27 @@ export class AdminDemoSeedingComponent implements OnInit, OnDestroy {
         next: (response: DemoActionResponse) => {
           this.actionMessage = response?.errorMessage ? response.errorMessage : message;
           this.refreshStatus();
+        },
+        error: (error: any) => {
+          this.errorMessage = this.formatError(error);
+        },
+      });
+  }
+
+  private runOperation(action$: any, message: string): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.actionMessage = '';
+
+    action$
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (response: RunQueuedResponse) => {
+          this.actionMessage = response?.message || message;
+          this.refreshOperations();
+          if (response?.runId) {
+            this.selectRun(response.runId);
+          }
         },
         error: (error: any) => {
           this.errorMessage = this.formatError(error);

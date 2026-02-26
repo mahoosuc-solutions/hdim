@@ -135,6 +135,54 @@
         text-transform: uppercase;
       }
 
+      .metadata-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .metadata-owner {
+        color: #223242;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .metadata-cadence {
+        color: #5b7186;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+
+      .priority-pill {
+        border-radius: 999px;
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        padding: 4px 10px;
+      }
+
+      .priority-high {
+        background: #ffe8e6;
+        color: #b9382f;
+      }
+
+      .priority-medium {
+        background: #fff5df;
+        color: #926208;
+      }
+
+      .priority-low {
+        background: #e9f8ec;
+        color: #1f7c35;
+      }
+
+      .priority-unspecified {
+        background: #edf1f5;
+        color: #4a6074;
+      }
+
       .action-buttons {
         display: flex;
         align-items: center;

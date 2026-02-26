@@ -1,6 +1,6 @@
 FROM node:20-alpine
 
-RUN apk add --no-cache bash curl docker-cli docker-cli-compose
+RUN apk add --no-cache bash curl docker-cli docker-cli-compose python3 jq
 
 WORKDIR /app
 COPY tools/ops-server/server.js ./server.js

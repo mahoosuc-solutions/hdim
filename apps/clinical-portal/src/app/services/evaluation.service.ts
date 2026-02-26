@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, tap, shareReplay, catchError, finalize } from 'rxjs/operators';
+import { map, tap, shareReplay, catchError, finalize, timeout } from 'rxjs/operators';
 import {
   CqlEvaluation,
   EvaluationRequest,
@@ -422,7 +422,10 @@ export class EvaluationService {
     }
 
     const url = buildQualityMeasureUrl(QUALITY_MEASURE_ENDPOINTS.RESULTS_BY_PATIENT, params);
-    return this.http.get<QualityMeasureResult[]>(url);
+    return this.http.get<QualityMeasureResult[]>(url).pipe(
+      timeout(API_CONFIG.TIMEOUT_MS),
+      catchError(() => of([]))
+    );
   }
 
   /**

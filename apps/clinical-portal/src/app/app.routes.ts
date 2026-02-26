@@ -251,6 +251,15 @@ export const appRoutes: Route[] = [
     ],
   },
   {
+    path: 'measure-builder/new',
+    loadComponent: () =>
+      import('./pages/measure-builder/create-measure-page.component').then(
+        (m) => m.CreateMeasurePageComponent
+      ),
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['ADMIN', 'MEASURE_DEVELOPER'] },
+  },
+  {
     path: 'measure-builder',
     loadComponent: () =>
       import('./pages/measure-builder/measure-builder.component').then(

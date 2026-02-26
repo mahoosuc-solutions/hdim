@@ -3,10 +3,20 @@ import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
 
 // For CI, you may want to set BASE_URL to the deployed application.
-const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const webServerPort = process.env['PORT'] || '4200';
+const baseURL = process.env['BASE_URL'] || `http://localhost:${webServerPort}`;
 const skipWebServer = ['1', 'true', 'yes'].includes(
   (process.env['SKIP_WEB_SERVER'] || '').toLowerCase()
 );
+const reuseWebServer = process.env['PW_REUSE_SERVER']
+  ? ['1', 'true', 'yes'].includes((process.env['PW_REUSE_SERVER'] || '').toLowerCase())
+  : true;
+const chromiumNoSandbox = ['1', 'true', 'yes'].includes(
+  (process.env['PW_CHROMIUM_NO_SANDBOX'] || '').toLowerCase()
+);
+const chromiumLaunchArgs = chromiumNoSandbox
+  ? ['--no-sandbox', '--disable-setuid-sandbox']
+  : [];
 
 // Backend service URLs for API testing
 const gatewayUrl = process.env['GATEWAY_URL'] || 'http://localhost:18080';
@@ -47,16 +57,21 @@ export default defineConfig({
   webServer: skipWebServer
     ? undefined
     : {
-        command: 'npx nx run clinical-portal:serve --port=4200',
-        url: 'http://localhost:4200',
-        reuseExistingServer: true,
+        command: `bash -lc "if [ ! -f dist/apps/clinical-portal/browser/index.html ]; then npx nx build clinical-portal --configuration=development; fi; cd dist/apps/clinical-portal/browser && python3 -m http.server ${webServerPort}"`,
+        url: `http://localhost:${webServerPort}`,
+        reuseExistingServer: reuseWebServer,
         timeout: 180 * 1000,
         cwd: workspaceRoot,
       },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          args: chromiumLaunchArgs,
+        },
+      },
     },
 
     {

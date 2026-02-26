@@ -70,7 +70,7 @@ interface TestResult {
 
         <!-- Error Message -->
         @if (errorMessage) {
-          <div class="error-banner">
+          <div class="error-banner" role="alert" aria-live="assertive">
             <mat-icon>info</mat-icon>
             <span>{{ errorMessage }}</span>
           </div>

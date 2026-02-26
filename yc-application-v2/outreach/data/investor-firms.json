@@ -1,0 +1,102 @@
+[
+  {
+    "name": "Define Ventures",
+    "domain": "definevc.com",
+    "website": "https://www.definevc.com",
+    "contactPage": "https://definevc.com/contact",
+    "teamPage": "https://definevc.com/team",
+    "thesisFit": "Healthcare-native fund aligned with value-based care infrastructure.",
+    "tier": 1,
+    "targetType": "healthcare-specialist"
+  },
+  {
+    "name": "Flare Capital Partners",
+    "domain": "flarecapital.com",
+    "website": "https://flarecapital.com",
+    "contactPage": "https://www.flarecapital.com/contact",
+    "teamPage": "https://www.flarecapital.com/our-people",
+    "thesisFit": "Healthcare software and payer/provider workflow fit.",
+    "tier": 1,
+    "targetType": "healthcare-specialist"
+  },
+  {
+    "name": "LRVHealth",
+    "domain": "lrvhealth.com",
+    "website": "https://www.lrvhealth.com",
+    "contactPage": "https://www.lrvhealth.com/contact/",
+    "teamPage": "https://www.lrvhealth.com/team/",
+    "thesisFit": "Provider network depth and enterprise healthcare software focus.",
+    "tier": 1,
+    "targetType": "healthcare-specialist"
+  },
+  {
+    "name": "Rock Health Capital",
+    "domain": "rockhealth.com",
+    "website": "https://rockhealth.com/capital",
+    "contactPage": "https://rockhealth.com/capital/",
+    "teamPage": "https://rockhealth.com/team/",
+    "thesisFit": "Digital health specialist with strong healthcare network.",
+    "tier": 1,
+    "targetType": "healthcare-specialist"
+  },
+  {
+    "name": "General Catalyst",
+    "domain": "generalcatalyst.com",
+    "website": "https://www.generalcatalyst.com",
+    "contactPage": "https://generalcatalyst.com/contact",
+    "teamPage": "https://generalcatalyst.com/team",
+    "thesisFit": "Healthcare transformation and scale support.",
+    "tier": 2,
+    "targetType": "platform-crossover"
+  },
+  {
+    "name": "Andreessen Horowitz Bio + Health",
+    "domain": "a16z.com",
+    "website": "https://a16z.com/bio-health",
+    "contactPage": "https://a16z.com/contact/",
+    "teamPage": "https://a16z.com/team/",
+    "thesisFit": "AI platform scale with healthcare vertical.",
+    "tier": 2,
+    "targetType": "platform-crossover"
+  },
+  {
+    "name": "Bessemer Venture Partners",
+    "domain": "bvp.com",
+    "website": "https://www.bvp.com",
+    "contactPage": "https://www.bvp.com/contact",
+    "teamPage": "https://www.bvp.com/team",
+    "thesisFit": "Strong B2B SaaS pattern recognition in healthcare.",
+    "tier": 2,
+    "targetType": "platform-crossover"
+  },
+  {
+    "name": "F-Prime Capital",
+    "domain": "fprimecapital.com",
+    "website": "https://fprimecapital.com",
+    "contactPage": "https://fprimecapital.com/contact/",
+    "teamPage": "https://fprimecapital.com/people/",
+    "thesisFit": "Healthcare infrastructure and payer/provider exposure.",
+    "tier": 2,
+    "targetType": "platform-crossover"
+  },
+  {
+    "name": "Oak HC/FT",
+    "domain": "oakhcft.com",
+    "website": "https://www.oakhcft.com",
+    "contactPage": "https://oakhcft.com/contact",
+    "teamPage": "https://oakhcft.com/team",
+    "thesisFit": "Healthcare and fintech growth-stage alignment.",
+    "tier": 3,
+    "targetType": "strategic-growth"
+  },
+  {
+    "name": "Optum Ventures",
+    "domain": "optumventures.com",
+    "website": "https://www.optumventures.com",
+    "contactPage": "https://optumventures.com/contact",
+    "teamPage": "https://optumventures.com/our-team",
+    "thesisFit": "Strategic healthcare distribution and partnerships.",
+    "tier": 3,
+    "targetType": "strategic-growth"
+  }
+]

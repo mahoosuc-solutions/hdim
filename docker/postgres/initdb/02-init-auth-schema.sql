@@ -140,4 +140,49 @@ CREATE INDEX IF NOT EXISTS idx_config_approvals_tenant_service
 CREATE INDEX IF NOT EXISTS idx_config_approvals_version
     ON tenant_service_config_approvals(version_id);
 
+
+-- Operational run tracking
+CREATE TABLE IF NOT EXISTS operation_runs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    operation_type VARCHAR(30) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    parameters_json JSONB,
+    requested_by VARCHAR(255) NOT NULL,
+    requested_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    summary TEXT,
+    exit_code INT,
+    log_output TEXT,
+    idempotency_key VARCHAR(128),
+    cancel_requested BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE INDEX IF NOT EXISTS idx_operation_runs_requested_at
+    ON operation_runs(requested_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_operation_runs_status
+    ON operation_runs(status);
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_operation_runs_type_idempotency
+    ON operation_runs(operation_type, idempotency_key)
+    WHERE idempotency_key IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS operation_run_steps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID NOT NULL REFERENCES operation_runs(id) ON DELETE CASCADE,
+    step_order INT NOT NULL,
+    step_name VARCHAR(120) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    command_text TEXT,
+    message TEXT,
+    output TEXT,
+    started_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_operation_run_steps_run
+    ON operation_run_steps(run_id, step_order);
+
 -- Schema creation complete

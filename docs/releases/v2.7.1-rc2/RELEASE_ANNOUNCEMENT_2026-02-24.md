@@ -30,6 +30,13 @@ Date: 2026-02-24
   - `docs/marketing/web/evidence/portal-link-audit-web-au6r5ywn9-mahooosuc-solutions-vercel-app-20260224T234251Z.csv`
 - RC2 checklist:
   - `docs/releases/v2.7.1-rc2/RC2_GO_NO_GO_CHECKLIST.md`
+- Technical review artifacts (independent diligence):
+  - `docs/review/TECHNICAL_REVIEW_PACKET_2026-02-25.md`
+  - `docs/review/INDEPENDENT_VALIDATION_RUNBOOK.md`
+  - `docs/review/evidence/technical-review-checks-20260225T020504Z.md`
+  - `docs/review/evidence/technical-review-evidence-20260225T020506Z.md`
+- Announcement copy source:
+  - `docs/marketing/ANNOUNCEMENTS_2026-02-25.md`
 
 ## Rollback
 - Previous production deployment target:

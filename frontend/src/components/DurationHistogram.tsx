@@ -61,7 +61,10 @@ const calculateAverage = (data: DurationData[]): number => {
  * Custom tooltip to display range and count
  */
 const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
+  const point = payload?.[0];
+  const range = point?.payload?.range;
+  const count = point?.value;
+  if (active && range !== undefined && count !== undefined) {
     return (
       <Box
         sx={{
@@ -72,10 +75,10 @@ const CustomTooltip = ({ active, payload }: any) => {
         }}
       >
         <Typography variant="body2">
-          <strong>Range:</strong> {payload[0].payload.range}
+          <strong>Range:</strong> {range}
         </Typography>
         <Typography variant="body2">
-          <strong>Count:</strong> {payload[0].value}
+          <strong>Count:</strong> {count}
         </Typography>
       </Box>
     );

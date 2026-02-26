@@ -1,0 +1,12 @@
+{
+  "name": "hdim-investor-outreach",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "enrich": "node scripts/enrich-investor-sites.mjs",
+    "validate": "node scripts/validate-email-candidates.mjs",
+    "drafts": "node scripts/generate-email-drafts.mjs",
+    "gmail:drafts": "node scripts/create-gmail-drafts.mjs",
+    "run:all": "npm run enrich && npm run validate && npm run drafts"
+  }
+}

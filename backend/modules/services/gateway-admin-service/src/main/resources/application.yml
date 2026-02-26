@@ -227,6 +227,20 @@ gateway:
     requests-per-second: 100
     burst-capacity: 150
 
+operations:
+  execution-mode: ${OPERATIONS_EXECUTION_MODE:LOCAL}
+  working-directory: ${OPERATIONS_WORKING_DIRECTORY:/workspace}
+  command-timeout-seconds: ${OPERATIONS_COMMAND_TIMEOUT_SECONDS:3600}
+  stack-start-command: ${OPERATIONS_STACK_START_COMMAND:docker compose -f docker-compose.demo.yml up -d}
+  stack-stop-command: ${OPERATIONS_STACK_STOP_COMMAND:docker compose -f docker-compose.demo.yml down}
+  seed-command: ${OPERATIONS_SEED_COMMAND:./scripts/seed-all-demo-data.sh}
+  seed-full-command: ${OPERATIONS_SEED_FULL_COMMAND:SEED_PROFILE=full ./scripts/seed-all-demo-data.sh}
+  seed-schedule-command: ${OPERATIONS_SEED_SCHEDULE_COMMAND:SEED_SCHEDULE_MODE=both ./scripts/seed-fhir-schedule.sh}
+  validate-command: ${OPERATIONS_VALIDATE_COMMAND:./validate-system.sh}
+  bridge:
+    base-url: ${OPERATIONS_BRIDGE_BASE_URL:http://ops-service:4710}
+    timeout-seconds: ${OPERATIONS_BRIDGE_TIMEOUT_SECONDS:3600}
+
 # Resilience4j Configuration
 resilience4j:
   circuitbreaker:

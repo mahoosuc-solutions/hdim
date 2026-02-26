@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, forkJoin, of } from 'rxjs';
+import { Observable, map, forkJoin, of, timeout } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import {
   API_CONFIG,
@@ -133,7 +133,14 @@ export class FhirClinicalService {
       observations: this.getObservations(patientId),
       conditions: this.getConditions(patientId),
       procedures: this.getProcedures(patientId),
-    });
+    }).pipe(
+      timeout(API_CONFIG.TIMEOUT_MS),
+      catchError(() => of({
+        observations: [],
+        conditions: [],
+        procedures: [],
+      }))
+    );
   }
 
   /**
@@ -147,6 +154,7 @@ export class FhirClinicalService {
       _sort: '-date',
     });
     return this.http.get<FhirBundle<Observation>>(url).pipe(
+      timeout(API_CONFIG.TIMEOUT_MS),
       map((bundle) => this.extractResourcesFromBundle(bundle)),
       catchError(() => of([]))
     );
@@ -163,6 +171,7 @@ export class FhirClinicalService {
       _sort: '-recorded-date',
     });
     return this.http.get<FhirBundle<Condition>>(url).pipe(
+      timeout(API_CONFIG.TIMEOUT_MS),
       map((bundle) => this.extractResourcesFromBundle(bundle)),
       catchError(() => of([]))
     );
@@ -179,6 +188,7 @@ export class FhirClinicalService {
       _sort: '-date',
     });
     return this.http.get<FhirBundle<Procedure>>(url).pipe(
+      timeout(API_CONFIG.TIMEOUT_MS),
       map((bundle) => this.extractResourcesFromBundle(bundle)),
       catchError(() => of([]))
     );
@@ -194,6 +204,7 @@ export class FhirClinicalService {
       _sort: '-date',
     });
     return this.http.get<FhirBundle<Observation>>(url).pipe(
+      timeout(API_CONFIG.TIMEOUT_MS),
       map((bundle) => this.extractResourcesFromBundle(bundle)),
       catchError(() => of([]))
     );

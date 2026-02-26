@@ -29,13 +29,34 @@ public class CustomMeasureService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public CustomMeasureEntity createDraft(String tenantId, String name, String description, String category, Integer year, String createdBy) {
+    public CustomMeasureEntity createDraft(
+            String tenantId,
+            String name,
+            String description,
+            String category,
+            Integer year,
+            String owner,
+            String clinicalFocus,
+            String reportingCadence,
+            String targetThreshold,
+            String priority,
+            String implementationNotes,
+            String tags,
+            String createdBy
+    ) {
         CustomMeasureEntity entity = CustomMeasureEntity.builder()
                 .tenantId(tenantId)
                 .name(name)
                 .description(description)
                 .category(category)
                 .year(year)
+                .owner(owner)
+                .clinicalFocus(clinicalFocus)
+                .reportingCadence(reportingCadence)
+                .targetThreshold(targetThreshold)
+                .priority(priority)
+                .implementationNotes(implementationNotes)
+                .tags(tags)
                 .status("DRAFT")
                 .createdBy(createdBy)
                 .build();
@@ -45,7 +66,21 @@ public class CustomMeasureService {
     }
 
     @Transactional
-    public CustomMeasureEntity updateDraft(String tenantId, UUID id, String name, String description, String category, Integer year) {
+    public CustomMeasureEntity updateDraft(
+            String tenantId,
+            UUID id,
+            String name,
+            String description,
+            String category,
+            Integer year,
+            String owner,
+            String clinicalFocus,
+            String reportingCadence,
+            String targetThreshold,
+            String priority,
+            String implementationNotes,
+            String tags
+    ) {
         CustomMeasureEntity existing = getById(tenantId, id);
         if (name != null && !name.isBlank()) {
             existing.setName(name);
@@ -58,6 +93,27 @@ public class CustomMeasureService {
         }
         if (year != null) {
             existing.setYear(year);
+        }
+        if (owner != null) {
+            existing.setOwner(owner);
+        }
+        if (clinicalFocus != null) {
+            existing.setClinicalFocus(clinicalFocus);
+        }
+        if (reportingCadence != null) {
+            existing.setReportingCadence(reportingCadence);
+        }
+        if (targetThreshold != null) {
+            existing.setTargetThreshold(targetThreshold);
+        }
+        if (priority != null) {
+            existing.setPriority(priority);
+        }
+        if (implementationNotes != null) {
+            existing.setImplementationNotes(implementationNotes);
+        }
+        if (tags != null) {
+            existing.setTags(tags);
         }
         CustomMeasureEntity saved = repository.save(existing);
         log.info("Updated custom measure draft [{}] for tenant {}", saved.getId(), tenantId);
@@ -231,6 +287,13 @@ public class CustomMeasureService {
                 .description(original.getDescription())
                 .category(original.getCategory())
                 .year(original.getYear())
+                .owner(original.getOwner())
+                .clinicalFocus(original.getClinicalFocus())
+                .reportingCadence(original.getReportingCadence())
+                .targetThreshold(original.getTargetThreshold())
+                .priority(original.getPriority())
+                .implementationNotes(original.getImplementationNotes())
+                .tags(original.getTags())
                 .cqlText(original.getCqlText())
                 .valueSets(original.getValueSets())
                 .status("DRAFT")

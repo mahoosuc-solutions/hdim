@@ -1,0 +1,292 @@
+[
+  {
+    "name": "Define Ventures",
+    "domain": "definevc.com",
+    "website": "https://www.definevc.com",
+    "contactPage": "https://definevc.com/contact",
+    "teamPage": "https://definevc.com/team",
+    "thesisFit": "Healthcare-native fund aligned with value-based care infrastructure.",
+    "tier": 1,
+    "targetType": "healthcare-specialist",
+    "contactUrls": [
+      "https://definevc.com/contact",
+      "https://definevc.com/team",
+      "https://definevc.com/team/lynne-chou-okeefe",
+      "https://definevc.com/team/bruce-broussard",
+      "https://definevc.com/team/frank-williams",
+      "https://definevc.com/team/carolyn-magill",
+      "https://definevc.com/team/chirag-shah",
+      "https://definevc.com/team/hong-truong"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@definevc.com",
+      "investorrelations@definevc.com",
+      "partners@definevc.com",
+      "partnerships@definevc.com",
+      "contact@definevc.com",
+      "hello@definevc.com",
+      "info@definevc.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "Flare Capital Partners",
+    "domain": "flarecapital.com",
+    "website": "https://flarecapital.com",
+    "contactPage": "https://www.flarecapital.com/contact",
+    "teamPage": "https://www.flarecapital.com/our-people",
+    "thesisFit": "Healthcare software and payer/provider workflow fit.",
+    "tier": 1,
+    "targetType": "healthcare-specialist",
+    "contactUrls": [
+      "https://www.flarecapital.com/contact",
+      "https://www.flarecapital.com/our-people",
+      "https://www.flarecapital.com/contact-preferences",
+      "https://www.flarecapital.com/portfolio",
+      "https://www.flarecapital.com/about"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@flarecapital.com",
+      "investorrelations@flarecapital.com",
+      "partners@flarecapital.com",
+      "partnerships@flarecapital.com",
+      "contact@flarecapital.com",
+      "hello@flarecapital.com",
+      "info@flarecapital.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "LRVHealth",
+    "domain": "lrvhealth.com",
+    "website": "https://www.lrvhealth.com",
+    "contactPage": "https://www.lrvhealth.com/contact/",
+    "teamPage": "https://www.lrvhealth.com/team/",
+    "thesisFit": "Provider network depth and enterprise healthcare software focus.",
+    "tier": 1,
+    "targetType": "healthcare-specialist",
+    "contactUrls": [
+      "https://www.lrvhealth.com/contact/",
+      "https://www.lrvhealth.com/team/",
+      "https://www.lrvhealth.com/portfolio/"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@lrvhealth.com",
+      "investorrelations@lrvhealth.com",
+      "partners@lrvhealth.com",
+      "partnerships@lrvhealth.com",
+      "contact@lrvhealth.com",
+      "hello@lrvhealth.com",
+      "info@lrvhealth.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "Rock Health Capital",
+    "domain": "rockhealth.com",
+    "website": "https://rockhealth.com/capital",
+    "contactPage": "https://rockhealth.com/capital/",
+    "teamPage": "https://rockhealth.com/team/",
+    "thesisFit": "Digital health specialist with strong healthcare network.",
+    "tier": 1,
+    "targetType": "healthcare-specialist",
+    "contactUrls": [
+      "https://rockhealth.com/capital/",
+      "https://rockhealth.com/team/",
+      "https://rockhealth.com/join-our-portfolio/",
+      "https://rockhealth.com/insights/modernizing-language-access-in-healthcare-our-investment-in-no-barrier/"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@rockhealth.com",
+      "investorrelations@rockhealth.com",
+      "partners@rockhealth.com",
+      "partnerships@rockhealth.com",
+      "contact@rockhealth.com",
+      "hello@rockhealth.com",
+      "info@rockhealth.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "General Catalyst",
+    "domain": "generalcatalyst.com",
+    "website": "https://www.generalcatalyst.com",
+    "contactPage": "https://generalcatalyst.com/contact",
+    "teamPage": "https://generalcatalyst.com/team",
+    "thesisFit": "Healthcare transformation and scale support.",
+    "tier": 2,
+    "targetType": "platform-crossover",
+    "contactUrls": [
+      "https://generalcatalyst.com/contact",
+      "https://generalcatalyst.com/team",
+      "https://generalcatalyst.com/team?catalyst-advisors=true",
+      "https://generalcatalyst.com/portfolio",
+      "https://www.generalcatalyst.com/portfolio?sector=Artificial+Intelligence",
+      "https://www.generalcatalyst.com/portfolio?sector=Fintech",
+      "https://www.generalcatalyst.com/portfolio?sector=Defense+%26+Government",
+      "https://www.generalcatalyst.com/portfolio?sector=Consumer"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@generalcatalyst.com",
+      "investorrelations@generalcatalyst.com",
+      "partners@generalcatalyst.com",
+      "partnerships@generalcatalyst.com",
+      "contact@generalcatalyst.com",
+      "hello@generalcatalyst.com",
+      "info@generalcatalyst.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "Andreessen Horowitz Bio + Health",
+    "domain": "a16z.com",
+    "website": "https://a16z.com/bio-health",
+    "contactPage": "https://a16z.com/contact/",
+    "teamPage": "https://a16z.com/team/",
+    "thesisFit": "AI platform scale with healthcare vertical.",
+    "tier": 2,
+    "targetType": "platform-crossover",
+    "contactUrls": [
+      "https://a16z.com/contact/",
+      "https://a16z.com/team/",
+      "https://a16z.com/team",
+      "https://a16z.com/strategic-partnerships/",
+      "https://a16z.com/bio-health/partnership/",
+      "https://a16z.com/announcement-andreessen-horowitz-partners-with-lilly-to-launch-first-of-its-kind-biotech-ecosystem-venture-fund",
+      "https://a16z.com/announcement-andreessen-horowitz-partners-with-lilly-to-launch-first-of-its-kind-biotech-ecosystem-venture-fund/",
+      "https://a16z.com/portfolio/"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@a16z.com",
+      "investorrelations@a16z.com",
+      "partners@a16z.com",
+      "partnerships@a16z.com",
+      "contact@a16z.com",
+      "hello@a16z.com",
+      "info@a16z.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "Bessemer Venture Partners",
+    "domain": "bvp.com",
+    "website": "https://www.bvp.com",
+    "contactPage": "https://www.bvp.com/contact",
+    "teamPage": "https://www.bvp.com/team",
+    "thesisFit": "Strong B2B SaaS pattern recognition in healthcare.",
+    "tier": 2,
+    "targetType": "platform-crossover",
+    "contactUrls": [
+      "https://www.bvp.com/contact",
+      "https://www.bvp.com/team",
+      "https://bvp.com/companies?filter=portfolio-roadmap&value=biotech",
+      "https://bvp.com/companies?filter=portfolio-roadmap&value=fintech",
+      "https://bvp.com/companies?filter=portfolio-roadmap&value=marketplaces",
+      "https://www.bvp.com/anti-portfolio",
+      "https://bvp.com/companies?filter=portfolio-roadmap&value=vertical-software",
+      "https://bvp.com/companies?filter=portfolio-roadmap&value=developer"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@bvp.com",
+      "investorrelations@bvp.com",
+      "partners@bvp.com",
+      "partnerships@bvp.com",
+      "contact@bvp.com",
+      "hello@bvp.com",
+      "info@bvp.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "F-Prime Capital",
+    "domain": "fprimecapital.com",
+    "website": "https://fprimecapital.com",
+    "contactPage": "https://fprimecapital.com/contact/",
+    "teamPage": "https://fprimecapital.com/people/",
+    "thesisFit": "Healthcare infrastructure and payer/provider exposure.",
+    "tier": 2,
+    "targetType": "platform-crossover",
+    "contactUrls": [
+      "https://fprimecapital.com/contact/",
+      "https://fprimecapital.com/people/",
+      "https://fprimecapital.com/portfolio/",
+      "https://fprimecapital.com/portfolio/life-sciences/",
+      "https://fprimecapital.com/portfolio/tech/",
+      "https://fprimecapital.com/portfolio/healthtech-services/",
+      "https://fprimecapital.com/portfolio/crypto/",
+      "https://fprimecapital.com/about/"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@fprimecapital.com",
+      "investorrelations@fprimecapital.com",
+      "partners@fprimecapital.com",
+      "partnerships@fprimecapital.com",
+      "contact@fprimecapital.com",
+      "hello@fprimecapital.com",
+      "info@fprimecapital.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "Oak HC/FT",
+    "domain": "oakhcft.com",
+    "website": "https://www.oakhcft.com",
+    "contactPage": "https://oakhcft.com/contact",
+    "teamPage": "https://oakhcft.com/team",
+    "thesisFit": "Healthcare and fintech growth-stage alignment.",
+    "tier": 3,
+    "targetType": "strategic-growth",
+    "contactUrls": [
+      "https://oakhcft.com/contact",
+      "https://oakhcft.com/team",
+      "https://oakhcft.com/portfolio",
+      "https://oakhcft.com/blog-post/investing-in-arch-building-the-operating-system-for-private-markets"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@oakhcft.com",
+      "investorrelations@oakhcft.com",
+      "partners@oakhcft.com",
+      "partnerships@oakhcft.com",
+      "contact@oakhcft.com",
+      "hello@oakhcft.com",
+      "info@oakhcft.com"
+    ],
+    "enrichmentStatus": "ok"
+  },
+  {
+    "name": "Optum Ventures",
+    "domain": "optumventures.com",
+    "website": "https://www.optumventures.com",
+    "contactPage": "https://optumventures.com/contact",
+    "teamPage": "https://optumventures.com/our-team",
+    "thesisFit": "Strategic healthcare distribution and partnerships.",
+    "tier": 3,
+    "targetType": "strategic-growth",
+    "contactUrls": [
+      "https://optumventures.com/contact",
+      "https://optumventures.com/our-team",
+      "https://optumventures.com/portfolio",
+      "https://optumventures.com/about"
+    ],
+    "discoveredEmails": [],
+    "candidateEmails": [
+      "investments@optumventures.com",
+      "investorrelations@optumventures.com",
+      "partners@optumventures.com",
+      "partnerships@optumventures.com",
+      "contact@optumventures.com",
+      "hello@optumventures.com",
+      "info@optumventures.com"
+    ],
+    "enrichmentStatus": "ok"
+  }
+]

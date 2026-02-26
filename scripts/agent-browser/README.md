@@ -41,6 +41,12 @@ SCREENSHOT_DIR=/tmp/agent-browser-smoke \
 - `ma-reminders.sh` — MA reminders
 - `quality-trends.sh` — quality trends
 - `quality-reports.sh` — quality report/export
+- `patient-detail-orchestrator.sh` — waits for patient detail data and saves list/detail screenshots with grading output
+
+## Patient detail orchestrator
+1. Start the demo stack (`./scripts/monitor/ensure-demo-stack.sh` run automatically).  
+2. Run `PORTAL_URL=http://localhost:4400 ./scripts/agent-browser/patient-detail-orchestrator.sh`. It logs each `agent-browser` command plus a grade (`PASS` when both `patient-list-agent.png` and `patient-detail-agent.png` exist).  
+3. If you need to rerun only when data changes, add a timestamped release folder (matching `${SCREENSHOT_DIR}`) and copy the graded PNGs there.
 
 ## Selector Notes
 - Role switching uses the dashboard role toggle with aria-labels like:

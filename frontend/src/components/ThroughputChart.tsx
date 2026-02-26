@@ -38,8 +38,8 @@ const formatTime = (timestamp: number): string => {
  * Custom tooltip component for the chart
  */
 const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
+  const data = payload?.[0]?.payload;
+  if (active && data) {
     return (
       <div
         style={{

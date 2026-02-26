@@ -22,6 +22,7 @@ function parseArgs(argv) {
     outDir: 'logs/mcp-reports',
     bundleOutDir: 'logs/mcp-reports/packages',
     policyMode: 'strict',
+    profile: 'local-dev',
     requestTimeoutSecs: 8,
     service: 'gateway-edge',
     includePretest: true,
@@ -44,6 +45,9 @@ function parseArgs(argv) {
         break;
       case '--request-timeout':
         parsed.requestTimeoutSecs = Number.parseInt(args.shift() ?? `${parsed.requestTimeoutSecs}`, 10);
+        break;
+      case '--profile':
+        parsed.profile = args.shift() ?? parsed.profile;
         break;
       case '--service':
         parsed.service = args.shift() ?? parsed.service;
@@ -150,6 +154,8 @@ function run(argv = process.argv.slice(2)) {
     'scripts/mcp/context-aware-release-gate.mjs',
     '--mode',
     input.policyMode,
+    '--profile',
+    input.profile,
     '--request-timeout',
     `${input.requestTimeoutSecs}`,
     '--out-dir',

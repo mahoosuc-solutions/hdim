@@ -1,7 +1,7 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, combineLatest, Subject } from 'rxjs';
+import { map, tap, shareReplay, takeUntil } from 'rxjs/operators';
 import { Clinical360PipelineService } from '@health-platform/shared/data-access';
 import { EventBusService, ClinicalEventType } from '@health-platform/shared/data-access';
 
@@ -81,7 +81,6 @@ export interface QualityMeasure {
         <div class="loading">Loading quality measures...</div>
       }
 
-      <!-- Detail Panel -->
       @if (selectedMeasure$ | async; as measure) {
         <div class="detail-panel">
           <div class="detail-content">
@@ -303,7 +302,7 @@ export interface QualityMeasure {
     }
   `]
 })
-export class QualityMeasuresComponent implements OnInit {
+export class QualityMeasuresComponent implements OnInit, OnDestroy {
   qualityMeasures$: Observable<QualityMeasure[]> | undefined;
   filteredMeasures$: Observable<QualityMeasure[]> | undefined;
   selectedMeasure$: Observable<QualityMeasure | null> | undefined;
@@ -312,6 +311,7 @@ export class QualityMeasuresComponent implements OnInit {
   activeFilter = 'ALL';
   private activeFilterSubject$ = new BehaviorSubject<string>('ALL');
   private selectedMeasureSubject$ = new BehaviorSubject<QualityMeasure | null>(null);
+  private destroy$ = new Subject<void>();
 
   private pipeline = inject(Clinical360PipelineService);
   private eventBus = inject(EventBusService);
@@ -321,10 +321,16 @@ export class QualityMeasuresComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Listen for patient selection events
-    this.eventBus.on(ClinicalEventType.PATIENT_SELECTED).subscribe((event: any) => {
-      this.loadMeasures(event.data.patientId);
-    });
+    this.eventBus.on(ClinicalEventType.PATIENT_SELECTED)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((event: any) => {
+        this.loadMeasures(event.data.patientId);
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadMeasures(patientId: string) {
@@ -333,7 +339,6 @@ export class QualityMeasuresComponent implements OnInit {
         if (!data || !data.qualityMeasures) {
           return [];
         }
-        // Scenario 1: Load from 360 pipeline
         return data.qualityMeasures.measures.map((m: any, index: number) => ({
           id: m.id || `measure-${index}`,
           name: m.name || 'Unknown Measure',
@@ -345,7 +350,6 @@ export class QualityMeasuresComponent implements OnInit {
         }));
       }),
       tap(measures => {
-        // Scenario 4: Emit event when loaded
         this.eventBus.emit({
           type: ClinicalEventType.MEASURE_EVALUATION_COMPLETED,
           source: 'mfe-quality',
@@ -355,29 +359,19 @@ export class QualityMeasuresComponent implements OnInit {
             measuresMet: measures.filter((m: QualityMeasure) => m.status === 'MET').length,
           },
         } as any);
-      })
+      }),
+      shareReplay(1)
     );
 
-    // Scenario 2: Support filtering by status
-    this.filteredMeasures$ = this.pipeline.clinical360$.pipe(
-      map(data => {
-        if (!data || !data.qualityMeasures) {
-          return [];
-        }
-        const measures = data.qualityMeasures.measures.map((m: any, index: number) => ({
-          id: m.id || `measure-${index}`,
-          name: m.name || 'Unknown Measure',
-          description: m.description || 'No description',
-          status: m.status || 'NOT_MET',
-          target: m.target,
-          actual: m.actual,
-          population: m.population,
-        }));
-
-        if (this.activeFilter === 'ALL') {
+    this.filteredMeasures$ = combineLatest([
+      this.qualityMeasures$,
+      this.activeFilterSubject$,
+    ]).pipe(
+      map(([measures, filter]) => {
+        if (filter === 'ALL') {
           return measures;
         }
-        return measures.filter((m: QualityMeasure) => m.status === this.activeFilter);
+        return measures.filter((m) => m.status === filter);
       })
     );
   }
@@ -385,17 +379,9 @@ export class QualityMeasuresComponent implements OnInit {
   filterByStatus(status: string) {
     this.activeFilter = status;
     this.activeFilterSubject$.next(status);
-    // Trigger filter update
-    this.qualityMeasures$ = this.qualityMeasures$?.pipe(
-      map(measures => {
-        if (status === 'ALL') return measures;
-        return measures.filter(m => m.status === status);
-      })
-    );
   }
 
   showDetail(measure: QualityMeasure) {
-    // Scenario 3: Drill into measure details
     this.selectedMeasureSubject$.next(measure);
   }
 

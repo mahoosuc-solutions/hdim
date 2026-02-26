@@ -12,8 +12,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -59,6 +65,67 @@ public class CareGapService {
         return gaps.stream()
             .map(this::mapToDTO)
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Get tenant-level care gap trends for dashboard visualization.
+     */
+    public List<CareGapTrendPoint> getCareGapTrends(String tenantId, int days) {
+        Instant now = Instant.now();
+        Instant rangeStart = now.minus(days, ChronoUnit.DAYS);
+        LocalDate startDate = LocalDate.ofInstant(rangeStart, ZoneOffset.UTC);
+        LocalDate endDate = LocalDate.ofInstant(now, ZoneOffset.UTC);
+
+        Long openCount = repository.countOpenCareGapsForTenant(tenantId);
+        int runningTotal = openCount == null ? 0 : openCount.intValue();
+
+        List<CareGapEntity> identifiedInRange =
+            repository.findByTenantIdAndIdentifiedDateBetween(tenantId, rangeStart, now);
+        List<CareGapEntity> addressedInRange =
+            repository.findByTenantIdAndAddressedDateBetween(tenantId, rangeStart, now);
+
+        Map<LocalDate, Integer> newByDay = new HashMap<>();
+        for (CareGapEntity gap : identifiedInRange) {
+            LocalDate day = LocalDate.ofInstant(gap.getIdentifiedDate(), ZoneOffset.UTC);
+            newByDay.merge(day, 1, Integer::sum);
+        }
+
+        Map<LocalDate, Integer> closedByDay = new HashMap<>();
+        for (CareGapEntity gap : addressedInRange) {
+            if (gap.getStatus() == CareGapEntity.Status.ADDRESSED || gap.getStatus() == CareGapEntity.Status.CLOSED) {
+                LocalDate day = LocalDate.ofInstant(gap.getAddressedDate(), ZoneOffset.UTC);
+                closedByDay.merge(day, 1, Integer::sum);
+            }
+        }
+
+        // Current urgency/type snapshot used by dashboard trend visualization.
+        List<CareGapEntity> currentOpenGaps = repository.findByTenantIdAndStatusIn(
+            tenantId,
+            List.of(CareGapEntity.Status.OPEN, CareGapEntity.Status.IN_PROGRESS)
+        );
+
+        Map<String, Integer> urgency = buildUrgencyBreakdown(currentOpenGaps);
+        Map<String, Integer> type = buildTypeBreakdown(currentOpenGaps);
+
+        List<CareGapTrendPoint> points = new ArrayList<>();
+        for (LocalDate day = endDate; !day.isBefore(startDate); day = day.minusDays(1)) {
+            int newCount = newByDay.getOrDefault(day, 0);
+            int closedCount = closedByDay.getOrDefault(day, 0);
+
+            points.add(new CareGapTrendPoint(
+                day.atStartOfDay().toInstant(ZoneOffset.UTC),
+                Math.max(0, runningTotal),
+                closedCount,
+                newCount,
+                urgency,
+                type
+            ));
+
+            runningTotal = Math.max(0, runningTotal - newCount + closedCount);
+        }
+
+        Collections.reverse(points);
+        return points;
     }
 
     /**
@@ -269,6 +336,58 @@ public class CareGapService {
             assessment.getSeverity()
         );
     }
+
+    private Map<String, Integer> buildUrgencyBreakdown(List<CareGapEntity> gaps) {
+        int high = 0;
+        int medium = 0;
+        int low = 0;
+
+        for (CareGapEntity gap : gaps) {
+            if (gap.getPriority() == CareGapEntity.Priority.URGENT || gap.getPriority() == CareGapEntity.Priority.HIGH) {
+                high++;
+            } else if (gap.getPriority() == CareGapEntity.Priority.MEDIUM) {
+                medium++;
+            } else {
+                low++;
+            }
+        }
+
+        Map<String, Integer> map = new HashMap<>();
+        map.put("high", high);
+        map.put("medium", medium);
+        map.put("low", low);
+        return map;
+    }
+
+    private Map<String, Integer> buildTypeBreakdown(List<CareGapEntity> gaps) {
+        Map<String, Integer> map = new HashMap<>();
+        map.put("screening", 0);
+        map.put("medication", 0);
+        map.put("followup", 0);
+        map.put("lab", 0);
+        map.put("assessment", 0);
+
+        for (CareGapEntity gap : gaps) {
+            switch (gap.getCategory()) {
+                case SCREENING, PREVENTIVE_CARE -> map.merge("screening", 1, Integer::sum);
+                case MEDICATION -> map.merge("medication", 1, Integer::sum);
+                case CHRONIC_DISEASE -> map.merge("followup", 1, Integer::sum);
+                case MENTAL_HEALTH, SOCIAL_DETERMINANTS -> map.merge("assessment", 1, Integer::sum);
+                default -> map.merge("lab", 1, Integer::sum);
+            }
+        }
+
+        return map;
+    }
+
+    public record CareGapTrendPoint(
+        Instant date,
+        int totalGaps,
+        int closedGaps,
+        int newGaps,
+        Map<String, Integer> byUrgency,
+        Map<String, Integer> byType
+    ) {}
 
     /**
      * Build recommendation

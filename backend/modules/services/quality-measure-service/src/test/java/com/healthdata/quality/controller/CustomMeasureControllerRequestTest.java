@@ -15,11 +15,15 @@ class CustomMeasureControllerRequestTest {
     void shouldConstructRequestAndResponseRecords() {
         CustomMeasureController.CreateCustomMeasureRequest create =
             new CustomMeasureController.CreateCustomMeasureRequest(
-                "Measure A", "desc", "HEDIS", 2024, "user-1"
+                "Measure A", "desc", "HEDIS", 2024,
+                "Owner Team", "Diabetes", "MONTHLY", "75%",
+                "HIGH", "Rollout notes", "diabetes,preventive", "user-1"
             );
         CustomMeasureController.UpdateCustomMeasureRequest update =
             new CustomMeasureController.UpdateCustomMeasureRequest(
-                "Measure B", "desc2", "CMS", 2025
+                "Measure B", "desc2", "CMS", 2025,
+                "Owner Team", "Cardiology", "QUARTERLY", "80%",
+                "MEDIUM", "Update notes", "cardio,quality"
             );
 
         CustomMeasureController.BatchPublishRequest publishRequest =
@@ -33,7 +37,9 @@ class CustomMeasureControllerRequestTest {
             new CustomMeasureController.BatchDeleteResponse(1, 0, List.of(), List.of());
 
         assertThat(create.name()).isEqualTo("Measure A");
+        assertThat(create.owner()).isEqualTo("Owner Team");
         assertThat(update.category()).isEqualTo("CMS");
+        assertThat(update.reportingCadence()).isEqualTo("QUARTERLY");
         assertThat(publishRequest.measureIds()).hasSize(1);
         assertThat(deleteRequest.force()).isTrue();
         assertThat(publishResponse.publishedCount()).isEqualTo(1);

@@ -144,8 +144,8 @@ const CustomTooltip = ({
   payload,
   metric,
 }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
+  const data = payload?.[0]?.payload;
+  if (active && data) {
     const { label, unit } = getMetricLabel(metric);
 
     return (

@@ -41,6 +41,7 @@ This folder contains the complete, updated Y Combinator application materials fo
 | [PRODUCT_POSITIONING_V2.md](PRODUCT_POSITIONING_V2.md) | Market messaging | Complete |
 | [CUSTOMER_OUTREACH_V2.md](CUSTOMER_OUTREACH_V2.md) | Sales templates | Complete |
 | [DEMO_VIDEO_SCRIPT_V2.md](DEMO_VIDEO_SCRIPT_V2.md) | Video recording guide | Complete |
+| [INVESTOR_OUTREACH_TARGETS_2026.md](INVESTOR_OUTREACH_TARGETS_2026.md) | Fundraising target list + sequence | Complete |
 
 ### Submission
 

@@ -1,0 +1,121 @@
+<div class="row">
+  <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-start mb-3">
+      <div>
+        <h2 class="mb-1"><%= contact.name %></h2>
+        <p class="text-muted mb-0"><%= contact.organization %></p>
+      </div>
+      <a href="/compose?contact_id=<%= contact.id %>" class="btn btn-primary">
+        <i class="bi bi-envelope-plus me-1"></i>Compose Email
+      </a>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="text-muted small">Type</label>
+            <div><span class="badge bg-<%= contact.type === 'VC' ? 'primary' : contact.type === 'Angel' ? 'warning' : 'success' %>"><%= contact.type %></span></div>
+          </div>
+          <div class="col-md-4">
+            <label class="text-muted small">Tier</label>
+            <div><%= contact.tier || '-' %></div>
+          </div>
+          <div class="col-md-4">
+            <label class="text-muted small">Check Size</label>
+            <div><%= contact.check_size || '-' %></div>
+          </div>
+          <div class="col-md-4">
+            <label class="text-muted small">Intro Path</label>
+            <div><%= contact.intro_path || '-' %></div>
+          </div>
+          <div class="col-md-4">
+            <label class="text-muted small">Portfolio Fit</label>
+            <div><%= contact.portfolio_fit || '-' %></div>
+          </div>
+          <div class="col-md-4">
+            <label class="text-muted small">Role</label>
+            <div><%= contact.role || '-' %></div>
+          </div>
+        </div>
+        <% if (contact.notes) { %>
+          <hr>
+          <label class="text-muted small">Notes / Outreach Angle</label>
+          <div><%= contact.notes %></div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Update Status</div>
+      <div class="card-body">
+        <form action="/contacts/<%= contact.id %>/update" method="POST" class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label small">Status</label>
+            <select name="status" class="form-select form-select-sm">
+              <% statuses.forEach(s => { %>
+                <option value="<%= s %>" <%= contact.status === s ? 'selected' : '' %>><%= s %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Next Action</label>
+            <input type="text" name="next_action" class="form-control form-control-sm" value="<%= contact.next_action || '' %>">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small">Due Date</label>
+            <input type="date" name="next_action_date" class="form-control form-control-sm" value="<%= contact.next_action_date || '' %>">
+          </div>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-sm btn-primary w-100">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">Log Activity</div>
+      <div class="card-body">
+        <form action="/contacts/<%= contact.id %>/activity" method="POST" class="row g-2 align-items-end">
+          <div class="col-md-3">
+            <label class="form-label small">Action</label>
+            <select name="action" class="form-select form-select-sm">
+              <option value="email_sent">Email Sent</option>
+              <option value="call">Call</option>
+              <option value="meeting">Meeting</option>
+              <option value="note">Note</option>
+            </select>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label small">Details</label>
+            <input type="text" name="details" class="form-control form-control-sm" placeholder="Brief note...">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">Log</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header">Activity History</div>
+      <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+        <% if (activities.length === 0) { %>
+          <p class="text-muted small">No activity logged yet.</p>
+        <% } else { %>
+          <% activities.forEach(a => { %>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between">
+                <strong class="small"><%= a.action.replace('_', ' ') %></strong>
+                <small class="text-muted"><%= a.created_at %></small>
+              </div>
+              <% if (a.details) { %><small><%= a.details %></small><% } %>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>

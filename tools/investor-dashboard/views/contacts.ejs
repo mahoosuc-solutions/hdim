@@ -1,0 +1,75 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Contacts</h2>
+  <div class="d-flex gap-2">
+    <select id="filterType" class="form-select form-select-sm" style="width: auto;" onchange="applyFilters()">
+      <option value="">All Types</option>
+      <option value="VC">VC</option>
+      <option value="Angel">Angel</option>
+      <option value="Strategic">Strategic</option>
+    </select>
+    <select id="filterTier" class="form-select form-select-sm" style="width: auto;" onchange="applyFilters()">
+      <option value="">All Tiers</option>
+      <option value="1">Tier 1</option>
+      <option value="2">Tier 2</option>
+      <option value="3">Tier 3</option>
+    </select>
+    <select id="filterStatus" class="form-select form-select-sm" style="width: auto;" onchange="applyFilters()">
+      <option value="">All Statuses</option>
+      <% statuses.forEach(s => { %>
+        <option value="<%= s %>"><%= s %></option>
+      <% }) %>
+    </select>
+  </div>
+</div>
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Organization</th>
+      <th>Type</th>
+      <th>Tier</th>
+      <th>Check Size</th>
+      <th>Status</th>
+      <th>Last Contact</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% contacts.forEach(c => { %>
+      <tr data-type="<%= c.type %>" data-tier="<%= c.tier || '' %>" data-status="<%= c.status %>">
+        <td><a href="/contacts/<%= c.id %>"><%= c.name %></a></td>
+        <td><%= c.organization %></td>
+        <td><span class="badge bg-<%= c.type === 'VC' ? 'primary' : c.type === 'Angel' ? 'warning' : 'success' %>"><%= c.type %></span></td>
+        <td><%= c.tier || '-' %></td>
+        <td><%= c.check_size || '-' %></td>
+        <td>
+          <span class="badge status-badge bg-<%= c.status === 'Research' ? 'secondary' : c.status === 'Passed' ? 'danger' : c.status.includes('Meeting') ? 'success' : 'info' %>">
+            <%= c.status %>
+          </span>
+        </td>
+        <td><%= c.last_contact_date || 'Never' %></td>
+        <td>
+          <a href="/compose?contact_id=<%= c.id %>" class="btn btn-sm btn-outline-primary" title="Compose email">
+            <i class="bi bi-envelope"></i>
+          </a>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<script>
+function applyFilters() {
+  const type = document.getElementById('filterType').value;
+  const tier = document.getElementById('filterTier').value;
+  const status = document.getElementById('filterStatus').value;
+  document.querySelectorAll('tbody tr').forEach(row => {
+    const show =
+      (!type || row.dataset.type === type) &&
+      (!tier || row.dataset.tier === tier) &&
+      (!status || row.dataset.status === status);
+    row.style.display = show ? '' : 'none';
+  });
+}
+</script>

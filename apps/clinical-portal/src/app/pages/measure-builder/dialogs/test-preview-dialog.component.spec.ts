@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { TestPreviewDialogComponent } from './test-preview-dialog.component';
 import { CustomMeasureService } from '../../../services/custom-measure.service';
 import { createMockMatDialogRef } from '../../testing/mocks';
+import { expectAlertBanner } from '../../../../testing/dialog-a11y.helper';
 
 describe('TestPreviewDialogComponent', () => {
   let fixture: ComponentFixture<TestPreviewDialogComponent>;
@@ -102,5 +103,18 @@ describe('TestPreviewDialogComponent', () => {
     component.runTest();
 
     expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('renders fallback error as an alert banner', () => {
+    customMeasureService.testMeasure.mockReturnValue(of({ results: [] }));
+    fixture.detectChanges();
+
+    component.errorMessage = 'Using sample data (backend test endpoint not available)';
+    fixture.detectChanges();
+
+    expectAlertBanner(
+      fixture,
+      'Using sample data (backend test endpoint not available)'
+    );
   });
 });

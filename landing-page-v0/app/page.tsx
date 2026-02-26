@@ -21,6 +21,8 @@ import { CyclingText } from './components/CyclingText'
 import { LandingPageClient } from './components/LandingPageClient'
 import { SegmentSelector } from './components/SegmentSelector'
 import VideoPlayer from '../components/VideoPlayer'
+import ScreenshotGallery from './components/ScreenshotLightbox'
+import IntegrationArchitectureDiagram from './components/IntegrationArchitectureDiagram'
 
 export default function LandingPage() {
   const features = [
@@ -625,57 +627,103 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="space-y-6">
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <Image
-                src="/images/dashboard-modern/01-dashboard-overview-clean.jpg"
-                alt="HDIM clinical portal dashboard overview"
-                width={1915}
-                height={939}
-                className="w-full h-auto"
-                loading="lazy"
-              />
-              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center">
-                <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse" />
-                LIVE
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="rounded-xl overflow-hidden shadow-lg bg-white">
-                <Image
-                  src="/images/dashboard-modern/02-results-detail-clean.jpg"
-                  alt="Results and measure detail view"
-                  width={1915}
-                  height={938}
-                  className="w-full h-auto"
-                  loading="lazy"
-                />
-              </div>
-              <div className="rounded-xl overflow-hidden shadow-lg bg-white">
-                <Image
-                  src="/images/dashboard-modern/03-care-gaps-detail-clean.jpg"
-                  alt="Care gaps workflow with detail pane"
-                  width={1915}
-                  height={938}
-                  className="w-full h-auto"
-                  loading="lazy"
-                />
-              </div>
-              <div className="rounded-xl overflow-hidden shadow-lg bg-white">
-                <Image
-                  src="/images/dashboard-modern/04-care-gaps-live-clean.jpg"
-                  alt="Live care gaps command center"
-                  width={1913}
-                  height={936}
-                  className="w-full h-auto"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          </div>
+          <ScreenshotGallery
+            heroScreenshot={{
+              src: "/images/dashboard-modern/01-dashboard-overview-clean.jpg",
+              alt: "HDIM Real-Time Care Gap Command Center Dashboard",
+              width: 1915,
+              height: 939,
+              title: "Provider Dashboard",
+              description: "Role-based clinical dashboard with KPIs, results awaiting review, high-priority care gaps, and quick actions",
+              badge: "LIVE",
+            }}
+            rows={[
+              {
+                columns: 3,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/05-quality-measures-library.jpg",
+                    alt: "HEDIS Quality Measures Library with benchmark scores and CMS impact ratings",
+                    width: 1918,
+                    height: 920,
+                    title: "Quality Measures Library",
+                    description: "6 HEDIS measures with national benchmarks, CMS star ratings, and compliance tracking",
+                  },
+                  {
+                    src: "/images/dashboard-modern/06-evaluation-results.jpg",
+                    alt: "Evaluation Results dashboard showing severity distribution, compliance rates, and outcome charts",
+                    width: 1916,
+                    height: 919,
+                    title: "Evaluation Results",
+                    description: "Real-time compliance scoring with outcome distribution and category breakdowns",
+                  },
+                  {
+                    src: "/images/dashboard-modern/08-care-gap-management.jpg",
+                    alt: "High Priority Care Gaps dashboard showing patient worklist with risk levels, clinical context, and address actions",
+                    width: 1918,
+                    height: 917,
+                    title: "Care Gap Management",
+                    description: "High-priority care gap worklist with patient names, risk badges, due dates, and one-click address actions",
+                  },
+                ],
+              },
+              {
+                columns: 3,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/07-patient-management.png",
+                    alt: "Patient Management registry with MPI status, demographics, search filters, and duplicate detection",
+                    width: 1920,
+                    height: 1080,
+                    title: "Patient Management",
+                    description: "Master Patient Index with duplicate detection, demographic search, and longitudinal records",
+                  },
+                  {
+                    src: "/images/dashboard-modern/03-risk-stratification.jpg",
+                    alt: "Risk Stratification view with patient cards showing risk scores, conditions, and improvement trends",
+                    width: 1915,
+                    height: 938,
+                    title: "Risk Stratification",
+                    description: "Prioritize high-risk patients with risk factor breakdowns and condition-based filtering",
+                  },
+                  {
+                    src: "/images/dashboard-modern/09-reports-hub.png",
+                    alt: "Quality Reports hub with Patient, Population, Comparative, and Provider Leaderboard report types",
+                    width: 1920,
+                    height: 1080,
+                    title: "Quality Reports",
+                    description: "Generate patient, population, comparative, and provider leaderboard reports with QRDA export",
+                  },
+                ],
+              },
+              {
+                columns: 2,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/10-care-gap-closure.jpg",
+                    alt: "Care Gap Closure workflow showing patient detail slide-out, recommended interventions, and close gap dialog",
+                    width: 1915,
+                    height: 921,
+                    title: "Care Gap Closure Workflow",
+                    description: "One-click gap closure with patient context, intervention recommendations, and audit documentation",
+                  },
+                  {
+                    src: "/images/dashboard-modern/04-care-gaps-live-clean.jpg",
+                    alt: "Live care gaps command center with urgency-sorted list, slide-out patient panel, and intervention actions",
+                    width: 1913,
+                    height: 936,
+                    title: "Live Care Gap Alerts",
+                    description: "Real-time urgency-sorted alerts with patient slide-out panel and one-click intervention actions",
+                  },
+                ],
+              },
+            ]}
+          />
         </div>
       </section>
+
+      {/* Integration Architecture */}
+      <IntegrationArchitectureDiagram />
 
       {/* Social Proof Section */}
       <section className="py-20 bg-gray-50" id="customers">

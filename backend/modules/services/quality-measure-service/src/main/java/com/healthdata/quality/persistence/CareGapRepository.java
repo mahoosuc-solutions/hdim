@@ -147,4 +147,37 @@ public interface CareGapRepository extends JpaRepository<CareGapEntity, UUID> {
     @Query("SELECT DISTINCT c.patientId FROM CareGapEntity c " +
            "WHERE c.tenantId = :tenantId")
     List<UUID> findDistinctPatientIdsByTenantId(@Param("tenantId") String tenantId);
+
+    /**
+     * Count all open/in-progress care gaps for a tenant
+     */
+    @Query("SELECT COUNT(c) FROM CareGapEntity c " +
+           "WHERE c.tenantId = :tenantId AND c.status IN ('OPEN', 'IN_PROGRESS')")
+    Long countOpenCareGapsForTenant(@Param("tenantId") String tenantId);
+
+    /**
+     * Find care gaps identified in a time range for a tenant
+     */
+    List<CareGapEntity> findByTenantIdAndIdentifiedDateBetween(
+        String tenantId,
+        Instant start,
+        Instant end
+    );
+
+    /**
+     * Find care gaps addressed in a time range for a tenant
+     */
+    List<CareGapEntity> findByTenantIdAndAddressedDateBetween(
+        String tenantId,
+        Instant start,
+        Instant end
+    );
+
+    /**
+     * Find care gaps by tenant and status list
+     */
+    List<CareGapEntity> findByTenantIdAndStatusIn(
+        String tenantId,
+        List<CareGapEntity.Status> statuses
+    );
 }

@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import {
   Activity,
@@ -6,14 +5,15 @@ import {
   Shield,
   Zap,
   Users,
-  Clock,
   CheckCircle2,
   ArrowRight,
   Database,
   Brain,
   Lock,
-  GitBranch
+  GitBranch,
 } from 'lucide-react'
+import IntegrationArchitectureDiagram from '../components/IntegrationArchitectureDiagram'
+import ScreenshotGallery from '../components/ScreenshotLightbox'
 
 export const metadata = {
   title: 'Features | HDIM - Healthcare Data in Motion',
@@ -140,11 +140,14 @@ const platformCapabilities = [
   }
 ]
 
-const integrations = [
-  { name: 'Epic', logo: '/logos/epic.png' },
-  { name: 'Cerner', logo: '/logos/cerner.png' },
-  { name: 'Allscripts', logo: '/logos/allscripts.png' },
-  { name: 'Athenahealth', logo: '/logos/athena.png' },
+const ehrSystems = [
+  'Epic', 'Cerner (Oracle Health)', 'Allscripts', 'Athenahealth',
+  'MEDITECH', 'eClinicalWorks', 'NextGen',
+]
+
+const dataFormats = [
+  'HL7 FHIR R4', 'HL7 v2', 'C-CDA', 'Claims (837/835)',
+  'Lab (HL7/LIS)', 'Pharmacy (NCPDP)', 'QRDA I/III',
 ]
 
 export default function FeaturesPage() {
@@ -252,6 +255,137 @@ export default function FeaturesPage() {
                 </ul>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Integration Architecture Diagram */}
+      <IntegrationArchitectureDiagram />
+
+      {/* Screenshot Gallery — See It in Action */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold tracking-widest uppercase text-blue-600 mb-3">
+              Live Portal
+            </p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              See It in Action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Every screen below is from our live Clinical Portal — not mockups, not prototypes.
+            </p>
+          </div>
+
+          <ScreenshotGallery
+            heroScreenshot={{
+              src: "/images/dashboard-modern/01-dashboard-overview-clean.jpg",
+              alt: "HDIM Clinical Portal Dashboard with KPIs, care gap alerts, and quick actions",
+              width: 1915,
+              height: 939,
+              title: "Provider Dashboard",
+              description: "Role-based clinical dashboard with real-time KPIs, results awaiting review, high-priority care gaps, and quick actions",
+              badge: "LIVE",
+            }}
+            rows={[
+              {
+                columns: 3,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/05-quality-measures-library.jpg",
+                    alt: "HEDIS Quality Measures Library with benchmark scores",
+                    width: 1918,
+                    height: 920,
+                    title: "Quality Measures Library",
+                    description: "6 HEDIS measures with national benchmarks, CMS star ratings, and compliance tracking",
+                  },
+                  {
+                    src: "/images/dashboard-modern/08-care-gap-management.jpg",
+                    alt: "High Priority Care Gaps worklist with risk levels and actions",
+                    width: 1918,
+                    height: 917,
+                    title: "Care Gap Management",
+                    description: "High-priority care gap worklist with patient names, risk badges, due dates, and one-click address actions",
+                  },
+                  {
+                    src: "/images/dashboard-modern/06-evaluation-results.jpg",
+                    alt: "Evaluation Results with compliance scoring and outcome charts",
+                    width: 1916,
+                    height: 919,
+                    title: "Evaluation Results",
+                    description: "Real-time compliance scoring with outcome distribution and category breakdowns",
+                  },
+                ],
+              },
+              {
+                columns: 2,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/04-care-gaps-live-clean.jpg",
+                    alt: "Live care gap alerts with patient slide-out panel",
+                    width: 1913,
+                    height: 936,
+                    title: "Live Care Gap Alerts",
+                    description: "Urgency-sorted alerts with patient slide-out panel and intervention recommendations",
+                  },
+                  {
+                    src: "/images/dashboard-modern/10-care-gap-closure.jpg",
+                    alt: "Care Gap Closure workflow with closure form and audit trail",
+                    width: 1915,
+                    height: 921,
+                    title: "Gap Closure Workflow",
+                    description: "One-click closure with patient context, recommended interventions, and audit documentation",
+                  },
+                ],
+              },
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* EHR Compatibility */}
+      <section className="py-16 bg-gray-50 border-y border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3">
+              Works With Your Existing Systems
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              HDIM connects via standard FHIR R4 APIs — no custom integration work required.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div>
+              <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-500 mb-4">
+                EHR Systems
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {ehrSystems.map((name) => (
+                  <span
+                    key={name}
+                    className="px-3 py-1.5 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-500 mb-4">
+                Data Formats
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {dataFormats.map((name) => (
+                  <span
+                    key={name}
+                    className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-sm font-medium text-blue-700"
+                  >
+                    {name}
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>

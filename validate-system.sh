@@ -17,6 +17,20 @@ QUALITY_HEALTH_URL="${QUALITY_HEALTH_URL:-http://localhost:8087/quality-measure/
 FHIR_URL="${FHIR_URL:-http://localhost:8085/fhir}"
 AUDIT_DIRECT_URL="${AUDIT_DIRECT_URL:-http://localhost:8088/api/v1/audit/logs/statistics}"
 AUDIT_GATEWAY_URL="${AUDIT_GATEWAY_URL:-${GATEWAY_URL}/api/v1/audit/logs/statistics}"
+AI_BASE_URL="${AI_BASE_URL:-${GATEWAY_URL}/api/v1/ai}"
+AI_HEALTH_URL="${AI_HEALTH_URL:-${AI_BASE_URL}/health}"
+AI_STATUS_URL="${AI_STATUS_URL:-${AI_BASE_URL}/status}"
+SCREENSHOT_DIR="${SCREENSHOT_DIR:-screenshots/demo-portal}"
+PATIENT_API_BASE="${PATIENT_API_BASE:-http://localhost:8084/patient/api/v1}"
+CARE_GAP_API_BASE="${CARE_GAP_API_BASE:-http://localhost:8086/care-gap/api/v1}"
+QUALITY_MEASURE_API_BASE="${QUALITY_MEASURE_API_BASE:-http://localhost:8087/quality-measure}"
+DEMO_SEEDING_URL="${DEMO_SEEDING_URL:-http://localhost:8098}"
+DEMO_SCENARIO="${DEMO_SCENARIO:-hedis-evaluation}"
+ENABLE_DEMO_SEEDING="${ENABLE_DEMO_SEEDING:-false}"
+TENANTS_CSV="${TENANTS_CSV:-acme-health}"
+EXPECTED_PATIENTS_PER_TENANT="${EXPECTED_PATIENTS_PER_TENANT:-}"
+VERIFY_SEEDING_SCRIPT_PATH="${VERIFY_SEEDING_SCRIPT_PATH:-scripts/verify-seeding-counts.sh}"
+read -r -a TENANTS <<< "${TENANTS_CSV//,/ }"
 AUTH_USER_ID="${AUTH_USER_ID:-550e8400-e29b-41d4-a716-446655440010}"
 AUTH_ROLES="${AUTH_ROLES:-ADMIN,EVALUATOR}"
 CURL_MAX_TIME="${CURL_MAX_TIME:-15}"
@@ -125,6 +139,140 @@ AUDIT_GATEWAY_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' \
   -H "X-Tenant-ID: ${TENANT_ID}" "${AUTH_HEADER[@]}" "${FHIR_AUTH_HEADER[@]}" \
   "${AUDIT_GATEWAY_URL}")
 echo "   • Gateway Stats:     HTTP $AUDIT_GATEWAY_STATUS"
+
+echo ""
+echo "✅ AI Assistant & Demo Services"
+AI_HEALTH_STATUS=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' "${AI_HEALTH_URL}")
+echo "   • AI Health:         HTTP $AI_HEALTH_STATUS"
+
+AI_STATUS_CODE=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' "${AI_STATUS_URL}")
+echo "   • AI Status:         HTTP $AI_STATUS_CODE"
+
+DEMO_SEEDING_HEALTH=$(curl "${CURL_OPTS[@]}" -o /dev/null -w '%{http_code}' "${DEMO_SEEDING_URL}/demo/actuator/health")
+echo "   • Demo Seeding:      HTTP $DEMO_SEEDING_HEALTH"
+
+check_demo_json_array() {
+  local name=$1 url=$2 jq_expr=$3
+  local response body status
+  response=$(curl "${CURL_OPTS[@]}" -H "X-Tenant-ID: ${TENANT_ID}" \
+    -H "X-Auth-User-Id: ${AUTH_USER_ID}" -H "X-Auth-Username: ${AUTH_USERNAME}" \
+    -H "X-Auth-Roles: ${AUTH_ROLES}" -H "X-Auth-Tenant-Ids: ${TENANT_ID}" \
+    -H "X-Auth-Validated: gateway-${VALIDATED_TS}-dev" "$url" -w $'\n%{http_code}')
+  status=$(printf '%s' "${response}" | tail -n1)
+  body=$(printf '%s' "${response}" | sed '$d')
+  local length=0
+  if command -v jq >/dev/null 2>&1; then
+    length=$(printf '%s' "${body}" | jq -r "${jq_expr}" 2>/dev/null || echo 0)
+  else
+    length=$(python3 - <<PY
+import json,sys
+try:
+    data=json.load(sys.stdin)
+    from operator import getitem
+    def dig(obj,path):
+        for key in path.split('.'):
+            if key == '':
+                continue
+            if isinstance(obj, list):
+                obj=obj[int(key)]
+            else:
+                obj=obj.get(key, {})
+        return obj
+    pieces = "${jq_expr}".split('|')
+    expr = pieces[-1].strip()
+    value=dig(data, expr[1:]) if expr.startswith('.') else data
+    if hasattr(value, '__len__'):
+        print(len(value))
+    else:
+        print(0)
+except Exception:
+    print(0)
+PY
+) 
+  fi
+  if [[ "${status}" != "200" ]] || [[ -z "${length}" ]] || (( length == 0 )); then
+    echo "   ✗ ${name}: HTTP ${status}, length=${length}"
+    return 1
+  fi
+  echo "   ✓ ${name}: ${length} entries"
+  return 0
+}
+
+run_demo_data_checks() {
+  local ok=0
+  echo ""
+  echo "🧪 Demo data validation"
+  if check_demo_json_array "Patients" "${PATIENT_API_BASE}/patients?page=0&size=1" '.content | length'; then
+    ok=$((ok+1))
+  fi
+  if check_demo_json_array "Care Gaps" "${CARE_GAP_API_BASE}/care-gaps?page=0&size=1" '.content | length'; then
+    ok=$((ok+1))
+  fi
+  if check_demo_json_array "Quality Measures" "${QUALITY_MEASURE_API_BASE}/measures/local" '. | length'; then
+    ok=$((ok+1))
+  fi
+  local fhir_response
+  fhir_response=$(curl "${CURL_OPTS[@]}" -H "X-Tenant-ID: ${TENANT_ID}" "${FHIR_URL}/Observation?_count=1" -w $'\n%{http_code}')
+  local fhir_status
+  fhir_status=$(printf '%s' "${fhir_response}" | tail -n1)
+  local fhir_body
+  fhir_body=$(printf '%s' "${fhir_response}" | sed '$d')
+  if [[ "${fhir_status}" == "200" ]] && [[ -n "${fhir_body}" ]] && echo "${fhir_body}" | grep -q '"resourceType":"Bundle"'; then
+    echo "   ✓ FHIR Observations: HTTP ${fhir_status}"
+    ok=$((ok+1))
+  else
+    echo "   ✗ FHIR Observations: HTTP ${fhir_status}"
+  fi
+  return $(( ok >= 4 ? 0 : 1 ))
+}
+
+run_demo_seeding() {
+  if [[ "${ENABLE_DEMO_SEEDING}" != "true" ]]; then
+    return 0
+  fi
+  echo ""
+  echo "🚀 Triggering demo scenario: ${DEMO_SCENARIO}"
+  local response
+  response=$(curl "${CURL_OPTS[@]}" -X POST "${DEMO_SEEDING_URL}/demo/api/v1/demo/scenarios/${DEMO_SCENARIO}" \
+    -H "Content-Type: application/json" \
+    -H "X-Tenant-ID: ${TENANT_ID}" -w $'\n%{http_code}')
+  local status
+  status=$(printf '%s' "${response}" | tail -n1)
+  local body
+  body=$(printf '%s' "${response}" | sed '$d')
+  if [[ "${status}" == "200" ]] || [[ "${status}" == "201" ]]; then
+    echo "   ✓ Seed request accepted"
+    echo "     Response: ${body//\"/}'"
+    return 0
+  fi
+  echo "   ✗ Seed request failed (HTTP ${status})"
+  echo "     Response: ${body//\"/}'"
+  return 1
+}
+
+verify_seeding_counts() {
+  if [[ ! -x "${VERIFY_SEEDING_SCRIPT_PATH}" ]]; then
+    echo "⚠️  Missing verify counts script: ${VERIFY_SEEDING_SCRIPT_PATH}" >&2
+    return 1
+  fi
+  echo ""
+  echo "📊 Verifying seeded counts"
+  TENANTS="${TENANTS_CSV}" EXPECTED_PATIENTS_PER_TENANT="${EXPECTED_PATIENTS_PER_TENANT}" "${VERIFY_SEEDING_SCRIPT_PATH}" || return 1
+  return 0
+}
+
+DEMO_SEEDING_STATUS=0
+if [[ "${ENABLE_DEMO_SEEDING}" == "true" ]]; then
+  run_demo_seeding || DEMO_SEEDING_STATUS=1
+fi
+DATA_VALIDATION_STATUS=0
+if ! run_demo_data_checks; then
+  DATA_VALIDATION_STATUS=1
+fi
+VERIFY_COUNTS_STATUS=0
+if ! verify_seeding_counts; then
+  VERIFY_COUNTS_STATUS=1
+fi
 
 echo ""
 # Summary

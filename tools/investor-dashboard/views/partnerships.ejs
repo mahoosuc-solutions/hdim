@@ -1,0 +1,36 @@
+<h2 class="mb-4">Partnership Targets</h2>
+
+<% const categories = [...new Set(partnerships.map(p => p.category))]; %>
+<% categories.forEach(cat => { %>
+  <h4 class="mt-4 mb-3"><%= cat %></h4>
+  <table class="table table-hover">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Product Focus</th>
+        <th>Customer Base</th>
+        <th>Partnership Angle</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% partnerships.filter(p => p.category === cat).forEach(p => { %>
+        <tr>
+          <td><strong><%= p.company %></strong></td>
+          <td><%= p.product_focus %></td>
+          <td><%= p.customer_base %></td>
+          <td style="max-width: 300px;"><%= p.partnership_angle %></td>
+          <td>
+            <form action="/partnerships/<%= p.id %>/status" method="POST" class="d-inline">
+              <select name="status" class="form-select form-select-sm" style="width: auto;" onchange="this.form.submit()">
+                <% ['Research', 'Contacted', 'Meeting Scheduled', 'In Discussion', 'Agreed', 'Passed'].forEach(s => { %>
+                  <option value="<%= s %>" <%= p.status === s ? 'selected' : '' %>><%= s %></option>
+                <% }) %>
+              </select>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% }) %>

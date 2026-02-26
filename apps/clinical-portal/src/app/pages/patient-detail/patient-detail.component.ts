@@ -10,7 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { takeUntil } from 'rxjs';
+import { catchError, of, takeUntil, timeout } from 'rxjs';
 import { injectDestroy } from '../../shared/utils';
 import { PatientService } from '../../services/patient.service';
 import { FhirClinicalService, PatientClinicalData, Observation, Condition, Procedure } from '../../services/fhir-clinical.service';
@@ -63,7 +63,11 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
   qualityResults: QualityMeasureResult[] = [];
 
   loading = true;
+  clinicalLoading = false;
+  qualityLoading = false;
   error: string | null = null;
+  clinicalDataError: string | null = null;
+  qualityResultsError: string | null = null;
 
   // Document upload (Issue #249 - OCR Phase 1)
   currentDocumentId: string | null = null;
@@ -215,12 +219,21 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
     if (!this.patientId) return;
 
     this.loading = true;
+    this.clinicalLoading = true;
+    this.qualityLoading = true;
     this.error = null;
+    this.clinicalDataError = null;
+    this.qualityResultsError = null;
 
     // Load patient demographics
-    this.patientService.getPatient(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
+    this.patientService.getPatient(this.patientId).pipe(
+      takeUntil(this.destroy$),
+      timeout(15000)
+    ).subscribe({
       next: (patient: Patient) => {
         this.patient = patient;
+        // Patient loaded: unblock page render while auxiliary clinical datasets continue loading
+        this.loading = false;
         this.loadClinicalData();
         this.loadQualityResults();
       },
@@ -228,6 +241,8 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
         this.logger.error('Error loading patient', err);
         this.error = 'Failed to load patient information';
         this.loading = false;
+        this.clinicalLoading = false;
+        this.qualityLoading = false;
       },
     });
   }
@@ -235,14 +250,28 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
   private loadClinicalData(): void {
     if (!this.patientId) return;
 
-    this.fhirClinicalService.getPatientClinicalData(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
+    this.clinicalLoading = true;
+    this.fhirClinicalService.getPatientClinicalData(this.patientId).pipe(
+      takeUntil(this.destroy$),
+      timeout(20000),
+      catchError((err: any) => {
+        this.logger.error('Error loading clinical data', err);
+        this.clinicalDataError = 'Clinical history is temporarily unavailable.';
+        return of({
+          observations: [],
+          conditions: [],
+          procedures: [],
+        } as PatientClinicalData);
+      })
+    ).subscribe({
       next: (data: PatientClinicalData) => {
         this.clinicalData = data;
-        this.loading = false;
+        this.clinicalLoading = false;
       },
       error: (err: any) => {
-        this.logger.error('Error loading clinical data', err);
-        this.loading = false;
+        this.logger.error('Unexpected clinical data stream error', err);
+        this.clinicalDataError = 'Clinical history is temporarily unavailable.';
+        this.clinicalLoading = false;
       },
     });
   }
@@ -250,12 +279,24 @@ export class PatientDetailComponent implements OnInit, AfterViewInit {
   private loadQualityResults(): void {
     if (!this.patientId) return;
 
-    this.evaluationService.getPatientResults(this.patientId).pipe(takeUntil(this.destroy$)).subscribe({
+    this.qualityLoading = true;
+    this.evaluationService.getPatientResults(this.patientId).pipe(
+      takeUntil(this.destroy$),
+      timeout(20000),
+      catchError((err: any) => {
+        this.logger.error('Error loading quality results', err);
+        this.qualityResultsError = 'Quality results are temporarily unavailable.';
+        return of([]);
+      })
+    ).subscribe({
       next: (results: QualityMeasureResult[]) => {
         this.qualityResults = results;
+        this.qualityLoading = false;
       },
       error: (err: any) => {
-        this.logger.error('Error loading quality results', err);
+        this.logger.error('Unexpected quality results stream error', err);
+        this.qualityResultsError = 'Quality results are temporarily unavailable.';
+        this.qualityLoading = false;
       },
     });
   }

@@ -22,6 +22,9 @@ public class GatewayClinicalController {
     @Value("${backend.services.care-gap.url}")
     private String careGapUrl;
 
+    @Value("${backend.services.quality-measure.url}")
+    private String qualityMeasureUrl;
+
     @Value("${backend.services.consent.url}")
     private String consentUrl;
 
@@ -74,6 +77,22 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, careGapUrl, "/care-gap");
+    }
+
+    @RequestMapping(value = "/quality-measure/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToQualityMeasure(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, qualityMeasureUrl, "/quality-measure");
+    }
+
+    @RequestMapping(value = "/api/quality-measure/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToQualityMeasureApi(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, qualityMeasureUrl, "/api/quality-measure");
     }
 
     @RequestMapping(value = "/api/consent/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})

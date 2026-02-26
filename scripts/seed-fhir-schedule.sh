@@ -100,7 +100,7 @@ get_id_by_identifier() {
   local identifier="$2"
   local encoded
   encoded=$(urlencode "${identifier}")
-  fhir_get "${resource}?identifier=${encoded}" | jq -r '.entry[0].resource.id // empty'
+  fhir_get "${resource}?identifier=${encoded}" | jq -r '.entry[0].resource.id // empty' 2>/dev/null || true
 }
 
 ensure_resource() {
@@ -113,7 +113,7 @@ ensure_resource() {
     echo "$id"
     return
   fi
-  id=$(fhir_post "$resource" "$payload" | jq -r '.id // empty')
+  id=$(fhir_post "$resource" "$payload" | jq -r '.id // empty' 2>/dev/null || true)
   echo "$id"
 }
 
@@ -278,6 +278,9 @@ for offset in $(seq 0 "$DAYS_AHEAD"); do
       existing_appt_id=$(get_id_by_identifier "Appointment" "${appt_identifier}")
       if [ -n "$existing_appt_id" ]; then
         appointment_id="$existing_appt_id"
+      elif fhir_exists "Appointment" "$appointment_id"; then
+        # Reruns can hit duplicate ID errors when identifier lookup is stale; reuse deterministic ID.
+        :
       else
         appointment_id=$(fhir_post "Appointment" "{
           \"resourceType\": \"Appointment\",
@@ -293,7 +296,7 @@ for offset in $(seq 0 "$DAYS_AHEAD"); do
             {\"actor\": {\"reference\": \"PractitionerRole/${provider_role_id}\", \"display\": \"Dr. Sarah Chen\"}, \"status\": \"accepted\"},
             {\"actor\": {\"reference\": \"Location/${location_id}\", \"display\": \"Main Street Clinic - Suite 200\"}, \"status\": \"accepted\"}
           ]
-        }" | jq -r '.id // empty')
+        }" | jq -r '.id // empty' 2>/dev/null || true)
       fi
 
       ma_task_identifier="${IDENTIFIER_SYSTEM}|task-ma-${schedule_day}-${slot_time//:/}"

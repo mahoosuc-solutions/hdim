@@ -64,7 +64,23 @@ subprojects {
             "org.xerial:sqlite-jdbc:3.51.2.0",
             "org.apache.tika:tika-core:2.9.2",
             "io.ktor:ktor-http-jvm:2.3.13",
-            "io.ktor:ktor-io-jvm:2.3.13"
+            "io.ktor:ktor-io-jvm:2.3.13",
+            // CVE remediation overrides (wave-2 dependency hardening)
+            "org.apache.kafka:kafka-clients:3.9.1",
+            "commons-beanutils:commons-beanutils:1.9.4",
+            "com.azure:azure-identity:1.15.3",
+            "org.apache.jena:jena-arq:4.10.0",
+            "org.apache.jena:jena-base:4.10.0",
+            "org.apache.jena:jena-core:4.10.0",
+            "org.apache.jena:jena-iri:4.10.0",
+            "org.springframework:spring-aop:6.1.14",
+            "org.springframework:spring-beans:6.1.14",
+            "org.springframework:spring-context:6.1.14",
+            "org.springframework:spring-core:6.1.14",
+            "org.springframework:spring-expression:6.1.14",
+            "org.springframework:spring-jcl:6.1.14",
+            "org.springframework:spring-web:6.1.14",
+            "org.springframework:spring-webmvc:6.1.14"
         )
         resolutionStrategy.eachDependency {
             if (requested.group == "com.fasterxml.jackson.core") {
@@ -109,6 +125,31 @@ subprojects {
             if (requested.group == "org.xerial" && requested.name == "sqlite-jdbc") {
                 useVersion("3.51.2.0")
             }
+            if (requested.group == "org.apache.kafka" && requested.name == "kafka-clients") {
+                useVersion("3.9.1")
+            }
+            if (requested.group == "commons-beanutils" && requested.name == "commons-beanutils") {
+                useVersion("1.9.4")
+            }
+            if (requested.group == "com.azure" && requested.name == "azure-identity") {
+                useVersion("1.15.3")
+            }
+            if (requested.group == "org.apache.jena" && requested.name.startsWith("jena-")) {
+                useVersion("4.10.0")
+            }
+            if (requested.group == "org.springframework" && requested.name in setOf(
+                    "spring-aop",
+                    "spring-beans",
+                    "spring-context",
+                    "spring-core",
+                    "spring-expression",
+                    "spring-jcl",
+                    "spring-web",
+                    "spring-webmvc"
+                )
+            ) {
+                useVersion("6.1.14")
+            }
             if (requested.group == "org.apache.tika" && requested.name == "tika-core") {
                 useVersion("2.9.2")
             }
@@ -125,6 +166,8 @@ subprojects {
                 dependency("org.apache.tomcat.embed:tomcat-embed-websocket:10.1.52")
                 dependency("org.quartz-scheduler:quartz:2.5.2")
                 dependency("org.xerial:sqlite-jdbc:3.51.2.0")
+                dependency("org.apache.kafka:kafka-clients:3.9.1")
+                dependency("com.azure:azure-identity:1.15.3")
             }
         }
     }

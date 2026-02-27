@@ -110,3 +110,9 @@ Each wave is complete only when all conditions pass:
 - Friday: wave gate run + evidence packaging + issue status update.
 
 This cadence keeps engineering throughput aligned with investor-grade evidence quality.
+
+---
+
+## 7. Weekly Tracking Dashboard
+
+- Burndown reference: `docs/GITHUB_WAVE_BURNDOWN_DASHBOARD_2026-02-27.md`

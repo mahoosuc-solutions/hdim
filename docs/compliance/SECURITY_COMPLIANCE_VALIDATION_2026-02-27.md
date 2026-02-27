@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-27  
 **Scope:** Local remediation and revalidation on current branch  
-**Result:** **Node CVEs cleared**, **HIPAA operational controls validated**, **SOC2 still requires formal evidence packaging**
+**Result:** **Node CVEs cleared**, **HIPAA operational controls validated**, **SOC2 still requires formal evidence packaging and completed backend CVE evidence**
 
 ---
 
@@ -28,13 +28,16 @@
 
 ### Java / Backend Dependencies
 - Backend Gradle now includes OWASP Dependency-Check plugin wiring (`org.owasp.dependencycheck`).
-- Local first run of `dependencyCheckAnalyze` is long-running without NVD API key and did not complete in this session.
+- Local runs of `dependencyCheckAnalyze`/`dependencyCheckAggregate` did not complete in this session due first-run NVD data constraints without `NVD_API_KEY`.
+- An offline attempt (`-DdependencyCheck.autoUpdate=false`) also did not produce a completed report artifact in this environment.
 
 **Evidence**
 - Wiring change: `backend/build.gradle.kts`
 - Attempted run log: `test-results/gradle-dependency-check-2026-02-27-after-wire.log`
+- Attempted aggregate run log: `test-results/gradle-dependency-check-aggregate-2026-02-27.log`
+- Attempted aggregate offline run log: `test-results/gradle-dependency-check-aggregate-2026-02-27-offline.log`
 
-**Current backend CVE conclusion:** **Pending completion of dependency-check scan output**.
+**Current backend CVE conclusion:** **Pending completion of dependency-check scan output in a network-enabled run with NVD data availability**.
 
 ---
 
@@ -86,7 +89,7 @@
 ## 6. Final Readiness Verdict (Current Branch)
 
 - **Node CVE-free:** ✅ **Yes** (high/critical audit gate clear)
-- **Backend CVE-free:** ⚠️ **Not yet proven in this run** (scan task wired; output pending with NVD update/API-key)
+- **Backend CVE-free:** ⚠️ **Not yet proven in this run** (scan tasks wired; output pending with NVD update/API key)
 - **HIPAA operational controls:** ✅ **Validated by current scripts**
 - **SOC2 audit-ready claim:** ⚠️ **Not yet fully substantiated** (missing consolidated control-evidence package)
 
@@ -94,6 +97,8 @@
 
 ## 7. Remaining Required Steps
 
-1. Complete backend `dependencyCheckAnalyze` with NVD API key configured to generate full report artifact.
-2. Publish SOC2 CC control mapping document with direct links to validation artifacts.
-3. Add backend CVE report and SOC2 mapping artifact as mandatory release-gate attachments.
+1. Complete backend scan in a network-enabled environment with `NVD_API_KEY`:
+   - `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
+2. Archive generated backend report artifacts (`HTML/JSON/SARIF`) into `test-results/` and link them in this report.
+3. Publish SOC2 CC control mapping document with direct links to validation artifacts.
+4. Add backend CVE report and SOC2 mapping artifact as mandatory release-gate attachments.

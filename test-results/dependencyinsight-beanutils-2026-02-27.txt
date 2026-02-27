@@ -1,0 +1,9 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Type-safe project accessors is an incubating feature.
+
+> Task :modules:services:fhir-service:dependencyInsight
+No dependencies matching given input were found in configuration ':modules:services:fhir-service:runtimeClasspath'
+
+BUILD SUCCESSFUL in 23s
+1 actionable task: 1 executed

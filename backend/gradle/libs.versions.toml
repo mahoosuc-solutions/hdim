@@ -4,7 +4,7 @@ java = "21"
 kotlin = "2.3.10"
 
 # Spring Framework
-spring-boot = "3.3.6"  # Compatible with Spring Cloud 2023.0.x
+spring-boot = "3.3.13"  # Security patch rollup for Spring/Tomcat stack
 spring-cloud = "2023.0.6"  # Updated to align with majority of services
 spring-cloud-openfeign = "4.3.1"  # Explicit version for openfeign starter
 spring-dependency-management = "1.1.7"

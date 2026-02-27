@@ -1,6 +1,7 @@
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.owasp.dependencycheck.gradle.extension.DependencyCheckExtension
 
 plugins {
     alias(libs.plugins.spring.boot) apply false
@@ -8,6 +9,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.kotlin.spring) apply false
     alias(libs.plugins.versions)
+    id("org.owasp.dependencycheck") version "12.1.8"
     java
 }
 
@@ -29,6 +31,13 @@ allprojects {
         // FHIR resources
         maven { url = uri("https://build.fhir.org/ig/") }
     }
+}
+
+extensions.configure<DependencyCheckExtension> {
+    format = "ALL"
+    failBuildOnCVSS = 9.0f
+    suppressionFile = rootProject.file("../.github/dependency-check-suppression.xml").absolutePath
+    analyzers.assemblyEnabled = false
 }
 
 // Configure subprojects

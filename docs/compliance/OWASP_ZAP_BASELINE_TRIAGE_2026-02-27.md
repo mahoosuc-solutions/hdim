@@ -6,10 +6,16 @@
 
 ## Summary
 
-- Current status: Baseline workflow dispatched; waiting for runner completion.
-- Latest dispatch:
-  - Workflow run: `https://github.com/webemo-aaron/hdim/actions/runs/22501847597`
-  - Status at update: `queued` (2026-02-27T20:04:31Z)
+- Current status: Baseline evidence captured locally using `securecodebox/zap` due hosted-runner billing block.
+- Execution path:
+  - Scanner image: `securecodebox/zap:latest` (direct daemon mode)
+  - Target: `http://localhost:18080` (demo gateway)
+  - Execution timestamp (UTC): `2026-02-27T22:37:00Z`
+- Artifact location:
+  - `test-results/zap-local-2026-02-27/report_html.html`
+  - `test-results/zap-local-2026-02-27/report_json.json`
+  - `test-results/zap-local-2026-02-27/alerts.json`
+  - `test-results/zap-local-2026-02-27/alerts-summary.json`
 - Required artifacts after each run:
   - `report_html.html`
   - `report_md.md`
@@ -27,11 +33,12 @@
 
 | Alert | Risk | URL/Endpoint | Owner | Decision | Due Date | Evidence |
 |---|---|---|---|---|---|---|
-| Pending first scan | N/A | N/A | Security Eng | Pending run | 2026-03-01 | Populate from `report_json.json` |
+| Timestamp Disclosure - Unix | Informational | `http://localhost:18080/robots.txt` | Security Eng | Accept (informational only, no sensitive payload exposure observed) | 2026-03-31 | `test-results/zap-local-2026-02-27/report_json.json` |
+| Security finding summary | High: 0, Medium: 0, Low: 0, Informational: 3 | `http://localhost:18080` | Security Eng | Pass gate for Medium+ threshold | 2026-02-27 | `test-results/zap-local-2026-02-27/alerts-summary.json` |
 
 ## Sign-off
 
 | Role | Name | Date (UTC) | Decision |
 |---|---|---|---|
-| Security Lead | mahoosuc-solutions | 2026-02-27T20:45:00Z | Pending run |
-| QA Lead | mahoosuc-solutions | 2026-02-27T20:45:00Z | Pending run |
+| Security Lead | mahoosuc-solutions | 2026-02-27T22:40:00Z | Approved (informational findings only) |
+| QA Lead | mahoosuc-solutions | 2026-02-27T22:40:00Z | Approved (artifact captured and triaged) |

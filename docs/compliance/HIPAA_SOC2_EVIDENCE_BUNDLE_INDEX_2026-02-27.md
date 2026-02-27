@@ -41,6 +41,11 @@
 
 7. **OWASP ZAP baseline triage evidence**
    - `docs/compliance/OWASP_ZAP_BASELINE_TRIAGE_2026-02-27.md`
+   - Local artifact capture (securecodebox image path):
+     - `test-results/zap-local-2026-02-27/report_html.html`
+     - `test-results/zap-local-2026-02-27/report_json.json`
+     - `test-results/zap-local-2026-02-27/alerts.json`
+     - `test-results/zap-local-2026-02-27/alerts-summary.json`
    - Tracks high/medium finding ownership and disposition status
 
 ---
@@ -97,6 +102,7 @@
 
 1. Backend dependency-check report refresh with `NVD_API_KEY` configured (recommended to reduce false negatives on enrichment feeds).
    - Suggested command: `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
+   - One-command helper: `scripts/security/run-backend-cve-with-nvd.sh`
 2. Compliance owner sign-off (name/date) on the SOC2 matrix and this bundle index.
 3. Cutoff-date strict go/no-go rerun artifact attached: `logs/mcp-reports/operator-go-no-go-20260227-021544.md`.
 

@@ -44,6 +44,10 @@
 - [#277](https://github.com/webemo-aaron/hdim/issues/277) - TEFCA/HIE Connectivity
 - [#276](https://github.com/webemo-aaron/hdim/issues/276) - Revenue Cycle Management Integration
 
+### Wave 1 Execution Slices (Child Tracking)
+- [#507](https://github.com/webemo-aaron/hdim/issues/507) - Execution Slice 1: HIE/ADT exchange backbone (child of #277)
+- [#506](https://github.com/webemo-aaron/hdim/issues/506) - Execution Slice 1: Revenue cycle transaction backbone (child of #276)
+
 ## Wave 2
 - [#282](https://github.com/webemo-aaron/hdim/issues/282) - CMS Quality Program Compliance Dashboard
 - [#278](https://github.com/webemo-aaron/hdim/issues/278) - Price Transparency Compliance
@@ -63,6 +67,9 @@
    - `gh api 'repos/webemo-aaron/hdim/milestones?state=open&per_page=100'`
 2. Refresh wave issue inventory:
    - `gh issue list --state open --limit 200 --json number,title,milestone,updatedAt,url`
+   - Include execution-slice children for Wave 1 parent epics:
+     - `gh issue view 276 --json timelineItems`
+     - `gh issue view 277 --json timelineItems`
 3. Update this dashboard:
    - actual remaining open count
    - variance vs target (`actual - target`)

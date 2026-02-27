@@ -56,7 +56,7 @@ Any one of these forces `NO GO`:
 - Domain-level provisional status from checklist:
   - High-confidence pass: A, B, D(partial), F(partial), G/H(partial)
   - In-progress/blocked: E-04, E-02, F-03
-- Provisional decision: **CONDITIONAL GO / NO GO for external audit claim** until blockers are cleared.
+- Provisional decision: **NO GO** due hard-gate failure on backend CVE control (`#497`).
 
 ## Required Sign-offs
 
@@ -66,4 +66,3 @@ Any one of these forces `NO GO`:
 | Compliance Lead | Yes |
 | Platform/Release Lead | Yes |
 | QA Lead | Yes |
-

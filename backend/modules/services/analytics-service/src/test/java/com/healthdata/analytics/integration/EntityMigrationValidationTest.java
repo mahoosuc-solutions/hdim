@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @EntityScan(basePackages = "com.healthdata.analytics.persistence")
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 @Tag("integration")
 class EntityMigrationValidationTest {

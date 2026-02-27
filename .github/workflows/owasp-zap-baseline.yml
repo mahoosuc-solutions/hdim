@@ -7,6 +7,10 @@ on:
         description: "Base URL to scan"
         required: true
         default: "http://localhost:18080"
+      fail_on_risk:
+        description: "Fail threshold (critical|high|medium|low|none)"
+        required: false
+        default: "high"
   schedule:
     - cron: '0 7 * * 1'
 
@@ -52,6 +56,39 @@ jobs:
           artifact_name: zap-baseline-report
           cmd_options: "-a -I"
 
+      - name: Enforce ZAP risk threshold
+        run: |
+          mkdir -p validation-reports
+          threshold="${{ github.event.inputs.fail_on_risk || 'high' }}"
+          if [ ! -f report_json.json ]; then
+            echo "ZAP JSON report is missing"
+            exit 1
+          fi
+
+          critical_count="$(jq '[.site[]?.alerts[]? | select((.riskdesc // "") | test("Critical"; "i"))] | length' report_json.json)"
+          high_count="$(jq '[.site[]?.alerts[]? | select((.riskdesc // "") | test("High"; "i"))] | length' report_json.json)"
+          medium_count="$(jq '[.site[]?.alerts[]? | select((.riskdesc // "") | test("Medium"; "i"))] | length' report_json.json)"
+          low_count="$(jq '[.site[]?.alerts[]? | select((.riskdesc // "") | test("Low"; "i"))] | length' report_json.json)"
+
+          {
+            echo "# ZAP Baseline Risk Summary"
+            echo
+            echo "- Threshold: ${threshold}"
+            echo "- Critical: ${critical_count}"
+            echo "- High: ${high_count}"
+            echo "- Medium: ${medium_count}"
+            echo "- Low: ${low_count}"
+          } > validation-reports/zap-baseline-risk-summary.md
+
+          case "$threshold" in
+            critical) [[ "$critical_count" -eq 0 ]] || exit 1 ;;
+            high) [[ "$critical_count" -eq 0 && "$high_count" -eq 0 ]] || exit 1 ;;
+            medium) [[ "$critical_count" -eq 0 && "$high_count" -eq 0 && "$medium_count" -eq 0 ]] || exit 1 ;;
+            low) [[ "$critical_count" -eq 0 && "$high_count" -eq 0 && "$medium_count" -eq 0 && "$low_count" -eq 0 ]] || exit 1 ;;
+            none) exit 0 ;;
+            *) echo "Unsupported threshold: $threshold"; exit 1 ;;
+          esac
+
       - name: Upload ZAP report artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,6 +99,7 @@ jobs:
             report_html.html
             report_md.md
             report_json.json
+            validation-reports/zap-baseline-risk-summary.md
 
       - name: Stop demo gateway target
         if: always()

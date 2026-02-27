@@ -9,6 +9,7 @@ SUMMARY_JSON="$REPORT_DIR/compliance-evidence-gate-summary.json"
 SUMMARY_MD="$REPORT_DIR/compliance-evidence-gate-summary.md"
 TMP_FILE="$REPORT_DIR/.compliance-evidence.tmp"
 STRICT_BACKEND_CVE="${STRICT_BACKEND_CVE:-true}"
+BACKEND_CVE_FAIL_ON_CVSS="${BACKEND_CVE_FAIL_ON_CVSS:-9.0}"
 
 mkdir -p "$REPORT_DIR"
 trap 'rm -f "$TMP_FILE"' EXIT
@@ -51,6 +52,7 @@ fi
 # Required evidence 3: Backend dependency-check report artifact
 backend_cve_html="$(latest_match "backend/build/reports/dependency-check-report.html")"
 backend_cve_sarif="$(latest_match "backend/build/reports/dependency-check-report.sarif")"
+backend_cve_json="$(latest_match "backend/build/reports/dependency-check-report.json")"
 backend_manifest="$(latest_match "test-results/backend-cve-artifacts-manifest-*.md")"
 
 if [[ -n "$backend_cve_html" ]]; then
@@ -58,7 +60,17 @@ if [[ -n "$backend_cve_html" ]]; then
   if [[ -n "$backend_cve_sarif" ]]; then
     detail="$detail; $backend_cve_sarif"
   fi
-  record_status "backend_cve_report" "pass" "$detail"
+  if [[ -n "$backend_cve_json" ]]; then
+    vuln_count="$(jq '[.dependencies[] | (.vulnerabilities // []) | length] | add // 0' "$backend_cve_json" 2>/dev/null || echo 0)"
+    max_cvss="$(jq '[.dependencies[] | (.vulnerabilities // [])[] | (.cvssv3.baseScore // .cvssv2.score // 0)] | max // 0' "$backend_cve_json" 2>/dev/null || echo 0)"
+    if awk "BEGIN { exit !($max_cvss >= $BACKEND_CVE_FAIL_ON_CVSS) }"; then
+      record_status "backend_cve_report" "fail" "$detail; vulnerabilities=$vuln_count; max_cvss=$max_cvss (threshold=$BACKEND_CVE_FAIL_ON_CVSS)"
+    else
+      record_status "backend_cve_report" "pass" "$detail; vulnerabilities=$vuln_count; max_cvss=$max_cvss"
+    fi
+  else
+    record_status "backend_cve_report" "pass" "$detail"
+  fi
 else
   if [[ "$STRICT_BACKEND_CVE" == "false" && -n "$backend_manifest" ]]; then
     record_status "backend_cve_report" "pass" "STRICT_BACKEND_CVE=false; using manifest placeholder: $backend_manifest"

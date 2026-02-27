@@ -1,0 +1,85 @@
+name: Compliance Evidence Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      strict_backend_cve:
+        description: "Require backend dependency-check HTML artifact"
+        required: false
+        default: "true"
+  workflow_call:
+    inputs:
+      strict_backend_cve:
+        required: false
+        type: string
+        default: "true"
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-gate:
+    name: Validate Required Compliance Evidence
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: gradle
+
+      - name: Prepare directories and executable bits
+        run: |
+          mkdir -p test-results validation-reports
+          chmod +x backend/gradlew
+          chmod +x scripts/security/validate-phase4-hipaa-controls.sh
+          chmod +x scripts/validation/validate-compliance-evidence-gate.sh
+
+      - name: Generate HIPAA controls evidence
+        run: |
+          ts="$(date -u +%Y%m%dT%H%M%SZ)"
+          bash scripts/security/validate-phase4-hipaa-controls.sh | tee "test-results/hipaa-controls-${ts}.log"
+
+      - name: Generate backend dependency-check evidence
+        continue-on-error: true
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          cd backend
+          if [ -n "${NVD_API_KEY:-}" ]; then
+            ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon
+          else
+            ./gradlew dependencyCheckAggregate --no-daemon
+          fi
+
+      - name: Run compliance evidence gate
+        id: gate
+        continue-on-error: true
+        env:
+          STRICT_BACKEND_CVE: ${{ inputs.strict_backend_cve || github.event.inputs.strict_backend_cve || 'true' }}
+        run: |
+          bash scripts/validation/validate-compliance-evidence-gate.sh
+
+      - name: Upload compliance gate summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-evidence-gate-summary
+          path: |
+            validation-reports/compliance-evidence-gate-summary.md
+            validation-reports/compliance-evidence-gate-summary.json
+            test-results/hipaa-controls-*.log
+            backend/build/reports/dependency-check-report.html
+            backend/build/reports/dependency-check-report.sarif
+            backend/build/reports/dependency-check-report.json
+
+      - name: Enforce gate
+        if: steps.gate.outcome != 'success'
+        run: |
+          echo "Compliance evidence gate failed. See artifact: compliance-evidence-gate-summary"
+          exit 1

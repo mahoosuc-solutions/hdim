@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Tag;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,6 +33,7 @@ import java.lang.annotation.Target;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@Testcontainers(disabledWithoutDocker = true)
 @Tag("integration")
 @Tag("slow")
 public @interface BaseIntegrationTest {

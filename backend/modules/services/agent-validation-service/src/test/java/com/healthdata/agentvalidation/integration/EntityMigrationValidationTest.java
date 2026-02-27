@@ -14,7 +14,7 @@ import java.util.Set;
         classes = AgentValidationServiceApplication.class,
         properties = "spring.liquibase.change-log=classpath:db/changelog/db.changelog-master.xml"
 )
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 @Tag("integration")
 @Tag("slow")

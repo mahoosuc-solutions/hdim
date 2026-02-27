@@ -23,6 +23,7 @@
 
 - **[Platform Flow Overview](../PLATFORM_FLOW_OVERVIEW.md)**: High-level flow architecture and patterns
 - **[Round-Trip Flows](../ROUND_TRIP_FLOWS.md)**: Complete sequence diagrams from button press to response
+- **[Enterprise SaaS Implementation Architecture](./ENTERPRISE_SAAS_IMPLEMENTATION_ARCHITECTURE.md)**: Client + product implementation, control-plane/data-plane, and enterprise data flows
 
 ---
 

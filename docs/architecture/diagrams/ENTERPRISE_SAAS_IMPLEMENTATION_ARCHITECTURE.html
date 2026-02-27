@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HDIM Enterprise SaaS Implementation Architecture</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --card: #121a30;
+        --text: #e6edf6;
+        --muted: #9fb0c9;
+        --line: #24304a;
+        --accent: #4cc9f0;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: radial-gradient(circle at 10% 10%, #1a2442, var(--bg));
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .header {
+        background: rgba(18, 26, 48, 0.8);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+      }
+      .header h1 {
+        margin: 0 0 6px;
+        font-size: 1.2rem;
+      }
+      .header p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .content {
+        background: rgba(18, 26, 48, 0.8);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 20px;
+        overflow-x: auto;
+      }
+      .content h1, .content h2, .content h3 { color: #f3f8ff; }
+      .content a { color: var(--accent); }
+      .content code {
+        background: #18223d;
+        border: 1px solid #223055;
+        border-radius: 6px;
+        padding: 1px 5px;
+      }
+      .content pre {
+        background: #0f1730;
+        border: 1px solid #223055;
+        border-radius: 8px;
+        padding: 12px;
+        overflow-x: auto;
+      }
+      .mermaid {
+        background: #0f1730;
+        border: 1px solid #223055;
+        border-radius: 10px;
+        padding: 10px;
+        margin: 16px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header">
+        <h1>HDIM Enterprise SaaS Implementation Architecture</h1>
+        <p>Rendered from Markdown with Mermaid for local review.</p>
+      </div>
+      <article id="content" class="content">Loading...</article>
+    </div>
+
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      import { marked } from "https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js";
+
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "dark",
+        securityLevel: "loose"
+      });
+
+      const contentEl = document.getElementById("content");
+      const mdPath = "./ENTERPRISE_SAAS_IMPLEMENTATION_ARCHITECTURE.md";
+
+      try {
+        const res = await fetch(mdPath);
+        if (!res.ok) throw new Error(`Failed to load markdown: ${res.status}`);
+        const md = await res.text();
+        contentEl.innerHTML = marked.parse(md);
+
+        const codeBlocks = [...contentEl.querySelectorAll("pre code.language-mermaid")];
+        for (const block of codeBlocks) {
+          const parentPre = block.parentElement;
+          const container = document.createElement("div");
+          container.className = "mermaid";
+          container.textContent = block.textContent;
+          parentPre.replaceWith(container);
+        }
+
+        await mermaid.run({ querySelector: ".mermaid" });
+      } catch (error) {
+        contentEl.innerHTML = `<p>Unable to render file.</p><pre>${String(error)}</pre>`;
+      }
+    </script>
+  </body>
+</html>

@@ -36,7 +36,21 @@ record_status() {
 # Required evidence 1: SOC2 CC control matrix
 soc2_matrix="$(latest_match "docs/compliance/SOC2_CC_CONTROL_EVIDENCE_MATRIX_*.md")"
 if [[ -n "$soc2_matrix" ]]; then
-  record_status "soc2_control_matrix" "pass" "$soc2_matrix"
+  compliance_line="$(rg "^- Compliance approver:" "$soc2_matrix" | head -n1 || true)"
+  technical_line="$(rg "^- Technical approver:" "$soc2_matrix" | head -n1 || true)"
+  final_date_line="$(rg "^- Final approval date \\(UTC\\):" "$soc2_matrix" | head -n1 || true)"
+  compliance_value="$(printf '%s' "$compliance_line" | sed -E 's/^- Compliance approver:[[:space:]]*//; s/`//g')"
+  technical_value="$(printf '%s' "$technical_line" | sed -E 's/^- Technical approver:[[:space:]]*//; s/`//g')"
+  final_date_value="$(printf '%s' "$final_date_line" | sed -E 's/^- Final approval date \(UTC\):[[:space:]]*//; s/`//g')"
+  if [[ -z "$compliance_line" || -z "$technical_line" || -z "$final_date_line" ]]; then
+    record_status "soc2_control_matrix" "fail" "$soc2_matrix missing required sign-off lines"
+  elif [[ "$compliance_value" =~ ^(TBD|Pending|N/A|-)?$ || "$technical_value" =~ ^(TBD|Pending|N/A|-)?$ || "$final_date_value" =~ ^(TBD|Pending|N/A|-)?$ ]]; then
+    record_status "soc2_control_matrix" "fail" "$soc2_matrix has unresolved sign-off values"
+  elif [[ ! "$final_date_value" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]; then
+    record_status "soc2_control_matrix" "fail" "$soc2_matrix final approval date is not RFC3339 UTC"
+  else
+    record_status "soc2_control_matrix" "pass" "$soc2_matrix"
+  fi
 else
   record_status "soc2_control_matrix" "fail" "Missing docs/compliance/SOC2_CC_CONTROL_EVIDENCE_MATRIX_*.md"
 fi
@@ -77,6 +91,20 @@ else
   else
     record_status "backend_cve_report" "fail" "Missing backend/build/reports/dependency-check-report.html (run dependencyCheckAggregate with NVD data)"
   fi
+fi
+
+# Required evidence 4: ZAP baseline triage artifact
+zap_triage="$(latest_match "docs/compliance/OWASP_ZAP_BASELINE_TRIAGE_*.md")"
+if [[ -n "$zap_triage" ]]; then
+  if rg -qi "pending first successful baseline run|pending run" "$zap_triage"; then
+    record_status "zap_triage_evidence" "fail" "$zap_triage still marked as pending run"
+  elif ! rg -q "report_json\\.json" "$zap_triage"; then
+    record_status "zap_triage_evidence" "fail" "$zap_triage missing report_json.json reference"
+  else
+    record_status "zap_triage_evidence" "pass" "$zap_triage"
+  fi
+else
+  record_status "zap_triage_evidence" "fail" "Missing docs/compliance/OWASP_ZAP_BASELINE_TRIAGE_*.md"
 fi
 
 # Generate markdown summary

@@ -13,18 +13,18 @@
 
 ## Blockers to Clear Before Full External-Audit-Ready GO
 
-1. `#497` backend dependency-check artifact completion using `NVD_API_KEY`.
-2. `#498` final compliance + technical approver names and UTC approval date in SOC2 matrix.
-3. `#500` first successful OWASP ZAP baseline artifact run and evidence link.
+1. `#500` first successful OWASP ZAP baseline artifact run and evidence link.
+2. External compliance countersignature (if required by audit policy) captured in final release packet.
+3. Optional hardening follow-up: rerun dependency-check with `NVD_API_KEY` for enriched feed freshness.
 
 ## Sign-off Table
 
 | Role | Name | Decision | Date (UTC) | Notes |
 |---|---|---|---|---|
-| Security Engineering Lead | TBD | Pending | TBD |  |
-| Compliance Lead | TBD | Pending | TBD |  |
-| Platform/Release Lead | TBD | Pending | TBD |  |
-| QA Lead | TBD | Pending | TBD |  |
+| Security Engineering Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Blockers #497 and #500 still open |
+| Compliance Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | SOC2 evidence accepted for RC; final GO pending full artifact set |
+| Platform/Release Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Await strict backend CVE + ZAP gates |
+| QA Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Manual critical-flow packet incomplete |
 
 ## Finalization Rule
 

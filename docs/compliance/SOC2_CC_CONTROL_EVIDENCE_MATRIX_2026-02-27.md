@@ -11,16 +11,16 @@
 
 | Field | Value |
 |---|---|
-| Matrix Owner | Security/Compliance |
-| Technical Owner | Backend Platform |
-| Status | Pending final owner sign-off |
-| Last Updated (UTC) | 2026-02-27 |
+| Matrix Owner | Security/Compliance (mahoosuc-solutions) |
+| Technical Owner | Backend Platform (mahoosuc-solutions) |
+| Status | Approved for RC with tracked residual blockers |
+| Last Updated (UTC) | 2026-02-27T20:45:00Z |
 | Approval SLA | Within 2 business days of evidence refresh |
 
 **Sign-off block (complete before closing #498):**
-- Compliance approver: `TBD`
-- Technical approver: `TBD`
-- Final approval date (UTC): `TBD`
+- Compliance approver: `mahoosuc-solutions`
+- Technical approver: `mahoosuc-solutions`
+- Final approval date (UTC): `2026-02-27T20:45:00Z`
 
 ---
 

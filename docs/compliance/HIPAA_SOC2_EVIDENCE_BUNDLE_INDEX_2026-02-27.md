@@ -25,6 +25,11 @@
    - `test-results/gradle-dependency-check-2026-02-27-after-wire.log`
    - Note: first-run NVD ingestion is long-running without `NVD_API_KEY`
 
+5. **Backend dependency-check aggregate attempts**
+   - `test-results/gradle-dependency-check-aggregate-2026-02-27.log`
+   - `test-results/gradle-dependency-check-aggregate-2026-02-27-offline.log`
+   - Note: no completed backend report artifact was generated in this environment
+
 ---
 
 ## B. HIPAA Operational Control Evidence
@@ -68,11 +73,13 @@
 1. `6485d48a7` - investor validation report and strict gate evidence updates  
 2. `bda1feb7d` - enterprise SaaS architecture docs (md/html/drawio)  
 3. `c48a2f641` - npm CVE remediation + compliance validation hardening
+4. `d1c8fc5fe` - SOC2 control-evidence matrix + HIPAA/SOC2 bundle index
 
 ---
 
 ## F. Remaining Evidence Needed for Final Audit Package
 
 1. Backend dependency-check report output (`HTML/SARIF/JSON`) with `NVD_API_KEY` configured.
+   - Suggested command: `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
 2. Compliance owner sign-off (name/date) on the SOC2 matrix and this bundle index.
 3. Optional: attach current strict go/no-go rerun artifact at release cutoff date.

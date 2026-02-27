@@ -1,0 +1,169 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Type-safe project accessors is an incubating feature.
+
+> Task :modules:services:fhir-service:dependencyInsight
+org.springframework:spring-web:6.1.21
+  Variant runtimeElements:
+    | Attribute Name                     | Provided     | Requested    |
+    |------------------------------------|--------------|--------------|
+    | org.gradle.status                  | release      |              |
+    | org.jetbrains.kotlin.platform.type | jvm          |              |
+    | org.gradle.category                | library      | library      |
+    | org.gradle.dependency.bundling     | external     | external     |
+    | org.gradle.jvm.environment         | standard-jvm | standard-jvm |
+    | org.gradle.jvm.version             | 17           | 21           |
+    | org.gradle.libraryelements         | jar          | jar          |
+    | org.gradle.usage                   | java-runtime | java-runtime |
+   Selection reasons:
+      - Forced
+      - Selected by rule
+
+org.springframework:spring-web:6.1.21
++--- org.springframework:spring-webmvc:6.1.21
+|    +--- org.springframework.boot:spring-boot-starter-web:3.3.13
+|    |    +--- runtimeClasspath
+|    |    +--- project :modules:shared:api-contracts:fhir-api
+|    |    |    \--- runtimeClasspath
+|    |    +--- project :modules:shared:infrastructure:gateway-core
+|    |    |    \--- runtimeClasspath
+|    |    +--- project :modules:shared:infrastructure:security (requested org.springframework.boot:spring-boot-starter-web)
+|    |    |    +--- runtimeClasspath
+|    |    |    \--- project :modules:shared:infrastructure:gateway-core (*)
+|    |    +--- project :modules:shared:infrastructure:authentication (requested org.springframework.boot:spring-boot-starter-web)
+|    |    |    +--- runtimeClasspath
+|    |    |    \--- project :modules:shared:infrastructure:gateway-core (*)
+|    |    +--- project :modules:shared:infrastructure:persistence (requested org.springframework.boot:spring-boot-starter-web)
+|    |    |    +--- runtimeClasspath
+|    |    |    +--- project :modules:shared:infrastructure:gateway-core (*)
+|    |    |    \--- project :modules:shared:infrastructure:cache
+|    |    |         +--- runtimeClasspath
+|    |    |         +--- project :modules:shared:infrastructure:gateway-core (*)
+|    |    |         \--- project :modules:shared:infrastructure:authentication (*)
+|    |    +--- project :platform:auth
+|    |    |    \--- runtimeClasspath
+|    |    +--- project :modules:shared:infrastructure:audit (requested org.springframework.boot:spring-boot-starter-web)
+|    |    |    +--- runtimeClasspath
+|    |    |    +--- project :modules:shared:infrastructure:gateway-core (*)
+|    |    |    \--- project :modules:shared:infrastructure:authentication (*)
+|    |    \--- org.springframework.boot:spring-boot-starter-websocket:3.3.13
+|    |         \--- runtimeClasspath (requested org.springframework.boot:spring-boot-starter-websocket)
+|    +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (requested org.springframework:spring-webmvc:6.1.14)
+|    |    \--- runtimeClasspath
+|    \--- org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0 (requested org.springframework:spring-webmvc:6.1.8)
+|         \--- org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0
+|              +--- runtimeClasspath
+|              +--- project :modules:shared:infrastructure:gateway-core (requested org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0) (*)
+|              \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (requested org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0) (*)
++--- org.springframework:spring-websocket:6.1.21
+|    +--- org.springframework.boot:spring-boot-starter-websocket:3.3.13 (*)
+|    +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (requested org.springframework:spring-websocket:6.1.14) (*)
+|    \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-subscription:7.6.0 (requested org.springframework:spring-websocket:6.1.14)
+|         \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
++--- org.springframework.boot:spring-boot-starter-json:3.3.13
+|    \--- org.springframework.boot:spring-boot-starter-web:3.3.13 (*)
+\--- org.springframework.boot:spring-boot-starter-web:3.3.13 (*)
+
+org.springframework:spring-web:6.1.20 -> 6.1.21
+\--- org.springframework.security:spring-security-web:6.3.10
+     +--- project :modules:shared:infrastructure:authentication (requested org.springframework.security:spring-security-web:6.5.7)
+     |    +--- runtimeClasspath
+     |    \--- project :modules:shared:infrastructure:gateway-core
+     |         \--- runtimeClasspath
+     \--- org.springframework.boot:spring-boot-starter-security:3.3.13
+          +--- runtimeClasspath
+          +--- project :modules:shared:infrastructure:gateway-core (requested org.springframework.boot:spring-boot-starter-security) (*)
+          +--- project :modules:shared:infrastructure:authentication (requested org.springframework.boot:spring-boot-starter-security) (*)
+          +--- project :platform:auth
+          |    \--- runtimeClasspath
+          \--- project :modules:shared:infrastructure:audit (requested org.springframework.boot:spring-boot-starter-security)
+               +--- runtimeClasspath
+               +--- project :modules:shared:infrastructure:gateway-core (*)
+               \--- project :modules:shared:infrastructure:authentication (*)
+
+org.springframework:spring-webmvc:6.1.21
+  Variant runtimeElements:
+    | Attribute Name                     | Provided     | Requested    |
+    |------------------------------------|--------------|--------------|
+    | org.gradle.status                  | release      |              |
+    | org.jetbrains.kotlin.platform.type | jvm          |              |
+    | org.gradle.category                | library      | library      |
+    | org.gradle.dependency.bundling     | external     | external     |
+    | org.gradle.jvm.environment         | standard-jvm | standard-jvm |
+    | org.gradle.jvm.version             | 17           | 21           |
+    | org.gradle.libraryelements         | jar          | jar          |
+    | org.gradle.usage                   | java-runtime | java-runtime |
+   Selection reasons:
+      - Forced
+      - Selected by rule
+
+org.springframework:spring-webmvc:6.1.21
+\--- org.springframework.boot:spring-boot-starter-web:3.3.13
+     +--- runtimeClasspath
+     +--- project :modules:shared:api-contracts:fhir-api
+     |    \--- runtimeClasspath
+     +--- project :modules:shared:infrastructure:gateway-core
+     |    \--- runtimeClasspath
+     +--- project :modules:shared:infrastructure:security (requested org.springframework.boot:spring-boot-starter-web)
+     |    +--- runtimeClasspath
+     |    \--- project :modules:shared:infrastructure:gateway-core (*)
+     +--- project :modules:shared:infrastructure:authentication (requested org.springframework.boot:spring-boot-starter-web)
+     |    +--- runtimeClasspath
+     |    \--- project :modules:shared:infrastructure:gateway-core (*)
+     +--- project :modules:shared:infrastructure:persistence (requested org.springframework.boot:spring-boot-starter-web)
+     |    +--- runtimeClasspath
+     |    +--- project :modules:shared:infrastructure:gateway-core (*)
+     |    \--- project :modules:shared:infrastructure:cache
+     |         +--- runtimeClasspath
+     |         +--- project :modules:shared:infrastructure:gateway-core (*)
+     |         \--- project :modules:shared:infrastructure:authentication (*)
+     +--- project :platform:auth
+     |    \--- runtimeClasspath
+     +--- project :modules:shared:infrastructure:audit (requested org.springframework.boot:spring-boot-starter-web)
+     |    +--- runtimeClasspath
+     |    +--- project :modules:shared:infrastructure:gateway-core (*)
+     |    \--- project :modules:shared:infrastructure:authentication (*)
+     \--- org.springframework.boot:spring-boot-starter-websocket:3.3.13
+          \--- runtimeClasspath (requested org.springframework.boot:spring-boot-starter-websocket)
+
+org.springframework:spring-webmvc:6.1.8 -> 6.1.21
+\--- org.springdoc:springdoc-openapi-starter-webmvc-api:2.6.0
+     \--- org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0
+          +--- runtimeClasspath
+          +--- project :modules:shared:infrastructure:gateway-core (requested org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0)
+          |    \--- runtimeClasspath
+          \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (requested org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0)
+               \--- runtimeClasspath
+
+org.springframework:spring-webmvc:6.1.14 -> 6.1.21
+\--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0
+     \--- runtimeClasspath
+
+org.springframework:spring-websocket:6.1.21 (selected by rule)
+  Variant runtimeElements:
+    | Attribute Name                 | Provided     | Requested    |
+    |--------------------------------|--------------|--------------|
+    | org.gradle.status              | release      |              |
+    | org.gradle.category            | library      | library      |
+    | org.gradle.dependency.bundling | external     | external     |
+    | org.gradle.jvm.version         | 17           | 21           |
+    | org.gradle.libraryelements     | jar          | jar          |
+    | org.gradle.usage               | java-runtime | java-runtime |
+    | org.gradle.jvm.environment     |              | standard-jvm |
+
+org.springframework:spring-websocket:6.1.21
+\--- org.springframework.boot:spring-boot-starter-websocket:3.3.13
+     \--- runtimeClasspath (requested org.springframework.boot:spring-boot-starter-websocket)
+
+org.springframework:spring-websocket:6.1.14 -> 6.1.21
++--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0
+|    \--- runtimeClasspath
+\--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-subscription:7.6.0
+     \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+
+(*) - Indicates repeated occurrences of a transitive dependency subtree. Gradle expands transitive dependency subtrees only once per project; repeat occurrences only display the root of the subtree, followed by this annotation.
+
+A web-based, searchable dependency report is available by adding the --scan option.
+
+BUILD SUCCESSFUL in 22s
+1 actionable task: 1 executed

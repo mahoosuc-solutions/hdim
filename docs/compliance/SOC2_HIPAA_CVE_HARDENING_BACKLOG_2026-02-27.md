@@ -12,6 +12,7 @@
 
 ## P0-1: Complete backend CVE evidence with NVD data
 
+- **Tracking issue:** `#497`
 - **Owner:** SWE (Backend Platform)
 - **Priority:** P0
 - **Objective:** Produce backend dependency vulnerability reports required for SOC2/enterprise diligence.
@@ -31,6 +32,7 @@
 
 ## P0-2: Promote SOC2 control matrix to signed release artifact
 
+- **Tracking issue:** `#498`
 - **Owner:** QA/Compliance
 - **Priority:** P0
 - **Objective:** Convert current control mapping into formal sign-off evidence.
@@ -46,6 +48,7 @@
 
 ## P1-1: Automate evidence packaging gate in CI
 
+- **Tracking issue:** `#499`
 - **Owner:** SWE (DevOps)
 - **Priority:** P1
 - **Objective:** Prevent releases when mandatory compliance evidence is missing.
@@ -64,6 +67,7 @@
 
 ## P1-2: OWASP ZAP baseline artifact for application tier
 
+- **Tracking issue:** `#500`
 - **Owner:** QA/Security
 - **Priority:** P1
 - **Objective:** Add current DAST evidence to complement dependency scans.
@@ -77,6 +81,7 @@
 
 ## P2-1: Compliance evidence retention and cadence policy
 
+- **Tracking issue:** `#501`
 - **Owner:** Security/Compliance
 - **Priority:** P2
 - **Objective:** Define repeatable cadence and retention for audit evidence.

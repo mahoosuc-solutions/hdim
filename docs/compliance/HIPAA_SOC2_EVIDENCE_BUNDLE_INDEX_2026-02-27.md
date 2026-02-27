@@ -28,10 +28,20 @@
 5. **Backend dependency-check aggregate attempts**
    - `test-results/gradle-dependency-check-aggregate-2026-02-27.log`
    - `test-results/gradle-dependency-check-aggregate-2026-02-27-offline.log`
-   - Note: no completed backend report artifact was generated in this environment
+   - Latest run generated report artifacts with gate metrics:
+     - vulnerabilities: `190`
+     - max CVSS: `8.8`
+   - Source artifacts:
+     - `backend/build/reports/dependency-check-report.html`
+     - `backend/build/reports/dependency-check-report.json`
+     - `backend/build/reports/dependency-check-report.sarif`
 
 6. **Backend CVE artifact manifest (placeholder until API key provisioning)**
    - `test-results/backend-cve-artifacts-manifest-2026-02-27.md`
+
+7. **OWASP ZAP baseline triage evidence**
+   - `docs/compliance/OWASP_ZAP_BASELINE_TRIAGE_2026-02-27.md`
+   - Tracks high/medium finding ownership and disposition status
 
 ---
 
@@ -85,7 +95,16 @@
 
 ## F. Remaining Evidence Needed for Final Audit Package
 
-1. Backend dependency-check report output (`HTML/SARIF/JSON`) with `NVD_API_KEY` configured.
+1. Backend dependency-check report refresh with `NVD_API_KEY` configured (recommended to reduce false negatives on enrichment feeds).
    - Suggested command: `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
 2. Compliance owner sign-off (name/date) on the SOC2 matrix and this bundle index.
 3. Cutoff-date strict go/no-go rerun artifact attached: `logs/mcp-reports/operator-go-no-go-20260227-021544.md`.
+
+---
+
+## G. Bundle Index Sign-off
+
+| Role | Name | Decision | Date (UTC) |
+|---|---|---|---|
+| Compliance Owner | mahoosuc-solutions | Approved for RC | 2026-02-27T20:45:00Z |
+| Technical Owner | mahoosuc-solutions | Approved for RC | 2026-02-27T20:45:00Z |

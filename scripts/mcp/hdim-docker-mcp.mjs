@@ -1881,6 +1881,7 @@ export function createServer(options = {}) {
                 ok: readiness.systemValidate.ok,
                 exitCode: readiness.systemValidate.exitCode,
                 stderr: truncateText(readiness.systemValidate.stderr, 4_000),
+                stdout: truncateText(readiness.systemValidate.stdout, 20_000),
               }
             : null,
         },

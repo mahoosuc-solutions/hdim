@@ -92,7 +92,8 @@
 
 ## Current Blockers (Must Resolve for Full GO)
 
-1. `#497` Backend CVE evidence completion with `NVD_API_KEY` (strict dependency-check output artifact).
+1. `#497` Backend CVE remediation and evidence completion: latest aggregate scan found `303` vulnerabilities and failed CVSS gate (`max_cvss=9.8`).
+   - Evidence: `test-results/dependency-check-aggregate-exec-2026-02-27.log`, `backend/build/reports/dependency-check-report.json`
 2. `#498` SOC2 matrix final named approver sign-off and date.
 3. `#500` First successful OWASP ZAP baseline artifact run completion.
 

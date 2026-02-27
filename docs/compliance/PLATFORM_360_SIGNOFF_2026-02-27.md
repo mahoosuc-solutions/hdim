@@ -8,8 +8,8 @@
 
 ## Decision Summary
 
-- Current Decision: **CONDITIONAL GO (Engineering) / NO GO (External Audit Assertion)**
-- Reason: High-confidence engineering stability is demonstrated, but external-audit controls still have explicit blockers.
+- Current Decision: **NO GO**
+- Reason: Backend CVE gate currently fails (303 vulnerabilities, max CVSS 9.8), and required SOC2/OWASP evidence sign-offs are still open.
 
 ## Blockers to Clear Before Full External-Audit-Ready GO
 

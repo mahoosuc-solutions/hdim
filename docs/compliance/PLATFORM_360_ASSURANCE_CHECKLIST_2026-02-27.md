@@ -92,8 +92,9 @@
 
 ## Current Blockers (Must Resolve for Full GO)
 
-1. `#497` Backend CVE remediation and evidence completion: latest aggregate scan found `303` vulnerabilities and failed CVSS gate (`max_cvss=9.8`).
-   - Evidence: `test-results/dependency-check-aggregate-exec-2026-02-27.log`, `backend/build/reports/dependency-check-report.json`
+1. `#497` Backend CVE remediation and evidence completion: latest wave-1 aggregate scan found `228` vulnerabilities (down from `303`) and still failed CVSS gate (`max_cvss=9.8`).
+   - Remaining critical CVEs: `CVE-2023-39017`, `CVE-2025-3277`, `CVE-2025-55754`, `CVE-2025-6965`
+   - Evidence: `test-results/dependency-check-aggregate-exec-wave1-2026-02-27.log`, `backend/build/reports/dependency-check-report.json`
 2. `#498` SOC2 matrix final named approver sign-off and date.
 3. `#500` First successful OWASP ZAP baseline artifact run completion.
 

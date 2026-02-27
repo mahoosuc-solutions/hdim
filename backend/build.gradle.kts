@@ -56,6 +56,15 @@ subprojects {
     }
 
     configurations.configureEach {
+        resolutionStrategy.force(
+            "org.apache.tomcat.embed:tomcat-embed-core:10.1.42",
+            "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.42",
+            "org.quartz-scheduler:quartz:2.5.0",
+            "org.xerial:sqlite-jdbc:3.50.2.0",
+            "org.apache.tika:tika-core:2.9.2",
+            "io.ktor:ktor-http-jvm:2.3.13",
+            "io.ktor:ktor-io-jvm:2.3.13"
+        )
         resolutionStrategy.eachDependency {
             if (requested.group == "com.fasterxml.jackson.core") {
                 useVersion(libs.versions.jackson.get())
@@ -88,6 +97,22 @@ subprojects {
             // Security patch - CVE-2024-55887 (ucum XXE)
             if (requested.group == "org.fhir" && requested.name == "ucum") {
                 useVersion(libs.versions.ucum.get())
+            }
+            // Security patch rollups for critical CVE findings in dependency-check
+            if (requested.group == "org.apache.tomcat.embed" && requested.name.startsWith("tomcat-embed-")) {
+                useVersion("10.1.40")
+            }
+            if (requested.group == "org.quartz-scheduler" && requested.name == "quartz") {
+                useVersion("2.5.0")
+            }
+            if (requested.group == "org.xerial" && requested.name == "sqlite-jdbc") {
+                useVersion("3.50.2.0")
+            }
+            if (requested.group == "org.apache.tika" && requested.name == "tika-core") {
+                useVersion("2.9.2")
+            }
+            if (requested.group == "io.ktor" && requested.name.startsWith("ktor-")) {
+                useVersion("2.3.13")
             }
         }
     }

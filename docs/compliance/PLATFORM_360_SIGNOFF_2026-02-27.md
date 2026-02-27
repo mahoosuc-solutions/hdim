@@ -9,7 +9,7 @@
 ## Decision Summary
 
 - Current Decision: **NO GO**
-- Reason: Backend CVE gate currently fails (303 vulnerabilities, max CVSS 9.8), and required SOC2/OWASP evidence sign-offs are still open.
+- Reason: Backend CVE gate currently fails (wave-1 reduced findings from 303 to 228, but max CVSS remains 9.8), and required SOC2/OWASP evidence sign-offs are still open.
 
 ## Blockers to Clear Before Full External-Audit-Ready GO
 

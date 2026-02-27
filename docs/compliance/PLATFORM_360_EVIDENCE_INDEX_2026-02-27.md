@@ -51,7 +51,7 @@
 | Control Area | Artifact |
 |---|---|
 | Dependency scanning configuration | `.github/workflows/security-scan.yml` |
-| Latest backend dependency-check execution | `test-results/dependency-check-aggregate-exec-2026-02-27.log` |
+| Latest backend dependency-check execution (wave-1) | `test-results/dependency-check-aggregate-exec-wave1-2026-02-27.log` |
 | Container scanning configuration | `.github/workflows/security-scan.yml` (Trivy sections) |
 | DAST configuration | `.github/workflows/owasp-zap-baseline.yml` |
 | Security hardening checks | `.github/workflows/security-hardening-validation.yml` |
@@ -60,7 +60,7 @@
 
 | Gap | Tracking |
 |---|---|
-| Backend strict CVE remediation: latest scan failed with `303` vulnerabilities, `max_cvss=9.8` | `#497` |
+| Backend strict CVE remediation: latest scan failed with `228` vulnerabilities, `max_cvss=9.8` (critical CVEs remaining: `CVE-2023-39017`, `CVE-2025-3277`, `CVE-2025-55754`, `CVE-2025-6965`) | `#497` |
 | SOC2 named approver sign-off | `#498` |
 | First successful OWASP baseline artifact capture | `#500` |
 

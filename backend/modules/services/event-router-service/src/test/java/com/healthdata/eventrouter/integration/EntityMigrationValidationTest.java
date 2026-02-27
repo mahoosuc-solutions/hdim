@@ -11,7 +11,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * Part of Phase 2 entity-migration validation framework.
  */
 @SpringBootTest
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @ActiveProfiles("test")
 @Tag("integration")
 class EntityMigrationValidationTest extends AbstractEntityMigrationValidationTest {

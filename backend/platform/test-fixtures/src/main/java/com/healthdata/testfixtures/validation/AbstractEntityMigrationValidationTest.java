@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author HDIM Platform Team
  */
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @Tag("entity-migration-validation")
 @Tag("integration")
 @Tag("slow")

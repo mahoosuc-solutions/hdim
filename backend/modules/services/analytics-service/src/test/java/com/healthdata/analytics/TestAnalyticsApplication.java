@@ -1,8 +1,10 @@
 package com.healthdata.analytics;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
@@ -15,7 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * Scans only com.healthdata.analytics — the service's own package.
  */
-@SpringBootApplication(scanBasePackages = "com.healthdata.analytics")
+@Configuration
+@EnableAutoConfiguration
+@ComponentScan(basePackages = "com.healthdata.analytics")
 @EntityScan(basePackages = "com.healthdata.analytics.persistence")
 @EnableJpaRepositories(basePackages = "com.healthdata.analytics.repository")
 @EnableScheduling

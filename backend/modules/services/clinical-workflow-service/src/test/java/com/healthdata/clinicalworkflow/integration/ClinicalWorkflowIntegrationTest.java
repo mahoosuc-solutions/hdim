@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.*;
  * Uses PostgreSQL TestContainer for database isolation.
  */
 @SpringBootTest
-@Testcontainers
+@Testcontainers(disabledWithoutDocker = true)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag("integration")
 @Tag("slow")

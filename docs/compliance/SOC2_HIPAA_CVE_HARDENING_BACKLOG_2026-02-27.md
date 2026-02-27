@@ -95,9 +95,9 @@
 
 - [ ] P0-1 complete: backend CVE report generated with `NVD_API_KEY`
 - [ ] P0-2 complete: SOC2 matrix signed by compliance owner
-- [ ] P1-1 complete: CI release gate enforces evidence presence
+- [x] P1-1 complete: CI release gate enforces evidence presence
 - [ ] P1-2 complete: OWASP ZAP report archived and linked
-- [ ] P2-1 complete: evidence cadence/retention policy documented
+- [x] P2-1 complete: evidence cadence/retention policy documented
 
 ## Closure Definition
 

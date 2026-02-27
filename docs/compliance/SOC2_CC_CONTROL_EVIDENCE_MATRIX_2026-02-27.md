@@ -2,6 +2,25 @@
 
 **Date:** 2026-02-27  
 **Scope:** HDIM SaaS technical control evidence mapped to SOC2 Trust Services Criteria (Security)
+**Version:** 1.1
+**Tracking Issue:** #498
+
+---
+
+## Approval Metadata
+
+| Field | Value |
+|---|---|
+| Matrix Owner | Security/Compliance |
+| Technical Owner | Backend Platform |
+| Status | Pending final owner sign-off |
+| Last Updated (UTC) | 2026-02-27 |
+| Approval SLA | Within 2 business days of evidence refresh |
+
+**Sign-off block (complete before closing #498):**
+- Compliance approver: `TBD`
+- Technical approver: `TBD`
+- Final approval date (UTC): `TBD`
 
 ---
 
@@ -76,3 +95,8 @@
 1. Complete backend dependency-check output artifact generation (`dependencyCheckAggregate`) in an environment configured with `NVD_API_KEY`.
 2. Attach backend CVE report artifact to release evidence package.
 3. Obtain compliance owner sign-off for this matrix and evidence index.
+
+## Evidence Lifecycle Reference
+
+- Evidence cadence and retention policy:
+  - `docs/compliance/COMPLIANCE_EVIDENCE_RETENTION_AND_CADENCE_POLICY_2026-02-27.md`

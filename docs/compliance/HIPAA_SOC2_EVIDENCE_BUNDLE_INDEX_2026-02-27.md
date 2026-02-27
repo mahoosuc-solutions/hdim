@@ -30,6 +30,9 @@
    - `test-results/gradle-dependency-check-aggregate-2026-02-27-offline.log`
    - Note: no completed backend report artifact was generated in this environment
 
+6. **Backend CVE artifact manifest (placeholder until API key provisioning)**
+   - `test-results/backend-cve-artifacts-manifest-2026-02-27.md`
+
 ---
 
 ## B. HIPAA Operational Control Evidence
@@ -47,15 +50,18 @@
 ## C. SOC2 Operational and Change Evidence
 
 1. **Strict operator go/no-go**
-   - `logs/mcp-reports/operator-go-no-go-20260227-001710.md`
+   - `logs/mcp-reports/operator-go-no-go-20260227-021544.md`
 
 2. **Strict release gate**
-   - `logs/mcp-reports/release-gate-20260227-001707.md`
+   - `logs/mcp-reports/release-gate-20260227-021542.md`
 
 3. **Release evidence pack**
-   - `logs/mcp-reports/release-evidence-pack-20260227-001707.md`
+   - `logs/mcp-reports/release-evidence-pack-20260227-021542.md`
 
-4. **Post-remediation MCP regression tests**
+4. **Deployment evidence package (cutoff-date rerun)**
+   - `logs/mcp-reports/packages/deployment-evidence-20260227-021542/DEPLOYMENT_EVIDENCE_SUMMARY.md`
+
+5. **Post-remediation MCP regression tests**
    - `test-results/test-mcp-post-cve-remediation-2026-02-27.log`
 
 ---
@@ -82,4 +88,4 @@
 1. Backend dependency-check report output (`HTML/SARIF/JSON`) with `NVD_API_KEY` configured.
    - Suggested command: `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
 2. Compliance owner sign-off (name/date) on the SOC2 matrix and this bundle index.
-3. Optional: attach current strict go/no-go rerun artifact at release cutoff date.
+3. Cutoff-date strict go/no-go rerun artifact attached: `logs/mcp-reports/operator-go-no-go-20260227-021544.md`.

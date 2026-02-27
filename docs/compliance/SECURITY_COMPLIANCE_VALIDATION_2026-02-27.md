@@ -65,7 +65,10 @@
 ### Demonstrated
 - Tenant isolation and auth checks pass in access matrix validation.
 - Operational security controls and runbook evidence exist.
-- Release-gate/go-no-go strict checks were previously validated as passing in this environment.
+- Cutoff-date strict run passed: `logs/mcp-reports/operator-go-no-go-20260227-021544.md`.
+- Corresponding strict release-gate and evidence pack artifacts were generated:
+  - `logs/mcp-reports/release-gate-20260227-021542.md`
+  - `logs/mcp-reports/release-evidence-pack-20260227-021542.md`
 
 ### Still Required for Audit Assertion
 - Formal SOC2 control-to-evidence map (CC-series) published as a single authoritative artifact.
@@ -100,5 +103,6 @@
 1. Complete backend scan in a network-enabled environment with `NVD_API_KEY`:
    - `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
 2. Archive generated backend report artifacts (`HTML/JSON/SARIF`) into `test-results/` and link them in this report.
+   - Placeholder manifest created: `test-results/backend-cve-artifacts-manifest-2026-02-27.md`
 3. Publish SOC2 CC control mapping document with direct links to validation artifacts.
 4. Add backend CVE report and SOC2 mapping artifact as mandatory release-gate attachments.

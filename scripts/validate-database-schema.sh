@@ -7,17 +7,32 @@ set -e
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5435}"
 DB_USER="${DB_USER:-healthdata}"
-DB_PASSWORD="${DB_PASSWORD:-healthdata_password}"
+DB_PASSWORD="${DB_PASSWORD:-demo_password_2024}"
+DB_FALLBACK_PASSWORD="${DB_FALLBACK_PASSWORD:-healthdata_password}"
+STRICT_SCHEMA="${STRICT_SCHEMA:-0}"
 
 echo "=== Database Schema Validation ==="
 echo "Host: $DB_HOST:$DB_PORT"
+echo "Strict mode: $STRICT_SCHEMA"
 echo ""
+
+MISSING_COUNT=0
 
 # Function to check table existence
 check_table() {
     local db=$1
     local table=$2
-    local exists=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$db" -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table');" 2>/dev/null || echo "false")
+    local exists
+    exists=$(PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$db" -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table');" 2>/dev/null)
+    local status=$?
+    if [ "$status" -ne 0 ] && [ -n "$DB_FALLBACK_PASSWORD" ] && [ "$DB_FALLBACK_PASSWORD" != "$DB_PASSWORD" ]; then
+        exists=$(PGPASSWORD="$DB_FALLBACK_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$db" -tAc "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '$table');" 2>/dev/null)
+        status=$?
+    fi
+    if [ "$status" -ne 0 ]; then
+        echo "ERROR"
+        return 0
+    fi
     echo "$exists"
 }
 
@@ -45,8 +60,12 @@ for table in "${AUDIT_TABLES[@]}"; do
     exists=$(check_table "fhir_db" "$table")
     if [ "$exists" = "t" ]; then
         echo "✅ $table exists in fhir_db"
+    elif [ "$exists" = "ERROR" ]; then
+        echo "❌ $table check failed in fhir_db (database connectivity/auth issue)"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     else
         echo "❌ $table MISSING in fhir_db"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     fi
 done
 
@@ -57,8 +76,12 @@ for table in "${FHIR_TABLES[@]}"; do
     exists=$(check_table "fhir_db" "$table")
     if [ "$exists" = "t" ]; then
         echo "✅ $table exists in fhir_db"
+    elif [ "$exists" = "ERROR" ]; then
+        echo "❌ $table check failed in fhir_db (database connectivity/auth issue)"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     else
         echo "❌ $table MISSING in fhir_db"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     fi
 done
 
@@ -69,8 +92,12 @@ for table in "${PATIENT_TABLES[@]}"; do
     exists=$(check_table "patient_db" "$table")
     if [ "$exists" = "t" ]; then
         echo "✅ $table exists in patient_db"
+    elif [ "$exists" = "ERROR" ]; then
+        echo "❌ $table check failed in patient_db (database connectivity/auth issue)"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     else
         echo "❌ $table MISSING in patient_db"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     fi
 done
 
@@ -81,10 +108,19 @@ for table in "${NOTIFICATION_TABLES[@]}"; do
     exists=$(check_table "notification_db" "$table")
     if [ "$exists" = "t" ]; then
         echo "✅ $table exists in notification_db"
+    elif [ "$exists" = "ERROR" ]; then
+        echo "❌ $table check failed in notification_db (database connectivity/auth issue)"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     else
         echo "❌ $table MISSING in notification_db"
+        MISSING_COUNT=$((MISSING_COUNT + 1))
     fi
 done
 
 echo ""
-echo "Validation complete!"
+echo "Validation complete! Missing table checks: $MISSING_COUNT"
+
+if [ "$STRICT_SCHEMA" = "1" ] && [ "$MISSING_COUNT" -gt 0 ]; then
+    echo "Schema validation failed in strict mode."
+    exit 1
+fi

@@ -18,6 +18,9 @@
 - **Objective:** Produce backend dependency vulnerability reports required for SOC2/enterprise diligence.
 - **Execution:**
   - `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
+  - Helper script:
+    - Pre-NVD packet (no key): `scripts/security/run-backend-cve-with-nvd.sh`
+    - Final enriched packet (with key): `NVD_API_KEY=<key> scripts/security/run-backend-cve-with-nvd.sh`
 - **Acceptance criteria:**
   - Dependency-Check completes successfully.
   - Artifacts exist and are archived in evidence package:
@@ -29,10 +32,15 @@
   - `test-results/gradle-dependency-check-2026-02-27-after-wire.log`
   - `test-results/gradle-dependency-check-aggregate-2026-02-27.log`
   - `test-results/gradle-dependency-check-aggregate-2026-02-27-offline.log`
+  - `test-results/gradle-dependency-check-aggregate-pre-nvd-2026-02-28T121308Z.log`
+  - `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.html`
+  - `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.json`
+  - `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.sarif`
+  - `test-results/backend-cve-artifacts-manifest-2026-02-28T121308Z.md`
 
 ## P0-2: Promote SOC2 control matrix to signed release artifact
 
-- **Tracking issue:** `#498`
+- **Tracking issue:** `#498` (closed)
 - **Owner:** QA/Compliance
 - **Priority:** P0
 - **Objective:** Convert current control mapping into formal sign-off evidence.
@@ -95,7 +103,7 @@
 ## Tracking Checklist
 
 - [ ] P0-1 complete: backend CVE report generated with `NVD_API_KEY`
-- [ ] P0-2 complete: SOC2 matrix signed by compliance owner
+- [x] P0-2 complete: SOC2 matrix signed by compliance owner (`#498` closed)
 - [x] P1-1 complete: CI release gate enforces evidence presence
 - [x] P1-2 complete: OWASP ZAP report archived and linked (`#500` closed)
 - [x] P2-1 complete: evidence cadence/retention policy documented

@@ -1,0 +1,40 @@
+package com.healthdata.payer.revenue.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ClaimSubmissionRequest {
+    @NotBlank
+    private String tenantId;
+
+    @NotBlank
+    private String claimId;
+
+    @NotBlank
+    private String patientId;
+
+    @NotBlank
+    private String payerId;
+
+    @NotNull
+    private BigDecimal totalAmount;
+
+    @NotBlank
+    private String idempotencyKey;
+
+    @NotBlank
+    private String correlationId;
+
+    @NotBlank
+    private String actor;
+}

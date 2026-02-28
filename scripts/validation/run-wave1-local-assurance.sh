@@ -193,6 +193,18 @@ preflight_non_404 "revenue_claim_submission_route" "POST" "/api/v1/revenue/claim
 preflight_non_404 "adt_ingest_route" "POST" "/api/v1/interoperability/adt/messages" "{"
 preflight_non_404 "price_publish_route" "POST" "/api/v1/revenue/price-transparency/rates/publish" "{"
 preflight_non_404 "price_estimate_route" "POST" "/api/v1/revenue/price-transparency/estimates" "{"
+preflight_non_404 "cmo_onboarding_summary_route" "GET" "/api/executive/cmo-onboarding/summary"
+
+echo "Running CMO onboarding summary contract validation"
+set +e
+run_in_ops "GATEWAY_URL=${IN_NETWORK_GATEWAY_URL} TENANT_ID=${TENANT_ID} AUTH_USERNAME=${TEST_USERNAME} AUTH_PASSWORD=${TEST_PASSWORD} bash ./scripts/validation/validate-cmo-onboarding-summary.sh"
+cmo_validation_rc=$?
+set -e
+if [[ "$cmo_validation_rc" -eq 0 ]]; then
+  pass "cmo_onboarding.summary_contract" "validation script passed"
+else
+  fail "cmo_onboarding.summary_contract" "validation script rc=${cmo_validation_rc}"
+fi
 
 echo "Running baseline Wave-1 smoke in demo network"
 set +e

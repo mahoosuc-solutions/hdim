@@ -385,6 +385,15 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_PATIENTS'] },
   },
   {
+    path: 'executive/cmo-onboarding',
+    loadComponent: () =>
+      import('./pages/cmo-onboarding/cmo-onboarding.component').then(
+        (m) => m.CmoOnboardingComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_REPORTS'] },
+  },
+  {
     path: 'qa-audit-dashboard',
     loadComponent: () =>
       import('./pages/qa-audit-dashboard/qa-audit-dashboard.component').then(

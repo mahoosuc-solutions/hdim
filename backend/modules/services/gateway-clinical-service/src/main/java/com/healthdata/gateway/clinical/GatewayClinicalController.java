@@ -1,10 +1,12 @@
 package com.healthdata.gateway.clinical;
 
+import com.healthdata.gateway.clinical.executive.CmoOnboardingAggregationService;
 import com.healthdata.gateway.service.GatewayForwarder;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class GatewayClinicalController {
 
     private final GatewayForwarder forwarder;
+    private final CmoOnboardingAggregationService cmoOnboardingAggregationService;
 
     @Value("${backend.services.care-gap.url}")
     private String careGapUrl;
@@ -227,5 +230,20 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, nurseWorkflowUrl, "/nurse-workflow");
+    }
+
+    /**
+     * CMO onboarding summary contract used by the clinical portal executive onboarding page.
+     *
+     * This gateway-level endpoint provides a stable response contract for the UI while downstream
+     * cross-service aggregation is finalized. The contract is intentionally aligned with
+     * apps/clinical-portal/src/app/services/cmo-onboarding.service.ts.
+     */
+    @RequestMapping(value = "/api/executive/cmo-onboarding/summary", method = RequestMethod.GET)
+    public ResponseEntity<?> getCmoOnboardingSummary(
+        @RequestHeader(value = "X-Tenant-ID", required = false) String tenantId,
+        @RequestHeader(value = "Authorization", required = false) String authorizationHeader
+    ) {
+        return ResponseEntity.ok(cmoOnboardingAggregationService.buildSummary(tenantId, authorizationHeader));
     }
 }

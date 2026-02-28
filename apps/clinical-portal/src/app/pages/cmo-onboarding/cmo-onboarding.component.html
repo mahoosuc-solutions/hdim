@@ -1,0 +1,61 @@
+<section class="cmo-onboarding-page" data-testid="cmo-onboarding-page">
+  <header class="page-header">
+    <div>
+      <h1>CMO Onboarding Command Center</h1>
+      <p>Clinical outcomes, adoption, and trust signals for the first 90 days.</p>
+    </div>
+    <button mat-flat-button color="primary" type="button">Export Executive Snapshot</button>
+  </header>
+
+  @if (loading) {
+    <mat-card>
+      <mat-card-content>Loading onboarding summary...</mat-card-content>
+    </mat-card>
+  }
+
+  <div class="kpi-grid">
+    @for (kpi of kpis; track kpi.label) {
+      <mat-card class="kpi-card">
+        <mat-card-header>
+          <mat-icon mat-card-avatar aria-hidden="true">monitor_heart</mat-icon>
+          <mat-card-title>{{ kpi.label }}</mat-card-title>
+          <mat-card-subtitle>
+            <mat-chip [highlighted]="true">{{ kpi.status }}</mat-chip>
+          </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="kpi-value">{{ kpi.value }}</p>
+          <p class="kpi-trend">{{ kpi.trend }} vs baseline</p>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <div class="content-grid">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Top Executive Actions</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <ol>
+          @for (action of topActions; track action) {
+            <li>{{ action }}</li>
+          }
+        </ol>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Adoption And Governance Signals</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <ul>
+          @for (signal of governanceSignals; track signal) {
+            <li>{{ signal }}</li>
+          }
+        </ul>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</section>

@@ -178,6 +178,89 @@ class RevenueContractControllerTest {
                 .andExpect(jsonPath("$[0].action").value("CLAIM_SUBMISSION"));
     }
 
+    @Test
+    @DisplayName("POST /api/v1/revenue/price-transparency/rates/publish returns version metadata")
+    void shouldPublishPriceTransparencyRates() throws Exception {
+        when(revenueContractService.publishPriceTransparencyRates(any())).thenReturn(PriceTransparencyRatePublishResponse.builder()
+                .tenantId("tenant-a")
+                .versionId("PTR-1")
+                .sourceReference("cms-file-2026-02")
+                .checksum("abc123")
+                .lineItemCount(2)
+                .publishedAt(Instant.now())
+                .publishedBy("system-test")
+                .auditEnvelope(audit("tenant-a", "corr-price-publish", "PRICE_TRANSPARENCY_PUBLISH", "VERSION_PUBLISHED"))
+                .build());
+
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "sourceReference":"cms-file-2026-02",
+              "correlationId":"corr-price-publish",
+              "actor":"system-test",
+              "rates":[
+                {"serviceCode":"SVC-99213","negotiatedRate":75.00,"cashPrice":95.00},
+                {"serviceCode":"SVC-93000","negotiatedRate":40.00,"cashPrice":60.00}
+              ]
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/revenue/price-transparency/rates/publish")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.versionId").value("PTR-1"))
+                .andExpect(jsonPath("$.lineItemCount").value(2));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/revenue/price-transparency/rates/current returns 404 when missing")
+    void shouldReturnNotFoundForMissingCurrentRates() throws Exception {
+        when(revenueContractService.getCurrentPriceTransparencyRates("tenant-a", "corr-price-read", "system-test"))
+                .thenReturn(null);
+
+        mockMvc.perform(get("/api/v1/revenue/price-transparency/rates/current")
+                        .param("tenantId", "tenant-a")
+                        .param("correlationId", "corr-price-read")
+                        .param("actor", "system-test"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/revenue/price-transparency/estimates returns deterministic estimate")
+    void shouldEstimatePriceFromPublishedRates() throws Exception {
+        when(revenueContractService.hasPriceTransparencyVersion("tenant-a", "PTR-1")).thenReturn(true);
+        when(revenueContractService.estimatePrice(any())).thenReturn(PriceEstimateResponse.builder()
+                .tenantId("tenant-a")
+                .versionId("PTR-1")
+                .serviceCode("SVC-99213")
+                .units(2)
+                .unitRate(java.math.BigDecimal.valueOf(75))
+                .estimatedAllowedAmount(java.math.BigDecimal.valueOf(150))
+                .estimatedPatientResponsibility(java.math.BigDecimal.valueOf(30))
+                .correlationId("corr-price-est")
+                .auditEnvelope(audit("tenant-a", "corr-price-est", "PRICE_ESTIMATE", "ESTIMATE_READY"))
+                .build());
+
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "versionId":"PTR-1",
+              "serviceCode":"SVC-99213",
+              "units":2,
+              "correlationId":"corr-price-est",
+              "actor":"system-test"
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/revenue/price-transparency/estimates")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estimatedAllowedAmount").value(150))
+                .andExpect(jsonPath("$.estimatedPatientResponsibility").value(30));
+    }
+
     private RevenueAuditEnvelope audit(String tenantId, String correlationId, String action, String outcome) {
         return RevenueAuditEnvelope.builder()
                 .tenantId(tenantId)

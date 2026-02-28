@@ -137,4 +137,43 @@ class RevenueContractServiceTest {
         assertThat(attempts.get()).isEqualTo(3);
         assertThat(backoffCalls).containsExactly(100L, 200L);
     }
+
+    @Test
+    @DisplayName("ingestRemittanceAdvice blocks illegal regression from PAID to PARTIALLY_PAID")
+    void shouldBlockIllegalPaidToPartialRegression() {
+        revenueContractService.submitClaim(ClaimSubmissionRequest.builder()
+                .tenantId("tenant-a")
+                .claimId("clm-transition")
+                .patientId("pat-transition")
+                .payerId("payer-a")
+                .totalAmount(BigDecimal.valueOf(500))
+                .idempotencyKey("idem-transition")
+                .correlationId("corr-transition")
+                .actor("test")
+                .build());
+
+        ReconciliationPreviewResponse first = revenueContractService.ingestRemittanceAdvice(RemittanceAdviceEvent.builder()
+                .tenantId("tenant-a")
+                .claimId("clm-transition")
+                .remittanceId("rem-paid")
+                .paymentAmount(BigDecimal.valueOf(500))
+                .adjustmentAmount(BigDecimal.ZERO)
+                .correlationId("corr-transition")
+                .actor("test")
+                .build());
+        assertThat(first.getNewStatus()).isEqualTo(RevenueClaimState.PAID);
+
+        ReconciliationPreviewResponse second = revenueContractService.ingestRemittanceAdvice(RemittanceAdviceEvent.builder()
+                .tenantId("tenant-a")
+                .claimId("clm-transition")
+                .remittanceId("rem-regress")
+                .paymentAmount(BigDecimal.valueOf(200))
+                .adjustmentAmount(BigDecimal.ZERO)
+                .correlationId("corr-transition")
+                .actor("test")
+                .build());
+
+        assertThat(second.getErrorCode()).isEqualTo(RevenueErrorCode.VALIDATION_ERROR);
+        assertThat(second.getNewStatus()).isEqualTo(RevenueClaimState.PAID);
+    }
 }

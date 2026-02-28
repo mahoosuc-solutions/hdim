@@ -13,6 +13,8 @@ IN_NETWORK_GATEWAY_URL="${IN_NETWORK_GATEWAY_URL:-http://gateway-edge:8080}"
 PERF_ENABLED="${PERF_ENABLED:-true}"
 PERF_SAMPLES="${PERF_SAMPLES:-20}"
 PERF_WARMUP="${PERF_WARMUP:-5}"
+PERF_BUDGET_REVENUE_CLAIM_STATUS_P95_MS="${PERF_BUDGET_REVENUE_CLAIM_STATUS_P95_MS:-120}"
+PERF_BUDGET_ADT_GET_EVENT_P95_MS="${PERF_BUDGET_ADT_GET_EVENT_P95_MS:-120}"
 
 START_STACK="${START_STACK:-true}"
 STOP_STACK="${STOP_STACK:-true}"
@@ -79,6 +81,7 @@ measure_latency() {
   local path="$3"
   local payload="${4:-}"
   local expected_csv="${5:-200}"
+  local p95_budget_ms="${6:-}"
 
   local -a latencies=()
   local success=0
@@ -130,12 +133,19 @@ measure_latency() {
   fi
   p95_ms="$(printf '%s\n' "${latencies[@]}" | sort -n | sed -n "${rank}p")"
 
-  if [[ "$failure" -eq 0 ]]; then
-    pass "performance.${name}" "samples=${n} p95Ms=${p95_ms} avgMs=${avg_ms} minMs=${min_ms} maxMs=${max_ms}"
-    perf_results+=("{\"name\":\"${name}\",\"status\":\"PASS\",\"samples\":${n},\"success\":${success},\"failure\":${failure},\"expectedCodes\":\"${expected_csv}\",\"p95Ms\":${p95_ms},\"avgMs\":${avg_ms},\"minMs\":${min_ms},\"maxMs\":${max_ms}}")
+  local budget_ok=1
+  if [[ -n "$p95_budget_ms" ]]; then
+    if ! awk -v p95="$p95_ms" -v budget="$p95_budget_ms" 'BEGIN { exit !(p95 <= budget) }'; then
+      budget_ok=0
+    fi
+  fi
+
+  if [[ "$failure" -eq 0 && "$budget_ok" -eq 1 ]]; then
+    pass "performance.${name}" "samples=${n} p95Ms=${p95_ms} avgMs=${avg_ms} minMs=${min_ms} maxMs=${max_ms} budgetP95Ms=${p95_budget_ms:-none}"
+    perf_results+=("{\"name\":\"${name}\",\"status\":\"PASS\",\"samples\":${n},\"success\":${success},\"failure\":${failure},\"expectedCodes\":\"${expected_csv}\",\"p95Ms\":${p95_ms},\"avgMs\":${avg_ms},\"minMs\":${min_ms},\"maxMs\":${max_ms},\"budgetP95Ms\":${p95_budget_ms:-null}}")
   else
-    fail "performance.${name}" "samples=${n} failures=${failure} expected=${expected_csv} p95Ms=${p95_ms}"
-    perf_results+=("{\"name\":\"${name}\",\"status\":\"FAIL\",\"samples\":${n},\"success\":${success},\"failure\":${failure},\"expectedCodes\":\"${expected_csv}\",\"p95Ms\":${p95_ms},\"avgMs\":${avg_ms},\"minMs\":${min_ms},\"maxMs\":${max_ms}}")
+    fail "performance.${name}" "samples=${n} failures=${failure} expected=${expected_csv} p95Ms=${p95_ms} budgetP95Ms=${p95_budget_ms:-none}"
+    perf_results+=("{\"name\":\"${name}\",\"status\":\"FAIL\",\"samples\":${n},\"success\":${success},\"failure\":${failure},\"expectedCodes\":\"${expected_csv}\",\"p95Ms\":${p95_ms},\"avgMs\":${avg_ms},\"minMs\":${min_ms},\"maxMs\":${max_ms},\"budgetP95Ms\":${p95_budget_ms:-null}}")
   fi
 }
 
@@ -215,13 +225,13 @@ fi
 if [[ "$PERF_ENABLED" == "true" ]]; then
   if [[ -n "${baseline_claim_id:-}" ]]; then
     perf_claim_payload="{\"tenantId\":\"${TENANT_ID}\",\"claimId\":\"${baseline_claim_id}\",\"correlationId\":\"PERF-CLAIM-${timestamp}\",\"actor\":\"assurance-perf\"}"
-    measure_latency "revenue_claim_status" "POST" "/api/v1/revenue/claim-status/checks" "$perf_claim_payload" "200"
+    measure_latency "revenue_claim_status" "POST" "/api/v1/revenue/claim-status/checks" "$perf_claim_payload" "200" "$PERF_BUDGET_REVENUE_CLAIM_STATUS_P95_MS"
   else
     fail "performance.revenue_claim_status" "baseline claim id unavailable"
   fi
 
   if [[ -n "${baseline_event_id:-}" ]]; then
-    measure_latency "adt_get_event" "GET" "/api/v1/interoperability/adt/events/${baseline_event_id}" "" "200"
+    measure_latency "adt_get_event" "GET" "/api/v1/interoperability/adt/events/${baseline_event_id}" "" "200" "$PERF_BUDGET_ADT_GET_EVENT_P95_MS"
   else
     fail "performance.adt_get_event" "baseline event id unavailable"
   fi

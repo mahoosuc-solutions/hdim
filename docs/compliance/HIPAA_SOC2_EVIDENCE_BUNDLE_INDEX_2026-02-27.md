@@ -36,10 +36,19 @@
      - `backend/build/reports/dependency-check-report.json`
      - `backend/build/reports/dependency-check-report.sarif`
 
-6. **Backend CVE artifact manifest (placeholder until API key provisioning)**
+6. **Backend dependency-check pre-NVD packet (latest local readiness)**
+   - `test-results/gradle-dependency-check-aggregate-pre-nvd-2026-02-28T121308Z.log`
+   - `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.html`
+   - `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.json`
+   - `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.sarif`
+   - `test-results/backend-cve-artifacts-manifest-2026-02-28T121308Z.md`
+   - Final one-command closeout when key exists:
+     - `NVD_API_KEY=<key> scripts/security/run-backend-cve-with-nvd.sh`
+
+7. **Backend CVE artifact manifest (placeholder until API key provisioning)**
    - `test-results/backend-cve-artifacts-manifest-2026-02-27.md`
 
-7. **OWASP ZAP baseline triage evidence**
+8. **OWASP ZAP baseline triage evidence**
    - `docs/compliance/OWASP_ZAP_BASELINE_TRIAGE_2026-02-27.md`
    - Local artifact capture (securecodebox image path):
      - `test-results/zap-local-2026-02-27/report_html.html`
@@ -82,6 +91,10 @@
 6. **Wave-1 local assurance (rebuild-enforced)**
    - `test-results/wave1-local-assurance-20260228T065856Z.json`
    - Outcome: `28/28` checks passed, including preflight gateway checks and expanded price-transparency contract/performance validations
+
+7. **Local immutable evidence manifest (checksums)**
+   - `test-results/local-evidence-manifest-2026-02-28T121333Z.md`
+   - `test-results/local-evidence-sha256-2026-02-28T121333Z.txt`
 
 ---
 

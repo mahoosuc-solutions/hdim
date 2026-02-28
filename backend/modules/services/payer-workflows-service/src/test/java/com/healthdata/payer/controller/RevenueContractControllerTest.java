@@ -261,6 +261,54 @@ class RevenueContractControllerTest {
                 .andExpect(jsonPath("$.estimatedPatientResponsibility").value(30));
     }
 
+    @Test
+    @DisplayName("POST /api/v1/revenue/price-transparency/estimates returns 404 when version is missing")
+    void shouldReturnNotFoundWhenPriceVersionMissing() throws Exception {
+        when(revenueContractService.hasPriceTransparencyVersion("tenant-a", "PTR-MISSING")).thenReturn(false);
+
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "versionId":"PTR-MISSING",
+              "serviceCode":"SVC-99213",
+              "units":2,
+              "correlationId":"corr-price-est-missing",
+              "actor":"system-test"
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/revenue/price-transparency/estimates")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/revenue/price-transparency/rates/publish returns 400 for duplicate service codes")
+    void shouldReturnBadRequestForDuplicateServiceCodes() throws Exception {
+        when(revenueContractService.publishPriceTransparencyRates(any()))
+                .thenThrow(new IllegalArgumentException("Duplicate serviceCode values are not allowed"));
+
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "sourceReference":"cms-file-2026-02",
+              "correlationId":"corr-price-dup",
+              "actor":"system-test",
+              "rates":[
+                {"serviceCode":"SVC-99213","negotiatedRate":75.00,"cashPrice":95.00},
+                {"serviceCode":"SVC-99213","negotiatedRate":80.00,"cashPrice":99.00}
+              ]
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/revenue/price-transparency/rates/publish")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Duplicate serviceCode values are not allowed"));
+    }
+
     private RevenueAuditEnvelope audit(String tenantId, String correlationId, String action, String outcome) {
         return RevenueAuditEnvelope.builder()
                 .tenantId(tenantId)

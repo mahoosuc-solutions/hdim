@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("RevenueContractService Tests")
 class RevenueContractServiceTest {
@@ -251,5 +252,24 @@ class RevenueContractServiceTest {
                 .build());
 
         assertThat(estimate.getErrorCode()).isEqualTo(RevenueErrorCode.VALIDATION_ERROR);
+    }
+
+    @Test
+    @DisplayName("publishPriceTransparencyRates rejects duplicate service codes")
+    void shouldRejectDuplicateServiceCodes() {
+        PriceTransparencyRatePublishRequest duplicateRequest = PriceTransparencyRatePublishRequest.builder()
+                .tenantId("tenant-a")
+                .sourceReference("cms-rate-file")
+                .correlationId("corr-price-dup")
+                .actor("test")
+                .rates(List.of(
+                        PriceTransparencyRateEntry.builder().serviceCode("SVC-99213").negotiatedRate(BigDecimal.valueOf(75)).cashPrice(BigDecimal.valueOf(95)).build(),
+                        PriceTransparencyRateEntry.builder().serviceCode("SVC-99213").negotiatedRate(BigDecimal.valueOf(80)).cashPrice(BigDecimal.valueOf(99)).build()
+                ))
+                .build();
+
+        assertThatThrownBy(() -> revenueContractService.publishPriceTransparencyRates(duplicateRequest))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Duplicate serviceCode");
     }
 }

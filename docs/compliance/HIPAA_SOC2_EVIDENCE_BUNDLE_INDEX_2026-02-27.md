@@ -79,6 +79,10 @@
 5. **Post-remediation MCP regression tests**
    - `test-results/test-mcp-post-cve-remediation-2026-02-27.log`
 
+6. **Wave-1 local assurance (rebuild-enforced)**
+   - `test-results/wave1-local-assurance-20260228T065856Z.json`
+   - Outcome: `28/28` checks passed, including preflight gateway checks and expanded price-transparency contract/performance validations
+
 ---
 
 ## D. Compliance Documentation Evidence
@@ -95,6 +99,8 @@
 2. `bda1feb7d` - enterprise SaaS architecture docs (md/html/drawio)  
 3. `c48a2f641` - npm CVE remediation + compliance validation hardening
 4. `d1c8fc5fe` - SOC2 control-evidence matrix + HIPAA/SOC2 bundle index
+5. `aee8bc88b` - startup health-wait timeout hardening for local assurance reliability
+6. `9bf7082fd` - preflight + contract + load expansions for Wave-1 local assurance
 
 ---
 
@@ -103,8 +109,9 @@
 1. Backend dependency-check report refresh with `NVD_API_KEY` configured (recommended to reduce false negatives on enrichment feeds).
    - Suggested command: `cd backend && NVD_API_KEY=<key> ./gradlew dependencyCheckUpdate dependencyCheckAggregate --no-daemon`
    - One-command helper: `scripts/security/run-backend-cve-with-nvd.sh`
-2. Compliance owner sign-off (name/date) on the SOC2 matrix and this bundle index.
-3. Cutoff-date strict go/no-go rerun artifact attached: `logs/mcp-reports/operator-go-no-go-20260227-021544.md`.
+2. Hosted CI runner unblock for immutable CI-attested reruns (`#515`).
+3. Compliance owner sign-off (name/date) on the SOC2 matrix and this bundle index.
+4. Cutoff-date strict go/no-go rerun artifact attached: `logs/mcp-reports/operator-go-no-go-20260227-021544.md`.
 
 ---
 

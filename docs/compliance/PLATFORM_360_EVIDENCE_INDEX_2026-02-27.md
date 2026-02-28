@@ -27,6 +27,7 @@
 | k6 load profiles | `backend/performance-tests/k6/` |
 | Load test workflow gate | `.github/workflows/load-tests.yml` |
 | E2E performance suite | `.github/workflows/e2e-tests.yml` |
+| Wave-1 local assurance (latest) | `test-results/wave1-local-assurance-20260228T065856Z.json` (`28/28` pass, includes `price_estimate_load`) |
 
 ## HIPAA Evidence
 
@@ -51,20 +52,19 @@
 | Control Area | Artifact |
 |---|---|
 | Dependency scanning configuration | `.github/workflows/security-scan.yml` |
-| Latest backend dependency-check execution (wave-1) | `test-results/dependency-check-aggregate-exec-wave1-2026-02-27.log` |
+| Latest backend dependency-check execution (wave-2b) | `test-results/dependency-check-aggregate-exec-wave2b-2026-02-27.log` |
 | Container scanning configuration | `.github/workflows/security-scan.yml` (Trivy sections) |
-| DAST configuration | `.github/workflows/owasp-zap-baseline.yml` |
+| DAST configuration + local evidence | `.github/workflows/owasp-zap-baseline.yml`, `test-results/zap-local-2026-02-27/*` |
 | Security hardening checks | `.github/workflows/security-hardening-validation.yml` |
 
 ## Open Evidence Gaps
 
 | Gap | Tracking |
 |---|---|
-| Backend strict CVE remediation: latest scan failed with `228` vulnerabilities, `max_cvss=9.8` (critical CVEs remaining: `CVE-2023-39017`, `CVE-2025-3277`, `CVE-2025-55754`, `CVE-2025-6965`) | `#497` |
-| SOC2 named approver sign-off | `#498` |
-| First successful OWASP baseline artifact capture | `#500` |
+| Backend strict CVE remediation final closeout with NVD-enriched evidence package | `#497` |
+| Hosted GitHub Actions runner billing/capacity unblock for immutable CI-attested reruns | `#515` |
 
 ## Active Workflow Run Links (Current)
 
-- Compliance Evidence Gate run: `https://github.com/webemo-aaron/hdim/actions/runs/22473840003` (queued at last check)
-- OWASP ZAP Baseline run: `https://github.com/webemo-aaron/hdim/actions/runs/22474191527` (queued at last check)
+- Hosted CI remains capacity-blocked in current cycle (see `#515`).
+- Latest validated local assurance artifact: `test-results/wave1-local-assurance-20260228T065856Z.json`.

@@ -19,7 +19,7 @@
 | A-02 | Core API health checks | Run system validation workflow | `test-results/validate-system-2026-02-26.log` | PASS | Platform Eng |
 | A-03 | Critical user journeys smoke-tested | Run portal smoke tests | `test-results/e2e-clinical-portal-smoke-2026-02-26.log` | PASS | QA |
 | A-04 | Workflow gate orchestrations pass | Run operator go/no-go strict gate | `logs/mcp-reports/operator-go-no-go-*.md` | PASS | Release Eng |
-| A-05 | Known feature gap register maintained | Open issue tracking of unresolved scope | `#497`, `#498`, `#500` | IN_PROGRESS | Product+Eng |
+| A-05 | Known feature gap register maintained | Open issue tracking of unresolved scope | `#497`, `#515` | IN_PROGRESS | Product+Eng |
 
 ## Domain B: Data Model and Schema Integrity
 
@@ -56,7 +56,7 @@
 | ID | Control | Validation Method | Evidence | Status | Owner |
 |---|---|---|---|---|---|
 | E-01 | Control-to-evidence mapping documented | Maintain SOC2 matrix | `docs/compliance/SOC2_CC_CONTROL_EVIDENCE_MATRIX_2026-02-27.md` | PASS | Compliance |
-| E-02 | Matrix approval metadata + lifecycle policy | Named approver + cadence policy | `docs/compliance/COMPLIANCE_EVIDENCE_RETENTION_AND_CADENCE_POLICY_2026-02-27.md` | IN_PROGRESS | Compliance |
+| E-02 | Matrix approval metadata + lifecycle policy | Named approver + cadence policy | `docs/compliance/COMPLIANCE_EVIDENCE_RETENTION_AND_CADENCE_POLICY_2026-02-27.md`, `#498` | PASS | Compliance |
 | E-03 | Access/auth controls evidence | Data access + release gate evidence | `validate-data-access-security...log`, `release-gate-*.md` | PASS | Security Eng |
 | E-04 | Vulnerability management evidence completeness | Backend + frontend CVE scans with artifacts | `#497` blocker | BLOCKED | Security Eng |
 | E-05 | Change management release traceability | Tagged releases with commit mapping | `v2.7.2-rc1`, baseline tags | PASS | Release Eng |
@@ -67,7 +67,7 @@
 |---|---|---|---|---|---|
 | F-01 | Dependency scanning configured | OWASP dependency-check workflows | `.github/workflows/security-scan.yml` | PASS | Security Eng |
 | F-02 | Container scanning configured | Trivy scans + SARIF uploads | `.github/workflows/security-scan.yml` | PASS | Security Eng |
-| F-03 | DAST baseline configured and runnable | OWASP ZAP workflow | `.github/workflows/owasp-zap-baseline.yml` | IN_PROGRESS | Security Eng |
+| F-03 | DAST baseline configured and runnable | OWASP ZAP workflow + local baseline artifacts | `.github/workflows/owasp-zap-baseline.yml`, `test-results/zap-local-2026-02-27/*`, `#500` | PASS | Security Eng |
 | F-04 | Secret/license governance gates | Secret scan + license checks | `.github/workflows/security-scan.yml` | PASS | Security Eng |
 | F-05 | Compliance evidence gate blocks incomplete releases | Dedicated gate workflow/script | `.github/workflows/compliance-evidence-gate.yml` | PASS | Platform Eng |
 
@@ -92,11 +92,11 @@
 
 ## Current Blockers (Must Resolve for Full GO)
 
-1. `#497` Backend CVE remediation and evidence completion: latest wave-1 aggregate scan found `228` vulnerabilities (down from `303`) and still failed CVSS gate (`max_cvss=9.8`).
+1. `#497` Backend CVE remediation and evidence completion: latest strict closeout still requires NVD-enriched final evidence run (`NVD_API_KEY`) for closure package.
    - Remaining critical CVEs: `CVE-2023-39017`, `CVE-2025-3277`, `CVE-2025-55754`, `CVE-2025-6965`
    - Evidence: `test-results/dependency-check-aggregate-exec-wave1-2026-02-27.log`, `backend/build/reports/dependency-check-report.json`
-2. `#498` SOC2 matrix final named approver sign-off and date.
-3. `#500` First successful OWASP ZAP baseline artifact run completion.
+2. `#515` Hosted GitHub Actions runner billing/capacity unblock for immutable CI-attested assurance reruns.
+3. Final 360 GO packet refresh after `#497` + `#515`, including sign-off table update with current artifact set.
 
 ## GO/NO-GO Rule
 

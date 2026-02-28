@@ -25,7 +25,7 @@ wait_for_url() {
   local sleep_seconds="${4:-5}"
 
   for i in $(seq 1 "$attempts"); do
-    if curl -fsS "$url" >/dev/null 2>&1; then
+    if curl -fsS --connect-timeout 2 --max-time 5 "$url" >/dev/null 2>&1; then
       echo "Ready: $label ($url)"
       return 0
     fi

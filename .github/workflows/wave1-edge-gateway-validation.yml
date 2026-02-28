@@ -1,0 +1,50 @@
+name: Wave-1 Edge Gateway Validation
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'backend/modules/services/gateway-clinical-service/**'
+      - 'backend/modules/services/payer-workflows-service/**'
+      - 'backend/modules/services/data-ingestion-service/**'
+      - 'docker-compose.demo.yml'
+      - 'scripts/validation/validate-wave1-edge-gateway-flow.sh'
+      - 'scripts/validation/start-wave1-validation-stack.sh'
+      - 'scripts/validation/stop-wave1-validation-stack.sh'
+      - '.github/workflows/wave1-edge-gateway-validation.yml'
+
+jobs:
+  wave1-smoke:
+    name: Wave-1 gateway smoke gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start Wave-1 validation stack
+        run: |
+          chmod +x scripts/validation/start-wave1-validation-stack.sh
+          BUILD_WAVE1_IMAGES=true ./scripts/validation/start-wave1-validation-stack.sh
+
+      - name: Execute Wave-1 smoke gate
+        run: |
+          chmod +x scripts/validation/validate-wave1-edge-gateway-flow.sh
+          GATEWAY_URL=http://127.0.0.1:18080 ./scripts/validation/validate-wave1-edge-gateway-flow.sh
+
+      - name: Upload Wave-1 smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wave1-edge-gateway-smoke
+          retention-days: 30
+          path: test-results/wave1-edge-gateway-smoke-*.json
+          if-no-files-found: warn
+
+      - name: Stop Wave-1 validation stack
+        if: always()
+        run: |
+          chmod +x scripts/validation/stop-wave1-validation-stack.sh
+          KEEP_VOLUMES=false ./scripts/validation/stop-wave1-validation-stack.sh

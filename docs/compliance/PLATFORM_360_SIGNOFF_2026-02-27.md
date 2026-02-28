@@ -9,13 +9,13 @@
 ## Decision Summary
 
 - Current Decision: **NO GO**
-- Reason: Backend CVE gate currently fails (wave-1 reduced findings from 303 to 228, but max CVSS remains 9.8), and required SOC2/OWASP evidence sign-offs are still open.
+- Reason: Final 360 closure still depends on `#497` (NVD-enriched backend CVE evidence run) and `#515` (hosted runner billing/capacity unblock for immutable CI-attested reruns). Local 360 assurance evidence is green but CI-attested closeout remains pending.
 
 ## Blockers to Clear Before Full External-Audit-Ready GO
 
-1. `#500` first successful OWASP ZAP baseline artifact run and evidence link.
-2. External compliance countersignature (if required by audit policy) captured in final release packet.
-3. Optional hardening follow-up: rerun dependency-check with `NVD_API_KEY` for enriched feed freshness.
+1. `#497` final backend CVE evidence refresh with `NVD_API_KEY` and closure sign-off package.
+2. `#515` restore hosted GitHub Actions runner billing/capacity and rerun immutable CI evidence gates.
+3. External compliance countersignature (if required by audit policy) captured in final release packet.
 
 ## Sign-off Table
 
@@ -25,6 +25,12 @@
 | Compliance Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | SOC2 evidence accepted for RC; final GO pending full artifact set |
 | Platform/Release Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Await strict backend CVE + ZAP gates |
 | QA Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Manual critical-flow packet incomplete |
+
+## Latest Execution Evidence (2026-02-28)
+
+- Local Wave-1 assurance (rebuild-enforced): `test-results/wave1-local-assurance-20260228T065856Z.json`
+- Result: `28/28` checks passed
+- Included: preflight gateway route checks, expanded price-transparency contract negatives, and `price_estimate_load` (`100` samples, p95 `60.48ms`)
 
 ## Finalization Rule
 

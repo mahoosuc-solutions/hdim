@@ -31,6 +31,10 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 - [Service Dependencies](services/DEPENDENCY_MAP.md) - How services interact
 - [Flow Diagrams](architecture/ROUND_TRIP_FLOWS.md) - Request flows through the system
 - [Technology Decisions](architecture/decisions/) - Architecture decision records (21 ADRs)
+- [Customer Onboarding Playbook](implementation-guides/CUSTOMER_ONBOARDING_ADOPTION_PLAYBOOK.md) ✨ NEW - CMO/CTO adoption model and phase gates
+- [CMO Onboarding Dashboard Spec](implementation-guides/CMO_ONBOARDING_DASHBOARD_SPEC.md) ✨ NEW - executive portal implementation blueprint
+- [Wave Epic Acceptance Alignment](GITHUB_WAVE_EPIC_ACCEPTANCE_ALIGNMENT_2026-02-28.md) ✨ NEW - issue-level acceptance criteria matrix
+- [Wave Issue Comment Pack](GITHUB_ISSUE_COMMENT_PACK_2026-02-28.md) ✨ NEW - ready-to-post issue comment checklists
 
 **🚀 DevOps & Operations**
 - [Deployment Guide](deployment/) - Docker, Kubernetes, production setup

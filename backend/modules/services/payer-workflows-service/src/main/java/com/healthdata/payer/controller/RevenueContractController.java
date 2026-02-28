@@ -56,4 +56,63 @@ public class RevenueContractController {
     public ResponseEntity<List<RevenueAuditEnvelope>> getAuditTrail(@PathVariable String correlationId) {
         return ResponseEntity.ok(revenueContractService.getAuditTrail(correlationId));
     }
+
+    @PostMapping("/price-transparency/rates/publish")
+    @Operation(summary = "Publish machine-readable negotiated rates")
+    public ResponseEntity<PriceTransparencyRatePublishResponse> publishPriceTransparencyRates(
+            @Valid @RequestBody PriceTransparencyRatePublishRequest request
+    ) {
+        return ResponseEntity.ok(revenueContractService.publishPriceTransparencyRates(request));
+    }
+
+    @GetMapping("/price-transparency/rates/current")
+    @Operation(summary = "Get current price transparency version for tenant")
+    public ResponseEntity<PriceTransparencyRatesViewResponse> getCurrentPriceTransparencyRates(
+            @RequestParam String tenantId,
+            @RequestParam String correlationId,
+            @RequestParam String actor
+    ) {
+        PriceTransparencyRatesViewResponse response = revenueContractService.getCurrentPriceTransparencyRates(
+                tenantId,
+                correlationId,
+                actor
+        );
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/price-transparency/rates/{versionId}")
+    @Operation(summary = "Get a specific price transparency rate version")
+    public ResponseEntity<PriceTransparencyRatesViewResponse> getPriceTransparencyRatesVersion(
+            @PathVariable String versionId,
+            @RequestParam String tenantId,
+            @RequestParam String correlationId,
+            @RequestParam String actor
+    ) {
+        PriceTransparencyRatesViewResponse response = revenueContractService.getPriceTransparencyRatesVersion(
+                tenantId,
+                versionId,
+                correlationId,
+                actor
+        );
+        if (response == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/price-transparency/estimates")
+    @Operation(summary = "Calculate deterministic price estimate from published rates")
+    public ResponseEntity<PriceEstimateResponse> estimatePrice(
+            @Valid @RequestBody PriceEstimateRequest request
+    ) {
+        if (request.getVersionId() != null
+                && !request.getVersionId().isBlank()
+                && !revenueContractService.hasPriceTransparencyVersion(request.getTenantId(), request.getVersionId())) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(revenueContractService.estimatePrice(request));
+    }
 }

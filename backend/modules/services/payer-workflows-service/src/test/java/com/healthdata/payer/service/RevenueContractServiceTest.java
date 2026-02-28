@@ -3,6 +3,9 @@ package com.healthdata.payer.service;
 import com.healthdata.payer.revenue.RevenueClaimState;
 import com.healthdata.payer.revenue.RevenueErrorCode;
 import com.healthdata.payer.revenue.dto.ClaimSubmissionRequest;
+import com.healthdata.payer.revenue.dto.PriceEstimateRequest;
+import com.healthdata.payer.revenue.dto.PriceTransparencyRateEntry;
+import com.healthdata.payer.revenue.dto.PriceTransparencyRatePublishRequest;
 import com.healthdata.payer.revenue.dto.ReconciliationPreviewResponse;
 import com.healthdata.payer.revenue.dto.RemittanceAdviceEvent;
 import org.junit.jupiter.api.DisplayName;
@@ -175,5 +178,78 @@ class RevenueContractServiceTest {
 
         assertThat(second.getErrorCode()).isEqualTo(RevenueErrorCode.VALIDATION_ERROR);
         assertThat(second.getNewStatus()).isEqualTo(RevenueClaimState.PAID);
+    }
+
+    @Test
+    @DisplayName("publish + read current rates returns immutable version metadata")
+    void shouldPublishAndReadCurrentPriceTransparencyRates() {
+        var publish = revenueContractService.publishPriceTransparencyRates(PriceTransparencyRatePublishRequest.builder()
+                .tenantId("tenant-a")
+                .sourceReference("cms-rate-file")
+                .correlationId("corr-price-publish")
+                .actor("test")
+                .rates(List.of(
+                        PriceTransparencyRateEntry.builder().serviceCode("SVC-99213").negotiatedRate(BigDecimal.valueOf(75)).cashPrice(BigDecimal.valueOf(95)).build(),
+                        PriceTransparencyRateEntry.builder().serviceCode("SVC-93000").negotiatedRate(BigDecimal.valueOf(40)).cashPrice(BigDecimal.valueOf(60)).build()
+                ))
+                .build());
+
+        var current = revenueContractService.getCurrentPriceTransparencyRates("tenant-a", "corr-price-read", "test");
+        assertThat(current).isNotNull();
+        assertThat(current.getVersionId()).isEqualTo(publish.getVersionId());
+        assertThat(current.getRates()).hasSize(2);
+        assertThat(current.getChecksum()).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("estimatePrice returns deterministic amount for known service code")
+    void shouldReturnDeterministicPriceEstimate() {
+        var publish = revenueContractService.publishPriceTransparencyRates(PriceTransparencyRatePublishRequest.builder()
+                .tenantId("tenant-a")
+                .sourceReference("cms-rate-file")
+                .correlationId("corr-price-publish")
+                .actor("test")
+                .rates(List.of(
+                        PriceTransparencyRateEntry.builder().serviceCode("SVC-99213").negotiatedRate(BigDecimal.valueOf(75)).cashPrice(BigDecimal.valueOf(95)).build()
+                ))
+                .build());
+
+        var estimate = revenueContractService.estimatePrice(PriceEstimateRequest.builder()
+                .tenantId("tenant-a")
+                .versionId(publish.getVersionId())
+                .serviceCode("SVC-99213")
+                .units(2)
+                .correlationId("corr-price-est")
+                .actor("test")
+                .build());
+
+        assertThat(estimate.getErrorCode()).isNull();
+        assertThat(estimate.getEstimatedAllowedAmount()).isEqualByComparingTo(BigDecimal.valueOf(150.00));
+        assertThat(estimate.getEstimatedPatientResponsibility()).isEqualByComparingTo(BigDecimal.valueOf(30.00));
+    }
+
+    @Test
+    @DisplayName("estimatePrice returns VALIDATION_ERROR for unknown service code")
+    void shouldReturnValidationErrorForUnknownServiceCode() {
+        var publish = revenueContractService.publishPriceTransparencyRates(PriceTransparencyRatePublishRequest.builder()
+                .tenantId("tenant-a")
+                .sourceReference("cms-rate-file")
+                .correlationId("corr-price-publish")
+                .actor("test")
+                .rates(List.of(
+                        PriceTransparencyRateEntry.builder().serviceCode("SVC-99213").negotiatedRate(BigDecimal.valueOf(75)).cashPrice(BigDecimal.valueOf(95)).build()
+                ))
+                .build());
+
+        var estimate = revenueContractService.estimatePrice(PriceEstimateRequest.builder()
+                .tenantId("tenant-a")
+                .versionId(publish.getVersionId())
+                .serviceCode("SVC-UNKNOWN")
+                .units(1)
+                .correlationId("corr-price-est")
+                .actor("test")
+                .build());
+
+        assertThat(estimate.getErrorCode()).isEqualTo(RevenueErrorCode.VALIDATION_ERROR);
     }
 }

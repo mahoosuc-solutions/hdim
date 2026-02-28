@@ -5,12 +5,21 @@ import com.healthdata.payer.revenue.RevenueErrorCode;
 import com.healthdata.payer.revenue.dto.*;
 import org.springframework.stereotype.Service;
 
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 @Service
 public class RevenueContractService {
@@ -24,6 +33,9 @@ public class RevenueContractService {
     private final Map<String, RevenueClaimState> claimStatusByClaimId = new ConcurrentHashMap<>();
     private final Map<String, BigDecimal> claimTotalByClaimId = new ConcurrentHashMap<>();
     private final Map<String, List<RevenueAuditEnvelope>> auditByCorrelationId = new ConcurrentHashMap<>();
+    private final Map<String, PriceTransparencySnapshot> priceTransparencySnapshotsByVersionId = new ConcurrentHashMap<>();
+    private final Map<String, String> currentPriceTransparencyVersionByTenant = new ConcurrentHashMap<>();
+    private final AtomicLong priceTransparencyVersionSequence = new AtomicLong(0L);
 
     public RevenueContractService() {
         this(
@@ -285,6 +297,221 @@ public class RevenueContractService {
         return auditByCorrelationId.getOrDefault(correlationId, List.of());
     }
 
+    public PriceTransparencyRatePublishResponse publishPriceTransparencyRates(PriceTransparencyRatePublishRequest request) {
+        List<PriceTransparencyRateEntry> normalizedRates = normalizeRates(request.getRates());
+        validateDuplicateServiceCodes(normalizedRates);
+
+        String versionId = "PTR-" + priceTransparencyVersionSequence.incrementAndGet();
+        String checksum = computeChecksum(normalizedRates);
+        Instant publishedAt = Instant.now();
+
+        PriceTransparencySnapshot snapshot = new PriceTransparencySnapshot(
+                request.getTenantId(),
+                versionId,
+                request.getSourceReference(),
+                checksum,
+                publishedAt,
+                request.getActor(),
+                normalizedRates
+        );
+        priceTransparencySnapshotsByVersionId.put(versionId, snapshot);
+        currentPriceTransparencyVersionByTenant.put(request.getTenantId(), versionId);
+
+        PriceTransparencyRatePublishResponse response = PriceTransparencyRatePublishResponse.builder()
+                .tenantId(request.getTenantId())
+                .versionId(versionId)
+                .sourceReference(request.getSourceReference())
+                .checksum(checksum)
+                .lineItemCount(normalizedRates.size())
+                .publishedAt(publishedAt)
+                .publishedBy(request.getActor())
+                .auditEnvelope(audit(
+                        request.getTenantId(),
+                        request.getCorrelationId(),
+                        request.getActor(),
+                        "PRICE_TRANSPARENCY_PUBLISH",
+                        "VERSION_PUBLISHED"))
+                .build();
+        appendAudit(request.getCorrelationId(), response.getAuditEnvelope());
+        return response;
+    }
+
+    public PriceTransparencyRatesViewResponse getCurrentPriceTransparencyRates(
+            String tenantId,
+            String correlationId,
+            String actor
+    ) {
+        String versionId = currentPriceTransparencyVersionByTenant.get(tenantId);
+        if (versionId == null) {
+            return null;
+        }
+        return getPriceTransparencyRatesVersion(tenantId, versionId, correlationId, actor);
+    }
+
+    public PriceTransparencyRatesViewResponse getPriceTransparencyRatesVersion(
+            String tenantId,
+            String versionId,
+            String correlationId,
+            String actor
+    ) {
+        PriceTransparencySnapshot snapshot = priceTransparencySnapshotsByVersionId.get(versionId);
+        if (snapshot == null || !snapshot.tenantId().equals(tenantId)) {
+            return null;
+        }
+
+        PriceTransparencyRatesViewResponse response = PriceTransparencyRatesViewResponse.builder()
+                .tenantId(snapshot.tenantId())
+                .versionId(snapshot.versionId())
+                .sourceReference(snapshot.sourceReference())
+                .checksum(snapshot.checksum())
+                .publishedAt(snapshot.publishedAt())
+                .publishedBy(snapshot.publishedBy())
+                .rates(new ArrayList<>(snapshot.rates()))
+                .auditEnvelope(audit(
+                        tenantId,
+                        correlationId,
+                        actor,
+                        "PRICE_TRANSPARENCY_READ_VERSION",
+                        "VERSION_RETURNED"))
+                .build();
+        appendAudit(correlationId, response.getAuditEnvelope());
+        return response;
+    }
+
+    public boolean hasPriceTransparencyVersion(String tenantId, String versionId) {
+        PriceTransparencySnapshot snapshot = priceTransparencySnapshotsByVersionId.get(versionId);
+        return snapshot != null && snapshot.tenantId().equals(tenantId);
+    }
+
+    public PriceEstimateResponse estimatePrice(PriceEstimateRequest request) {
+        String resolvedVersionId = request.getVersionId();
+        if (resolvedVersionId == null || resolvedVersionId.isBlank()) {
+            resolvedVersionId = currentPriceTransparencyVersionByTenant.get(request.getTenantId());
+        }
+
+        if (resolvedVersionId == null) {
+            PriceEstimateResponse response = PriceEstimateResponse.builder()
+                    .tenantId(request.getTenantId())
+                    .serviceCode(request.getServiceCode())
+                    .units(request.getUnits())
+                    .correlationId(request.getCorrelationId())
+                    .errorCode(RevenueErrorCode.NON_RETRYABLE_UPSTREAM)
+                    .auditEnvelope(audit(
+                            request.getTenantId(),
+                            request.getCorrelationId(),
+                            request.getActor(),
+                            "PRICE_ESTIMATE",
+                            "NO_ACTIVE_VERSION"))
+                    .build();
+            appendAudit(request.getCorrelationId(), response.getAuditEnvelope());
+            return response;
+        }
+
+        PriceTransparencySnapshot snapshot = priceTransparencySnapshotsByVersionId.get(resolvedVersionId);
+        if (snapshot == null || !snapshot.tenantId().equals(request.getTenantId())) {
+            PriceEstimateResponse response = PriceEstimateResponse.builder()
+                    .tenantId(request.getTenantId())
+                    .versionId(resolvedVersionId)
+                    .serviceCode(request.getServiceCode())
+                    .units(request.getUnits())
+                    .correlationId(request.getCorrelationId())
+                    .errorCode(RevenueErrorCode.NON_RETRYABLE_UPSTREAM)
+                    .auditEnvelope(audit(
+                            request.getTenantId(),
+                            request.getCorrelationId(),
+                            request.getActor(),
+                            "PRICE_ESTIMATE",
+                            "VERSION_NOT_FOUND"))
+                    .build();
+            appendAudit(request.getCorrelationId(), response.getAuditEnvelope());
+            return response;
+        }
+
+        PriceTransparencyRateEntry rateEntry = snapshot.rates().stream()
+                .filter(item -> item.getServiceCode().equals(request.getServiceCode()))
+                .findFirst()
+                .orElse(null);
+        if (rateEntry == null) {
+            PriceEstimateResponse response = PriceEstimateResponse.builder()
+                    .tenantId(request.getTenantId())
+                    .versionId(resolvedVersionId)
+                    .serviceCode(request.getServiceCode())
+                    .units(request.getUnits())
+                    .correlationId(request.getCorrelationId())
+                    .errorCode(RevenueErrorCode.VALIDATION_ERROR)
+                    .auditEnvelope(audit(
+                            request.getTenantId(),
+                            request.getCorrelationId(),
+                            request.getActor(),
+                            "PRICE_ESTIMATE",
+                            "SERVICE_CODE_NOT_FOUND"))
+                    .build();
+            appendAudit(request.getCorrelationId(), response.getAuditEnvelope());
+            return response;
+        }
+
+        BigDecimal unitRate = rateEntry.getNegotiatedRate().setScale(2, RoundingMode.HALF_UP);
+        BigDecimal estimatedAllowedAmount = unitRate
+                .multiply(BigDecimal.valueOf(request.getUnits()))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal estimatedPatientResponsibility = estimatedAllowedAmount
+                .multiply(BigDecimal.valueOf(0.20d))
+                .setScale(2, RoundingMode.HALF_UP);
+
+        PriceEstimateResponse response = PriceEstimateResponse.builder()
+                .tenantId(request.getTenantId())
+                .versionId(resolvedVersionId)
+                .serviceCode(request.getServiceCode())
+                .units(request.getUnits())
+                .unitRate(unitRate)
+                .estimatedAllowedAmount(estimatedAllowedAmount)
+                .estimatedPatientResponsibility(estimatedPatientResponsibility)
+                .correlationId(request.getCorrelationId())
+                .auditEnvelope(audit(
+                        request.getTenantId(),
+                        request.getCorrelationId(),
+                        request.getActor(),
+                        "PRICE_ESTIMATE",
+                        "ESTIMATE_READY"))
+                .build();
+        appendAudit(request.getCorrelationId(), response.getAuditEnvelope());
+        return response;
+    }
+
+    private List<PriceTransparencyRateEntry> normalizeRates(List<PriceTransparencyRateEntry> rates) {
+        return rates.stream()
+                .map(rate -> PriceTransparencyRateEntry.builder()
+                        .serviceCode(rate.getServiceCode())
+                        .negotiatedRate(rate.getNegotiatedRate().setScale(2, RoundingMode.HALF_UP))
+                        .cashPrice(rate.getCashPrice().setScale(2, RoundingMode.HALF_UP))
+                        .build())
+                .sorted(Comparator.comparing(PriceTransparencyRateEntry::getServiceCode))
+                .collect(Collectors.toList());
+    }
+
+    private void validateDuplicateServiceCodes(List<PriceTransparencyRateEntry> rates) {
+        long uniqueCodes = rates.stream()
+                .map(PriceTransparencyRateEntry::getServiceCode)
+                .distinct()
+                .count();
+        if (uniqueCodes != rates.size()) {
+            throw new IllegalArgumentException("Duplicate serviceCode values are not allowed");
+        }
+    }
+
+    private String computeChecksum(List<PriceTransparencyRateEntry> rates) {
+        String payload = rates.stream()
+                .map(rate -> rate.getServiceCode() + "|" + rate.getNegotiatedRate() + "|" + rate.getCashPrice())
+                .collect(Collectors.joining(";"));
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(payload.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
+
     private void appendAudit(String correlationId, RevenueAuditEnvelope envelope) {
         auditByCorrelationId
                 .computeIfAbsent(correlationId, unused -> new CopyOnWriteArrayList<>())
@@ -306,5 +533,16 @@ public class RevenueContractService {
                 .action(action)
                 .outcome(outcome)
                 .build();
+    }
+
+    private record PriceTransparencySnapshot(
+            String tenantId,
+            String versionId,
+            String sourceReference,
+            String checksum,
+            Instant publishedAt,
+            String publishedBy,
+            List<PriceTransparencyRateEntry> rates
+    ) {
     }
 }

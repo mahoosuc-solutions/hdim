@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT_DIR"
 
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.demo.yml}"
-NETWORK_NAME="${NETWORK_NAME:-hdim-demo-network}"
+NETWORK_NAME="${NETWORK_NAME:-}"
 BUILD_WAVE1_IMAGES="${BUILD_WAVE1_IMAGES:-true}"
 
 PAYER_IMAGE="${PAYER_IMAGE:-hdim-payer-workflows-service:wave1-local}"
@@ -40,11 +40,24 @@ wait_for_url() {
 echo "Starting demo stack using $COMPOSE_FILE"
 docker compose -f "$COMPOSE_FILE" up -d
 
+if [[ -z "$NETWORK_NAME" ]]; then
+  NETWORK_NAME="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' hdim-demo-gateway-edge 2>/dev/null || true)"
+  if [[ -z "$NETWORK_NAME" ]]; then
+    NETWORK_NAME="hdim-demo-network"
+  fi
+fi
+echo "Using Docker network: $NETWORK_NAME"
+
 wait_for_url "http://127.0.0.1:18080/actuator/health" "gateway-edge"
 
 echo "Ensuring Wave-1 validation databases exist"
-docker exec hdim-demo-postgres psql -U healthdata -d postgres -c "SELECT 'CREATE DATABASE payer_workflows_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'payer_workflows_db')\\gexec" >/dev/null
-docker exec hdim-demo-postgres psql -U healthdata -d postgres -c "SELECT 'CREATE DATABASE data_ingestion_db' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'data_ingestion_db')\\gexec" >/dev/null
+if ! docker exec hdim-demo-postgres psql -U healthdata -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'payer_workflows_db'" | grep -q 1; then
+  docker exec hdim-demo-postgres psql -U healthdata -d postgres -c "CREATE DATABASE payer_workflows_db" >/dev/null
+fi
+
+if ! docker exec hdim-demo-postgres psql -U healthdata -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = 'data_ingestion_db'" | grep -q 1; then
+  docker exec hdim-demo-postgres psql -U healthdata -d postgres -c "CREATE DATABASE data_ingestion_db" >/dev/null
+fi
 
 if [[ "$BUILD_WAVE1_IMAGES" == "true" ]]; then
   echo "Building Wave-1 service images"

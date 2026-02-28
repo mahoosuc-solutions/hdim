@@ -374,6 +374,8 @@ services:
       BACKEND_SERVICES_HCC_URL: http://hcc-service:8105
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
+      BACKEND_SERVICES_PAYER_WORKFLOWS_URL: http://payer-workflows-service:8098/api/v1/revenue
+      BACKEND_SERVICES_DATA_INGESTION_URL: http://data-ingestion-service:8080/api/v1/interoperability/adt
       # Authentication enforcement - require JWT tokens for all protected endpoints
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"

@@ -26,7 +26,7 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 | Idempotency/replay scaffold | `RevenueContractService.claimSubmissionsByIdempotencyKey` | Service test coverage + controller contract tests | Implemented |
 | Audit trail scaffold | `RevenueAuditEnvelope`, `/api/v1/revenue/audit/{correlationId}` | `RevenueContractControllerTest.shouldReturnAuditTrail` | Implemented |
 | Remittance event contract object | `RemittanceAdviceEvent`, `ReconciliationPreviewResponse`, `/api/v1/revenue/remittance/advice` | `RevenueContractControllerTest.shouldReturnReconciliationPreview`, `RevenueContractServiceTest.*` | Implemented |
-| Adapter timeout/retry/backoff behavior | (Not yet added) | N/A | Gap |
+| Adapter timeout/retry/backoff behavior | `ClearinghouseSubmissionAdapter` + retry loop in `RevenueContractService.submitClaim` | `RevenueContractServiceTest.shouldRetryAndEventuallySucceed`, `shouldFailAfterRetryExhaustion` | Implemented |
 
 ## Issue #507: HIE/ADT Exchange Backbone
 
@@ -63,4 +63,4 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 
 1. Add dedicated service-level tests for revenue idempotency replay, illegal transitions, and audit append order.
 2. Add state transition guard tests for illegal financial transitions (e.g., `PAID` to `PARTIALLY_PAID`).
-3. Add integration tests with adapter stubs for retry/backoff and upstream timeout taxonomy.
+3. Add integration tests that execute with real HTTP adapter stubs, not in-memory lambda adapters.

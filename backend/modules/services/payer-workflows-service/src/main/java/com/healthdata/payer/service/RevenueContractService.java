@@ -14,11 +14,36 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class RevenueContractService {
+    private static final int MAX_SUBMISSION_ATTEMPTS = 3;
+    private static final long INITIAL_BACKOFF_MILLIS = 100L;
+
+    private final ClearinghouseSubmissionAdapter clearinghouseSubmissionAdapter;
+    private final ClearinghouseBackoffExecutor backoffExecutor;
 
     private final Map<String, ClaimSubmissionResponse> claimSubmissionsByIdempotencyKey = new ConcurrentHashMap<>();
     private final Map<String, RevenueClaimState> claimStatusByClaimId = new ConcurrentHashMap<>();
     private final Map<String, BigDecimal> claimTotalByClaimId = new ConcurrentHashMap<>();
     private final Map<String, List<RevenueAuditEnvelope>> auditByCorrelationId = new ConcurrentHashMap<>();
+
+    public RevenueContractService() {
+        this(
+                (request, attempt) -> new ClearinghouseSubmissionResult(
+                        true,
+                        "ACK-" + request.getClaimId() + "-A" + attempt
+                ),
+                millis -> {
+                    // Intentionally no-op in current scaffold.
+                }
+        );
+    }
+
+    RevenueContractService(
+            ClearinghouseSubmissionAdapter clearinghouseSubmissionAdapter,
+            ClearinghouseBackoffExecutor backoffExecutor
+    ) {
+        this.clearinghouseSubmissionAdapter = clearinghouseSubmissionAdapter;
+        this.backoffExecutor = backoffExecutor;
+    }
 
     public ClaimSubmissionResponse submitClaim(ClaimSubmissionRequest request) {
         ClaimSubmissionResponse existing = claimSubmissionsByIdempotencyKey.get(request.getIdempotencyKey());
@@ -46,22 +71,52 @@ public class RevenueContractService {
                     .build();
         }
 
-        RevenueClaimState status = RevenueClaimState.SUBMITTED;
-        claimStatusByClaimId.put(request.getClaimId(), status);
+        claimStatusByClaimId.put(request.getClaimId(), RevenueClaimState.PENDING_SUBMIT);
         claimTotalByClaimId.put(request.getClaimId(), request.getTotalAmount());
 
+        int attempt = 1;
+        long backoff = INITIAL_BACKOFF_MILLIS;
+        RevenueClaimState finalStatus = RevenueClaimState.REJECTED;
+        RevenueErrorCode errorCode = null;
+        String outcome = "SUBMISSION_REJECTED";
+        while (attempt <= MAX_SUBMISSION_ATTEMPTS) {
+            try {
+                ClearinghouseSubmissionResult result = clearinghouseSubmissionAdapter.submit(request, attempt);
+                finalStatus = result.accepted() ? RevenueClaimState.SUBMITTED : RevenueClaimState.REJECTED;
+                outcome = "SUBMITTED";
+                break;
+            } catch (NonRetryableClearinghouseException e) {
+                finalStatus = RevenueClaimState.REJECTED;
+                errorCode = RevenueErrorCode.NON_RETRYABLE_UPSTREAM;
+                outcome = "NON_RETRYABLE_REJECTED";
+                break;
+            } catch (RetryableClearinghouseException e) {
+                if (attempt == MAX_SUBMISSION_ATTEMPTS) {
+                    finalStatus = RevenueClaimState.REJECTED;
+                    errorCode = RevenueErrorCode.UPSTREAM_TIMEOUT;
+                    outcome = "RETRY_EXHAUSTED";
+                    break;
+                }
+                backoffExecutor.backoff(backoff);
+                backoff = backoff * 2;
+                attempt++;
+            }
+        }
+
+        claimStatusByClaimId.put(request.getClaimId(), finalStatus);
         ClaimSubmissionResponse response = ClaimSubmissionResponse.builder()
                 .tenantId(request.getTenantId())
                 .claimId(request.getClaimId())
                 .correlationId(request.getCorrelationId())
-                .status(status)
+                .status(finalStatus)
                 .duplicate(false)
+                .errorCode(errorCode)
                 .auditEnvelope(audit(
                         request.getTenantId(),
                         request.getCorrelationId(),
                         request.getActor(),
                         "CLAIM_SUBMISSION",
-                        "SUBMITTED"))
+                        outcome))
                 .build();
 
         claimSubmissionsByIdempotencyKey.put(request.getIdempotencyKey(), response);

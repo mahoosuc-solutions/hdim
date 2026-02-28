@@ -9,10 +9,16 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
   - Result: `5 passed, 0 failed`
 - Revenue contract service tests:
   - Command: `./gradlew :modules:services:payer-workflows-service:test --tests com.healthdata.payer.service.RevenueContractServiceTest`
-  - Result: `2 passed, 0 failed`
+  - Result: `5 passed, 0 failed`
+- Revenue adapter contract tests (HTTP-level stubs):
+  - Command: `./gradlew :modules:services:payer-workflows-service:test --tests com.healthdata.payer.service.RestClearinghouseSubmissionAdapterTest`
+  - Result: `3 passed, 0 failed`
 - ADT interoperability controller tests:
   - Command: `./gradlew :modules:services:data-ingestion-service:test --tests com.healthdata.ingestion.api.v1.AdtInteroperabilityControllerTest`
   - Result: `6 passed, 0 failed`
+- Consolidated payer increment run:
+  - Command: `./gradlew :modules:services:payer-workflows-service:test --tests com.healthdata.payer.service.RevenueContractServiceTest --tests com.healthdata.payer.service.RestClearinghouseSubmissionAdapterTest --tests com.healthdata.payer.controller.RevenueContractControllerTest`
+  - Result: `13 passed, 0 failed`
 
 ## Issue #506: Revenue Cycle Backbone
 
@@ -26,7 +32,8 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 | Idempotency/replay scaffold | `RevenueContractService.claimSubmissionsByIdempotencyKey` | Service test coverage + controller contract tests | Implemented |
 | Audit trail scaffold | `RevenueAuditEnvelope`, `/api/v1/revenue/audit/{correlationId}` | `RevenueContractControllerTest.shouldReturnAuditTrail` | Implemented |
 | Remittance event contract object | `RemittanceAdviceEvent`, `ReconciliationPreviewResponse`, `/api/v1/revenue/remittance/advice` | `RevenueContractControllerTest.shouldReturnReconciliationPreview`, `RevenueContractServiceTest.*` | Implemented |
-| Adapter timeout/retry/backoff behavior | `ClearinghouseSubmissionAdapter` + retry loop in `RevenueContractService.submitClaim` | `RevenueContractServiceTest.shouldRetryAndEventuallySucceed`, `shouldFailAfterRetryExhaustion` | Implemented |
+| Adapter timeout/retry/backoff behavior | `ClearinghouseSubmissionAdapter`, `RestClearinghouseSubmissionAdapter` + retry loop in `RevenueContractService.submitClaim` | `RevenueContractServiceTest.shouldRetryAndEventuallySucceed`, `shouldFailAfterRetryExhaustion`, `RestClearinghouseSubmissionAdapterTest.*` | Implemented |
+| Illegal state-transition guard | `RevenueContractService.isAllowedTransition` | `RevenueContractServiceTest.shouldBlockIllegalPaidToPartialRegression` | Implemented |
 
 ## Issue #507: HIE/ADT Exchange Backbone
 
@@ -61,6 +68,5 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 
 ## Residual Risk / Next TDD Increments
 
-1. Add dedicated service-level tests for revenue idempotency replay, illegal transitions, and audit append order.
-2. Add state transition guard tests for illegal financial transitions (e.g., `PAID` to `PARTIALLY_PAID`).
-3. Add integration tests that execute with real HTTP adapter stubs, not in-memory lambda adapters.
+1. Add dedicated service-level tests for revenue idempotency replay and audit append ordering guarantees.
+2. Add integration tests that execute against deployed adapter stubs in containerized environments, beyond in-process HTTP mock server tests.

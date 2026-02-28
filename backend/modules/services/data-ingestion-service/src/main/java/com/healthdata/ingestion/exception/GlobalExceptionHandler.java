@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,6 +60,20 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error("Invalid Argument")
                 .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadablePayload(
+            HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Malformed JSON payload at {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Malformed Request")
+                .message("Request body is not valid JSON")
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity.badRequest().body(body);

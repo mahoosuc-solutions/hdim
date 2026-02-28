@@ -6,6 +6,7 @@ import com.healthdata.ingestion.interoperability.dto.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -40,6 +41,17 @@ public class AdtExchangeService {
                     .state(AdtEventState.REJECTED)
                     .errorCode(InteroperabilityErrorCode.UNSUPPORTED_EVENT_TYPE)
                     .auditEnvelope(audit(request, "UNSUPPORTED_EVENT_TYPE"))
+                    .build();
+        }
+
+        if (isUnmatchedPatient(request.getPatientExternalId())) {
+            return AdtMessageIngestResponse.builder()
+                    .tenantId(request.getTenantId())
+                    .sourceMessageId(request.getSourceMessageId())
+                    .correlationId(request.getCorrelationId())
+                    .state(AdtEventState.REJECTED)
+                    .errorCode(InteroperabilityErrorCode.PATIENT_MATCH_FAILED)
+                    .auditEnvelope(audit(request, "PATIENT_MATCH_FAILED"))
                     .build();
         }
 
@@ -138,5 +150,10 @@ public class AdtExchangeService {
                 .timestamp(Instant.now())
                 .outcome(outcome)
                 .build();
+    }
+
+    private boolean isUnmatchedPatient(String patientExternalId) {
+        return "UNMATCHED".equalsIgnoreCase(patientExternalId)
+                || patientExternalId.toLowerCase(Locale.ROOT).startsWith("unknown-");
     }
 }

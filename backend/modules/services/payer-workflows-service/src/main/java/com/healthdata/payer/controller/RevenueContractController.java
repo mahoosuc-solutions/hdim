@@ -43,6 +43,14 @@ public class RevenueContractController {
         return ResponseEntity.ok(revenueContractService.checkClaimStatus(request));
     }
 
+    @PostMapping("/remittance/advice")
+    @Operation(summary = "Ingest remittance advice and return reconciliation preview")
+    public ResponseEntity<ReconciliationPreviewResponse> ingestRemittanceAdvice(
+            @Valid @RequestBody RemittanceAdviceEvent request
+    ) {
+        return ResponseEntity.ok(revenueContractService.ingestRemittanceAdvice(request));
+    }
+
     @GetMapping("/audit/{correlationId}")
     @Operation(summary = "Get revenue audit envelopes by correlation id")
     public ResponseEntity<List<RevenueAuditEnvelope>> getAuditTrail(@PathVariable String correlationId) {

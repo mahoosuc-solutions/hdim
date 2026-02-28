@@ -6,10 +6,13 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 
 - Revenue contract controller tests:
   - Command: `./gradlew :modules:services:payer-workflows-service:test --tests com.healthdata.payer.controller.RevenueContractControllerTest`
-  - Result: `4 passed, 0 failed`
+  - Result: `5 passed, 0 failed`
+- Revenue contract service tests:
+  - Command: `./gradlew :modules:services:payer-workflows-service:test --tests com.healthdata.payer.service.RevenueContractServiceTest`
+  - Result: `2 passed, 0 failed`
 - ADT interoperability controller tests:
   - Command: `./gradlew :modules:services:data-ingestion-service:test --tests com.healthdata.ingestion.api.v1.AdtInteroperabilityControllerTest`
-  - Result: `4 passed, 0 failed`
+  - Result: `6 passed, 0 failed`
 
 ## Issue #506: Revenue Cycle Backbone
 
@@ -20,9 +23,9 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 | `POST /api/v1/revenue/claim-status/checks` | `RevenueContractController.checkClaimStatus` | `RevenueContractControllerTest.shouldReturnClaimStatus` | Implemented |
 | Core DTO scaffolding | `ClaimSubmission*`, `EligibilityCheck*`, `ClaimStatus*`, `RevenueAuditEnvelope` | Compile + controller tests | Implemented |
 | Error taxonomy scaffold | `RevenueErrorCode` enum | Compile-time contract presence | Implemented |
-| Idempotency/replay scaffold | `RevenueContractService.claimSubmissionsByIdempotencyKey` | Service logic path covered by controller contract shape; dedicated service tests pending | Partial |
+| Idempotency/replay scaffold | `RevenueContractService.claimSubmissionsByIdempotencyKey` | Service test coverage + controller contract tests | Implemented |
 | Audit trail scaffold | `RevenueAuditEnvelope`, `/api/v1/revenue/audit/{correlationId}` | `RevenueContractControllerTest.shouldReturnAuditTrail` | Implemented |
-| Remittance event contract object | (Not yet added) | N/A | Gap |
+| Remittance event contract object | `RemittanceAdviceEvent`, `ReconciliationPreviewResponse`, `/api/v1/revenue/remittance/advice` | `RevenueContractControllerTest.shouldReturnReconciliationPreview`, `RevenueContractServiceTest.*` | Implemented |
 | Adapter timeout/retry/backoff behavior | (Not yet added) | N/A | Gap |
 
 ## Issue #507: HIE/ADT Exchange Backbone
@@ -35,8 +38,8 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 | Core DTO scaffolding | `AdtMessageIngest*`, `AdtAcknowledgement*`, `EncounterEventRecord`, `InteroperabilityAuditEnvelope` | Compile + controller tests | Implemented |
 | Error taxonomy scaffold | `InteroperabilityErrorCode` enum | `shouldRejectUnsupportedEventType` | Implemented |
 | Idempotency/replay scaffold | `eventIdBySourceMessageId` map in `AdtExchangeService` | `shouldSuppressDuplicateMessageReplay` | Implemented |
-| Allowlist/source authz scaffold | `SOURCE_ALLOWLIST` in `AdtExchangeService` | Covered by ingest decision logic; explicit denial test pending | Partial |
-| Deterministic patient-match failure path | (Not yet added) | N/A | Gap |
+| Allowlist/source authz scaffold | `SOURCE_ALLOWLIST` in `AdtExchangeService` | `shouldRejectUnauthorizedSourceSystem` | Implemented |
+| Deterministic patient-match failure path | `isUnmatchedPatient` in `AdtExchangeService` | `shouldRejectUnmatchedPatient` | Implemented |
 | Downstream routing failure handling (`PARTIAL_ROUTE_FAILURE`) | enum + placeholder only | N/A | Gap |
 
 ## Code Artifacts Added
@@ -59,6 +62,5 @@ This matrix maps locked contract requirements from GitHub issues `#506` and `#50
 ## Residual Risk / Next TDD Increments
 
 1. Add dedicated service-level tests for revenue idempotency replay, illegal transitions, and audit append order.
-2. Add ADT negative tests for unauthorized source denial and patient-match failure.
-3. Implement and test `RemittanceAdviceEvent` mapping and reconciliation preview contract for `#506`.
-4. Add integration tests with adapter stubs for retry/backoff and upstream timeout taxonomy.
+2. Add state transition guard tests for illegal financial transitions (e.g., `PAID` to `PARTIALLY_PAID`).
+3. Add integration tests with adapter stubs for retry/backoff and upstream timeout taxonomy.

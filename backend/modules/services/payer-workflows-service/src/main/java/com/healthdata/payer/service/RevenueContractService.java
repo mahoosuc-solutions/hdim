@@ -6,6 +6,7 @@ import com.healthdata.payer.revenue.dto.*;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,6 +17,7 @@ public class RevenueContractService {
 
     private final Map<String, ClaimSubmissionResponse> claimSubmissionsByIdempotencyKey = new ConcurrentHashMap<>();
     private final Map<String, RevenueClaimState> claimStatusByClaimId = new ConcurrentHashMap<>();
+    private final Map<String, BigDecimal> claimTotalByClaimId = new ConcurrentHashMap<>();
     private final Map<String, List<RevenueAuditEnvelope>> auditByCorrelationId = new ConcurrentHashMap<>();
 
     public ClaimSubmissionResponse submitClaim(ClaimSubmissionRequest request) {
@@ -46,6 +48,7 @@ public class RevenueContractService {
 
         RevenueClaimState status = RevenueClaimState.SUBMITTED;
         claimStatusByClaimId.put(request.getClaimId(), status);
+        claimTotalByClaimId.put(request.getClaimId(), request.getTotalAmount());
 
         ClaimSubmissionResponse response = ClaimSubmissionResponse.builder()
                 .tenantId(request.getTenantId())
@@ -62,6 +65,60 @@ public class RevenueContractService {
                 .build();
 
         claimSubmissionsByIdempotencyKey.put(request.getIdempotencyKey(), response);
+        appendAudit(response.getCorrelationId(), response.getAuditEnvelope());
+        return response;
+    }
+
+    public ReconciliationPreviewResponse ingestRemittanceAdvice(RemittanceAdviceEvent request) {
+        RevenueClaimState priorStatus = claimStatusByClaimId.get(request.getClaimId());
+        BigDecimal claimTotal = claimTotalByClaimId.get(request.getClaimId());
+        if (priorStatus == null || claimTotal == null) {
+            ReconciliationPreviewResponse response = ReconciliationPreviewResponse.builder()
+                    .tenantId(request.getTenantId())
+                    .claimId(request.getClaimId())
+                    .remittanceId(request.getRemittanceId())
+                    .correlationId(request.getCorrelationId())
+                    .priorStatus(RevenueClaimState.REJECTED)
+                    .newStatus(RevenueClaimState.REJECTED)
+                    .paidAmount(request.getPaymentAmount())
+                    .adjustmentAmount(request.getAdjustmentAmount())
+                    .remainingBalance(BigDecimal.ZERO)
+                    .errorCode(RevenueErrorCode.NON_RETRYABLE_UPSTREAM)
+                    .auditEnvelope(audit(
+                            request.getTenantId(),
+                            request.getCorrelationId(),
+                            request.getActor(),
+                            "REMITTANCE_INGEST",
+                            "CLAIM_NOT_FOUND"))
+                    .build();
+            appendAudit(response.getCorrelationId(), response.getAuditEnvelope());
+            return response;
+        }
+
+        BigDecimal applied = request.getPaymentAmount().add(request.getAdjustmentAmount());
+        BigDecimal remainingBalance = claimTotal.subtract(applied);
+        RevenueClaimState newStatus = remainingBalance.compareTo(BigDecimal.ZERO) <= 0
+                ? RevenueClaimState.PAID
+                : RevenueClaimState.PARTIALLY_PAID;
+        claimStatusByClaimId.put(request.getClaimId(), newStatus);
+
+        ReconciliationPreviewResponse response = ReconciliationPreviewResponse.builder()
+                .tenantId(request.getTenantId())
+                .claimId(request.getClaimId())
+                .remittanceId(request.getRemittanceId())
+                .correlationId(request.getCorrelationId())
+                .priorStatus(priorStatus)
+                .newStatus(newStatus)
+                .paidAmount(request.getPaymentAmount())
+                .adjustmentAmount(request.getAdjustmentAmount())
+                .remainingBalance(remainingBalance.max(BigDecimal.ZERO))
+                .auditEnvelope(audit(
+                        request.getTenantId(),
+                        request.getCorrelationId(),
+                        request.getActor(),
+                        "REMITTANCE_INGEST",
+                        "RECONCILIATION_PREVIEW_READY"))
+                .build();
         appendAudit(response.getCorrelationId(), response.getAuditEnvelope());
         return response;
     }

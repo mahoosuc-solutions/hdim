@@ -133,6 +133,40 @@ class RevenueContractControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/revenue/remittance/advice returns reconciliation preview")
+    void shouldReturnReconciliationPreview() throws Exception {
+        when(revenueContractService.ingestRemittanceAdvice(any())).thenReturn(ReconciliationPreviewResponse.builder()
+                .tenantId("tenant-a")
+                .claimId("clm-remit")
+                .remittanceId("rem-001")
+                .correlationId("corr-remit")
+                .priorStatus(RevenueClaimState.SUBMITTED)
+                .newStatus(RevenueClaimState.PARTIALLY_PAID)
+                .remainingBalance(java.math.BigDecimal.valueOf(150))
+                .auditEnvelope(audit("tenant-a", "corr-remit", "REMITTANCE_INGEST", "RECONCILIATION_PREVIEW_READY"))
+                .build());
+
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "claimId":"clm-remit",
+              "remittanceId":"rem-001",
+              "paymentAmount":350.00,
+              "adjustmentAmount":0.00,
+              "correlationId":"corr-remit",
+              "actor":"system-test"
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/revenue/remittance/advice")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.newStatus").value("PARTIALLY_PAID"))
+                .andExpect(jsonPath("$.remainingBalance").value(150));
+    }
+
+    @Test
     @DisplayName("GET /api/v1/revenue/audit/{correlationId} returns audit envelopes")
     void shouldReturnAuditTrail() throws Exception {
         when(revenueContractService.getAuditTrail("corr-audit")).thenReturn(List.of(

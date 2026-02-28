@@ -137,8 +137,11 @@ backend:
       url: ${BACKEND_SERVICES_APPROVAL_URL:http://localhost:8097}
       timeout: 30000
     payer-workflows:
-      url: ${BACKEND_SERVICES_PAYER_WORKFLOWS_URL:http://localhost:8098}
+      url: ${BACKEND_SERVICES_PAYER_WORKFLOWS_URL:http://localhost:8098/api/v1/revenue}
       timeout: 60000  # Longer timeout for payer integrations
+    data-ingestion:
+      url: ${BACKEND_SERVICES_DATA_INGESTION_URL:http://localhost:8080/api/v1/interoperability/adt}
+      timeout: 60000
     migration-workflow:
       url: ${BACKEND_SERVICES_MIGRATION_WORKFLOW_URL:http://localhost:8103}
       timeout: 60000  # Longer timeout for migration operations

@@ -471,6 +471,8 @@ services:
       BACKEND_SERVICES_HCC_URL: http://hcc-service:8105/hcc
       BACKEND_SERVICES_ECR_URL: http://ecr-service:8101/ecr
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102/prior-auth
+      BACKEND_SERVICES_PAYER_WORKFLOWS_URL: http://payer-workflows-service:8098/api/v1/revenue
+      BACKEND_SERVICES_DATA_INGESTION_URL: http://data-ingestion-service:8080/api/v1/interoperability/adt
       BACKEND_SERVICES_AUDIT_URL: http://audit-query-service:8088/api/v1/audit
       AUTHENTICATION_COOKIE_SECURE: "false"
       AUTHENTICATION_COOKIE_SAME_SITE: "Lax"
@@ -711,6 +713,18 @@ services:
             }
 
             location ~ ^/api/v1/provider-access/ {
+                proxy_pass http://gateway_clinical;
+            }
+
+            location ~ ^/api/v1/revenue/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
+                proxy_pass http://gateway_clinical;
+            }
+
+            location ~ ^/api/v1/interoperability/adt/ {
+                if ($$http_x_tenant_id = "") { return 400; }
+                if ($$hdim_missing_auth = 1) { return 401; }
                 proxy_pass http://gateway_clinical;
             }
 

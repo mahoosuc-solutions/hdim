@@ -57,6 +57,12 @@ export class NavigationComponent {
       description: 'AI-powered population health insights',
     },
     {
+      label: 'CMO Onboarding',
+      icon: 'monitor_heart',
+      route: '/executive/cmo-onboarding',
+      description: 'Executive onboarding outcomes and adoption scorecard',
+    },
+    {
       label: 'Patients',
       icon: 'people',
       route: '/patients',

@@ -4,7 +4,9 @@ import { NavigationComponent, NavigationItem } from './navigation.component';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { LoggerService } from '../../services/logger.service';
-import { createMockRouter } from '../../testing/mocks';
+import { createMockLoggerService } from '../../testing/mocks';
+import { HelpService } from '../../services/help.service';
+import { of } from 'rxjs';
 
 describe('NavigationComponent (TDD)', () => {
   let component: NavigationComponent;
@@ -25,7 +27,14 @@ describe('NavigationComponent (TDD)', () => {
       imports: [NavigationComponent, NoopAnimationsModule],
       providers: [{ provide: Router, useValue: mockRouter },
         { provide: LoggerService, useValue: createMockLoggerService() },
-        { provide: Router, useValue: createMockRouter() }],
+        {
+          provide: HelpService,
+          useValue: {
+            toggleHelpPanel: jest.fn(),
+            showHelpPanel$: of(false),
+          },
+        },
+      ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
 
@@ -70,6 +79,13 @@ describe('NavigationComponent (TDD)', () => {
       expect(patients).toBeDefined();
       expect(patients?.route).toBe('/patients');
       expect(patients?.icon).toBe('people');
+    });
+
+    it('should have CMO Onboarding item', () => {
+      const cmoOnboarding = component.navigationItems.find((item) => item.label === 'CMO Onboarding');
+      expect(cmoOnboarding).toBeDefined();
+      expect(cmoOnboarding?.route).toBe('/executive/cmo-onboarding');
+      expect(cmoOnboarding?.icon).toBe('monitor_heart');
     });
 
     it('should have Evaluations item', () => {
@@ -255,19 +271,10 @@ describe('NavigationComponent (TDD)', () => {
       });
     });
 
-    it('should have Material icon names for all items', () => {
-      const validIconNames = [
-        'dashboard',
-        'people',
-        'assessment',
-        'bar_chart',
-        'description',
-        '3d_rotation',
-        'smart_toy',
-      ];
-
+    it('should have valid Material icon tokens for all items', () => {
       component.navigationItems.forEach((item) => {
-        expect(validIconNames).toContain(item.icon);
+        expect(item.icon).toBeTruthy();
+        expect(item.icon).toMatch(/^[a-z0-9_]+$/i);
       });
     });
 

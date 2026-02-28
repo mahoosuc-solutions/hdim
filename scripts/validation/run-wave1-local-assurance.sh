@@ -16,7 +16,10 @@ PERF_WARMUP="${PERF_WARMUP:-5}"
 PERF_BUDGET_REVENUE_CLAIM_STATUS_P95_MS="${PERF_BUDGET_REVENUE_CLAIM_STATUS_P95_MS:-120}"
 PERF_BUDGET_ADT_GET_EVENT_P95_MS="${PERF_BUDGET_ADT_GET_EVENT_P95_MS:-120}"
 PERF_BUDGET_PRICE_ESTIMATE_P95_MS="${PERF_BUDGET_PRICE_ESTIMATE_P95_MS:-150}"
+PERF_BUDGET_PRICE_ESTIMATE_LOAD_P95_MS="${PERF_BUDGET_PRICE_ESTIMATE_LOAD_P95_MS:-250}"
 PERF_TREND_WARN_THRESHOLD_PERCENT="${PERF_TREND_WARN_THRESHOLD_PERCENT:-15}"
+PERF_PRICE_ESTIMATE_LOAD_ENABLED="${PERF_PRICE_ESTIMATE_LOAD_ENABLED:-true}"
+PERF_PRICE_ESTIMATE_LOAD_SAMPLES="${PERF_PRICE_ESTIMATE_LOAD_SAMPLES:-120}"
 
 START_STACK="${START_STACK:-true}"
 STOP_STACK="${STOP_STACK:-true}"
@@ -85,6 +88,7 @@ measure_latency() {
   local payload="${4:-}"
   local expected_csv="${5:-200}"
   local p95_budget_ms="${6:-}"
+  local samples="${7:-$PERF_SAMPLES}"
 
   local -a latencies=()
   local success=0
@@ -100,7 +104,7 @@ measure_latency() {
     fi
   done
 
-  for i in $(seq 1 "$PERF_SAMPLES"); do
+  for i in $(seq 1 "$samples"); do
     if [[ -n "$payload" ]]; then
       curl_cmd="curl -sS -o /tmp/perf_${name}.json -w '%{http_code} %{time_total}' -X ${method} -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${payload}' ${IN_NETWORK_GATEWAY_URL}${path}"
     else
@@ -152,6 +156,26 @@ measure_latency() {
   fi
 }
 
+preflight_non_404() {
+  local name="$1"
+  local method="$2"
+  local path="$3"
+  local payload="${4:-}"
+
+  local code
+  if [[ -n "$payload" ]]; then
+    code="$(run_in_ops "curl -sS -o /tmp/preflight_${name}.json -w '%{http_code}' -X ${method} -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${payload}' ${IN_NETWORK_GATEWAY_URL}${path}")"
+  else
+    code="$(run_in_ops "curl -sS -o /tmp/preflight_${name}.json -w '%{http_code}' -X ${method} -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' ${IN_NETWORK_GATEWAY_URL}${path}")"
+  fi
+
+  if [[ "$code" == "404" ]]; then
+    fail "preflight.${name}" "status=404 route unavailable path=${path}"
+  else
+    pass "preflight.${name}" "status=${code} route available path=${path}"
+  fi
+}
+
 if [[ "$START_STACK" == "true" ]]; then
   BUILD_WAVE1_IMAGES="$BUILD_WAVE1_IMAGES" INGEST_IMAGE="$INGEST_IMAGE" ./scripts/validation/start-wave1-validation-stack.sh
 fi
@@ -163,6 +187,12 @@ if [[ -n "$auth_token" ]]; then
 else
   fail "auth.token_acquired" "accessToken missing"
 fi
+
+# Detect missing gateway/backend route wiring before full assurance run.
+preflight_non_404 "revenue_claim_submission_route" "POST" "/api/v1/revenue/claims/submissions" "{"
+preflight_non_404 "adt_ingest_route" "POST" "/api/v1/interoperability/adt/messages" "{"
+preflight_non_404 "price_publish_route" "POST" "/api/v1/revenue/price-transparency/rates/publish" "{"
+preflight_non_404 "price_estimate_route" "POST" "/api/v1/revenue/price-transparency/estimates" "{"
 
 echo "Running baseline Wave-1 smoke in demo network"
 set +e
@@ -279,6 +309,27 @@ expect_code "price.reject_missing_tenant" "$price_no_tenant_code" "400"
 price_bad_json_code="$(run_in_ops "curl -sS -o /tmp/price_bad_json.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '{' ${IN_NETWORK_GATEWAY_URL}/api/v1/revenue/price-transparency/estimates")"
 expect_code "price.reject_malformed_payload" "$price_bad_json_code" "400,422"
 
+price_duplicate_payload="{\"tenantId\":\"${TENANT_ID}\",\"sourceReference\":\"cms-rate-file-dupe-${timestamp}\",\"correlationId\":\"ASSURE-PRICE-DUPE-${timestamp}\",\"actor\":\"assurance\",\"rates\":[{\"serviceCode\":\"SVC-99213\",\"negotiatedRate\":75.00,\"cashPrice\":95.00},{\"serviceCode\":\"SVC-99213\",\"negotiatedRate\":80.00,\"cashPrice\":99.00}]}"
+price_duplicate_code="$(run_in_ops "curl -sS -o /tmp/price_duplicate.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${price_duplicate_payload}' ${IN_NETWORK_GATEWAY_URL}/api/v1/revenue/price-transparency/rates/publish")"
+expect_code "price.reject_duplicate_service_codes" "$price_duplicate_code" "400,422"
+
+price_missing_version_payload="{\"tenantId\":\"${TENANT_ID}\",\"versionId\":\"PTR-NOT-FOUND\",\"serviceCode\":\"SVC-99213\",\"units\":2,\"correlationId\":\"ASSURE-PRICE-VERSION-MISS-${timestamp}\",\"actor\":\"assurance\"}"
+price_missing_version_code="$(run_in_ops "curl -sS -o /tmp/price_missing_version.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${price_missing_version_payload}' ${IN_NETWORK_GATEWAY_URL}/api/v1/revenue/price-transparency/estimates")"
+expect_code "price.reject_missing_version" "$price_missing_version_code" "404"
+
+price_unsupported_service_payload="{\"tenantId\":\"${TENANT_ID}\",\"versionId\":\"${price_version_id:-}\",\"serviceCode\":\"SVC-UNKNOWN\",\"units\":1,\"correlationId\":\"ASSURE-PRICE-UNKNOWN-SVC-${timestamp}\",\"actor\":\"assurance\"}"
+price_unsupported_service_code="$(run_in_ops "curl -sS -o /tmp/price_unsupported_service.json -w '%{http_code}' -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${price_unsupported_service_payload}' ${IN_NETWORK_GATEWAY_URL}/api/v1/revenue/price-transparency/estimates")"
+if [[ "$price_unsupported_service_code" == "200" ]]; then
+  unsupported_error_code="$(run_in_ops "jq -r '.errorCode // empty' /tmp/price_unsupported_service.json")"
+  if [[ "$unsupported_error_code" == "VALIDATION_ERROR" ]]; then
+    pass "price.reject_unsupported_service_code" "status=200 errorCode=${unsupported_error_code}"
+  else
+    fail "price.reject_unsupported_service_code" "status=200 errorCode=${unsupported_error_code:-missing} expected=VALIDATION_ERROR"
+  fi
+else
+  fail "price.reject_unsupported_service_code" "status=${price_unsupported_service_code} expected=200"
+fi
+
 if [[ "$PERF_ENABLED" == "true" ]]; then
   if [[ -n "${baseline_claim_id:-}" ]]; then
     perf_claim_payload="{\"tenantId\":\"${TENANT_ID}\",\"claimId\":\"${baseline_claim_id}\",\"correlationId\":\"PERF-CLAIM-${timestamp}\",\"actor\":\"assurance-perf\"}"
@@ -296,6 +347,10 @@ if [[ "$PERF_ENABLED" == "true" ]]; then
   if [[ -n "${price_version_id:-}" ]]; then
     perf_price_estimate_payload="{\"tenantId\":\"${TENANT_ID}\",\"versionId\":\"${price_version_id}\",\"serviceCode\":\"SVC-99213\",\"units\":2,\"correlationId\":\"PERF-PRICE-${timestamp}\",\"actor\":\"assurance-perf\"}"
     measure_latency "price_estimate" "POST" "/api/v1/revenue/price-transparency/estimates" "$perf_price_estimate_payload" "200" "$PERF_BUDGET_PRICE_ESTIMATE_P95_MS"
+
+    if [[ "$PERF_PRICE_ESTIMATE_LOAD_ENABLED" == "true" ]]; then
+      measure_latency "price_estimate_load" "POST" "/api/v1/revenue/price-transparency/estimates" "$perf_price_estimate_payload" "200" "$PERF_BUDGET_PRICE_ESTIMATE_LOAD_P95_MS" "$PERF_PRICE_ESTIMATE_LOAD_SAMPLES"
+    fi
   else
     fail "performance.price_estimate" "price_version_id unavailable"
   fi
@@ -318,7 +373,7 @@ fi
 
 previous_assurance_artifact="$(ls -1t ${OUTPUT_DIR}/wave1-local-assurance-*.json 2>/dev/null | head -n 1 || true)"
 if [[ -n "$previous_assurance_artifact" && -f "$previous_assurance_artifact" && "${#perf_results[@]}" -gt 0 ]]; then
-  for metric in revenue_claim_status adt_get_event price_estimate; do
+  for metric in revenue_claim_status adt_get_event price_estimate price_estimate_load; do
     current_p95="$(jq -r --arg metric "$metric" '.[] | select(.name == $metric) | .p95Ms // empty' <<< "$perf_json")"
     previous_p95="$(jq -r --arg metric "$metric" '.performance[]? | select(.name == $metric) | .p95Ms // empty' "$previous_assurance_artifact")"
     if [[ -z "$current_p95" || -z "$previous_p95" ]]; then

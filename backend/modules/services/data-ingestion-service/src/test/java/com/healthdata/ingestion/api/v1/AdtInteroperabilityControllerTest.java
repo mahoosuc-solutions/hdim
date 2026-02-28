@@ -111,6 +111,56 @@ class AdtInteroperabilityControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/interoperability/adt/messages rejects unauthorized source system")
+    void shouldRejectUnauthorizedSourceSystem() throws Exception {
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "sourceSystem":"unknown-source",
+              "sourceMessageId":"msg-unauthorized",
+              "eventType":"A01",
+              "patientExternalId":"pat-001",
+              "encounterExternalId":"enc-001",
+              "payloadHash":"unauthorized-hash",
+              "correlationId":"corr-unauthorized"
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/interoperability/adt/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("REJECTED"))
+                .andExpect(jsonPath("$.errorCode").value("AUTHZ_ERROR"))
+                .andExpect(jsonPath("$.auditEnvelope.outcome").value("AUTHZ_DENIED"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/interoperability/adt/messages rejects unmatched patient")
+    void shouldRejectUnmatchedPatient() throws Exception {
+        String request = """
+            {
+              "tenantId":"tenant-a",
+              "sourceSystem":"hie-main",
+              "sourceMessageId":"msg-unmatched-patient",
+              "eventType":"A08",
+              "patientExternalId":"UNMATCHED",
+              "encounterExternalId":"enc-001",
+              "payloadHash":"unmatched-patient-hash",
+              "correlationId":"corr-unmatched-patient"
+            }
+            """;
+
+        mockMvc.perform(post("/api/v1/interoperability/adt/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("REJECTED"))
+                .andExpect(jsonPath("$.errorCode").value("PATIENT_MATCH_FAILED"))
+                .andExpect(jsonPath("$.auditEnvelope.outcome").value("PATIENT_MATCH_FAILED"));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/interoperability/adt/acks transitions event to ACKNOWLEDGED")
     void shouldAcknowledgeEvent() throws Exception {
         String ingestRequest = """

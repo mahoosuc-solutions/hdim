@@ -52,7 +52,7 @@
 | Control Area | Artifact |
 |---|---|
 | Dependency scanning configuration | `.github/workflows/security-scan.yml` |
-| Latest backend dependency-check execution (wave-2b) | `test-results/dependency-check-aggregate-exec-wave2b-2026-02-27.log` |
+| Latest backend dependency-check execution (pre-NVD packet) | `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.json`, `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.sarif`, `test-results/backend-cve-artifacts-manifest-2026-02-28T121308Z.md` |
 | Container scanning configuration | `.github/workflows/security-scan.yml` (Trivy sections) |
 | DAST configuration + local evidence | `.github/workflows/owasp-zap-baseline.yml`, `test-results/zap-local-2026-02-27/*` |
 | Security hardening checks | `.github/workflows/security-hardening-validation.yml` |

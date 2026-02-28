@@ -94,7 +94,7 @@
 
 1. `#497` Backend CVE remediation and evidence completion: latest strict closeout still requires NVD-enriched final evidence run (`NVD_API_KEY`) for closure package.
    - Remaining critical CVEs: `CVE-2023-39017`, `CVE-2025-3277`, `CVE-2025-55754`, `CVE-2025-6965`
-   - Evidence: `test-results/dependency-check-aggregate-exec-wave1-2026-02-27.log`, `backend/build/reports/dependency-check-report.json`
+   - Latest pre-NVD evidence: `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.json`, `test-results/dependency-check-report-pre-nvd-2026-02-28T121308Z.sarif`, `test-results/backend-cve-artifacts-manifest-2026-02-28T121308Z.md`
 2. `#515` Hosted GitHub Actions runner billing/capacity unblock for immutable CI-attested assurance reruns.
 3. Final 360 GO packet refresh after `#497` + `#515`, including sign-off table update with current artifact set.
 

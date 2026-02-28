@@ -1,0 +1,48 @@
+{
+  "timestamp": "20260228T044417Z",
+  "gatewayUrl": "http://gateway-edge:8080",
+  "tenantId": "acme-health",
+  "summary": {
+    "totalChecks": 7,
+    "passed": 7,
+    "failed": 0,
+    "passRate": 100
+  },
+  "checks": [
+    {
+      "name": "gateway.auth_login",
+      "status": "PASS",
+      "details": "200 token acquired for test_admin"
+    },
+    {
+      "name": "revenue.claim_submission",
+      "status": "PASS",
+      "details": "200 with claimId=WAVE1-CLAIM-20260228T044417Z"
+    },
+    {
+      "name": "revenue.claim_status",
+      "status": "PASS",
+      "details": "200 with status=SUBMITTED"
+    },
+    {
+      "name": "revenue.remittance_advice",
+      "status": "PASS",
+      "details": "200 with newStatus=PAID"
+    },
+    {
+      "name": "adt.ingest_message",
+      "status": "PASS",
+      "details": "200 with eventId=f98b3820-84d3-48e8-916e-ba0e7d66f666"
+    },
+    {
+      "name": "adt.acknowledge",
+      "status": "PASS",
+      "details": "200 with state=ACKNOWLEDGED"
+    },
+    {
+      "name": "adt.get_event",
+      "status": "PASS",
+      "details": "200 with eventId=f98b3820-84d3-48e8-916e-ba0e7d66f666"
+    }
+  ]
+}

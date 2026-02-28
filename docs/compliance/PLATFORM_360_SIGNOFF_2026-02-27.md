@@ -21,9 +21,9 @@
 
 | Role | Name | Decision | Date (UTC) | Notes |
 |---|---|---|---|---|
-| Security Engineering Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Blockers #497 and #500 still open |
+| Security Engineering Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Blockers #497 and #515 still open |
 | Compliance Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | SOC2 evidence accepted for RC; final GO pending full artifact set |
-| Platform/Release Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Await strict backend CVE + ZAP gates |
+| Platform/Release Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Await strict backend CVE evidence and CI-attested gate reruns |
 | QA Lead | mahoosuc-solutions | NO GO | 2026-02-27T20:45:00Z | Manual critical-flow packet incomplete |
 
 ## Latest Execution Evidence (2026-02-28)

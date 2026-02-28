@@ -155,6 +155,29 @@ public class RevenueContractService {
         RevenueClaimState newStatus = remainingBalance.compareTo(BigDecimal.ZERO) <= 0
                 ? RevenueClaimState.PAID
                 : RevenueClaimState.PARTIALLY_PAID;
+        if (!isAllowedTransition(priorStatus, newStatus)) {
+            ReconciliationPreviewResponse response = ReconciliationPreviewResponse.builder()
+                    .tenantId(request.getTenantId())
+                    .claimId(request.getClaimId())
+                    .remittanceId(request.getRemittanceId())
+                    .correlationId(request.getCorrelationId())
+                    .priorStatus(priorStatus)
+                    .newStatus(priorStatus)
+                    .paidAmount(request.getPaymentAmount())
+                    .adjustmentAmount(request.getAdjustmentAmount())
+                    .remainingBalance(claimTotal.max(BigDecimal.ZERO))
+                    .errorCode(RevenueErrorCode.VALIDATION_ERROR)
+                    .auditEnvelope(audit(
+                            request.getTenantId(),
+                            request.getCorrelationId(),
+                            request.getActor(),
+                            "REMITTANCE_INGEST",
+                            "ILLEGAL_STATE_TRANSITION"))
+                    .build();
+            appendAudit(response.getCorrelationId(), response.getAuditEnvelope());
+            return response;
+        }
+
         claimStatusByClaimId.put(request.getClaimId(), newStatus);
 
         ReconciliationPreviewResponse response = ReconciliationPreviewResponse.builder()
@@ -176,6 +199,30 @@ public class RevenueContractService {
                 .build();
         appendAudit(response.getCorrelationId(), response.getAuditEnvelope());
         return response;
+    }
+
+    private boolean isAllowedTransition(RevenueClaimState from, RevenueClaimState to) {
+        if (from == to) {
+            return true;
+        }
+        return switch (from) {
+            case DRAFT -> to == RevenueClaimState.PENDING_SUBMIT;
+            case PENDING_SUBMIT -> to == RevenueClaimState.SUBMITTED || to == RevenueClaimState.REJECTED;
+            case SUBMITTED -> to == RevenueClaimState.ACKNOWLEDGED
+                    || to == RevenueClaimState.REJECTED
+                    || to == RevenueClaimState.PARTIALLY_PAID
+                    || to == RevenueClaimState.PAID
+                    || to == RevenueClaimState.DENIED;
+            case ACKNOWLEDGED -> to == RevenueClaimState.PARTIALLY_PAID
+                    || to == RevenueClaimState.PAID
+                    || to == RevenueClaimState.DENIED;
+            case PARTIALLY_PAID -> to == RevenueClaimState.PAID
+                    || to == RevenueClaimState.DENIED;
+            case PAID -> false;
+            case DENIED -> to == RevenueClaimState.UNDER_REVIEW;
+            case UNDER_REVIEW -> false;
+            case REJECTED -> false;
+        };
     }
 
     public EligibilityCheckResponse checkEligibility(EligibilityCheckRequest request) {

@@ -21,8 +21,10 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
-REPORTS_DIR="$(pwd)/reports"
+REPORTS_DIR="${REPORTS_DIR:-$ROOT_DIR/reports}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 # Create reports directory
@@ -84,7 +86,7 @@ run_api_tests() {
     echo -e "${BLUE}🚀 Running API Performance Tests${NC}"
     echo ""
 
-    run_test "tests/performance/api-gateway-performance.js" "api-gateway-performance"
+    run_test "$ROOT_DIR/tests/performance/api-gateway-performance.js" "api-gateway-performance"
 }
 
 # Function to run load tests
@@ -92,8 +94,8 @@ run_load_tests() {
     echo -e "${BLUE}🚀 Running Load Tests${NC}"
     echo ""
 
-    run_test "tests/performance/load-test-normal.js" "load-test-normal-100users"
-    run_test "tests/performance/load-test-stress.js" "load-test-stress-1500users"
+    run_test "$ROOT_DIR/tests/performance/load-test-normal.js" "load-test-normal-100users"
+    run_test "$ROOT_DIR/tests/performance/load-test-stress.js" "load-test-stress-1500users"
 }
 
 # Function to run stress test
@@ -101,7 +103,15 @@ run_stress_test() {
     echo -e "${BLUE}🚀 Running Stress Test${NC}"
     echo ""
 
-    run_test "tests/performance/load-test-stress.js" "load-test-stress-1500users"
+    run_test "$ROOT_DIR/tests/performance/load-test-stress.js" "load-test-stress-1500users"
+}
+
+# Function to run Wave-1 contract performance tests
+run_wave1_tests() {
+    echo -e "${BLUE}🚀 Running Wave-1 Revenue/ADT Performance Tests${NC}"
+    echo ""
+
+    run_test "$ROOT_DIR/tests/performance/wave1-revenue-adt-performance.js" "wave1-revenue-adt-performance"
 }
 
 # Function to generate summary report
@@ -144,6 +154,9 @@ main() {
         stress)
             run_stress_test
             ;;
+        wave1)
+            run_wave1_tests
+            ;;
         all)
             run_api_tests
             run_load_tests
@@ -151,12 +164,13 @@ main() {
         *)
             echo -e "${RED}❌ Unknown test type: $test_type${NC}"
             echo ""
-            echo "Usage: $0 [api|load|stress|all]"
+            echo "Usage: $0 [api|load|stress|wave1|all]"
             echo ""
             echo "Options:"
             echo "  api      - Run API performance tests only"
             echo "  load     - Run load tests (100 users + stress test)"
             echo "  stress   - Run stress test only (1500 users)"
+            echo "  wave1    - Run Wave-1 revenue/ADT contract performance tests"
             echo "  all      - Run all tests (default)"
             echo ""
             exit 1

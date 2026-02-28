@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-27T23:44:18Z",
+  "generatedAt": "2026-02-28T00:51:10Z",
   "strictBackendCve": true,
   "checks": [
     {"key":"soc2_control_matrix","status":"pass","detail":"docs/compliance/SOC2_CC_CONTROL_EVIDENCE_MATRIX_2026-02-27.md"}

@@ -167,22 +167,28 @@ export function teardown(data) {
  * Custom summary handler
  */
 export function handleSummary(data) {
+  const vusValues = data.metrics.vus ? data.metrics.vus.values : {};
+  const reqValues = data.metrics.http_reqs ? data.metrics.http_reqs.values : {};
+  const durationValues = data.metrics.http_req_duration ? data.metrics.http_req_duration.values : {};
+  const errorValues = data.metrics.errors ? data.metrics.errors.values : {};
+  const checkValues = data.metrics.checks ? data.metrics.checks.values : {};
+
   const summary = {
     timestamp: new Date().toISOString(),
     test_name: 'API Gateway Performance Test',
     duration_seconds: data.state.testRunDurationMs / 1000,
-    virtual_users: data.metrics.vus.values.max,
-    total_requests: data.metrics.http_reqs.values.count,
-    requests_per_second: data.metrics.http_reqs.values.rate,
+    virtual_users: vusValues.max || 0,
+    total_requests: reqValues.count || 0,
+    requests_per_second: reqValues.rate || 0,
     response_times: {
-      avg_ms: data.metrics.http_req_duration.values.avg,
-      p50_ms: data.metrics.http_req_duration.values['p(50)'],
-      p95_ms: data.metrics.http_req_duration.values['p(95)'],
-      p99_ms: data.metrics.http_req_duration.values['p(99)'],
-      max_ms: data.metrics.http_req_duration.values.max,
+      avg_ms: durationValues.avg || 0,
+      p50_ms: durationValues['p(50)'] || 0,
+      p95_ms: durationValues['p(95)'] || 0,
+      p99_ms: durationValues['p(99)'] || 0,
+      max_ms: durationValues.max || 0,
     },
-    error_rate: data.metrics.errors ? data.metrics.errors.values.rate : 0,
-    checks_passed: data.metrics.checks ? data.metrics.checks.values.rate : 0,
+    error_rate: errorValues.rate || 0,
+    checks_passed: checkValues.rate || 0,
   };
 
   console.log('\n📊 Performance Summary:');
@@ -205,6 +211,6 @@ export function handleSummary(data) {
 
   return {
     'stdout': JSON.stringify(summary, null, 2),
-    'reports/api-gateway-summary.json': JSON.stringify(summary, null, 2),
+    '/reports/api-gateway-summary.json': JSON.stringify(summary, null, 2),
   };
 }

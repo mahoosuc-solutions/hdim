@@ -32,13 +32,15 @@
 
 - [x] Traceability matrix updated
   - `docs/testing/WAVE1_SLICE1_TRACEABILITY_MATRIX_2026-02-28.md`
+- [x] Adapter perf/security gate report added
+  - `docs/testing/WAVE1_ADAPTER_PERF_SECURITY_GATE_2026-02-28.md`
 - [x] Issue evidence posted
   - `#502`, `#506`, `#507` comments with commands and outcomes
 
 ## Residual Risks (No-Go if unresolved for production)
 
 - [ ] Containerized end-to-end adapter integration tests against deployed stubs
-- [ ] Security/performance load thresholds for new endpoints formally baselined
+- [ ] Security/performance load thresholds for new endpoints formally baselined (current k6 API gate failed)
 - [ ] NVD-enriched dependency-check closure pending `NVD_API_KEY` (`#497`)
 
 ## Decision

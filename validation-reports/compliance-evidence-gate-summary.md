@@ -1,6 +1,6 @@
 # Compliance Evidence Gate Summary
 
-- Date (UTC): 2026-02-27T23:44:18Z
+- Date (UTC): 2026-02-28T00:51:10Z
 - Strict backend CVE mode: true
 
 | Control | Status | Detail |

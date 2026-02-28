@@ -10,6 +10,9 @@ TENANT_ID="${TENANT_ID:-acme-health}"
 TEST_USERNAME="${TEST_USERNAME:-test_admin}"
 TEST_PASSWORD="${TEST_PASSWORD:-password123}"
 IN_NETWORK_GATEWAY_URL="${IN_NETWORK_GATEWAY_URL:-http://gateway-edge:8080}"
+PERF_ENABLED="${PERF_ENABLED:-true}"
+PERF_SAMPLES="${PERF_SAMPLES:-20}"
+PERF_WARMUP="${PERF_WARMUP:-5}"
 
 START_STACK="${START_STACK:-true}"
 STOP_STACK="${STOP_STACK:-true}"
@@ -30,6 +33,7 @@ cleanup() {
 trap cleanup EXIT
 
 declare -a results=()
+declare -a perf_results=()
 
 pass() {
   local name="$1"
@@ -63,6 +67,78 @@ expect_code() {
   fi
 }
 
+in_expected_codes() {
+  local code="$1"
+  local expected_csv="$2"
+  [[ ",${expected_csv}," == *",${code},"* ]]
+}
+
+measure_latency() {
+  local name="$1"
+  local method="$2"
+  local path="$3"
+  local payload="${4:-}"
+  local expected_csv="${5:-200}"
+
+  local -a latencies=()
+  local success=0
+  local failure=0
+  local curl_cmd out code seconds ms
+  local i
+
+  for i in $(seq 1 "$PERF_WARMUP"); do
+    if [[ -n "$payload" ]]; then
+      run_in_ops "curl -sS -o /tmp/perf_warmup_${name}.json -w '%{http_code}' -X ${method} -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${payload}' ${IN_NETWORK_GATEWAY_URL}${path}" >/dev/null 2>&1 || true
+    else
+      run_in_ops "curl -sS -o /tmp/perf_warmup_${name}.json -w '%{http_code}' -X ${method} -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' ${IN_NETWORK_GATEWAY_URL}${path}" >/dev/null 2>&1 || true
+    fi
+  done
+
+  for i in $(seq 1 "$PERF_SAMPLES"); do
+    if [[ -n "$payload" ]]; then
+      curl_cmd="curl -sS -o /tmp/perf_${name}.json -w '%{http_code} %{time_total}' -X ${method} -H 'Content-Type: application/json' -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' -d '${payload}' ${IN_NETWORK_GATEWAY_URL}${path}"
+    else
+      curl_cmd="curl -sS -o /tmp/perf_${name}.json -w '%{http_code} %{time_total}' -X ${method} -H 'Authorization: Bearer ${auth_token}' -H 'X-Tenant-ID: ${TENANT_ID}' ${IN_NETWORK_GATEWAY_URL}${path}"
+    fi
+    out="$(run_in_ops "$curl_cmd")"
+    code="$(printf '%s' "$out" | awk '{print $1}')"
+    seconds="$(printf '%s' "$out" | awk '{print $2}')"
+    ms="$(awk -v s="${seconds:-0}" 'BEGIN { printf "%.2f", s * 1000 }')"
+    latencies+=("$ms")
+
+    if in_expected_codes "$code" "$expected_csv"; then
+      success=$((success + 1))
+    else
+      failure=$((failure + 1))
+    fi
+  done
+
+  local min_ms max_ms avg_ms p95_ms n rank
+  n="${#latencies[@]}"
+  if [[ "$n" -eq 0 ]]; then
+    fail "performance.${name}" "no samples collected"
+    perf_results+=("{\"name\":\"${name}\",\"status\":\"FAIL\",\"samples\":0,\"success\":0,\"failure\":0,\"expectedCodes\":\"${expected_csv}\"}")
+    return
+  fi
+
+  min_ms="$(printf '%s\n' "${latencies[@]}" | sort -n | head -n 1)"
+  max_ms="$(printf '%s\n' "${latencies[@]}" | sort -n | tail -n 1)"
+  avg_ms="$(printf '%s\n' "${latencies[@]}" | awk '{sum+=$1} END {if (NR==0) print "0.00"; else printf "%.2f", sum/NR}')"
+  rank=$(( (95 * n + 99) / 100 ))
+  if [[ "$rank" -lt 1 ]]; then
+    rank=1
+  fi
+  p95_ms="$(printf '%s\n' "${latencies[@]}" | sort -n | sed -n "${rank}p")"
+
+  if [[ "$failure" -eq 0 ]]; then
+    pass "performance.${name}" "samples=${n} p95Ms=${p95_ms} avgMs=${avg_ms} minMs=${min_ms} maxMs=${max_ms}"
+    perf_results+=("{\"name\":\"${name}\",\"status\":\"PASS\",\"samples\":${n},\"success\":${success},\"failure\":${failure},\"expectedCodes\":\"${expected_csv}\",\"p95Ms\":${p95_ms},\"avgMs\":${avg_ms},\"minMs\":${min_ms},\"maxMs\":${max_ms}}")
+  else
+    fail "performance.${name}" "samples=${n} failures=${failure} expected=${expected_csv} p95Ms=${p95_ms}"
+    perf_results+=("{\"name\":\"${name}\",\"status\":\"FAIL\",\"samples\":${n},\"success\":${success},\"failure\":${failure},\"expectedCodes\":\"${expected_csv}\",\"p95Ms\":${p95_ms},\"avgMs\":${avg_ms},\"minMs\":${min_ms},\"maxMs\":${max_ms}}")
+  fi
+}
+
 if [[ "$START_STACK" == "true" ]]; then
   BUILD_WAVE1_IMAGES="$BUILD_WAVE1_IMAGES" INGEST_IMAGE="$INGEST_IMAGE" ./scripts/validation/start-wave1-validation-stack.sh
 fi
@@ -86,6 +162,9 @@ if [[ "$baseline_rc" -eq 0 ]]; then
 else
   fail "baseline.wave1_smoke" "rc=${baseline_rc} artifact=${baseline_artifact:-missing}"
 fi
+
+baseline_claim_id="$(jq -r '.checks[] | select(.name=="revenue.claim_submission") | .details' "${baseline_artifact:-/dev/null}" 2>/dev/null | sed -n 's/.*claimId=\([^ ]*\).*/\1/p')"
+baseline_event_id="$(jq -r '.checks[] | select(.name=="adt.ingest_message") | .details' "${baseline_artifact:-/dev/null}" 2>/dev/null | sed -n 's/.*eventId=\([^ ]*\).*/\1/p')"
 
 claim_id="ASSURE-CLAIM-${timestamp}"
 claim_payload="{\"tenantId\":\"${TENANT_ID}\",\"claimId\":\"${claim_id}\",\"patientId\":\"PATIENT-001\",\"payerId\":\"PAYER-001\",\"totalAmount\":125.00,\"idempotencyKey\":\"ASSURE-IDEMP-${timestamp}\",\"correlationId\":\"ASSURE-CORR-${timestamp}\",\"actor\":\"assurance\"}"
@@ -133,6 +212,21 @@ else
   fail "adt.duplicate_source_message_handled" "codes=${code_adt_1},${code_adt_2}"
 fi
 
+if [[ "$PERF_ENABLED" == "true" ]]; then
+  if [[ -n "${baseline_claim_id:-}" ]]; then
+    perf_claim_payload="{\"tenantId\":\"${TENANT_ID}\",\"claimId\":\"${baseline_claim_id}\",\"correlationId\":\"PERF-CLAIM-${timestamp}\",\"actor\":\"assurance-perf\"}"
+    measure_latency "revenue_claim_status" "POST" "/api/v1/revenue/claim-status/checks" "$perf_claim_payload" "200"
+  else
+    fail "performance.revenue_claim_status" "baseline claim id unavailable"
+  fi
+
+  if [[ -n "${baseline_event_id:-}" ]]; then
+    measure_latency "adt_get_event" "GET" "/api/v1/interoperability/adt/events/${baseline_event_id}" "" "200"
+  else
+    fail "performance.adt_get_event" "baseline event id unavailable"
+  fi
+fi
+
 passed=0
 failed=0
 for item in "${results[@]}"; do
@@ -143,6 +237,11 @@ for item in "${results[@]}"; do
   fi
 done
 
+perf_json="[]"
+if [[ "${#perf_results[@]}" -gt 0 ]]; then
+  perf_json="$(printf '%s\n' "${perf_results[@]}" | jq -s '.')"
+fi
+
 jq -n \
   --arg timestamp "$timestamp" \
   --arg tenantId "$TENANT_ID" \
@@ -151,6 +250,7 @@ jq -n \
   --argjson passed "$passed" \
   --argjson failed "$failed" \
   --argjson checks "$(printf '%s\n' "${results[@]}" | jq -s '.')" \
+  --argjson performance "$perf_json" \
   '{
     timestamp: $timestamp,
     tenantId: $tenantId,
@@ -162,6 +262,7 @@ jq -n \
       failed: $failed,
       passRate: (if ($passed + $failed) == 0 then 0 else (($passed / ($passed + $failed)) * 100) end)
     },
+    performance: $performance,
     checks: $checks
   }' > "$report_file"
 

@@ -205,4 +205,15 @@ class AdtInteroperabilityControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value("ACKNOWLEDGED"));
     }
+
+    @Test
+    @DisplayName("POST /api/v1/interoperability/adt/messages returns 400 for malformed JSON")
+    void shouldReturnBadRequestForMalformedJson() throws Exception {
+        mockMvc.perform(post("/api/v1/interoperability/adt/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Malformed Request"))
+                .andExpect(jsonPath("$.message").value("Request body is not valid JSON"));
+    }
 }

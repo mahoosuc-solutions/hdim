@@ -1,0 +1,54 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.11.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Type-safe project accessors is an incubating feature.
+
+> Task :modules:services:fhir-service:dependencyInsight
+org.xerial:sqlite-jdbc:3.51.2.0
+  Variant runtime:
+    | Attribute Name                 | Provided     | Requested    |
+    |--------------------------------|--------------|--------------|
+    | org.gradle.status              | release      |              |
+    | org.gradle.category            | library      | library      |
+    | org.gradle.libraryelements     | jar          | jar          |
+    | org.gradle.usage               | java-runtime | java-runtime |
+    | org.gradle.dependency.bundling |              | external     |
+    | org.gradle.jvm.environment     |              | standard-jvm |
+    | org.gradle.jvm.version         |              | 21           |
+   Selection reasons:
+      - Forced
+      - Selected by rule
+
+org.xerial:sqlite-jdbc:3.45.1.0 -> 3.51.2.0
+\--- ca.uhn.hapi.fhir:org.hl7.fhir.convertors:6.4.0
+     +--- ca.uhn.hapi.fhir:org.hl7.fhir.validation:6.4.0
+     |    \--- ca.uhn.hapi.fhir:hapi-fhir-validation:7.6.0
+     |         +--- runtimeClasspath
+     |         +--- project :modules:shared:domain:fhir-models
+     |         |    +--- runtimeClasspath
+     |         |    \--- project :modules:shared:api-contracts:fhir-api
+     |         |         \--- runtimeClasspath
+     |         +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0
+     |         |    \--- runtimeClasspath
+     |         +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-subscription:7.6.0
+     |         |    \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+     |         \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-searchparam:7.6.0
+     |              +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+     |              +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-subscription:7.6.0 (*)
+     |              \--- ca.uhn.hapi.fhir:hapi-fhir-storage:7.6.0
+     |                   +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+     |                   +--- ca.uhn.hapi.fhir:hapi-fhir-server-mdm:7.6.0
+     |                   |    \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+     |                   +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-subscription:7.6.0 (*)
+     |                   \--- ca.uhn.hapi.fhir:hapi-fhir-storage-batch2:7.6.0
+     |                        +--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+     |                        \--- ca.uhn.hapi.fhir:hapi-fhir-storage-batch2-jobs:7.6.0
+     |                             \--- ca.uhn.hapi.fhir:hapi-fhir-jpaserver-base:7.6.0 (*)
+     \--- ca.uhn.hapi.fhir:hapi-fhir-converter:7.6.0
+          \--- ca.uhn.hapi.fhir:hapi-fhir-validation:7.6.0 (*)
+
+(*) - Indicates repeated occurrences of a transitive dependency subtree. Gradle expands transitive dependency subtrees only once per project; repeat occurrences only display the root of the subtree, followed by this annotation.
+
+A web-based, searchable dependency report is available by adding the --scan option.
+
+BUILD SUCCESSFUL in 29s
+1 actionable task: 1 executed

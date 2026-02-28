@@ -1,0 +1,48 @@
+{
+  "timestamp": "20260228T013746Z",
+  "gatewayUrl": "http://127.0.0.1:18080",
+  "tenantId": "acme-health",
+  "summary": {
+    "totalChecks": 7,
+    "passed": 1,
+    "failed": 6,
+    "passRate": 14.285714285714285
+  },
+  "checks": [
+    {
+      "name": "gateway.auth_login",
+      "status": "PASS",
+      "details": "200 token acquired for test_admin"
+    },
+    {
+      "name": "revenue.claim_submission",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "revenue.claim_status",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "revenue.remittance_advice",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "adt.ingest_message",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "adt.acknowledge",
+      "status": "FAIL",
+      "details": "skipped because ingest_message failed"
+    },
+    {
+      "name": "adt.get_event",
+      "status": "FAIL",
+      "details": "skipped because ingest_message failed"
+    }
+  ]
+}

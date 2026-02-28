@@ -9,8 +9,9 @@ COPY gradle ./gradle
 # Copy shared modules (required for compilation)
 COPY modules/shared ./modules/shared
 
-# Copy data-ingestion-service source ONLY
+# Copy service sources required by project dependencies.
 COPY modules/services/data-ingestion-service ./modules/services/data-ingestion-service
+COPY modules/services/demo-seeding-service ./modules/services/demo-seeding-service
 
 # Build the service
 RUN ./gradlew :modules:services:data-ingestion-service:bootJar --no-daemon

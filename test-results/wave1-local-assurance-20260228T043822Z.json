@@ -1,0 +1,64 @@
+{
+  "timestamp": "20260228T043822Z",
+  "tenantId": "acme-health",
+  "gatewayUrl": "http://gateway-edge:8080",
+  "baselineArtifact": "test-results/wave1-edge-gateway-smoke-20260228T044417Z.json",
+  "summary": {
+    "totalChecks": 10,
+    "passed": 9,
+    "failed": 1,
+    "passRate": 90
+  },
+  "checks": [
+    {
+      "name": "auth.token_acquired",
+      "status": "PASS",
+      "details": "token for test_admin"
+    },
+    {
+      "name": "baseline.wave1_smoke",
+      "status": "PASS",
+      "details": "pass artifact=test-results/wave1-edge-gateway-smoke-20260228T044417Z.json"
+    },
+    {
+      "name": "revenue.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "revenue.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "revenue.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "revenue.idempotency_replay",
+      "status": "PASS",
+      "details": "codes=200,200 claimId=ASSURE-IDEM-CLAIM-20260228T043822Z"
+    },
+    {
+      "name": "adt.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "adt.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "adt.reject_malformed_payload",
+      "status": "FAIL",
+      "details": "status=500 expected=400,422"
+    },
+    {
+      "name": "adt.duplicate_source_message_handled",
+      "status": "PASS",
+      "details": "codes=200,200"
+    }
+  ]
+}

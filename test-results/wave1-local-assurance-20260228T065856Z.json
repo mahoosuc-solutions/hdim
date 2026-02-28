@@ -1,0 +1,210 @@
+{
+  "timestamp": "20260228T065856Z",
+  "tenantId": "acme-health",
+  "gatewayUrl": "http://gateway-edge:8080",
+  "baselineArtifact": "test-results/wave1-edge-gateway-smoke-20260228T071510Z.json",
+  "previousAssuranceArtifact": "test-results/wave1-local-assurance-20260228T061251Z.json",
+  "summary": {
+    "totalChecks": 28,
+    "passed": 28,
+    "failed": 0,
+    "passRate": 100
+  },
+  "performance": [
+    {
+      "name": "revenue_claim_status",
+      "status": "PASS",
+      "samples": 3,
+      "success": 3,
+      "failure": 0,
+      "expectedCodes": "200",
+      "p95Ms": 30.04,
+      "avgMs": 28.02,
+      "minMs": 24.98,
+      "maxMs": 30.04,
+      "budgetP95Ms": 120
+    },
+    {
+      "name": "adt_get_event",
+      "status": "PASS",
+      "samples": 3,
+      "success": 3,
+      "failure": 0,
+      "expectedCodes": "200",
+      "p95Ms": 29.52,
+      "avgMs": 25.59,
+      "minMs": 23.22,
+      "maxMs": 29.52,
+      "budgetP95Ms": 120
+    },
+    {
+      "name": "price_estimate",
+      "status": "PASS",
+      "samples": 3,
+      "success": 3,
+      "failure": 0,
+      "expectedCodes": "200",
+      "p95Ms": 35.62,
+      "avgMs": 33.41,
+      "minMs": 29.93,
+      "maxMs": 35.62,
+      "budgetP95Ms": 150
+    },
+    {
+      "name": "price_estimate_load",
+      "status": "PASS",
+      "samples": 100,
+      "success": 100,
+      "failure": 0,
+      "expectedCodes": "200",
+      "p95Ms": 60.48,
+      "avgMs": 30.29,
+      "minMs": 15.45,
+      "maxMs": 97.45,
+      "budgetP95Ms": 250
+    }
+  ],
+  "trendWarnings": [],
+  "checks": [
+    {
+      "name": "auth.token_acquired",
+      "status": "PASS",
+      "details": "token for test_admin"
+    },
+    {
+      "name": "preflight.revenue_claim_submission_route",
+      "status": "PASS",
+      "details": "status=400 route available path=/api/v1/revenue/claims/submissions"
+    },
+    {
+      "name": "preflight.adt_ingest_route",
+      "status": "PASS",
+      "details": "status=400 route available path=/api/v1/interoperability/adt/messages"
+    },
+    {
+      "name": "preflight.price_publish_route",
+      "status": "PASS",
+      "details": "status=400 route available path=/api/v1/revenue/price-transparency/rates/publish"
+    },
+    {
+      "name": "preflight.price_estimate_route",
+      "status": "PASS",
+      "details": "status=400 route available path=/api/v1/revenue/price-transparency/estimates"
+    },
+    {
+      "name": "baseline.wave1_smoke",
+      "status": "PASS",
+      "details": "pass artifact=test-results/wave1-edge-gateway-smoke-20260228T071510Z.json"
+    },
+    {
+      "name": "revenue.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "revenue.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "revenue.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "revenue.idempotency_replay",
+      "status": "PASS",
+      "details": "codes=200,200 claimId=ASSURE-IDEM-CLAIM-20260228T065856Z"
+    },
+    {
+      "name": "adt.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "adt.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "adt.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "adt.duplicate_source_message_handled",
+      "status": "PASS",
+      "details": "codes=200,200"
+    },
+    {
+      "name": "price.publish_rates",
+      "status": "PASS",
+      "details": "status=200 versionId=PTR-1"
+    },
+    {
+      "name": "price.read_current_rates",
+      "status": "PASS",
+      "details": "status=200 versionId=PTR-1"
+    },
+    {
+      "name": "price.read_version_rates",
+      "status": "PASS",
+      "details": "status=200 expected=200"
+    },
+    {
+      "name": "price.estimate_deterministic",
+      "status": "PASS",
+      "details": "status=200 estimatedAllowedAmount=150.00"
+    },
+    {
+      "name": "price.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "price.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "price.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "price.reject_duplicate_service_codes",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "price.reject_missing_version",
+      "status": "PASS",
+      "details": "status=404 expected=404"
+    },
+    {
+      "name": "price.reject_unsupported_service_code",
+      "status": "PASS",
+      "details": "status=200 errorCode=VALIDATION_ERROR"
+    },
+    {
+      "name": "performance.revenue_claim_status",
+      "status": "PASS",
+      "details": "samples=3 p95Ms=30.04 avgMs=28.02 minMs=24.98 maxMs=30.04 budgetP95Ms=120"
+    },
+    {
+      "name": "performance.adt_get_event",
+      "status": "PASS",
+      "details": "samples=3 p95Ms=29.52 avgMs=25.59 minMs=23.22 maxMs=29.52 budgetP95Ms=120"
+    },
+    {
+      "name": "performance.price_estimate",
+      "status": "PASS",
+      "details": "samples=3 p95Ms=35.62 avgMs=33.41 minMs=29.93 maxMs=35.62 budgetP95Ms=150"
+    },
+    {
+      "name": "performance.price_estimate_load",
+      "status": "PASS",
+      "details": "samples=100 p95Ms=60.48 avgMs=30.29 minMs=15.45 maxMs=97.45 budgetP95Ms=250"
+    }
+  ]
+}

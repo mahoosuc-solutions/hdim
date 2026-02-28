@@ -1,0 +1,100 @@
+{
+  "timestamp": "20260228T050504Z",
+  "tenantId": "acme-health",
+  "gatewayUrl": "http://gateway-edge:8080",
+  "baselineArtifact": "test-results/wave1-edge-gateway-smoke-20260228T051353Z.json",
+  "summary": {
+    "totalChecks": 12,
+    "passed": 12,
+    "failed": 0,
+    "passRate": 100
+  },
+  "performance": [
+    {
+      "name": "revenue_claim_status",
+      "status": "PASS",
+      "samples": 20,
+      "success": 20,
+      "failure": 0,
+      "expectedCodes": "200",
+      "p95Ms": 47.18,
+      "avgMs": 35.88,
+      "minMs": 25.22,
+      "maxMs": 49.36
+    },
+    {
+      "name": "adt_get_event",
+      "status": "PASS",
+      "samples": 20,
+      "success": 20,
+      "failure": 0,
+      "expectedCodes": "200",
+      "p95Ms": 35.58,
+      "avgMs": 27.1,
+      "minMs": 17.21,
+      "maxMs": 46.22
+    }
+  ],
+  "checks": [
+    {
+      "name": "auth.token_acquired",
+      "status": "PASS",
+      "details": "token for test_admin"
+    },
+    {
+      "name": "baseline.wave1_smoke",
+      "status": "PASS",
+      "details": "pass artifact=test-results/wave1-edge-gateway-smoke-20260228T051353Z.json"
+    },
+    {
+      "name": "revenue.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "revenue.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "revenue.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "revenue.idempotency_replay",
+      "status": "PASS",
+      "details": "codes=200,200 claimId=ASSURE-IDEM-CLAIM-20260228T050504Z"
+    },
+    {
+      "name": "adt.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "adt.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "adt.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "adt.duplicate_source_message_handled",
+      "status": "PASS",
+      "details": "codes=200,200"
+    },
+    {
+      "name": "performance.revenue_claim_status",
+      "status": "PASS",
+      "details": "samples=20 p95Ms=47.18 avgMs=35.88 minMs=25.22 maxMs=49.36"
+    },
+    {
+      "name": "performance.adt_get_event",
+      "status": "PASS",
+      "details": "samples=20 p95Ms=35.58 avgMs=27.10 minMs=17.21 maxMs=46.22"
+    }
+  ]
+}

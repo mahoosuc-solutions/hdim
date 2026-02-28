@@ -1,0 +1,153 @@
+{
+  "timestamp": "20260228T054928Z",
+  "tenantId": "acme-health",
+  "gatewayUrl": "http://gateway-edge:8080",
+  "baselineArtifact": "test-results/wave1-edge-gateway-smoke-20260228T055433Z.json",
+  "previousAssuranceArtifact": "test-results/wave1-local-assurance-20260228T052617Z.json",
+  "summary": {
+    "totalChecks": 20,
+    "passed": 12,
+    "failed": 8,
+    "passRate": 60
+  },
+  "performance": [
+    {
+      "name": "revenue_claim_status",
+      "status": "FAIL",
+      "samples": 5,
+      "success": 4,
+      "failure": 1,
+      "expectedCodes": "200",
+      "p95Ms": 2670.54,
+      "avgMs": 567.53,
+      "minMs": 27.64,
+      "maxMs": 2670.54,
+      "budgetP95Ms": 120
+    },
+    {
+      "name": "adt_get_event",
+      "status": "FAIL",
+      "samples": 5,
+      "success": 0,
+      "failure": 5,
+      "expectedCodes": "200",
+      "p95Ms": 331.98,
+      "avgMs": 111.05,
+      "minMs": 24.26,
+      "maxMs": 331.98,
+      "budgetP95Ms": 120
+    }
+  ],
+  "trendWarnings": [
+    {
+      "metric": "revenue_claim_status",
+      "warning": "Metric revenue_claim_status p95 regression 4699.68% (previous=55.64ms current=2670.54ms threshold=15%)"
+    },
+    {
+      "metric": "adt_get_event",
+      "warning": "Metric adt_get_event p95 regression 333.28% (previous=76.62ms current=331.98ms threshold=15%)"
+    }
+  ],
+  "checks": [
+    {
+      "name": "auth.token_acquired",
+      "status": "PASS",
+      "details": "token for test_admin"
+    },
+    {
+      "name": "baseline.wave1_smoke",
+      "status": "PASS",
+      "details": "pass artifact=test-results/wave1-edge-gateway-smoke-20260228T055433Z.json"
+    },
+    {
+      "name": "revenue.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "revenue.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "revenue.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "revenue.idempotency_replay",
+      "status": "PASS",
+      "details": "codes=200,200 claimId=ASSURE-IDEM-CLAIM-20260228T054928Z"
+    },
+    {
+      "name": "adt.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "adt.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "adt.reject_malformed_payload",
+      "status": "PASS",
+      "details": "status=400 expected=400,422"
+    },
+    {
+      "name": "adt.duplicate_source_message_handled",
+      "status": "PASS",
+      "details": "codes=200,200"
+    },
+    {
+      "name": "price.publish_rates",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "price.read_current_rates",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "price.read_version_rates",
+      "status": "FAIL",
+      "details": "price_version_id unavailable"
+    },
+    {
+      "name": "price.estimate_deterministic",
+      "status": "FAIL",
+      "details": "status=404"
+    },
+    {
+      "name": "price.reject_missing_auth",
+      "status": "PASS",
+      "details": "status=401 expected=401"
+    },
+    {
+      "name": "price.reject_missing_tenant",
+      "status": "PASS",
+      "details": "status=400 expected=400"
+    },
+    {
+      "name": "price.reject_malformed_payload",
+      "status": "FAIL",
+      "details": "status=404 expected=400,422"
+    },
+    {
+      "name": "performance.revenue_claim_status",
+      "status": "FAIL",
+      "details": "samples=5 failures=1 expected=200 p95Ms=2670.54 budgetP95Ms=120"
+    },
+    {
+      "name": "performance.adt_get_event",
+      "status": "FAIL",
+      "details": "samples=5 failures=5 expected=200 p95Ms=331.98 budgetP95Ms=120"
+    },
+    {
+      "name": "performance.price_estimate",
+      "status": "FAIL",
+      "details": "price_version_id unavailable"
+    }
+  ]
+}

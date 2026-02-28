@@ -40,7 +40,7 @@
 ## Residual Risks (No-Go if unresolved for production)
 
 - [ ] Containerized end-to-end adapter integration tests against deployed stubs
-- [ ] Security/performance load thresholds for new endpoints formally baselined (current k6 API gate failed)
+- [ ] Wave-1 gateway route availability validated above 0% in staged topology (current local wave1 baseline shows `endpoint_available_rate=0%`)
 - [ ] NVD-enriched dependency-check closure pending `NVD_API_KEY` (`#497`)
 
 ## Decision

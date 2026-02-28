@@ -55,6 +55,12 @@ public class GatewayClinicalController {
     @Value("${backend.services.nurse-workflow.url}")
     private String nurseWorkflowUrl;
 
+    @Value("${backend.services.payer-workflows.url}")
+    private String payerWorkflowsUrl;
+
+    @Value("${backend.services.data-ingestion.url}")
+    private String dataIngestionUrl;
+
     @RequestMapping(value = "/api/care-gaps/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
     public ResponseEntity<?> routeToCareGap(
         HttpServletRequest request,
@@ -165,6 +171,22 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, priorAuthUrl, "/api/v1/provider-access");
+    }
+
+    @RequestMapping(value = "/api/v1/revenue/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToRevenueContracts(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, payerWorkflowsUrl, "/api/v1/revenue");
+    }
+
+    @RequestMapping(value = "/api/v1/interoperability/adt/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToAdtInteroperability(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, dataIngestionUrl, "/api/v1/interoperability/adt");
     }
 
     @RequestMapping(value = "/demo/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})

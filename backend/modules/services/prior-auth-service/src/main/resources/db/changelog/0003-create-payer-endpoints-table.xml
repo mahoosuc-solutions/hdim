@@ -7,7 +7,7 @@
     <changeSet id="0003-create-payer-endpoints-table" author="prior-auth-service">
         <comment>Create payer_endpoints table for payer API configuration</comment>
 
-        <sqlFile path="db/changelog/sql/0003-create-payer-endpoints-table.sql"
+        <sqlFile path="sql/0003-create-payer-endpoints-table.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>

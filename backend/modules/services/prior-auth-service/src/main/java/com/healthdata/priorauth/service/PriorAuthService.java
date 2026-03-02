@@ -7,10 +7,10 @@ import com.healthdata.priorauth.persistence.PayerEndpointEntity;
 import com.healthdata.priorauth.persistence.PayerEndpointRepository;
 import com.healthdata.priorauth.persistence.PriorAuthRequestEntity;
 import com.healthdata.priorauth.persistence.PriorAuthRequestRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Claim;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -29,7 +29,6 @@ import java.util.*;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class PriorAuthService {
 
     private final PriorAuthRequestRepository requestRepository;
@@ -38,6 +37,22 @@ public class PriorAuthService {
     private final PayerApiClient payerApiClient;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final PriorAuthAuditIntegration priorAuthAuditIntegration;
+
+    @Autowired
+    public PriorAuthService(
+            PriorAuthRequestRepository requestRepository,
+            PayerEndpointRepository payerEndpointRepository,
+            PasClaimBuilder claimBuilder,
+            PayerApiClient payerApiClient,
+            KafkaTemplate<String, Object> kafkaTemplate,
+            @Autowired(required = false) PriorAuthAuditIntegration priorAuthAuditIntegration) {
+        this.requestRepository = requestRepository;
+        this.payerEndpointRepository = payerEndpointRepository;
+        this.claimBuilder = claimBuilder;
+        this.payerApiClient = payerApiClient;
+        this.kafkaTemplate = kafkaTemplate;
+        this.priorAuthAuditIntegration = priorAuthAuditIntegration;
+    }
 
     private static final String PA_EVENTS_TOPIC = "prior-auth-events";
 
@@ -88,15 +103,17 @@ public class PriorAuthService {
         log.info("Created PA request {} for patient {}", entity.getPaRequestId(), request.getPatientId());
 
         // Publish audit event
-        priorAuthAuditIntegration.publishPriorAuthRequestEvent(
-            tenantId,
-            entity.getId(),
-            entity.getPatientId(),
-            entity.getPayerId(),
-            entity.getServiceCode(),
-            entity.getUrgency().name(),
-            requestedBy
-        );
+        if (priorAuthAuditIntegration != null) {
+            priorAuthAuditIntegration.publishPriorAuthRequestEvent(
+                tenantId,
+                entity.getId(),
+                entity.getPatientId(),
+                entity.getPayerId(),
+                entity.getServiceCode(),
+                entity.getUrgency().name(),
+                requestedBy
+            );
+        }
 
         return mapToResponse(entity);
     }
@@ -184,17 +201,19 @@ public class PriorAuthService {
             publishPaEvent(entity, "PA_SUBMITTED");
 
             // Publish audit event
-            priorAuthAuditIntegration.publishPriorAuthSubmissionEvent(
-                entity.getTenantId(),
-                entity.getId(),
-                entity.getPatientId(),
-                entity.getPayerId(),
-                entity.getStatus() == PriorAuthRequestEntity.Status.SUBMITTED,
-                entity.getLastError(),
-                entity.getSubmittedAt() != null ? 
-                    java.time.Duration.between(entity.getCreatedAt(), entity.getSubmittedAt()).toMillis() : 0,
-                entity.getRequestedBy()
-            );
+            if (priorAuthAuditIntegration != null) {
+                priorAuthAuditIntegration.publishPriorAuthSubmissionEvent(
+                    entity.getTenantId(),
+                    entity.getId(),
+                    entity.getPatientId(),
+                    entity.getPayerId(),
+                    entity.getStatus() == PriorAuthRequestEntity.Status.SUBMITTED,
+                    entity.getLastError(),
+                    entity.getSubmittedAt() != null ?
+                        java.time.Duration.between(entity.getCreatedAt(), entity.getSubmittedAt()).toMillis() : 0,
+                    entity.getRequestedBy()
+                );
+            }
 
         } catch (Exception e) {
             log.error("Failed to submit PA request to payer: {}", e.getMessage());

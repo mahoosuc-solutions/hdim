@@ -7,7 +7,7 @@
     <changeSet id="0001-create-prior-auth-schema" author="prior-auth-service">
         <comment>Create prior_auth schema for Da Vinci PAS implementation</comment>
 
-        <sqlFile path="db/changelog/sql/0001-create-prior-auth-schema.sql"
+        <sqlFile path="sql/0001-create-prior-auth-schema.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>

@@ -1831,7 +1831,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       HEALTHDATA_SECURITY_JWT_SECRET: ${JWT_SECRET}
       SPRING_FLYWAY_ENABLED: "false"
-      SPRING_LIQUIBASE_ENABLED: "false"
+      SPRING_LIQUIBASE_ENABLED: "true"
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       AUDIT_ENABLED: "false"
       # OpenTelemetry OTLP HTTP Exporter (port 4318)

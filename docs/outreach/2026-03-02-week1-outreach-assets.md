@@ -30,6 +30,13 @@ The core problem is the same one you know from the HIE side: care gaps
 surface within seconds of a clinical event instead of showing up in
 next year's annual report.
 
+We've also built a RHEL 7 branch specifically for Healthix's
+infrastructure. Our support model through Mahoosuc Solutions is
+different from traditional vendors — we maintain a dedicated code
+repository per customer, AI-managed with human review, so your team has
+full visibility into every change made on your behalf. You're not buying
+a black box; you're getting a fully supported, customer-scoped codebase.
+
 Would you give me 20 minutes to show you where it landed? Your honest
 reaction in December was useful — I'd value it again.
 
@@ -67,6 +74,13 @@ isolation at the data layer, PHI audit logging, controlled cache TTL.
 
 693 tests passing. 62 documented API endpoints (OpenAPI 3.0). 3-minute
 Docker deployment.
+
+We've built a RHEL 7 branch targeting Healthix's infrastructure
+specifically. Our support model runs through a dedicated customer
+repository managed by Mahoosuc Solutions — AI-managed code with
+human-in-the-loop review on every change. Your team gets full
+transparency into what's running, why each change was made, and a
+complete audit trail. No vendor black box.
 
 I'd value 20 minutes for your honest technical read on whether the
 architecture holds up — specifically how it maps to how HIEs actually
@@ -179,6 +193,20 @@ whatever works for your schedule.
 1. Architecture diagram walkthrough + ADR overview
 2. Swagger UI live endpoint demo (OpenAPI 3.0, 62 endpoints)
 3. Multi-tenant isolation explanation — data layer, not application layer
+
+### Explaining the Customer Repo Model (If Asked)
+
+> "Mahoosuc Solutions maintains a dedicated GitHub repository for each
+> customer. Your Healthix repo is scoped to your deployment — RHEL 7
+> branch, your infrastructure. Every change goes through AI-assisted
+> development with a human reviewing before anything ships. You can see
+> every commit, every decision, every reason a change was made. That's
+> the support model — not a ticket queue, a shared codebase."
+
+**If they ask who reviews the AI output:**
+> "I do, as the engineer of record. The AI handles the acceleration;
+> a human owns the accountability. That's what 'humanity in the loop'
+> means in practice."
 
 ### One Question to Close Each Call With
 

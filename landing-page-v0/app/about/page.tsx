@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { LandingPageClient } from '../components/LandingPageClient'
 import { SiteFooter } from '../components/SiteFooter'
+import ScreenshotGallery from '../components/ScreenshotLightbox'
 
 export const metadata: Metadata = {
   title: 'About Us | HDIM - Healthcare Data in Motion',
@@ -216,8 +217,77 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Our Team */}
+      {/* The Platform */}
       <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold tracking-widest uppercase text-blue-600 mb-3">
+              Live Portal
+            </p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              The Platform
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Built for real clinical workflows — every screen from our live portal.
+            </p>
+          </div>
+
+          <ScreenshotGallery
+            heroScreenshot={{
+              src: "/images/dashboard-modern/01-dashboard-overview-clean.jpg",
+              alt: "HDIM Clinical Portal Dashboard",
+              width: 1915,
+              height: 939,
+              title: "Clinical Dashboard",
+              description: "Role-based dashboard with real-time KPIs, care gap alerts, and quick actions",
+              badge: "LIVE",
+            }}
+            rows={[
+              {
+                columns: 3,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/03-risk-stratification.jpg",
+                    alt: "Risk Stratification view",
+                    width: 1918,
+                    height: 920,
+                    title: "Risk Stratification",
+                    description: "Population-level risk scoring and cohort analysis",
+                  },
+                  {
+                    src: "/images/dashboard-modern/04-care-gaps-live-clean.jpg",
+                    alt: "Live Care Gap Alerts",
+                    width: 1913,
+                    height: 936,
+                    title: "Live Care Gap Alerts",
+                    description: "Urgency-sorted alerts with patient slide-out panel",
+                  },
+                  {
+                    src: "/images/dashboard-modern/09-reports-hub.png",
+                    alt: "Reports Hub",
+                    width: 1918,
+                    height: 920,
+                    title: "Reports Hub",
+                    description: "Automated quality reporting and QRDA export",
+                  },
+                ],
+              },
+            ]}
+          />
+
+          <div className="text-center mt-10">
+            <Link
+              href="/features"
+              className="inline-flex items-center gap-2 text-blue-600 font-semibold hover:gap-3 transition-all"
+            >
+              See all platform screenshots <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Our Team */}
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">

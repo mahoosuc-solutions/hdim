@@ -40,7 +40,6 @@ public class TwilioResilienceConfiguration {
     public RetryConfig twilioSmsRetryConfig() {
         return RetryConfig.custom()
                 .maxAttempts(3) // Max 3 attempts (1 initial + 2 retries)
-                .waitDuration(Duration.ofSeconds(1)) // Initial wait 1s
                 .intervalFunction(attempt -> Duration.ofSeconds(1L << (attempt - 1)).toMillis()) // Exponential backoff: 1s, 2s, 4s
                 .retryOnException(throwable -> {
                     // Retry on transient errors

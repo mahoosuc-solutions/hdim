@@ -269,7 +269,7 @@ export default function ResearchPage() {
                 <h2 className="text-2xl font-bold mb-3">
                   New: Care Transitions Pilot Blueprint
                 </h2>
-                <p className="text-blue-100 max-w-2xl">
+                <p className="text-blue-200 max-w-2xl">
                   Review the public framework for a 90-day transitions-of-care pilot,
                   including scope, security baseline, KPI model, and deployment options
                   across vendor-hosted, customer-hosted cloud, and on-prem environments.

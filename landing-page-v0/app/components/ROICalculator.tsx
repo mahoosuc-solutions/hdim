@@ -166,7 +166,7 @@ export default function ROICalculator() {
           <Calculator className="mr-3" size={28} />
           <h3 className="text-2xl font-bold">ROI Calculator</h3>
         </div>
-        <p className="text-blue-100">
+        <p className="text-blue-200">
           Estimate your quality improvement and financial impact with HDIM
         </p>
       </div>

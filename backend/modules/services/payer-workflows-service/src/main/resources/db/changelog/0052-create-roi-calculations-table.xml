@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="0052-create-roi-calculations-table" author="hdim">
+        <createTable tableName="roi_calculations">
+            <!-- Primary Key -->
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Multi-Tenant (nullable for public/anonymous calculations) -->
+            <column name="tenant_id" type="VARCHAR(255)"/>
+
+            <!-- Input Fields -->
+            <column name="org_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_population" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_quality_score" type="NUMERIC(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_star_rating" type="NUMERIC(3,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manual_reporting_hours" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Calculated Result Fields -->
+            <column name="quality_improvement" type="NUMERIC(5,1)"/>
+            <column name="projected_score" type="NUMERIC(5,1)"/>
+            <column name="star_improvement" type="NUMERIC(3,1)"/>
+            <column name="projected_star_rating" type="NUMERIC(3,1)"/>
+            <column name="quality_bonuses" type="NUMERIC(14,2)"/>
+            <column name="admin_savings" type="NUMERIC(14,2)"/>
+            <column name="gap_closure_value" type="NUMERIC(14,2)"/>
+            <column name="total_year1_value" type="NUMERIC(14,2)"/>
+            <column name="year1_investment" type="NUMERIC(14,2)"/>
+            <column name="year1_roi" type="NUMERIC(10,2)"/>
+            <column name="payback_days" type="NUMERIC(6,0)"/>
+            <column name="three_year_npv" type="NUMERIC(14,2)"/>
+
+            <!-- Lead Capture Fields -->
+            <column name="contact_name" type="VARCHAR(255)"/>
+            <column name="contact_email" type="VARCHAR(255)"/>
+            <column name="contact_company" type="VARCHAR(255)"/>
+
+            <!-- Audit Fields -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex indexName="idx_roi_tenant" tableName="roi_calculations">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_roi_contact_email" tableName="roi_calculations">
+            <column name="contact_email"/>
+        </createIndex>
+
+        <createIndex indexName="idx_roi_created" tableName="roi_calculations">
+            <column name="created_at"/>
+        </createIndex>
+
+        <!-- Rollback -->
+        <rollback>
+            <dropTable tableName="roi_calculations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

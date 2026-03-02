@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Calculator, DollarSign, TrendingUp, Clock, Star } from 'lucide-react'
+import { useState } from 'react'
+import { Calculator, DollarSign, TrendingUp, Clock, Star, Share2, Download, Check } from 'lucide-react'
 
 interface ROIInputs {
   orgType: 'ACO' | 'Health System' | 'HIE' | 'Payer' | 'FQHC'
@@ -53,6 +53,9 @@ export default function ROICalculator() {
 
   const [results, setResults] = useState<ROIResults | null>(null)
   const [showResults, setShowResults] = useState(false)
+  const [savedId, setSavedId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   const calculateROI = () => {
     const { orgType, patientPopulation, currentQualityScore, currentStarRating, manualReportingHours } = inputs
@@ -356,6 +359,60 @@ export default function ROICalculator() {
                 <div className="text-2xl font-bold text-purple-600">{formatCurrency(results.threeYearNPV)}</div>
                 <p className="text-sm text-gray-600">3-Year NPV</p>
               </div>
+            </div>
+
+            {/* Save & Share Actions */}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={async () => {
+                  if (savedId) {
+                    // Already saved — copy share link
+                    const url = `${window.location.origin}/roi-calculator?id=${savedId}`
+                    await navigator.clipboard.writeText(url)
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                    return
+                  }
+                  setSaving(true)
+                  try {
+                    const res = await fetch('/api/roi', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...inputs, save: true }),
+                    })
+                    if (res.ok) {
+                      const data = await res.json()
+                      if (data.id) {
+                        setSavedId(data.id)
+                        const url = `${window.location.origin}/roi-calculator?id=${data.id}`
+                        await navigator.clipboard.writeText(url)
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }
+                    }
+                  } catch {
+                    // Backend unavailable — silent fail
+                  } finally {
+                    setSaving(false)
+                  }
+                }}
+                disabled={saving}
+                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg border border-[#0D4F8B] text-[#0D4F8B] hover:bg-blue-50 transition font-medium disabled:opacity-50"
+              >
+                {copied ? <Check size={18} /> : <Share2 size={18} />}
+                {copied ? 'Link Copied!' : saving ? 'Saving...' : savedId ? 'Copy Share Link' : 'Save & Share'}
+              </button>
+              {savedId && (
+                <a
+                  href={`/api/roi/pdf?id=${savedId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-lg bg-[#0D4F8B] text-white hover:bg-[#0A3D6E] transition font-medium"
+                >
+                  <Download size={18} />
+                  Download PDF
+                </a>
+              )}
             </div>
 
             <p className="text-xs text-gray-500 mt-6 text-center">

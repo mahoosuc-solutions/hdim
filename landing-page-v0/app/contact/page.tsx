@@ -157,9 +157,9 @@ export default function ContactPage() {
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                   <method.icon className="w-6 h-6 text-blue-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                <h2 className="text-lg font-bold text-gray-900 mb-2">
                   {method.title}
-                </h3>
+                </h2>
                 <p className="text-blue-600 font-semibold mb-2">
                   {method.detail}
                 </p>

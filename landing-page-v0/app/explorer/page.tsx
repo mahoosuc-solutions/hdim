@@ -469,7 +469,7 @@ export default function ExplorerPage() {
           {/* CTA Section */}
           <div className="mt-12 bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-8 text-white text-center">
             <h2 className="text-2xl font-bold mb-2">Ready to explore your own data?</h2>
-            <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+            <p className="text-blue-200 mb-6 max-w-2xl mx-auto">
               Schedule a demo to see HDIM process your patient population and identify care gaps in real-time.
             </p>
             <div className="flex justify-center gap-4">

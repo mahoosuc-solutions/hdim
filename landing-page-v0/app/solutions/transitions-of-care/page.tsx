@@ -73,7 +73,7 @@ export default function CareTransitionsPilotPage() {
             <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
               Care Transitions Pilot
             </h1>
-            <p className="text-lg text-blue-100 max-w-3xl">
+            <p className="text-lg text-blue-200 max-w-3xl">
               A 90-day pilot model for Medicare Advantage plans, ACOs, and
               health systems to improve post-discharge engagement,
               comprehension, and secure escalation to care teams.

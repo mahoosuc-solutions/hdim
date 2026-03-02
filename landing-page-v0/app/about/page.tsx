@@ -343,7 +343,7 @@ export default function AboutPage() {
                       In Progress
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
                       <Clock className="w-3 h-3" />
                       Planned
                     </span>
@@ -374,7 +374,7 @@ export default function AboutPage() {
           <h2 className="text-4xl font-bold text-white mb-6">
             Join Us in Building Better Healthcare
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-blue-200 mb-8">
             See how HDIM can help your organization achieve quality measurement excellence.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

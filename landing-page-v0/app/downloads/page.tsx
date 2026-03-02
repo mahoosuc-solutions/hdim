@@ -220,7 +220,7 @@ export default function DownloadsPage() {
                     <div className={`p-3 rounded-lg ${colorClasses[dataset.color as keyof typeof colorClasses]}`}>
                       <Icon className="w-6 h-6" />
                     </div>
-                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-1 rounded">
                       {dataset.type}
                     </span>
                   </div>
@@ -235,15 +235,15 @@ export default function DownloadsPage() {
                   <div className="grid grid-cols-3 gap-2 mb-4 text-center">
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-sm font-semibold text-gray-900">{dataset.patients}</div>
-                      <div className="text-xs text-gray-500">Patients</div>
+                      <div className="text-xs text-gray-600">Patients</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-sm font-semibold text-gray-900">{dataset.resources}</div>
-                      <div className="text-xs text-gray-500">Resources</div>
+                      <div className="text-xs text-gray-600">Resources</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-2">
                       <div className="text-sm font-semibold text-gray-900">{dataset.size}</div>
-                      <div className="text-xs text-gray-500">Size</div>
+                      <div className="text-xs text-gray-600">Size</div>
                     </div>
                   </div>
 
@@ -256,7 +256,7 @@ export default function DownloadsPage() {
                     ))}
                   </ul>
 
-                  <div className="flex items-center text-xs text-gray-500">
+                  <div className="flex items-center text-xs text-gray-600">
                     <FileJson className="w-3 h-3 mr-1" />
                     {dataset.formats.join(', ')}
                   </div>
@@ -372,13 +372,13 @@ export default function DownloadsPage() {
                         />
                         <div>
                           <div className="text-sm font-medium">{size.label}</div>
-                          <div className="text-xs text-gray-500">{size.size}</div>
+                          <div className="text-xs text-gray-600">{size.size}</div>
                         </div>
                         {!size.free && <Lock className="w-3 h-3 ml-auto text-gray-400" />}
                       </label>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-600 mt-2">
                     * Full datasets available after sales consultation
                   </p>
                 </div>
@@ -459,7 +459,7 @@ export default function DownloadsPage() {
                     setSubmitted(false)
                     setSelectedDataset(null)
                   }}
-                  className="text-gray-500 hover:text-gray-700 text-sm mt-4"
+                  className="text-gray-600 hover:text-gray-700 text-sm mt-4"
                 >
                   ← Download a different dataset
                 </button>

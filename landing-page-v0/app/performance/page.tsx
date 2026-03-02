@@ -338,7 +338,7 @@ export default function PerformancePage() {
           <h2 className="text-4xl font-bold text-white mb-6">
             Want to See the Platform That Produced These Numbers?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-blue-200 mb-8">
             Schedule a technical walkthrough. We will show you the k6 dashboards, the Jaeger trace view,
             and the dry-run checklist — not just the demo portal.
           </p>

@@ -358,7 +358,7 @@ export default function FeaturesPage() {
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div>
-              <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-500 mb-4">
+              <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-600 mb-4">
                 EHR Systems
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -373,7 +373,7 @@ export default function FeaturesPage() {
               </div>
             </div>
             <div>
-              <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-500 mb-4">
+              <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-600 mb-4">
                 Data Formats
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -485,7 +485,7 @@ export default function FeaturesPage() {
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Transform Your Quality Measurement?
           </h2>
-          <p className="text-xl text-blue-100 mb-8">
+          <p className="text-xl text-blue-200 mb-8">
             See how HDIM can help you close care gaps faster and improve quality performance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

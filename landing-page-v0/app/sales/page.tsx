@@ -181,7 +181,7 @@ export default function SalesPage() {
             <h1 className="text-5xl font-bold mb-6 leading-tight">
               Here&apos;s Exactly How<br />We Work With You
             </h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-10">
+            <p className="text-xl text-blue-200 max-w-2xl mx-auto mb-10">
               No black boxes, no surprise timelines. Most healthcare vendors make buying feel like a risk. We make it feel like a partnership — starting with the first call.
             </p>
             <Link

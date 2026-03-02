@@ -19,4 +19,8 @@
     <include file="db/changelog/0050-create-phase2-execution-tasks-table.xml"/>
     <include file="db/changelog/0051-add-financial-roi-tracking-fields-to-phase2-execution-tasks.xml"/>
 
+    <!-- ROI Calculator & Pilot Readiness -->
+    <include file="db/changelog/0052-create-roi-calculations-table.xml"/>
+    <include file="db/changelog/0053-create-pilot-readiness-table.xml"/>
+
 </databaseChangeLog>

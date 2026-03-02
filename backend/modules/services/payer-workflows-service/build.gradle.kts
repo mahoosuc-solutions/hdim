@@ -61,9 +61,10 @@ dependencies {
     implementation(libs.commons.lang3)
     implementation(libs.guava)
 
-    // Export functionality (Excel, CSV)
+    // Export functionality (Excel, CSV, PDF)
     implementation(libs.commons.csv)
     implementation(libs.poi.ooxml)
+    implementation(libs.pdfbox)
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))

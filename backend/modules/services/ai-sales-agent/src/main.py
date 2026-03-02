@@ -21,6 +21,8 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 
 from agents.discovery_agent import DiscoveryAgent
+from agents.demo_agent import DemoAgent, DemoResult
+from agents.objection_handler import ObjectionHandler, ObjectionResult
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -496,15 +498,17 @@ async def list_agents():
             },
             {
                 "name": "Demo Agent",
-                "status": "planned",
+                "status": "active",
                 "capability": "Generate persona-specific product demos (15/30/45 min)",
-                "timeline": "Week 2 (Feb 22-28)",
+                "endpoint": "POST /api/sales/demo-script",
+                "personas": ["cmo", "coordinator", "cfo", "provider", "it"],
             },
             {
                 "name": "Objection Agent",
-                "status": "planned",
+                "status": "active",
                 "capability": "Handle 6 common objections with real-time reframes",
-                "timeline": "Month 2 (March)",
+                "endpoint": "POST /api/sales/handle-objection",
+                "categories": ["competitive", "price", "it_approval", "contract", "priority", "proof"],
             },
             {
                 "name": "Pipeline Agent",
@@ -513,7 +517,7 @@ async def list_agents():
                 "timeline": "Month 2 (March)",
             },
         ],
-        "phase": "Phase 1: Discovery Agent (Feb 15-21)",
+        "phase": "Phase 2: All Core Agents Active (Mar 2026)",
         "launch_target": "March 1, 2026",
         "goals": {
             "discovery_calls": "50-100",
@@ -788,6 +792,129 @@ async def startup_event():
     logger.info("Objection Agent: PLANNED (Month 2)")
     logger.info("Pipeline Agent: PLANNED (Month 2)")
     logger.info(f"Operator audit DB initialized at {DB_PATH}")
+
+
+# ==================== Demo Agent Endpoints ====================
+
+demo_agent = DemoAgent()
+objection_handler = ObjectionHandler()
+
+
+class DemoScriptRequest(BaseModel):
+    customer_name: str
+    persona_type: str = "cmo"
+    duration_minutes: int = 30
+    pain_points: Optional[list[str]] = None
+    patient_count: Optional[int] = None
+
+
+class DemoScriptResponse(BaseModel):
+    customer_name: str
+    persona_type: str
+    duration_minutes: int
+    opening_hook: str
+    segments: list[dict]
+    closing: str
+    follow_up_actions: list[str]
+    customization_notes: list[str]
+    total_talking_points: int
+
+
+@app.post("/api/sales/demo-script", response_model=DemoScriptResponse)
+async def generate_demo_script(request: DemoScriptRequest):
+    """Generate a persona-specific demo script.
+
+    Creates a structured demo script with timing, talking points,
+    and follow-up actions based on persona and duration.
+    """
+    try:
+        result = demo_agent.generate_demo_script(
+            customer_name=request.customer_name,
+            persona_type=request.persona_type,
+            duration_minutes=request.duration_minutes,
+            pain_points=request.pain_points,
+            patient_count=request.patient_count,
+        )
+        return DemoScriptResponse(
+            customer_name=result.customer_name,
+            persona_type=result.persona_type,
+            duration_minutes=result.duration_minutes,
+            opening_hook=result.opening_hook,
+            segments=result.segments,
+            closing=result.closing,
+            follow_up_actions=result.follow_up_actions,
+            customization_notes=result.customization_notes,
+            total_talking_points=result.total_talking_points,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Demo script generation failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Demo script generation failed")
+
+
+@app.get("/api/sales/demo-flows")
+async def list_demo_flows():
+    """List available demo configurations by persona and duration."""
+    return demo_agent.list_available_demos()
+
+
+# ==================== Objection Handler Endpoints ====================
+
+
+class ObjectionRequest(BaseModel):
+    objection_text: str
+    persona_type: str = "cmo"
+    category: Optional[str] = None
+
+
+class ObjectionResponse(BaseModel):
+    category: str
+    objection_text: str
+    severity: str
+    acknowledge: str
+    reframe: str
+    proof_point: str
+    persona_specific: str
+    next_step: str
+    confidence: float
+
+
+@app.post("/api/sales/handle-objection", response_model=ObjectionResponse)
+async def handle_objection(request: ObjectionRequest):
+    """Handle a sales objection with persona-specific response.
+
+    Auto-classifies the objection if category is not provided.
+    Returns structured response: acknowledge → reframe → proof → next step.
+    """
+    try:
+        result = objection_handler.handle_objection(
+            objection_text=request.objection_text,
+            persona_type=request.persona_type,
+            category=request.category,
+        )
+        return ObjectionResponse(
+            category=result.category,
+            objection_text=result.objection_text,
+            severity=result.severity,
+            acknowledge=result.acknowledge,
+            reframe=result.reframe,
+            proof_point=result.proof_point,
+            persona_specific=result.persona_specific,
+            next_step=result.next_step,
+            confidence=result.confidence,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Objection handling failed: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Objection handling failed")
+
+
+@app.get("/api/sales/objections")
+async def list_objection_categories():
+    """List all available objection categories with example objections."""
+    return objection_handler.list_objection_categories()
 
 
 @app.on_event("shutdown")

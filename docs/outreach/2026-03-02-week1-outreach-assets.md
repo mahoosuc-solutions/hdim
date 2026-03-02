@@ -11,81 +11,77 @@
 ### Email 1: Healthix CEO (Send Monday)
 
 **To:** [CEO name] <[email]>
-**Subject:** Catching up + something I've been building
+**Subject:** We spoke in December — here's what's changed
 
 ---
 
 Hi [Name],
 
-Hope you're well — it's been too long since our Healthix days.
+We had a call in December where I showed you an early prototype of
+HealthData-in-Motion. It wasn't ready — the architecture was exploratory
+and I knew it when you were looking at it.
 
-I've been building something over the past year that's rooted directly
-in what I watched quality teams struggle with as enterprise architect:
-the lag between when a care event happens and when anyone acts on it.
-Most health systems are still working off 6-12 month old HEDIS data
-when they're making quality decisions.
+Since then I've rebuilt the platform from scratch. What was a Node.js
+prototype is now 51 Java/Spring Boot microservices with 1,771 commits,
+52 HEDIS measures automated via a CQL engine, and 693 passing tests.
+It runs on FHIR R4 natively and deploys in three minutes.
 
-I built a platform called HealthData-in-Motion that evaluates quality
-measures in real-time — care gaps surface within seconds of a FHIR
-event instead of showing up in next year's annual report. It's
-event-driven, FHIR R4 native, and built for the interoperability
-infrastructure that HIEs like Healthix were standing up.
+The core problem is the same one you know from the HIE side: care gaps
+surface within seconds of a clinical event instead of showing up in
+next year's annual report.
 
-I'd love 20 minutes to walk you through it and get your honest reaction.
-You've seen this problem from the HIE side better than almost anyone I
-know — you'd tell me quickly whether I'm solving it the right way.
-
-No agenda beyond that.
-
-Would you have time for a call this week or next?
+Would you give me 20 minutes to show you where it landed? Your honest
+reaction in December was useful — I'd value it again.
 
 Aaron
-[LinkedIn: linkedin.com/in/your-profile]
+[LinkedIn]
 
 ---
 
 **Follow-up if no response by Thursday:**
 
-Hi [Name] — just wanted to make sure this didn't get buried.
-Happy to keep it to 15 minutes and work around your schedule.
+Hi [Name] — wanted to make sure my note didn't get buried. Happy to
+keep it to 15 minutes. Given you saw where it was in December, I think
+the contrast would be worth your time.
 
 ---
 
 ### Email 2: Healthix CIO (Send Tuesday)
 
 **To:** [CIO name] <[email]>
-**Subject:** Picking your brain on something I'm building
+**Subject:** Re: our December call — want your honest technical read on where this landed
 
 ---
 
 Hi [Name],
 
-It's been too long. I hope things are going well at Healthix.
+When we spoke in December I was showing you a Node.js prototype. I knew
+at the time it wasn't where it needed to be architecturally.
 
-I've been heads-down this past year building a platform for real-time
-HEDIS quality measurement — essentially tackling the data latency
-problem we used to work around constantly. Health systems see care
-gaps within seconds of a clinical event, not in the next annual report.
+Since then I rebuilt the platform completely. It's now 51 Java 21 /
+Spring Boot 3.x microservices — event-driven, FHIR R4 native, 29
+independent PostgreSQL databases with Liquibase schema management, and
+11 Architecture Decision Records documenting the major design choices.
+HIPAA compliance is architectural rather than bolted on: multi-tenant
+isolation at the data layer, PHI audit logging, controlled cache TTL.
 
-The architecture is event-driven FHIR R4, which means it hooks into the
-same data pipelines HIEs and health systems already have. But I'm
-genuinely curious whether I'm thinking about the data consumption side
-correctly — how health systems actually pull and use data from HIEs
-in practice is something you understand better than I do.
+693 tests passing. 62 documented API endpoints (OpenAPI 3.0). 3-minute
+Docker deployment.
 
-Would you have 20 minutes this week or next for a sanity check? No
-pitch — I'm at the stage where honest technical pushback is more useful
-than encouragement.
+I'd value 20 minutes for your honest technical read on whether the
+architecture holds up — specifically how it maps to how HIEs actually
+surface data to health systems.
 
 Aaron
-[LinkedIn: linkedin.com/in/your-profile]
+[LinkedIn]
 
 ---
 
 **Follow-up if no response by Thursday:**
 
-Hi [Name] — wanted to make sure this didn't slip through. Happy to
-keep it to 15 minutes, whatever works for your schedule.
+Hi [Name] — just following up. If the December version set your
+expectations low, that's fair — that's kind of the point. 15 minutes,
+whatever works for your schedule.
 
 ---
 
@@ -157,10 +153,34 @@ keep it to 15 minutes, whatever works for your schedule.
 
 ## Tracking
 
-| Contact | Type | Sent | Responded | Call Scheduled | Notes |
-|---------|------|------|-----------|----------------|-------|
-| Healthix CEO | Warm email | | | | |
-| Healthix CIO | Warm email | | | | |
-| John Halamka | LinkedIn | | | | |
-| Glen Tullman | LinkedIn | | | | |
-| Farzad Mostashari | LinkedIn | | | | |
+| Contact | Type | Prior Contact | Sent | Responded | Call Scheduled | Notes |
+|---------|------|---------------|------|-----------|----------------|-------|
+| Healthix CEO | Re-engagement email | Dec 2025 call (prototype) | | | | |
+| Healthix CIO | Re-engagement email | Dec 2025 call (prototype) | | | | |
+| John Halamka | LinkedIn | None | | | | |
+| Glen Tullman | LinkedIn | None | | | | |
+| Farzad Mostashari | LinkedIn | None | | | | |
+
+---
+
+## Call Prep (When They Respond)
+
+### 90-Second "What Changed" Answer
+
+> "In December I showed you a Node.js prototype — I knew it wasn't ready. Since then I rebuilt the platform completely: 51 Java microservices, event-driven FHIR R4, 693 passing tests. The care gap detection now works in real-time against a live event stream, not a batch job."
+
+### 20-Minute Demo Plan by Persona
+
+**CEO:**
+1. ROI calculator — customize to their health system size live on the call
+2. Live care gap detection speed demo — event fires, gap surfaces in seconds
+
+**CIO:**
+1. Architecture diagram walkthrough + ADR overview
+2. Swagger UI live endpoint demo (OpenAPI 3.0, 62 endpoints)
+3. Multi-tenant isolation explanation — data layer, not application layer
+
+### One Question to Close Each Call With
+
+- **CEO:** "What would make this worth a pilot conversation with your quality team?"
+- **CIO:** "Where does this break down from a data consumption standpoint — specifically how your member health systems pull from Healthix today?"

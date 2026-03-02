@@ -20,7 +20,8 @@ import {
 import { LandingPageClient } from './LandingPageClient'
 import { ProgressiveCTA } from './ProgressiveCTA'
 import { SiteFooter } from './SiteFooter'
-import { CAPABILITIES } from '../../lib/constants'
+import { RoleScreenshotGrid } from './RoleScreenshotGrid'
+import { CAPABILITIES, SEGMENT_SCREENSHOTS } from '../../lib/constants'
 import type { Segment } from '../../lib/constants'
 
 const CAPABILITY_ICONS: Record<string, React.ElementType> = {
@@ -46,10 +47,18 @@ interface SegmentPageProps {
   segment: Segment
 }
 
+const SLUG_TO_KEY: Record<string, string> = {
+  'health-plans': 'healthPlans',
+  'health-systems': 'healthSystems',
+  'acos': 'acos',
+}
+
 export function SegmentPage({ segment }: SegmentPageProps) {
   const segmentCapabilities = CAPABILITIES.filter((c) =>
     segment.capabilities.includes(c.id)
   )
+  const segmentKey = SLUG_TO_KEY[segment.slug] || ''
+  const roleScreenshots = SEGMENT_SCREENSHOTS[segmentKey] || []
 
   return (
     <LandingPageClient>
@@ -111,8 +120,26 @@ export function SegmentPage({ segment }: SegmentPageProps) {
         </div>
       </section>
 
+      {/* Role Screenshots */}
+      {roleScreenshots.length > 0 && (
+        <section className="py-20 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <p className="text-sm font-semibold tracking-widest uppercase text-primary mb-3">
+                Live Portal
+              </p>
+              <h2 className="section-heading">See what your team sees</h2>
+              <p className="section-subheading mt-4">
+                Role-specific views from our live Clinical Portal — not mockups.
+              </p>
+            </div>
+            <RoleScreenshotGrid roles={roleScreenshots} />
+          </div>
+        </section>
+      )}
+
       {/* Capabilities */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="section-heading">Capabilities for {segment.label.toLowerCase()}</h2>

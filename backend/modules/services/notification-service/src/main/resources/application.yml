@@ -62,6 +62,12 @@ spring:
     redis:
       time-to-live: 300000
 
+# Disable AI audit event consumer (requires messaging module's stringKafkaListenerContainerFactory)
+audit:
+  kafka:
+    consumer:
+      enabled: false
+
 # HealthData Database Configuration
 healthdata:
   database:

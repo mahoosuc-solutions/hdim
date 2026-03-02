@@ -22,6 +22,12 @@ spring:
     host: ${SMTP_HOST:mailhog}
     port: ${SMTP_PORT:1025}
 
+# Disable AI audit event consumer (requires messaging module's stringKafkaListenerContainerFactory)
+audit:
+  kafka:
+    consumer:
+      enabled: false
+
 healthdata:
   security:
     jwt:

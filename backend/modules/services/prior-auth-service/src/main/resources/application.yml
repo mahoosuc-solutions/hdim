@@ -24,14 +24,8 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: prior_auth
+    liquibase-schema: public
 
-# HealthData Database Configuration
-healthdata:
-  database:
-    hikari:
-      traffic-tier: MEDIUM  # Prior authorization: 10-100 req/sec, moderate workflow
-
-spring:
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -62,6 +56,18 @@ spring:
           default:
             connect-timeout: 30000
             read-timeout: 60000
+
+# HealthData Database Configuration
+healthdata:
+  database:
+    hikari:
+      traffic-tier: MEDIUM  # Prior authorization: 10-100 req/sec, moderate workflow
+
+# Disable unused AI audit Kafka consumer to prevent missing bean errors
+audit:
+  kafka:
+    consumer:
+      enabled: false
 
 management:
   endpoints:

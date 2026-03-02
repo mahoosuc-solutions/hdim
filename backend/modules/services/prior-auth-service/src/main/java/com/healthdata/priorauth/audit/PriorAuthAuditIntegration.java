@@ -8,6 +8,7 @@ import com.healthdata.audit.service.ai.AIAuditEventPublisher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,6 +22,7 @@ import java.util.UUID;
  * Critical for CMS Interoperability and Prior Authorization Rule (CMS-0057-F) compliance
  */
 @Service
+@ConditionalOnBean(AIAuditEventPublisher.class)
 @Slf4j
 public class PriorAuthAuditIntegration {
 

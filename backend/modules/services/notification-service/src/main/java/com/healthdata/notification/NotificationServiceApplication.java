@@ -26,22 +26,28 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * - Bulk notification support
  * - Kafka event consumption for async notifications
  */
-@SpringBootApplication(scanBasePackages = {
-    "com.healthdata.notification",
-    "com.healthdata.authentication",
-    "com.healthdata.security",
-    "com.healthdata.audit",
-    "com.healthdata.common",
-    "com.healthdata.featureflags"
-})
-@EnableJpaRepositories(basePackages = {
-    "com.healthdata.notification.domain.repository",
-    "com.healthdata.featureflags"
-})
+@SpringBootApplication(
+    scanBasePackages = {
+        "com.healthdata.notification",
+        "com.healthdata.authentication.filter",
+        "com.healthdata.authentication.security",
+        "com.healthdata.security",
+        "com.healthdata.audit",
+        "com.healthdata.common",
+        "com.healthdata.featureflags"
+    },
+    exclude = {
+        com.healthdata.authentication.config.AuthenticationAutoConfiguration.class,
+        com.healthdata.authentication.config.AuthenticationJwtAutoConfiguration.class,
+        com.healthdata.authentication.config.AuthenticationControllerAutoConfiguration.class
+    }
+)
+// Repository scanning for audit and feature-flags provided by AuditAutoConfiguration
+// and FeatureFlagAutoConfiguration — only declare notification-specific repos here
+@EnableJpaRepositories(basePackages = "com.healthdata.notification.domain.repository")
 @EntityScan(basePackages = {
     "com.healthdata.notification.domain.model",
     "com.healthdata.audit.entity",
-    "com.healthdata.authentication.domain",
     "com.healthdata.featureflags"
 })
 @EnableAsync

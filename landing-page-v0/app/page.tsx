@@ -1,3 +1,4 @@
+import { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
@@ -24,6 +25,11 @@ import { ProgressiveCTA } from './components/ProgressiveCTA'
 import { SiteFooter } from './components/SiteFooter'
 import ScreenshotGallery from './components/ScreenshotLightbox'
 import { CAPABILITIES, SEGMENTS } from '../lib/constants'
+
+export const metadata: Metadata = {
+  title: 'HDIM - FHIR-Native Healthcare Quality Platform | Care Gaps, HEDIS, Star Ratings',
+  description: 'Real-time HEDIS quality measurement, care gap detection, and Star Rating optimization. Built on FHIR R4 with CQL-native execution for health plans, ACOs, and health systems.',
+}
 
 const SEGMENT_CARDS = [
   { key: 'healthPlans', icon: Building2, color: 'from-primary to-primary-600' },

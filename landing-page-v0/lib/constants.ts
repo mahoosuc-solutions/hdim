@@ -111,22 +111,22 @@ export const SEGMENT_SCREENSHOTS: Record<string, SegmentScreenshots[]> = {
     {
       role: 'CMO Dashboard',
       screenshots: [
-        { src: '/images/screenshots/cmo/cmo-01-dashboard.png', alt: 'CMO Dashboard overview', title: 'Executive Dashboard', description: 'Real-time quality KPIs and measure performance' },
-        { src: '/images/screenshots/cmo/cmo-02-quality-measures.png', alt: 'Quality measures list', title: 'Quality Measures', description: 'HEDIS measure library with compliance tracking' },
+        { src: '/images/screenshots/cmo/cmo-01-dashboard.jpg', alt: 'CMO Dashboard overview', title: 'Executive Dashboard', description: 'Real-time quality KPIs and measure performance' },
+        { src: '/images/screenshots/cmo/cmo-02-quality-measures.jpg', alt: 'Quality measures list', title: 'Quality Measures', description: 'HEDIS measure library with compliance tracking' },
       ],
     },
     {
       role: 'Quality Analyst',
       screenshots: [
-        { src: '/images/screenshots/quality-analyst/quality-analyst-04-run-evaluation.png', alt: 'Run evaluation', title: 'Measure Evaluation', description: 'One-click HEDIS measure evaluation' },
-        { src: '/images/screenshots/quality-analyst/quality-analyst-06-results-pass-fail.png', alt: 'Results pass/fail', title: 'Evaluation Results', description: 'Pass/fail compliance scoring with drilldowns' },
+        { src: '/images/screenshots/quality-analyst/quality-analyst-04-run-evaluation.jpg', alt: 'Run evaluation', title: 'Measure Evaluation', description: 'One-click HEDIS measure evaluation' },
+        { src: '/images/screenshots/quality-analyst/quality-analyst-06-results-pass-fail.jpg', alt: 'Results pass/fail', title: 'Evaluation Results', description: 'Pass/fail compliance scoring with drilldowns' },
       ],
     },
     {
       role: 'Data Analyst',
       screenshots: [
-        { src: '/images/screenshots/data-analyst/data-analyst-02-risk-stratification.png', alt: 'Risk stratification', title: 'Risk Stratification', description: 'Population-level risk scoring and cohort analysis' },
-        { src: '/images/screenshots/data-analyst/data-analyst-04-quality-constellation.png', alt: 'Quality constellation', title: 'Quality Constellation', description: 'Multi-dimensional measure visualization' },
+        { src: '/images/screenshots/data-analyst/data-analyst-02-risk-stratification.jpg', alt: 'Risk stratification', title: 'Risk Stratification', description: 'Population-level risk scoring and cohort analysis' },
+        { src: '/images/screenshots/data-analyst/data-analyst-04-quality-constellation.jpg', alt: 'Quality constellation', title: 'Quality Constellation', description: 'Multi-dimensional measure visualization' },
       ],
     },
   ],
@@ -134,22 +134,22 @@ export const SEGMENT_SCREENSHOTS: Record<string, SegmentScreenshots[]> = {
     {
       role: 'Provider',
       screenshots: [
-        { src: '/images/screenshots/provider/provider-01-pre-visit.png', alt: 'Pre-visit summary', title: 'Pre-Visit Summary', description: 'Care gaps and recommendations before patient arrives' },
-        { src: '/images/screenshots/provider/provider-06-care-gaps.png', alt: 'Provider care gaps', title: 'Point-of-Care Gaps', description: 'Real-time care gap alerts during patient visit' },
+        { src: '/images/screenshots/provider/provider-01-pre-visit.jpg', alt: 'Pre-visit summary', title: 'Pre-Visit Summary', description: 'Care gaps and recommendations before patient arrives' },
+        { src: '/images/screenshots/provider/provider-06-care-gaps.jpg', alt: 'Provider care gaps', title: 'Point-of-Care Gaps', description: 'Real-time care gap alerts during patient visit' },
       ],
     },
     {
       role: 'Care Manager',
       screenshots: [
-        { src: '/images/screenshots/care-manager/care-manager-02-care-gaps-table.png', alt: 'Care gaps table', title: 'Care Gap Worklist', description: 'Priority-based worklist for care gap closure' },
-        { src: '/images/screenshots/care-manager/care-manager-06-intervention-dialog.png', alt: 'Intervention dialog', title: 'Intervention Dialog', description: 'Document interventions and close gaps' },
+        { src: '/images/screenshots/care-manager/care-manager-02-care-gaps-table.jpg', alt: 'Care gaps table', title: 'Care Gap Worklist', description: 'Priority-based worklist for care gap closure' },
+        { src: '/images/screenshots/care-manager/care-manager-06-intervention-dialog.jpg', alt: 'Intervention dialog', title: 'Intervention Dialog', description: 'Document interventions and close gaps' },
       ],
     },
     {
       role: 'Admin',
       screenshots: [
-        { src: '/images/screenshots/admin/admin-05-audit-logs.png', alt: 'Audit logs', title: 'Audit Logs', description: 'HIPAA-compliant audit trail for all PHI access' },
-        { src: '/images/screenshots/admin/admin-03-user-management.png', alt: 'User management', title: 'User Management', description: 'Role-based access control and user provisioning' },
+        { src: '/images/screenshots/admin/admin-05-audit-logs.jpg', alt: 'Audit logs', title: 'Audit Logs', description: 'HIPAA-compliant audit trail for all PHI access' },
+        { src: '/images/screenshots/admin/admin-03-user-management.jpg', alt: 'User management', title: 'User Management', description: 'Role-based access control and user provisioning' },
       ],
     },
   ],
@@ -157,22 +157,22 @@ export const SEGMENT_SCREENSHOTS: Record<string, SegmentScreenshots[]> = {
     {
       role: 'Provider',
       screenshots: [
-        { src: '/images/screenshots/provider/provider-01-pre-visit.png', alt: 'Pre-visit summary', title: 'Pre-Visit Summary', description: 'Care gaps surfaced before patient arrives' },
-        { src: '/images/screenshots/provider/provider-07-care-recommendations.png', alt: 'Care recommendations', title: 'Care Recommendations', description: 'Evidence-based care recommendations at the point of care' },
+        { src: '/images/screenshots/provider/provider-01-pre-visit.jpg', alt: 'Pre-visit summary', title: 'Pre-Visit Summary', description: 'Care gaps surfaced before patient arrives' },
+        { src: '/images/screenshots/provider/provider-07-care-recommendations.jpg', alt: 'Care recommendations', title: 'Care Recommendations', description: 'Evidence-based care recommendations at the point of care' },
       ],
     },
     {
       role: 'Care Manager',
       screenshots: [
-        { src: '/images/screenshots/care-manager/care-manager-01-dashboard-overview.png', alt: 'Care manager dashboard', title: 'Care Manager Dashboard', description: 'Population overview with gap closure tracking' },
-        { src: '/images/screenshots/care-manager/care-manager-05-gap-detail.png', alt: 'Gap detail', title: 'Gap Detail', description: 'Full clinical context for care gap closure' },
+        { src: '/images/screenshots/care-manager/care-manager-01-dashboard-overview.jpg', alt: 'Care manager dashboard', title: 'Care Manager Dashboard', description: 'Population overview with gap closure tracking' },
+        { src: '/images/screenshots/care-manager/care-manager-05-gap-detail.jpg', alt: 'Gap detail', title: 'Gap Detail', description: 'Full clinical context for care gap closure' },
       ],
     },
     {
       role: 'Quality Analyst',
       screenshots: [
-        { src: '/images/screenshots/quality-analyst/quality-analyst-01-measures-list.png', alt: 'Measures list', title: 'Measure Library', description: 'Full HEDIS measure library with evaluation status' },
-        { src: '/images/screenshots/quality-analyst/quality-analyst-08-qrda-export.png', alt: 'QRDA export', title: 'QRDA Export', description: 'CMS-ready quality reporting export' },
+        { src: '/images/screenshots/quality-analyst/quality-analyst-01-measures-list.jpg', alt: 'Measures list', title: 'Measure Library', description: 'Full HEDIS measure library with evaluation status' },
+        { src: '/images/screenshots/quality-analyst/quality-analyst-08-qrda-export.jpg', alt: 'QRDA export', title: 'QRDA Export', description: 'CMS-ready quality reporting export' },
       ],
     },
   ],

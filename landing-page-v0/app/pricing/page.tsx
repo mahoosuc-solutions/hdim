@@ -18,6 +18,7 @@ import { SiteFooter } from '../components/SiteFooter'
 export const metadata: Metadata = {
   title: 'Pricing - HDIM | Healthcare Quality Platform',
   description: 'Flexible pricing for healthcare quality automation. Request a tailored quote based on your measure mix and deployment needs.',
+  alternates: { canonical: '/pricing' },
 }
 
 const tiers = [

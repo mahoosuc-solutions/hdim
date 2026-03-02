@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+
+    <changeSet id="0053-create-pilot-readiness-table" author="hdim">
+        <createTable tableName="pilot_readiness">
+            <!-- Primary Key -->
+            <column name="id" type="VARCHAR(36)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <!-- Multi-Tenant -->
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Customer Info -->
+            <column name="customer_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- EHR Integration -->
+            <column name="ehr_type" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="integration_status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fhir_endpoint_url" type="VARCHAR(500)"/>
+
+            <!-- Data Ingestion -->
+            <column name="data_ingestion_status" type="VARCHAR(30)">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Readiness Checklist -->
+            <column name="demo_data_seeded" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quality_measures_configured" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_accounts_provisioned" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <!-- Score & Blockers -->
+            <column name="readiness_score" type="INTEGER" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blockers" type="TEXT"/>
+
+            <!-- Audit -->
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Indexes -->
+        <createIndex indexName="idx_pilot_tenant_customer" tableName="pilot_readiness">
+            <column name="tenant_id"/>
+            <column name="customer_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pilot_readiness_score" tableName="pilot_readiness">
+            <column name="tenant_id"/>
+            <column name="readiness_score"/>
+        </createIndex>
+
+        <createIndex indexName="idx_pilot_integration_status" tableName="pilot_readiness">
+            <column name="tenant_id"/>
+            <column name="integration_status"/>
+        </createIndex>
+
+        <!-- Rollback -->
+        <rollback>
+            <dropTable tableName="pilot_readiness"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

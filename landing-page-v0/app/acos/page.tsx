@@ -5,6 +5,7 @@ import { SEGMENTS } from '../../lib/constants'
 export const metadata: Metadata = {
   title: 'HDIM for ACOs - Population Health Visibility for Shared Savings',
   description: 'Real-time care gap detection and quality measurement for Accountable Care Organizations, physician groups, and IPAs.',
+  alternates: { canonical: '/acos' },
 }
 
 export default function ACOsPage() {

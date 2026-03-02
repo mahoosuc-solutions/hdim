@@ -18,6 +18,7 @@ import ScreenshotGallery from '../components/ScreenshotLightbox'
 export const metadata = {
   title: 'Features | HDIM - Healthcare Data in Motion',
   description: 'Explore HDIM\'s comprehensive features for quality measurement, care gap detection, HEDIS compliance, and population health management.',
+  alternates: { canonical: '/features' },
 }
 
 const coreFeatures = [

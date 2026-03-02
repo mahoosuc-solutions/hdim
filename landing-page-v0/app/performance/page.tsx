@@ -15,6 +15,7 @@ import {
 export const metadata = {
   title: 'Performance Validation | HDIM - Healthcare Data in Motion',
   description: 'Complete load test methodology, results, and traditional vs HDIM development comparison for healthcare quality platform infrastructure.',
+  alternates: { canonical: '/performance' },
 }
 
 export default function PerformancePage() {

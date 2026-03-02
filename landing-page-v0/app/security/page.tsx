@@ -15,6 +15,7 @@ import { SiteFooter } from '../components/SiteFooter'
 export const metadata: Metadata = {
   title: 'HDIM Security - HIPAA Engineered, CVE Remediated, Enterprise Ready',
   description: 'Security posture for the HDIM healthcare quality platform: HIPAA compliance, CVE remediation, ZAP scanning, multi-tenant isolation, and audit controls.',
+  alternates: { canonical: '/security' },
 }
 
 const SECURITY_TABLE = [

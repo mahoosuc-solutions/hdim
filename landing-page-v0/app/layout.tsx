@@ -4,7 +4,6 @@ import Script from 'next/script'
 import { Analytics } from '@vercel/analytics/react'
 import './globals.css'
 
-const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
 
 const inter = localFont({
@@ -77,12 +76,6 @@ export default function RootLayout({
               gtag('config', '${GA_ID}');
             `}</Script>
           </>
-        )}
-        {RECAPTCHA_SITE_KEY && (
-          <Script
-            src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
-            strategy="afterInteractive"
-          />
         )}
       </body>
     </html>

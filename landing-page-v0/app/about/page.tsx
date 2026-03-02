@@ -16,6 +16,7 @@ import ScreenshotGallery from '../components/ScreenshotLightbox'
 export const metadata: Metadata = {
   title: 'About Us | HDIM - Healthcare Data in Motion',
   description: 'Learn about HDIM\'s mission to build healthcare software that saves lives through better quality measurement and care gap detection.',
+  alternates: { canonical: '/about' },
 }
 
 const values = [
@@ -263,7 +264,7 @@ export default function AboutPage() {
                     description: "Urgency-sorted alerts with patient slide-out panel",
                   },
                   {
-                    src: "/images/dashboard-modern/09-reports-hub.png",
+                    src: "/images/dashboard-modern/09-reports-hub.jpg",
                     alt: "Reports Hub",
                     width: 1918,
                     height: 920,

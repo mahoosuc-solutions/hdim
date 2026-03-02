@@ -21,6 +21,7 @@ import { CAPABILITIES } from '../../lib/constants'
 export const metadata: Metadata = {
   title: 'HDIM Platform - Complete Healthcare Quality Measurement Capabilities',
   description: 'All platform capabilities: HEDIS measures, care gap detection, FHIR R4 integration, revenue cycle, custom measure builder, and enterprise security.',
+  alternates: { canonical: '/platform' },
 }
 
 const CAPABILITY_ICONS: Record<string, React.ElementType> = {
@@ -148,7 +149,7 @@ export default function PlatformPage() {
                 columns: 3,
                 screenshots: [
                   {
-                    src: "/images/dashboard-modern/07-patient-management.png",
+                    src: "/images/dashboard-modern/07-patient-management.jpg",
                     alt: "Patient Management view",
                     width: 1918,
                     height: 920,

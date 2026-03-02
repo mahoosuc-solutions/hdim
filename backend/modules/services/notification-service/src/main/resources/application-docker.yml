@@ -2,6 +2,8 @@ server:
   port: 8107
 
 spring:
+  liquibase:
+    change-log: classpath:db/changelog/notification-changelog-master.xml
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/notification_db}
     username: ${SPRING_DATASOURCE_USERNAME:healthdata}

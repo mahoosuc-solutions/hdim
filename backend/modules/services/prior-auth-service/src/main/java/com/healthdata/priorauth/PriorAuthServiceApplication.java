@@ -25,20 +25,20 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  *
  * @see <a href="https://hl7.org/fhir/us/davinci-pas/">Da Vinci PAS Implementation Guide</a>
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = {
+    com.healthdata.authentication.config.AuthenticationAutoConfiguration.class,
+    com.healthdata.authentication.config.AuthenticationControllerAutoConfiguration.class
+})
 @EnableCaching
 @EnableAsync
 @EnableScheduling
 @EnableFeignClients
 @EnableKafka
 @EntityScan(basePackages = {
-    "com.healthdata.priorauth.persistence",
-    "com.healthdata.authentication.domain",
-    "com.healthdata.authentication.entity"
+    "com.healthdata.priorauth.persistence"
 })
 @EnableJpaRepositories(basePackages = {
-    "com.healthdata.priorauth.persistence",
-    "com.healthdata.authentication.repository"
+    "com.healthdata.priorauth.persistence"
 })
 public class PriorAuthServiceApplication {
 

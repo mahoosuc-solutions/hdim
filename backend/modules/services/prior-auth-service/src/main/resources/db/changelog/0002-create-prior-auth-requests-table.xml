@@ -7,7 +7,7 @@
     <changeSet id="0002-create-prior-auth-requests-table" author="prior-auth-service">
         <comment>Create prior_auth_requests table for Da Vinci PAS workflow</comment>
 
-        <sqlFile path="db/changelog/sql/0002-create-prior-auth-requests-table.sql"
+        <sqlFile path="sql/0002-create-prior-auth-requests-table.sql"
                  relativeToChangelogFile="true"/>
 
         <rollback>

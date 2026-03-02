@@ -854,6 +854,64 @@ Message sent to Kafka but not processed by consumer service
 
 ---
 
+### 9. Cascading Startup Failures (Shared Module Pattern)
+
+**This is a known HDIM pattern where fixing one startup error reveals the next. Follow the steps in order.**
+
+See [ADR-011: Shared Module Integration](../architecture/decisions/ADR-011-shared-module-integration.md) for the full architectural decision.
+
+**Problem: Service crashes on startup with multiple errors that appear one at a time**
+
+```
+┌─ Does the error mention `DuplicateKeyException` or duplicate YAML key?
+│  └─ YES ─→ [YAML has duplicate top-level keys — merge them]
+│
+├─ Does the error mention duplicate bean definition (e.g., `objectMapper`)?
+│  └─ YES ─→ [Remove redundant @Bean from service config; shared module provides it]
+│
+├─ Does the error mention `Schema-validation: missing table` for a table
+│  your service doesn't own (e.g., `tenants`, `api_key_allowed_ips`)?
+│  └─ YES ─→ [Narrow @EntityScan to service-specific packages only]
+│            [Exclude AuthenticationAutoConfiguration in @SpringBootApplication]
+│
+├─ Does the error mention `Schema-validation: missing table` for a table
+│  your service DOES own?
+│  └─ YES ─→ [Check Liquibase: is it enabled in Docker? Are sqlFile paths correct?]
+│            [Add liquibase-schema: public if using custom default-schema]
+│
+├─ Does the error mention a bean that could not be found from a shared module
+│  (e.g., `AIAuditEventPublisher`, `SmtpService`)?
+│  └─ YES ─→ [Add @ConditionalOnBean on the integration class]
+│            [Use @Autowired(required=false) in consuming service]
+│            [Add null checks at call sites]
+│
+├─ Does the error mention `waitDuration` and `intervalFunction` conflict?
+│  └─ YES ─→ [Use only intervalFunction for Resilience4j retry config]
+│
+└─ None of the above?
+   └─ [Run the full 8-step checklist: Skill("service-startup-doctor")]
+```
+
+**Key Insight:** These failures cascade. Fixing the YAML duplicate key reveals the bean conflict. Fixing the bean conflict reveals the Liquibase issue. And so on through all 5 layers. Work through them sequentially.
+
+**Quick Fix Commands:**
+```bash
+# Check for duplicate YAML keys
+grep -n "^[a-z]" backend/modules/services/YOUR-SERVICE/src/main/resources/application.yml \
+  | sort -t: -k2 | uniq -f1 -d
+
+# Check entity scan breadth
+grep -n "EntityScan\|EnableJpaRepositories" \
+  backend/modules/services/YOUR-SERVICE/src/main/java/**/*Application.java
+
+# Check Liquibase is enabled in Docker
+grep -A5 "YOUR-SERVICE" docker-compose.yml | grep -i liquibase
+```
+
+**Reference:** Proven on notification-service (`f212b4327`) and prior-auth-service (`8c6918ea4`).
+
+---
+
 ## Advanced Troubleshooting
 
 ### Checking Service Health

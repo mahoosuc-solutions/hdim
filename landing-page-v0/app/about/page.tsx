@@ -1,19 +1,18 @@
-import Image from 'next/image'
+import { Metadata } from 'next'
 import Link from 'next/link'
 import {
   Heart,
   Shield,
   Code,
   Users,
-  Lightbulb,
-  Target,
-  Award,
   ArrowRight,
   CheckCircle2,
   Clock
 } from 'lucide-react'
+import { LandingPageClient } from '../components/LandingPageClient'
+import { SiteFooter } from '../components/SiteFooter'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'About Us | HDIM - Healthcare Data in Motion',
   description: 'Learn about HDIM\'s mission to build healthcare software that saves lives through better quality measurement and care gap detection.',
 }
@@ -119,9 +118,9 @@ const roadmap = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <LandingPageClient>
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-50 py-20">
+      <section id="main-content" className="bg-gradient-to-br from-blue-50 to-indigo-50 pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl font-bold text-gray-900 mb-6">
@@ -324,6 +323,8 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
-    </div>
+
+      <SiteFooter />
+    </LandingPageClient>
   )
 }

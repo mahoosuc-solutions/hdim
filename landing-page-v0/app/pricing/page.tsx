@@ -1,8 +1,8 @@
+import { Metadata } from 'next'
 import {
   Check,
   X,
   ArrowRight,
-  HeartPulse,
   Building2,
   Users,
   Heart,
@@ -12,8 +12,10 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import Link from 'next/link'
+import { LandingPageClient } from '../components/LandingPageClient'
+import { SiteFooter } from '../components/SiteFooter'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: 'Pricing - HDIM | Healthcare Quality Platform',
   description: 'Flexible pricing for healthcare quality automation. Request a tailored quote based on your measure mix and deployment needs.',
 }
@@ -151,27 +153,9 @@ const faqs = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="bg-white border-b sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                <HeartPulse className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">HDIM</span>
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-gray-600 hover:text-primary text-sm">Home</Link>
-              <Link href="/demo" className="btn-primary text-sm">Try Demo</Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+    <LandingPageClient>
       {/* Hero */}
-      <section className="py-16 bg-gradient-to-br from-primary via-primary-600 to-primary-800 text-white">
+      <section id="main-content" className="pt-32 pb-16 bg-gradient-to-br from-primary via-primary-600 to-primary-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Flexible Pricing for Healthcare Quality
@@ -447,30 +431,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                <HeartPulse className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold">HDIM</span>
-            </div>
-            <div className="flex items-center space-x-4 text-gray-400 text-sm">
-              <Shield className="w-4 h-4" />
-              <span>HIPAA-aligned</span>
-              <span>|</span>
-              <span>BAA Available</span>
-              <span>|</span>
-              <span>SOC 2-aligned controls</span>
-            </div>
-          </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400 text-sm">
-            &copy; {new Date().getFullYear()} HealthData-in-Motion. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
+      <SiteFooter />
+    </LandingPageClient>
   )
 }

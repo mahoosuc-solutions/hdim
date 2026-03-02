@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import Script from 'next/script'
-import { Analytics } from '@vercel/analytics/react'
 import './globals.css'
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
@@ -66,7 +65,6 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-white font-sans">
         {children}
-        <Analytics />
         {GA_ID && (
           <>
             <Script

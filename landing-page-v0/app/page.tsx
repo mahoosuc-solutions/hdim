@@ -22,6 +22,7 @@ import { MetricsBar } from './components/MetricsBar'
 import { WhatsNew } from './components/WhatsNew'
 import { ProgressiveCTA } from './components/ProgressiveCTA'
 import { SiteFooter } from './components/SiteFooter'
+import ScreenshotGallery from './components/ScreenshotLightbox'
 import { CAPABILITIES, SEGMENTS } from '../lib/constants'
 
 const SEGMENT_CARDS = [
@@ -178,6 +179,73 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
             >
               View all platform details <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* See It In Action */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold tracking-widest uppercase text-primary mb-3">
+              Live Portal
+            </p>
+            <h2 className="section-heading">See it in action</h2>
+            <p className="section-subheading mt-4">
+              Every screen below is from our live Clinical Portal — not mockups, not prototypes.
+            </p>
+          </div>
+
+          <ScreenshotGallery
+            heroScreenshot={{
+              src: "/images/dashboard-modern/01-dashboard-overview-clean.jpg",
+              alt: "HDIM Clinical Portal Dashboard with KPIs, care gap alerts, and quick actions",
+              width: 1915,
+              height: 939,
+              title: "Provider Dashboard",
+              description: "Role-based clinical dashboard with real-time KPIs, results awaiting review, and high-priority care gaps",
+              badge: "LIVE",
+            }}
+            rows={[
+              {
+                columns: 3,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/05-quality-measures-library.jpg",
+                    alt: "HEDIS Quality Measures Library with benchmark scores",
+                    width: 1918,
+                    height: 920,
+                    title: "Quality Measures Library",
+                    description: "HEDIS measures with national benchmarks and CMS star ratings",
+                  },
+                  {
+                    src: "/images/dashboard-modern/08-care-gap-management.jpg",
+                    alt: "High Priority Care Gaps worklist",
+                    width: 1918,
+                    height: 917,
+                    title: "Care Gap Management",
+                    description: "Priority-based care gap worklist with one-click actions",
+                  },
+                  {
+                    src: "/images/dashboard-modern/06-evaluation-results.jpg",
+                    alt: "Evaluation Results with compliance scoring",
+                    width: 1916,
+                    height: 919,
+                    title: "Evaluation Results",
+                    description: "Real-time compliance scoring with outcome distribution",
+                  },
+                ],
+              },
+            ]}
+          />
+
+          <div className="text-center mt-10">
+            <Link
+              href="/features"
+              className="inline-flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all"
+            >
+              See all screenshots <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>

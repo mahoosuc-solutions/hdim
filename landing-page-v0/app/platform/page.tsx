@@ -15,6 +15,7 @@ import { LandingPageClient } from '../components/LandingPageClient'
 import { MetricsBar } from '../components/MetricsBar'
 import { ProgressiveCTA } from '../components/ProgressiveCTA'
 import { SiteFooter } from '../components/SiteFooter'
+import ScreenshotGallery from '../components/ScreenshotLightbox'
 import { CAPABILITIES } from '../../lib/constants'
 
 export const metadata: Metadata = {
@@ -116,6 +117,66 @@ export default function PlatformPage() {
           </section>
         )
       })}
+
+      {/* Live Platform Screenshots */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="text-sm font-semibold tracking-widest uppercase text-primary mb-3">
+              Live Portal
+            </p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+              Live Platform Screenshots
+            </h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Every screen from our production Clinical Portal — not mockups.
+            </p>
+          </div>
+
+          <ScreenshotGallery
+            heroScreenshot={{
+              src: "/images/dashboard-modern/01-dashboard-overview-clean.jpg",
+              alt: "HDIM Clinical Portal Dashboard",
+              width: 1915,
+              height: 939,
+              title: "Clinical Dashboard",
+              description: "Role-based dashboard with real-time KPIs, care gap alerts, and quick actions",
+              badge: "LIVE",
+            }}
+            rows={[
+              {
+                columns: 3,
+                screenshots: [
+                  {
+                    src: "/images/dashboard-modern/07-patient-management.png",
+                    alt: "Patient Management view",
+                    width: 1918,
+                    height: 920,
+                    title: "Patient Management",
+                    description: "Comprehensive patient lookup and health record access",
+                  },
+                  {
+                    src: "/images/dashboard-modern/05-quality-measures-library.jpg",
+                    alt: "Quality Measures Library",
+                    width: 1918,
+                    height: 920,
+                    title: "Quality Measures Library",
+                    description: "HEDIS measures with national benchmarks and star ratings",
+                  },
+                  {
+                    src: "/images/dashboard-modern/10-care-gap-closure.jpg",
+                    alt: "Care Gap Closure workflow",
+                    width: 1915,
+                    height: 921,
+                    title: "Gap Closure Workflow",
+                    description: "One-click closure with audit documentation",
+                  },
+                ],
+              },
+            ]}
+          />
+        </div>
+      </section>
 
       <ProgressiveCTA variant="full" />
 

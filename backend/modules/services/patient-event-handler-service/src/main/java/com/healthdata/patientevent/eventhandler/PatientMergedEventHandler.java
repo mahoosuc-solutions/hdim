@@ -176,6 +176,10 @@ public class PatientMergedEventHandler {
      * @param mergedEvent Merge event for cascading
      */
     private void cascadeUpdateToDependentServices(PatientMergedEvent mergedEvent) {
+        // TODO: Extract mergeChainDepth from PatientMergedEvent once event schema includes it.
+        // For now, default to 1 (direct merge). Future: support transitive merge tracking.
+        int mergeChainDepth = 1;
+
         try {
             // Publish CareGapMergedEvent
             careGapEventPublisher.publishMergedGaps(
@@ -185,7 +189,8 @@ public class PatientMergedEventHandler {
                 mergedEvent.getMergedAt(),
                 mergedEvent.getConfidenceScore(),
                 mergedEvent.getCombinedIdentifiers(),
-                mergedEvent.getCombinedIdentifiers());
+                mergedEvent.getCombinedIdentifiers(),
+                mergeChainDepth);
 
             // Publish QualityMeasureMergedEvent
             qualityMeasureEventPublisher.publishMergedResults(
@@ -195,7 +200,8 @@ public class PatientMergedEventHandler {
                 mergedEvent.getMergedAt(),
                 mergedEvent.getConfidenceScore(),
                 mergedEvent.getCombinedIdentifiers(),
-                mergedEvent.getCombinedIdentifiers());
+                mergedEvent.getCombinedIdentifiers(),
+                mergeChainDepth);
 
             // Publish WorkflowMergedEvent
             workflowEventPublisher.publishMergedWorkflows(
@@ -205,7 +211,8 @@ public class PatientMergedEventHandler {
                 mergedEvent.getMergedAt(),
                 mergedEvent.getConfidenceScore(),
                 mergedEvent.getCombinedIdentifiers(),
-                mergedEvent.getCombinedIdentifiers());
+                mergedEvent.getCombinedIdentifiers(),
+                mergeChainDepth);
 
             log.info("Cascaded merge updates to dependent services: source={}, target={}",
                 mergedEvent.getSourcePatientId(), mergedEvent.getTargetPatientId());

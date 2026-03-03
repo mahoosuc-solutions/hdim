@@ -68,7 +68,7 @@ export const ORACLE_HEALTH_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'HDIM deploys on your infrastructure and connects to your Millennium FHIR endpoint directly. Configure these Spring Boot properties for each deployment.',
-      codeSnippet: `# application.properties (or environment variables)
+      codeSnippet: `# Configuration reference — actual property names may vary by release
 
 # Active profile
 spring.profiles.active=production
@@ -119,14 +119,9 @@ PATIENT_BATCH_SIZE=1000`,
             'Population-level asynchronous export using the FHIR Bulk Data Access specification (NDJSON format). Enables batch quality measure evaluation across entire patient panels for HEDIS reporting cycles.',
         },
         {
-          label: 'CDS Hooks',
+          label: 'CDS Hooks (Roadmap)',
           value:
-            'Real-time clinical decision support cards surfaced in Millennium workflows. HDIM acts as a CDS Hooks service provider for patient-view, order-select, and appointment-book hooks, delivering care gap alerts at the point of care.',
-        },
-        {
-          label: 'Webhooks',
-          value:
-            'Event-driven notifications for care gap status changes, measure evaluation completions, and quality report generation. HDIM publishes webhook events to configured endpoints for downstream system integration.',
+            'Planned — not yet available. When implemented, HDIM will act as a CDS Hooks service provider for patient-view, order-select, and appointment-book hooks, delivering care gap alerts at the point of care within Millennium workflows.',
         },
         {
           label: 'HL7 v2',

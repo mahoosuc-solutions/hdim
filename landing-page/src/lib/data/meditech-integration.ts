@@ -12,7 +12,7 @@ export const MEDITECH_INTEGRATION: IntegrationPageData = {
       title: 'Overview',
       type: 'text',
       content:
-        'Meditech Expanse is the right EHR for this problem. It introduced native FHIR R4 APIs and US Core data model compliance, which means HDIM can connect directly to the clinical data repository without custom HL7 v2 interfaces or proprietary extract files. But the reality I have seen in community hospital deployments is that most organizations running Expanse have not fully leveraged those FHIR capabilities — because they do not have the engineering staff to build against them. The APIs are there. The connection logic is already written. HDIM fills the gap between what Expanse can expose and what the quality team can actually consume.\n\nHDIM deploys on the hospital\'s own infrastructure — on-premises RHEL, a private VMware cluster, or their cloud VPC — and fronts the Meditech FHIR Server. Clinical data never leaves the hospital\'s network perimeter. The HDIM services connect upstream to pull FHIR resources and run CQL measure logic, then surface care gap results into the workflows and registries the clinical team already uses. For a community hospital doing manual abstraction today, the operational shift is significant: quality reporting moves from a retrospective annual exercise to a continuous automated process running against live Meditech data.',
+        'Meditech Expanse is the right EHR for this problem. It introduced native FHIR R4 APIs and US Core data model compliance, which means HDIM can connect directly to the clinical data repository without custom HL7 v2 interfaces or proprietary extract files. But the reality in community hospital deployments is that most organizations running Expanse have not fully leveraged those FHIR capabilities — because they do not have the engineering staff to build against them. The APIs are there. The connection logic is already written. HDIM fills the gap between what Expanse can expose and what the quality team can actually consume.\n\nHDIM deploys on the hospital\'s own infrastructure — on-premises RHEL, a private VMware cluster, or their cloud VPC — and fronts the Meditech FHIR Server. Clinical data never leaves the hospital\'s network perimeter. The HDIM services connect upstream to pull FHIR resources and run CQL measure logic, then surface care gap results into the workflows and registries the clinical team already uses. For a community hospital doing manual abstraction today, the operational shift is significant: quality reporting moves from a retrospective annual exercise to a continuous automated process running against live Meditech data.',
     },
     {
       id: 'architecture',
@@ -68,7 +68,8 @@ export const MEDITECH_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'Add these environment variables to your HDIM deployment to connect to Meditech Expanse.',
-      codeSnippet: `# .env — Meditech Expanse Connection
+      codeSnippet: `# Configuration reference — actual property names may vary by release
+# Meditech Expanse Connection
 # FHIR_SERVICE_URL points to the Meditech FHIR Server on the hospital's network
 FHIR_SERVICE_URL=https://your-meditech-host/fhir/r4
 FHIR_AUTH_TYPE=oauth2

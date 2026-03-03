@@ -221,7 +221,12 @@ export default function IntegrationsIndexPage() {
                 exposes a FHIR R4 endpoint — regardless of vendor — HDIM can front it. The Java
                 services deploy on your infrastructure and connect over your private network.
               </p>
-              <button className="btn-primary">Contact Us for Custom Integration</button>
+              <a
+                href="mailto:contact@healthdatainmotion.com?subject=Custom FHIR Integration"
+                className="btn-primary inline-block"
+              >
+                Contact Us for Custom Integration
+              </a>
             </div>
           </div>
         </section>

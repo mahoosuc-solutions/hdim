@@ -70,7 +70,8 @@ export const ATHENAHEALTH_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'Add these environment variables to your HDIM deployment to connect to Athenahealth athenaClinicals.',
-      codeSnippet: `# .env — Athenahealth athenaClinicals Connection
+      codeSnippet: `# Configuration reference — actual property names may vary by release
+# Athenahealth athenaClinicals Connection
 FHIR_SERVICE_URL=https://api.platform.athena.io/fhir/r4
 FHIR_AUTH_TYPE=oauth2
 FHIR_CLIENT_ID=<your-athena-client-id>
@@ -115,16 +116,6 @@ REDIS_CACHE_MAX_MEMORY=512mb`,
           label: 'Athena Proprietary API',
           value:
             'Supplemental access to practice management data (scheduling, billing codes, payer contracts) not yet available in the FHIR R4 surface; used for HEDIS attribution and coverage verification',
-        },
-        {
-          label: 'Bulk Export (SFTP)',
-          value:
-            'Population-level data export for batch HEDIS measure evaluation across large ambulatory populations; Athenahealth delivers NDJSON-formatted files via SFTP for offline processing',
-        },
-        {
-          label: 'Changed Data Capture',
-          value:
-            'Webhook-based event notifications from athenaNet when clinical data changes (new lab results, updated diagnoses, completed encounters); used by HDIM to trigger incremental care gap re-evaluation without full patient re-query',
         },
       ],
     },

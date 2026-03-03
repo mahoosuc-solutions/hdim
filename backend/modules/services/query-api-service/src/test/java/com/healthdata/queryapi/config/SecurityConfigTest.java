@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -46,6 +47,7 @@ class SecurityConfigTest {
     @BeforeEach
     void setUp() {
         securityConfig = new SecurityConfig(jwtAuthenticationConverter);
+        ReflectionTestUtils.setField(securityConfig, "allowedOrigins", "http://localhost:4200,http://localhost:3000");
     }
 
     /**

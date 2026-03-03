@@ -2,7 +2,7 @@
 
 Central decision tree for diagnosing and resolving issues in the HealthData-in-Motion platform.
 
-**Last Updated**: January 19, 2026
+**Last Updated**: March 3, 2026
 **Status**: Complete troubleshooting index with decision trees
 
 ---
@@ -1002,6 +1002,6 @@ For request tracing across services:
 
 ---
 
-**Last Updated**: January 19, 2026
+**Last Updated**: March 3, 2026
 **Maintained by**: HDIM Platform Team
 **Status**: Complete - Production-ready troubleshooting guide with decision trees

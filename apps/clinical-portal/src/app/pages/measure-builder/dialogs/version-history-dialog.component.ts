@@ -11,6 +11,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { Subject } from 'rxjs';
 import { takeUntil, finalize } from 'rxjs/operators';
+import { LoadingButtonComponent } from '../../../shared/components/loading-button/loading-button.component';
 import {
   CustomMeasureService,
   CustomMeasure,
@@ -46,6 +47,7 @@ interface AuditEntry {
     MatProgressSpinnerModule,
     MatMenuModule,
     MatDividerModule,
+    LoadingButtonComponent,
   ],
   template: `
     <div class="version-dialog">
@@ -705,11 +707,15 @@ export class VersionHistoryDialogComponent implements OnInit, OnDestroy {
   // Comparison state
   comparisonResult: VersionDiff[] | null = null;
   comparisonV1 = '';
-  comparisonV2 = '';  constructor(
+  comparisonV2 = '';
+
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private dialogRef: MatDialogRef<VersionHistoryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VersionHistoryDialogData,
     private customMeasureService: CustomMeasureService,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {

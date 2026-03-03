@@ -106,11 +106,15 @@ export class QualityConstellationScene {
     CUSTOM: new THREE.Color(0x009688), // Teal
   };
 
+  private logger: ReturnType<LoggerService['withContext']>;
+
   constructor(
     private logger: LoggerService,
     private scene: THREE.Scene,
     private transformService: DataTransformService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('QualityConstellationScene');
+  }
 
   /**
    * Initialize the constellation with patient quality data

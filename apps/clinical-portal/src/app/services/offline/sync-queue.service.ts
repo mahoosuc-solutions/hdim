@@ -6,9 +6,9 @@
  * Handles conflict resolution and retry logic.
  */
 import { Injectable, OnDestroy } from '@angular/core';
+import { LoggerService } from '../logger.service';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, from, of, forkJoin, timer } from 'rxjs';
-import { LoggerService } from '../logger.service';
 import {
   catchError,
   concatMap,
@@ -63,6 +63,7 @@ const RETRY_DELAY_MS = 5000;
   providedIn: 'root',
 })
 export class SyncQueueService implements OnDestroy {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private readonly destroy$ = new Subject<void>();
   private readonly syncInProgress = new BehaviorSubject<boolean>(false);
   private readonly syncProgress = new BehaviorSubject<SyncProgress>({
@@ -93,7 +94,7 @@ export class SyncQueueService implements OnDestroy {
   readonly hasPendingChanges$ = this.pendingCount$.pipe(map((count) => count > 0));
 
   constructor(
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private http: HttpClient,
     private storage: OfflineStorageService,
     private networkStatus: NetworkStatusService

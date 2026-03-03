@@ -449,15 +449,15 @@ export class RiskTrendChartComponent
   };
 
   private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('RiskTrendChartComponent');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private patientHealthService: PatientHealthService,
     private riskAssessmentService: RiskAssessmentService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('RiskTrendChartComponent');
+}
 
   ngOnInit(): void {
     this.loadData();

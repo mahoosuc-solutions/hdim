@@ -72,15 +72,20 @@ export class TestingDashboardComponent implements OnInit, OnDestroy {
   errorSummary: ErrorSummary | null = null;
   complianceConfig = COMPLIANCE_CONFIG;
 
-  private destroy$ = new Subject<void>();  constructor(
+  private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private demoModeService: DemoModeService,
     private testingService: TestingService,
     private snackBar: MatSnackBar,
     private cdr: ChangeDetectorRef,
     private errorValidationService: ErrorValidationService,
     private router: Router,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {
+    this.logger = this.loggerService.withContext('TestingDashboardComponent');
+
     // Initialize service health map
     this.serviceHealth.set('patient-service', { status: 'unknown', lastChecked: null });
     this.serviceHealth.set('care-gap-service', { status: 'unknown', lastChecked: null });

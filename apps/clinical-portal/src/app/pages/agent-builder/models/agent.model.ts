@@ -118,11 +118,10 @@ export interface TemplateVariable {
   name: string;
   description?: string;
   defaultValue?: string;
-  required: boolean;
+  required?: boolean;
+  startIndex?: number;  // Used by prompt editor for variable detection
+  endIndex?: number;    // Used by prompt editor for variable detection
 }
-
-// Alias for backward compatibility
-export type PromptVariable = TemplateVariable;
 
 // Prompt Template entity
 export interface PromptTemplate {
@@ -154,16 +153,16 @@ export interface TestMessage {
 // Tool invocation during test
 export interface ToolInvocation {
   name: string;
-  toolName?: string; // Alias for name
+  toolName?: string;  // Alternative property name used by backend
   arguments: Record<string, unknown>;
-  input?: Record<string, unknown>; // Alias for arguments
+  input?: Record<string, unknown>;  // Alternative property name for arguments
   result?: string;
-  output?: string; // Alias for result
+  output?: string;  // Alternative property name for result
   success: boolean;
-  status?: string; // SUCCESS | FAILED | TIMEOUT
-  error?: string; // Error message if failed
+  status?: string;  // Alternative property name (e.g., 'success', 'error')
+  error?: string;  // Error message if invocation failed
   durationMs: number;
-  timestamp?: number; // When tool was invoked
+  timestamp?: string;  // ISO timestamp of invocation
 }
 
 // Guardrail trigger detail

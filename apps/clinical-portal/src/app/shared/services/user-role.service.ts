@@ -101,11 +101,11 @@ export class UserRoleService {
     }
   };
 
-  private get logger() {
-    return this.loggerService.withContext('UserRoleService');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('UserRoleService');
+
     // Load saved role from localStorage
     this.loadSavedRole();
   }

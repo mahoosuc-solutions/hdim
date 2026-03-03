@@ -65,12 +65,15 @@ import { ThreeSceneService } from '../core/three-scene.service';
 })
 export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
   @ViewChild('visualizationContent') visualizationContent!: ElementRef<HTMLDivElement>;
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private logger: LoggerService,
     private sceneService: ThreeSceneService,
     private snackBar: MatSnackBar
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('VisualizationLayoutComponent');
+  }
 
   ngOnInit(): void {
     this.logger.info('Visualization Layout initialized');

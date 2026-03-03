@@ -25,14 +25,14 @@ import { LoggerService } from './logger.service';
   providedIn: 'root',
 })
 export class RiskAssessmentService {
-  private get logger() {
-    return this.loggerService.withContext('RiskAssessmentService');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private apiService: ApiService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('RiskAssessmentService');
+}
 
   /**
    * Get HCC-based risk assessment for a patient from patient-service.

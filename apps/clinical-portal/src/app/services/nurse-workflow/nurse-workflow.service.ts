@@ -14,9 +14,9 @@
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { LoggerService } from '../logger.service';
 import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
 import { catchError, tap, map, switchMap, shareReplay } from 'rxjs/operators';
-import { LoggerService } from '../logger.service';
 
 import {
   OutreachLog,
@@ -47,14 +47,13 @@ interface CacheEntry<T> {
   providedIn: 'root',
 })
 export class NurseWorkflowService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private tenantContext$ = new BehaviorSubject<string | null>(null);
   private cache = new Map<string, CacheEntry<any>>();
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor(
-    private logger: LoggerService,
-    private http: HttpClient
-  ) {}
+    private loggerService: LoggerService,private http: HttpClient) {}
 
   /**
    * Set multi-tenant context for all subsequent requests

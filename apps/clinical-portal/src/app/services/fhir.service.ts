@@ -25,11 +25,12 @@ import {
 })
 export class FhirService {
   private readonly baseUrl = API_CONFIG.FHIR_SERVER_URL;
+  private readonly logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private http: HttpClient,
     private apiService: ApiService,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {}
 
   // ==================== Observation Operations ====================

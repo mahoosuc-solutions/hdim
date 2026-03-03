@@ -70,6 +70,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
   private destroy$ = new Subject<void>();
   private constellation?: QualityConstellationScene;
   private animationCallback?: (delta: number, elapsed: number) => void;
+  private logger: ReturnType<LoggerService['withContext']>;
 
   // Data
   qualityResults: QualityMeasureResult[] = [];
@@ -107,14 +108,16 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
   private hoveredPatient?: PatientPoint;
 
   constructor(
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private sceneService: ThreeSceneService,
     private transformService: DataTransformService,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
     private measureService: MeasureService,
     private errorValidationService: ErrorValidationService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('QualityConstellationComponent');
+  }
 
   ngOnInit(): void {
     this.loadData();
@@ -272,7 +275,7 @@ export class QualityConstellationComponent implements OnInit, AfterViewInit, OnD
 
     // Create constellation scene
     const scene = this.sceneService.getScene();
-    this.constellation = new QualityConstellationScene(this.logger, scene, this.transformService);
+    this.constellation = new QualityConstellationScene(this.loggerService, scene, this.transformService);
     this.constellation.initialize(this.qualityResults, this.patients);
 
     // Get initial stats

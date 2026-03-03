@@ -474,12 +474,17 @@ export class MfaSettingsComponent implements OnInit, OnDestroy {
   disableForm: FormGroup;
   confirmForm: FormGroup;
 
-  private destroy$ = new Subject<void>();  constructor(
+  private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private snackBar: MatSnackBar,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {
+    this.logger = this.loggerService.withContext('MfaSettingsComponent');
+
     const codeValidators = [Validators.required, Validators.pattern(/^\d{6}$/)];
 
     this.verifyForm = this.fb.group({ code: ['', codeValidators] });

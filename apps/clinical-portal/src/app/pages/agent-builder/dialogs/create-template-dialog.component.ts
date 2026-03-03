@@ -11,7 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Subject, takeUntil } from 'rxjs';
 
 import { AgentBuilderService } from '../services/agent-builder.service';
-import { PromptTemplate, TemplateCategory, PromptVariable } from '../models/agent.model';
+import { PromptTemplate, TemplateCategory, TemplateVariable } from '../models/agent.model';
 import { PromptEditorComponent } from '../components/prompt-editor/prompt-editor.component';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
@@ -135,8 +135,6 @@ export interface CreateTemplateDialogData {
           <mat-spinner diameter="20"></mat-spinner>
         } @else {
           <mat-icon>{{ data.isEdit ? 'save' : 'add' }}</mat-icon>
-        }
-        @if (!saving) {
           {{ data.isEdit ? 'Save Changes' : 'Create Template' }}
         }
       </button>
@@ -229,9 +227,10 @@ export interface CreateTemplateDialogData {
 })
 export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
 
   templateForm!: FormGroup;
-  detectedVariables: PromptVariable[] = [];
+  detectedVariables: TemplateVariable[] = [];
   saving = false;
 
   categories = [
@@ -249,10 +248,12 @@ export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private dialogRef: MatDialogRef<CreateTemplateDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: CreateTemplateDialogData
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('CreateTemplateDialogComponent');
+  }
 
   ngOnInit(): void {
     this.initForm();
@@ -291,12 +292,11 @@ export class CreateTemplateDialogComponent implements OnInit, OnDestroy {
         name: v.name,
         startIndex: 0,
         endIndex: 0,
-        required: v.required || false,
       }));
     }
   }
 
-  onVariablesDetected(variables: PromptVariable[]): void {
+  onVariablesDetected(variables: TemplateVariable[]): void {
     this.detectedVariables = variables;
     this.logger.info('Variables detected', { count: variables.length });
   }

@@ -24,11 +24,14 @@ export class ApiService {
   private readonly maxRetries = 3;
   private readonly retryDelay = 1000; // 1 second
   private readonly maxRetryDelay = 10000; // 10 seconds
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private http: HttpClient,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('ApiService');
+}
 
   /**
    * Generic GET request with error handling and retry

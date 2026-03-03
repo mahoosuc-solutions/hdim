@@ -9,8 +9,6 @@ import { MatListModule } from '@angular/material/list';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { BreadcrumbComponent } from './shared/components/breadcrumb/breadcrumb.component';
 import { GlobalSearchService } from './shared/services/global-search.service';
 import { ThemeService } from './services/theme.service';
@@ -35,8 +33,6 @@ import { Subscription } from 'rxjs';
     MatBadgeModule,
     MatMenuModule,
     MatTooltipModule,
-    MatSelectModule,
-    MatFormFieldModule,
     BreadcrumbComponent,
     DemoControlBarComponent,
     DemoStoryboardOverlayComponent,
@@ -59,11 +55,6 @@ export class App implements OnInit, OnDestroy {
   protected sessionTimeRemaining = 0;
   private sessionCountdownId: ReturnType<typeof setInterval> | null = null;
   private authSubscription: Subscription | null = null;
-  private tenantSubscription: Subscription | null = null;
-  private selectedTenantSubscription: Subscription | null = null;
-
-  protected tenantOptions: string[] = [];
-  protected selectedTenantId: string | null = null;
 
   /**
    * Navigation items - conditionally includes demo/testing routes when demo mode is enabled
@@ -98,10 +89,7 @@ export class App implements OnInit, OnDestroy {
     return baseItems;
   }
 
-  getNavTestId(item: { path: string }): string {
-    const slug = item.path.replace(/^\//, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '');
-    return `nav-${slug || 'dashboard'}`;
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private globalSearchService: GlobalSearchService,
@@ -109,9 +97,11 @@ export class App implements OnInit, OnDestroy {
     private authService: AuthService,
     protected router: Router,
     private demoModeService: DemoModeService,
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private auditService: AuditService
   ) {
+    this.logger = this.loggerService.withContext('App');
+
     // React to demo mode changes to add/remove body class
     effect(() => {
       if (this.demoModeService.isDemoMode()) {
@@ -125,7 +115,6 @@ export class App implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Initialize theme system - automatically detects browser preference
     this.themeService.initialize();
-    this.initTestIdBridge();
 
     // Start session timeout monitoring if user is authenticated
     this.authSubscription = this.authService.isAuthenticated$.subscribe((isAuth) => {
@@ -135,53 +124,6 @@ export class App implements OnInit, OnDestroy {
         this.clearSessionTimeout();
       }
     });
-
-    this.tenantSubscription = this.authService.currentUser$.subscribe((user) => {
-      this.tenantOptions = user?.tenantIds?.length ? user.tenantIds : (user?.tenantId ? [user.tenantId] : []);
-      this.selectedTenantId = this.authService.getTenantId();
-    });
-
-    this.selectedTenantSubscription = this.authService.selectedTenant$.subscribe((tenantId) => {
-      this.selectedTenantId = tenantId;
-    });
-  }
-
-  private initTestIdBridge(): void {
-    if (typeof window === 'undefined') return;
-
-    const syncAttr = (el: Element) => {
-      if (el.hasAttribute('data-testid') && !el.hasAttribute('data-test-id')) {
-        const value = el.getAttribute('data-testid');
-        if (value) {
-          el.setAttribute('data-test-id', value);
-        }
-      }
-    };
-
-    document.querySelectorAll('[data-testid]').forEach(syncAttr);
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.type === 'attributes' && mutation.target instanceof Element) {
-          syncAttr(mutation.target);
-        }
-        if (mutation.type === 'childList') {
-          mutation.addedNodes.forEach((node) => {
-            if (node instanceof Element) {
-              syncAttr(node);
-              node.querySelectorAll?.('[data-testid]').forEach(syncAttr);
-            }
-          });
-        }
-      }
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['data-testid'],
-      childList: true,
-      subtree: true,
-    });
   }
 
   ngOnDestroy(): void {
@@ -189,20 +131,6 @@ export class App implements OnInit, OnDestroy {
     if (this.authSubscription) {
       this.authSubscription.unsubscribe();
     }
-    if (this.tenantSubscription) {
-      this.tenantSubscription.unsubscribe();
-    }
-    if (this.selectedTenantSubscription) {
-      this.selectedTenantSubscription.unsubscribe();
-    }
-  }
-
-  onTenantChange(nextTenantId: string): void {
-    if (!nextTenantId || nextTenantId === this.selectedTenantId) {
-      return;
-    }
-    this.authService.setTenantId(nextTenantId);
-    this.selectedTenantId = nextTenantId;
   }
 
   // Listen for user activity to reset session timeout

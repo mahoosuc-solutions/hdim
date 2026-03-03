@@ -397,10 +397,14 @@ export class DemoControlBarComponent implements OnInit {
   scenarioOptions: Array<{ name: string; label: string; icon: string }> = [];
   showDataFlow = false;
 
+  private logger: ReturnType<LoggerService['withContext']>;
+
   constructor(
     public demoService: DemoModeService,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('DemoControlBarComponent');
+}
 
   async ngOnInit(): Promise<void> {
     const scenarios = await this.demoService.loadScenarios();

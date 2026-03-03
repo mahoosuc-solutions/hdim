@@ -1,4 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
+import { LoggerService } from '../../services/logger.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -8,7 +9,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
-import { LoggerService } from '../../services/logger.service';
 import { PatientService } from '../../services/patient.service';
 import { Patient, PatientSummary } from '../../models/patient.model';
 
@@ -398,6 +398,7 @@ import { Patient, PatientSummary } from '../../models/patient.model';
   ],
 })
 export class PatientSelectionDialogComponent implements OnInit {
+  private logger: ReturnType<LoggerService['withContext']>;
   searchQuery = '';
   displayedColumns = ['name', 'details', 'action'];
 
@@ -407,10 +408,12 @@ export class PatientSelectionDialogComponent implements OnInit {
   isLoading = signal(false);
 
   constructor(
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private dialogRef: MatDialogRef<PatientSelectionDialogComponent>,
     private patientService: PatientService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('PatientSelectionDialogComponent');
+  }
 
   ngOnInit(): void {
     this.loadPatients();

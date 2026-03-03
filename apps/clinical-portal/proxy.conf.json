@@ -115,5 +115,20 @@
     "pathRewrite": {
       "^/monitoring/grafana": "/"
     }
+  },
+  "/audit": {
+    "target": "http://localhost:18080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/audit": "/api/v1/audit"
+    }
+  },
+  "/api/v1/compliance": {
+    "target": "http://localhost:18080",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
   }
 }

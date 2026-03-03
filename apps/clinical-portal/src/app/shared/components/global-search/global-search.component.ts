@@ -65,9 +65,7 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
 
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('GlobalSearchComponent');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
   // Quick access pages
   private readonly QUICK_PAGES: SearchResult[] = [
@@ -127,7 +125,9 @@ export class GlobalSearchComponent implements OnInit, OnDestroy {
     private patientService: PatientService,
     private measureService: MeasureService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('GlobalSearchComponent');
+}
 
   ngOnInit(): void {
     // Setup search debouncing

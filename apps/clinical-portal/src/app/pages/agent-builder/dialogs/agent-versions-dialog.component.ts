@@ -385,6 +385,7 @@ export class AgentVersionsDialogComponent implements OnInit, OnDestroy, AfterVie
   @ViewChild(MatSort) sort!: MatSort;
 
   private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
 
   dataSource = new MatTableDataSource<AgentVersion>([]);
   displayedColumns = [
@@ -404,11 +405,13 @@ export class AgentVersionsDialogComponent implements OnInit, OnDestroy, AfterVie
   constructor(
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<AgentVersionsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: AgentVersionsDialogData
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('AgentVersionsDialogComponent');
+  }
 
   ngOnInit(): void {
     this.loadVersions();

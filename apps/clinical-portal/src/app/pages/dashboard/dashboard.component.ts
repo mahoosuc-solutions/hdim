@@ -123,7 +123,10 @@ export interface ComplianceTrendPoint {
 })
 export class DashboardComponent implements OnInit {
   // Subscription cleanup
-  private destroy$ = injectDestroy();  /**
+  private destroy$ = injectDestroy();
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  /**
    * Configuration constants for trend calculation
    * These can be adjusted based on clinical requirements or made configurable via environment
    */
@@ -270,8 +273,10 @@ export class DashboardComponent implements OnInit {
     private userRoleService: UserRoleService,
     public measureFavorites: MeasureFavoritesService,
     private contextNavService: ContextNavigationService,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('DashboardComponent');
+}
 
   ngOnInit(): void {
     // Load current role from service

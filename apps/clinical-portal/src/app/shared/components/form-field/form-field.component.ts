@@ -154,11 +154,11 @@ export class FormFieldComponent implements OnInit {
     pattern: 'Invalid format'
   };
 
-  private get logger() {
-    return this.loggerService.withContext('FormFieldComponent');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
-  constructor(private loggerService: LoggerService) {}
+  constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('FormFieldComponent');
+}
 
   ngOnInit(): void {
     if (!this.control) {

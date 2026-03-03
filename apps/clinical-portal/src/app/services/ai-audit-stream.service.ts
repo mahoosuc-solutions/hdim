@@ -27,6 +27,7 @@ import { LoggerService } from './logger.service';
   providedIn: 'root'
 })
 export class AiAuditStreamService implements OnDestroy {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private eventSource: EventSource | null = null;
   private eventsSubject = new Subject<any>();
   private connectionStatusSubject = new BehaviorSubject<'connected' | 'disconnected' | 'connecting'>('disconnected');
@@ -34,7 +35,6 @@ export class AiAuditStreamService implements OnDestroy {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 5000; // 5 seconds
   private reconnectTimer: any = null;
-
 
   /**
    * Observable stream of AI audit events.
@@ -46,7 +46,8 @@ export class AiAuditStreamService implements OnDestroy {
    */
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
 
-  constructor(private logger: LoggerService) {
+  constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('AiAuditStreamService');
   }
 
   /**

@@ -113,11 +113,11 @@ export class LoadingSpinnerComponent implements OnInit {
     return this.message || 'Loading content, please wait';
   }
 
-  private get logger() {
-    return this.loggerService.withContext('LoadingSpinnerComponent');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
-  constructor(private loggerService: LoggerService) {}
+  constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('LoadingSpinnerComponent');
+}
 
   ngOnInit(): void {
     // Validate diameter input

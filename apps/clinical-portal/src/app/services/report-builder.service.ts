@@ -280,6 +280,7 @@ const SECTION_TEMPLATES: Omit<ReportSection, 'id' | 'order'>[] = [
   providedIn: 'root',
 })
 export class ReportBuilderService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private readonly REPORTS_STORAGE_KEY = 'hdim_custom_reports';
   private readonly HISTORY_STORAGE_KEY = 'hdim_report_history';
 
@@ -290,8 +291,7 @@ export class ReportBuilderService {
   readonly history$ = this.historySubject.asObservable();
 
   constructor(
-    private logger: LoggerService
-  ) {
+    private loggerService: LoggerService,) {
     this.loadFromStorage();
   }
 

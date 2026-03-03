@@ -22,6 +22,7 @@ import { takeUntil, finalize } from 'rxjs/operators';
 import { PatientService } from '../../services/patient.service';
 import { PatientSummary } from '../../models/patient.model';
 import { LoadingOverlayComponent } from '../../shared/components/loading-overlay/loading-overlay.component';
+import { LoadingButtonComponent } from '../../shared/components/loading-button/loading-button.component';
 import { LoggerService } from '../../services/logger.service';
 
 /**
@@ -74,6 +75,7 @@ export interface PreVisitCareGap {
     MatBadgeModule,
     MatDividerModule,
     LoadingOverlayComponent,
+    LoadingButtonComponent,
   ],
   templateUrl: './pre-visit-planning.component.html',
   styleUrl: './pre-visit-planning.component.scss',
@@ -103,11 +105,17 @@ export class PreVisitPlanningComponent implements OnInit, OnDestroy {
   highUrgencyCount = computed(() =>
     this.patients().reduce((sum, p) =>
       sum + p.careGaps.filter(g => g.urgency === 'high').length, 0)
-  );  constructor(
+  );
+
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private patientService: PatientService,
     private router: Router,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('PreVisitPlanningComponent');
+}
 
   ngOnInit(): void {
     this.loadPatientsForDate();

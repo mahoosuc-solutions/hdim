@@ -1175,10 +1175,16 @@ export class MeasureComparisonComponent implements OnInit, OnDestroy {
       totalUniquePatients: uniquePatients,
       overlapPercentage,
     };
-  });  constructor(
+  });
+
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private router: Router,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('MeasureComparisonComponent');
+}
 
   ngOnInit(): void {
     this.loadAvailableMeasures();

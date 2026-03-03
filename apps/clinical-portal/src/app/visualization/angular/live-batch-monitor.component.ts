@@ -73,6 +73,7 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
   private particles: ParticleData[] = [];
   private instancedMesh?: THREE.InstancedMesh;
   private animationCallback?: (delta: number, elapsed: number) => void;
+  private logger: ReturnType<LoggerService['withContext']>;
 
   // WebSocket status
   wsStatus: WebSocketStatus = WebSocketStatus.DISCONNECTED;
@@ -105,7 +106,9 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
     private wsService: WebSocketVisualizationService,
     private transformService: DataTransformService,
     private batchMonitorService: BatchMonitorService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('LiveBatchMonitorComponent');
+  }
 
   ngOnInit(): void {
     // Initialize with first library

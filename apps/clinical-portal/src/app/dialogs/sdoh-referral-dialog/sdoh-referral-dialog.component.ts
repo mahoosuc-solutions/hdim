@@ -125,7 +125,10 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
 
   // Destroy subject
   private destroy$ = new Subject<void>();
-  private searchSubject = new Subject<string>();  // Constants for template
+  private searchSubject = new Subject<string>();
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  // Constants for template
   readonly INTERNAL_DESTINATION_NAMES = INTERNAL_DESTINATION_NAMES;
   readonly INTERNAL_DESTINATION_ICONS = INTERNAL_DESTINATION_ICONS;
   readonly REFERRAL_URGENCY_CONFIG = REFERRAL_URGENCY_CONFIG;
@@ -163,7 +166,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private referralService: SDOHReferralService,
     private toastService: ToastService,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {
     this.initializeForm();
   }

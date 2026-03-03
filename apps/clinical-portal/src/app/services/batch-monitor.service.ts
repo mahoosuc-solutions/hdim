@@ -58,6 +58,7 @@ export interface BatchMonitorState {
   providedIn: 'root'
 })
 export class BatchMonitorService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private stateSubject = new Subject<BatchMonitorState>();
   // ⚠️ CRITICAL HIPAA COMPLIANCE - DO NOT REMOVE refCount: true ⚠️
   // refCount: true ensures cache is destroyed when all subscribers unsubscribe
@@ -70,7 +71,7 @@ export class BatchMonitorService {
   private currentBatchId?: string;
 
   constructor(
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
     private websocketService: WebSocketVisualizationService

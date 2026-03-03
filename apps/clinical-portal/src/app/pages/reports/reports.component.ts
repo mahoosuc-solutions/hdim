@@ -2205,7 +2205,9 @@ const INITIAL_SAVED_REPORTS: SavedReport[] = [
   ],
 })
 export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
-  private destroy$ = new Subject<void>();  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   selectedTabIndex = 0;
@@ -2269,8 +2271,10 @@ export class ReportsComponent implements OnInit, OnDestroy, AfterViewInit {
     private reportTemplatesService: ReportTemplatesService,
     private qrdaExportService: QrdaExportService,
     public aiAssistant: AIAssistantService,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('ReportsComponent');
+}
 
   ngOnInit(): void {
     this.loadSavedReports();

@@ -34,6 +34,7 @@ export interface RecentMeasure {
   providedIn: 'root',
 })
 export class MeasureFavoritesService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   // Reactive signals for favorites and recents
   private _favorites = signal<FavoriteMeasure[]>([]);
   private _recentMeasures = signal<RecentMeasure[]>([]);
@@ -45,8 +46,7 @@ export class MeasureFavoritesService {
   readonly hasRecent = computed(() => this._recentMeasures().length > 0);
 
   constructor(
-    private logger: LoggerService
-  ) {
+    private loggerService: LoggerService,) {
     this.loadFromStorage();
   }
 

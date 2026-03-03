@@ -3,16 +3,55 @@ import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import type { IntegrationPageData, IntegrationSection } from '@/lib/data/intersystems-integration';
 
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /\*\*(.+?)\*\*/g;
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    parts.push(<strong key={key++}>{match[1]}</strong>);
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+  return parts;
+}
+
+function renderTextBlock(block: string, blockIndex: number): React.ReactNode {
+  const lines = block.split('\n');
+  const bulletLines = lines.filter((l) => l.startsWith('• '));
+
+  if (bulletLines.length > 0 && bulletLines.length === lines.length) {
+    return (
+      <ul key={blockIndex} className="list-disc pl-6 space-y-2 mb-4">
+        {lines.map((line, i) => (
+          <li key={i} className="text-gray-700 leading-relaxed">
+            {renderInlineMarkdown(line.replace(/^• /, ''))}
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  return (
+    <p key={blockIndex} className="text-gray-700 leading-relaxed mb-4">
+      {renderInlineMarkdown(block)}
+    </p>
+  );
+}
+
 function SectionRenderer({ section }: { section: IntegrationSection }) {
   switch (section.type) {
     case 'text':
       return (
         <div className="prose prose-lg max-w-none">
-          {section.content.split('\n\n').map((paragraph, i) => (
-            <p key={i} className="text-gray-700 leading-relaxed mb-4">
-              {paragraph}
-            </p>
-          ))}
+          {section.content.split('\n\n').map((block, i) => renderTextBlock(block, i))}
         </div>
       );
 
@@ -210,6 +249,17 @@ export default function IntegrationPageLayout({ data }: { data: IntegrationPageD
                   <div key={model.name} className="card p-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{model.name}</h3>
                     <p className="text-gray-600 text-sm">{model.description}</p>
+                    {model.link && (
+                      <Link
+                        href={model.link}
+                        className="inline-flex items-center text-blue-600 text-sm font-medium mt-3 hover:underline"
+                      >
+                        Learn more
+                        <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>

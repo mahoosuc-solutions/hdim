@@ -49,14 +49,14 @@ export interface OfflineMetadata {
   providedIn: 'root',
 })
 export class OfflineStorageService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private db: IDBDatabase | null = null;
   private dbReady = new BehaviorSubject<boolean>(false);
 
   readonly isReady$ = this.dbReady.asObservable();
 
   constructor(
-    private logger: LoggerService
-  ) {
+    private loggerService: LoggerService,) {
     this.initDatabase();
   }
 

@@ -3,6 +3,7 @@ package com.healthdata.notification.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.envers.Audited;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -12,7 +13,9 @@ import java.util.UUID;
 /**
  * Template for generating notifications.
  * Supports variable substitution using {{variable}} syntax.
+ * Audited for HIPAA compliance — all access and modifications are tracked.
  */
+@Audited
 @Entity
 @Table(name = "notification_templates", indexes = {
     @Index(name = "idx_templates_tenant_id", columnList = "tenant_id"),

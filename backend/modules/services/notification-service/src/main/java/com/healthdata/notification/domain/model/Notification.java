@@ -3,6 +3,7 @@ package com.healthdata.notification.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.envers.Audited;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
@@ -11,7 +12,9 @@ import java.util.UUID;
 
 /**
  * Notification entity representing a single notification to be sent.
+ * Audited for HIPAA compliance — all access and modifications are tracked.
  */
+@Audited
 @Entity
 @Table(name = "notifications", indexes = {
     @Index(name = "idx_notifications_tenant_id", columnList = "tenant_id"),

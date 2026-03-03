@@ -2,6 +2,7 @@ package com.healthdata.notification.domain.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.envers.Audited;
 
 import java.time.Instant;
 import java.time.LocalTime;
@@ -9,7 +10,9 @@ import java.util.UUID;
 
 /**
  * User preferences for receiving notifications.
+ * Audited for HIPAA compliance — all access and modifications are tracked.
  */
+@Audited
 @Entity
 @Table(name = "notification_preferences", indexes = {
     @Index(name = "idx_preferences_tenant_user", columnList = "tenant_id, user_id")

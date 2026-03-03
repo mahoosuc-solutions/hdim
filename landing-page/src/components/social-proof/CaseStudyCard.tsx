@@ -23,6 +23,12 @@ export default function CaseStudyCard({
 }: CaseStudyCardProps) {
   return (
     <div className="card p-8 hover:shadow-xl transition-all duration-300">
+      {/* Scenario Label */}
+      <div className="mb-4">
+        <span className="inline-block text-xs font-semibold uppercase tracking-wide text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+          Illustrative Scenario
+        </span>
+      </div>
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-lg font-bold text-gray-900 mb-2">{organization}</h3>

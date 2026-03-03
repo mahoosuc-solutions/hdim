@@ -22,7 +22,7 @@ export const INTERSYSTEMS_INTEGRATION: IntegrationPageData = {
   ehrName: 'InterSystems HealthShare / IRIS',
   tagline: 'Enterprise HEDIS Quality Measurement at HIE Scale',
   heroDescription:
-    'HIEs like Healthix have solved the hardest part of healthcare data — aggregating clinical records from thousands of providers into a single longitudinal view. What they lack is a processing layer that turns that aggregated data into quality scores, care gaps, and risk stratification. HDIM deploys within the HIE\'s own infrastructure, sitting between the HealthShare CDR and the clinical workflows that need actionable intelligence.',
+    'HIEs have solved the hardest part of healthcare data — aggregating clinical records from thousands of providers into a single longitudinal view. What they lack is a processing layer that turns that aggregated data into quality scores, care gaps, and risk stratification. HDIM deploys within the HIE\'s own infrastructure, sitting between the HealthShare CDR and the clinical workflows that need actionable intelligence.',
 
   sections: [
     {
@@ -30,7 +30,7 @@ export const INTERSYSTEMS_INTEGRATION: IntegrationPageData = {
       title: 'Overview',
       type: 'text',
       content:
-        'HealthShare solves a genuinely hard problem: it aggregates clinical data from thousands of provider organizations — hospitals, labs, pharmacies, specialist practices — and normalizes it into a longitudinal patient record. That is the foundation. But aggregation alone does not produce quality scores. It does not detect care gaps. It does not tell a care manager which patients are at risk of a preventable admission next quarter.\n\nHDIM is the compute layer that sits on top of that foundation. It deploys on the HIE\'s own infrastructure — on-premises or in the HIE\'s cloud VPC — and fronts the IRIS for Health FHIR endpoint. Inbound FHIR queries from clinical applications pass through HDIM, which evaluates CQL/HEDIS measures in real time, identifies open care gaps, and returns enriched responses. The HIE\'s data never leaves its perimeter. HDIM does not replicate the CDR — it processes it in place.\n\nFor an organization like Healthix, serving 16 million patients across the New York metropolitan area, the architecture has to handle concurrent measure evaluation across entire attributed populations, sub-second FHIR query response times, and HIPAA-compliant audit trails on every data access. Those are the operational constraints HDIM was designed around.',
+        'HealthShare solves a genuinely hard problem: it aggregates clinical data from thousands of provider organizations — hospitals, labs, pharmacies, specialist practices — and normalizes it into a longitudinal patient record. That is the foundation. But aggregation alone does not produce quality scores. It does not detect care gaps. It does not tell a care manager which patients are at risk of a preventable admission next quarter.\n\nHDIM is the compute layer that sits on top of that foundation. It deploys on the HIE\'s own infrastructure — on-premises or in the HIE\'s cloud VPC — and fronts the IRIS for Health FHIR endpoint. Inbound FHIR queries from clinical applications pass through HDIM, which evaluates CQL/HEDIS measures in real time, identifies open care gaps, and returns enriched responses. The HIE\'s data never leaves its perimeter. HDIM does not replicate the CDR — it processes it in place.\n\nFor HIE-scale deployments serving millions of patients across metropolitan areas, the architecture must handle concurrent measure evaluation across entire attributed populations, sub-second FHIR query response times, and HIPAA-compliant audit trails on every data access. Those are the operational constraints HDIM was designed around.',
     },
     {
       id: 'architecture',
@@ -105,10 +105,10 @@ PATIENT_BATCH_SIZE=5000`,
     },
     {
       id: 'healthix-context',
-      title: 'Proven at HIE Scale',
+      title: 'Designed for HIE Scale',
       type: 'text',
       content:
-        'HDIM was architected for health information exchange scale — designed for workloads like Healthix — NYC\'s largest public HIE serving 16 million patients across thousands of provider organizations in the New York metropolitan area.\n\nAt HIE scale, HDIM handles:\n\n• 16M+ patient records with sub-second FHIR query response times\n• 52 HEDIS quality measures evaluated concurrently across entire populations\n• Real-time care gap detection with ADT event-driven triggers\n• Multi-tenant isolation ensuring data segregation across participating organizations\n• HIPAA-compliant audit trails for every data access and quality evaluation\n\nFor HIE-scale deployments, HDIM is configured with optimized connection pooling (50 concurrent FHIR connections), Kafka partitioning (24 partitions for parallel measure evaluation), and Redis cache sizing (2GB for patient demographic caching).',
+        'HDIM was architected for health information exchange scale — designed for workloads spanning millions of patients across thousands of provider organizations.\n\nAt HIE scale, HDIM handles:\n\n• 16M+ patient records with sub-second FHIR query response times\n• 52 HEDIS quality measures evaluated concurrently across entire populations\n• Real-time care gap detection with ADT event-driven triggers\n• Multi-tenant isolation ensuring data segregation across participating organizations\n• HIPAA-compliant audit trails for every data access and quality evaluation\n\nFor HIE-scale deployments, HDIM is configured with optimized connection pooling (50 concurrent FHIR connections), Kafka partitioning (24 partitions for parallel measure evaluation), and Redis cache sizing (2GB for patient demographic caching).',
     },
     {
       id: 'data-exchange',

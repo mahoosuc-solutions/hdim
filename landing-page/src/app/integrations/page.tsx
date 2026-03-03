@@ -23,7 +23,7 @@ const VENDORS = [
     slug: 'intersystems',
     name: 'InterSystems HealthShare',
     segment: 'Health information exchanges (HIEs)',
-    description: "HIEs aggregate data from thousands of providers but lack the processing layer to turn that data into quality scores. HDIM plugs into IRIS for Health and evaluates CQL measures across entire exchange populations — proven at 16M+ patients with Healthix.",
+    description: "HIEs aggregate data from thousands of providers but lack the processing layer to turn that data into quality scores. HDIM plugs into IRIS for Health and evaluates CQL measures across entire exchange populations — architected for HIE-scale workloads of 16M+ patients.",
     color: 'from-purple-500 to-indigo-700',
     choke: 'OAuth2 or API key, HIE-scale data volumes',
   },

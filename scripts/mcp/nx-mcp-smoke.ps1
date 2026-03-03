@@ -20,6 +20,6 @@ if ($output -notmatch '"id":1') { throw "Missing initialize response" }
 if ($output -notmatch '"serverInfo":\\{"name":"Nx MCP"') { throw "Missing Nx MCP serverInfo" }
 if ($output -notmatch '"id":2') { throw "Missing tools/list response" }
 if ($output -notmatch '"name":"nx_workspace_path"') { throw "Missing nx_workspace_path tool" }
+if ($output -notmatch '"name":"nx_available_plugins"') { throw "Missing nx_available_plugins tool" }
 if ($output -notmatch '"id":3') { throw "Missing tools/call response" }
 if ($output -notmatch [regex]::Escape("\"text\":\"$root\"")) { throw "workspace_path mismatch" }
-

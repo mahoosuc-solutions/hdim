@@ -65,7 +65,7 @@ export const ALLSCRIPTS_INTEGRATION: IntegrationPageData = {
         'Configure OAuth2 authentication — Set up OAuth2 client credentials flow using the client ID and secret issued by Allscripts. HDIM supports both the Allscripts OAuth2 authorization server and static bearer token authentication for on-premises Sunrise deployments where OAuth2 infrastructure may not be available.',
         'Set up the FHIR R4 endpoint — Configure HDIM\'s FHIR Service to point to your Allscripts FHIR R4 base URL. For Sunrise, this is typically https://your-sunrise-host/fhir/r4. For TouchWorks, the endpoint format follows https://your-touchworks-host/Unity/FHIR/R4. Verify connectivity by running a test Patient read against a known patient identifier.',
         'Map FHIR resources from Sunrise or TouchWorks — Configure HDIM\'s resource mapping to account for Allscripts-specific FHIR extensions and identifier systems. Sunrise uses NPI-based practitioner identifiers and facility OIDs; TouchWorks uses practice-level tenant identifiers. HDIM\'s normalization layer handles both formats transparently.',
-        'Deploy HDIM on your infrastructure — Set spring.profiles.active=production in your application.properties and configure FHIR_SERVICE_URL and FHIR_SECONDARY_SERVICE_URL to point at your Sunrise and TouchWorks FHIR endpoints respectively. HDIM\'s FHIR Service will ingest from both endpoints and normalize resources into a shared patient model. Adjust FHIR_CONNECTION_POOL_SIZE and PATIENT_BATCH_SIZE based on your patient population size.',
+        'Deploy HDIM on your infrastructure — Set spring.profiles.active=production in your application.properties and configure FHIR_SERVICE_URL to point at your Sunrise or TouchWorks FHIR endpoint. For organizations running both platforms, deploy a separate HDIM instance for each and aggregate results at the reporting layer. Adjust FHIR_CONNECTION_POOL_SIZE and PATIENT_BATCH_SIZE based on your patient population size.',
         'Verify end-to-end integration — Execute the HDIM integration verification suite to confirm FHIR connectivity, patient demographic resolution, CQL measure evaluation, and care gap detection are functioning correctly for both Sunrise inpatient and TouchWorks ambulatory populations.',
       ],
     },
@@ -80,18 +80,12 @@ export const ALLSCRIPTS_INTEGRATION: IntegrationPageData = {
 # Active profile — controls logging, cache TTLs, and connection pool sizing
 spring.profiles.active=production
 
-# Sunrise inpatient FHIR endpoint (on your network)
+# Allscripts FHIR endpoint (Sunrise or TouchWorks — on your network)
 FHIR_SERVICE_URL=https://sunrise.your-health-system.org/fhir/r4
 FHIR_AUTH_TYPE=oauth2
-FHIR_CLIENT_ID=hdim-sunrise-client
+FHIR_CLIENT_ID=hdim-allscripts-client
 FHIR_CLIENT_SECRET=<your-client-secret>
 FHIR_TOKEN_URL=https://sunrise.your-health-system.org/oauth2/token
-
-# TouchWorks ambulatory FHIR endpoint (on your network)
-FHIR_SECONDARY_SERVICE_URL=https://touchworks.your-health-system.org/Unity/FHIR/R4
-FHIR_SECONDARY_CLIENT_ID=hdim-touchworks-client
-FHIR_SECONDARY_CLIENT_SECRET=<touchworks-client-secret>
-FHIR_SECONDARY_TOKEN_URL=https://touchworks.your-health-system.org/oauth2/token
 
 # Connection tuning
 FHIR_CONNECTION_POOL_SIZE=20
@@ -103,7 +97,7 @@ PATIENT_BATCH_SIZE=500`,
       title: 'Dual-Platform Support: Sunrise and TouchWorks',
       type: 'text',
       content:
-        'Many health systems running Allscripts operate both Sunrise Clinical Manager for their hospital and inpatient facilities and TouchWorks EHR across their affiliated physician practices and ambulatory clinics. These platforms expose distinct FHIR endpoint structures, use different patient identifier schemes, and represent clinical data at different levels of granularity — acute encounter-level detail in Sunrise vs. longitudinal outpatient visit history in TouchWorks.\n\nHDIM handles both platforms through a unified FHIR ingestion interface. The FHIR Service normalizes incoming resources to a common internal representation regardless of which Allscripts platform originated the data. Patient identity resolution links Sunrise inpatient records to TouchWorks ambulatory records using enterprise master patient index (EMPI) identifiers when available, or probabilistic demographic matching as a fallback.\n\nFor HEDIS quality measures that require both acute and ambulatory data — such as Comprehensive Diabetes Care (CDC), Controlling High Blood Pressure (CBP), and Colorectal Cancer Screening (COL) — HDIM automatically aggregates evidence from both platforms before evaluating measure logic. This eliminates the false care gap alerts that occur when only one platform\'s data is considered, improving measure accuracy and reducing unnecessary outreach to patients who already received the required care in the other setting.',
+        'Many health systems running Allscripts operate both Sunrise Clinical Manager for their hospital and inpatient facilities and TouchWorks EHR across their affiliated physician practices and ambulatory clinics. These platforms expose distinct FHIR endpoint structures, use different patient identifier schemes, and represent clinical data at different levels of granularity — acute encounter-level detail in Sunrise vs. longitudinal outpatient visit history in TouchWorks.\n\nToday, HDIM connects to one FHIR endpoint at a time — either Sunrise or TouchWorks — and normalizes incoming resources to a common internal representation. For organizations running both platforms, the recommended deployment pattern is a separate HDIM instance per platform, with quality results aggregated at the reporting layer. Multi-source ingestion from both endpoints simultaneously is on the roadmap.\n\nFor HEDIS quality measures that require both acute and ambulatory data — such as Comprehensive Diabetes Care (CDC), Controlling High Blood Pressure (CBP), and Colorectal Cancer Screening (COL) — the dual-instance approach ensures each platform\'s data is evaluated independently, and aggregate reports combine results to identify true care gaps versus false positives caused by incomplete single-platform data.',
     },
     {
       id: 'data-exchange',

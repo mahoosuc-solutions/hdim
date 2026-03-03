@@ -31,6 +31,7 @@ grep -Fq '"serverInfo":{"name":"Nx MCP"' "$tmpfile"
 
 grep -Fq '"id":2' "$tmpfile"
 grep -Fq '"name":"nx_workspace_path"' "$tmpfile"
+grep -Fq '"name":"nx_available_plugins"' "$tmpfile"
 
 grep -Fq '"id":3' "$tmpfile"
 grep -Fq "\"text\":\"$ROOT_DIR\"" "$tmpfile"

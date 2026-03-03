@@ -7,6 +7,7 @@ import ROICalculator from '@/components/roi/ROICalculator';
 import CaseStudyCard from '@/components/social-proof/CaseStudyCard';
 import ScenarioCard from '@/components/scenarios/ScenarioCard';
 import { MESSAGING, CASE_STUDIES, CUSTOMIZATION_LEVELS, PRICING_TIERS, FAQ } from '@/lib/constants';
+import CookieSettingsButton from '@/components/consent/CookieSettingsButton';
 
 export const metadata: Metadata = {
   title: 'HDIM — Real-Time Healthcare Quality Measurement',
@@ -198,12 +199,12 @@ export default function Home() {
                 </div>
 
                 {/* Arrow */}
-                <div className="hidden md:flex items-center">
+                <div className="hidden md:flex items-center animate-pulse">
                   <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </div>
-                <div className="md:hidden">
+                <div className="md:hidden animate-pulse">
                   <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
@@ -216,12 +217,12 @@ export default function Home() {
                 </div>
 
                 {/* Arrow */}
-                <div className="hidden md:flex items-center">
+                <div className="hidden md:flex items-center animate-pulse">
                   <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </div>
-                <div className="md:hidden">
+                <div className="md:hidden animate-pulse">
                   <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
@@ -234,12 +235,12 @@ export default function Home() {
                 </div>
 
                 {/* Arrow */}
-                <div className="hidden md:flex items-center">
+                <div className="hidden md:flex items-center animate-pulse">
                   <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </div>
-                <div className="md:hidden">
+                <div className="md:hidden animate-pulse">
                   <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                   </svg>
@@ -570,6 +571,7 @@ export default function Home() {
               <ul className="space-y-2 text-sm">
                 <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
                 <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
+                <li><CookieSettingsButton /></li>
               </ul>
             </div>
           </div>

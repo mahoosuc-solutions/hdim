@@ -42,7 +42,7 @@ const TIERS = [
     commitment: 'Annual contract',
     description: 'Full production deployment. Multi-EHR, predictive AI, real-time financial tracking.',
     cta: 'Schedule Demo',
-    ctaHref: 'mailto:info@mahoosuc.solutions?subject=Demo Request',
+    ctaHref: 'https://calendar.app.google/zKDs6ZdXW7V61c7i7',
     highlighted: true,
     members: '50K–500K members',
     roi: 'Typical ROI: 50–150×',
@@ -237,6 +237,7 @@ export default function PricingPage() {
                 {/* CTA */}
                 <a
                   href={tier.ctaHref}
+                  {...(tier.ctaHref.startsWith('http') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                   className={`w-full text-center py-3 px-6 rounded-xl font-bold transition mb-8 ${
                     tier.highlighted
                       ? 'bg-white text-blue-600 hover:bg-blue-50'
@@ -358,7 +359,7 @@ export default function PricingPage() {
             and current gap closure rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="mailto:sales@mahoosuc.solutions?subject=15-Minute Call Request" className="bg-white text-blue-600 font-bold py-3 px-8 rounded-xl hover:bg-blue-50 transition text-center">
+            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="bg-white text-blue-600 font-bold py-3 px-8 rounded-xl hover:bg-blue-50 transition text-center">
               Schedule 15-Minute Call
             </a>
             <Link

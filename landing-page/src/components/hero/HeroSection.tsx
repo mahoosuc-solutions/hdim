@@ -35,7 +35,7 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <a href="mailto:info@mahoosuc.solutions?subject=Demo Request" className="btn-primary text-lg px-8 py-4 text-center">
+            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="btn-primary text-lg px-8 py-4 text-center">
               Schedule Demo
             </a>
           </div>

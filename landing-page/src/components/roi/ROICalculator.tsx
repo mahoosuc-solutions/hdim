@@ -210,9 +210,9 @@ export default function ROICalculator() {
               </div>
 
               {/* CTA */}
-              <button className="w-full btn-primary py-3">
+              <a href="mailto:sales@mahoosuc.solutions?subject=ROI Discussion" className="block w-full btn-primary py-3 text-center">
                 Let's Talk About Your ROI
-              </button>
+              </a>
             </div>
           </div>
 

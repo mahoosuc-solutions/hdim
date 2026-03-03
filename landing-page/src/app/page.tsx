@@ -144,9 +144,9 @@ export default function Home() {
                       <p className="font-semibold text-gray-900">{model.timeline}</p>
                     </div>
                   </div>
-                  <button className={model.highlighted ? 'btn-primary w-full mt-6' : 'btn-secondary w-full mt-6'}>
+                  <Link href="/pricing" className={`block text-center ${model.highlighted ? 'btn-primary w-full mt-6' : 'btn-secondary w-full mt-6'}`}>
                     Learn More
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -337,12 +337,12 @@ export default function Home() {
               Schedule a 30-minute personalized demo to see how HDIM can impact your specific organization.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all">
+              <a href="mailto:info@mahoosuc.solutions?subject=Demo Request" className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all text-center">
                 Schedule Demo
-              </button>
-              <button className="px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-blue-700 transition-all">
+              </a>
+              <a href="mailto:sales@mahoosuc.solutions?subject=Sales Inquiry" className="px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-blue-700 transition-all text-center">
                 Contact Sales
-              </button>
+              </a>
             </div>
           </div>
         </section>

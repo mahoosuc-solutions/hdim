@@ -1,5 +1,6 @@
 package com.healthdata.caregap.contracts;
 
+import com.healthdata.test.TestTenantConstants;
 import com.healthdata.caregap.persistence.CareGapEntity;
 import com.healthdata.caregap.persistence.CareGapRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,20 +39,22 @@ import java.util.UUID;
 public class CareGapContractStateSetup {
 
     /**
-     * Deterministic UUID for HBA1C care gap (FHIR-compliant string format).
-     * This ID is referenced in consumer contracts and must remain stable.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#CARE_GAP_HBA1C_ID}
      */
-    public static final String CARE_GAP_HBA1C_ID = "550e8400-e29b-41d4-a716-446655440001";
+    @Deprecated
+    public static final String CARE_GAP_HBA1C_ID = com.healthdata.test.TestTenantConstants.CARE_GAP_HBA1C_ID;
 
     /**
-     * Deterministic UUID for Breast Cancer Screening care gap.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#CARE_GAP_BCS_ID}
      */
-    public static final String CARE_GAP_BCS_ID = "550e8400-e29b-41d4-a716-446655440002";
+    @Deprecated
+    public static final String CARE_GAP_BCS_ID = com.healthdata.test.TestTenantConstants.CARE_GAP_BCS_ID;
 
     /**
-     * Deterministic UUID for Colorectal Cancer Screening care gap.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#CARE_GAP_COL_ID}
      */
-    public static final String CARE_GAP_COL_ID = "550e8400-e29b-41d4-a716-446655440003";
+    @Deprecated
+    public static final String CARE_GAP_COL_ID = com.healthdata.test.TestTenantConstants.CARE_GAP_COL_ID;
 
     /**
      * Patient ID for patient with open care gaps.
@@ -66,10 +69,10 @@ public class CareGapContractStateSetup {
     public static final String PATIENT_NO_GAPS_ID = "00000000-0000-0000-0000-000000000000";
 
     /**
-     * Test tenant ID for contract tests.
-     * All test data is associated with this tenant.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#PRIMARY_TENANT_ID}
      */
-    public static final String TEST_TENANT_ID = "test-tenant-contracts";
+    @Deprecated
+    public static final String TEST_TENANT_ID = TestTenantConstants.PRIMARY_TENANT_ID;
 
     /**
      * HEDIS measure ID for Hemoglobin A1c Testing.

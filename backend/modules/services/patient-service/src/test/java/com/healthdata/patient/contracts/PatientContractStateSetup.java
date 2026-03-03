@@ -1,5 +1,6 @@
 package com.healthdata.patient.contracts;
 
+import com.healthdata.test.TestTenantConstants;
 import com.healthdata.patient.entity.PatientDemographicsEntity;
 import com.healthdata.patient.repository.PatientDemographicsRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,21 +30,22 @@ import java.util.UUID;
 public class PatientContractStateSetup {
 
     /**
-     * Deterministic UUID for John Doe test patient (FHIR-compliant string format).
-     * This ID is referenced in consumer contracts and must remain stable.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#PATIENT_JOHN_DOE_ID}
      */
-    public static final String PATIENT_JOHN_DOE_ID = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
+    @Deprecated
+    public static final String PATIENT_JOHN_DOE_ID = com.healthdata.test.TestTenantConstants.PATIENT_JOHN_DOE_ID;
 
     /**
-     * Deterministic UUID for Jane Smith test patient.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#PATIENT_JANE_SMITH_ID}
      */
-    public static final String PATIENT_JANE_SMITH_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+    @Deprecated
+    public static final String PATIENT_JANE_SMITH_ID = com.healthdata.test.TestTenantConstants.PATIENT_JANE_SMITH_ID;
 
     /**
-     * Test tenant ID for contract tests.
-     * All test data is associated with this tenant.
+     * @deprecated Use {@link com.healthdata.test.TestTenantConstants#PRIMARY_TENANT_ID}
      */
-    public static final String TEST_TENANT_ID = "test-tenant-contracts";
+    @Deprecated
+    public static final String TEST_TENANT_ID = TestTenantConstants.PRIMARY_TENANT_ID;
 
     /**
      * Test MRN for John Doe patient.

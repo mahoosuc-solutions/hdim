@@ -70,6 +70,7 @@ dependencies {
 
     // Testing
     testImplementation(project(":platform:test-fixtures"))
+    testImplementation(project(":modules:shared:test-infrastructure"))
     testImplementation(libs.bundles.testing)
     testImplementation(libs.bundles.testcontainers)
     testImplementation(libs.testcontainers.postgresql)

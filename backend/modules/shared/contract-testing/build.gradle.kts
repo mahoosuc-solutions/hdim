@@ -7,15 +7,15 @@ plugins {
 description = "Shared Pact contract testing infrastructure"
 
 dependencies {
-    val pactVersion = "4.6.14"
+    val pactVersion = "4.6.20"
 
     // Pact Provider Verification
     api("au.com.dius.pact.provider:junit5:$pactVersion")
     api("au.com.dius.pact.provider:spring:$pactVersion")
     api("au.com.dius.pact.provider:junit5spring:$pactVersion")
 
-    // Shared test infrastructure
-    implementation(project(":modules:shared:test-infrastructure"))
+    // Shared test infrastructure (api scope so consumers get TestTenantConstants etc.)
+    api(project(":modules:shared:test-infrastructure"))
 
     // Spring Boot Test
     implementation("org.springframework.boot:spring-boot-starter-test")

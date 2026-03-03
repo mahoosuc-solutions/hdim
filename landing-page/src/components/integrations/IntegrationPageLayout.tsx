@@ -278,7 +278,9 @@ export default function IntegrationPageLayout({ data }: { data: IntegrationPageD
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:info@mahoosuc.solutions?subject=HDIM Demo Request"
+                href="https://calendar.app.google/zKDs6ZdXW7V61c7i7"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all inline-block"
               >
                 Schedule Demo

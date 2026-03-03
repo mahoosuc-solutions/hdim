@@ -23,16 +23,16 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: create
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: false
     show-sql: false
 
+  # Demo profile uses Hibernate DDL — no migration tooling needed
   liquibase:
-    enabled: ${SPRING_LIQUIBASE_ENABLED:true}
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: false
   flyway:
     enabled: false
 

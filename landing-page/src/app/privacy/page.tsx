@@ -79,15 +79,17 @@ export default function PrivacyPage() {
               <section>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Cookies &amp; Tracking</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
-                  Our marketing website uses the following categories of cookies:
+                  Our marketing website uses privacy-respecting, cookieless analytics (Plausible). We do
+                  not use tracking cookies, advertising cookies, or sell data to third parties.
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-700">
                   <li><strong>Essential cookies:</strong> Required for site functionality (session management, security). Cannot be disabled.</li>
-                  <li><strong>Analytics cookies:</strong> Used to understand site usage patterns (page views, navigation paths). No PHI is collected.</li>
+                  <li><strong>Optional cookies:</strong> If we introduce optional analytics or marketing tools in the future, they will only activate after you grant consent via our cookie banner.</li>
                 </ul>
                 <p className="text-gray-700 leading-relaxed mt-4">
-                  We do not use advertising cookies or sell data to third parties. The HDIM platform itself
-                  does not use cookies — authentication is handled via JWT tokens within your infrastructure.
+                  You can manage your cookie preferences at any time via the Cookie Settings link in our
+                  footer. The HDIM platform itself does not use cookies — authentication is handled via JWT
+                  tokens within your infrastructure.
                 </p>
               </section>
 

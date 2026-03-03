@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0036-create-bulk-import-jobs-table" author="hie-pipeline">
+        <createTable tableName="bulk_import_jobs">
+            <column name="job_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_url" type="varchar(1024)"/>
+            <column name="total_records" type="bigint"/>
+            <column name="processed_records" type="bigint" defaultValueNumeric="0"/>
+            <column name="failed_records" type="bigint" defaultValueNumeric="0"/>
+            <column name="error_summary" type="text"/>
+            <column name="submitted_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="started_at" type="timestamp with time zone"/>
+            <column name="completed_at" type="timestamp with time zone"/>
+            <column name="submitted_by" type="varchar(100)"/>
+        </createTable>
+
+        <createIndex indexName="idx_bulk_import_tenant_status" tableName="bulk_import_jobs">
+            <column name="tenant_id"/>
+            <column name="status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_bulk_import_submitted_at" tableName="bulk_import_jobs">
+            <column name="submitted_at"/>
+        </createIndex>
+
+        <createIndex indexName="idx_bulk_import_status" tableName="bulk_import_jobs">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="bulk_import_jobs"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

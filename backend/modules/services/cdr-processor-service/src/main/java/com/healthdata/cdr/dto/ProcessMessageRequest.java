@@ -32,4 +32,11 @@ public class ProcessMessageRequest {
      * Convert to FHIR resources.
      */
     private boolean convertToFhir;
+
+    /**
+     * Persist converted FHIR resources to the FHIR store.
+     * Requires convertToFhir=true. Defaults to true when convertToFhir is true.
+     */
+    @Builder.Default
+    private boolean persistToFhir = true;
 }

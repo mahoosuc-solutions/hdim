@@ -49,4 +49,7 @@
     <include file="db/changelog/0034-create-practitioner-roles-table.xml"/>
     <include file="db/changelog/0035-create-organizations-table.xml"/>
 
+    <!-- HIE Data Pipeline: Bulk Import job tracking -->
+    <include file="db/changelog/0036-create-bulk-import-jobs-table.xml"/>
+
 </databaseChangeLog>

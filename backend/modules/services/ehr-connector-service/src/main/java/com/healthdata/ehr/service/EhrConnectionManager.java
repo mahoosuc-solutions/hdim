@@ -4,7 +4,9 @@ import com.healthdata.ehr.connector.EhrConnector;
 import com.healthdata.ehr.dto.EhrConnectionConfig;
 import com.healthdata.ehr.factory.EhrConnectorFactory;
 import com.healthdata.ehr.model.EhrConnectionStatus;
-import lombok.RequiredArgsConstructor;
+import com.healthdata.ehr.persistence.EhrConnectionConfigEntity;
+import com.healthdata.ehr.persistence.EhrConnectionConfigRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -17,22 +19,61 @@ import java.util.stream.Collectors;
 /**
  * Manages active EHR connections for all tenants.
  * Provides connection pooling, lifecycle management, and health monitoring.
+ *
+ * <p>Connection configurations are persisted to the database so they survive
+ * service restarts. On startup, all active configs are loaded and used to
+ * reconstruct live connectors.</p>
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class EhrConnectionManager {
 
     private final EhrConnectorFactory connectorFactory;
+    private final EhrConnectionConfigRepository configRepository;
 
-    // Map of connectionId -> connector
+    // Map of connectionId -> connector (runtime instances, non-serializable)
     private final Map<String, EhrConnector> activeConnections = new ConcurrentHashMap<>();
 
     // Map of connectionId -> tenantId for quick tenant lookup
     private final Map<String, String> connectionTenantMap = new ConcurrentHashMap<>();
 
+    public EhrConnectionManager(EhrConnectorFactory connectorFactory,
+                                 EhrConnectionConfigRepository configRepository) {
+        this.connectorFactory = connectorFactory;
+        this.configRepository = configRepository;
+    }
+
+    /**
+     * On startup, restore all active connections from the database.
+     * Connectors are non-serializable, so we reconstruct them from persisted configs.
+     */
+    @PostConstruct
+    void initializeFromDatabase() {
+        List<EhrConnectionConfigEntity> activeConfigs = configRepository.findByActiveTrue();
+        log.info("Restoring {} EHR connections from database", activeConfigs.size());
+
+        for (EhrConnectionConfigEntity entity : activeConfigs) {
+            try {
+                EhrConnectionConfig config = entity.toConfig();
+                EhrConnector connector = connectorFactory.createConnector(config);
+                connector.initialize(config).block();
+
+                activeConnections.put(config.getConnectionId(), connector);
+                connectionTenantMap.put(config.getConnectionId(), config.getTenantId());
+
+                log.info("Restored connection: {} for tenant: {}", config.getConnectionId(), config.getTenantId());
+            } catch (Exception e) {
+                log.warn("Failed to restore connection: {} — will retry on next access",
+                        entity.getConnectionId(), e);
+            }
+        }
+
+        log.info("EHR connection initialization complete: {} active connections", activeConnections.size());
+    }
+
     /**
      * Register a new EHR connection.
+     * Persists the config to DB, then creates the live connector.
      *
      * @param config Connection configuration
      * @return Mono containing the connection ID
@@ -47,6 +88,10 @@ public class EhrConnectionManager {
         }
 
         log.info("Registering new EHR connection: {} for tenant: {}", connectionId, tenantId);
+
+        // Persist config to database first
+        EhrConnectionConfigEntity entity = EhrConnectionConfigEntity.fromConfig(config);
+        configRepository.save(entity);
 
         return Mono.fromCallable(() -> connectorFactory.createConnector(config))
                 .flatMap(connector -> connector.initialize(config)
@@ -128,6 +173,13 @@ public class EhrConnectionManager {
         }
 
         log.info("Removing connection: {} for tenant: {}", connectionId, tenantId);
+
+        // Soft-delete in database
+        configRepository.findByConnectionIdAndTenantId(connectionId, tenantId)
+                .ifPresent(entity -> {
+                    entity.setActive(false);
+                    configRepository.save(entity);
+                });
 
         return connector.disconnect()
                 .doFinally(signal -> {

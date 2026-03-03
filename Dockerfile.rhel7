@@ -1,5 +1,9 @@
 #
-# RHEL 7 Test Environment for HealthData In Motion Platform
+# DEPRECATED — This Dockerfile is a test harness, not a production artifact.
+# For production RHEL 7 deployment, use: installer/rhel7/hdim-install.sh
+# See docs/deployment/RHEL7-DEPLOYMENT-GUIDE.md for full documentation.
+#
+# RHEL 7 Test Environment for HealthData In Motion Platform (LEGACY)
 #
 # This Dockerfile creates a RHEL 7-like environment for testing the complete
 # platform deployment including Kong API Gateway and all microservices.

@@ -1,0 +1,29 @@
+[Unit]
+Description=HealthData-in-Motion Platform
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=${HDIM_USER}
+Group=${HDIM_GROUP}
+WorkingDirectory=${HDIM_CURRENT}/source
+EnvironmentFile=${HDIM_CONF}
+ExecStart=/usr/bin/docker compose \
+  -f docker-compose.yml -f docker-compose.prod.yml \
+  --env-file ${HDIM_CURRENT}/.env \
+  --profile ${HDIM_PROFILE} up -d
+ExecStop=/usr/bin/docker compose \
+  -f docker-compose.yml -f docker-compose.prod.yml \
+  --env-file ${HDIM_CURRENT}/.env \
+  --profile ${HDIM_PROFILE} down --timeout 30
+ExecStartPost=${HDIM_CURRENT}/source/scripts/wait-for-services.sh 300
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hdim
+
+[Install]
+WantedBy=multi-user.target

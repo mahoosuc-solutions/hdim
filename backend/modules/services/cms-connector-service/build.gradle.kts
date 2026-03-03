@@ -34,6 +34,9 @@ dependencies {
     // Spring Cloud OpenFeign (for HTTP clients)
     implementation(libs.spring.cloud.starter.openfeign)
 
+    // Kafka for event publishing
+    implementation(libs.bundles.kafka)
+
     // Resilience4j for circuit breaker and retry
     implementation(libs.resilience4j.spring.boot3)
     implementation(libs.resilience4j.circuitbreaker)

@@ -11,7 +11,7 @@ export default function Header() {
       <nav className="container-lg py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg"></div>
+            <img src="/hdim-icon.svg" alt="HDIM" className="w-8 h-8" />
             <span className="text-xl font-bold text-gray-900">HDIM</span>
           </div>
 

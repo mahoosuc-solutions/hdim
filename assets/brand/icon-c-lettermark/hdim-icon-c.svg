@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="bg-grad-c" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a5f"/>
+      <stop offset="100%" style="stop-color:#2d5a87"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100" height="100" rx="18" fill="url(#bg-grad-c)"/>
+
+  <!-- H letterform — bold, geometric -->
+  <!-- Left vertical stroke -->
+  <rect x="18" y="20" width="13" height="60" rx="2" fill="#ffffff"/>
+  <!-- Right vertical stroke -->
+  <rect x="69" y="20" width="13" height="60" rx="2" fill="#ffffff"/>
+
+  <!-- Crossbar replaced with data-flow element -->
+  <!-- Main crossbar bar — thinner than verticals, positioned at visual midpoint -->
+  <rect x="31" y="44" width="38" height="12" rx="2" fill="#2196f3"/>
+
+  <!-- Tick marks on crossbar — measurement / data scale motif -->
+  <!-- 4 evenly spaced ticks, slightly taller than bar -->
+  <rect x="38" y="41" width="2.5" height="18" rx="1" fill="#21cbf3"/>
+  <rect x="46" y="41" width="2.5" height="18" rx="1" fill="#21cbf3"/>
+  <rect x="54" y="41" width="2.5" height="18" rx="1" fill="#21cbf3"/>
+  <rect x="62" y="41" width="2.5" height="18" rx="1" fill="#21cbf3"/>
+</svg>

@@ -159,9 +159,9 @@ docker compose --profile core up -d
 
 **🚀 DevOps/Operations:** [Deployment Guide](./docs/deployment/) → [Operations Guide](./docs/operations/) → [Troubleshooting](./docs/troubleshooting/README.md)
 
-**👥 End Users:** [System Overview](./docs/architecture/SYSTEM_ARCHITECTURE.md) → [FAQ](./docs/troubleshooting/FAQ.md) → [Feature List](./PRODUCT_FEATURES.md)
+**👥 End Users:** [System Overview](./docs/architecture/SYSTEM_ARCHITECTURE.md) → [FAQ](./docs/troubleshooting/FAQ.md) → [Feature List](#-key-features)
 
-**💼 Product/Sales:** [Feature List](./PRODUCT_FEATURES.md) → [Use Cases](#-use-cases) → [ROI Calculator](./ROI_CALCULATOR_TEMPLATE.md)
+**💼 Product/Sales:** [Feature List](#-key-features) → [Use Cases](#-use-cases) → [ROI Calculator](./docs/gtm/ROI_CALCULATOR_SPEC.md)
 
 ---
 
@@ -285,7 +285,7 @@ kubectl scale deployment quality-measure --replicas=10
 **Resources:** Auto-scaling, multi-node clusters
 **Cost:** Variable, based on cloud provider
 
-See [DISTRIBUTION_ARCHITECTURE.md](./DISTRIBUTION_ARCHITECTURE.md) for detailed deployment guides.
+See [Deployment Runbook](./docs/DEPLOYMENT_RUNBOOK.md) for detailed deployment guides.
 
 ---
 
@@ -294,14 +294,14 @@ See [DISTRIBUTION_ARCHITECTURE.md](./DISTRIBUTION_ARCHITECTURE.md) for detailed 
 ### ✨ New Documentation Portals (Start Here!)
 
 - **[Documentation Portal](./docs/README.md)** - Centralized navigation for all 1,411 docs
-- **[Service Catalog](./docs/services/SERVICE_CATALOG.md)** - All 50+ services with discovery features
+- **[Service Catalog](./docs/services/SERVICE_CATALOG.md)** - All 57 services with discovery features
 - **[Troubleshooting Guide](./docs/troubleshooting/README.md)** - Decision trees for problem resolution
 - **[Developer Guide](./CLAUDE.md)** - Essential reference for developers
 
 ### Getting Started
 
-- [Quick Start Guide](./QUICK_START.md) - Deploy in < 10 minutes
-- [Installation Guide](./README_DEPLOYMENT.md) - Detailed setup
+- [Quick Start Guide](./docs/QUICK_START_GUIDE.md) - Deploy in < 10 minutes
+- [Installation Guide](./docs/development/LOCAL_SETUP.md) - Detailed setup
 - [Authentication Guide](./AUTHENTICATION_GUIDE.md) - User management
 - [Configuration Reference](./backend/README.md) - Service configuration
 - [Deployment Validation](./docs/deployment/IMPLEMENTATION_VALIDATION_RUNBOOK.md) - Verify deployment
@@ -335,17 +335,17 @@ See [DISTRIBUTION_ARCHITECTURE.md](./DISTRIBUTION_ARCHITECTURE.md) for detailed 
 ### Product & Features
 
 - [Product Overview](./docs/product/overview.md) - Value propositions
-- [Feature List](./PRODUCT_FEATURES.md) - Complete capabilities
-- [Patient Health Dashboard](./PATIENT_HEALTH_OVERVIEW_GUIDE.md) - Patient overview features
-- [Quality Measures Examples](./CUSTOM_MEASURES_EXAMPLES.md) - CQL examples and patterns
+- [Feature List](#-key-features) - Complete capabilities
+- [Clinical Portal User Guide](./docs/CLINICAL_PORTAL_USER_GUIDE.md) - Patient overview features
+- [CQL Measure Library](./docs/measures/) - CQL examples and patterns
 - [Use Cases](#-use-cases) - Industry-specific scenarios
 
 ### Sales & Marketing
 
-- [Sales Strategy](./CLINICAL_SALES_STRATEGY.md) - Target personas and messaging
-- [ROI Calculator](./ROI_CALCULATOR_TEMPLATE.md) - Financial analysis template
-- [Case Studies](./CASE_STUDY_CLINICAL_IMPACT.md) - Customer success stories
-- [Demo Scripts](./SALES_DEMO_SCRIPT.md) - Product demonstrations
+- [GTM Strategy](./docs/gtm/) - Target personas, sales collateral, and messaging
+- [ROI Calculator](./docs/gtm/ROI_CALCULATOR_SPEC.md) - Financial analysis specification
+- [Marketing Content](./docs/marketing/) - Announcements and content index
+- [Demo Scripts](./docs/marketing/demo/) - Product demonstrations
 
 ### Compliance & Standards
 
@@ -437,7 +437,7 @@ npx nx e2e clinical-portal-e2e
 - **Session Management** - Configurable timeouts
 - **MFA Support** - Multi-factor authentication ready
 
-See [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) for complete security documentation.
+See [Production Security Guide](./docs/PRODUCTION_SECURITY_GUIDE.md) for complete security documentation.
 
 ---
 
@@ -499,29 +499,24 @@ For production deployments, SLAs, and custom development:
 
 ## 📈 Roadmap
 
-### ✅ Completed (January 2026)
-- [x] **Phase 1**: Data Ingestion Service (load testing infrastructure)
-- [x] **Phase 2**: GitHub Issue Tracking (15 issues created)
-- [x] **Phase 3**: Backend Implementation (14/15 issues resolved)
-  - [x] Real-time AI audit event streaming (SSE)
-  - [x] Configuration history tracking & alerting
-  - [x] Patient age range filtering
-  - [x] WebSocket progress tracking
+### ✅ Completed (January–March 2026)
+- [x] **Phase 1–3**: Data Ingestion, GitHub Issue Tracking, Backend Implementation
+- [x] **Phase 4**: API Documentation — 62 endpoints with interactive Swagger UI
+- [x] **Phase 5**: Embedded Kafka Migration — 50% test performance improvement
+- [x] **Phase 6**: Test Infrastructure Modernization — 33% faster test suite
+- [x] **Phase 7**: CI/CD Parallelization — 42.5% faster PR feedback (40m → 23-25m)
+- [x] **HIE Data Pipeline**: End-to-end EHR/CDR/CMS → FHIR → CQL → care gap detection
+- [x] **Contract Testing**: Consumer-driven Pact tests + OpenAPI validation
+- [x] **Event Sourcing**: CQRS pattern with 4 event services
+- [x] **Gateway Modularization**: 4-gateway architecture with shared gateway-core
 
-### Q1 2026 (In Progress)
-- [ ] **Phase 4**: Demo Docker Image for AI Solution Architect (40-60 hours)
-- [ ] Advanced AI/ML predictions
-- [ ] Mobile apps (iOS, Android)
-- [ ] HL7 v2 integration
-- [ ] Enhanced reporting
+### Q2 2026 (Planned)
+- [ ] Advanced AI/ML predictive care gap detection
+- [ ] Mobile companion apps (iOS, Android)
+- [ ] HL7 v2 bidirectional integration
+- [ ] Enhanced reporting and analytics dashboards
 
-### Q2 2026
-- [ ] Multi-language support
-- [ ] Voice-enabled interfaces
-- [ ] Blockchain for consent
-- [ ] Advanced analytics
-
-See [docs/product/roadmap.md](./docs/product/roadmap.md) for detailed roadmap.
+See [Year 1 Strategic Roadmap](./docs/YEAR_1_STRATEGIC_ROADMAP.md) for detailed roadmap.
 
 ---
 

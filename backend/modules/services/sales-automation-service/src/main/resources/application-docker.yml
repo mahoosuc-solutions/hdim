@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://postgres:5432/sales_automation_db
     username: healthdata
-    password: healthdata_password
+    password: ${SPRING_DATASOURCE_PASSWORD:}
 
   data:
     redis:

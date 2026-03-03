@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://postgres:5432/agent_db
     username: healthdata
-    password: healthdata_password
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -15,9 +15,9 @@ spring:
       host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
 
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
+  liquibase:
+    enabled: ${SPRING_LIQUIBASE_ENABLED:true}
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   jpa:
     hibernate:

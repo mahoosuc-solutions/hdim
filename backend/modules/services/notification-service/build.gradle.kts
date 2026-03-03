@@ -28,6 +28,10 @@ dependencies {
     implementation(libs.spring.boot.starter.security)
     implementation(libs.spring.boot.starter.validation)
 
+    // Hibernate Envers for audit trail (HIPAA §164.312(b) compliance)
+    // Tracks all changes to Notification, NotificationPreference, NotificationTemplate entities
+    implementation("org.hibernate.orm:hibernate-envers")
+
     // Spring Mail for email sending
     implementation("org.springframework.boot:spring-boot-starter-mail")
 

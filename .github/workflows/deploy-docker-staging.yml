@@ -3,7 +3,7 @@ name: Deploy to Docker Staging
 on:
   push:
     branches:
-      - develop
+      - master
     paths:
       - 'backend/modules/services/ai-sales-agent/**'
       - 'backend/modules/services/live-call-sales-agent/**'

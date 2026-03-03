@@ -7,7 +7,7 @@ on:
 
   # Smoke mode on PRs touching load tests or the 3 core services
   pull_request:
-    branches: [master, develop]
+    branches: [master]
     paths:
       - 'load-tests/**'
       - 'backend/modules/services/patient-service/**'

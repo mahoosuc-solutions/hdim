@@ -7,16 +7,16 @@
 ## Validation
 
 - [ ] Relevant local tests run and passing
-- [ ] If frontend session/auth code changed, ran `npm --prefix frontend run test:session-flow`
-- [ ] If session flow UI changed, ran `npm --prefix frontend run e2e:session-flow` (or attached reason if not run)
+- [ ] If frontend session/auth code changed, ran `npm --prefix apps/clinical-portal run test:session-flow`
+- [ ] If session flow UI changed, ran `npm --prefix apps/clinical-portal run e2e:session-flow` (or attached reason if not run)
 - [ ] If `landing-page/**` changed, ran `npm --prefix landing-page run validate:ci`
 
 ## Merge Gate Checklist
 
-- [ ] PR targets protected branch (`main` or `develop`) when applicable
+- [ ] PR targets `master` branch
 - [ ] Required checks are green, including:
   - [ ] `MCP Release Gate / release-gate`
-  - [ ] `Frontend Session Flow E2E / session-flow` (when `frontend/**` is affected)
+  - [ ] `Frontend Session Flow E2E / session-flow` (when `apps/clinical-portal/**` is affected)
   - [ ] `Landing Page Validation` (when `landing-page/**` is affected)
   - [ ] `Frontend Session Flow E2E / session-flow-external-auth` (for auth/login config changes; CI runs this conditionally)
   - [ ] `Frontend Session Flow E2E / auth-callback` (for auth/login config changes; CI runs this conditionally)

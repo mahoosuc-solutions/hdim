@@ -2,7 +2,7 @@ name: Integration Validation (Backend + E2E + Health)
 
 on:
   pull_request:
-    branches: [master, main, develop]
+    branches: [master]
   workflow_dispatch: {}
 
 env:

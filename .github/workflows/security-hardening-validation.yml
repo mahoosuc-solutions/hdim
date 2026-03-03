@@ -11,7 +11,6 @@ on:
   push:
     branches:
       - master
-      - main
     paths:
       - 'docker-compose.production.yml'
       - 'docker-compose.staging.sales-agents.yml'
@@ -35,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trivy config scan (IaC)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'config'
           scan-ref: '.'

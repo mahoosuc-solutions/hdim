@@ -2,9 +2,9 @@ name: Security Scanning
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [master]
   pull_request:
-    branches: [main, master]
+    branches: [master]
   schedule:
     # Run weekly on Monday at 9am UTC
     - cron: '0 9 * * 1'
@@ -46,7 +46,7 @@ jobs:
           ./gradlew dependencies --no-daemon > ../dependency-report.txt
 
       - name: Run OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
+        uses: dependency-check/Dependency-Check_Action@v4
         id: depcheck
         with:
           project: 'HDIM'
@@ -90,7 +90,7 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.82.13
         with:
           path: ./
           base: ${{ github.event.repository.default_branch }}
@@ -212,7 +212,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: 'hdim/${{ matrix.service }}:scan'
           format: 'sarif'
@@ -229,7 +229,7 @@ jobs:
           category: 'trivy-${{ matrix.service }}'
 
       - name: Run Trivy for table output
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         if: always()
         with:
           image-ref: 'hdim/${{ matrix.service }}:scan'
@@ -334,7 +334,7 @@ jobs:
           ./gradlew checkLicense --no-daemon || true
 
       - name: FOSSA License Scan
-        uses: fossas/fossa-action@main
+        uses: fossas/fossa-action@v1
         continue-on-error: true
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}

@@ -5,6 +5,7 @@ import com.healthdata.ehr.dto.EhrConnectionConfig;
 import com.healthdata.ehr.factory.EhrConnectorFactory;
 import com.healthdata.ehr.model.EhrConnectionStatus;
 import com.healthdata.ehr.model.EhrVendorType;
+import com.healthdata.ehr.persistence.EhrConnectionConfigRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,13 +32,16 @@ class EhrConnectionManagerTest {
     private EhrConnectorFactory connectorFactory;
 
     @Mock
+    private EhrConnectionConfigRepository configRepository;
+
+    @Mock
     private EhrConnector mockConnector;
 
     private EhrConnectionManager connectionManager;
 
     @BeforeEach
     void setUp() {
-        connectionManager = new EhrConnectionManager(connectorFactory);
+        connectionManager = new EhrConnectionManager(connectorFactory, configRepository);
     }
 
     @Test

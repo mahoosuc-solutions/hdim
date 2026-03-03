@@ -1,4 +1,4 @@
-import type { IntegrationPageData } from './intersystems-integration';
+import type { IntegrationPageData } from '@/lib/types/integration';
 
 export const NEXTGEN_INTEGRATION: IntegrationPageData = {
   ehrName: 'NextGen Healthcare',

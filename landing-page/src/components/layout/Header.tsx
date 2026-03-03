@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { CALENDAR_URL } from '@/lib/constants';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,7 +40,7 @@ export default function Header() {
           </div>
 
           {/* CTA Button */}
-          <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="btn-primary hidden md:block">Schedule Demo</a>
+          <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn-primary hidden md:block">Schedule Demo</a>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -62,26 +63,26 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div id="mobile-menu" className="md:hidden mt-4 pb-4 border-t" role="menu">
-            <a href="#solution" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
+          <div id="mobile-menu" className="md:hidden mt-4 pb-4 border-t">
+            <a href="#solution" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu}>
               Solution
             </a>
-            <a href="#deployment" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
+            <a href="#deployment" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu}>
               Deployment
             </a>
-            <a href="#scenarios" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
+            <a href="#scenarios" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu}>
               Scenarios
             </a>
-            <a href="#roi" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
+            <a href="#roi" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu}>
               ROI
             </a>
-            <Link href="/integrations" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
+            <Link href="/integrations" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu}>
               Integrations
             </Link>
-            <Link href="/pricing" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
+            <Link href="/pricing" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu}>
               Pricing
             </Link>
-            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="btn-primary block w-full mt-4 text-center" onClick={closeMenu}>Schedule Demo</a>
+            <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn-primary block w-full mt-4 text-center" onClick={closeMenu}>Schedule Demo</a>
           </div>
         )}
       </nav>

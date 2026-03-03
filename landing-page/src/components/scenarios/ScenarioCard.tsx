@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CUSTOMER_SCENARIOS } from '@/lib/constants';
+import { CUSTOMER_SCENARIOS, EMAIL_SALES } from '@/lib/constants';
 
 interface ScenarioCardProps {
   scenarioId: string;
@@ -127,7 +127,7 @@ export default function ScenarioCard({ scenarioId }: ScenarioCardProps) {
       </div>
 
       {/* CTA */}
-      <a href="mailto:info@mahoosuc.solutions?subject=Scenario Inquiry" className="block w-full btn-primary mt-6 py-2 text-sm text-center">
+      <a href={`mailto:${EMAIL_SALES}?subject=Scenario Inquiry`} className="block w-full btn-primary mt-6 py-2 text-sm text-center">
         Explore This Scenario
       </a>
     </div>

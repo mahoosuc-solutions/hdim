@@ -18,7 +18,7 @@ export const MESSAGING = {
 
   // Deployment Models
   DEPLOYMENT_HEADLINE: 'Start Small, Scale as You Grow',
-  DEPLOYMENT_DESCRIPTION: 'Five deployment models to match your organization, from $500/month to enterprise scale.',
+  DEPLOYMENT_DESCRIPTION: 'Four deployment models to match your organization, from $2,500/month to enterprise scale.',
 
   // Customization
   CUSTOMIZATION_HEADLINE: 'From 52 Pre-Built Measures to Unlimited Customization',
@@ -49,7 +49,7 @@ export const DEPLOYMENT_MODELS = [
     description: 'Single-node Docker deployment for proof of concept',
     patients: 'Up to 50K',
     timeline: '2-3 weeks',
-    cost: '$500/month',
+    cost: '$2,500/month',
     infrastructure: {
       servers: 1,
       cpu: '4 CPUs',
@@ -71,7 +71,7 @@ export const DEPLOYMENT_MODELS = [
     description: 'Clustered deployment with high availability',
     patients: '50K - 500K',
     timeline: '4-8 weeks',
-    cost: '$2,500/month',
+    cost: '$8,500/month',
     infrastructure: {
       servers: '3-5',
       cpu: '8+ CPUs per server',
@@ -94,7 +94,7 @@ export const DEPLOYMENT_MODELS = [
     description: 'Kubernetes deployment for maximum scale',
     patients: '500K+',
     timeline: '8-12 weeks',
-    cost: '$5,000-15,000/month',
+    cost: '$15,000+/month',
     infrastructure: {
       servers: '10+',
       cpu: '16+ CPUs',
@@ -118,7 +118,7 @@ export const DEPLOYMENT_MODELS = [
     description: 'On-premise gateway with cloud compute',
     patients: '100K - 2M+',
     timeline: '6-10 weeks',
-    cost: '$10,000-20,000/month',
+    cost: '$20,000+/month',
     infrastructure: {
       servers: 'On-prem: 3+, Cloud: elastic',
       cpu: 'Mixed on-prem/cloud',
@@ -289,7 +289,7 @@ export const CUSTOMIZATION_LEVELS = [
       'Email notifications',
     ],
     timeline: 'Included',
-    cost: '$500/month',
+    cost: '$2,500/month',
     customerType: 'Pilot',
   },
   {
@@ -446,7 +446,7 @@ export const FEATURE_COMPARISON = {
         { name: 'HIPAA compliance', hdim: true, competitors: true },
         { name: 'Multi-tenant isolation', hdim: true, competitors: 'Limited' },
         { name: 'HIPAA audit logging', hdim: true, competitors: true },
-        { name: 'SOC 2 certified', hdim: true, competitors: true },
+        { name: 'SOC 2 ready', hdim: true, competitors: true },
         { name: 'BAA included', hdim: true, competitors: true },
       ],
     },
@@ -546,7 +546,7 @@ export const FAQ = [
   {
     question: 'Can we start small and scale later?',
     answer:
-      'Absolutely. Start with the Pilot tier ($500/month) for a small proof of concept, then upgrade to Growth or Enterprise as you expand. Zero switching costs.',
+      'Absolutely. Start with the Pilot tier ($2,500/month) for a 3-month proof of concept, then upgrade to Growth or Enterprise as you expand. Zero switching costs.',
   },
   {
     question: 'What kind of ROI can we expect?',

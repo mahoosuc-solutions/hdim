@@ -156,11 +156,11 @@ export default function PricingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-3xl font-bold text-blue-600">35–40%</div>
-              <div className="text-sm text-gray-600 mt-1">gap closure improvement (early pilots)</div>
+              <div className="text-sm text-gray-600 mt-1">projected gap closure improvement</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-green-600">$1M+</div>
-              <div className="text-sm text-gray-600 mt-1">incremental quality bonus, Month 1</div>
+              <div className="text-sm text-gray-600 mt-1">projected incremental quality bonus</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-indigo-600">4 weeks</div>

@@ -3,14 +3,13 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'InterSystems HealthShare Integration | HDIM',
   description:
-    'Connect HDIM to InterSystems HealthShare and IRIS for Health for HEDIS quality measurement at HIE scale. Proven at 16M+ patients with Healthix.',
+    'Connect HDIM to InterSystems HealthShare and IRIS for Health for HEDIS quality measurement at HIE scale. Architected for workloads of 16M+ patients.',
   keywords: [
     'InterSystems HealthShare',
     'IRIS for Health',
     'HIE integration',
     'FHIR R4',
     'HEDIS measures',
-    'Healthix',
     'health information exchange',
   ],
 };

@@ -195,7 +195,11 @@ public class AIAuditStreamController {
                         continue;
                     }
 
-                    // TODO: Add severity filtering when severity field is added to entity
+                    // Filter by severity (maps to entity's riskLevel field)
+                    if (severity != null && event.getRiskLevel() != null
+                            && !event.getRiskLevel().name().equalsIgnoreCase(severity)) {
+                        continue;
+                    }
 
                     // Convert entity to DTO
                     AIAuditEventDTO dto = convertToDTO(event);
@@ -254,6 +258,9 @@ public class AIAuditStreamController {
         dto.setOutcome(entity.getOutcome().name());
         dto.setCostEstimate(entity.getCostEstimate());
         dto.setProcessingTimeMs(entity.getInferenceTimeMs());
+        if (entity.getRiskLevel() != null) {
+            dto.setSeverity(entity.getRiskLevel().name());
+        }
         return dto;
     }
 

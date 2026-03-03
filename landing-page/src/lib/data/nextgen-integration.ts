@@ -67,7 +67,7 @@ export const NEXTGEN_INTEGRATION: IntegrationPageData = {
         'Configure a Mirth Connect channel (optional) — If your NextGen deployment uses Mirth Connect for HL7 v2 or CCDA message routing, deploy the HDIM Mirth Connect channel bundle included in the installer package. The channel transforms inbound HL7 v2 ADT/ORU messages and C-CDA documents into FHIR R4 resources and forwards them to HDIM\'s FHIR Service ingestion endpoint. Skip this step if you are using the NextGen FHIR R4 API directly.',
         'Map FHIR resources to the HDIM patient model — Review the FHIR resource mapping configuration in hdim-fhir-mapping.yml. NextGen uses standard FHIR R4 resource profiles with US Core extensions. Confirm that your NextGen FHIR server\'s CapabilityStatement includes the resource types required for your quality measures (Patient, Encounter, Condition, Observation, Procedure, MedicationRequest, Immunization, DiagnosticReport, AllergyIntolerance, DocumentReference).',
         'Deploy HDIM on your infrastructure — Set spring.profiles.active=production and configure FHIR_SERVICE_URL to your NextGen FHIR R4 endpoint. For practice-scale deployments, set FHIR_CONNECTION_POOL_SIZE=20 and PATIENT_BATCH_SIZE=1000. For large multi-specialty groups spanning hundreds of thousands of patients, increase KAFKA_PARTITIONS and deploy HDIM\'s CQL Engine pods with horizontal autoscaling enabled.',
-        'Verify end-to-end connectivity — Execute the built-in smoke test suite: ./hdim-verify.sh --ehr nextgen. The suite confirms FHIR authentication, resource retrieval (Patient, Encounter, Observation), CQL measure evaluation for at least one HEDIS measure, care gap detection, and quality report generation. Review the verification report at http://localhost:8087/quality-measure/api/v1/verification/report.',
+        'Verify end-to-end connectivity — Confirm FHIR endpoint reachability via the health check endpoint, verify OAuth2 token acquisition, test FHIR resource retrieval (Patient, Encounter, Observation), and validate CQL measure evaluation and care gap detection are functioning end-to-end against your NextGen environment.',
       ],
     },
     {
@@ -76,7 +76,7 @@ export const NEXTGEN_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'HDIM deploys on your infrastructure. Configure these Spring Boot properties to connect to your NextGen FHIR endpoint.',
-      codeSnippet: `# application.properties (or environment variables)
+      codeSnippet: `# Configuration reference — actual property names may vary by release
 
 # Active profile — controls logging, cache TTLs, and connection pool sizing
 spring.profiles.active=production
@@ -135,11 +135,6 @@ PATIENT_BATCH_SIZE=1000`,
           label: 'CCDA',
           value:
             'Clinical document import (Continuity of Care Document, Referral Note, Discharge Summary) with automatic FHIR R4 conversion via Mirth Connect or direct HDIM CDA parser',
-        },
-        {
-          label: 'Direct Messaging',
-          value:
-            'Secure Direct protocol support for receiving CDA documents from external providers and care transitions, ingested and converted to FHIR R4 for quality measure evaluation',
         },
       ],
     },

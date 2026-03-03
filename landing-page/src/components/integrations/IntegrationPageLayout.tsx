@@ -277,9 +277,12 @@ export default function IntegrationPageLayout({ data }: { data: IntegrationPageD
               Schedule a personalized demo to see HDIM working with your {data.ehrName} environment.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all">
+              <a
+                href="mailto:contact@healthdatainmotion.com?subject=HDIM Demo Request"
+                className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all inline-block"
+              >
                 Schedule Demo
-              </button>
+              </a>
               <Link
                 href="/integrations"
                 className="px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-blue-700 transition-all"

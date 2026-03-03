@@ -77,7 +77,7 @@ export const EPIC_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'HDIM deploys on your infrastructure and connects to your Epic FHIR endpoint directly. Configure these Spring Boot properties for each deployment.',
-      codeSnippet: `# application.properties (or environment variables)
+      codeSnippet: `# Configuration reference — actual property names may vary by release
 
 # Active profile
 spring.profiles.active=production
@@ -124,9 +124,9 @@ PATIENT_BATCH_SIZE=1000`,
             'Population-level asynchronous export (NDJSON) via $export endpoint for batch HEDIS quality measure evaluation across entire patient panels',
         },
         {
-          label: 'CDS Hooks',
+          label: 'CDS Hooks (Roadmap)',
           value:
-            'Event-driven care gap alerts surfaced at the point of care within EpicCare clinician workflows using Epic\'s CDS Hooks integration',
+            'Planned — not yet available. When implemented, HDIM will surface care gap alerts at the point of care within EpicCare clinician workflows using Epic\'s CDS Hooks integration',
         },
         {
           label: 'MyChart Patient Access API',

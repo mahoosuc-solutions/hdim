@@ -5,7 +5,7 @@ export interface EHRDetail {
   fhirSupport: string;
   authComplexity: string;
   integrationTimeline: string;
-  typicalACV: string;
+
   queryMethods: string[];
   supportedResources: string[];
   commonIntegrationPatterns: string[];
@@ -20,7 +20,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'Full FHIR R4 support',
     authComplexity: 'HIGH - RS384 JWT signing required',
     integrationTimeline: '6-8 weeks',
-    typicalACV: '$80-150K',
     queryMethods: [
       'Direct FHIR REST queries (R4)',
       'Epic FHIR DSTU2 (legacy support)',
@@ -48,14 +47,13 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     implementationNotes:
       'Epic requires OAuth2 with RS384 JWT. Typical integration: establish service account, configure FHIR endpoint URL, set up JWT signing certificate, test with sample data, deploy to production.',
   },
-  cerner: {
-    id: 'cerner',
-    name: 'Cerner Corporation',
+  'oracle-health': {
+    id: 'oracle-health',
+    name: 'Oracle Health (Cerner)',
     marketShare: '27% US market share',
     fhirSupport: 'Full FHIR R4 support',
     authComplexity: 'MEDIUM - OAuth2 with standard JWT',
     integrationTimeline: '4-6 weeks',
-    typicalACV: '$50-100K',
     queryMethods: [
       'Direct FHIR REST queries (R4)',
       'CDS Connect (clinical workflow)',
@@ -90,7 +88,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'Full FHIR R4 support',
     authComplexity: 'MEDIUM - OAuth2',
     integrationTimeline: '3-5 weeks',
-    typicalACV: '$30-60K',
     queryMethods: [
       'Direct FHIR REST queries (R4)',
       'Athena API (proprietary)',
@@ -121,7 +118,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'Full FHIR R4 via IRIS for Health',
     authComplexity: 'MEDIUM - OAuth2 or API key',
     integrationTimeline: '4-8 weeks',
-    typicalACV: '$100-200K',
     queryMethods: [
       'FHIR REST API (R4 via IRIS for Health)',
       'HL7 FHIR Bulk Data Access',
@@ -141,7 +137,7 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
       'AllergyIntolerance',
       'DocumentReference',
       'Coverage',
-      'ExplanationOfBenefit',
+
     ],
     commonIntegrationPatterns: [
       'Real-time FHIR queries via IRIS for Health',
@@ -160,7 +156,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'FHIR R4 via Expanse platform',
     authComplexity: 'MEDIUM - OAuth2',
     integrationTimeline: '4-6 weeks',
-    typicalACV: '$40-80K',
     queryMethods: [
       'FHIR REST API (R4 via Expanse)',
       'HL7 v2 ADT feeds',
@@ -195,7 +190,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'FHIR R4 support',
     authComplexity: 'MEDIUM - OAuth2',
     integrationTimeline: '4-6 weeks',
-    typicalACV: '$40-80K',
     queryMethods: [
       'FHIR REST API (R4)',
       'Allscripts Unity API',
@@ -230,7 +224,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'FHIR R4 support',
     authComplexity: 'MEDIUM - OAuth2',
     integrationTimeline: '3-5 weeks',
-    typicalACV: '$30-60K',
     queryMethods: [
       'FHIR REST API (R4)',
       'eCW V11+ API',
@@ -265,7 +258,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'FHIR R4 support',
     authComplexity: 'MEDIUM - OAuth2',
     integrationTimeline: '3-5 weeks',
-    typicalACV: '$30-60K',
     queryMethods: [
       'FHIR REST API (R4)',
       'Mirth Connect integration engine',
@@ -301,7 +293,6 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
     fhirSupport: 'Native FHIR R4',
     authComplexity: 'LOW - Standard OAuth2 or basic auth',
     integrationTimeline: '1-3 weeks',
-    typicalACV: '$20-50K',
     queryMethods: [
       'Standard FHIR REST (GET/POST)',
       'FHIR Search API',

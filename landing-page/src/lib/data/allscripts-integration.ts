@@ -75,7 +75,7 @@ export const ALLSCRIPTS_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'HDIM deploys on your infrastructure. Configure these properties in your Spring Boot environment to connect to your Allscripts FHIR endpoints.',
-      codeSnippet: `# application.properties (or environment variables)
+      codeSnippet: `# Configuration reference — actual property names may vary by release
 
 # Active profile — controls logging, cache TTLs, and connection pool sizing
 spring.profiles.active=production
@@ -118,7 +118,7 @@ PATIENT_BATCH_SIZE=500`,
         {
           label: 'HL7 v2',
           value:
-            'Legacy ADT and ORU message ingestion for real-time event-driven care gap triggers; supported via HDIM\'s HL7 v2 inbound listener on port 2575',
+            'Legacy ADT and ORU message ingestion for real-time event-driven care gap triggers; converted to FHIR R4 resources before entering the HDIM evaluation pipeline',
         },
         {
           label: 'CDA/C-CDA',

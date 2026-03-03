@@ -83,7 +83,8 @@ export const INTERSYSTEMS_INTEGRATION: IntegrationPageData = {
       title: 'Configuration',
       type: 'code',
       content: 'HDIM uses standard Spring Boot configuration. Set the active profile and point the FHIR service at your IRIS for Health endpoint. The HIE-scale tuning parameters below reflect real operational requirements for large deployments — 50 connection pool slots, 24 Kafka partitions for parallel measure evaluation, and 5000-record batch sizes for population-level processing.',
-      codeSnippet: `# .env — InterSystems HealthShare Connection
+      codeSnippet: `# Configuration reference — actual property names may vary by release
+# InterSystems HealthShare Connection
 FHIR_SERVICE_URL=https://your-healthshare-host/csp/healthshare/fhir/r4
 FHIR_AUTH_TYPE=oauth2          # or "api-key"
 FHIR_CLIENT_ID=hdim-client
@@ -107,7 +108,7 @@ PATIENT_BATCH_SIZE=5000`,
       title: 'Proven at HIE Scale',
       type: 'text',
       content:
-        'HDIM was architected for health information exchange scale. The platform has been validated against Healthix workloads — NYC\'s largest public HIE serving 16 million patients across thousands of provider organizations in the New York metropolitan area.\n\nAt HIE scale, HDIM handles:\n\n• 16M+ patient records with sub-second FHIR query response times\n• 52 HEDIS quality measures evaluated concurrently across entire populations\n• Real-time care gap detection with ADT event-driven triggers\n• Multi-tenant isolation ensuring data segregation across participating organizations\n• HIPAA-compliant audit trails for every data access and quality evaluation\n\nFor HIE-scale deployments, HDIM is configured with optimized connection pooling (50 concurrent FHIR connections), Kafka partitioning (24 partitions for parallel measure evaluation), and Redis cache sizing (2GB for patient demographic caching).',
+        'HDIM was architected for health information exchange scale — designed for workloads like Healthix — NYC\'s largest public HIE serving 16 million patients across thousands of provider organizations in the New York metropolitan area.\n\nAt HIE scale, HDIM handles:\n\n• 16M+ patient records with sub-second FHIR query response times\n• 52 HEDIS quality measures evaluated concurrently across entire populations\n• Real-time care gap detection with ADT event-driven triggers\n• Multi-tenant isolation ensuring data segregation across participating organizations\n• HIPAA-compliant audit trails for every data access and quality evaluation\n\nFor HIE-scale deployments, HDIM is configured with optimized connection pooling (50 concurrent FHIR connections), Kafka partitioning (24 partitions for parallel measure evaluation), and Redis cache sizing (2GB for patient demographic caching).',
     },
     {
       id: 'data-exchange',
@@ -136,7 +137,6 @@ PATIENT_BATCH_SIZE=5000`,
     { name: 'AllergyIntolerance', description: 'Allergy and adverse reaction records' },
     { name: 'DocumentReference', description: 'Clinical documents (CDA, C-CDA, PDF)' },
     { name: 'Coverage', description: 'Insurance and payer information for HEDIS attribution' },
-    { name: 'ExplanationOfBenefit', description: 'Claims data for quality measure supplemental data' },
   ],
 
   deploymentModels: [

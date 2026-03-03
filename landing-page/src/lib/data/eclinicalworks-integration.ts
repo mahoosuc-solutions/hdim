@@ -69,7 +69,7 @@ export const ECLINICALWORKS_INTEGRATION: IntegrationPageData = {
       type: 'code',
       content:
         'HDIM deploys on your network and connects to your eClinicalWorks FHIR endpoint directly. Configure these Spring Boot properties for each deployment.',
-      codeSnippet: `# application.properties (or environment variables)
+      codeSnippet: `# Configuration reference — actual property names may vary by release
 
 # Active profile — controls logging, cache TTLs, and connection pool sizing
 spring.profiles.active=production
@@ -110,19 +110,9 @@ PATIENT_BATCH_SIZE=2000`,
             'Primary — real-time patient queries and resource retrieval via eCW FHIR R4 server (V11+)',
         },
         {
-          label: 'eCW V11+ API',
-          value:
-            'Native eCW API access for advanced clinical data not yet surfaced through the FHIR layer, including custom clinical forms and practice-specific templates',
-        },
-        {
           label: 'HL7 v2',
           value:
-            'Legacy HL7 v2 ADT and ORU message ingestion for practices on eCW versions prior to V11 or for real-time event-driven care gap triggers',
-        },
-        {
-          label: 'Direct Messaging',
-          value:
-            'Direct secure messaging for care gap notification delivery to eCW care coordinators and for receiving updated clinical documents from referral networks',
+            'Legacy ADT and ORU message ingestion converted to FHIR R4 resources for practices on eCW versions prior to V11 or for real-time event-driven care gap triggers',
         },
       ],
     },
@@ -143,9 +133,9 @@ PATIENT_BATCH_SIZE=2000`,
 
   deploymentModels: [
     {
-      name: 'Cloud-Hosted',
+      name: 'Cloud VPC',
       description:
-        'Deploy HDIM as a fully managed cloud service connecting to your eClinicalWorks cloud instance. Zero infrastructure management, automatic scaling, and 99.9% SLA. Ideal for large ambulatory networks that want rapid time-to-value without on-premises infrastructure investment.',
+        'Deploy HDIM in your own cloud VPC (AWS, Azure, or GCP) alongside your eClinicalWorks cloud connectivity. HDIM runs on your infrastructure — you control the environment, and PHI never leaves your network boundary. Ideal for ambulatory networks that prefer cloud hosting over on-premises servers.',
     },
     {
       name: 'Docker Compose',

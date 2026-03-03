@@ -4,7 +4,7 @@ export const ORACLE_HEALTH_INTEGRATION: IntegrationPageData = {
   ehrName: 'Oracle Health (Cerner)',
   tagline: 'Enterprise Quality Measurement on the Millennium Platform',
   heroDescription:
-    'Connect HDIM to Oracle Health (formerly Cerner) to evaluate CQL/HEDIS quality measures across the Millennium platform — the EHR powering 27% of US hospitals. Native CDS Hooks integration delivers real-time care gap alerts at the point of care, while Oracle Cloud migration support future-proofs your quality measurement infrastructure.',
+    'Millennium stores rich clinical data across 27% of US hospitals, but quality measurement typically requires extracting that data into a separate analytics warehouse — a process that introduces lag, adds infrastructure, and creates a second copy of PHI. HDIM deploys on your infrastructure and fronts the Millennium FHIR server directly, evaluating HEDIS measures against live data without building a parallel pipeline.',
 
   sections: [
     {
@@ -12,7 +12,7 @@ export const ORACLE_HEALTH_INTEGRATION: IntegrationPageData = {
       title: 'Overview',
       type: 'text',
       content:
-        'Oracle Health, formerly Cerner Corporation, operates the Millennium platform — one of the two dominant EHR systems in the United States with approximately 27% of US hospital market share. In 2022, Oracle Corporation acquired Cerner and began the strategic migration of Millennium onto Oracle Cloud Infrastructure (OCI), creating a path toward cloud-native EHR capabilities.\n\nThe Millennium platform provides strong FHIR R4 support through the Cerner FHIR Server, which exposes standardized REST APIs for patient data retrieval, clinical document exchange, and bulk data export. CDS Hooks is a first-class feature of Millennium, enabling real-time clinical decision support cards to surface inside clinical workflows — making Oracle Health an ideal integration target for HDIM\'s care gap alerting capabilities.\n\nHDIM integrates with Oracle Health via the Cerner FHIR R4 endpoint, leveraging OAuth2 SMART on FHIR authentication through the Cerner Code developer program. The integration supports real-time patient queries, population-level Bulk FHIR export, and bidirectional CDS Hooks for surfacing care gap notifications directly in the Millennium clinical workflow.',
+        'The pattern at most Millennium sites is familiar: clinical data lives in the CDR, a data warehouse team extracts it nightly or weekly, an analytics team runs measure logic against the extract, and the results arrive days after the clinical encounter where they could have made a difference. The data was there when the patient was in the room — it just was not processed in time.\n\nHDIM eliminates this lag by deploying on your infrastructure and fronting the Millennium FHIR server. It evaluates CQL/HEDIS measures against live clinical data — encounters, conditions, observations, medication requests — as it flows through the FHIR R4 endpoint. The result is quality intelligence that is current at the time of care, not stale by the time it reaches the quality team.\n\nMillennium\'s FHIR R4 implementation is strong: OAuth2 SMART on FHIR authentication through the Cerner Code developer program, Bulk FHIR export for population-level analysis, and comprehensive resource coverage. HDIM leverages all of this from within your network boundary. For organizations migrating to Oracle Cloud Infrastructure, HDIM deploys in your OCI VPC with the same architecture — the processing layer stays co-located with the data.',
     },
     {
       id: 'architecture',
@@ -57,9 +57,9 @@ export const ORACLE_HEALTH_INTEGRATION: IntegrationPageData = {
         'Register in Cerner Code Console — Create a developer account at code.cerner.com and register a new application. Submit for SMART on FHIR authorization and request the required FHIR resource scopes (patient/Patient.read, patient/Observation.read, patient/Condition.read, and others matching your HEDIS measures). For production use, complete the Cerner App Submission process to enable access to live patient data.',
         'Configure OAuth2 client credentials — Obtain your client_id and client_secret from the Cerner Code Console. HDIM uses the SMART on FHIR Backend Services authorization flow (RFC 7523 JWT bearer token) for system-level access. Set CERNER_CLIENT_ID and CERNER_CLIENT_SECRET in your HDIM environment configuration. The token endpoint is https://authorization.cerner.com/tenants/{tenant-id}/protocols/oauth2/profiles/smart-v1/token.',
         'Set up Millennium FHIR R4 endpoint — Configure FHIR_SERVER_URL to point to your organization\'s Millennium FHIR R4 endpoint in the format https://fhir-ehr.cerner.com/r4/{tenant-id}. For on-premises Millennium deployments, the endpoint follows the pattern https://{millennium-host}/fhir/r4. Verify connectivity using the FHIR capability statement: GET {FHIR_SERVER_URL}/metadata.',
-        'Enable CDS Hooks for care gap alerts — Register HDIM as a CDS Hooks service provider in the Millennium CDS configuration. Point the hook endpoint to https://{hdim-host}/cds-hooks/services. HDIM exposes patient-view and order-select hooks for care gap detection. Configure which HEDIS measure care gaps should surface as CDS Cards in clinical workflows (e.g., HbA1c testing reminders for diabetic patients).',
-        'Deploy HDIM — Use Docker Compose or the HDIM installer with Oracle Health-specific environment variables. Run docker compose --profile oracle-health up -d to start all 51+ services with Cerner-optimized connection pooling and CDS Hooks listener pre-configured. Alternatively, use the HDIM installer: ./hdim-installer.sh --ehr cerner --tenant-id {your-millennium-tenant-id}.',
-        'Verify integration — Run the built-in verification suite to confirm end-to-end connectivity. Execute docker compose exec fhir-service curl http://localhost:8085/fhir/actuator/health to check FHIR connectivity. Submit a test CDS Hooks prefetch request to confirm care gap card generation. Review HDIM audit logs to verify FHIR resource ingestion, CQL measure evaluation, and care gap detection are functioning correctly.',
+        'Configure Bulk FHIR export — Enable Bulk FHIR export for population-level quality measurement. Set FHIR_BULK_EXPORT_ENABLED=true and configure the polling interval. Bulk export allows HDIM to evaluate HEDIS measures across your entire patient panel without individual FHIR queries.',
+        'Deploy HDIM on your infrastructure — Deploy HDIM on your RHEL servers or cloud VPC using Docker Compose or Kubernetes. Set spring.profiles.active=production and FHIR_SERVICE_URL to your Millennium FHIR R4 endpoint. HDIM connects over your private network — PHI never leaves your infrastructure.',
+        'Verify integration — Run the built-in verification suite to confirm end-to-end connectivity. Check FHIR connectivity via the health endpoint, verify OAuth2 token acquisition, confirm FHIR resource retrieval (Patient, Encounter, Condition, Observation), and validate CQL measure evaluation and care gap detection against your Millennium data.',
       ],
     },
     {
@@ -67,47 +67,40 @@ export const ORACLE_HEALTH_INTEGRATION: IntegrationPageData = {
       title: 'Configuration',
       type: 'code',
       content:
-        'Add these environment variables to your HDIM deployment to connect to Oracle Health Millennium.',
-      codeSnippet: `# .env — Oracle Health (Cerner Millennium) Connection
+        'HDIM deploys on your infrastructure and connects to your Millennium FHIR endpoint directly. Configure these Spring Boot properties for each deployment.',
+      codeSnippet: `# application.properties (or environment variables)
 
-# Cerner Millennium FHIR R4 Endpoint
-# Cloud / Cerner-hosted tenants:
-FHIR_SERVER_URL=https://fhir-ehr.cerner.com/r4/<your-millennium-tenant-id>
+# Active profile
+spring.profiles.active=production
+
+# Cerner Millennium FHIR R4 endpoint (on your network)
+# Cloud-hosted Millennium:
+FHIR_SERVICE_URL=https://fhir-ehr.cerner.com/r4/<your-millennium-tenant-id>
 # On-premises Millennium:
-# FHIR_SERVER_URL=https://<millennium-host>/fhir/r4
+# FHIR_SERVICE_URL=https://<millennium-host>/fhir/r4
 
 # OAuth2 SMART on FHIR (Backend Services)
 FHIR_AUTH_TYPE=oauth2
-CERNER_CLIENT_ID=<your-cerner-code-client-id>
-CERNER_CLIENT_SECRET=<your-cerner-code-client-secret>
+FHIR_CLIENT_ID=<your-cerner-code-client-id>
+FHIR_CLIENT_SECRET=<your-cerner-code-client-secret>
 FHIR_TOKEN_URL=https://authorization.cerner.com/tenants/<your-tenant-id>/protocols/oauth2/profiles/smart-v1/token
 
-# CDS Hooks (real-time care gap alerts in Millennium workflows)
-CDS_HOOKS_ENABLED=true
-CDS_HOOKS_BASE_URL=https://<hdim-host>/cds-hooks
-CDS_HOOKS_PATIENT_VIEW=true
-CDS_HOOKS_ORDER_SELECT=true
-
-# Bulk FHIR Export (population-level analysis)
+# Bulk FHIR Export for population-level evaluation
 FHIR_BULK_EXPORT_ENABLED=true
 FHIR_BULK_EXPORT_POLL_INTERVAL=30
 
-# Oracle Cloud Infrastructure (if using OCI-hosted Millennium)
-# OCI_TENANT_ID=<your-oci-tenancy-ocid>
-# OCI_REGION=us-ashburn-1
-
-# Connection tuning
+# Connection tuning (adjust for your Millennium capacity)
 FHIR_CONNECTION_POOL_SIZE=20
-PATIENT_BATCH_SIZE=1000
-REDIS_CACHE_MAX_MEMORY=1gb`,
+KAFKA_PARTITIONS=12
+PATIENT_BATCH_SIZE=1000`,
       codeLanguage: 'bash',
     },
     {
       id: 'cds-hooks',
-      title: 'CDS Hooks Integration',
+      title: 'Roadmap: Point-of-Care Clinical Decision Support',
       type: 'text',
       content:
-        'Oracle Health Millennium provides native CDS Hooks support, making it one of the most powerful integration targets for real-time clinical decision support. HDIM leverages this capability to surface care gap notifications directly within clinician workflows — at precisely the moment when intervention is most impactful.\n\nWhen a clinician opens a patient chart in Millennium (triggering the patient-view hook), HDIM evaluates applicable HEDIS quality measures in real time and returns CDS Cards identifying open care gaps. For example, if a diabetic patient is due for an HbA1c test, HDIM returns a card with the care gap details, the overdue duration, and a suggested action — all surfaced inline in the Millennium clinical workflow without requiring the clinician to leave the EHR.\n\nHDIM supports the following CDS Hooks workflows with Oracle Health:\n\n• patient-view: Evaluates all applicable HEDIS measures when a patient chart is opened. Returns care gap cards for overdue preventive screenings, chronic disease management, and medication adherence.\n\n• order-select: Intercepts medication and procedure orders to check for HEDIS measure opportunities. For example, flags when a statin order for a cardiovascular patient presents an opportunity to address a related care gap.\n\n• appointment-book: Pre-visit care gap reminders when an appointment is scheduled, enabling care coordination staff to prepare relevant preventive care materials.\n\nCDS Hook responses from HDIM include structured FHIR-based suggestions that can auto-populate orders, referrals, or care plan entries in Millennium, enabling one-click care gap closure directly from the alert card.',
+        'Millennium\'s native CDS Hooks support creates a natural extension point for HDIM — and it is on our roadmap. The architecture is straightforward: when a clinician opens a patient chart (patient-view hook), HDIM would evaluate applicable HEDIS measures against that patient\'s current clinical data and return CDS Cards identifying open care gaps directly in the Millennium workflow.\n\nThis capability is not yet implemented in the current HDIM release. Today, HDIM surfaces care gap intelligence through its own dashboard and API layer. The data and the evaluation logic are production-ready — the CDS Hooks delivery mechanism is the planned next step.\n\nWhen available, the CDS Hooks integration will support:\n\n• patient-view: Care gap cards surfaced when a patient chart is opened — overdue screenings, chronic disease management gaps, medication adherence issues.\n\n• order-select: Measure opportunity detection when orders are placed — flagging when a clinical action could close an existing care gap.\n\n• appointment-book: Pre-visit preparation — identifying care gaps before the patient arrives so care coordination staff can prepare.\n\nThe key architectural advantage: because HDIM deploys on your infrastructure alongside Millennium, the CDS Hooks server will communicate over your private network with sub-second latency. No external API calls, no data leaving your trust boundary.',
     },
     {
       id: 'data-exchange',
@@ -163,12 +156,12 @@ REDIS_CACHE_MAX_MEMORY=1gb`,
     {
       name: 'On-Premises',
       description:
-        'Deploy HDIM on your existing infrastructure alongside an on-premises Millennium installation. Supports RHEL 7/8, Ubuntu 20.04+, and Windows Server 2019+. Data never leaves your network, meeting strict data residency and HIPAA security requirements. Use the HDIM installer with --ehr cerner for Millennium-optimized configuration.',
+        'Deploy HDIM on your existing infrastructure alongside an on-premises Millennium installation. Supports RHEL 7/8 and Ubuntu 20.04+. Data never leaves your network, meeting strict data residency and HIPAA security requirements.',
     },
     {
       name: 'Docker Compose',
       description:
-        'Single-command deployment with Docker Compose for rapid pilot programs, development environments, and mid-size Oracle Health implementations. Includes all 51+ HDIM services pre-configured with Cerner FHIR connectivity and CDS Hooks listener. Run docker compose --profile oracle-health up -d to start.',
+        'Single-command deployment with Docker Compose for rapid pilot programs, development environments, and mid-size Oracle Health implementations. Includes all 51+ HDIM services. Run docker compose up -d to start.',
     },
     {
       name: 'Kubernetes',

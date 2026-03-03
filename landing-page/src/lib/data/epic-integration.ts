@@ -12,7 +12,7 @@ export const EPIC_INTEGRATION: IntegrationPageData = {
       title: 'Overview',
       type: 'text',
       content:
-        'Epic Systems is the dominant electronic health record platform in the United States, deployed at over 350 health systems and serving more than 36% of the US patient population. Epic\'s FHIR R4 implementation — available through Epic\'s SMART on FHIR framework — exposes clinical data via standardized REST APIs that power a broad ecosystem of third-party applications through the Epic App Orchard marketplace.\n\nEpic\'s FHIR server supports both patient-facing access (MyChart) and backend system integrations via RS384-signed JWT bearer tokens, enabling HDIM to perform population-level quality measure evaluation without requiring end-user OAuth flows. The Epic Cosmos federated research network aggregates de-identified data from over 200M patients across participating Epic organizations, providing the scale needed for robust quality benchmarking.\n\nHDIM integrates with Epic via FHIR R4 REST APIs and Epic\'s Bulk FHIR export endpoint ($export), enabling real-time care gap detection, CQL/HEDIS measure evaluation, and quality reporting — all within Epic\'s App Orchard security and compliance framework.',
+        'Epic\'s FHIR R4 implementation is the most mature in the industry — over 350 health systems, comprehensive resource coverage, Bulk FHIR export, and a well-documented SMART on FHIR authorization framework. The data is there. The problem is that raw FHIR resources — scattered encounters, conditions, observations, medication requests — do not tell a Chief Medical Officer which patients have open care gaps, which measures are trending below threshold, or which populations need intervention before the next HEDIS submission window closes.\n\nHDIM deploys on your infrastructure — on-prem RHEL servers or inside your cloud VPC — and fronts the Epic FHIR endpoint. It ingests patient resources via RS384 JWT backend authentication (no end-user OAuth flows), evaluates 52+ HEDIS measures using the CQL engine, and produces care gap alerts, quality scores, and risk stratification that providers can act on at the point of care. The data never leaves your network. HDIM is not a SaaS extraction tool — it is clinical processing infrastructure that sits between your CDR and your clinical workflows.\n\nFor population-level evaluation, HDIM uses Epic\'s Bulk FHIR export ($export) to process entire patient panels in batch, while real-time FHIR queries handle on-demand evaluation during clinical encounters. Both paths produce the same quality intelligence — the difference is latency and scale.',
     },
     {
       id: 'architecture',
@@ -67,7 +67,7 @@ export const EPIC_INTEGRATION: IntegrationPageData = {
         'Configure RS384 JWT signing certificate — Generate an RSA 2048-bit or EC P-384 key pair. Register the public key (JWK format) with Epic via the App Orchard developer portal. Store the private key securely and set EPIC_PRIVATE_KEY_PATH in your HDIM environment. Epic uses RS384 (RSA + SHA-384) for backend service authentication.',
         'Set up FHIR R4 endpoint URL — Obtain your Epic organization\'s FHIR base URL from your Epic technical contact. The format is typically https://your-epic-host/api/FHIR/R4. Set FHIR_SERVER_URL in your HDIM configuration. Confirm the endpoint supports the $metadata capability statement.',
         'Configure Bulk FHIR export for population data — Enable Epic\'s Bulk FHIR ($export) endpoint for population-level quality measure evaluation. Confirm your App Orchard application is granted system/*.read scope. Set FHIR_BULK_EXPORT_ENABLED=true and configure the polling interval for your expected export volume.',
-        'Deploy HDIM with Epic profile — Use the HDIM installer with the epic profile for Epic-optimized configuration: ./hdim-installer.sh --profile epic. This pre-configures RS384 JWT token signing, Epic-specific FHIR resource extensions, App Orchard rate limit handling, and connection pooling appropriate for Epic FHIR server throughput limits.',
+        'Deploy HDIM on your infrastructure — Deploy HDIM on your RHEL servers or cloud VPC using Docker Compose or Kubernetes. Configure spring.profiles.active=production and set FHIR_SERVICE_URL to your Epic FHIR R4 endpoint. HDIM connects to Epic over your private network — PHI never crosses your network boundary.',
         'Verify with smoke tests — Run the HDIM integration verification suite to confirm RS384 JWT authentication, FHIR R4 resource retrieval (Patient, Encounter, Condition, Observation), Bulk FHIR export initiation and polling, CQL measure evaluation, and care gap detection are all working end-to-end against your Epic sandbox environment before promoting to production.',
       ],
     },
@@ -76,25 +76,27 @@ export const EPIC_INTEGRATION: IntegrationPageData = {
       title: 'Configuration',
       type: 'code',
       content:
-        'Add these environment variables to your HDIM deployment to connect to Epic via RS384 JWT backend authentication.',
-      codeSnippet: `# .env — Epic Systems Connection
-FHIR_SERVER_URL=https://your-epic-host/api/FHIR/R4
+        'HDIM deploys on your infrastructure and connects to your Epic FHIR endpoint directly. Configure these Spring Boot properties for each deployment.',
+      codeSnippet: `# application.properties (or environment variables)
+
+# Active profile
+spring.profiles.active=production
+
+# Epic FHIR R4 endpoint (on your network)
+FHIR_SERVICE_URL=https://your-epic-host/api/FHIR/R4
 FHIR_AUTH_TYPE=oauth2-jwt
 EPIC_CLIENT_ID=<your-app-orchard-client-id>
 EPIC_PRIVATE_KEY_PATH=/run/secrets/epic_private_key.pem
 FHIR_TOKEN_URL=https://your-epic-host/oauth2/token
 FHIR_JWT_ALGORITHM=RS384
 
-# Bulk FHIR Export (population-level evaluation)
+# Bulk FHIR Export for population-level evaluation
 FHIR_BULK_EXPORT_ENABLED=true
 FHIR_BULK_EXPORT_POLL_INTERVAL=30
-FHIR_BULK_EXPORT_OUTPUT_FORMAT=application/fhir+ndjson
 
-# Epic-Scale Optimization (--profile epic)
+# Connection tuning (adjust for your Epic FHIR server capacity)
 FHIR_CONNECTION_POOL_SIZE=20
-FHIR_REQUEST_TIMEOUT_MS=30000
 KAFKA_PARTITIONS=12
-REDIS_CACHE_MAX_MEMORY=1gb
 PATIENT_BATCH_SIZE=1000`,
       codeLanguage: 'bash',
     },

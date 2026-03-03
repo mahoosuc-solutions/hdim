@@ -16,6 +16,12 @@ export default function ScenarioCard({ scenarioId }: ScenarioCardProps) {
 
   return (
     <div className="card p-8 h-full flex flex-col">
+      {/* Scenario Label */}
+      <div className="mb-4">
+        <span className="inline-block text-xs font-semibold uppercase tracking-wide text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full">
+          Modeled Scenario
+        </span>
+      </div>
       {/* Header */}
       <div className="mb-6">
         <h3 className="text-xl font-bold text-gray-900 mb-2">{scenario.name}</h3>

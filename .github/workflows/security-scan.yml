@@ -212,7 +212,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           image-ref: 'hdim/${{ matrix.service }}:scan'
           format: 'sarif'
@@ -229,7 +229,7 @@ jobs:
           category: 'trivy-${{ matrix.service }}'
 
       - name: Run Trivy for table output
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.0
         if: always()
         with:
           image-ref: 'hdim/${{ matrix.service }}:scan'

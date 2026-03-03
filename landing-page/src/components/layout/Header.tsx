@@ -32,9 +32,9 @@ export default function Header() {
             <Link href="/integrations" className="text-gray-600 hover:text-gray-900 font-medium transition">
               Integrations
             </Link>
-            <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium transition">
+            <Link href="/pricing" className="text-gray-600 hover:text-gray-900 font-medium transition">
               Pricing
-            </a>
+            </Link>
           </div>
 
           {/* CTA Button */}
@@ -74,9 +74,9 @@ export default function Header() {
             <Link href="/integrations" className="block py-2 text-gray-600 hover:text-gray-900">
               Integrations
             </Link>
-            <a href="#pricing" className="block py-2 text-gray-600 hover:text-gray-900">
+            <Link href="/pricing" className="block py-2 text-gray-600 hover:text-gray-900">
               Pricing
-            </a>
+            </Link>
             <button className="btn-primary w-full mt-4">Schedule Demo</button>
           </div>
         )}

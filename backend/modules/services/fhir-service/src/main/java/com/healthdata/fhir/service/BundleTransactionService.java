@@ -377,9 +377,35 @@ public class BundleTransactionService {
             String tenantId, String resourceType, String resourceId, Resource resource, String actor) {
         return switch (resourceType) {
             case "Patient" -> patientService.updatePatient(tenantId, resourceId, (Patient) resource, actor);
-            default -> throw new BundleValidationException(
-                    "Update not yet supported for resource type: " + resourceType
-                    + ". POST (create) is supported for all 19 FHIR resource types.");
+            case "Condition" -> conditionService.updateCondition(tenantId, resourceId, (Condition) resource, actor);
+            case "Observation" -> observationService.updateObservation(tenantId, resourceId, (Observation) resource, actor);
+            case "Encounter" -> encounterService.updateEncounter(tenantId, resourceId, (Encounter) resource, actor);
+            case "Procedure" -> procedureService.updateProcedure(tenantId, resourceId, (Procedure) resource, actor);
+            case "MedicationRequest" -> medicationRequestService.updateMedicationRequest(
+                    tenantId, resourceId, (MedicationRequest) resource, actor);
+            case "MedicationAdministration" -> medicationAdministrationService.updateMedicationAdministration(
+                    tenantId, resourceId, (MedicationAdministration) resource, actor);
+            case "Immunization" -> immunizationService.updateImmunization(tenantId, resourceId, (Immunization) resource, actor);
+            case "AllergyIntolerance" -> allergyIntoleranceService.updateAllergyIntolerance(
+                    tenantId, resourceId, (AllergyIntolerance) resource, actor);
+            case "DiagnosticReport" -> diagnosticReportService.updateDiagnosticReport(
+                    tenantId, UUID.fromString(resourceId), (DiagnosticReport) resource, actor);
+            case "DocumentReference" -> documentReferenceService.updateDocumentReference(
+                    tenantId, UUID.fromString(resourceId), (DocumentReference) resource, actor);
+            case "CarePlan" -> carePlanService.updateCarePlan(
+                    tenantId, UUID.fromString(resourceId), (CarePlan) resource, actor);
+            case "Goal" -> goalService.updateGoal(tenantId, UUID.fromString(resourceId), (Goal) resource, actor);
+            case "Task" -> taskService.updateTask(tenantId, resourceId, (org.hl7.fhir.r4.model.Task) resource, actor);
+            case "Coverage" -> coverageService.updateCoverage(
+                    tenantId, UUID.fromString(resourceId), (Coverage) resource, actor);
+            case "Appointment" -> appointmentService.updateAppointment(tenantId, resourceId, (Appointment) resource, actor);
+            case "Practitioner" -> practitionerService.updatePractitioner(
+                    tenantId, UUID.fromString(resourceId), (Practitioner) resource, actor);
+            case "PractitionerRole" -> practitionerRoleService.updatePractitionerRole(
+                    tenantId, UUID.fromString(resourceId), (PractitionerRole) resource, actor);
+            case "Organization" -> organizationService.updateOrganization(
+                    tenantId, UUID.fromString(resourceId), (Organization) resource, actor);
+            default -> throw new BundleValidationException("Unsupported resource type: " + resourceType);
         };
     }
 
@@ -389,8 +415,30 @@ public class BundleTransactionService {
     private void deleteResource(String tenantId, String resourceType, String resourceId, String actor) {
         switch (resourceType) {
             case "Patient" -> patientService.deletePatient(tenantId, resourceId, actor);
-            default -> throw new BundleValidationException(
-                    "Delete not yet supported for resource type: " + resourceType);
+            case "Condition" -> conditionService.deleteCondition(tenantId, resourceId, actor);
+            case "Observation" -> observationService.deleteObservation(tenantId, resourceId, actor);
+            case "Encounter" -> encounterService.deleteEncounter(tenantId, resourceId, actor);
+            case "Procedure" -> procedureService.deleteProcedure(tenantId, resourceId, actor);
+            case "MedicationRequest" -> medicationRequestService.deleteMedicationRequest(tenantId, resourceId, actor);
+            case "MedicationAdministration" -> medicationAdministrationService.deleteMedicationAdministration(
+                    tenantId, resourceId, actor);
+            case "Immunization" -> immunizationService.deleteImmunization(tenantId, resourceId, actor);
+            case "AllergyIntolerance" -> allergyIntoleranceService.deleteAllergyIntolerance(tenantId, resourceId, actor);
+            case "DiagnosticReport" -> diagnosticReportService.deleteDiagnosticReport(
+                    tenantId, UUID.fromString(resourceId), actor);
+            case "DocumentReference" -> documentReferenceService.deleteDocumentReference(
+                    tenantId, UUID.fromString(resourceId), actor);
+            case "CarePlan" -> carePlanService.deleteCarePlan(tenantId, UUID.fromString(resourceId), actor);
+            case "Goal" -> goalService.deleteGoal(tenantId, UUID.fromString(resourceId), actor);
+            case "Task" -> taskService.deleteTask(tenantId, resourceId, actor);
+            case "Coverage" -> coverageService.deleteCoverage(tenantId, UUID.fromString(resourceId), actor);
+            case "Appointment" -> appointmentService.deleteAppointment(tenantId, resourceId, actor);
+            case "Practitioner" -> practitionerService.deletePractitioner(tenantId, UUID.fromString(resourceId), actor);
+            case "PractitionerRole" -> practitionerRoleService.deletePractitionerRole(
+                    tenantId, UUID.fromString(resourceId), actor);
+            case "Organization" -> organizationService.deleteOrganization(
+                    tenantId, UUID.fromString(resourceId), actor);
+            default -> throw new BundleValidationException("Unsupported resource type: " + resourceType);
         }
     }
 

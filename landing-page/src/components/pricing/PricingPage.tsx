@@ -2,29 +2,27 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { PRICING_TIERS } from '@/lib/constants';
 
-const TIERS = [
-  {
-    name: 'Pilot',
+// Extend shared PRICING_TIERS with page-specific presentation fields.
+// Core pricing (name, price, period, description, commitment, features, cta, highlighted)
+// comes from constants.ts — single source of truth for price changes.
+const TIER_EXTENSIONS: Record<string, {
+  badge: string | null;
+  ctaHref: string;
+  members: string;
+  roi: string;
+  extraFeatures: string[];
+  notIncluded: string[];
+}> = {
+  Pilot: {
     badge: null,
-    price: '$2,500',
-    period: '/month',
-    commitment: '3-month pilot',
-    description: 'Prove value before you commit. Get live on FHIR in 4 weeks.',
-    cta: 'Start Pilot',
     ctaHref: 'mailto:sales@mahoosuc.solutions?subject=Pilot Inquiry',
-    highlighted: false,
     members: 'Up to 50K members',
     roi: 'Typical ROI: 10–20×',
-    features: [
-      '52 pre-built HEDIS measures',
-      'Single FHIR R4 server (Epic, Cerner, Athena)',
+    extraFeatures: [
       'Care gap detection & prioritization',
-      'Coordinator dashboard',
-      'Basic financial impact tracking',
       'Email + Slack notifications',
-      'Dedicated integration engineer (4 weeks)',
-      'HIPAA BAA included',
       'Community + email support',
     ],
     notIncluded: [
@@ -34,30 +32,17 @@ const TIERS = [
       'Custom CQL measures',
     ],
   },
-  {
-    name: 'Annual',
+  Annual: {
     badge: 'Most Popular',
-    price: '$8,500',
-    period: '/month',
-    commitment: 'Annual contract',
-    description: 'Full production deployment. Multi-EHR, predictive AI, real-time financial tracking.',
-    cta: 'Schedule Demo',
     ctaHref: 'https://calendar.app.google/zKDs6ZdXW7V61c7i7',
-    highlighted: true,
     members: '50K–500K members',
     roi: 'Typical ROI: 50–150×',
-    features: [
-      'Everything in Pilot',
-      'Predictive gap detection (30–60 day early warning)',
-      'Multi-payer / multi-tenant isolation',
-      'Multiple FHIR servers (Epic + Cerner, etc.)',
+    extraFeatures: [
       'HL7 v2 + bulk data ingestion',
       'Real-time quality bonus tracking dashboard',
       'AI provider narratives (3× engagement)',
-      'Custom CQL measures (unlimited)',
       'CDS Hooks for in-workflow EHR alerts',
       'Advanced ROI calculator + board reporting',
-      'Priority support (< 4-hour response)',
       'Quarterly business reviews',
     ],
     notIncluded: [
@@ -65,34 +50,45 @@ const TIERS = [
       'On-premise air-gapped deployment',
     ],
   },
-  {
-    name: 'Enterprise',
+  Enterprise: {
     badge: null,
-    price: 'Custom',
-    period: '',
-    commitment: 'Multi-year contract',
-    description: 'Kubernetes, SMART on FHIR, on-prem air-gapped, unlimited scale. Your infrastructure.',
-    cta: 'Contact Sales',
     ctaHref: 'mailto:sales@mahoosuc.solutions?subject=Enterprise Inquiry',
-    highlighted: false,
     members: '500K+ members',
     roi: 'Typical ROI: 100×+',
-    features: [
-      'Everything in Annual',
+    extraFeatures: [
       'Kubernetes auto-scaling deployment',
       'SMART on FHIR app integration',
-      'On-premise / air-gapped option',
       'Multi-region deployment',
       'Readmission risk + cost forecasting AI',
       'BI tool connectors (Tableau, Power BI)',
       'Custom integrations (non-FHIR sources)',
       'Dedicated customer success manager',
-      '24/7 SLA support',
       'White-label option',
     ],
     notIncluded: [],
   },
-];
+};
+
+const TIERS = PRICING_TIERS.map((tier) => {
+  const ext = TIER_EXTENSIONS[tier.name];
+  const priceDisplay = tier.price ? `$${tier.price.toLocaleString()}` : 'Custom';
+  const periodDisplay = tier.price ? tier.period : '';
+  return {
+    name: tier.name,
+    badge: ext?.badge ?? null,
+    price: priceDisplay,
+    period: periodDisplay,
+    commitment: tier.commitment ?? '',
+    description: tier.description,
+    cta: tier.cta,
+    ctaHref: ext?.ctaHref ?? '#',
+    highlighted: tier.highlighted,
+    members: ext?.members ?? '',
+    roi: ext?.roi ?? '',
+    features: [...tier.features, ...(ext?.extraFeatures ?? [])],
+    notIncluded: ext?.notIncluded ?? [],
+  };
+});
 
 const FAQ_ITEMS = [
   {
@@ -171,6 +167,11 @@ export default function PricingPage() {
               <div className="text-sm text-gray-600 mt-1">typical ROI on implementation cost</div>
             </div>
           </div>
+          <p className="text-xs text-gray-400 text-center mt-6">
+            Based on modeled outcomes for a 100K-member health plan with 2-point quality score improvement.
+            Actual results vary by organization. See{' '}
+            <Link href="/terms" className="underline hover:text-gray-500">Terms</Link> for details.
+          </p>
         </div>
       </section>
 

@@ -157,9 +157,9 @@ export default function Home() {
         <section id="scenarios" className="section bg-gradient-to-b from-blue-50 to-white">
           <div className="container-lg">
             <div className="text-center mb-12">
-              <h2 className="section-title">Customer Scenarios</h2>
+              <h2 className="section-title">Projected Impact by Organization Type</h2>
               <p className="section-subtitle">
-                See how organizations like yours are using HDIM to drive clinical value and financial impact
+                Modeled scenarios showing how HDIM drives clinical value and financial impact for your organization type
               </p>
             </div>
 

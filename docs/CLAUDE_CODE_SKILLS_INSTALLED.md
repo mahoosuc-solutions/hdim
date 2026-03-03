@@ -1,19 +1,19 @@
 # Claude Code Skills - HDIM Project Enhancement
 
-**Date:** February 11, 2026
-**Purpose:** Document newly installed skills from mahoosuc-os for enhanced HDIM product design and customer scenario thinking
+**Date:** March 2, 2026
+**Purpose:** Document all installed skills for enhanced HDIM product design, sales execution, and marketing video production
 
 ---
 
 ## Installation Summary
 
-**13 skills installed** from webemo-aaron/mahoosuc-operating-system repository:
+**23 skills installed** across core platform, sales, and video production:
 
-### Core Skills (All Installed)
+### Core Platform Skills (14)
 
 | Skill | Purpose | HDIM Use Case |
 |-------|---------|---------------|
-| `hdim-customer-scenarios` | **NEW** - HDIM-specific customer persona thinking, workflow validation | Phase 2 sales positioning, product-market fit validation, feature prioritization |
+| `hdim-customer-scenarios` | **CUSTOM** - HDIM-specific customer persona thinking, workflow validation | Phase 2 sales positioning, product-market fit validation, feature prioritization |
 | `frontend-design` | Distinctive, production-grade UI/UX design | Clinical Portal UI, Financial ROI Dashboard design |
 | `brand-voice` | Data-driven, authority-building content voice | Sales collateral, marketing content, thought leadership |
 | `content-optimizer` | Platform-specific content optimization (Reddit, LinkedIn, Twitter, HN) | Social media strategy, community engagement, content marketing |
@@ -27,10 +27,30 @@
 | `onprem-ops` | On-premise operations and maintenance | Enterprise customer on-prem installations |
 | `stripe-revenue-analyzer` | Revenue analytics and financial tracking | Financial ROI tracking (Phase 3), revenue analysis |
 | `vercel-landing-page-builder` | Landing page design and development | Marketing website, product landing pages |
+| `service-startup-doctor` | **NEW** - Diagnoses cascading Spring Boot startup failures in HDIM microservices | Fixes duplicate YAML keys, bean conflicts, Liquibase misconfigs, entity scan issues |
+
+### Sales Skills (4) — Added February 2026
+
+| Skill | Purpose | HDIM Use Case |
+|-------|---------|---------------|
+| `sales-manager` | Strategic advisor — validate sales strategy, analyze deals, pipeline coaching | Sanity-check sales decisions, prioritize prospects, board-level messaging |
+| `sales-demo-designer` | Create persona-specific demo pathways (15/30/45-min) with feature prioritization | Build CMO, Coordinator, CFO, IT, Provider demo flows with specific talking points |
+| `sales-discovery-coach` | AI-powered discovery call coach with persona roleplay and call scoring | Practice calls, analyze transcripts, score on 5 dimensions (Pain, Qualification, Objections, Next Steps, Rapport) |
+| `sales-objection-handler` | Master 6 common HDIM objections with reframe techniques and competitive positioning | "Too expensive," "build vs. buy," "security concerns," "EHR integration," "wait and see" |
+
+### Video Production Skills (5) — Added February 2026
+
+| Skill | Purpose | HDIM Use Case |
+|-------|---------|---------------|
+| `video-narrative-strategist` | Plans 10-scene narrative arc for HDIM Remotion marketing videos | Start here — maps persona pain to 4-act story structure, produces story brief |
+| `video-clinical-writer` | Writes production-ready text content (headlines, captions, metrics, CTAs) for video configs | Transforms story briefs into `RoleStoryConfig` text fields with brand voice |
+| `video-medical-reviewer` | Validates clinical accuracy, HEDIS compliance, and HIPAA-safe marketing patterns | Reviews every text field for medical plausibility and regulatory safety before render |
+| `video-visual-designer` | Optimizes overlay placement, timing, Ken Burns motion for visual impact | Designs `overlays[]` arrays — glow-highlights, metrics, badges — for each scene |
+| `video-pipeline-coordinator` | Orchestrates rendering, QA, and distribution asset generation | Final step — writes config, renders MP4, generates YouTube/LinkedIn/Twitter assets |
 
 ---
 
-## Key Skills for Phase 2 (March 2026)
+## Key Skills for Phase 2 (March 2026) — Sales & Video Production NEW
 
 ### 1. `hdim-customer-scenarios` (CUSTOM BUILT) ⭐
 
@@ -178,6 +198,185 @@ Optimize the Phase 2 sales positioning for:
 - FHIR/ECDS readiness
 - HIPAA PHI handling
 - Multi-tenant data isolation
+
+---
+
+## Sales Skills — Phase 2 Execution
+
+### `sales-manager` — Strategic Sales Advisor
+
+**Purpose:** VP Sales coaching, deal analysis, pipeline prioritization, board-level messaging
+
+**Use Cases:**
+- Validate ICP prioritization (health plans vs. ACOs)
+- Sanity-check deal strategy before a customer call
+- Analyze pipeline to identify highest-probability closes
+- Prepare for Series A investor questions on sales metrics
+
+**Example Invocation:**
+```
+Use sales-manager skill:
+"Here are my top 5 prospects. Which 2 should I focus on this week
+ to hit the March LOI target? [paste prospect list]"
+```
+
+---
+
+### `sales-demo-designer` — Persona Demo Pathways
+
+**Purpose:** Design 15/30/45-minute demos tailored to each buyer persona with exact feature sequencing and talking points
+
+**5 Pre-Built Demo Pathways:**
+- **CMO / VP Quality** (30 min): Predictive gap detection → Coordinator dashboard → Financial tracking closer
+- **Quality Coordinator** (20 min): Smart gap dashboard → Prioritization logic → Time savings calc
+- **CFO / Finance Leader** (20 min): Financial model → Month-by-month tracking → Investment decision
+- **IT / Analytics Leader** (30 min): Architecture → Integration → Security/compliance → Performance
+- **Healthcare Provider** (10 min): Clinical alert comparison → Outcome impact
+
+**Key Principle:** Every feature connects to a pain point. Every demo ends with financial impact.
+
+**Example Invocation:**
+```
+Use sales-demo-designer skill:
+"Design a 30-minute demo for a CMO at a 300K-member Blue Cross plan"
+```
+
+---
+
+### `sales-discovery-coach` — Discovery Call Practice & Scoring
+
+**Purpose:** Roleplay discovery calls, analyze transcripts, score on 5 dimensions
+
+**Scoring Rubric (0-100):**
+- Pain Discovery (0-20 pts)
+- Qualification (0-20 pts)
+- Objection Handling (0-15 pts)
+- Next Steps Clarity (0-20 pts)
+- Credibility & Rapport (0-25 pts)
+
+**3 Usage Modes:**
+1. **Live Roleplay** — Claude plays customer persona, gives feedback after each exchange
+2. **Transcript Analysis** — Paste a real call, get scored feedback
+3. **Question Bank** — "What discovery question should I ask about care gap prioritization?"
+
+**Example Invocation:**
+```
+Use sales-discovery-coach skill:
+"Practice a discovery call — you're a skeptical CMO at a 500K-member plan.
+ I'll play the sales rep."
+```
+
+---
+
+### `sales-objection-handler` — 6 Core Objections with Reframes
+
+**Purpose:** Turn the 6 most common HDIM objections into buying conversations
+
+**Covered Objections:**
+1. "Too expensive / costs more than Epic add-on"
+2. "We'll build this ourselves"
+3. "Security and compliance concerns"
+4. "Not enough EHR integration depth"
+5. "We want to wait and see market adoption"
+6. "We already have a quality vendor"
+
+**Technique:** Each objection has a data-driven reframe, competitive positioning, and closing language.
+
+**Example Invocation:**
+```
+Use sales-objection-handler skill:
+"Customer just said: 'We'd need to rebuild our entire workflow around this.
+ We don't have the bandwidth right now.'"
+```
+
+---
+
+## Video Production Pipeline
+
+The 5 video skills work in sequence. Always run them in this order:
+
+```
+video-narrative-strategist → video-clinical-writer → video-medical-reviewer
+       → video-visual-designer → video-pipeline-coordinator
+```
+
+### Skill 1: `video-narrative-strategist` — Story Planning
+
+**Input:** Target role (CMO, Coordinator, CFO, Provider, IT)
+**Output:** 10-scene story brief with pain-to-solution arc
+
+**4-Act Structure:**
+- Act 1 (Scenes 1-2): The Pain — Reactive, overwhelmed, manual
+- Act 2 (Scenes 3-5): The Moment of Change — HDIM discovery
+- Act 3 (Scenes 6-8): The Solution — Workflow transformation
+- Act 4 (Scenes 9-10): The Outcome — Financial impact, recognition
+
+---
+
+### Skill 2: `video-clinical-writer` — Script Content
+
+**Input:** Story brief from narrative-strategist
+**Output:** Complete `RoleStoryConfig` text fields — headlines, captions, metrics, CTA
+
+**Brand Voice Enforcement:**
+- Every metric has a specific number ("35-40% improvement," not "significant improvement")
+- No vague claims ("HIPAA-compliant" specifics, not "secure")
+- CTA is soft and value-first
+
+---
+
+### Skill 3: `video-medical-reviewer` — Clinical Validation
+
+**Input:** Draft `RoleStoryConfig` from clinical-writer
+**Output:** Approved config or list of corrections with clinical justification
+
+**Validates:**
+- HEDIS terminology accuracy
+- CMS Star Ratings data accuracy
+- HIPAA marketing compliance (no false claims)
+- Statistical plausibility
+
+---
+
+### Skill 4: `video-visual-designer` — Overlay Design
+
+**Input:** Clinically validated `RoleStoryConfig`
+**Output:** Complete `overlays[]` arrays for all 10 scenes
+
+**Overlay Types:** glow-highlight, metric, badge, text
+**Ken Burns Motion:** Zoom/pan timing optimized for 30-second attention arc
+
+---
+
+### Skill 5: `video-pipeline-coordinator` — Render & Distribute
+
+**Input:** Finalized `RoleStoryConfig` with overlays
+**Output:** Rendered MP4 + YouTube/LinkedIn/Twitter distribution assets
+
+---
+
+## `service-startup-doctor` — Microservice Startup Failures
+
+**Purpose:** Diagnoses cascading startup failures in HDIM Spring Boot microservices
+
+**Common Issues Diagnosed:**
+- Duplicate YAML keys in shared module configs
+- Spring bean conflicts from gateway-core shared module
+- Liquibase changelog misconfiguration (missing includes, wrong paths)
+- JPA entity scan overreach (scanning other service's entities)
+- Missing `@ConditionalOnMissingBean` optional beans
+
+**When to Use:**
+- Service crash loop or "application failed to start"
+- "Could not autowire" bean errors after adding new shared module
+- Liquibase rollback failures blocking startup
+
+**Example Invocation:**
+```
+Use service-startup-doctor skill:
+"notification-service is failing to start after the prior-auth integration.
+ Here are the logs: [paste stack trace]"
+```
 
 ---
 
@@ -357,23 +556,23 @@ vps-ops/
 
 ---
 
-## Next Steps: Using Skills for Phase 2
+## Phase 2 Skill Usage Plan (March 2026)
 
-**Week of Feb 11-15:**
-1. ✅ Skills installed and documented
-2. ☐ Use `hdim-customer-scenarios` to validate Phase 2 positioning
-3. ☐ Use `brand-voice` to review discovery call script
-4. ☐ Use `content-optimizer` to create LinkedIn thought leadership posts
+**This Week (Mar 2-8) — Sales Motion:**
+1. ✅ Sales skills installed and documented
+2. ☐ Use `sales-demo-designer` to prepare CMO demo for Healthix call
+3. ☐ Use `sales-discovery-coach` to practice discovery call script
+4. ☐ Use `sales-objection-handler` to prepare for "we'll build it ourselves" objection
 
-**Week of Feb 17-21:**
-1. ☐ Use `frontend-design` to design marketing landing page
-2. ☐ Use `security-auditor` to validate HIPAA compliance before pilot
-3. ☐ Use `compliance-mapper` to verify HEDIS/FHIR alignment
+**Week 2 (Mar 9-15) — Content + Outreach:**
+1. ☐ Use `content-optimizer` to optimize LinkedIn posts for thought leadership
+2. ☐ Use `brand-voice` to refine client proposal templates
+3. ☐ Use `video-narrative-strategist` + pipeline for first CMO role video
 
-**Week of Feb 24-28:**
-1. ☐ Use `content-optimizer` for multi-platform content (Reddit, Twitter, LinkedIn)
-2. ☐ Use `brand-voice` for client proposal templates
-3. ☐ Use `hdim-customer-scenarios` for VP Sales training (persona walkthroughs)
+**Week 3-4 (Mar 16-28) — Pilot Close:**
+1. ☐ Use `sales-manager` to analyze pipeline before LOI push
+2. ☐ Use `hdim-customer-scenarios` for pilot customer onboarding walkthrough
+3. ☐ Use `security-auditor` to validate HIPAA compliance before pilot launch
 
 ---
 
@@ -383,18 +582,20 @@ vps-ops/
 
 **Update Frequency:**
 - Review quarterly (March, June, September, December)
-- Update after major product launches
+- Update after major product launches or new skill additions
 - Refresh based on customer feedback
 
 **Source Repository:** https://github.com/webemo-aaron/mahoosuc-operating-system
 
-**Custom Skills:**
-- `hdim-customer-scenarios` - Maintained in HDIM repo (HDIM-specific)
-- All others synced from mahoosuc-os
+**Custom Skills (HDIM-specific):**
+- `hdim-customer-scenarios` - Maintained in HDIM repo
+- `service-startup-doctor` - Maintained in HDIM repo
+- `sales-manager`, `sales-demo-designer`, `sales-discovery-coach`, `sales-objection-handler` - HDIM sales skills
+- `video-*` (5 skills) - HDIM Remotion video production pipeline
 
 ---
 
-**Document Version:** 1.0
-**Last Updated:** February 11, 2026
-**Status:** Skills Installed & Ready for Phase 2 Execution
-**Next Review:** March 15, 2026 (Phase 2 mid-point)
+**Document Version:** 2.0
+**Last Updated:** March 2, 2026
+**Status:** 23 Skills Installed — Core, Sales, Video Production
+**Next Review:** June 1, 2026 (Phase 3 mid-point)

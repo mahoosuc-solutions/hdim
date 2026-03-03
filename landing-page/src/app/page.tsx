@@ -126,10 +126,10 @@ export default function Home() {
 
             <div className="grid md:grid-cols-4 gap-6">
               {[
-                { name: 'Pilot', price: '$500/mo', patients: '<50K', timeline: '2-3 weeks' },
-                { name: 'Growth', price: '$2.5K/mo', patients: '50K-500K', timeline: '4-8 weeks', highlighted: true },
-                { name: 'Enterprise', price: '$5-15K/mo', patients: '>500K', timeline: '8-12 weeks' },
-                { name: 'Hybrid', price: '$10-20K/mo', patients: '>500K', timeline: '6-10 weeks' },
+                { name: 'Pilot', price: '$2,500/mo', patients: '<50K', timeline: '2-3 weeks' },
+                { name: 'Growth', price: '$8,500/mo', patients: '50K-500K', timeline: '4-8 weeks', highlighted: true },
+                { name: 'Enterprise', price: '$15K+/mo', patients: '>500K', timeline: '8-12 weeks' },
+                { name: 'Hybrid', price: '$20K+/mo', patients: '>500K', timeline: '6-10 weeks' },
               ].map((model, idx) => (
                 <div key={idx} className={`card p-6 ${model.highlighted ? 'ring-2 ring-blue-600 shadow-xl' : ''}`}>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{model.name}</h3>
@@ -213,9 +213,9 @@ export default function Home() {
         <section className="section bg-white">
           <div className="container-lg">
             <div className="text-center mb-12">
-              <h2 className="section-title">Customer Success Stories</h2>
+              <h2 className="section-title">What Your ROI Could Look Like</h2>
               <p className="section-subtitle">
-                See real-world impact across different organization types and EHRs
+                Modeled scenarios showing projected impact across different organization types and EHRs
               </p>
             </div>
 
@@ -376,8 +376,8 @@ export default function Home() {
             <div>
               <h4 className="text-white font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm">
-                <li><span className="text-gray-500">Privacy Policy</span></li>
-                <li><span className="text-gray-500">Terms of Service</span></li>
+                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-white">Terms of Service</Link></li>
               </ul>
             </div>
           </div>

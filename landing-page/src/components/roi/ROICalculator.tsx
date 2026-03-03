@@ -124,10 +124,10 @@ export default function ROICalculator() {
                   onChange={(e) => handleChange('deploymentModel', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="pilot">Pilot ($500/mo)</option>
-                  <option value="growth">Growth ($2,500/mo)</option>
-                  <option value="enterprise">Enterprise ($7,500/mo)</option>
-                  <option value="hybrid">Hybrid ($12,500/mo)</option>
+                  <option value="pilot">Pilot ($2,500/mo)</option>
+                  <option value="growth">Growth ($8,500/mo)</option>
+                  <option value="enterprise">Enterprise ($15K+/mo)</option>
+                  <option value="hybrid">Hybrid ($20K+/mo)</option>
                 </select>
               </div>
 

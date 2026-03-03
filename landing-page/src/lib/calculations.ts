@@ -71,16 +71,16 @@ export function calculateROI(inputs: ROIInputs): ROIResults {
   let monthlyCost = 0;
   switch (inputs.deploymentModel) {
     case 'pilot':
-      monthlyCost = 500;
-      break;
-    case 'growth':
       monthlyCost = 2500;
       break;
+    case 'growth':
+      monthlyCost = 8500;
+      break;
     case 'enterprise':
-      monthlyCost = 7500; // midpoint
+      monthlyCost = 15000;
       break;
     case 'hybrid':
-      monthlyCost = 12500; // midpoint
+      monthlyCost = 20000;
       break;
   }
 

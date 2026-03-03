@@ -147,7 +147,7 @@ export const EHR_DETAILS: Record<string, EHRDetail> = {
       'Hybrid: Real-time queries + scheduled bulk refresh',
     ],
     implementationNotes:
-      'InterSystems HealthShare powers 70%+ of US HIEs including Healthix (NYC, 16M patients). HDIM connects via FHIR R4 endpoint on IRIS for Health. Setup: configure HealthShare FHIR endpoint URL, establish OAuth2 or API key auth, map FHIR resources to HDIM patient model, configure real-time + bulk ingestion, deploy with SPRING_PROFILES_ACTIVE=production and tune connection pooling, Kafka partitions, and batch sizes for HIE-scale volumes.',
+      'InterSystems HealthShare powers 70%+ of US HIEs. HDIM connects via FHIR R4 endpoint on IRIS for Health, architected for HIE-scale workloads of 16M+ patients. Setup: configure HealthShare FHIR endpoint URL, establish OAuth2 or API key auth, map FHIR resources to HDIM patient model, configure real-time + bulk ingestion, deploy with SPRING_PROFILES_ACTIVE=production and tune connection pooling, Kafka partitions, and batch sizes for HIE-scale volumes.',
   },
   meditech: {
     id: 'meditech',

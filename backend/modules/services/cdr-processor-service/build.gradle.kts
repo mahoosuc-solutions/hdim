@@ -34,6 +34,9 @@ dependencies {
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.spring.boot.starter.actuator)
 
+    // Spring WebFlux for reactive HTTP client (FHIR persistence)
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+
     // HAPI FHIR for conversion
     implementation(libs.bundles.hapi.fhir.client)
 

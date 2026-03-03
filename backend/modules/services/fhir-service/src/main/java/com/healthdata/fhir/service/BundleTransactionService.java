@@ -402,7 +402,7 @@ public class BundleTransactionService {
             throw new BundleValidationException(
                     "Bundle type must be 'transaction' or 'batch', got: " + bundle.getType());
         }
-        if (!bundle.hasEntry() || bundle.getEntry().isEmpty()) {
+        if (bundle.getEntry() == null || bundle.getEntry().size() == 0) {
             throw new BundleValidationException("Bundle must contain at least one entry");
         }
     }

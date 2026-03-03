@@ -174,6 +174,7 @@ class BulkImportServiceTest {
         service.processNdjsonStream(jobId, TENANT_ID, stream);
 
         // Should complete without exception — errors captured in job status
-        verify(importRepository).findById(jobId);
+        // findById called twice: once in processNdjsonStream, once in completeJob
+        verify(importRepository, org.mockito.Mockito.atLeastOnce()).findById(jobId);
     }
 }

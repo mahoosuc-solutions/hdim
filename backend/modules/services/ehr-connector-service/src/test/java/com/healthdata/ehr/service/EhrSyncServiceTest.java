@@ -37,6 +37,9 @@ class EhrSyncServiceTest {
     @Mock
     private EhrConnectorAuditIntegration auditIntegration;
 
+    @Mock
+    private EhrFhirPersistenceService fhirPersistenceService;
+
     private EhrSyncService syncService;
 
     @BeforeEach
@@ -50,7 +53,7 @@ class EhrSyncServiceTest {
                 anyString(), anyString(), anyString(), anyString(), anyBoolean(),
                 any(), anyLong(), anyString());
 
-        syncService = new EhrSyncService(connectionManager, auditIntegration);
+        syncService = new EhrSyncService(connectionManager, auditIntegration, fhirPersistenceService);
     }
 
     @Test

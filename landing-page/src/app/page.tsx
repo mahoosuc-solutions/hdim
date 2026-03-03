@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import Header from '@/components/layout/Header';
 import HeroSection from '@/components/hero/HeroSection';
 import ROICalculator from '@/components/roi/ROICalculator';
@@ -7,11 +8,70 @@ import CaseStudyCard from '@/components/social-proof/CaseStudyCard';
 import ScenarioCard from '@/components/scenarios/ScenarioCard';
 import { MESSAGING, CASE_STUDIES, CUSTOMIZATION_LEVELS, PRICING_TIERS, FAQ } from '@/lib/constants';
 
+export const metadata: Metadata = {
+  title: 'HDIM — Real-Time Healthcare Quality Measurement',
+  description:
+    'Deploy HDIM your way: 52 HEDIS measures, FHIR R4 integration with Epic, Cerner, Athena. Real-time care gap detection without moving your data.',
+  openGraph: {
+    title: 'HDIM — Real-Time Healthcare Quality Measurement',
+    description:
+      'Real-time HEDIS measures, care gap detection, and quality reporting for health plans and ACOs.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'HDIM — Healthcare Quality Measurement Platform' }],
+  },
+};
+
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      name: 'Mahoosuc Solutions LLC',
+      url: 'https://healthdatainmotion.com',
+      logo: 'https://healthdatainmotion.com/hdim-icon.svg',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        email: 'info@mahoosuc.solutions',
+        contactType: 'sales',
+      },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'HDIM',
+      applicationCategory: 'HealthApplication',
+      operatingSystem: 'Cloud',
+      description:
+        'Enterprise healthcare interoperability platform for HEDIS quality measure evaluation, FHIR R4 compliance, and clinical decision support.',
+      offers: {
+        '@type': 'AggregateOffer',
+        lowPrice: '2500',
+        priceCurrency: 'USD',
+        offerCount: 3,
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: FAQ.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    },
+  ],
+};
+
 export default function Home() {
   return (
     <>
+      {/* JSON-LD structured data — static content from constants, safe to inline */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <Header />
-      <main>
+      <main id="main-content">
         {/* Hero Section */}
         <HeroSection />
 
@@ -349,14 +409,14 @@ export default function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12">
+      <footer className="bg-gray-900 text-gray-400 py-12" role="contentinfo">
         <div className="container-lg">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img src="/hdim-icon.svg" alt="HDIM" className="w-6 h-6" />
+              <Link href="/" className="flex items-center gap-2 mb-4" aria-label="HDIM home">
+                <img src="/hdim-icon.svg" alt="" className="w-6 h-6" aria-hidden="true" />
                 <span className="text-white font-bold">HDIM</span>
-              </div>
+              </Link>
               <p className="text-sm">Healthcare Quality Measurement Platform</p>
             </div>
             <div>
@@ -370,6 +430,7 @@ export default function Home() {
             <div>
               <h4 className="text-white font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm">
+                <li><Link href="/about" className="hover:text-white">About</Link></li>
                 <li><a href="mailto:info@mahoosuc.solutions?subject=General Inquiry" className="hover:text-white">Contact</a></li>
               </ul>
             </div>

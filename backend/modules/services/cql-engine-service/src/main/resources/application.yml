@@ -114,6 +114,18 @@ visualization:
     emit-interval-seconds: ${BATCH_PROGRESS_EMIT_INTERVAL:15}    # Emit progress every 15 seconds (was 5s)
     emit-every-n-patients: ${BATCH_PROGRESS_EMIT_EVERY_N:50}     # Or every 50 patients (was 10)
 
+# Pipeline Auto-Evaluation Configuration (Phase 5)
+# When enabled, CQL measures auto-evaluate when new FHIR data arrives via Kafka events
+cql:
+  auto-evaluation:
+    enabled: ${CQL_AUTO_EVALUATION_ENABLED:false}
+    default-library-id: ${CQL_AUTO_EVALUATION_LIBRARY_ID:}  # UUID of default CQL library to evaluate
+  # Lazy Fetch Configuration (Phase 6)
+  # When enabled, checks Redis for stale patient data and requests EHR sync before evaluation
+  lazy-fetch:
+    enabled: ${CQL_LAZY_FETCH_ENABLED:false}
+    stale-threshold-hours: ${CQL_LAZY_FETCH_STALE_HOURS:24}
+
 # Resilience4j Configuration
 resilience4j:
   circuitbreaker:

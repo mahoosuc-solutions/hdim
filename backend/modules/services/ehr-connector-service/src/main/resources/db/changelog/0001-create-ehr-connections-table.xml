@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+    <changeSet id="0001-create-ehr-connections-table" author="hie-pipeline">
+        <createTable tableName="ehr_connections">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="connection_id" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="uq_ehr_connection_id"/>
+            </column>
+            <column name="tenant_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor_type" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="base_url" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="client_secret" type="varchar(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="token_url" type="varchar(500)"/>
+            <column name="scope" type="varchar(500)"/>
+            <column name="timeout_ms" type="int" defaultValueNumeric="30000"/>
+            <column name="max_retries" type="int" defaultValueNumeric="3"/>
+            <column name="enable_circuit_breaker" type="boolean" defaultValueBoolean="true"/>
+            <column name="additional_properties" type="jsonb"/>
+            <column name="active" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_ehr_conn_tenant" tableName="ehr_connections">
+            <column name="tenant_id"/>
+        </createIndex>
+
+        <createIndex indexName="idx_ehr_conn_tenant_active" tableName="ehr_connections">
+            <column name="tenant_id"/>
+            <column name="active"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="ehr_connections"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

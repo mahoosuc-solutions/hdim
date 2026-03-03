@@ -57,6 +57,9 @@ dependencies {
     // OpenAPI/Swagger
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
+    // Kafka for event publishing and consuming
+    implementation(libs.bundles.kafka)
+
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 

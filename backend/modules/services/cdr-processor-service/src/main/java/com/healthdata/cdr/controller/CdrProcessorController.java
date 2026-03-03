@@ -4,6 +4,7 @@ import com.healthdata.cdr.converter.CdaToFhirConverter;
 import com.healthdata.cdr.converter.Hl7ToFhirConverter;
 import com.healthdata.cdr.dto.*;
 import com.healthdata.cdr.service.CdaParserService;
+import com.healthdata.cdr.service.CdrFhirPersistenceService;
 import com.healthdata.cdr.service.Hl7v2ParserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,7 @@ public class CdrProcessorController {
     private final Hl7ToFhirConverter hl7ToFhirConverter;
     private final CdaParserService cdaParserService;
     private final CdaToFhirConverter cdaToFhirConverter;
+    private final CdrFhirPersistenceService fhirPersistenceService;
 
     /**
      * Parse and process a single HL7 v2 message.
@@ -93,6 +95,16 @@ public class CdrProcessorController {
             Bundle fhirBundle = null;
             if (request.isConvertToFhir()) {
                 fhirBundle = hl7ToFhirConverter.convertToFhir(parsedMessage);
+
+                // Persist to FHIR store if requested (default: true)
+                if (fhirBundle != null && request.isPersistToFhir()) {
+                    try {
+                        fhirPersistenceService.persistBundle(
+                                fhirBundle, request.getTenantId(), "hl7v2");
+                    } catch (Exception e) {
+                        log.warn("FHIR persistence failed (non-blocking): {}", e.getMessage());
+                    }
+                }
             }
 
             long processingTime = System.currentTimeMillis() - startTime;
@@ -355,6 +367,16 @@ public class CdrProcessorController {
             Bundle fhirBundle = null;
             if (request.isConvertToFhir()) {
                 fhirBundle = cdaToFhirConverter.convertToFhir(parsedDocument);
+
+                // Persist to FHIR store
+                if (fhirBundle != null) {
+                    try {
+                        fhirPersistenceService.persistBundle(
+                                fhirBundle, request.getTenantId(), "cda");
+                    } catch (Exception e) {
+                        log.warn("CDA FHIR persistence failed (non-blocking): {}", e.getMessage());
+                    }
+                }
             }
 
             long processingTime = System.currentTimeMillis() - startTime;

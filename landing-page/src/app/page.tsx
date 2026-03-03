@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import HeroSection from '@/components/hero/HeroSection';
 import ROICalculator from '@/components/roi/ROICalculator';
@@ -254,10 +255,13 @@ export default function Home() {
                   }`}
                 >
                   <h3 className="text-2xl font-bold text-gray-900 mb-2">{tier.name}</h3>
-                  <p className="text-gray-600 mb-6">{tier.description}</p>
+                  <p className="text-gray-600 mb-1">{tier.description}</p>
+                  {'commitment' in tier && (
+                    <p className="text-xs text-gray-400 mb-4">{(tier as { commitment: string }).commitment}</p>
+                  )}
                   <div className="mb-8">
                     <p className="text-4xl font-bold text-blue-600">
-                      {tier.price ? `$${tier.price}` : 'Custom'}
+                      {tier.price ? `$${tier.price.toLocaleString()}` : 'Custom'}
                     </p>
                     <p className="text-gray-600">{tier.period}</p>
                   </div>
@@ -279,11 +283,27 @@ export default function Home() {
                       </li>
                     ))}
                   </ul>
-                  <button className={tier.highlighted ? 'btn-primary w-full' : 'btn-secondary w-full'}>
+                  <Link
+                    href="/pricing"
+                    className={`block text-center py-3 px-6 rounded-lg font-semibold transition ${
+                      tier.highlighted
+                        ? 'btn-primary w-full'
+                        : 'btn-secondary w-full'
+                    }`}
+                  >
                     {tier.cta}
-                  </button>
+                  </Link>
                 </div>
               ))}
+            </div>
+
+            <div className="text-center mt-10">
+              <Link href="/pricing" className="inline-flex items-center text-blue-600 font-medium hover:underline">
+                See full pricing details, FAQ, and ROI calculator
+                <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           </div>
         </section>

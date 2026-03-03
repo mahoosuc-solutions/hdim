@@ -61,8 +61,17 @@ logging:
     root: INFO
     com.healthdata.cms: DEBUG
 
+# Kafka Configuration for event publishing (Phase 4 pipeline)
+spring.kafka:
+  bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+  producer:
+    key-serializer: org.apache.kafka.common.serialization.StringSerializer
+    value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
 # CMS OAuth2 Configuration (Development)
 cms:
+  # FHIR Service URL for persisting BCDA data (Phase 4)
+  fhir-service-url: ${CMS_FHIR_SERVICE_URL:http://localhost:8085/fhir}
   oauth2:
     client-id: ${CMS_OAUTH2_CLIENT_ID:dev-client-id}
     client-secret: ${CMS_OAUTH2_CLIENT_SECRET:dev-client-secret}

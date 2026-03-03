@@ -74,7 +74,7 @@ export const INTERSYSTEMS_INTEGRATION: IntegrationPageData = {
         'Set up authentication — Configure OAuth2 client credentials or API key authentication. HDIM supports both HealthShare OAuth2 server integration and static API key authentication for on-prem deployments.',
         'Map FHIR resource types — Configure which FHIR resources to ingest from HealthShare. HDIM supports 12 resource types out of the box. Map HealthShare-specific extensions to HDIM\'s patient model.',
         'Configure data ingestion mode — Choose real-time FHIR queries for on-demand evaluation, bulk FHIR export for population-level analysis, or hybrid mode (recommended for HIE-scale deployments).',
-        'Deploy HDIM — Use the HDIM installer with the healthix profile for HIE-optimized configuration: ./hdim-installer.sh --profile healthix. This pre-configures connection pooling, cache sizing, and Kafka partitioning for 10M+ patient volumes.',
+        'Deploy HDIM on your infrastructure — Deploy HDIM on your RHEL servers or cloud VPC using Docker Compose or Kubernetes. Set spring.profiles.active=production and FHIR_SERVICE_URL to your HealthShare FHIR R4 endpoint. For HIE-scale deployments (10M+ patients), increase connection pool size, Kafka partitions, and batch size to match your data volume.',
         'Verify with smoke tests — Run the built-in integration verification suite to confirm FHIR connectivity, resource mapping, CQL evaluation, and care gap detection are working end-to-end.',
       ],
     },
@@ -107,7 +107,7 @@ PATIENT_BATCH_SIZE=5000`,
       title: 'Proven at HIE Scale',
       type: 'text',
       content:
-        'HDIM was architected for health information exchange scale. The platform has been validated against Healthix workloads — NYC\'s largest public HIE serving 16 million patients across thousands of provider organizations in the New York metropolitan area.\n\nAt HIE scale, HDIM handles:\n\n• 16M+ patient records with sub-second FHIR query response times\n• 52 HEDIS quality measures evaluated concurrently across entire populations\n• Real-time care gap detection with ADT event-driven triggers\n• Multi-tenant isolation ensuring data segregation across participating organizations\n• HIPAA-compliant audit trails for every data access and quality evaluation\n\nThe --profile healthix installer option pre-configures HDIM for these workloads, including optimized connection pooling (50 concurrent FHIR connections), Kafka partitioning (24 partitions for parallel measure evaluation), and Redis cache sizing (2GB for patient demographic caching).',
+        'HDIM was architected for health information exchange scale. The platform has been validated against Healthix workloads — NYC\'s largest public HIE serving 16 million patients across thousands of provider organizations in the New York metropolitan area.\n\nAt HIE scale, HDIM handles:\n\n• 16M+ patient records with sub-second FHIR query response times\n• 52 HEDIS quality measures evaluated concurrently across entire populations\n• Real-time care gap detection with ADT event-driven triggers\n• Multi-tenant isolation ensuring data segregation across participating organizations\n• HIPAA-compliant audit trails for every data access and quality evaluation\n\nFor HIE-scale deployments, HDIM is configured with optimized connection pooling (50 concurrent FHIR connections), Kafka partitioning (24 partitions for parallel measure evaluation), and Redis cache sizing (2GB for patient demographic caching).',
     },
     {
       id: 'data-exchange',

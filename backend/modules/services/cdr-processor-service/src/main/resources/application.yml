@@ -89,6 +89,8 @@ hl7:
 
 # CDR Configuration
 cdr:
+  # FHIR persistence: forward converted FHIR bundles to fhir-service (Phase 2)
+  fhir-service-url: ${CDR_FHIR_SERVICE_URL:http://localhost:8085/fhir}
   audit:
     enabled: true
     include-message-content: ${CDR_AUDIT_INCLUDE_CONTENT:false}

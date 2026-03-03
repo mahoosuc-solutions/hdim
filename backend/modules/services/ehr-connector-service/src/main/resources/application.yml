@@ -105,6 +105,12 @@ ehr:
     enable-circuit-breaker: true
     connection-pool-size: 50
     cache-ttl-seconds: 300
+  # FHIR persistence: forward synced data to fhir-service (Phase 3B)
+  fhir-service-url: ${EHR_FHIR_SERVICE_URL:http://localhost:8085/fhir}
+  # Kafka consumer for on-demand sync requests (Phase 6)
+  sync:
+    consumer:
+      enabled: ${EHR_SYNC_CONSUMER_ENABLED:false}
 
 logging:
   level:

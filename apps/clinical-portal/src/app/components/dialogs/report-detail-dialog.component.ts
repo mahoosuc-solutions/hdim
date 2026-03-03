@@ -788,6 +788,7 @@ import { EvaluationService } from '../../services/evaluation.service';
   ],
 })
 export class ReportDetailDialogComponent implements OnInit {
+  private logger: ReturnType<LoggerService['withContext']>;
   parsedData: any = null;
 
   constructor(
@@ -795,7 +796,9 @@ export class ReportDetailDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public report: SavedReport,
     private dialogRef: MatDialogRef<ReportDetailDialogComponent>,
     private evaluationService: EvaluationService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('ReportDetailDialogComponent');
+  }
 
   ngOnInit(): void {
     this.parseReportData();

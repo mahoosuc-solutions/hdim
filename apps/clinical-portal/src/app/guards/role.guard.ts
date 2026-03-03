@@ -26,11 +26,16 @@ import { LoggerService } from '../services/logger.service';
 @Injectable({
   providedIn: 'root',
 })
-export class RoleGuard implements CanActivate {  constructor(
+export class RoleGuard implements CanActivate {
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private authService: AuthService,
     private router: Router,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('RoleGuard');
+}
 
   canActivate(
     route: ActivatedRouteSnapshot,

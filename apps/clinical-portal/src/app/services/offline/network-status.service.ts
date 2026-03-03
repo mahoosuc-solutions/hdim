@@ -32,6 +32,7 @@ interface NetworkInformation {
   providedIn: 'root',
 })
 export class NetworkStatusService implements OnDestroy {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private readonly destroy$ = new Subject<void>();
   private readonly networkState = new BehaviorSubject<NetworkState>(this.getCurrentState());
   private readonly connectionChangeListener: EventListener;
@@ -49,9 +50,7 @@ export class NetworkStatusService implements OnDestroy {
   );
 
   constructor(
-    private logger: LoggerService,
-    private ngZone: NgZone
-  ) {
+    private loggerService: LoggerService,private ngZone: NgZone) {
     this.connectionChangeListener = () => this.updateNetworkState();
     this.initializeListeners();
     this.startPeriodicCheck();

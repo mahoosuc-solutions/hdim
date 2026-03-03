@@ -775,6 +775,7 @@ export interface ProviderLeaderboardDialogData {
   ],
 })
 export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
+  private logger: ReturnType<LoggerService['withContext']>;
   private destroy$ = new Subject<void>();
 
   loading = false;
@@ -791,7 +792,9 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
     private logger: LoggerService,
     private dialogRef: MatDialogRef<ProviderLeaderboardDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ProviderLeaderboardDialogData
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('ProviderLeaderboardDialogComponent');
+  }
 
   ngOnInit(): void {
     this.loadProviderData();

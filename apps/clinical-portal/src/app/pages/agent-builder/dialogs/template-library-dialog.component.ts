@@ -545,6 +545,7 @@ export class TemplateLibraryDialogComponent implements OnInit, OnDestroy, AfterV
   @ViewChild(MatSort) sort!: MatSort;
 
   private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
 
   dataSource = new MatTableDataSource<PromptTemplate>([]);
   displayedColumns = ['name', 'category', 'usageCount', 'actions'];
@@ -570,11 +571,13 @@ export class TemplateLibraryDialogComponent implements OnInit, OnDestroy, AfterV
   constructor(
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<TemplateLibraryDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: TemplateLibraryDialogData
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('TemplateLibraryDialogComponent');
+  }
 
   ngOnInit(): void {
     this.loadTemplates();

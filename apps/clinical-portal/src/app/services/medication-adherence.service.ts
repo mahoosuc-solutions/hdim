@@ -48,10 +48,11 @@ interface CoveredPeriod {
   providedIn: 'root',
 })
 export class MedicationAdherenceService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
     private http: HttpClient,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {}
 
   /**

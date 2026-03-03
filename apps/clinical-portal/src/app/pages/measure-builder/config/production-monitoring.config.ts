@@ -5,6 +5,15 @@
  * Enables alerts when performance metrics exceed defined thresholds.
  */
 
+import { inject } from '@angular/core';
+import { LoggerService } from '../../../services/logger.service';
+
+// Create a logger instance for this configuration
+const getLogger = () => {
+  const loggerService = inject(LoggerService);
+  return loggerService.withContext('ProductionMonitoring');
+};
+
 export interface MonitoringAlert {
   severity: 'critical' | 'warning' | 'info';
   metric: string;
@@ -115,7 +124,8 @@ export const AlertHandlers = {
    * Critical alert: Immediate action required
    */
   critical: (alert: MonitoringAlert) => {
-    console.error('🔴 CRITICAL ALERT:', alert.metric, alert.currentValue);
+    const logger = getLogger();
+    logger.error(`🔴 CRITICAL ALERT: ${alert.metric} = ${alert.currentValue}`);
 
     // Send to monitoring service (Sentry, DataDog, etc.)
     if (window.location.hostname !== 'localhost') {
@@ -130,7 +140,7 @@ export const AlertHandlers = {
           currentValue: alert.currentValue,
           timestamp: alert.timestamp
         })
-      }).catch(err => console.error('Failed to send alert:', err));
+      }).catch(err => logger.error('Failed to send alert:', err));
     }
 
     // Trigger configured action (e.g., fallback to Canvas, disable features)
@@ -141,7 +151,8 @@ export const AlertHandlers = {
    * Warning alert: Monitoring for trends
    */
   warning: (alert: MonitoringAlert) => {
-    console.warn('🟡 WARNING:', alert.metric, alert.currentValue);
+    const logger = getLogger();
+    logger.warn(`🟡 WARNING: ${alert.metric} = ${alert.currentValue}`);
 
     // Log to analytics for trend analysis
     if (window.gtag) {
@@ -157,7 +168,8 @@ export const AlertHandlers = {
    * Info alert: For awareness
    */
   info: (alert: MonitoringAlert) => {
-    console.info('ℹ️ INFO:', alert.metric, alert.currentValue);
+    const logger = getLogger();
+    logger.info(`ℹ️ INFO: ${alert.metric} = ${alert.currentValue}`);
   }
 };
 

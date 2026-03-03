@@ -26,11 +26,14 @@ import {
   providedIn: 'root',
 })
 export class AgentBuilderService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private readonly http = inject(HttpClient);
+  private readonly loggerService = inject(LoggerService);
   private readonly baseUrl = '/api/v1/agent-builder';
-  private readonly logger = inject(LoggerService);
 
-  constructor() {}
+  constructor() {
+    this.logger = this.loggerService.withContext('AgentBuilderService');
+  }
 
   // ============================================================================
   // AGENT CRUD OPERATIONS

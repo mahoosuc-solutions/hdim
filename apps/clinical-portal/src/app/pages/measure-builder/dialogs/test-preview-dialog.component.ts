@@ -70,7 +70,7 @@ interface TestResult {
 
         <!-- Error Message -->
         @if (errorMessage) {
-          <div class="error-banner" role="alert" aria-live="assertive">
+          <div class="error-banner">
             <mat-icon>info</mat-icon>
             <span>{{ errorMessage }}</span>
           </div>
@@ -469,11 +469,14 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
   testResults: TestResult[] = [];
   errorMessage: string | null = null;
   totalExecutionTimeMs = 0;
-  private testSubscription?: Subscription;  constructor(
+  private testSubscription?: Subscription;
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private dialogRef: MatDialogRef<TestPreviewDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: TestPreviewDialogData,
     private customMeasureService: CustomMeasureService,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {}
 
   ngOnDestroy(): void {

@@ -71,7 +71,7 @@ export const appRoutes: Route[] = [
   // ==================== Protected Routes ====================
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/login',
     pathMatch: 'full',
   },
   {

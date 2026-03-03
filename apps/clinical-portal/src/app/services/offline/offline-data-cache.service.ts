@@ -39,13 +39,11 @@ const DEFAULT_TTL = 5 * 60 * 1000;
   providedIn: 'root',
 })
 export class OfflineDataCacheService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private readonly http = inject(HttpClient);
   private readonly storage = inject(OfflineStorageService);
   private readonly networkStatus = inject(NetworkStatusService);
   private readonly syncQueue = inject(SyncQueueService);
-  private readonly logger = inject(LoggerService);
-
-  constructor() {}
 
   /**
    * GET request with offline caching

@@ -66,7 +66,10 @@ export class GuidedTourService implements OnDestroy {
   private readonly TOUR_COMPLETED_KEY = 'hdim_completed_tours';
   private readonly FIRST_VISIT_KEY = 'hdim_first_visit_complete';
   private readonly destroy$ = new Subject<void>();
-  private readonly isBrowser: boolean;  // Tour definitions registry
+  private readonly isBrowser: boolean;
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  // Tour definitions registry
   private tours = new Map<string, TourDefinition>();
 
   // Active tour state
@@ -83,7 +86,7 @@ export class GuidedTourService implements OnDestroy {
 
   constructor(
     @Inject(PLATFORM_ID) platformId: object,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     this.initializeDefaultTours();

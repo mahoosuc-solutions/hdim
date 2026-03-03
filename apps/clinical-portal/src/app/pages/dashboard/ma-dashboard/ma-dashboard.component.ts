@@ -41,8 +41,6 @@ export interface MATaskItem {
   status: 'pending' | 'in-progress' | 'completed';
   priority: 'high' | 'normal' | 'low';
   room?: string;
-  ownerName?: string;
-  practitionerName?: string;
 }
 
 export interface PreVisitTask {
@@ -96,7 +94,7 @@ export interface OutreachItem {
 export class MADashboardComponent implements OnInit, OnDestroy {
   loading = true;
   todaySchedule: MATaskItem[] = [];
-  displayedColumns = ['time', 'patient', 'provider', 'task', 'room', 'status', 'actions'];
+  displayedColumns = ['time', 'patient', 'task', 'room', 'status', 'actions'];
 
   // Dashboard metrics
   patientsScheduledToday = 0;
@@ -109,7 +107,10 @@ export class MADashboardComponent implements OnInit, OnDestroy {
   careGaps: CareGap[] = [];
   outreachItems: OutreachItem[] = [];
 
-  private destroy$ = new Subject<void>();  constructor(
+  private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private router: Router,
     private patientService: PatientService,
     private evaluationService: EvaluationService,
@@ -118,8 +119,10 @@ export class MADashboardComponent implements OnInit, OnDestroy {
     private dialogService: DialogService,
     private notificationService: NotificationService,
     private toastService: ToastService,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('MADashboardComponent');
+}
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -185,9 +188,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
         taskType: this.mapTaskType(task.type),
         status: this.mapTaskStatus(task.status),
         priority: task.priority,
-        room: appointment ? this.assignRoomFromTime(appointment.start) : undefined,
-        ownerName: task.ownerName,
-        practitionerName: appointment?.practitionerName,
+        room: appointment ? this.assignRoomFromTime(appointment.start) : undefined
       };
     });
 
@@ -203,8 +204,7 @@ export class MADashboardComponent implements OnInit, OnDestroy {
       taskType: 'check-in',
       status: this.mapAppointmentStatus(appointment.status),
       priority: index === 0 ? 'high' : 'normal',
-      room: this.assignRoomFromTime(appointment.start),
-      practitionerName: appointment.practitionerName,
+      room: this.assignRoomFromTime(appointment.start)
     }));
   }
 

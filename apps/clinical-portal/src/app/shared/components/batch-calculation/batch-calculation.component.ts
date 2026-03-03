@@ -29,9 +29,7 @@ import { LoggerService } from '../../../services/logger.service';
 })
 export class BatchCalculationComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
-  private get logger() {
-    return this.loggerService.withContext('BatchCalculationComponent');
-  }
+  private logger: ReturnType<LoggerService['withContext']>;
 
   // Current active job
   activeJob: BatchCalculationJob | null = null;
@@ -53,7 +51,9 @@ export class BatchCalculationComponent implements OnInit, OnDestroy {
   constructor(
     private batchCalculationService: BatchCalculationService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('BatchCalculationComponent');
+}
 
   ngOnInit(): void {
     this.loadJobHistory();

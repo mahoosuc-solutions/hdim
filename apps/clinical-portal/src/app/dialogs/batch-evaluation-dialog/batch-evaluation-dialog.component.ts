@@ -404,7 +404,11 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
 
   // Results
   results: QualityMeasureResult[] = [];
-  errors: { patientId: string; measureId: string; error: string }[] = [];  constructor(
+  errors: { patientId: string; measureId: string; error: string }[] = [];
+
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private dialogRef: MatDialogRef<BatchEvaluationDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: BatchEvaluationDialogData | null,
     private measureService: MeasureService,
@@ -414,7 +418,7 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
     private scheduledEvaluationService: ScheduledEvaluationService,
     private toastService: ToastService,
     private router: Router,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {}
 
   ngOnInit(): void {

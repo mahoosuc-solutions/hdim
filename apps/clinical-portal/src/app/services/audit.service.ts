@@ -23,6 +23,7 @@ import { API_CONFIG } from '../config/api.config';
   providedIn: 'root',
 })
 export class AuditService {
+  private readonly logger: ReturnType<LoggerService['withContext']>;
   private readonly AUDIT_ENDPOINT = '/audit/events';
   private readonly BATCH_INTERVAL_MS = 5000; // Batch events every 5 seconds
   private readonly MAX_BUFFER_SIZE = 50; // Maximum events to buffer before force flush
@@ -32,7 +33,7 @@ export class AuditService {
   private pendingEvents: AuditEvent[] = [];
 
   constructor(
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private http: HttpClient,
     private authService: AuthService
   ) {
@@ -79,14 +80,6 @@ export class AuditService {
    */
   private sendBatch(events: AuditEvent[]): void {
     const url = this.getAuditUrl();
-
-    // In demo/dev mode, the audit ingest endpoint may not exist yet.
-    // Store events locally for when the endpoint becomes available.
-    if (!API_CONFIG.USE_API_GATEWAY && !API_CONFIG.AUDIT_INGEST_ENABLED) {
-      this.logger.debug('[AuditService] Audit ingest disabled, buffering locally');
-      this.storeEventsLocally(events);
-      return;
-    }
 
     this.http.post<void>(url, { events }).pipe(
       catchError((error) => {

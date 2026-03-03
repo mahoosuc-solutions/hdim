@@ -117,8 +117,6 @@ export interface ProviderAppointment {
   date: string;
   type: string;
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  practitionerName?: string;
-  locationName?: string;
 }
 
 export interface BlockedTimeSlot {
@@ -209,8 +207,11 @@ export interface RiskFactor {
     PageHeaderComponent,
     EmptyStateComponent,
     ShortcutHintDirective,
+    KeyboardShortcutsDialogComponent,
+    ProviderLeaderboardDialogComponent,
     TourOverlayComponent,
-    HelpPanelComponent
+    HelpPanelComponent,
+    HelpTooltipComponent
   ],
   templateUrl: './provider-dashboard.component.html',
   styleUrls: ['./provider-dashboard.component.scss']
@@ -301,7 +302,11 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     { text: 'Knowledge Base', url: '/knowledge-base' },
     { text: 'Keyboard Shortcuts', url: '#' },
     { text: 'Report a Problem', url: '#' },
-  ];  constructor(
+  ];
+
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private router: Router,
     private dialog: MatDialog,
     private dialogService: DialogService,
@@ -314,8 +319,10 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
     private tourService: GuidedTourService,
     private helpService: HelpService,
     private errorValidationService: ErrorValidationService,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('ProviderDashboardComponent');
+}
 
   ngOnInit(): void {
     // Issue #139: Load persisted section preferences
@@ -1639,9 +1646,7 @@ export class ProviderDashboardComponent implements OnInit, OnDestroy {
       endTime: this.formatTime(appointment.end),
       date: dateStr,
       type: appointment.type,
-      status: this.mapAppointmentStatus(appointment.status),
-      practitionerName: appointment.practitionerName,
-      locationName: appointment.locationName,
+      status: this.mapAppointmentStatus(appointment.status)
     };
   }
 

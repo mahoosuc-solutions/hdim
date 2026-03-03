@@ -482,6 +482,7 @@ interface ConfigDiff {
 })
 export class VersionCompareDialogComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
 
   version1: AgentVersion | null = null;
   version2: AgentVersion | null = null;
@@ -495,10 +496,12 @@ export class VersionCompareDialogComponent implements OnInit, OnDestroy {
   constructor(
     private agentService: AgentBuilderService,
     private toast: ToastService,
-    private logger: LoggerService,
+    private loggerService: LoggerService,
     private dialogRef: MatDialogRef<VersionCompareDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: VersionCompareDialogData
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('VersionCompareDialogComponent');
+  }
 
   ngOnInit(): void {
     this.loadVersions();

@@ -54,7 +54,9 @@ export interface ErrorInfo {
  *
  * Usage:
  * ```typescript
- * constructor(private dialogService: DialogService) {}
+ * constructor(private dialogService: DialogService) {
+    this.logger = this.loggerService.withContext('DialogService');
+}
  *
  * openDialog(): void {
  *   this.dialogService.openPatientEdit().subscribe(patient => {
@@ -74,9 +76,12 @@ export class DialogService {
     autoFocus: true,
     restoreFocus: true,
     panelClass: 'custom-dialog-container',
-  };  constructor(
+  };
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private dialog: MatDialog,
-    private logger: LoggerService
+    private loggerService: LoggerService
   ) {}
 
   /**

@@ -69,11 +69,16 @@ export class VisualAlgorithmBuilderComponent implements OnInit, AfterViewInit, O
     ['exception', '#9C27B0']            // Purple
   ]);
 
-  private destroy$ = new Subject<void>();  constructor(
+  private destroy$ = new Subject<void>();
+  private logger: ReturnType<LoggerService['withContext']>;
+
+  constructor(
     private algorithmService: AlgorithmBuilderService,
     private cdr: ChangeDetectorRef,
-    private logger: LoggerService
-  ) {}
+    private loggerService: LoggerService
+  ) {
+    this.logger = this.loggerService.withContext('VisualAlgorithmBuilderComponent');
+}
 
   ngOnInit(): void {
     this.loadAlgorithm();

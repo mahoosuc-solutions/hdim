@@ -24,8 +24,12 @@ Thumbs.db
 *.log
 logs/
 
+# Process ID files
+*.pid
+
 # Environment variables (CRITICAL: Never commit secrets)
 .env
+.env.dev
 .env.local
 .env.*.local
 .env.linkedin

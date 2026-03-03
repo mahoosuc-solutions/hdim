@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { ROIInputs, calculateROI, formatCurrency, ROIResults } from '@/lib/calculations';
+import { ROIInputs, calculateROI, formatCurrency } from '@/lib/calculations';
 
 export default function ROICalculator() {
   const [inputs, setInputs] = useState<ROIInputs>({

@@ -354,7 +354,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 bg-blue-600 rounded"></div>
+                <img src="/hdim-icon.svg" alt="HDIM" className="w-6 h-6" />
                 <span className="text-white font-bold">HDIM</span>
               </div>
               <p className="text-sm">Healthcare Quality Measurement Platform</p>

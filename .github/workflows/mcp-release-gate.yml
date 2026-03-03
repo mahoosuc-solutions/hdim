@@ -18,8 +18,7 @@ on:
       - 'docs/runbooks/MCP_IMPLEMENTATION_REFERENCE_SPEC.examples.json'
   push:
     branches:
-      - main
-      - develop
+      - master
     paths:
       - 'scripts/mcp/**'
       - 'docker-compose*.yml'

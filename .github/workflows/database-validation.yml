@@ -6,7 +6,7 @@ on:
       - 'backend/modules/services/*/src/main/java/**/*Entity.java'
       - 'backend/modules/services/*/src/main/resources/db/changelog/**'
   push:
-    branches: [main, master]
+    branches: [master]
 
 jobs:
   validate:

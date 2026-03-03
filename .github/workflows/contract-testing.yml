@@ -13,7 +13,6 @@ on:
   push:
     branches:
       - master
-      - develop
     paths:
       - 'apps/clinical-portal/**'
       - 'backend/modules/services/patient-service/**'
@@ -24,7 +23,6 @@ on:
   pull_request:
     branches:
       - master
-      - develop
     paths:
       - 'apps/clinical-portal/**'
       - 'backend/modules/services/patient-service/**'

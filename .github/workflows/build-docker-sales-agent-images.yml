@@ -3,8 +3,7 @@ name: Build Docker Sales Agent Images
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
       - feature/**
     paths:
       - 'backend/modules/services/ai-sales-agent/**'
@@ -19,8 +18,7 @@ on:
       - '.github/workflows/build-docker-sales-agent-images.yml'
   pull_request:
     branches:
-      - main
-      - develop
+      - master
     paths:
       - 'backend/modules/services/ai-sales-agent/**'
       - 'backend/modules/services/live-call-sales-agent/**'
@@ -112,7 +110,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}:${{ github.sha }}
           format: 'sarif'
@@ -125,7 +123,7 @@ jobs:
           category: trivy-${{ matrix.service }}
 
       - name: Run Trivy with fail on high severity
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: ${{ env.REGISTRY }}/${{ env.DOCKER_USERNAME }}/hdim-${{ matrix.service }}:${{ github.sha }}
           format: 'table'

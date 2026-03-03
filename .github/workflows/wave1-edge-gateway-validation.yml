@@ -3,7 +3,7 @@ name: Wave-1 Edge Gateway Validation
 on:
   workflow_dispatch: {}
   pull_request:
-    branches: [main, master, develop]
+    branches: [master]
     paths:
       - 'backend/modules/services/gateway-clinical-service/**'
       - 'backend/modules/services/payer-workflows-service/**'

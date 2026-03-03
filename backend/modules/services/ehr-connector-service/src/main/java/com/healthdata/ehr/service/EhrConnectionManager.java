@@ -8,6 +8,7 @@ import com.healthdata.ehr.persistence.EhrConnectionConfigEntity;
 import com.healthdata.ehr.persistence.EhrConnectionConfigRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -49,10 +50,39 @@ public class EhrConnectionManager {
      */
     @PostConstruct
     void initializeFromDatabase() {
-        List<EhrConnectionConfigEntity> activeConfigs = configRepository.findByActiveTrue();
-        log.info("Restoring {} EHR connections from database", activeConfigs.size());
+        try {
+            List<EhrConnectionConfigEntity> activeConfigs = configRepository.findByActiveTrue();
+            log.info("Restoring {} EHR connections from database", activeConfigs.size());
+            restoreConnections(activeConfigs);
+            log.info("EHR connection initialization complete: {} active connections", activeConnections.size());
+        } catch (Exception e) {
+            log.error("Failed to restore EHR connections from database — will retry in 5 minutes: {}", e.getMessage());
+        }
+    }
 
-        for (EhrConnectionConfigEntity entity : activeConfigs) {
+    /**
+     * Periodically retry restoring any active connections that aren't yet loaded.
+     * Handles the case where the database was unreachable at startup.
+     */
+    @Scheduled(fixedDelay = 300_000, initialDelay = 300_000)
+    void retryFailedConnections() {
+        try {
+            List<EhrConnectionConfigEntity> activeConfigs = configRepository.findByActiveTrue();
+            List<EhrConnectionConfigEntity> missing = activeConfigs.stream()
+                    .filter(entity -> !activeConnections.containsKey(entity.getConnectionId()))
+                    .toList();
+
+            if (!missing.isEmpty()) {
+                log.info("Retrying {} unrestored EHR connections", missing.size());
+                restoreConnections(missing);
+            }
+        } catch (Exception e) {
+            log.warn("Scheduled connection retry failed: {}", e.getMessage());
+        }
+    }
+
+    private void restoreConnections(List<EhrConnectionConfigEntity> configs) {
+        for (EhrConnectionConfigEntity entity : configs) {
             try {
                 EhrConnectionConfig config = entity.toConfig();
                 EhrConnector connector = connectorFactory.createConnector(config);
@@ -67,8 +97,6 @@ public class EhrConnectionManager {
                         entity.getConnectionId(), e);
             }
         }
-
-        log.info("EHR connection initialization complete: {} active connections", activeConnections.size());
     }
 
     /**

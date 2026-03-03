@@ -2,14 +2,14 @@ name: Week 3 E2E Tests with Coverage
 
 on:
   push:
-    branches: [main, develop, master]
+    branches: [master]
     paths:
       - 'backend/modules/services/consent-service/**'
       - 'backend/modules/services/qrda-export-service/**'
       - 'backend/modules/services/hcc-service/**'
       - '.github/workflows/week3-e2e-tests-with-coverage.yml'
   pull_request:
-    branches: [main, develop, master]
+    branches: [master]
     paths:
       - 'backend/modules/services/consent-service/**'
       - 'backend/modules/services/qrda-export-service/**'

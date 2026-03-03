@@ -2,12 +2,12 @@ name: Frontend Session Flow E2E
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master]
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-session-flow-e2e.yml'
   pull_request:
-    branches: [main, develop]
+    branches: [master]
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend-session-flow-e2e.yml'

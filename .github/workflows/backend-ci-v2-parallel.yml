@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - develop
       - 'release/**'
     paths:
       - 'backend/**'
@@ -12,7 +11,6 @@ on:
   pull_request:
     branches:
       - master
-      - develop
     paths:
       - 'backend/**'
   workflow_dispatch:
@@ -616,7 +614,7 @@ jobs:
           path: backend/
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         with:
           scan-type: 'fs'
           scan-ref: 'backend'

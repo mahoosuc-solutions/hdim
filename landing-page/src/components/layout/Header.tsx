@@ -5,15 +5,16 @@ import Link from 'next/link';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const closeMenu = () => setMobileMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 bg-white shadow-sm">
-      <nav className="container-lg py-4">
+      <nav className="container-lg py-4" aria-label="Main navigation">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img src="/hdim-icon.svg" alt="HDIM" className="w-8 h-8" />
+          <Link href="/" className="flex items-center gap-2" aria-label="HDIM home">
+            <img src="/hdim-icon.svg" alt="" className="w-8 h-8" aria-hidden="true" />
             <span className="text-xl font-bold text-gray-900">HDIM</span>
-          </div>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
@@ -44,13 +45,16 @@ export default function Header() {
           <button
             className="md:hidden p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-menu"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
+                d={mobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'}
               />
             </svg>
           </button>
@@ -58,26 +62,26 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden mt-4 pb-4 border-t">
-            <a href="#solution" className="block py-2 text-gray-600 hover:text-gray-900">
+          <div id="mobile-menu" className="md:hidden mt-4 pb-4 border-t" role="menu">
+            <a href="#solution" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
               Solution
             </a>
-            <a href="#deployment" className="block py-2 text-gray-600 hover:text-gray-900">
+            <a href="#deployment" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
               Deployment
             </a>
-            <a href="#scenarios" className="block py-2 text-gray-600 hover:text-gray-900">
+            <a href="#scenarios" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
               Scenarios
             </a>
-            <a href="#roi" className="block py-2 text-gray-600 hover:text-gray-900">
+            <a href="#roi" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
               ROI
             </a>
-            <Link href="/integrations" className="block py-2 text-gray-600 hover:text-gray-900">
+            <Link href="/integrations" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
               Integrations
             </Link>
-            <Link href="/pricing" className="block py-2 text-gray-600 hover:text-gray-900">
+            <Link href="/pricing" className="block py-2 text-gray-600 hover:text-gray-900" onClick={closeMenu} role="menuitem">
               Pricing
             </Link>
-            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="btn-primary block w-full mt-4 text-center">Schedule Demo</a>
+            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="btn-primary block w-full mt-4 text-center" onClick={closeMenu}>Schedule Demo</a>
           </div>
         )}
       </nav>

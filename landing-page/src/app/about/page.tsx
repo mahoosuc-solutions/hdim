@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
+import { CALENDAR_URL, EMAIL_INFO } from '@/lib/constants';
 
 export const metadata = {
   title: 'About | HDIM',
@@ -67,7 +68,7 @@ export default function AboutPage() {
                 <p>
                   Interested in learning how HDIM can impact your quality program?{' '}
                   <a
-                    href="https://calendar.app.google/zKDs6ZdXW7V61c7i7"
+                    href={CALENDAR_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline font-medium"
@@ -76,10 +77,10 @@ export default function AboutPage() {
                   </a>{' '}
                   or reach us at{' '}
                   <a
-                    href="mailto:info@mahoosuc.solutions?subject=General Inquiry"
+                    href={`mailto:${EMAIL_INFO}?subject=General Inquiry`}
                     className="text-blue-600 hover:underline font-medium"
                   >
-                    info@mahoosuc.solutions
+                    {EMAIL_INFO}
                   </a>.
                 </p>
               </section>

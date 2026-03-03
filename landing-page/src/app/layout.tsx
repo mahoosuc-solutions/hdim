@@ -11,6 +11,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://healthdatainmotion.com'),
   title: 'HDIM - Healthcare Quality Measurement Platform',
   description:
     'Deploy HDIM your way: Single-node to enterprise, Epic to Athena, 52 HEDIS measures to unlimited customization. Real-time clinical insights without moving your data.',

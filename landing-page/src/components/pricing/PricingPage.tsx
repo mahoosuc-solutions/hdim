@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { PRICING_TIERS } from '@/lib/constants';
+import { PRICING_TIERS, CALENDAR_URL, EMAIL_SALES } from '@/lib/constants';
 
 // Extend shared PRICING_TIERS with page-specific presentation fields.
 // Core pricing (name, price, period, description, commitment, features, cta, highlighted)
@@ -17,7 +17,7 @@ const TIER_EXTENSIONS: Record<string, {
 }> = {
   Pilot: {
     badge: null,
-    ctaHref: 'mailto:sales@mahoosuc.solutions?subject=Pilot Inquiry',
+    ctaHref: `mailto:${EMAIL_SALES}?subject=Pilot Inquiry`,
     members: 'Up to 50K members',
     roi: 'Typical ROI: 10–20×',
     extraFeatures: [
@@ -34,7 +34,7 @@ const TIER_EXTENSIONS: Record<string, {
   },
   Annual: {
     badge: 'Most Popular',
-    ctaHref: 'https://calendar.app.google/zKDs6ZdXW7V61c7i7',
+    ctaHref: CALENDAR_URL,
     members: '50K–500K members',
     roi: 'Typical ROI: 50–150×',
     extraFeatures: [
@@ -52,7 +52,7 @@ const TIER_EXTENSIONS: Record<string, {
   },
   Enterprise: {
     badge: null,
-    ctaHref: 'mailto:sales@mahoosuc.solutions?subject=Enterprise Inquiry',
+    ctaHref: `mailto:${EMAIL_SALES}?subject=Enterprise Inquiry`,
     members: '500K+ members',
     roi: 'Typical ROI: 100×+',
     extraFeatures: [
@@ -121,7 +121,7 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
-    <main>
+    <main id="main-content">
       {/* Hero */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20">
         <div className="container-lg">
@@ -305,7 +305,7 @@ export default function PricingPage() {
             incremental quality bonuses.
           </p>
           <a
-            href="mailto:sales@mahoosuc.solutions?subject=PMPM Pricing Inquiry"
+            href={`mailto:${EMAIL_SALES}?subject=PMPM Pricing Inquiry`}
             className="inline-flex items-center text-blue-600 font-semibold hover:underline"
           >
             Talk to sales about PMPM
@@ -360,7 +360,7 @@ export default function PricingPage() {
             and current gap closure rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="bg-white text-blue-600 font-bold py-3 px-8 rounded-xl hover:bg-blue-50 transition text-center">
+            <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="bg-white text-blue-600 font-bold py-3 px-8 rounded-xl hover:bg-blue-50 transition text-center">
               Schedule 15-Minute Call
             </a>
             <Link

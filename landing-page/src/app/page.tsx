@@ -6,7 +6,7 @@ import HeroSection from '@/components/hero/HeroSection';
 import ROICalculator from '@/components/roi/ROICalculator';
 import CaseStudyCard from '@/components/social-proof/CaseStudyCard';
 import ScenarioCard from '@/components/scenarios/ScenarioCard';
-import { MESSAGING, CASE_STUDIES, CUSTOMIZATION_LEVELS, PRICING_TIERS, FAQ } from '@/lib/constants';
+import { MESSAGING, CASE_STUDIES, CUSTOMIZATION_LEVELS, PRICING_TIERS, FAQ, CALENDAR_URL, EMAIL_SALES, EMAIL_INFO, DEPLOYMENT_MODELS } from '@/lib/constants';
 import CookieSettingsButton from '@/components/consent/CookieSettingsButton';
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ const faqJsonLd = {
       logo: 'https://healthdatainmotion.com/hdim-icon.svg',
       contactPoint: {
         '@type': 'ContactPoint',
-        email: 'info@mahoosuc.solutions',
+        email: EMAIL_INFO,
         contactType: 'sales',
       },
     },
@@ -317,15 +317,10 @@ export default function Home() {
             </div>
 
             <div className="grid md:grid-cols-4 gap-6">
-              {[
-                { name: 'Pilot', price: '$2,500/mo', patients: '<50K', timeline: '2-3 weeks' },
-                { name: 'Growth', price: '$8,500/mo', patients: '50K-500K', timeline: '4-8 weeks', highlighted: true },
-                { name: 'Enterprise', price: '$15K+/mo', patients: '>500K', timeline: '8-12 weeks' },
-                { name: 'Hybrid', price: '$20K+/mo', patients: '>500K', timeline: '6-10 weeks' },
-              ].map((model, idx) => (
-                <div key={idx} className={`card p-6 ${model.highlighted ? 'ring-2 ring-blue-600 shadow-xl' : ''}`}>
+              {DEPLOYMENT_MODELS.map((model) => (
+                <div key={model.id} className={`card p-6 ${model.id === 'growth' ? 'ring-2 ring-blue-600 shadow-xl' : ''}`}>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{model.name}</h3>
-                  <p className="text-3xl font-bold text-blue-600 mb-6">{model.price}</p>
+                  <p className="text-3xl font-bold text-blue-600 mb-6">{model.cost}</p>
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm text-gray-500">Patient Volume</p>
@@ -336,7 +331,7 @@ export default function Home() {
                       <p className="font-semibold text-gray-900">{model.timeline}</p>
                     </div>
                   </div>
-                  <Link href="/pricing" className={`block text-center ${model.highlighted ? 'btn-primary w-full mt-6' : 'btn-secondary w-full mt-6'}`}>
+                  <Link href="/pricing" className={`block text-center ${model.id === 'growth' ? 'btn-primary w-full mt-6' : 'btn-secondary w-full mt-6'}`}>
                     Learn More
                   </Link>
                 </div>
@@ -529,10 +524,10 @@ export default function Home() {
               Schedule a 30-minute personalized demo to see how HDIM can impact your specific organization.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all text-center">
+              <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all text-center">
                 Schedule Demo
               </a>
-              <a href="mailto:sales@mahoosuc.solutions?subject=Sales Inquiry" className="px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-blue-700 transition-all text-center">
+              <a href={`mailto:${EMAIL_SALES}?subject=Sales Inquiry`} className="px-8 py-4 border-2 border-white text-white font-bold rounded-lg hover:bg-blue-700 transition-all text-center">
                 Contact Sales
               </a>
             </div>
@@ -563,7 +558,7 @@ export default function Home() {
               <h4 className="text-white font-semibold mb-4">Company</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link href="/about" className="hover:text-white">About</Link></li>
-                <li><a href="mailto:info@mahoosuc.solutions?subject=General Inquiry" className="hover:text-white">Contact</a></li>
+                <li><a href={`mailto:${EMAIL_INFO}?subject=General Inquiry`} className="hover:text-white">Contact</a></li>
               </ul>
             </div>
             <div>

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import DeploymentSelector from './DeploymentSelector';
-import { MESSAGING } from '@/lib/constants';
+import { MESSAGING, CALENDAR_URL } from '@/lib/constants';
 
 export default function HeroSection() {
   return (
@@ -35,7 +35,7 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <a href="https://calendar.app.google/zKDs6ZdXW7V61c7i7" target="_blank" rel="noopener noreferrer" className="btn-primary text-lg px-8 py-4 text-center">
+            <a href={CALENDAR_URL} target="_blank" rel="noopener noreferrer" className="btn-primary text-lg px-8 py-4 text-center">
               Schedule Demo
             </a>
           </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
+import { EMAIL_SALES } from '@/lib/constants';
 
 const VENDORS = [
   {
@@ -73,7 +74,7 @@ export default function IntegrationsIndexPage() {
   return (
     <>
       <Header />
-      <main>
+      <main id="main-content">
         {/* Hero */}
         <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20">
           <div className="container-lg">
@@ -237,7 +238,7 @@ export default function IntegrationsIndexPage() {
                 services deploy on your infrastructure and connect over your private network.
               </p>
               <a
-                href="mailto:sales@mahoosuc.solutions?subject=Custom FHIR Integration"
+                href={`mailto:${EMAIL_SALES}?subject=Custom FHIR Integration`}
                 className="btn-primary inline-block"
               >
                 Contact Us for Custom Integration

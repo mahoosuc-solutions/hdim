@@ -1,6 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
+import { EMAIL_INFO } from '@/lib/constants';
 
 export const metadata = {
   title: 'Privacy Policy | HDIM',
@@ -11,7 +12,7 @@ export default function PrivacyPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-white pt-24 pb-16">
+      <main id="main-content" className="min-h-screen bg-white pt-24 pb-16">
         <div className="container-lg">
           <div className="max-w-3xl mx-auto">
             <Link href="/" className="inline-flex items-center text-blue-600 hover:underline mb-8">
@@ -161,8 +162,8 @@ export default function PrivacyPage() {
                 <p className="text-gray-700 leading-relaxed">
                   For privacy-related inquiries, data subject requests, or to obtain our current subprocessor
                   list, contact us at{' '}
-                  <a href="mailto:info@mahoosuc.solutions?subject=Privacy Inquiry" className="text-blue-600 hover:underline">
-                    info@mahoosuc.solutions
+                  <a href={`mailto:${EMAIL_INFO}?subject=Privacy Inquiry`} className="text-blue-600 hover:underline">
+                    {EMAIL_INFO}
                   </a>.
                 </p>
               </section>

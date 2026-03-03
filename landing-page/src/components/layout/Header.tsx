@@ -29,6 +29,9 @@ export default function Header() {
             <a href="#roi" className="text-gray-600 hover:text-gray-900 font-medium transition">
               ROI
             </a>
+            <Link href="/integrations" className="text-gray-600 hover:text-gray-900 font-medium transition">
+              Integrations
+            </Link>
             <a href="#pricing" className="text-gray-600 hover:text-gray-900 font-medium transition">
               Pricing
             </a>
@@ -68,6 +71,9 @@ export default function Header() {
             <a href="#roi" className="block py-2 text-gray-600 hover:text-gray-900">
               ROI
             </a>
+            <Link href="/integrations" className="block py-2 text-gray-600 hover:text-gray-900">
+              Integrations
+            </Link>
             <a href="#pricing" className="block py-2 text-gray-600 hover:text-gray-900">
               Pricing
             </a>

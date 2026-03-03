@@ -14,7 +14,7 @@ export const MESSAGING = {
   // Solution Overview
   SOLUTION_HEADLINE: 'Real-Time Intelligence Without Moving Your Data',
   SOLUTION_DESCRIPTION:
-    'HDIM's gateway architecture queries your FHIR servers directly, evaluates 52+ HEDIS measures in real-time, and identifies care gaps instantly.',
+    "HDIM's gateway architecture queries your FHIR servers directly, evaluates 52+ HEDIS measures in real-time, and identifies care gaps instantly.",
 
   // Deployment Models
   DEPLOYMENT_HEADLINE: 'Start Small, Scale as You Grow',
@@ -532,7 +532,7 @@ export const FAQ = [
   {
     question: 'Is our data secure and compliant?',
     answer:
-      'Yes. We're HIPAA-compliant with multi-tenant isolation, HIPAA audit logging, TLS 1.3 encryption, and role-based access control. Data never leaves your FHIR server - we query it directly.',
+      "Yes. We're HIPAA-compliant with multi-tenant isolation, HIPAA audit logging, TLS 1.3 encryption, and role-based access control. Data never leaves your FHIR server - we query it directly.",
   },
   {
     question: 'Can we start small and scale later?',

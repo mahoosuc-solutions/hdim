@@ -28,7 +28,7 @@ export default function ScenarioCard({ scenarioId }: ScenarioCardProps) {
         <h4 className="font-semibold text-gray-900 mb-3">Current State</h4>
         <div className="space-y-2 text-sm text-gray-600">
           <p>
-            <span className="font-medium text-gray-900">{scenario.currentState.patients.toLocaleString()}</span> patients
+            <span className="font-medium text-gray-900">{scenario.currentState.patients?.toLocaleString()}</span> patients
           </p>
           {scenario.currentState.manualHours && (
             <p>

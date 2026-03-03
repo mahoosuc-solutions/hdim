@@ -1,6 +1,10 @@
 #!/bin/bash
 #
-# HealthData In Motion - RHEL 7 Deployment Script
+# DEPRECATED — This script is superseded by the production installer.
+# Use instead: installer/rhel7/hdim-install.sh install --profile core
+# See docs/deployment/RHEL7-DEPLOYMENT-GUIDE.md for full documentation.
+#
+# HealthData In Motion - RHEL 7 Deployment Script (LEGACY)
 #
 # This script automates the complete deployment of the platform on RHEL 7
 # Can be run on actual RHEL 7 or in a test container

@@ -1,0 +1,601 @@
+# =============================================================================
+# HDIM — Healthix HIE Scale Configuration (16M Patients)
+# =============================================================================
+#
+# Docker Compose overlay for New York Healthix deployment.
+# Sized for 16 million patient records across the NYC metro area.
+#
+# Usage (with HA + prod + resources overlays):
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f docker-compose.prod.yml \
+#     -f docker-compose.ha.yml \
+#     -f docker-compose.redis-ha.yml \
+#     -f docker-compose.resources.yml \
+#     -f docker-compose.healthix.yml \
+#     --profile full up -d
+#
+# Hardware baseline (single-server minimum):
+#   CPU:  32 cores (64 threads)
+#   RAM:  128 GB
+#   Disk: 2 TB NVMe SSD (RAID-10 recommended)
+#   Net:  10 Gbps (internal Docker bridge)
+#
+# For multi-server deployment, use Kubernetes (k8s/) instead.
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # POSTGRESQL — 16M patient database engine
+  # ===========================================================================
+  # Overrides docker-compose.resources.yml and docker-compose.ha.yml settings
+  # At 16M patients (~400 bytes/record avg + relations), expect:
+  #   - Raw patient data: ~6-10 GB
+  #   - With care gaps, measures, events, audit: ~200-500 GB total
+  #   - Index overhead: ~30% of data size
+  #   - WAL throughput: ~50-100 MB/min during bulk operations
+
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G
+        reservations:
+          cpus: '4.0'
+          memory: 8G
+    command: >
+      postgres
+      -c max_connections=500
+      -c shared_buffers=8GB
+      -c effective_cache_size=24GB
+      -c work_mem=64MB
+      -c maintenance_work_mem=1GB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=64MB
+      -c max_wal_size=8GB
+      -c min_wal_size=2GB
+      -c checkpoint_timeout=15min
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c default_statistics_target=500
+      -c max_worker_processes=16
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=16
+      -c max_parallel_maintenance_workers=4
+      -c huge_pages=try
+      -c wal_level=replica
+      -c max_wal_senders=10
+      -c wal_keep_size=4GB
+      -c max_replication_slots=10
+      -c hot_standby=on
+      -c logging_collector=on
+      -c log_min_duration_statement=500
+      -c log_checkpoints=on
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_lock_waits=on
+      -c log_statement=ddl
+      -c password_encryption=scram-sha-256
+      -c ssl=off
+      -c timezone=America/New_York
+    shm_size: '4g'
+
+  # PostgreSQL replicas inherit from docker-compose.ha.yml
+  # Scale to 2 read replicas for query distribution
+  postgres-primary:
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 16G
+        reservations:
+          cpus: '4.0'
+          memory: 8G
+    shm_size: '4g'
+
+  postgres-replica-1:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    shm_size: '2g'
+
+  # ===========================================================================
+  # PGBOUNCER — Connection pooling for 16M patient queries
+  # ===========================================================================
+  # 50+ services × 30 connections each = 1500+ potential connections
+  # PgBouncer pools these down to ~200 server-side connections
+  pgbouncer:
+    environment:
+      MAX_CLIENT_CONN: "2000"
+      DEFAULT_POOL_SIZE: "100"
+      MIN_POOL_SIZE: "20"
+      RESERVE_POOL_SIZE: "50"
+      RESERVE_POOL_TIMEOUT: "3"
+      SERVER_LIFETIME: "3600"
+      SERVER_IDLE_TIMEOUT: "300"
+      POOL_MODE: "transaction"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '1.0'
+          memory: 256M
+
+  # ===========================================================================
+  # REDIS — Cache layer for 16M patient lookups
+  # ===========================================================================
+  # PHI cache TTL still ≤ 5 minutes (HIPAA)
+  # But cache SIZE must handle concurrent patient lookups:
+  #   - Active patient cache: ~500K-1M records in memory at peak
+  #   - Care gap summaries: ~200K-500K cached entries
+  #   - Session data: ~5K concurrent users
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    command: >
+      redis-server
+      --maxmemory 6gb
+      --maxmemory-policy allkeys-lru
+      --save 300 1000
+      --save 60 10000
+      --appendonly yes
+      --appendfsync everysec
+      --tcp-backlog 511
+      --timeout 300
+      --hz 10
+      --activedefrag yes
+      --active-defrag-enabled yes
+
+  # Redis HA (overrides docker-compose.redis-ha.yml)
+  redis-master:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    command: >
+      redis-server
+      --port 6379
+      --requirepass ${REDIS_PASSWORD:-}
+      --masterauth ${REDIS_PASSWORD:-}
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 6gb
+      --maxmemory-policy allkeys-lru
+      --tcp-backlog 511
+      --activedefrag yes
+
+  # ===========================================================================
+  # KAFKA — Event streaming for 16M patient events
+  # ===========================================================================
+  # Healthix event volume estimate:
+  #   - Patient events: ~50K-100K/hour during business hours
+  #   - Audit events: ~200K-500K/hour (HIPAA — every API call)
+  #   - Care gap events: ~10K-50K/hour during evaluations
+  #   - Total peak: ~500K events/hour → ~140 events/second sustained
+  kafka:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      KAFKA_HEAP_OPTS: "-Xmx3g -Xms2g"
+      KAFKA_NUM_PARTITIONS: "12"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "1"
+      KAFKA_LOG_RETENTION_HOURS: "168"
+      KAFKA_LOG_SEGMENT_BYTES: "1073741824"
+      KAFKA_LOG_RETENTION_BYTES: "107374182400"
+      KAFKA_NUM_IO_THREADS: "8"
+      KAFKA_NUM_NETWORK_THREADS: "5"
+      KAFKA_SOCKET_SEND_BUFFER_BYTES: "1048576"
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: "1048576"
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: "104857600"
+
+  zookeeper:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ===========================================================================
+  # HOT-PATH SERVICES — Patient, FHIR, CQL, Care Gap
+  # ===========================================================================
+  # These services handle the heaviest query load at Healthix scale.
+  # 16M patients × HEDIS measure evaluations = billions of data points.
+
+  patient-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=16m
+        -XX:+UseStringDeduplication
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heap-dump.hprof
+        -XX:+UseNUMA
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "20"
+      SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: "30000"
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE: "50"
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE: "20"
+      SPRING_DATA_REDIS_LETTUCE_POOL_MIN_IDLE: "10"
+      RATE_LIMITING_API_PER_MINUTE: "1000"
+
+  fhir-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=16m
+        -XX:+UseStringDeduplication
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heap-dump.hprof
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "20"
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE: "50"
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_IDLE: "20"
+      FHIR_SERVICE_TIMEOUT: "60000"
+
+  cql-engine-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '8.0'
+          memory: 8G
+        reservations:
+          cpus: '4.0'
+          memory: 4G
+    environment:
+      JAVA_OPTS: >-
+        -Xms4g
+        -Xmx6g
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=32m
+        -XX:+UseStringDeduplication
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heap-dump.hprof
+        -XX:+UseNUMA
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "20"
+      # CQL evaluation thread pool — sized for bulk HEDIS runs
+      MEASURE_EVALUATION_CORE_POOL_SIZE: "32"
+      MEASURE_EVALUATION_MAX_POOL_SIZE: "128"
+      MEASURE_EVALUATION_QUEUE_CAPACITY: "2000"
+
+  quality-measure-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=16m
+        -XX:+UseStringDeduplication
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heap-dump.hprof
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "20"
+
+  care-gap-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:G1HeapRegionSize=16m
+        -XX:+UseStringDeduplication
+        -XX:+ExitOnOutOfMemoryError
+        -XX:+HeapDumpOnOutOfMemoryError
+        -XX:HeapDumpPath=/app/logs/heap-dump.hprof
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "20"
+      SPRING_DATA_REDIS_LETTUCE_POOL_MAX_ACTIVE: "50"
+
+  # ===========================================================================
+  # GATEWAY SERVICES — API entry points (handle all inbound traffic)
+  # ===========================================================================
+  # Healthix: 500+ participating organizations, ~5K concurrent users peak
+  gateway-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 2G
+        reservations:
+          cpus: '2.0'
+          memory: 1G
+    environment:
+      JAVA_OPTS: >-
+        -Xms1g
+        -Xmx1536m
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=100
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_TOMCAT_THREADS_MAX: "400"
+      SERVER_TOMCAT_MAX_CONNECTIONS: "20000"
+      SERVER_TOMCAT_ACCEPT_COUNT: "200"
+      RATE_LIMITING_API_PER_MINUTE: "5000"
+
+  gateway-clinical-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      JAVA_OPTS: >-
+        -Xms1g
+        -Xmx1536m
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=100
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_TOMCAT_THREADS_MAX: "400"
+      SERVER_TOMCAT_MAX_CONNECTIONS: "20000"
+
+  gateway-fhir-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      JAVA_OPTS: >-
+        -Xms1g
+        -Xmx1536m
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=100
+        -XX:+ExitOnOutOfMemoryError
+      SERVER_TOMCAT_THREADS_MAX: "400"
+      SERVER_TOMCAT_MAX_CONNECTIONS: "20000"
+
+  gateway-admin-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      JAVA_OPTS: >-
+        -Xms512m
+        -Xmx768m
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+
+  # ===========================================================================
+  # EVENT SERVICES — Audit trail (HIPAA — every API call logged)
+  # ===========================================================================
+  audit-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:MaxGCPauseMillis=200
+        -XX:+ExitOnOutOfMemoryError
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "100"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "20"
+      SERVER_TOMCAT_THREADS_MAX: "200"
+      SERVER_TOMCAT_MAX_CONNECTIONS: "10000"
+
+  auth-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      JAVA_OPTS: >-
+        -Xms1g
+        -Xmx1536m
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "30"
+
+  notification-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      JAVA_OPTS: >-
+        -Xms512m
+        -Xmx768m
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+
+  # ===========================================================================
+  # AI & ANALYTICS — Scaled for 16M patient analysis
+  # ===========================================================================
+  agent-runtime-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+
+  analytics-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "50"
+
+  predictive-analytics-service:
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    environment:
+      JAVA_OPTS: >-
+        -Xms2g
+        -Xmx3g
+        -XX:+UseContainerSupport
+        -XX:+UseG1GC
+        -XX:+ExitOnOutOfMemoryError
+
+  # ===========================================================================
+  # OBSERVABILITY — Scaled for high-volume tracing and metrics
+  # ===========================================================================
+  jaeger:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  prometheus:
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  grafana:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M

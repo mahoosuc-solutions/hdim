@@ -15,6 +15,9 @@ hapi-hl7 = "2.5.1"
 cql-engine = "3.3.1"
 cql-framework = "3.29.0"
 
+# Contract Testing
+pact = "4.6.14"
+
 # Legacy/Integration Libraries
 jsch = "0.1.55"
 

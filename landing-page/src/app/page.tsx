@@ -174,6 +174,137 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Real-Time Interoperability Pipeline */}
+        <section id="pipeline" className="section bg-white">
+          <div className="container-lg">
+            <div className="text-center mb-12">
+              <h2 className="section-title">Real-Time Interoperability Pipeline</h2>
+              <p className="section-subtitle">
+                Zero manual intervention from data receipt to care gap detection.
+                Every data source feeds the same automated quality measurement engine.
+              </p>
+            </div>
+
+            {/* Pipeline Flow Visualization */}
+            <div className="max-w-5xl mx-auto mb-12">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
+                {/* Sources */}
+                <div className="flex flex-wrap justify-center gap-2 md:flex-col md:gap-3">
+                  {['Epic', 'Cerner', 'HL7v2', 'NDJSON', 'CMS BCDA'].map((source) => (
+                    <span key={source} className="px-3 py-1.5 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      {source}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <div className="md:hidden">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
+
+                {/* FHIR Store */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl px-6 py-4 text-center">
+                  <div className="font-bold text-lg">FHIR R4 Store</div>
+                  <div className="text-blue-100 text-sm">Normalized persistence</div>
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <div className="md:hidden">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
+
+                {/* CQL Engine */}
+                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl px-6 py-4 text-center">
+                  <div className="font-bold text-lg">CQL Engine</div>
+                  <div className="text-indigo-100 text-sm">Auto-evaluation</div>
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+                <div className="md:hidden">
+                  <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                </div>
+
+                {/* Care Gaps */}
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl px-6 py-4 text-center">
+                  <div className="font-bold text-lg">Care Gaps</div>
+                  <div className="text-green-100 text-sm">Actionable alerts</div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4 Data Path Cards */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                {
+                  title: 'EHR Sync',
+                  description: 'Pull from Epic, Cerner, or Athena. Patient data auto-persists to your FHIR store and triggers quality evaluation.',
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'HL7 v2 Feed',
+                  description: 'Receive ADT, ORU, and ORM messages. Converted to FHIR R4 and persisted in real-time with full provenance.',
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Bulk NDJSON',
+                  description: 'Load millions of records from BCDA exports or data warehouses. Streamed in 200-resource batches — no memory limits.',
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Automated Quality',
+                  description: 'CQL measures auto-evaluate when new data arrives. Care gaps detected and surfaced without any manual trigger.',
+                  icon: (
+                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ),
+                },
+              ].map((card) => (
+                <div key={card.title} className="card p-6 hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mb-4">
+                    {card.icon}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{card.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{card.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Deployment Models */}
         <section id="deployment" className="section bg-white">
           <div className="container-lg">

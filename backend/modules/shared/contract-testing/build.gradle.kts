@@ -7,7 +7,7 @@ plugins {
 description = "Shared Pact contract testing infrastructure"
 
 dependencies {
-    val pactVersion = "4.7.0"
+    val pactVersion = "4.6.14"
 
     // Pact Provider Verification
     api("au.com.dius.pact.provider:junit5:$pactVersion")

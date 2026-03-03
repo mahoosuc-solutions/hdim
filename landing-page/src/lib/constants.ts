@@ -467,7 +467,7 @@ export const FEATURE_COMPARISON = {
 export const CASE_STUDIES = [
   {
     id: 'case-study-1',
-    organization: 'Midwest Regional Health',
+    organization: 'Regional Health System',
     logo: '/logos/midwest-health.svg',
     metric: '1,800% ROI in Year 1',
     challenge: 'Manual quality measure tracking across 8 clinics with Epic',
@@ -480,12 +480,12 @@ export const CASE_STUDIES = [
     ],
     quote:
       "HDIM transformed how we manage clinical quality. We went from manual spreadsheet tracking to real-time insights across all our clinics. The ROI was immediate.",
-    quoteAuthor: 'Chief Medical Officer, Midwest Regional Health',
+    quoteAuthor: 'Chief Medical Officer, Regional Health System',
     image: '/case-studies/midwest-health.jpg',
   },
   {
     id: 'case-study-2',
-    organization: 'Community Care ACO',
+    organization: 'Multi-Site ACO Network',
     logo: '/logos/community-care.svg',
     metric: '4.2x Patient Care Improvement',
     challenge: 'Multi-EHR coordination across 20 clinics (Epic, Cerner, Athena)',
@@ -498,12 +498,12 @@ export const CASE_STUDIES = [
     ],
     quote:
       "Before HDIM, coordinating quality across multiple EHRs was impossible. Now we have real-time visibility that drives 4x faster clinical decisions.",
-    quoteAuthor: 'Executive Director, Community Care ACO',
+    quoteAuthor: 'Executive Director, Multi-Site ACO',
     image: '/case-studies/community-care.jpg',
   },
   {
     id: 'case-study-3',
-    organization: 'Strategic Health Payer',
+    organization: 'Regional Health Plan',
     logo: '/logos/strategic-health.svg',
     metric: '$8.5M Quality Bonus Uplift',
     challenge: 'Real-time Star rating calculation for 500K members',
@@ -516,7 +516,7 @@ export const CASE_STUDIES = [
     ],
     quote:
       "HDIM enabled us to identify gaps in real-time rather than quarterly. The impact on our Star ratings and member outcomes has been transformational.",
-    quoteAuthor: 'VP of Quality, Strategic Health Payer',
+    quoteAuthor: 'VP of Quality, Regional Health Plan',
     image: '/case-studies/strategic-health.jpg',
   },
 ]

@@ -12,6 +12,19 @@ This directory contains Architecture Decision Records (ADRs) for the HealthData-
 | [0004](0004-hashicorp-vault-secrets-management.md) | HashiCorp Vault for Secrets Management | Accepted | 2025-12-06 |
 | [0005](0005-postgresql-read-replicas.md) | PostgreSQL Read Replicas for Scalability | Accepted | 2025-12-06 |
 | [0006](0006-api-gateway-resilience.md) | API Gateway with Resilience Patterns | Accepted | 2025-12-06 |
+| [ADR-001](ADR-001-event-sourcing-for-clinical-services.md) | Event Sourcing for Clinical Services | Accepted | 2026-02-11 |
+| [ADR-002](ADR-002-gateway-modularization.md) | Gateway Modularization | Accepted | 2026-02-11 |
+| [ADR-003](ADR-003-kafka-event-streaming.md) | Kafka Event Streaming | Accepted | 2026-02-11 |
+| [ADR-004](ADR-004-postgresql-multi-database.md) | PostgreSQL Multi-Database Strategy | Accepted | 2026-02-11 |
+| [ADR-005](ADR-005-liquibase-migrations.md) | Liquibase Database Migrations | Accepted | 2026-02-11 |
+| [ADR-006](ADR-006-tdd-swarm-methodology.md) | TDD Swarm Methodology | Accepted | 2026-02-11 |
+| [ADR-007](ADR-007-gateway-trust-authentication.md) | Gateway Trust Authentication | Accepted | 2026-02-11 |
+| [ADR-008](ADR-008-opentelemetry-distributed-tracing.md) | OpenTelemetry Distributed Tracing | Accepted | 2026-02-11 |
+| [ADR-009](ADR-009-multi-tenant-isolation.md) | Multi-Tenant Isolation | Accepted | 2026-02-11 |
+| [ADR-010](ADR-010-hipaa-phi-cache-ttl.md) | HIPAA PHI Cache TTL | Accepted | 2026-02-11 |
+| [ADR-011](ADR-011-shared-module-integration.md) | Shared Module Integration | Accepted | 2026-03-02 |
+| [ADR-012](ADR-012-linkedin-integration.md) | LinkedIn Integration | Accepted | 2026-03-02 |
+| [ADR-013](ADR-013-hie-data-pipeline.md) | HIE Data Pipeline Architecture | Accepted | 2026-03-02 |
 
 ## By Category
 
@@ -29,7 +42,7 @@ This directory contains Architecture Decision Records (ADRs) for the HealthData-
 
 ## By Status
 
-- **Accepted**: 6
+- **Accepted**: 20
 - **Proposed**: 0
 - **Deprecated**: 0
 - **Superseded**: 0

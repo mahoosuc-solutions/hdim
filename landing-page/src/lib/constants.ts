@@ -417,52 +417,6 @@ export const PRICING_TIERS = [
   },
 ]
 
-// Feature comparison
-export const FEATURE_COMPARISON = {
-  categories: [
-    {
-      name: 'Core Capabilities',
-      features: [
-        { name: 'Pre-built HEDIS measures', hdim: true, competitors: true },
-        { name: 'Real-time measure calculation', hdim: true, competitors: false },
-        { name: 'Custom measure support', hdim: true, competitors: 'Limited' },
-        { name: 'Multi-EHR support', hdim: true, competitors: false },
-        { name: 'Care gap detection', hdim: true, competitors: true },
-      ],
-    },
-    {
-      name: 'Deployment',
-      features: [
-        { name: 'Single-node deployment', hdim: true, competitors: false },
-        { name: 'On-premise option', hdim: true, competitors: 'Cloud-only' },
-        { name: 'Kubernetes support', hdim: true, competitors: true },
-        { name: 'Hybrid cloud', hdim: true, competitors: false },
-        { name: 'Multi-region', hdim: true, competitors: 'Enterprise only' },
-      ],
-    },
-    {
-      name: 'Compliance & Security',
-      features: [
-        { name: 'HIPAA compliance', hdim: true, competitors: true },
-        { name: 'Multi-tenant isolation', hdim: true, competitors: 'Limited' },
-        { name: 'HIPAA audit logging', hdim: true, competitors: true },
-        { name: 'SOC 2 ready', hdim: true, competitors: true },
-        { name: 'BAA included', hdim: true, competitors: true },
-      ],
-    },
-    {
-      name: 'Integrations',
-      features: [
-        { name: 'Epic integration', hdim: true, competitors: true },
-        { name: 'Cerner integration', hdim: true, competitors: 'Limited' },
-        { name: 'Athena integration', hdim: true, competitors: false },
-        { name: 'SMART on FHIR', hdim: true, competitors: false },
-        { name: 'CDS Hooks', hdim: true, competitors: false },
-      ],
-    },
-  ],
-}
-
 // Case studies
 export const CASE_STUDIES = [
   {

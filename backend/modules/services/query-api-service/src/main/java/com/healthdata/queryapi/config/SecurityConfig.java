@@ -2,6 +2,7 @@ package com.healthdata.queryapi.config;
 
 import com.healthdata.queryapi.security.JwtAuthenticationConverter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -16,6 +17,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Spring Security configuration for JWT-based authentication and method-level authorization.
@@ -47,6 +49,9 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationConverter jwtAuthenticationConverter;
+
+    @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
+    private String allowedOrigins;
 
     /**
      * Configures the security filter chain for stateless REST API.
@@ -123,17 +128,17 @@ public class SecurityConfig {
     /**
      * Configures CORS policy for frontend application integration.
      *
-     * Development Configuration (current):
-     * - Allows all origins
+     * Configuration:
+     * - Origins configurable via cors.allowed-origins property
+     * - Defaults to localhost:4200, localhost:3000 for development
      * - Allows all methods (GET, POST, PUT, DELETE, OPTIONS)
      * - Allows all headers
      * - Allows credentials (Authorization header)
      * - Cache preflight for 1 hour
      *
-     * Production Configuration (TODO):
-     * - Restrict to specific frontend domains
-     * - Restrict to necessary methods
-     * - Restrict to necessary headers
+     * Production:
+     * - Set cors.allowed-origins to specific frontend domains
+     * - e.g., https://app.healthdatainmotion.com,https://admin.hdim.ai
      *
      * @return CORS configuration source for UrlBasedCorsConfigurationSource
      */
@@ -141,8 +146,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Development: Allow all origins (restrictive in production)
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:4200", "http://localhost:3000", "*"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
 
         // Allow standard HTTP methods
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
@@ -194,8 +198,9 @@ public class SecurityConfig {
         // Development: Use symmetric key (shared secret)
         // In production, use: NimbusJwtDecoder.withJwkSetUri(...).build()
 
-        String jwtSecret = "your-jwt-secret-here-change-in-production-min-64-chars-" +
-                          "abcdefghijklmnopqrstuvwxyz0123456789";
+        String jwtSecret = System.getenv().getOrDefault("JWT_SECRET",
+            "your-jwt-secret-here-change-in-production-min-64-chars-" +
+            "abcdefghijklmnopqrstuvwxyz0123456789");
 
         return NimbusJwtDecoder.withSecretKey(
             new javax.crypto.spec.SecretKeySpec(

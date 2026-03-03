@@ -3,6 +3,6 @@ import { MetadataRoute } from 'next'
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: '*', allow: '/', disallow: ['/api/'] },
-    sitemap: 'https://hdim.health/sitemap.xml',
+    sitemap: 'https://healthdatainmotion.com/sitemap.xml',
   }
 }

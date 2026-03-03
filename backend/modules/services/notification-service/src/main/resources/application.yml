@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5435/healthdata_notification
     username: healthdata
-    password: healthdata
+    password: ${SPRING_DATASOURCE_PASSWORD:}
 
   jpa:
     hibernate:

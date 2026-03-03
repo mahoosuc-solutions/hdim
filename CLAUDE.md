@@ -1251,15 +1251,15 @@ Before submitting code, verify:
 ### Phase 7 Documentation
 
 **Phase 7 Specific:**
-- [PHASE-7-COMPLETION-SUMMARY.md](PHASE-7-COMPLETION-SUMMARY.md) - Complete overview (1,000+ lines)
-- [PHASE-7-FINAL-REPORT.md](PHASE-7-FINAL-REPORT.md) - Executive summary (500+ lines)
-- [CI_CD_BEST_PRACTICES.md](CI_CD_BEST_PRACTICES.md) - Team procedures (600+ lines)
+- [PHASE-7-COMPLETION-SUMMARY.md](./docs/phases/PHASE-7-COMPLETION-SUMMARY.md) - Complete overview (1,000+ lines)
+- [PHASE-7-FINAL-REPORT.md](./docs/phases/PHASE-7-FINAL-REPORT.md) - Executive summary (500+ lines)
+- [CI_CD_BEST_PRACTICES.md](./docs/deployment/CI_CD_BEST_PRACTICES.md) - Team procedures (600+ lines)
 
 **Cumulative Documentation:**
-- [PHASES-1-7-COMPLETE-SUMMARY.md](PHASES-1-7-COMPLETE-SUMMARY.md) - All phases overview (800+ lines)
-- [PHASE-7-WORKFLOW-DESIGN.md](PHASE-7-WORKFLOW-DESIGN.md) - Workflow architecture
-- [PHASE-7-CHANGE-DETECTION-GUIDE.md](PHASE-7-CHANGE-DETECTION-GUIDE.md) - Implementation patterns
-- [PHASE-7-CACHING-STRATEGY.md](PHASE-7-CACHING-STRATEGY.md) - Caching optimization
+- [PHASES-1-7-COMPLETE-SUMMARY.md](./docs/phases/PHASES-1-7-COMPLETE-SUMMARY.md) - All phases overview (800+ lines)
+- [PHASE-7-WORKFLOW-DESIGN.md](./docs/phases/PHASE-7-WORKFLOW-DESIGN.md) - Workflow architecture
+- [PHASE-7-CHANGE-DETECTION-GUIDE.md](./docs/phases/PHASE-7-CHANGE-DETECTION-GUIDE.md) - Implementation patterns
+- [PHASE-7-CACHING-STRATEGY.md](./docs/phases/PHASE-7-CACHING-STRATEGY.md) - Caching optimization
 
 ### Quick Start (Phase 7)
 
@@ -1289,8 +1289,8 @@ Before submitting code, verify:
 
 ---
 
-_Last Updated: February 1, 2026_
-_Version: 4.0_ - **Phase 7 Complete: CI/CD Parallelization & Advanced Optimization** (February 2026): All 8 Phase 7 tasks complete and live on master. Achieved 42.5% improvement in PR feedback time (40m → 23-25m) through parallel workflow execution, intelligent change detection (21 service filters), and advanced caching strategies. Cumulative improvement from Phase 1: 90%+ faster feedback loops (60-70m → 23-25m). Implemented 4 parallel test jobs, 3 parallel validation jobs, and 21-path change detection enabling 85% improvement for docs-only PRs. Added performance monitoring with real-time metrics collection, automated regression detection, and alerting. Team velocity improved 25-50% with 359 annual hours saved. Zero regressions across all 613+ tests. Production stable with zero issues in first week. See [PHASE-7-COMPLETION-SUMMARY.md](PHASE-7-COMPLETION-SUMMARY.md), [PHASE-7-FINAL-REPORT.md](PHASE-7-FINAL-REPORT.md), [CI_CD_BEST_PRACTICES.md](CI_CD_BEST_PRACTICES.md), and [PHASES-1-7-COMPLETE-SUMMARY.md](PHASES-1-7-COMPLETE-SUMMARY.md) for comprehensive documentation. Infrastructure modernization project (Phases 1-7) complete. Platform achievements: ✅ HIPAA Compliance, ✅ OCR Document Processing, ✅ API Documentation, ✅ Test Performance Optimization (Phase 6 Complete), ✅ CI/CD Parallelization (Phase 7 Complete) - all production-ready.
+_Last Updated: March 3, 2026_
+_Version: 4.1_ - **v2.8.0 System Remediation** (March 2026): Security hardening, landing page SEO/accessibility, CI/CD normalization, docs reorganization. See [docs/phases/](./docs/phases/) for phase summaries, [docs/deployment/CI_CD_BEST_PRACTICES.md](./docs/deployment/CI_CD_BEST_PRACTICES.md) for CI/CD procedures. Infrastructure modernization (Phases 1-7) complete. Platform achievements: ✅ HIPAA Compliance, ✅ OCR Document Processing, ✅ API Documentation, ✅ Test Performance Optimization (Phase 6), ✅ CI/CD Parallelization (Phase 7) - all production-ready.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

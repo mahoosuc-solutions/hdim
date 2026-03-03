@@ -1,16 +1,19 @@
+// Shared URLs and contact info
+export const CALENDAR_URL = 'https://calendar.app.google/zKDs6ZdXW7V61c7i7';
+export const EMAIL_SALES = 'sales@mahoosuc.solutions';
+export const EMAIL_INFO = 'info@mahoosuc.solutions';
+
 // Landing page copy and messaging
 export const MESSAGING = {
   // Hero Section
   HERO_HEADLINE: 'Calculate Clinical Value in Real-Time, Your Way',
   HERO_SUBHEADLINE:
     'Deploy HDIM your way: Pilot single-node, scale to enterprise. Integrate with Epic, Cerner, Athena, or any FHIR server. Zero vendor lock-in.',
-  HERO_CTA: 'Schedule Demo',
-  HERO_SECONDARY_CTA: 'Explore Architectures',
 
   // Problem Statement
   PROBLEM_HEADLINE: "Healthcare Quality Measurement Has a Data Problem",
   PROBLEM_DESCRIPTION: 'Manual processes, siloed data, and vendor lock-in slow down clinical insights.',
-  
+
   // Solution Overview
   SOLUTION_HEADLINE: 'Real-Time Intelligence Without Moving Your Data',
   SOLUTION_DESCRIPTION:
@@ -35,10 +38,6 @@ export const MESSAGING = {
   // Pricing
   PRICING_HEADLINE: 'Transparent Pricing for Every Stage',
   PRICING_DESCRIPTION: 'No enterprise minimums. Pay for what you need, upgrade as you grow.',
-
-  // CTA
-  DEMO_CTA: "Schedule a 30-minute demo with our healthcare experts",
-  CONTACT_CTA: "Have questions? Let's talk",
 }
 
 // Deployment models configuration
@@ -422,7 +421,6 @@ export const CASE_STUDIES = [
   {
     id: 'case-study-1',
     organization: 'Regional Health System',
-    logo: '/logos/midwest-health.svg',
     metric: '1,800% ROI in Year 1',
     challenge: 'Manual quality measure tracking across 8 clinics with Epic',
     solution: 'Deployed HDIM Growth tier in 6 weeks',
@@ -435,12 +433,10 @@ export const CASE_STUDIES = [
     quote:
       "HDIM transformed how we manage clinical quality. We went from manual spreadsheet tracking to real-time insights across all our clinics. The ROI was immediate.",
     quoteAuthor: 'Chief Medical Officer, Regional Health System',
-    image: '/case-studies/midwest-health.jpg',
   },
   {
     id: 'case-study-2',
     organization: 'Multi-Site ACO Network',
-    logo: '/logos/community-care.svg',
     metric: '4.2x Patient Care Improvement',
     challenge: 'Multi-EHR coordination across 20 clinics (Epic, Cerner, Athena)',
     solution: 'Deployed HDIM Enterprise tier with multi-EHR support',
@@ -453,12 +449,10 @@ export const CASE_STUDIES = [
     quote:
       "Before HDIM, coordinating quality across multiple EHRs was impossible. Now we have real-time visibility that drives 4x faster clinical decisions.",
     quoteAuthor: 'Executive Director, Multi-Site ACO',
-    image: '/case-studies/community-care.jpg',
   },
   {
     id: 'case-study-3',
     organization: 'Regional Health Plan',
-    logo: '/logos/strategic-health.svg',
     metric: '$8.5M Quality Bonus Uplift',
     challenge: 'Real-time Star rating calculation for 500K members',
     solution: 'Custom HDIM deployment with claims data integration',
@@ -471,7 +465,6 @@ export const CASE_STUDIES = [
     quote:
       "HDIM enabled us to identify gaps in real-time rather than quarterly. The impact on our Star ratings and member outcomes has been transformational.",
     quoteAuthor: 'VP of Quality, Regional Health Plan',
-    image: '/case-studies/strategic-health.jpg',
   },
 ]
 

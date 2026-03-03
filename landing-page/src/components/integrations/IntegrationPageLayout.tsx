@@ -1,7 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import Header from '@/components/layout/Header';
-import type { IntegrationPageData, IntegrationSection } from '@/lib/data/intersystems-integration';
+import { CALENDAR_URL } from '@/lib/constants';
+import type { IntegrationPageData, IntegrationSection } from '@/lib/types/integration';
 
 function renderInlineMarkdown(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
@@ -135,7 +136,7 @@ export default function IntegrationPageLayout({ data }: { data: IntegrationPageD
   return (
     <>
       <Header />
-      <main>
+      <main id="main-content">
         {/* Hero */}
         <section className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-20">
           <div className="container-lg">
@@ -278,7 +279,7 @@ export default function IntegrationPageLayout({ data }: { data: IntegrationPageD
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="https://calendar.app.google/zKDs6ZdXW7V61c7i7"
+                href={CALENDAR_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-8 py-4 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transition-all inline-block"

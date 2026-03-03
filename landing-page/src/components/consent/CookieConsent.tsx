@@ -47,12 +47,14 @@ export default function CookieConsent() {
     }
 
     const handleReset = () => setVisible(true);
-    window.addEventListener('hdim-consent-changed', (e) => {
+    const handleChanged = (e: Event) => {
       if (!(e as CustomEvent).detail) handleReset();
-    });
+    };
+    window.addEventListener('hdim-consent-changed', handleChanged);
     window.addEventListener('hdim-consent-reset', handleReset);
 
     return () => {
+      window.removeEventListener('hdim-consent-changed', handleChanged);
       window.removeEventListener('hdim-consent-reset', handleReset);
     };
   }, []);

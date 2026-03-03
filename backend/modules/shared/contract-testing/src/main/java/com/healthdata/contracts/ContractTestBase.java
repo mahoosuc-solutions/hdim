@@ -6,6 +6,7 @@ import au.com.dius.pact.provider.junitsupport.loader.PactBroker;
 import au.com.dius.pact.provider.junitsupport.loader.PactBrokerAuth;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import com.healthdata.test.TestTenantConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -155,7 +156,7 @@ public abstract class ContractTestBase {
      * @return the test tenant ID, defaults to "test-tenant-contracts"
      */
     protected String getTestTenantId() {
-        return "test-tenant-contracts";
+        return TestTenantConstants.PRIMARY_TENANT_ID;
     }
 
     /**
@@ -168,6 +169,6 @@ public abstract class ContractTestBase {
      * @return the test user ID, defaults to "contract-test-user"
      */
     protected String getTestUserId() {
-        return "contract-test-user";
+        return TestTenantConstants.TEST_ACTOR;
     }
 }

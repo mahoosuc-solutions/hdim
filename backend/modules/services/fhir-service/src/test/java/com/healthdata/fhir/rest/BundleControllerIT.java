@@ -1,21 +1,17 @@
 package com.healthdata.fhir.rest;
 
+import static com.healthdata.test.TestTenantConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.healthdata.fhir.config.AbstractFhirIntegrationTest;
 import com.healthdata.fhir.persistence.ConditionRepository;
 import com.healthdata.fhir.persistence.ObservationRepository;
 import com.healthdata.fhir.persistence.PatientRepository;
@@ -24,44 +20,11 @@ import com.healthdata.fhir.persistence.PatientRepository;
  * Integration tests for BundleController — proves FHIR transaction/batch
  * Bundles flow through to database persistence with tenant isolation.
  */
-@SpringBootTest(
-    properties = {
-        "spring.cache.type=simple",
-        "spring.data.redis.repositories.enabled=false",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.flyway.enabled=false",
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration,org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration,org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
-    },
-    classes = {
-        com.healthdata.fhir.FhirServiceApplication.class,
-        com.healthdata.fhir.config.TestCacheConfiguration.class,
-        com.healthdata.fhir.config.TestSecurityConfiguration.class
-    }
-)
-@AutoConfigureMockMvc(addFilters = false)
-@ActiveProfiles("test")
-@Tag("integration")
-class BundleControllerIT {
+class BundleControllerIT extends AbstractFhirIntegrationTest {
 
-    private static final String TENANT_1 = "bundle-test-tenant-1";
-    private static final String TENANT_2 = "bundle-test-tenant-2";
+    private static final String TENANT_1 = PRIMARY_TENANT_ID;
+    private static final String TENANT_2 = SECONDARY_TENANT_ID;
     private static final MediaType FHIR_JSON = MediaType.valueOf("application/fhir+json");
-
-    @DynamicPropertySource
-    static void overrideDatasource(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> "jdbc:tc:postgresql:15-alpine:///testdb");
-        registry.add("spring.datasource.username", () -> "sa");
-        registry.add("spring.datasource.password", () -> "");
-        registry.add("spring.datasource.driver-class-name", () -> "org.testcontainers.jdbc.ContainerDatabaseDriver");
-        registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.flyway.enabled", () -> "false");
-        registry.add("jwt.secret", () -> "test-secret-key-that-is-at-least-256-bits-long-for-HS256-algorithm");
-        registry.add("jwt.access-token-expiration", () -> "1h");
-        registry.add("jwt.refresh-token-expiration", () -> "1d");
-        registry.add("jwt.issuer", () -> "test-issuer");
-        registry.add("jwt.audience", () -> "test-audience");
-    }
 
     @Autowired
     private MockMvc mockMvc;

@@ -38,6 +38,7 @@ build/
 build-user/
 .docker-tmp/
 .tmp-*/
+tmp/
 META-INF/
 backend/modules/services/*/bin/
 backend/modules/shared/*/bin/

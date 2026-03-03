@@ -47,6 +47,7 @@ public class WorkflowEventPublisher {
      * @param confidenceScore Merge confidence (0-1)
      * @param sourceIdentifiers Source patient identifiers for tracing
      * @param targetIdentifiers Target patient identifiers for tracing
+     * @param mergeChainDepth Number of transitive merges in chain (1 = direct merge)
      */
     public void publishMergedWorkflows(
             String sourcePatientId,
@@ -55,12 +56,13 @@ public class WorkflowEventPublisher {
             Instant mergedAt,
             Double confidenceScore,
             java.util.List<?> sourceIdentifiers,
-            java.util.List<?> targetIdentifiers) {
+            java.util.List<?> targetIdentifiers,
+            int mergeChainDepth) {
 
         try {
             Map<String, Object> event = buildWorkflowMergedEvent(
                 sourcePatientId, targetPatientId, tenantId, mergedAt,
-                confidenceScore, sourceIdentifiers, targetIdentifiers
+                confidenceScore, sourceIdentifiers, targetIdentifiers, mergeChainDepth
             );
 
             String key = String.format("%s-%s", tenantId, targetPatientId);
@@ -88,7 +90,8 @@ public class WorkflowEventPublisher {
             Instant mergedAt,
             Double confidenceScore,
             java.util.List<?> sourceIdentifiers,
-            java.util.List<?> targetIdentifiers) {
+            java.util.List<?> targetIdentifiers,
+            int mergeChainDepth) {
 
         Map<String, Object> event = new HashMap<>();
 
@@ -108,7 +111,7 @@ public class WorkflowEventPublisher {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("sourceIdentifiers", sourceIdentifiers);
         metadata.put("targetIdentifiers", targetIdentifiers);
-        metadata.put("mergeChainDepth", 1);  // TODO: Include actual depth from merge event
+        metadata.put("mergeChainDepth", mergeChainDepth);
 
         event.put("additionalMetadata", metadata);
 

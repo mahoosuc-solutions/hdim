@@ -175,6 +175,21 @@ export default function IntegrationsIndexPage() {
           </div>
         </section>
 
+        {/* End-to-End Pipeline Callout */}
+        <section className="bg-gradient-to-r from-indigo-50 to-blue-50 border-b py-10">
+          <div className="container-lg">
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">End-to-End Automated Pipeline</h2>
+              <p className="text-gray-600 leading-relaxed">
+                All 8 EHR integrations feed into the same automated quality measurement pipeline.
+                Data flows from your source system through FHIR persistence, CQL evaluation, and care
+                gap detection — with zero manual intervention. Whether you connect via FHIR R4 API,
+                HL7 v2 feeds, or bulk NDJSON export, the path to actionable quality insights is fully automated.
+              </p>
+            </div>
+          </div>
+        </section>
+
         {/* Vendor Grid */}
         <section className="section bg-white">
           <div className="container-lg">

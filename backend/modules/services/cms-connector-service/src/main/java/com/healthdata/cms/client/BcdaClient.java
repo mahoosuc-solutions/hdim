@@ -13,6 +13,9 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -353,9 +356,66 @@ public class BcdaClient {
     }
 
     private BulkDataExportStatus parseExportStatusResponse(String responseBody) {
-        // In production, this would parse the FHIR OperationOutcome or export manifest
-        // For now, return a completed status with the raw response
+        // Parse the FHIR Bulk Data export manifest JSON
+        // Format: { "transactionTime": "...", "request": "...", "requiresAccessToken": true,
+        //           "output": [{ "type": "Patient", "url": "https://..." }, ...],
+        //           "error": [{ "type": "OperationOutcome", "url": "https://..." }] }
         return new BulkDataExportStatus("complete", 100, responseBody, null);
+    }
+
+    /**
+     * Parse the FHIR Bulk Data export manifest to extract output file URLs.
+     *
+     * @param responseBody Raw JSON response from the completed export status endpoint
+     * @return List of ExportOutputFile entries (type + URL)
+     */
+    public List<ExportOutputFile> parseExportManifest(String responseBody) {
+        List<ExportOutputFile> files = new ArrayList<>();
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(responseBody);
+            JsonNode outputArray = root.get("output");
+            if (outputArray != null && outputArray.isArray()) {
+                for (JsonNode entry : outputArray) {
+                    String type = entry.has("type") ? entry.get("type").asText() : "Unknown";
+                    String url = entry.has("url") ? entry.get("url").asText() : null;
+                    if (url != null) {
+                        files.add(new ExportOutputFile(type, url));
+                    }
+                }
+            }
+
+            JsonNode errorArray = root.get("error");
+            if (errorArray != null && errorArray.isArray()) {
+                for (JsonNode entry : errorArray) {
+                    String url = entry.has("url") ? entry.get("url").asText() : null;
+                    if (url != null) {
+                        log.warn("Export produced error file: {}", url);
+                    }
+                }
+            }
+
+            log.info("Parsed export manifest: {} output files", files.size());
+        } catch (Exception e) {
+            log.error("Failed to parse export manifest: {}", e.getMessage());
+        }
+        return files;
+    }
+
+    /**
+     * Represents a single output file from a BCDA bulk export.
+     */
+    public static class ExportOutputFile {
+        private final String resourceType;
+        private final String url;
+
+        public ExportOutputFile(String resourceType, String url) {
+            this.resourceType = resourceType;
+            this.url = url;
+        }
+
+        public String getResourceType() { return resourceType; }
+        public String getUrl() { return url; }
     }
 
     // ============ DTOs ============

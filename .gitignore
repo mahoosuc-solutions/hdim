@@ -29,6 +29,9 @@ logs/
 .env.local
 .env.*.local
 .env.linkedin
+.env.production
+.env.staging
+.env.customer-simulation
 monitoring/.env.alertmanager
 
 # Build artifacts

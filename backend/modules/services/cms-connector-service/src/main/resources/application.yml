@@ -18,7 +18,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/cms_development
     username: cms_dev_user
-    password: dev_password_change_me
+    password: ${SPRING_DATASOURCE_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
   liquibase:

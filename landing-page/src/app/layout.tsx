@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import CookieConsent from '@/components/consent/CookieConsent';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -69,6 +70,7 @@ export default function RootLayout({
           Skip to main content
         </a>
         <div id="root">{children}</div>
+        <CookieConsent />
       </body>
     </html>
   );

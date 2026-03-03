@@ -222,7 +222,7 @@ export default function IntegrationsIndexPage() {
                 services deploy on your infrastructure and connect over your private network.
               </p>
               <a
-                href="mailto:contact@healthdatainmotion.com?subject=Custom FHIR Integration"
+                href="mailto:sales@mahoosuc.solutions?subject=Custom FHIR Integration"
                 className="btn-primary inline-block"
               >
                 Contact Us for Custom Integration

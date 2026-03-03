@@ -12,7 +12,7 @@ const TIERS = [
     commitment: '3-month pilot',
     description: 'Prove value before you commit. Get live on FHIR in 4 weeks.',
     cta: 'Start Pilot',
-    ctaHref: '#contact',
+    ctaHref: 'mailto:sales@mahoosuc.solutions?subject=Pilot Inquiry',
     highlighted: false,
     members: 'Up to 50K members',
     roi: 'Typical ROI: 10–20×',
@@ -42,7 +42,7 @@ const TIERS = [
     commitment: 'Annual contract',
     description: 'Full production deployment. Multi-EHR, predictive AI, real-time financial tracking.',
     cta: 'Schedule Demo',
-    ctaHref: '#contact',
+    ctaHref: 'mailto:info@mahoosuc.solutions?subject=Demo Request',
     highlighted: true,
     members: '50K–500K members',
     roi: 'Typical ROI: 50–150×',
@@ -73,7 +73,7 @@ const TIERS = [
     commitment: 'Multi-year contract',
     description: 'Kubernetes, SMART on FHIR, on-prem air-gapped, unlimited scale. Your infrastructure.',
     cta: 'Contact Sales',
-    ctaHref: '#contact',
+    ctaHref: 'mailto:sales@mahoosuc.solutions?subject=Enterprise Inquiry',
     highlighted: false,
     members: '500K+ members',
     roi: 'Typical ROI: 100×+',
@@ -303,7 +303,7 @@ export default function PricingPage() {
             incremental quality bonuses.
           </p>
           <a
-            href="#contact"
+            href="mailto:sales@mahoosuc.solutions?subject=PMPM Pricing Inquiry"
             className="inline-flex items-center text-blue-600 font-semibold hover:underline"
           >
             Talk to sales about PMPM
@@ -358,9 +358,9 @@ export default function PricingPage() {
             and current gap closure rate.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-white text-blue-600 font-bold py-3 px-8 rounded-xl hover:bg-blue-50 transition">
+            <a href="mailto:sales@mahoosuc.solutions?subject=15-Minute Call Request" className="bg-white text-blue-600 font-bold py-3 px-8 rounded-xl hover:bg-blue-50 transition text-center">
               Schedule 15-Minute Call
-            </button>
+            </a>
             <Link
               href="/#roi"
               className="border border-blue-300 text-white font-bold py-3 px-8 rounded-xl hover:bg-blue-500 transition"

@@ -38,7 +38,7 @@ export default function Header() {
           </div>
 
           {/* CTA Button */}
-          <button className="btn-primary hidden md:block">Schedule Demo</button>
+          <a href="mailto:info@mahoosuc.solutions?subject=Demo Request" className="btn-primary hidden md:block">Schedule Demo</a>
 
           {/* Mobile Menu Toggle */}
           <button
@@ -77,7 +77,7 @@ export default function Header() {
             <Link href="/pricing" className="block py-2 text-gray-600 hover:text-gray-900">
               Pricing
             </Link>
-            <button className="btn-primary w-full mt-4">Schedule Demo</button>
+            <a href="mailto:info@mahoosuc.solutions?subject=Demo Request" className="btn-primary block w-full mt-4 text-center">Schedule Demo</a>
           </div>
         )}
       </nav>

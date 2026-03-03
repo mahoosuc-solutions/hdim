@@ -35,12 +35,9 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <button className="btn-primary text-lg px-8 py-4">
+            <a href="mailto:info@mahoosuc.solutions?subject=Demo Request" className="btn-primary text-lg px-8 py-4 text-center">
               Schedule Demo
-            </button>
-            <button className="btn-secondary text-lg px-8 py-4">
-              Watch 3-min Demo
-            </button>
+            </a>
           </div>
 
           {/* Trust indicators */}

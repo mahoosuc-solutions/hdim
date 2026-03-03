@@ -1,9 +1,9 @@
 # HDIM Service Catalog
 
-Central index of all 50+ microservices in the HDIM platform. Use this to find a specific service and access its documentation.
+Central index of all 57 microservices in the HDIM platform. Use this to find a specific service and access its documentation.
 
-**Last Updated**: February 4, 2026
-**Total Services**: 52+ microservices (including 4 Phase 5 Event Sourcing services)
+**Last Updated**: March 3, 2026
+**Total Services**: 57 microservices (including event sourcing, AI agents, gateways, and sales services)
 **Coverage**: 100% documented with architecture patterns
 
 ---
@@ -29,6 +29,8 @@ These are the foundation services that handle clinical data and quality measures
 | **fhir-service** | 8085 | FHIR R4 resource management, clinical documents | PostgreSQL, Redis | [README](../../backend/modules/services/fhir-service/README.md) |
 | **care-gap-service** | 8086 | Care gap detection, closure recommendations | PostgreSQL, Kafka | [README](../../backend/modules/services/care-gap-service/README.md) |
 | **consent-service** | 8082 | Patient consent management, privacy controls | PostgreSQL | [README](../../backend/modules/services/consent-service/README.md) |
+| **clinical-workflow-service** | 8093 | Clinical workflow orchestration, care coordination | PostgreSQL, Kafka, WebSocket | [README](../../backend/modules/services/clinical-workflow-service/README.md) |
+| **nurse-workflow-service** | TBD | Nurse-specific workflows, task management | PostgreSQL | [README](../../backend/modules/services/nurse-workflow-service/README.md) |
 | **event-processing-service** | TBD | Event processing pipeline, stream handling | Kafka, PostgreSQL | [README](../../backend/modules/services/event-processing-service/README.md) |
 
 ---
@@ -52,8 +54,7 @@ HCC coding, cost monitoring, risk stratification.
 | Service | Port | Purpose | Tech Stack | Documentation |
 |---------|------|---------|-----------|-----------------|
 | **hcc-service** | TBD | HCC risk adjustment, coding optimization | PostgreSQL, ML models | [README](../../backend/modules/services/hcc-service/README.md) |
-| **cost-monitoring-service** | TBD | Cost tracking, budget management | PostgreSQL, Prometheus | [README](../../backend/modules/services/cost-monitoring-service/README.md) |
-| **risk-stratification-service** | TBD | Patient risk scoring, intervention prioritization | PostgreSQL, ML models | [README](../../backend/modules/services/risk-stratification-service/README.md) |
+| **cost-analysis-service** | TBD | Cost tracking, budget management, financial analysis | PostgreSQL | [README](../../backend/modules/services/cost-analysis-service/README.md) |
 
 ---
 
@@ -77,6 +78,8 @@ External system integrations, data enrichment, health information exchange.
 | Service | Port | Purpose | Tech Stack | Documentation |
 |---------|------|---------|-----------|-----------------|
 | **ehr-connector-service** | TBD | Electronic Health Record integration, HL7 v2/v3 | PostgreSQL, Kafka | [README](../../backend/modules/services/ehr-connector-service/README.md) |
+| **cms-connector-service** | TBD | CMS BCDA/DPC integration, bulk data export | PostgreSQL, Kafka | [README](../../backend/modules/services/cms-connector-service/README.md) |
+| **data-ingestion-service** | TBD | Bulk data ingestion, NDJSON import, synthetic data | PostgreSQL, Kafka | [README](../../backend/modules/services/data-ingestion-service/README.md) |
 | **data-enrichment-service** | TBD | Data validation, enrichment, deduplication | PostgreSQL | [README](../../backend/modules/services/data-enrichment-service/README.md) |
 | **ecr-service** | TBD | Electronic Case Reporting for public health | PostgreSQL | [README](../../backend/modules/services/ecr-service/README.md) |
 | **sdoh-service** | TBD | Social determinants of health tracking | PostgreSQL, Redis | [README](../../backend/modules/services/sdoh-service/README.md) |
@@ -90,11 +93,19 @@ Core platform infrastructure, messaging, routing, authentication.
 
 | Service | Port | Purpose | Tech Stack | Documentation |
 |---------|------|---------|-----------|-----------------|
-| **gateway-service** | 8001 | API gateway, authentication, routing | Kong, PostgreSQL | [README](../../backend/modules/services/gateway-service/README.md) |
+| **gateway-clinical-service** | 8001 | Clinical API gateway, authentication, routing | Spring Cloud Gateway, PostgreSQL | [README](../../backend/modules/services/gateway-clinical-service/README.md) |
+| **gateway-fhir-service** | TBD | FHIR-specific API gateway | Spring Cloud Gateway | [README](../../backend/modules/services/gateway-fhir-service/README.md) |
+| **gateway-admin-service** | TBD | Admin API gateway, configuration management | Spring Cloud Gateway, PostgreSQL | [README](../../backend/modules/services/gateway-admin-service/README.md) |
+| **admin-service** | TBD | Platform administration, tenant management | PostgreSQL | [README](../../backend/modules/services/admin-service/README.md) |
 | **event-router-service** | TBD | Event routing, topic management, message transformation | Kafka | [README](../../backend/modules/services/event-router-service/README.md) |
+| **event-store-service** | TBD | Immutable event log, event persistence | PostgreSQL, Kafka | [README](../../backend/modules/services/event-store-service/README.md) |
+| **event-replay-service** | TBD | Event replay, projection rebuilding | PostgreSQL, Kafka | [README](../../backend/modules/services/event-replay-service/README.md) |
+| **fhir-event-bridge-service** | TBD | Bridge between FHIR resources and event streams | Kafka, PostgreSQL | [README](../../backend/modules/services/fhir-event-bridge-service/README.md) |
 | **notification-service** | TBD | Email, SMS, in-app notifications | PostgreSQL, Redis | [README](../../backend/modules/services/notification-service/README.md) |
-| **audit-service** | TBD | Compliance audit logging, user activity tracking | PostgreSQL, Elasticsearch | [README](../../backend/modules/services/audit-service/README.md) |
-| **cdr-processor-service** | TBD | Clinical Data Repository processing | PostgreSQL | [README](../../backend/modules/services/cdr-processor-service/README.md) |
+| **audit-query-service** | TBD | Audit log querying, compliance reporting, NLQ | PostgreSQL, Elasticsearch | [README](../../backend/modules/services/audit-query-service/README.md) |
+| **cdr-processor-service** | TBD | Clinical Data Repository processing, HL7 v2/CDA | PostgreSQL | [README](../../backend/modules/services/cdr-processor-service/README.md) |
+| **cqrs-query-service** | TBD | CQRS read-side query API | PostgreSQL | [README](../../backend/modules/services/cqrs-query-service/README.md) |
+| **query-api-service** | TBD | Unified query API with JWT auth, role hierarchy | PostgreSQL | [README](../../backend/modules/services/query-api-service/README.md) |
 
 ---
 
@@ -105,6 +116,7 @@ Sales automation, lead management, and CRM integrations.
 | Service | Port | Purpose | Tech Stack | Documentation |
 |---------|------|---------|-----------|-----------------|
 | **sales-automation-service** | 8106 | CRM, lead capture, email sequences, LinkedIn outreach, Zoho sync | PostgreSQL, Redis, Kafka | [README](../../backend/modules/services/sales-automation-service/README.md) |
+| **investor-dashboard-service** | TBD | Investor metrics, Zoho CRM sync, pipeline tracking | PostgreSQL, Redis | [README](../../backend/modules/services/investor-dashboard-service/README.md) |
 
 ---
 
@@ -115,8 +127,12 @@ Machine learning, natural language processing, intelligent agents.
 | Service | Port | Purpose | Tech Stack | Documentation |
 |---------|------|---------|-----------|-----------------|
 | **ai-assistant-service** | TBD | AI chatbot, clinical decision support | PostgreSQL, ML models | [README](../../backend/modules/services/ai-assistant-service/README.md) |
+| **ai-sales-agent** | 8090 | AI sales agent, demo personas, objection handling | Python, FastAPI | [README](../../backend/modules/services/ai-sales-agent/README.md) |
+| **live-call-sales-agent** | 8095 | Real-time AI call agent, WebSocket, Chrome automation | Python, FastAPI, WebSocket | [README](../../backend/modules/services/live-call-sales-agent/README.md) |
 | **agent-runtime-service** | TBD | Agent execution engine, autonomous workflows | PostgreSQL, Kafka | [README](../../backend/modules/services/agent-runtime-service/README.md) |
 | **agent-builder-service** | TBD | Agent creation and configuration UI | PostgreSQL | [README](../../backend/modules/services/agent-builder-service/README.md) |
+| **agent-validation-service** | TBD | Agent output validation, safety checks | PostgreSQL | [README](../../backend/modules/services/agent-validation-service/README.md) |
+| **devops-agent-service** | TBD | DevOps automation, infrastructure management agent | PostgreSQL | [README](../../backend/modules/services/devops-agent-service/README.md) |
 
 ---
 
@@ -130,6 +146,28 @@ Modern microservices using Event Sourcing and CQRS patterns. These services impl
 | **quality-measure-event-service** | 8191 | Quality measure events and calculations | PostgreSQL, Kafka, Event Store | [README](../../backend/modules/services/quality-measure-event-service/README.md) |
 | **care-gap-event-service** | 8111 | Care gap events and detection | PostgreSQL, Kafka, Event Store | [README](../../backend/modules/services/care-gap-event-service/README.md) |
 | **clinical-workflow-event-service** | 8193 | Clinical workflow events and orchestration | PostgreSQL, Kafka, Event Store | [README](../../backend/modules/services/clinical-workflow-event-service/README.md) |
+
+### Event Handler Services
+
+Event handlers consume domain events and trigger side effects (projections, notifications, integrations).
+
+| Service | Port | Purpose | Tech Stack | Documentation |
+|---------|------|---------|-----------|-----------------|
+| **patient-event-handler-service** | TBD | Patient event projections, identity resolution | PostgreSQL, Kafka | [README](../../backend/modules/services/patient-event-handler-service/README.md) |
+| **quality-measure-event-handler-service** | TBD | Quality measure event projections | PostgreSQL, Kafka | [README](../../backend/modules/services/quality-measure-event-handler-service/README.md) |
+| **care-gap-event-handler-service** | TBD | Care gap event projections, closure tracking | PostgreSQL, Kafka | [README](../../backend/modules/services/care-gap-event-handler-service/README.md) |
+| **clinical-workflow-event-handler-service** | TBD | Clinical workflow event projections | PostgreSQL, Kafka | [README](../../backend/modules/services/clinical-workflow-event-handler-service/README.md) |
+
+---
+
+## Demo & Orchestration Services
+
+Services for demo environments, data seeding, and orchestration.
+
+| Service | Port | Purpose | Tech Stack | Documentation |
+|---------|------|---------|-----------|-----------------|
+| **demo-orchestrator-service** | TBD | Demo environment orchestration, scenario management | PostgreSQL | [README](../../backend/modules/services/demo-orchestrator-service/README.md) |
+| **demo-seeding-service** | TBD | Synthetic data generation, demo data seeding | PostgreSQL | [README](../../backend/modules/services/demo-seeding-service/README.md) |
 
 ---
 
@@ -185,24 +223,44 @@ Shared code used across multiple services.
 
 ### Data Integration
 - ehr-connector-service
+- cms-connector-service
 - fhir-service
 - ecr-service
 - cdr-processor-service
+- data-ingestion-service
 - documentation-service
 
 ### Platform Infrastructure
-- gateway-service
+- gateway-clinical-service
+- gateway-fhir-service
+- gateway-admin-service
+- admin-service
 - event-router-service
-- audit-service
+- event-store-service
+- event-replay-service
 - event-processing-service
+- fhir-event-bridge-service
+- audit-query-service
+- notification-service
+- cqrs-query-service
+- query-api-service
 
 ### AI & Automation
 - ai-assistant-service
+- ai-sales-agent
+- live-call-sales-agent
 - agent-runtime-service
 - agent-builder-service
+- agent-validation-service
+- devops-agent-service
 
 ### Sales & CRM
 - sales-automation-service
+- investor-dashboard-service
+
+### Demo & Orchestration
+- demo-orchestrator-service
+- demo-seeding-service
 
 ---
 
@@ -327,6 +385,6 @@ Each service README should include:
 
 ---
 
-**Last Updated**: February 4, 2026
+**Last Updated**: March 3, 2026
 **Maintained by**: HDIM Platform Team
-**Status**: Complete Service Catalog - 52+ services (100% coverage including Phase 5 Event Services and Sales Automation)
+**Status**: Complete Service Catalog — 57 services (100% coverage including event sourcing, event handlers, AI agents, gateways, and demo services)

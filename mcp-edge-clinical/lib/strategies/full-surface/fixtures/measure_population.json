@@ -1,0 +1,50 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "reportDate": "2026-03-04T14:30:00Z",
+    "measurementPeriod": {
+      "start": "2025-01-01",
+      "end": "2025-12-31"
+    },
+    "totalPatients": 12500,
+    "overallComplianceRate": 0.72,
+    "measures": [
+      {
+        "measureId": "HbA1c-Control",
+        "measureName": "Hemoglobin A1c Control for Patients with Diabetes",
+        "denominator": 3200,
+        "numerator": 2560,
+        "exclusions": 180,
+        "complianceRate": 0.80
+      },
+      {
+        "measureId": "BCS",
+        "measureName": "Breast Cancer Screening",
+        "denominator": 4100,
+        "numerator": 2870,
+        "exclusions": 95,
+        "complianceRate": 0.70
+      },
+      {
+        "measureId": "COL",
+        "measureName": "Colorectal Cancer Screening",
+        "denominator": 5800,
+        "numerator": 3770,
+        "exclusions": 210,
+        "complianceRate": 0.65
+      },
+      {
+        "measureId": "CBP",
+        "measureName": "Controlling High Blood Pressure",
+        "denominator": 6200,
+        "numerator": 4650,
+        "exclusions": 310,
+        "complianceRate": 0.75
+      }
+    ],
+    "starsRating": 3.5,
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

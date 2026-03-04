@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "AllergyIntolerance",
+  "data": "{\"resourceType\":\"AllergyIntolerance\",\"id\":\"demo-allergy_intolerance-001\"}",
+  "demoMode": true
+}

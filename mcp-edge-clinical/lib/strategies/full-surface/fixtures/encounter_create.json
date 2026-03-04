@@ -1,0 +1,7 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "Encounter",
+  "data": "{\"resourceType\":\"Encounter\",\"id\":\"new-encounter-001\"}",
+  "demoMode": true
+}

@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "CarePlan",
+  "data": "{\"resourceType\":\"CarePlan\",\"id\":\"demo-care_plan-001\"}",
+  "demoMode": true
+}

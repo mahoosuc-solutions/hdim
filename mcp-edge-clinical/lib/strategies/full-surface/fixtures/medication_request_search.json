@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "MedicationRequest",
+  "data": "{\"resourceType\":\"Bundle\",\"type\":\"searchset\",\"total\":3}",
+  "demoMode": true
+}

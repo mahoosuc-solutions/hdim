@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Immunization",
+  "data": "{\"resourceType\":\"Immunization\",\"id\":\"demo-immunization-001\"}",
+  "demoMode": true
+}

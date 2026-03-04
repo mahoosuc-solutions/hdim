@@ -1,0 +1,7 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "Condition",
+  "data": "{\"resourceType\":\"Condition\",\"id\":\"new-condition-001\"}",
+  "demoMode": true
+}

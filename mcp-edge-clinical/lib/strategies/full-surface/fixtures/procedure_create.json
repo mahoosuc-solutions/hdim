@@ -1,0 +1,7 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "Procedure",
+  "data": "{\"resourceType\":\"Procedure\",\"id\":\"new-procedure-001\"}",
+  "demoMode": true
+}

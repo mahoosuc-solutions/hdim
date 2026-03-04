@@ -1,5 +1,8 @@
 node_modules
 __tests__
-*.test.js
+coverage*
 .env
-.env.local
+.env.*
+!.env.example
+*.test.js
+*.md

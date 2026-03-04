@@ -1,6 +1,7 @@
 FROM node:20-slim
 WORKDIR /app
 
+# Docker CLI and healthcheck probes require ca-certificates and curl
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
 COPY mcp-edge-common/ ./mcp-edge-common/

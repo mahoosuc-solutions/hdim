@@ -1,0 +1,23 @@
+{
+  "name": "hdim-mcp-edge-clinical",
+  "version": "0.1.0",
+  "description": "HDIM MCP edge sidecar for clinical tools (port 3300)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js",
+    "test": "jest"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "hdim-mcp-edge-common": "file:../mcp-edge-common",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "supertest": "^6.3.4"
+  }
+}

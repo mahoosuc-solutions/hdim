@@ -1,0 +1,8 @@
+node_modules
+__tests__
+coverage*
+.env
+.env.*
+!.env.example
+*.test.js
+*.md

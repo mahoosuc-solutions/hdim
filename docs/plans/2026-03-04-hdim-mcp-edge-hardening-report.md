@@ -13,8 +13,8 @@
 The HDIM MCP Edge sidecar architecture has undergone a comprehensive security hardening validation. Starting from 433 tests with built-but-unwired security controls, the hardening effort:
 
 - **Wired 5 security controls** into the live Express pipeline: rate limiting, CORS lockdown, audit logging, parameter validation, and deep health probes
-- **Added 159 new tests** across 11 new test suites, bringing the total to 592 tests
-- **Achieved 99.27% statement coverage** and 100% function coverage
+- **Added 164 new tests** across 14 new test suites, bringing the total to 597 tests
+- **Achieved 99.27% statement coverage**, 96.30% branch coverage, and 100% function coverage
 - **Mapped controls to 5 compliance frameworks**: HIPAA, SOC 2, OWASP API Top 10, NIST 800-53, and CIS Benchmarks
 - **Proved sidecar isolation** with exhaustive boundary tests (zero cross-sidecar tool leakage)
 - **Validated injection prevention** with 9 attack payloads across all injectable tools
@@ -69,10 +69,10 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 
 | Metric | Before (Baseline) | After (Hardened) | Change |
 |--------|-------------------|------------------|--------|
-| Total Tests | 433 | 592 | +159 (+36.7%) |
-| Test Suites | 40 | 51 | +11 (+27.5%) |
+| Total Tests | 433 | 597 | +164 (+37.9%) |
+| Test Suites | 40 | 54 | +14 (+35.0%) |
 | Statements | 99.42% | 99.27% | -0.15% |
-| Branches | 92.93% | 92.60% | -0.33% |
+| Branches | 92.93% | 96.30% | +3.37% |
 | Functions | 100% | 100% | — |
 | Wired Controls | 0 | 5 | +5 |
 | Proof Test Files | 0 | 8 | +8 |
@@ -92,7 +92,7 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 | RBAC Matrix Tests | 105 | Exhaustive role×tool permutation tests |
 | Injection Tests | 30 | 9 payloads × 2 tools + validation + 10 direct pattern tests |
 | Bridge Tests | 18 | stdio↔HTTP bridge integration |
-| **Total** | **592** | |
+| **Total** | **597** | |
 
 ---
 
@@ -100,10 +100,10 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 
 | Package | Stmts | Branch | Funcs | Lines |
 |---------|-------|--------|-------|-------|
-| mcp-edge-common | ~99% | ~93% | 100% | ~99% |
-| mcp-edge-platform | ~99% | ~91% | 100% | ~99% |
-| mcp-edge-devops | ~99% | ~93% | 100% | ~99% |
-| **Overall** | **99.27%** | **92.60%** | **100%** | **99.27%** |
+| mcp-edge-common | ~99% | ~97% | 100% | ~99% |
+| mcp-edge-platform | ~99% | ~95% | 100% | ~99% |
+| mcp-edge-devops | ~99% | ~96% | 100% | ~99% |
+| **Overall** | **99.27%** | **96.30%** | **100%** | **99.27%** |
 
 ---
 

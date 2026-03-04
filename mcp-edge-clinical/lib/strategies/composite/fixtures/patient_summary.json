@@ -1,0 +1,59 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "resourceType": "Bundle",
+    "type": "searchset",
+    "total": 12,
+    "entry": [
+      {
+        "resource": {
+          "resourceType": "Patient",
+          "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "active": true,
+          "name": [{ "use": "official", "family": "Doe", "given": ["John", "M"] }],
+          "gender": "male",
+          "birthDate": "1985-07-12"
+        }
+      },
+      {
+        "resource": {
+          "resourceType": "Condition",
+          "id": "cond-001",
+          "clinicalStatus": { "coding": [{ "code": "active" }] },
+          "code": { "coding": [{ "system": "http://snomed.info/sct", "code": "44054006", "display": "Type 2 diabetes mellitus" }] },
+          "onsetDateTime": "2020-03-15"
+        }
+      },
+      {
+        "resource": {
+          "resourceType": "Observation",
+          "id": "obs-hba1c-001",
+          "status": "final",
+          "code": { "coding": [{ "system": "http://loinc.org", "code": "4548-4", "display": "Hemoglobin A1c" }] },
+          "valueQuantity": { "value": 7.2, "unit": "%", "system": "http://unitsofmeasure.org", "code": "%" },
+          "effectiveDateTime": "2026-01-10"
+        }
+      },
+      {
+        "resource": {
+          "resourceType": "MedicationRequest",
+          "id": "medrx-001",
+          "status": "active",
+          "medicationCodeableConcept": { "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "860975", "display": "Metformin 500 MG" }] },
+          "dosageInstruction": [{ "text": "500mg twice daily" }]
+        }
+      },
+      {
+        "resource": {
+          "resourceType": "Encounter",
+          "id": "enc-001",
+          "status": "finished",
+          "class": { "code": "AMB", "display": "ambulatory" },
+          "period": { "start": "2026-01-10T09:00:00Z", "end": "2026-01-10T09:30:00Z" }
+        }
+      }
+    ]
+  },
+  "demoMode": true
+}

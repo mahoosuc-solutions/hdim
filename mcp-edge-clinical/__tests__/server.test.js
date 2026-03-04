@@ -45,10 +45,10 @@ describe('clinical edge server', () => {
     expect(toolNames.length).toBe(25);
   });
 
-  it('can call a stub tool', async () => {
+  it('can call a tool in demo mode', async () => {
     const res = await request.post('/mcp')
       .set('x-operator-role', 'platform_admin')
-      .send({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'patient_summary', arguments: {} } });
+      .send({ jsonrpc: '2.0', id: 3, method: 'tools/call', params: { name: 'patient_summary', arguments: { patientId: 'demo-1', tenantId: 'acme' } } });
     expect(res.body.result).toBeDefined();
     expect(res.body.error).toBeUndefined();
   });

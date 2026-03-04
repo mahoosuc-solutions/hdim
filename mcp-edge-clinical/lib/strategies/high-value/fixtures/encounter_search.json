@@ -1,0 +1,33 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Encounter",
+  "data": {
+    "resourceType": "Bundle",
+    "type": "searchset",
+    "total": 2,
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:enc-001",
+        "resource": {
+          "resourceType": "Encounter",
+          "id": "enc-001",
+          "status": "finished",
+          "class": { "code": "AMB", "display": "ambulatory" },
+          "period": { "start": "2026-01-15T09:00:00Z", "end": "2026-01-15T09:30:00Z" }
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:enc-002",
+        "resource": {
+          "resourceType": "Encounter",
+          "id": "enc-002",
+          "status": "finished",
+          "class": { "code": "AMB", "display": "ambulatory" },
+          "period": { "start": "2025-07-10T14:00:00Z", "end": "2025-07-10T14:45:00Z" }
+        }
+      }
+    ]
+  },
+  "demoMode": true
+}

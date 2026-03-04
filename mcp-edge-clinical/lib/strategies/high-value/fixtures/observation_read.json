@@ -1,0 +1,30 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Observation",
+  "data": {
+    "resourceType": "Observation",
+    "id": "obs-001",
+    "status": "final",
+    "code": {
+      "coding": [
+        {
+          "system": "http://loinc.org",
+          "code": "4548-4",
+          "display": "Hemoglobin A1c"
+        }
+      ]
+    },
+    "subject": {
+      "reference": "Patient/f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    },
+    "valueQuantity": {
+      "value": 7.2,
+      "unit": "%",
+      "system": "http://unitsofmeasure.org",
+      "code": "%"
+    },
+    "effectiveDateTime": "2026-01-10T09:00:00Z"
+  },
+  "demoMode": true
+}

@@ -1,0 +1,35 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "results": [
+      {
+        "measureId": "HbA1c-Control",
+        "measureName": "Hemoglobin A1c Control for Patients with Diabetes",
+        "status": "compliant",
+        "score": 1.0,
+        "evaluationDate": "2026-03-04T14:30:00Z",
+        "numerator": true,
+        "denominator": true,
+        "exclusion": false
+      },
+      {
+        "measureId": "BCS",
+        "measureName": "Breast Cancer Screening",
+        "status": "non-compliant",
+        "score": 0.0,
+        "evaluationDate": "2026-03-04T14:30:00Z",
+        "numerator": false,
+        "denominator": true,
+        "exclusion": false
+      }
+    ],
+    "totalMeasures": 2,
+    "compliant": 1,
+    "nonCompliant": 1,
+    "excluded": 0,
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

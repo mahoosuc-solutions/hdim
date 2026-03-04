@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "tenantId": "acme-health",
+    "reportDate": "2026-03-04",
+    "summary": {
+      "totalGaps": 1847,
+      "openGaps": 623,
+      "closedGaps": 1224,
+      "closureRate": 0.6626,
+      "highPriorityOpen": 142,
+      "overdueGaps": 87
+    },
+    "distributionByMeasure": [
+      { "measureId": "HbA1c-Control", "measureName": "HbA1c Control", "open": 198, "closed": 412, "closureRate": 0.675 },
+      { "measureId": "BCS", "measureName": "Breast Cancer Screening", "open": 145, "closed": 310, "closureRate": 0.681 },
+      { "measureId": "CCS", "measureName": "Colorectal Cancer Screening", "open": 112, "closed": 189, "closureRate": 0.628 }
+    ],
+    "trendLast30Days": {
+      "gapsClosed": 187,
+      "gapsOpened": 43,
+      "netReduction": 144
+    }
+  },
+  "demoMode": true
+}

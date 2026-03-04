@@ -1,0 +1,39 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "MedicationRequest",
+  "data": {
+    "resourceType": "Bundle",
+    "type": "searchset",
+    "total": 2,
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:med-001",
+        "resource": {
+          "resourceType": "MedicationRequest",
+          "id": "med-001",
+          "status": "active",
+          "intent": "order",
+          "medicationCodeableConcept": {
+            "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "860975", "display": "Metformin 500 MG" }]
+          },
+          "authoredOn": "2025-06-15"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:med-002",
+        "resource": {
+          "resourceType": "MedicationRequest",
+          "id": "med-002",
+          "status": "active",
+          "intent": "order",
+          "medicationCodeableConcept": {
+            "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "197361", "display": "Lisinopril 10 MG" }]
+          },
+          "authoredOn": "2025-08-20"
+        }
+      }
+    ]
+  },
+  "demoMode": true
+}

@@ -1,0 +1,32 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Patient",
+  "data": {
+    "resourceType": "Patient",
+    "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "meta": {
+      "versionId": "1",
+      "lastUpdated": "2026-01-15T10:30:00Z"
+    },
+    "active": true,
+    "name": [
+      {
+        "use": "official",
+        "family": "Doe",
+        "given": ["John", "M"]
+      }
+    ],
+    "gender": "male",
+    "birthDate": "1985-07-12",
+    "address": [
+      {
+        "use": "home",
+        "city": "Portland",
+        "state": "ME",
+        "postalCode": "04101"
+      }
+    ]
+  },
+  "demoMode": true
+}

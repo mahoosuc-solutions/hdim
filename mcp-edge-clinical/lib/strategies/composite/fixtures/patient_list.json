@@ -1,0 +1,38 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "content": [
+      {
+        "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "firstName": "John",
+        "lastName": "Doe",
+        "dateOfBirth": "1985-07-12",
+        "gender": "male",
+        "active": true
+      },
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "firstName": "Jane",
+        "lastName": "Smith",
+        "dateOfBirth": "1990-03-25",
+        "gender": "female",
+        "active": true
+      },
+      {
+        "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "firstName": "Robert",
+        "lastName": "Johnson",
+        "dateOfBirth": "1972-11-08",
+        "gender": "male",
+        "active": true
+      }
+    ],
+    "page": 0,
+    "size": 20,
+    "totalElements": 3,
+    "totalPages": 1,
+    "last": true
+  },
+  "demoMode": true
+}

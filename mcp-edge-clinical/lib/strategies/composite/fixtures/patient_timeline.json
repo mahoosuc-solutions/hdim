@@ -1,0 +1,52 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "timelineEvents": [
+      {
+        "date": "2026-01-10",
+        "type": "Encounter",
+        "description": "Office visit - Annual wellness exam",
+        "provider": "Dr. Sarah Chen",
+        "status": "finished"
+      },
+      {
+        "date": "2026-01-10",
+        "type": "Observation",
+        "description": "HbA1c: 7.2%",
+        "code": "4548-4",
+        "status": "final"
+      },
+      {
+        "date": "2025-10-15",
+        "type": "Encounter",
+        "description": "Office visit - Diabetes follow-up",
+        "provider": "Dr. Sarah Chen",
+        "status": "finished"
+      },
+      {
+        "date": "2025-10-15",
+        "type": "Observation",
+        "description": "HbA1c: 7.8%",
+        "code": "4548-4",
+        "status": "final"
+      },
+      {
+        "date": "2025-07-20",
+        "type": "Immunization",
+        "description": "Influenza vaccine, injectable",
+        "status": "completed"
+      },
+      {
+        "date": "2025-04-01",
+        "type": "MedicationRequest",
+        "description": "Metformin 500 MG - started",
+        "status": "active"
+      }
+    ],
+    "startDate": "2025-01-01",
+    "endDate": "2026-12-31"
+  },
+  "demoMode": true
+}

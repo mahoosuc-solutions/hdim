@@ -209,6 +209,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Kafka tracing configuration examples
   - Custom span patterns and best practices
 
+### MCP Edge Layer (v0.1.0) — 2026-03-04
+
+- **3 sidecars:** platform (3100), devops (3200), clinical (3300)
+- **3 clinical strategies:** composite (25 tools), high-value (15 tools), full-surface (68 tools)
+- **123 total MCP tools** across all sidecars
+- **1,273 tests** with 99.35% statement coverage
+- RBAC: 7 roles x 108 clinical tools exhaustive matrix (352+ test cases)
+- PHI leak detection, cross-sidecar isolation, MCP protocol contract tests
+- Demo mode with per-tool fixtures for all 108 tools
+- stdio bridges for Claude Desktop/Code integration
+- Structured pino logging with PHI scrubbing
+- ESLint no-console enforcement
+
 ### Breaking Changes
 - **HikariCP Configuration Required**
   - All services now require production-ready HikariCP configuration

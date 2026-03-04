@@ -1,0 +1,20 @@
+{
+  "capturedAt": "2026-03-04T12:00:00.000Z",
+  "phase": "pre-validation-proof",
+  "tests": {
+    "total": 433,
+    "passed": 433,
+    "failed": 0,
+    "suites": 40
+  },
+  "coverage": {
+    "statements": "99.42%",
+    "branches": "92.93%",
+    "functions": "100%",
+    "lines": "99.42%"
+  },
+  "bridgeTests": {
+    "total": 18,
+    "passed": 18
+  }
+}

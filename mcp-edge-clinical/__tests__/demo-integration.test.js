@@ -32,9 +32,10 @@ const DEMO_TOOLS = [
   { name: 'cql_batch', args: { library: 'test-lib', patientIds: ['demo-1'], tenantId: 'acme' } },
   { name: 'cql_libraries', args: { tenantId: 'acme' } },
   { name: 'cql_result', args: { patientId: 'demo-1', library: 'test-lib', tenantId: 'acme' } },
+  { name: 'edge_health', args: {} },
 ];
 
-describe('clinical edge demo integration — all 25 tools', () => {
+describe('clinical edge demo integration — all 26 tools', () => {
   let request;
 
   beforeAll(() => {
@@ -50,10 +51,10 @@ describe('clinical edge demo integration — all 25 tools', () => {
     delete process.env.CLINICAL_TOOL_STRATEGY;
   });
 
-  it('has exactly 25 tool configs in the test matrix', () => {
-    expect(DEMO_TOOLS.length).toBe(25);
+  it('has exactly 26 tool configs in the test matrix', () => {
+    expect(DEMO_TOOLS.length).toBe(26);
     const names = DEMO_TOOLS.map(t => t.name);
-    expect(new Set(names).size).toBe(25); // all unique
+    expect(new Set(names).size).toBe(26); // all unique
   });
 
   it.each(DEMO_TOOLS)(

@@ -29,15 +29,16 @@ describe('high-value strategy integration (demo mode)', () => {
     'medication_read', 'medication_search',
     'encounter_read', 'encounter_search',
     'care_gap_list', 'care_gap_close', 'care_gap_stats',
-    'measure_evaluate', 'measure_results'
+    'measure_evaluate', 'measure_results',
+    'edge_health'
   ];
 
-  it('lists exactly 15 tools', async () => {
+  it('lists exactly 16 tools', async () => {
     const res = await request.post('/mcp')
       .set('x-operator-role', 'clinical_admin')
       .send({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
     expect(res.status).toBe(200);
-    expect(res.body.result.tools).toHaveLength(15);
+    expect(res.body.result.tools).toHaveLength(16);
 
     const names = res.body.result.tools.map(t => t.name).sort();
     expect(names).toEqual([...EXPECTED_TOOL_NAMES].sort());
@@ -56,7 +57,7 @@ describe('high-value strategy integration (demo mode)', () => {
     }
   });
 
-  describe('demo mode returns fixtures for all 15 tools', () => {
+  describe('demo mode returns fixtures for all 16 tools', () => {
     const DEMO_CALLS = [
       { name: 'patient_read', args: { id: 'demo-1', tenantId: 'acme' } },
       { name: 'patient_search', args: { tenantId: 'acme' } },

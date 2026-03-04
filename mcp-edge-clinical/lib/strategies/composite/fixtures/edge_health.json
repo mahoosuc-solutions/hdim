@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "ok": true,
+  "demoMode": true,
+  "edgeStatus": "healthy",
+  "service": "hdim-clinical-edge",
+  "version": "0.1.0",
+  "uptime": 42.5,
+  "timestamp": "2026-03-04T12:00:00.000Z",
+  "downstream": {
+    "fhir": {
+      "url": "http://localhost:18080/fhir/metadata",
+      "reachable": true
+    }
+  }
+}

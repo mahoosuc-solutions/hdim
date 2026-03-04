@@ -9,6 +9,12 @@ describe('createAuditLogger', () => {
     expect(typeof logger.warn).toBe('function');
   });
 
+  it('creates logger without stream and with default serviceName', () => {
+    const logger = createAuditLogger();
+    expect(logger).toBeDefined();
+    expect(typeof logger.info).toBe('function');
+  });
+
   it('logs to provided writable stream with structured output', () => {
     const chunks = [];
     const stream = new Writable({

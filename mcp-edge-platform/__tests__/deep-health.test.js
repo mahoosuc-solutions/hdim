@@ -38,4 +38,21 @@ describe('platform edge_health deep probe', () => {
     expect(payload.downstream.gateway.reachable).toBe(false);
     expect(payload.status).toBe('degraded');
   });
+
+  it('reports healthy when gateway is reachable', async () => {
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockResolvedValue({ ok: true });
+
+    try {
+      const res = await request.post('/mcp')
+        .set('x-operator-role', 'platform_admin')
+        .send({ jsonrpc: '2.0', id: 10, method: 'tools/call', params: { name: 'edge_health', arguments: {} } });
+
+      const payload = JSON.parse(res.body.result.content[0].text);
+      expect(payload.status).toBe('healthy');
+      expect(payload.downstream.gateway.reachable).toBe(true);
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });

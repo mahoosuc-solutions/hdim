@@ -50,6 +50,16 @@ describe('docker-client', () => {
       const result = parseComposePsJson(output);
       expect(result).toHaveLength(1);
     });
+
+    it('returns empty array for malformed JSON array', () => {
+      expect(parseComposePsJson('[not valid json')).toEqual([]);
+    });
+
+    it('skips malformed NDJSON lines starting with {', () => {
+      const result = parseComposePsJson('{not json}\n{"Name":"svc1"}');
+      expect(result).toHaveLength(1);
+      expect(result[0].Name).toBe('svc1');
+    });
   });
 
   describe('createDockerClient', () => {

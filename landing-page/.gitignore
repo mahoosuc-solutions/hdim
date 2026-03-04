@@ -12,6 +12,9 @@ dist/
 .next/
 out/
 
+# TypeScript
+*.tsbuildinfo
+
 # Misc
 .DS_Store
 .env

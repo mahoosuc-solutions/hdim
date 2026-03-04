@@ -44,4 +44,26 @@ describe('health endpoint HTTP behavior', () => {
     const res = await supertest(app).get('/health');
     expect(res.body.status).toBe('degraded');
   });
+
+  it('returns HTTP 503 when statusProvider reports unhealthy', async () => {
+    const app = express();
+    app.use(createHealthRouter({
+      serviceName: 'test', version: '1.0.0',
+      statusProvider: () => ({ status: 'unhealthy' })
+    }));
+    const res = await supertest(app).get('/health');
+    expect(res.status).toBe(503);
+    expect(res.body.status).toBe('unhealthy');
+  });
+
+  it('returns HTTP 200 for degraded status', async () => {
+    const app = express();
+    app.use(createHealthRouter({
+      serviceName: 'test', version: '1.0.0',
+      statusProvider: () => ({ status: 'degraded' })
+    }));
+    const res = await supertest(app).get('/health');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('degraded');
+  });
 });

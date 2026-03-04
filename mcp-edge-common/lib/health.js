@@ -19,7 +19,9 @@ function createHealthRouter({ serviceName, version, statusProvider }) {
   }
 
   router.get('/health', (req, res) => {
-    res.json(buildStatus());
+    const body = buildStatus();
+    const statusCode = body.status === 'unhealthy' ? 503 : 200;
+    res.status(statusCode).json(body);
   });
 
   return router;

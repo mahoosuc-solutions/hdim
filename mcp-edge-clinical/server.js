@@ -16,6 +16,15 @@ function loadStrategy(strategyName, client) {
   return strategy.loadTools(client);
 }
 
+function loadRolePolicies(strategyName) {
+  try {
+    const { clinicalRolePolicies } = require(`./lib/strategies/${strategyName}/role-policies`);
+    return clinicalRolePolicies();
+  } catch {
+    return undefined; // fall back to common default policies
+  }
+}
+
 function createApp() {
   const app = express();
   app.use(helmet());
@@ -36,7 +45,8 @@ function createApp() {
     serverName: 'hdim-clinical-edge',
     serverVersion: '0.1.0',
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
-    fixturesDir: path.join(__dirname, 'lib', 'strategies', strategyName, 'fixtures')
+    fixturesDir: path.join(__dirname, 'lib', 'strategies', strategyName, 'fixtures'),
+    rolePolicies: loadRolePolicies(strategyName)
   }));
 
   return app;

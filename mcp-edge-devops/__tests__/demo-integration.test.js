@@ -11,10 +11,15 @@ const DEVOPS_TOOLS = [
   'build_status'
 ];
 
+const TOOL_ARGS = {
+  docker_logs: { service: 'fhir-service' },
+  docker_restart: { service: 'fhir-service' }
+};
+
 function callTool(request, name, id = 1) {
   return request.post('/mcp')
     .set('x-operator-role', 'platform_admin')
-    .send({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: {} } });
+    .send({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: TOOL_ARGS[name] || {} } });
 }
 
 describe('devops edge — demo mode integration', () => {

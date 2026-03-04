@@ -156,6 +156,9 @@
     "koa": "3.1.2",
     "tar": "7.5.9",
     "minimatch": "10.2.4",
+    "test-exclude": {
+      "minimatch": "^3.1.2"
+    },
     "rollup": "4.59.0",
     "systeminformation": "5.31.1",
     "undici": "7.22.0",

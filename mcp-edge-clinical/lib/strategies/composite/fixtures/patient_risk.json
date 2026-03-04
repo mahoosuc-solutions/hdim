@@ -1,0 +1,44 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "riskAssessment": {
+      "overallRiskLevel": "moderate",
+      "overallScore": 3.2,
+      "lastAssessedDate": "2026-01-10",
+      "categories": [
+        {
+          "category": "HCC Risk Score",
+          "score": 1.45,
+          "level": "moderate",
+          "description": "Hierarchical Condition Category risk adjustment score"
+        },
+        {
+          "category": "Readmission Risk",
+          "score": 0.12,
+          "level": "low",
+          "description": "30-day hospital readmission probability"
+        },
+        {
+          "category": "Diabetes Complication Risk",
+          "score": 0.65,
+          "level": "high",
+          "description": "Risk of diabetes-related complications within 12 months"
+        },
+        {
+          "category": "Medication Adherence",
+          "score": 0.78,
+          "level": "moderate",
+          "description": "Proportion of days covered (PDC) for diabetes medications"
+        }
+      ],
+      "riskFactors": [
+        "Type 2 diabetes mellitus",
+        "HbA1c above target (7.2%)",
+        "Age > 40 with metabolic syndrome"
+      ]
+    }
+  },
+  "demoMode": true
+}

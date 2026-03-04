@@ -3,14 +3,14 @@
 **Date:** 2026-03-04
 **Version:** 1.0
 **Author:** Claude Code + Aaron
-**Total Tests:** 566 (548 MCP edge + 18 bridge)
+**Total Tests:** 592 (574 MCP edge + 18 bridge)
 **Coverage:** 99.27% statements, 92.60% branches, 100% functions
 
 ---
 
 ## Executive Summary
 
-The HDIM MCP Edge security hardening initiative added 133 new tests across 11 new test suites, bringing the total from 433 tests (40 suites) to 566 tests (51 suites) with zero failures. Every security control was implemented using a test-driven development (TDD) approach: proof tests were written first to define the control boundary, then implementation was wired in, and full regression confirmed no regressions. Coverage remained above 99% for statements and 100% for functions throughout.
+The HDIM MCP Edge security hardening initiative added 159 new tests across 11 new test suites, bringing the total from 433 tests (40 suites) to 592 tests (51 suites) with zero failures. Every security control was implemented using a test-driven development (TDD) approach: proof tests were written first to define the control boundary, then implementation was wired in, and full regression confirmed no regressions. Coverage remained above 99% for statements and 100% for functions throughout.
 
 This document maps each security control to concrete test evidence across five compliance frameworks: HIPAA Security Rule, SOC 2 Trust Services Criteria, OWASP API Security Top 10 (2023), NIST 800-53, and CIS Benchmarks. Every mapping references the exact test file, test count, and key assertions so that auditors can independently verify each control by running the referenced test commands.
 
@@ -112,7 +112,7 @@ The architecture follows a sidecar-per-service-group pattern with CISO-required 
 
 | Metric | Baseline (Wave 0) | Final (Wave 3) | Change |
 |--------|-------------------|----------------|--------|
-| Tests | 433 | 566 | +133 (+30.7%) |
+| Tests | 433 | 592 | +159 (+36.7%) |
 | Test Suites | 40 | 51 | +11 |
 | Statements | 99.42% | 99.27% | -0.15% (new code paths) |
 | Branches | 92.93% | 92.60% | -0.33% (deep health probe success paths) |

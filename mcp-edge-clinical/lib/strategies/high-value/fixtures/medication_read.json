@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "MedicationRequest",
+  "data": {
+    "resourceType": "MedicationRequest",
+    "id": "med-001",
+    "status": "active",
+    "intent": "order",
+    "medicationCodeableConcept": {
+      "coding": [{ "system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "860975", "display": "Metformin 500 MG Oral Tablet" }]
+    },
+    "subject": {
+      "reference": "Patient/f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    },
+    "authoredOn": "2025-06-15",
+    "dosageInstruction": [
+      {
+        "text": "Take 1 tablet twice daily with meals",
+        "timing": { "repeat": { "frequency": 2, "period": 1, "periodUnit": "d" } }
+      }
+    ]
+  },
+  "demoMode": true
+}

@@ -1,0 +1,40 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "careGaps": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "measureId": "HbA1c-Control",
+        "measureName": "Hemoglobin A1c Control for Patients with Diabetes",
+        "status": "open",
+        "priority": "high",
+        "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "dueDate": "2026-03-31",
+        "lastEvaluated": "2026-02-15T10:30:00Z",
+        "evidence": {
+          "lastHbA1c": 7.2,
+          "lastHbA1cDate": "2026-01-10",
+          "targetThreshold": 8.0
+        }
+      },
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440002",
+        "measureId": "BCS",
+        "measureName": "Breast Cancer Screening",
+        "status": "open",
+        "priority": "medium",
+        "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "dueDate": "2026-12-31",
+        "lastEvaluated": "2026-02-15T10:30:00Z",
+        "evidence": {
+          "lastScreeningDate": null,
+          "screeningDueBy": "2026-12-31"
+        }
+      }
+    ],
+    "total": 2,
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

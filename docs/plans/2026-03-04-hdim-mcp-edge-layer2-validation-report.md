@@ -254,3 +254,37 @@ All uncovered lines are defensive edge cases. No business logic or security-crit
 | RBAC test cases | 56 | 352+ | 408+ |
 | Sidecars | 2 | 1 | 3 |
 | Ports | 3100, 3200 | 3300 | 3 |
+
+---
+
+## Release Hardening (2026-03-04)
+
+| Fix | Status |
+|-----|--------|
+| Remove unused pino from clinical | Done |
+| Align supertest to ^7.2.2 | Done |
+| Wire pino logger into clinical server | Done |
+| Replace console.log in all 3 index.js | Done |
+| Add rate limiter to clinical server | Done |
+| Fix Docker compose env_file (.env) | Done |
+| Align healthcheck to 10s/2s/5s/6 | Done |
+| Align .env.example files | Done |
+| ESLint no-console enforcement | Done |
+| jest.config.js with coverage thresholds | Done |
+| README.md per package (4) | Done |
+| CHANGELOG v0.1.0 entry | Done |
+| Full test suite regression (1,296 tests) | Done |
+| ESLint zero errors across all packages | Done |
+| Docker build smoke test | Done (all 3 images built successfully) |
+
+### Post-Hardening Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total tests | 1,296 (98 suites) |
+| Statement coverage | 99.35% |
+| Branch coverage | 95.01% |
+| Function coverage | 100% |
+| Line coverage | 99.35% |
+| ESLint errors | 0 |
+| Hardening commits | 8 |

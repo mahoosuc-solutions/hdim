@@ -16,6 +16,10 @@ const ROLE_TOOL_MATRIX = {
 
 jest.setTimeout(30_000);
 
+const TOOL_ARGS = {
+  demo_seed: { scenarioName: 'hedis-evaluation' }
+};
+
 describe('RBAC exhaustive matrix — platform edge (7 roles × 8 tools)', () => {
   let request;
   beforeAll(() => { request = supertest(createApp()); });
@@ -30,7 +34,7 @@ describe('RBAC exhaustive matrix — platform edge (7 roles × 8 tools)', () => 
   it.each(cases)('%s %s → %s', async (role, tool, allowed) => {
     const res = await request.post('/mcp')
       .set('x-operator-role', role)
-      .send({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: tool, arguments: {} } });
+      .send({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: tool, arguments: TOOL_ARGS[tool] || {} } });
     if (allowed) {
       expect(res.body.error).toBeUndefined();
       expect(res.body.result).toBeDefined();

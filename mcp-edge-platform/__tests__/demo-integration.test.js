@@ -12,10 +12,14 @@ const PLATFORM_TOOLS = [
   'demo_seed'
 ];
 
+const TOOL_ARGS = {
+  demo_seed: { scenarioName: 'hedis-evaluation' }
+};
+
 function callTool(request, name, id = 1) {
   return request.post('/mcp')
     .set('x-operator-role', 'platform_admin')
-    .send({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: {} } });
+    .send({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: TOOL_ARGS[name] || {} } });
 }
 
 describe('platform edge — demo mode integration', () => {

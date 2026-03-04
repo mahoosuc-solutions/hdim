@@ -1,10 +1,25 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'measure_score',
-    description: 'Get aggregated quality score for a patient',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    description: 'Get quality measure compliance score for a patient.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        patientId: { type: 'string', description: 'Patient UUID' },
+        tenantId: { type: 'string', description: 'Tenant identifier' }
+      },
+      required: ['patientId', 'tenantId'],
+      additionalProperties: false
+    },
     handler: async (args) => {
-      return { content: [{ type: 'text', text: JSON.stringify({ stub: true, tool: 'measure_score' }, null, 2) }] };
+      const { patientId, tenantId } = args;
+      try {
+        const path = `/quality-measure/score?patient=${encodeURIComponent(patientId)}`;
+        const res = await clinicalClient.get(path, { tenantId });
+        return { content: [{ type: 'text', text: JSON.stringify({ status: res.status, ok: res.ok, data: res.body }, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: err?.message || String(err) }, null, 2) }] };
+      }
     }
   };
 }

@@ -6,7 +6,7 @@ const { validateToolParams } = require('./param-validator');
 
 const MCP_PROTOCOL_VERSION = '2025-11-25';
 
-function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger }) {
+function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies }) {
   const router = express.Router();
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
@@ -37,7 +37,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
 
     const role = extractOperatorRole(req);
     const authResult = authorizeToolCall({
-      toolName: name, role, enforce: enforceRoleAuth
+      toolName: name, role, enforce: enforceRoleAuth, customPolicies: rolePolicies
     });
     if (!authResult.allowed) {
       if (logger) logger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');

@@ -27,7 +27,7 @@ function rolePolicies() {
   };
 }
 
-function authorizeToolCall({ toolName, role, enforce }) {
+function authorizeToolCall({ toolName, role, enforce, customPolicies }) {
   const normalized = normalizeToolName(toolName);
 
   if (!enforce) {
@@ -38,7 +38,7 @@ function authorizeToolCall({ toolName, role, enforce }) {
     return { allowed: false, normalized, reason: 'missing_operator_role' };
   }
 
-  const policies = rolePolicies();
+  const policies = customPolicies || rolePolicies();
   const matchers = policies[role];
   if (!matchers || matchers.length === 0) {
     return { allowed: false, normalized, reason: 'unknown_role' };

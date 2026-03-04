@@ -13,7 +13,7 @@
 The HDIM MCP Edge sidecar architecture has undergone a comprehensive security hardening validation. Starting from 433 tests with built-but-unwired security controls, the hardening effort:
 
 - **Wired 5 security controls** into the live Express pipeline: rate limiting, CORS lockdown, audit logging, parameter validation, and deep health probes
-- **Added 133 new tests** across 11 new test suites, bringing the total to 566 tests
+- **Added 159 new tests** across 11 new test suites, bringing the total to 592 tests
 - **Achieved 99.27% statement coverage** and 100% function coverage
 - **Mapped controls to 5 compliance frameworks**: HIPAA, SOC 2, OWASP API Top 10, NIST 800-53, and CIS Benchmarks
 - **Proved sidecar isolation** with exhaustive boundary tests (zero cross-sidecar tool leakage)
@@ -69,7 +69,7 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 
 | Metric | Before (Baseline) | After (Hardened) | Change |
 |--------|-------------------|------------------|--------|
-| Total Tests | 433 | 566 | +133 (+30.7%) |
+| Total Tests | 433 | 592 | +159 (+36.7%) |
 | Test Suites | 40 | 51 | +11 (+27.5%) |
 | Statements | 99.42% | 99.27% | -0.15% |
 | Branches | 92.93% | 92.60% | -0.33% |
@@ -78,7 +78,7 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 | Proof Test Files | 0 | 8 | +8 |
 | Compliance Frameworks | 0 | 5 | +5 |
 | RBAC Test Cases | 56 | 105 | +49 |
-| Injection Test Cases | 0 | 20 | +20 |
+| Injection Test Cases | 0 | 30 | +30 |
 
 ---
 
@@ -90,9 +90,9 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 | Integration Tests | ~120 | Supertest end-to-end MCP round-trips |
 | Security Proof Tests | ~100 | Dedicated auditor-runnable proof files |
 | RBAC Matrix Tests | 105 | Exhaustive role×tool permutation tests |
-| Injection Tests | 20 | 9 payloads × 2 tools + validation |
+| Injection Tests | 30 | 9 payloads × 2 tools + validation + 10 direct pattern tests |
 | Bridge Tests | 18 | stdio↔HTTP bridge integration |
-| **Total** | **566** | |
+| **Total** | **592** | |
 
 ---
 

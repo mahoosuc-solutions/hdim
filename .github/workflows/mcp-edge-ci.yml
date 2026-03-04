@@ -43,7 +43,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage enforcement
-        run: npx jest --projects mcp-edge-common mcp-edge-devops mcp-edge-platform --coverage --ci
+        run: npx jest --projects mcp-edge-common mcp-edge-devops mcp-edge-platform mcp-edge-clinical --coverage --ci
         env:
           HDIM_DEMO_MODE: 'true'
 

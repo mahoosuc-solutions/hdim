@@ -42,7 +42,7 @@ describe('clinical edge integration (demo mode)', () => {
         .set('x-operator-role', 'clinical_admin')
         .send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
       expect(list.status).toBe(200);
-      expect(list.body.result.tools.length).toBe(25);
+      expect(list.body.result.tools.length).toBe(26);
 
       // 3. Verify each tool has valid schema
       for (const tool of list.body.result.tools) {

@@ -36,6 +36,9 @@ function createApp() {
   const client = createClinicalClient();
   const tools = loadStrategy(strategyName, client);
 
+  // Infrastructure tool — loaded regardless of strategy
+  tools.push(require('./lib/tools/edge-health').definition);
+
   app.use(createHealthRouter({
     serviceName: 'hdim-clinical-edge',
     version: '0.1.0'

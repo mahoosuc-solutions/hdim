@@ -10,14 +10,15 @@ afterAll(() => {
   delete process.env.MCP_EDGE_RATE_LIMIT_MAX;
 });
 
-// All 25 composite tools
+// All 26 composite tools (25 clinical + 1 infrastructure)
 const ALL_TOOLS = [
   'patient_summary', 'patient_timeline', 'patient_risk', 'patient_list', 'pre_visit_plan',
   'care_gap_list', 'care_gap_identify', 'care_gap_close', 'care_gap_stats', 'care_gap_population', 'care_gap_provider',
   'fhir_read', 'fhir_search', 'fhir_create', 'fhir_bundle',
   'cds_patient_view', 'health_score',
   'measure_evaluate', 'measure_results', 'measure_score', 'measure_population',
-  'cql_evaluate', 'cql_batch', 'cql_libraries', 'cql_result'
+  'cql_evaluate', 'cql_batch', 'cql_libraries', 'cql_result',
+  'edge_health'
 ];
 
 // Minimum valid arguments per tool (needed when auth passes and param validation runs)
@@ -46,7 +47,8 @@ const TOOL_ARGS = {
   cql_evaluate:       { library: 'lib1', patientId: 'p1', tenantId: 't1' },
   cql_batch:          { library: 'lib1', patientIds: ['p1'], tenantId: 't1' },
   cql_libraries:      { tenantId: 't1' },
-  cql_result:         { patientId: 'p1', library: 'lib1', tenantId: 't1' }
+  cql_result:         { patientId: 'p1', library: 'lib1', tenantId: 't1' },
+  edge_health:        {}
 };
 
 // Per-role allowed tool sets
@@ -75,7 +77,7 @@ const EXECUTIVE_TOOLS = new Set([
   'care_gap_stats', 'care_gap_population', 'measure_population', 'health_score'
 ]);
 
-// Build exhaustive 7x25 = 175 matrix
+// Build exhaustive 7x26 = 182 matrix
 function allowed(role, tool) {
   if (['clinical_admin', 'platform_admin', 'developer'].includes(role)) return true;
   if (role === 'clinician') return CLINICIAN_TOOLS.has(tool);
@@ -96,7 +98,7 @@ for (const role of ROLES) {
 
 jest.setTimeout(30_000);
 
-describe('RBAC exhaustive matrix — clinical edge (7 roles x 25 tools = 175 cases)', () => {
+describe('RBAC exhaustive matrix — clinical edge (7 roles x 26 tools = 182 cases)', () => {
   let request;
   beforeAll(() => { request = supertest(createApp()); });
 
@@ -108,9 +110,9 @@ describe('RBAC exhaustive matrix — clinical edge (7 roles x 25 tools = 175 cas
     }
   }
 
-  // Verify we have exactly 175 cases
-  it('matrix covers 175 role-tool pairs', () => {
-    expect(cases).toHaveLength(175);
+  // Verify we have exactly 182 cases
+  it('matrix covers 182 role-tool pairs', () => {
+    expect(cases).toHaveLength(182);
   });
 
   it.each(cases)('%s %s → %s', async (role, tool, isAllowed) => {

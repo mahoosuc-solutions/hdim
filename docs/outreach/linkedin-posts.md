@@ -7,3 +7,4 @@ Logs all published posts from `/social:linkedin` command.
 
 | Date | Tag/Topic | Mode | Post URL | Impressions | Comments | Notes |
 |------|-----------|------|----------|-------------|----------|-------|
+| 2026-03-03 | HEDIS quality measure gaps | thought-leadership | https://www.linkedin.com/feed/update/urn:li:share:7434744051519729674/ | — | — | |

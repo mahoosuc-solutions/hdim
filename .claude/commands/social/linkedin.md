@@ -136,40 +136,47 @@ Wait for input:
 
 ## Step 6: Publish to LinkedIn
 
-Source `.env.linkedin` and execute:
+Source `.env.linkedin` and execute using the **Posts API** (`/rest/posts`):
 
 ```bash
 source .env.linkedin
 
 POST_TEXT="$APPROVED_DRAFT"
 
-RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://api.linkedin.com/v2/ugcPosts \
+# LinkedIn Posts API (replaces deprecated ugcPosts API)
+# Requires: LinkedIn-Version header, author as urn:li:person:{id}
+# .env.linkedin must contain LINKEDIN_PERSON_ID (numeric ID, not URN)
+AUTHOR_URN="urn:li:person:${LINKEDIN_PERSON_ID}"
+
+RESPONSE=$(curl -s -w "\n%{http_code}" -X POST https://api.linkedin.com/rest/posts \
   -H "Authorization: Bearer $LINKEDIN_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
+  -H "LinkedIn-Version: 202401" \
   -H "X-Restli-Protocol-Version: 2.0.0" \
   -d "{
-    \"author\": \"$LINKEDIN_PERSON_URN\",
-    \"lifecycleState\": \"PUBLISHED\",
-    \"specificContent\": {
-      \"com.linkedin.ugc.ShareContent\": {
-        \"shareCommentary\": {
-          \"text\": $(echo "$POST_TEXT" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))')
-        },
-        \"shareMediaCategory\": \"NONE\"
-      }
+    \"author\": \"${AUTHOR_URN}\",
+    \"commentary\": $(echo "$POST_TEXT" | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read()))'),
+    \"visibility\": \"PUBLIC\",
+    \"distribution\": {
+      \"feedDistribution\": \"MAIN_FEED\",
+      \"targetEntities\": [],
+      \"thirdPartyDistributionChannels\": []
     },
-    \"visibility\": {
-      \"com.linkedin.ugc.MemberNetworkVisibility\": \"PUBLIC\"
-    }
+    \"lifecycleState\": \"PUBLISHED\",
+    \"isReshareDisabledByAuthor\": false
   }")
 
 HTTP_CODE=$(echo "$RESPONSE" | tail -1)
 BODY=$(echo "$RESPONSE" | head -n -1)
 
 if [ "$HTTP_CODE" = "201" ]; then
-  POST_URN=$(echo "$BODY" | python3 -c "import sys,json; print(json.load(sys.stdin).get('id',''))")
+  # Posts API returns the URN in the x-restli-id header or response body
+  POST_URN=$(echo "$BODY" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id', d.get('urn', '')))" 2>/dev/null)
+  if [ -z "$POST_URN" ]; then
+    # Fallback: extract from Location header if body is empty (201 with header-only response)
+    POST_URN="(check LinkedIn activity feed for published post)"
+  fi
   echo "✓ Published! URN: $POST_URN"
-  # Convert URN to URL: urn:li:ugcPost:1234567 → https://www.linkedin.com/feed/update/urn:li:ugcPost:1234567/
   POST_URL="https://www.linkedin.com/feed/update/${POST_URN}/"
 else
   echo "ERROR publishing (HTTP $HTTP_CODE):"
@@ -221,6 +228,12 @@ Print confirmation: `Logged to docs/outreach/linkedin-posts.md`
 
 ## Notes
 
+- **API Version:** This skill uses the LinkedIn **Posts API** (`/rest/posts`) which replaced the deprecated UGC Posts API (`/v2/ugcPosts`) in 2024. The `LinkedIn-Version: 202401` header is required.
+- **OAuth Scope:** The Posts API requires the `w_member_social` OAuth scope. Ensure this scope was granted during `scripts/linkedin-auth.sh`.
+- **Scheduling Limitation:** LinkedIn's API does **not** support scheduled publishing for personal profiles. There is no `scheduledPublishAt` field. To schedule posts, use one of:
+  1. LinkedIn's native post scheduler (compose → clock icon → set date/time)
+  2. A local cron job that calls this command at the desired time
+  3. Manual copy-paste from draft files at the target time
+- **`.env.linkedin` required fields:** `LINKEDIN_ACCESS_TOKEN`, `LINKEDIN_PERSON_ID` (numeric, e.g., `A1b2C3d4E5`), `LINKEDIN_TOKEN_EXPIRY`, `LINKEDIN_REFRESH_TOKEN`, `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`
 - Phase 2 engagement sync (`scripts/linkedin-engagement-sync.sh`) is out of scope for this command. Fill Impressions and Comments columns manually until Phase 2 is built.
-- LinkedIn's UGC Posts API requires the `w_member_social` OAuth scope. Ensure this scope was granted during `scripts/linkedin-auth.sh`.
 - Posts cannot be edited via API after publishing. Reject and re-run if corrections needed.

@@ -85,4 +85,14 @@ describe('fhir_search tool', () => {
     expect(parsed.data).toBeUndefined();
     expect(result.content[0].text).not.toContain('secret-patient-id');
   });
+
+  it('handles non-Error throw values in catch block', async () => {
+    mockClient.get.mockRejectedValue('raw string error');
+
+    const result = await definition.handler({ resourceType: 'Patient', tenantId: 't1' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('raw string error');
+    expect(parsed.resourceType).toBe('Patient');
+  });
 });

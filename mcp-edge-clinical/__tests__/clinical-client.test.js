@@ -70,6 +70,17 @@ describe('createClinicalClient', () => {
   });
 
   describe('post()', () => {
+    it('truncates response body at 20KB', async () => {
+      const bigBody = 'y'.repeat(25_000);
+      global.fetch = jest.fn().mockResolvedValue({
+        status: 201, ok: true, text: () => Promise.resolve(bigBody)
+      });
+      const client = createClinicalClient({ baseUrl: 'http://gw:18080' });
+      const res = await client.post('/some/path', { data: 1 }, { tenantId: 't1' });
+      expect(res.body.length).toBeLessThan(21_000);
+      expect(res.body).toContain('...[truncated]');
+    });
+
     it('sends POST with body, Authorization, and X-Tenant-ID', async () => {
       global.fetch = jest.fn().mockResolvedValue({
         status: 201, ok: true, text: () => Promise.resolve('{"created":true}')

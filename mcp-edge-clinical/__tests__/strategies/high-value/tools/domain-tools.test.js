@@ -39,6 +39,20 @@ describe('care_gap_list tool', () => {
     expect(parsed.ok).toBe(false);
     expect(result.content[0].text).not.toContain('secret-id');
   });
+
+  it('handles non-Error throw values', async () => {
+    mockClient.get.mockRejectedValue('string-error');
+    const result = await definition.handler({ patientId: 'p1', tenantId: 't1' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('string-error');
+  });
+
+  it('falls back to /care-gap/open for unknown status values', async () => {
+    mockClient.get.mockResolvedValue({ status: 200, ok: true, body: '[]' });
+    await definition.handler({ patientId: 'p1', tenantId: 't1', status: 'unknown-status' });
+    expect(mockClient.get).toHaveBeenCalledWith('/care-gap/open?patient=p1', { tenantId: 't1' });
+  });
 });
 
 describe('care_gap_close tool', () => {
@@ -75,6 +89,14 @@ describe('care_gap_close tool', () => {
     expect(parsed.ok).toBe(false);
     expect(parsed.error).toBe('forbidden');
   });
+
+  it('handles non-Error throw values', async () => {
+    mockClient.post.mockRejectedValue(null);
+    const result = await definition.handler({ gapId: 'g1', tenantId: 't1', closedBy: 'x', reason: 'y' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('null');
+  });
 });
 
 describe('care_gap_stats tool', () => {
@@ -107,6 +129,22 @@ describe('care_gap_stats tool', () => {
     expect(result.content[0].type).toBe('text');
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.ok).toBe(true);
+  });
+
+  it('returns error on failure', async () => {
+    mockClient.get.mockRejectedValue(new Error('service unavailable'));
+    const result = await definition.handler({ tenantId: 't1' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('service unavailable');
+  });
+
+  it('handles non-Error throw values', async () => {
+    mockClient.get.mockRejectedValue(undefined);
+    const result = await definition.handler({ tenantId: 't1' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('undefined');
   });
 });
 
@@ -153,6 +191,14 @@ describe('measure_evaluate tool', () => {
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.ok).toBe(false);
   });
+
+  it('handles non-Error throw values', async () => {
+    mockClient.post.mockRejectedValue(42);
+    const result = await definition.handler({ patientId: 'p1', tenantId: 't1' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('42');
+  });
 });
 
 describe('measure_results tool', () => {
@@ -196,5 +242,13 @@ describe('measure_results tool', () => {
     const parsed = JSON.parse(result.content[0].text);
     expect(parsed.ok).toBe(false);
     expect(parsed.error).toBe('not found');
+  });
+
+  it('handles non-Error throw values', async () => {
+    mockClient.get.mockRejectedValue(false);
+    const result = await definition.handler({ patientId: 'p1', tenantId: 't1' });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.ok).toBe(false);
+    expect(parsed.error).toBe('false');
   });
 });

@@ -1,5 +1,19 @@
 const { createPhiAuditLogger } = require('../lib/phi-audit');
 
+describe('createPhiAuditLogger — default serviceName', () => {
+  it('uses default serviceName when none provided', () => {
+    const logged = [];
+    const mockStream = { write: (chunk) => { logged.push(JSON.parse(chunk)); } };
+    const logger = createPhiAuditLogger({ stream: mockStream });
+
+    logger.logToolAccess({
+      tool: 'test_tool', role: 'admin', tenantId: 'acme',
+      success: true, durationMs: 10, phi: false
+    });
+    expect(logged[0].source).toBe('mcp-edge-clinical');
+  });
+});
+
 describe('createPhiAuditLogger', () => {
   let logged, logger;
 

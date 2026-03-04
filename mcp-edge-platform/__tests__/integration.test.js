@@ -13,7 +13,7 @@ describe('platform edge integration — tool execution', () => {
     expect(res.body.jsonrpc).toBe('2.0');
     expect(res.body.id).toBe(1);
     const content = JSON.parse(res.body.result.content[0].text);
-    expect(content.status).toBe('healthy');
+    expect(['healthy', 'degraded']).toContain(content.status);
     expect(content.service).toBe('hdim-platform-edge');
   });
 

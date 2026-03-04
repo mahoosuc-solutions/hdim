@@ -103,6 +103,9 @@ validation/results/*.json
 # Claude Code local settings
 .claude/settings.local.json
 
+# MCP Edge local env (use .env.example as template)
+mcp-edge-*/.env
+
 # Generated reports
 reports/
 

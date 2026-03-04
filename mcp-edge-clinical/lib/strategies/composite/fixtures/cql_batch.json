@@ -1,0 +1,41 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "batchId": "batch-001",
+    "library": "HbA1c-Control",
+    "version": "2026-01",
+    "evaluatedAt": "2026-03-04T14:35:00Z",
+    "totalPatients": 3,
+    "results": [
+      {
+        "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "status": "compliant",
+        "numerator": true,
+        "denominator": true,
+        "initialPopulation": true
+      },
+      {
+        "patientId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "status": "non-compliant",
+        "numerator": false,
+        "denominator": true,
+        "initialPopulation": true
+      },
+      {
+        "patientId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "status": "excluded",
+        "numerator": false,
+        "denominator": false,
+        "initialPopulation": false
+      }
+    ],
+    "summary": {
+      "compliant": 1,
+      "nonCompliant": 1,
+      "excluded": 1,
+      "complianceRate": 0.5
+    }
+  },
+  "demoMode": true
+}

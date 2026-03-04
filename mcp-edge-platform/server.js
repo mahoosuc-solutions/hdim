@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('node:path');
 const cors = require('cors');
 const helmet = require('helmet');
-const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions } = require('hdim-mcp-edge-common');
+const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
 const { createPlatformClient } = require('./lib/platform-client');
 
 function loadTools() {
@@ -34,12 +34,15 @@ function createApp() {
     version: '0.1.0'
   }));
 
+  const logger = createAuditLogger({ serviceName: 'hdim-platform-edge' });
+
   app.use(createMcpRouter({
     tools,
     serverName: 'hdim-platform-edge',
     serverVersion: '0.1.0',
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
-    fixturesDir: path.join(__dirname, 'fixtures')
+    fixturesDir: path.join(__dirname, 'fixtures'),
+    logger
   }));
 
   return app;

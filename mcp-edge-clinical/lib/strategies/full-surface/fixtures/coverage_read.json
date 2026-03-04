@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Coverage",
+  "data": "{\"resourceType\":\"Coverage\",\"id\":\"demo-coverage-001\"}",
+  "demoMode": true
+}

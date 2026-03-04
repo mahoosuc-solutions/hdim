@@ -1,0 +1,7 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "DocumentReference",
+  "data": "{\"resourceType\":\"DocumentReference\",\"id\":\"new-document_reference-001\"}",
+  "demoMode": true
+}

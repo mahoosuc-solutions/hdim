@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Goal",
+  "data": "{\"resourceType\":\"Goal\",\"id\":\"demo-goal-001\"}",
+  "demoMode": true
+}

@@ -1,0 +1,65 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "cards": [
+      {
+        "uuid": "cds-card-001",
+        "summary": "HbA1c screening overdue",
+        "detail": "Patient has not had a Hemoglobin A1c test in the past 12 months. Last result: 7.2% on 2025-01-10.",
+        "indicator": "warning",
+        "source": {
+          "label": "HDIM Quality Measure Engine",
+          "url": "https://healthdatainmotion.com"
+        },
+        "suggestions": [
+          {
+            "label": "Order HbA1c Lab",
+            "uuid": "sug-001",
+            "actions": [
+              {
+                "type": "create",
+                "description": "Order Hemoglobin A1c test",
+                "resource": {
+                  "resourceType": "ServiceRequest",
+                  "code": {
+                    "coding": [{ "system": "http://loinc.org", "code": "4548-4", "display": "Hemoglobin A1c" }]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "uuid": "cds-card-002",
+        "summary": "Breast cancer screening due",
+        "detail": "Patient is eligible for breast cancer screening. No mammogram on record in the measurement period.",
+        "indicator": "info",
+        "source": {
+          "label": "HDIM Quality Measure Engine",
+          "url": "https://healthdatainmotion.com"
+        },
+        "suggestions": [
+          {
+            "label": "Order Mammogram",
+            "uuid": "sug-002",
+            "actions": [
+              {
+                "type": "create",
+                "description": "Order screening mammogram",
+                "resource": {
+                  "resourceType": "ServiceRequest",
+                  "code": {
+                    "coding": [{ "system": "http://loinc.org", "code": "24606-6", "display": "Mammogram screening" }]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "demoMode": true
+}

@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Observation",
+  "data": "{\"resourceType\":\"Observation\",\"id\":\"demo-observation-001\"}",
+  "demoMode": true
+}

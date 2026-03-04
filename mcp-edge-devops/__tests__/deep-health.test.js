@@ -28,4 +28,24 @@ describe('devops edge_health deep probe', () => {
     expect(typeof payload.uptime).toBe('number');
     expect(payload.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
+
+  it('reports healthy when docker is reachable', async () => {
+    let definition;
+    jest.isolateModules(() => {
+      jest.doMock('node:child_process', () => ({
+        ...jest.requireActual('node:child_process'),
+        execFile: jest.fn((cmd, args, opts, cb) => {
+          if (typeof opts === 'function') { cb = opts; }
+          cb(null, { stdout: '24.0.7\n', stderr: '' });
+        })
+      }));
+      definition = require('../lib/tools/edge-health').definition;
+    });
+
+    const result = await definition.handler();
+    const payload = JSON.parse(result.content[0].text);
+    expect(payload.status).toBe('healthy');
+    expect(payload.downstream.docker.reachable).toBe(true);
+    expect(payload.downstream.docker.version).toBe('24.0.7');
+  });
 });

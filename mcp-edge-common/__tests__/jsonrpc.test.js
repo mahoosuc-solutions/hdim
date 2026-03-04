@@ -44,5 +44,17 @@ describe('jsonrpc', () => {
     it('returns null for empty string', () => {
       expect(parseJsonRpcRequest('')).toBeNull();
     });
+
+    it('returns null for invalid JSON that starts with {', () => {
+      expect(parseJsonRpcRequest('{not valid json}')).toBeNull();
+    });
+
+    it('returns null for non-2.0 jsonrpc version', () => {
+      expect(parseJsonRpcRequest('{"jsonrpc":"1.0","method":"test"}')).toBeNull();
+    });
+
+    it('returns null for missing method', () => {
+      expect(parseJsonRpcRequest('{"jsonrpc":"2.0","id":1}')).toBeNull();
+    });
   });
 });

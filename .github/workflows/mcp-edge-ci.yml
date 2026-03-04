@@ -1,0 +1,95 @@
+name: MCP Edge CI
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - 'mcp-edge-common/**'
+      - 'mcp-edge-devops/**'
+      - 'mcp-edge-platform/**'
+      - 'mcp-edge-clinical/**'
+      - 'mcp-bridge-desktop/**'
+      - '.github/workflows/mcp-edge-ci.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'mcp-edge-common/**'
+      - 'mcp-edge-devops/**'
+      - 'mcp-edge-platform/**'
+      - 'mcp-edge-clinical/**'
+      - 'mcp-bridge-desktop/**'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: MCP Edge Tests + Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage enforcement
+        run: npx jest --projects mcp-edge-common mcp-edge-devops mcp-edge-platform --coverage --ci
+        env:
+          HDIM_DEMO_MODE: 'true'
+
+      - name: Run bridge tests
+        run: npx jest --project mcp-bridge-desktop --ci
+        continue-on-error: true
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-edge-coverage
+          retention-days: 30
+          path: coverage/
+          if-no-files-found: warn
+
+  lint:
+    name: MCP Edge Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint mcp-edge-common
+        run: npx eslint .
+        working-directory: mcp-edge-common
+
+      - name: Lint mcp-edge-devops
+        run: npx eslint .
+        working-directory: mcp-edge-devops
+
+      - name: Lint mcp-edge-platform
+        run: npx eslint .
+        working-directory: mcp-edge-platform
+
+      - name: Lint mcp-edge-clinical
+        run: npx eslint .
+        working-directory: mcp-edge-clinical

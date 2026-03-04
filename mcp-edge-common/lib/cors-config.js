@@ -19,6 +19,9 @@ function createCorsOptions() {
     origin = envOrigins.split(',').map(o => o.trim()).filter(Boolean);
   }
 
+  // credentials:false is correct for API-key auth (Authorization header).
+  // If cookie-based JWT auth is added (Layer 4), change to credentials:true
+  // and ensure origin is never '*' (browsers reject wildcard + credentials).
   return { origin, credentials: false };
 }
 

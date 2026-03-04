@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "PractitionerRole",
+  "data": "{\"resourceType\":\"PractitionerRole\",\"id\":\"demo-practitioner_role-001\"}",
+  "demoMode": true
+}

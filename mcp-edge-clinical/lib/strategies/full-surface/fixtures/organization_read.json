@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Organization",
+  "data": "{\"resourceType\":\"Organization\",\"id\":\"demo-organization-001\"}",
+  "demoMode": true
+}

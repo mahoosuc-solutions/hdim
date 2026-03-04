@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Bundle",
+  "data": "{\"resourceType\":\"Bundle\",\"id\":\"demo-bundle-001\"}",
+  "demoMode": true
+}

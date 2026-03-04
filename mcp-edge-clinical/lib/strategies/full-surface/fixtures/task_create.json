@@ -1,0 +1,7 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "Task",
+  "data": "{\"resourceType\":\"Task\",\"id\":\"new-task-001\"}",
+  "demoMode": true
+}

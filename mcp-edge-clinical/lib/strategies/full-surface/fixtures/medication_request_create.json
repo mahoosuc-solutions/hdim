@@ -1,0 +1,7 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "MedicationRequest",
+  "data": "{\"resourceType\":\"MedicationRequest\",\"id\":\"new-medication_request-001\"}",
+  "demoMode": true
+}

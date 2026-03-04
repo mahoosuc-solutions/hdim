@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Appointment",
+  "data": "{\"resourceType\":\"Appointment\",\"id\":\"demo-appointment-001\"}",
+  "demoMode": true
+}

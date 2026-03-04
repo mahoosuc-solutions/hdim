@@ -1,0 +1,7 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "DiagnosticReport",
+  "data": "{\"resourceType\":\"DiagnosticReport\",\"id\":\"demo-diagnostic_report-001\"}",
+  "demoMode": true
+}

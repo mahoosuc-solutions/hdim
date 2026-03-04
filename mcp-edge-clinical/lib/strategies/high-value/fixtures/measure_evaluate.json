@@ -1,0 +1,36 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "measureId": "HbA1c-Control",
+    "measureName": "Hemoglobin A1c Control for Patients with Diabetes",
+    "evaluationDate": "2026-03-04T14:30:00Z",
+    "measurementPeriod": {
+      "start": "2025-01-01",
+      "end": "2025-12-31"
+    },
+    "populationResults": {
+      "initialPopulation": true,
+      "denominator": true,
+      "denominatorExclusion": false,
+      "denominatorException": false,
+      "numerator": true,
+      "numeratorExclusion": false
+    },
+    "score": 1.0,
+    "status": "compliant",
+    "evidence": [
+      {
+        "resourceType": "Observation",
+        "code": "4548-4",
+        "display": "Hemoglobin A1c",
+        "value": 6.8,
+        "unit": "%",
+        "date": "2025-09-15"
+      }
+    ],
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

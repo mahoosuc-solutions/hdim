@@ -1,0 +1,33 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Patient",
+  "data": {
+    "resourceType": "Bundle",
+    "type": "searchset",
+    "total": 2,
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "resource": {
+          "resourceType": "Patient",
+          "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+          "name": [{ "family": "Doe", "given": ["John"] }],
+          "gender": "male",
+          "birthDate": "1985-07-12"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "resource": {
+          "resourceType": "Patient",
+          "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "name": [{ "family": "Smith", "given": ["Jane"] }],
+          "gender": "female",
+          "birthDate": "1990-03-22"
+        }
+      }
+    ]
+  },
+  "demoMode": true
+}

@@ -13,11 +13,10 @@
     "hdim-mcp-edge-common": "file:../mcp-edge-common",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "helmet": "^8.1.0",
-    "pino": "^9.6.0"
+    "helmet": "^8.1.0"
   },
   "devDependencies": {
     "jest": "^30.0.0",
-    "supertest": "^6.3.4"
+    "supertest": "^7.2.2"
   }
 }

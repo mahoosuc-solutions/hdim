@@ -1,0 +1,25 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "resourceType": "Bundle",
+    "type": "transaction-response",
+    "entry": [
+      {
+        "response": {
+          "status": "201 Created",
+          "location": "Patient/f47ac10b-58cc-4372-a567-0e02b2c3d479/_history/1",
+          "lastModified": "2026-01-15T14:30:00Z"
+        }
+      },
+      {
+        "response": {
+          "status": "201 Created",
+          "location": "Observation/c3d2e1f0-a1b2-4c3d-8e9f-0a1b2c3d4e5f/_history/1",
+          "lastModified": "2026-01-15T14:30:00Z"
+        }
+      }
+    ]
+  },
+  "demoMode": true
+}

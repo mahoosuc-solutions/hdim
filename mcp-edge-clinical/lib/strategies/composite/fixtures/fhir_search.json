@@ -1,0 +1,61 @@
+{
+  "status": 200,
+  "ok": true,
+  "resourceType": "Bundle",
+  "data": {
+    "resourceType": "Bundle",
+    "type": "searchset",
+    "total": 2,
+    "entry": [
+      {
+        "fullUrl": "urn:uuid:obs-001",
+        "resource": {
+          "resourceType": "Observation",
+          "id": "obs-001",
+          "status": "final",
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "4548-4",
+                "display": "Hemoglobin A1c"
+              }
+            ]
+          },
+          "valueQuantity": {
+            "value": 7.2,
+            "unit": "%",
+            "system": "http://unitsofmeasure.org",
+            "code": "%"
+          },
+          "effectiveDateTime": "2026-01-10T09:00:00Z"
+        }
+      },
+      {
+        "fullUrl": "urn:uuid:obs-002",
+        "resource": {
+          "resourceType": "Observation",
+          "id": "obs-002",
+          "status": "final",
+          "code": {
+            "coding": [
+              {
+                "system": "http://loinc.org",
+                "code": "2093-3",
+                "display": "Cholesterol [Mass/volume] in Serum or Plasma"
+              }
+            ]
+          },
+          "valueQuantity": {
+            "value": 195,
+            "unit": "mg/dL",
+            "system": "http://unitsofmeasure.org",
+            "code": "mg/dL"
+          },
+          "effectiveDateTime": "2026-01-10T09:00:00Z"
+        }
+      }
+    ]
+  },
+  "demoMode": true
+}

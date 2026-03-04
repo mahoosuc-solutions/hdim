@@ -1,0 +1,38 @@
+{
+  "status": 201,
+  "ok": true,
+  "resourceType": "Observation",
+  "data": {
+    "resourceType": "Observation",
+    "id": "c3d2e1f0-a1b2-4c3d-8e9f-0a1b2c3d4e5f",
+    "meta": {
+      "versionId": "1",
+      "lastUpdated": "2026-01-15T14:22:00Z"
+    },
+    "status": "final",
+    "code": {
+      "coding": [
+        {
+          "system": "http://loinc.org",
+          "code": "85354-9",
+          "display": "Blood pressure panel"
+        }
+      ]
+    },
+    "component": [
+      {
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "8480-6", "display": "Systolic blood pressure" }]
+        },
+        "valueQuantity": { "value": 128, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]" }
+      },
+      {
+        "code": {
+          "coding": [{ "system": "http://loinc.org", "code": "8462-4", "display": "Diastolic blood pressure" }]
+        },
+        "valueQuantity": { "value": 82, "unit": "mmHg", "system": "http://unitsofmeasure.org", "code": "mm[Hg]" }
+      }
+    ]
+  },
+  "demoMode": true
+}

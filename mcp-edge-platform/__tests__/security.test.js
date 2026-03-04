@@ -29,4 +29,14 @@ describe('platform edge security', () => {
       .send('not json at all');
     expect(res.status).toBe(400);
   });
+
+  describe('rate limiting', () => {
+    it('returns RateLimit-* headers on /mcp requests', async () => {
+      const res = await request.post('/mcp')
+        .set('x-operator-role', 'platform_admin')
+        .send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} });
+      expect(res.headers['ratelimit-limit']).toBeDefined();
+      expect(res.headers['ratelimit-remaining']).toBeDefined();
+    });
+  });
 });

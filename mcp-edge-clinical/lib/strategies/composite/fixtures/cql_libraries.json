@@ -1,0 +1,56 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "libraries": [
+      {
+        "id": "HbA1c-Control",
+        "name": "Hemoglobin A1c Control for Patients with Diabetes",
+        "version": "2026-01",
+        "status": "active",
+        "measureType": "HEDIS",
+        "domain": "Effectiveness of Care",
+        "description": "Assesses adults 18-75 with diabetes whose HbA1c was adequately controlled (<8.0%)."
+      },
+      {
+        "id": "BCS",
+        "name": "Breast Cancer Screening",
+        "version": "2026-01",
+        "status": "active",
+        "measureType": "HEDIS",
+        "domain": "Effectiveness of Care",
+        "description": "Women 50-74 who had a mammogram to screen for breast cancer in the past two years."
+      },
+      {
+        "id": "CCS",
+        "name": "Cervical Cancer Screening",
+        "version": "2026-01",
+        "status": "active",
+        "measureType": "HEDIS",
+        "domain": "Effectiveness of Care",
+        "description": "Women 21-64 who were screened for cervical cancer."
+      },
+      {
+        "id": "COL",
+        "name": "Colorectal Cancer Screening",
+        "version": "2026-01",
+        "status": "active",
+        "measureType": "HEDIS",
+        "domain": "Effectiveness of Care",
+        "description": "Adults 45-75 who had appropriate screening for colorectal cancer."
+      },
+      {
+        "id": "AWV",
+        "name": "Annual Wellness Visit",
+        "version": "2025-01",
+        "status": "draft",
+        "measureType": "Custom",
+        "domain": "Access/Availability of Care",
+        "description": "Tracks completion of Medicare Annual Wellness Visit."
+      }
+    ],
+    "total": 5,
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

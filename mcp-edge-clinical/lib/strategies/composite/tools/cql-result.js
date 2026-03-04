@@ -1,10 +1,26 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'cql_result',
-    description: 'Get latest CQL evaluation result for a patient',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    description: 'Get the latest CQL evaluation result for a specific patient and library.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        patientId: { type: 'string', description: 'Patient UUID' },
+        library: { type: 'string', description: 'CQL library identifier' },
+        tenantId: { type: 'string', description: 'Tenant identifier' }
+      },
+      required: ['patientId', 'library', 'tenantId'],
+      additionalProperties: false
+    },
     handler: async (args) => {
-      return { content: [{ type: 'text', text: JSON.stringify({ stub: true, tool: 'cql_result' }, null, 2) }] };
+      const { patientId, library, tenantId } = args;
+      try {
+        const path = `/cql/api/v1/cql/evaluations/patient/${encodeURIComponent(patientId)}/library/${encodeURIComponent(library)}/latest`;
+        const res = await clinicalClient.get(path, { tenantId });
+        return { content: [{ type: 'text', text: JSON.stringify({ status: res.status, ok: res.ok, data: res.body }, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: err?.message || String(err) }, null, 2) }] };
+      }
     }
   };
 }

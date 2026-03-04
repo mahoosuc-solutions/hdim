@@ -1,0 +1,6 @@
+{
+  "status": 200,
+  "ok": true,
+  "body": "{\"activePatients\":1250,\"appointmentsToday\":87,\"openCarePlans\":340,\"qualityScore\":92.5}",
+  "demoMode": true
+}

@@ -1,0 +1,32 @@
+{
+  "dependencies": {
+    "gateway-edge": [
+      "gateway-admin-service",
+      "gateway-clinical-service",
+      "gateway-fhir-service"
+    ],
+    "gateway-admin-service": [
+      "postgres",
+      "redis"
+    ],
+    "gateway-clinical-service": [
+      "postgres",
+      "redis"
+    ],
+    "gateway-fhir-service": [
+      "fhir-service"
+    ],
+    "fhir-service": [
+      "postgres"
+    ],
+    "quality-measure-service": [
+      "postgres",
+      "kafka"
+    ],
+    "care-gap-service": [
+      "postgres",
+      "kafka"
+    ]
+  },
+  "demoMode": true
+}

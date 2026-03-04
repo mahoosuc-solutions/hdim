@@ -14,6 +14,24 @@
       "type": "stdio",
       "command": "node",
       "args": ["scripts/mcp/hdim-platform-mcp.mjs"]
+    },
+    "hdim-platform-edge": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["scripts/mcp/mcp-edge-platform-bridge.mjs"],
+      "env": {
+        "MCP_EDGE_URL": "http://localhost:3100/mcp",
+        "MCP_EDGE_OPERATOR_ROLE": "platform_admin"
+      }
+    },
+    "hdim-devops-edge": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["scripts/mcp/mcp-edge-devops-bridge.mjs"],
+      "env": {
+        "MCP_EDGE_URL": "http://localhost:3200/mcp",
+        "MCP_EDGE_OPERATOR_ROLE": "platform_admin"
+      }
     }
   }
 }

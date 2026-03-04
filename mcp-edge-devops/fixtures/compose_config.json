@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "composeFile": "docker-compose.demo.yml",
+  "config": "services:\n  postgres:\n    image: postgres:16\n    ports:\n      - '5432:5432'\n  redis:\n    image: redis:7-alpine\n    ports:\n      - '6379:6379'\n  gateway-edge:\n    image: hdim/gateway-edge:latest\n    ports:\n      - '18080:18080'",
+  "stderr": null,
+  "demoMode": true
+}

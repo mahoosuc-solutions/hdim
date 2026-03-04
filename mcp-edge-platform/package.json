@@ -1,0 +1,22 @@
+{
+  "name": "hdim-mcp-edge-platform",
+  "version": "0.1.0",
+  "description": "HDIM MCP edge sidecar for platform tools (port 3100)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "NODE_ENV=development node index.js",
+    "test": "jest"
+  },
+  "engines": { "node": ">=20.0.0" },
+  "dependencies": {
+    "hdim-mcp-edge-common": "file:../mcp-edge-common",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.0",
+    "supertest": "^6.3.4"
+  }
+}

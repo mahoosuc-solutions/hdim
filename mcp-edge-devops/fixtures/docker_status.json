@@ -1,0 +1,27 @@
+{
+  "ok": true,
+  "services": [
+    {
+      "Service": "postgres",
+      "State": "running",
+      "Status": "Up 2 hours"
+    },
+    {
+      "Service": "redis",
+      "State": "running",
+      "Status": "Up 2 hours"
+    },
+    {
+      "Service": "gateway-edge",
+      "State": "running",
+      "Status": "Up 1 hour"
+    },
+    {
+      "Service": "fhir-service",
+      "State": "running",
+      "Status": "Up 1 hour"
+    }
+  ],
+  "composeFile": "docker-compose.demo.yml",
+  "demoMode": true
+}

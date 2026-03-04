@@ -1,8 +1,14 @@
 const { createApp } = require('../server');
 const supertest = require('supertest');
 
-beforeAll(() => { process.env.HDIM_DEMO_MODE = 'true'; });
-afterAll(() => { delete process.env.HDIM_DEMO_MODE; });
+beforeAll(() => {
+  process.env.HDIM_DEMO_MODE = 'true';
+  process.env.MCP_EDGE_RATE_LIMIT_MAX = '500';
+});
+afterAll(() => {
+  delete process.env.HDIM_DEMO_MODE;
+  delete process.env.MCP_EDGE_RATE_LIMIT_MAX;
+});
 
 // All 25 composite tools
 const ALL_TOOLS = [

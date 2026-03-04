@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('node:path');
 const cors = require('cors');
 const helmet = require('helmet');
-const { createHealthRouter, createMcpRouter } = require('hdim-mcp-edge-common');
+const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
 const { createClinicalClient } = require('./lib/clinical-client');
 
 const VALID_STRATEGIES = ['composite', 'high-value', 'full-surface'];
@@ -28,8 +28,9 @@ function loadRolePolicies(strategyName) {
 function createApp() {
   const app = express();
   app.use(helmet());
-  app.use(cors({ origin: '*', credentials: false }));
+  app.use(cors(createCorsOptions()));
   app.use(express.json({ limit: '1mb' }));
+  app.use(createRateLimiter());
 
   const strategyName = process.env.CLINICAL_TOOL_STRATEGY || 'composite';
   const client = createClinicalClient();
@@ -40,12 +41,15 @@ function createApp() {
     version: '0.1.0'
   }));
 
+  const logger = createAuditLogger({ serviceName: 'hdim-clinical-edge' });
+
   app.use(createMcpRouter({
     tools,
     serverName: 'hdim-clinical-edge',
     serverVersion: '0.1.0',
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
     fixturesDir: path.join(__dirname, 'lib', 'strategies', strategyName, 'fixtures'),
+    logger,
     rolePolicies: loadRolePolicies(strategyName)
   }));
 

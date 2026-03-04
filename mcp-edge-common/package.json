@@ -4,7 +4,8 @@
   "description": "Shared library for HDIM MCP edge sidecars",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint ."
   },
   "engines": {
     "node": ">=20.0.0"
@@ -16,6 +17,7 @@
     "pino": "^10.3.1"
   },
   "devDependencies": {
+    "eslint": "^9.20.0",
     "jest": "^30.0.0",
     "supertest": "^7.2.2"
   }

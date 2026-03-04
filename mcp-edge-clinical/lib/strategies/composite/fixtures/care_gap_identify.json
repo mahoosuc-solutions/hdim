@@ -1,0 +1,42 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "evaluationDate": "2026-03-04T14:00:00Z",
+    "measuresEvaluated": 5,
+    "gapsIdentified": 2,
+    "gaps": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440010",
+        "measureId": "HbA1c-Control",
+        "measureName": "Hemoglobin A1c Control for Patients with Diabetes",
+        "status": "open",
+        "priority": "high",
+        "evidence": {
+          "lastHbA1c": 7.2,
+          "lastHbA1cDate": "2026-01-10",
+          "targetThreshold": 8.0,
+          "numerator": false,
+          "denominator": true
+        }
+      },
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440011",
+        "measureId": "CCS",
+        "measureName": "Colorectal Cancer Screening",
+        "status": "open",
+        "priority": "medium",
+        "evidence": {
+          "lastScreeningDate": null,
+          "screeningInterval": "10 years",
+          "numerator": false,
+          "denominator": true
+        }
+      }
+    ],
+    "closedMeasures": ["AWV", "BCS", "CBP"],
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

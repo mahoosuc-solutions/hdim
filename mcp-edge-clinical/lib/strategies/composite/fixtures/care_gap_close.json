@@ -1,0 +1,21 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "careGapId": "550e8400-e29b-41d4-a716-446655440001",
+    "status": "closed",
+    "closedBy": "dr-smith",
+    "closureReason": "HbA1c result 6.8% within target range (<8.0%)",
+    "closedAt": "2026-03-04T15:30:00Z",
+    "measureId": "HbA1c-Control",
+    "measureName": "Hemoglobin A1c Control for Patients with Diabetes",
+    "evidence": {
+      "observationId": "obs-hba1c-002",
+      "value": 6.8,
+      "unit": "%",
+      "effectiveDate": "2026-03-01"
+    },
+    "tenantId": "acme-health"
+  },
+  "demoMode": true
+}

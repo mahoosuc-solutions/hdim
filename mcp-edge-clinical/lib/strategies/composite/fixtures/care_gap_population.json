@@ -1,0 +1,27 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "tenantId": "acme-health",
+    "reportDate": "2026-03-04",
+    "population": {
+      "totalPatients": 4250,
+      "patientsWithGaps": 1523,
+      "patientsFullyCompliant": 2727,
+      "complianceRate": 0.6416
+    },
+    "measurePerformance": [
+      { "measureId": "HbA1c-Control", "eligible": 890, "numerator": 602, "rate": 0.6764, "hedisThreshold": 0.58, "starsRating": 4 },
+      { "measureId": "BCS", "eligible": 1200, "numerator": 845, "rate": 0.7042, "hedisThreshold": 0.74, "starsRating": 3 },
+      { "measureId": "CCS", "eligible": 980, "numerator": 618, "rate": 0.6306, "hedisThreshold": 0.64, "starsRating": 3 },
+      { "measureId": "AWV", "eligible": 4250, "numerator": 3100, "rate": 0.7294, "hedisThreshold": 0.70, "starsRating": 4 },
+      { "measureId": "CBP", "eligible": 720, "numerator": 485, "rate": 0.6736, "hedisThreshold": 0.62, "starsRating": 4 }
+    ],
+    "riskStratification": {
+      "highRisk": { "count": 312, "avgOpenGaps": 3.2 },
+      "mediumRisk": { "count": 876, "avgOpenGaps": 1.8 },
+      "lowRisk": { "count": 335, "avgOpenGaps": 0.7 }
+    }
+  },
+  "demoMode": true
+}

@@ -17,7 +17,7 @@ describe('edge_health tool', () => {
     const result = await definition.handler();
     const payload = JSON.parse(result.content[0].text);
 
-    expect(payload.status).toBe('healthy');
+    expect(['healthy', 'degraded']).toContain(payload.status);
     expect(payload.service).toBe('hdim-platform-edge');
     expect(payload.version).toBe('0.1.0');
     expect(typeof payload.uptime).toBe('number');

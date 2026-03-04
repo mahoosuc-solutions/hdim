@@ -2,10 +2,11 @@ const express = require('express');
 const { jsonRpcResult, jsonRpcError } = require('./jsonrpc');
 const { extractOperatorRole, authorizeToolCall } = require('./auth');
 const { isDemoMode, loadFixture } = require('./demo-mode');
+const { validateToolParams } = require('./param-validator');
 
 const MCP_PROTOCOL_VERSION = '2025-11-25';
 
-function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir }) {
+function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger }) {
   const router = express.Router();
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
@@ -25,6 +26,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
   }
 
   async function handleToolsCall(id, params, req) {
+    const start = Date.now();
     const { name, arguments: args } = params || {};
     const tool = toolMap.get(name);
     if (!tool) {
@@ -38,8 +40,17 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       toolName: name, role, enforce: enforceRoleAuth
     });
     if (!authResult.allowed) {
+      if (logger) logger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');
       return jsonRpcError(id, -32603, `Forbidden: ${authResult.reason}`, {
         tool: name, role, reason: authResult.reason
+      });
+    }
+
+    // Param validation
+    const validationError = validateToolParams(tool.inputSchema, args);
+    if (validationError) {
+      return jsonRpcError(id, -32602, 'Invalid params', {
+        tool: name, reason: 'invalid_params', detail: validationError
       });
     }
 
@@ -47,6 +58,8 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     if (fixturesDir && isDemoMode()) {
       const fixture = loadFixture(fixturesDir, name);
       if (fixture) {
+        const duration_ms = Date.now() - start;
+        if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: true }, 'tool_call');
         return jsonRpcResult(id, {
           content: [{ type: 'text', text: JSON.stringify(fixture, null, 2) }]
         });
@@ -55,8 +68,12 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
 
     try {
       const result = await tool.handler(args || {}, { req });
+      const duration_ms = Date.now() - start;
+      if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: isDemoMode() }, 'tool_call');
       return jsonRpcResult(id, result);
     } catch (err) {
+      const duration_ms = Date.now() - start;
+      if (logger) logger.error({ tool: name, role, error_code: -32603, duration_ms, demo: isDemoMode() }, 'tool_error');
       return jsonRpcError(id, -32603, 'Tool execution error', {
         tool: name, detail: err?.message || String(err)
       });

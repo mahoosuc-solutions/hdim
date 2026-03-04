@@ -188,6 +188,126 @@ describe('mcp-router tool handler errors', () => {
   });
 });
 
+describe('mcp-router edge-case branches', () => {
+  let app;
+  let request;
+
+  beforeAll(() => {
+    app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: testTools,
+      serverName: 'branch-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: false
+    }));
+    request = supertest(app);
+  });
+
+  it('tools/call with null arguments defaults to empty object', async () => {
+    const res = await request.post('/mcp').send({
+      jsonrpc: '2.0', id: 40, method: 'tools/call',
+      params: { name: 'test_tool', arguments: null }
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.result.content[0].text).toBe('hello');
+  });
+
+  it('notification with explicit id:null returns 204', async () => {
+    const res = await request.post('/mcp').send({
+      jsonrpc: '2.0', id: null, method: 'notifications/initialized'
+    });
+    expect(res.status).toBe(204);
+  });
+
+  it('invalid jsonrpc version with undefined id uses null in error', async () => {
+    const res = await request.post('/mcp').send({
+      jsonrpc: '1.0', method: 'initialize'
+    });
+    expect(res.status).toBe(200);
+    expect(res.body.error.code).toBe(-32600);
+    expect(res.body.id).toBeNull();
+  });
+});
+
+describe('mcp-router with logger', () => {
+  it('logs info on successful tool call when logger is provided', async () => {
+    const logEntries = [];
+    const mockLogger = {
+      info: jest.fn((...args) => logEntries.push(args)),
+      warn: jest.fn(),
+      error: jest.fn()
+    };
+    const app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: testTools,
+      serverName: 'log-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: false,
+      logger: mockLogger
+    }));
+    const res = await supertest(app).post('/mcp').send({
+      jsonrpc: '2.0', id: 41, method: 'tools/call',
+      params: { name: 'test_tool', arguments: {} }
+    });
+    expect(res.body.result).toBeDefined();
+    expect(mockLogger.info).toHaveBeenCalled();
+  });
+
+  it('logs warn on auth failure when logger is provided', async () => {
+    const mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn()
+    };
+    const app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: testTools,
+      serverName: 'log-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: true,
+      logger: mockLogger
+    }));
+    const res = await supertest(app).post('/mcp').send({
+      jsonrpc: '2.0', id: 42, method: 'tools/call',
+      params: { name: 'test_tool', arguments: {} }
+    });
+    expect(res.body.error).toBeDefined();
+    expect(mockLogger.warn).toHaveBeenCalled();
+  });
+
+  it('logs error when tool handler throws and logger is provided', async () => {
+    const mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn()
+    };
+    const errorTools = [{
+      name: 'err_tool',
+      description: 'Throws',
+      inputSchema: { type: 'object', properties: {} },
+      handler: async () => { throw new Error('boom'); }
+    }];
+    const app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: errorTools,
+      serverName: 'log-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: false,
+      logger: mockLogger
+    }));
+    const res = await supertest(app).post('/mcp').send({
+      jsonrpc: '2.0', id: 43, method: 'tools/call',
+      params: { name: 'err_tool', arguments: {} }
+    });
+    expect(res.body.error).toBeDefined();
+    expect(mockLogger.error).toHaveBeenCalled();
+  });
+});
+
 describe('mcp-router auth enforcement', () => {
   let app;
   let request;

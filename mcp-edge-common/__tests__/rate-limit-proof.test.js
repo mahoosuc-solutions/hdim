@@ -39,17 +39,31 @@ describe('PROOF: Rate Limiting — HIPAA 164.312(e)(1), OWASP API4, NIST SC-7', 
     expect(res.status).toBe(200);
   });
 
-  it('respects MCP_EDGE_RATE_LIMIT_MAX env var', () => {
-    process.env.MCP_EDGE_RATE_LIMIT_MAX = '50';
-    const limiter = createRateLimiter();
-    expect(typeof limiter).toBe('function');
+  it('respects MCP_EDGE_RATE_LIMIT_MAX env var', async () => {
+    process.env.MCP_EDGE_RATE_LIMIT_MAX = '2';
+    const testApp = express();
+    testApp.use(createRateLimiter());
+    testApp.post('/mcp', (req, res) => res.json({ ok: true }));
+    const testReq = supertest(testApp);
+
+    await testReq.post('/mcp');
+    await testReq.post('/mcp');
+    const res = await testReq.post('/mcp');
+    expect(res.status).toBe(429);
     delete process.env.MCP_EDGE_RATE_LIMIT_MAX;
   });
 
-  it('respects MCP_EDGE_RATE_LIMIT_WINDOW_MS env var', () => {
-    process.env.MCP_EDGE_RATE_LIMIT_WINDOW_MS = '30000';
-    const limiter = createRateLimiter();
-    expect(typeof limiter).toBe('function');
+  it('respects MCP_EDGE_RATE_LIMIT_WINDOW_MS env var', async () => {
+    process.env.MCP_EDGE_RATE_LIMIT_WINDOW_MS = '1000';
+    const testApp = express();
+    testApp.use(createRateLimiter({ max: 1 }));
+    testApp.post('/mcp', (req, res) => res.json({ ok: true }));
+    const testReq = supertest(testApp);
+
+    await testReq.post('/mcp');
+    const res = await testReq.post('/mcp');
+    expect(res.status).toBe(429);
+    expect(res.body.error.data.retryAfterMs).toBe(1000);
     delete process.env.MCP_EDGE_RATE_LIMIT_WINDOW_MS;
   });
 });

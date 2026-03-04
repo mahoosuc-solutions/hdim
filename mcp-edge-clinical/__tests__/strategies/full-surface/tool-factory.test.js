@@ -52,6 +52,14 @@ describe('full-surface tool-factory', () => {
       expect(parsed.ok).toBe(false);
       expect(parsed.error).toBe('Network error');
     });
+
+    it('handler handles non-Error throw values', async () => {
+      mockClient.get.mockRejectedValueOnce('plain string');
+      const result = await tool.handler({ id: '1', tenantId: 'acme' });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.error).toBe('plain string');
+    });
   });
 
   describe('createSearchTool', () => {
@@ -76,6 +84,31 @@ describe('full-surface tool-factory', () => {
     });
   });
 
+  describe('createSearchTool — error branch', () => {
+    const resource = { type: 'Observation', searchable: true, creatable: true };
+    const errorClient = {
+      get: jest.fn().mockRejectedValue(new Error('search failure')),
+      post: jest.fn()
+    };
+    const tool = createSearchTool(resource, errorClient);
+
+    it('catches client errors and returns error response', async () => {
+      const result = await tool.handler({ tenantId: 'acme' });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.resourceType).toBe('Observation');
+      expect(parsed.error).toBe('search failure');
+    });
+
+    it('handles non-Error throw values in search', async () => {
+      errorClient.get.mockRejectedValueOnce('raw string error');
+      const result = await tool.handler({ tenantId: 'acme' });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.error).toBe('raw string error');
+    });
+  });
+
   describe('createCreateTool', () => {
     const resource = { type: 'Condition', searchable: true, creatable: true };
     const tool = createCreateTool(resource, mockClient);
@@ -93,6 +126,31 @@ describe('full-surface tool-factory', () => {
       const payload = { resourceType: 'Condition', code: {} };
       await tool.handler({ resource: payload, tenantId: 'acme' });
       expect(mockClient.post).toHaveBeenCalledWith('/fhir/Condition', payload, { tenantId: 'acme' });
+    });
+
+    it('catches client errors and returns error response', async () => {
+      const errorClient = {
+        get: jest.fn(),
+        post: jest.fn().mockRejectedValue(new Error('create failure'))
+      };
+      const errorTool = createCreateTool(resource, errorClient);
+      const result = await errorTool.handler({ resource: { resourceType: 'Condition' }, tenantId: 'acme' });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.resourceType).toBe('Condition');
+      expect(parsed.error).toBe('create failure');
+    });
+
+    it('handles non-Error throw values in create', async () => {
+      const errorClient = {
+        get: jest.fn(),
+        post: jest.fn().mockRejectedValue(null)
+      };
+      const errorTool = createCreateTool(resource, errorClient);
+      const result = await errorTool.handler({ resource: { resourceType: 'Condition' }, tenantId: 'acme' });
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.ok).toBe(false);
+      expect(parsed.error).toBe('null');
     });
   });
 

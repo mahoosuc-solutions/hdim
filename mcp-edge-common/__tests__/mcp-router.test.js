@@ -234,3 +234,90 @@ describe('mcp-router auth enforcement', () => {
     expect(res.body.error.data.reason).toBe('forbidden_for_role');
   });
 });
+
+describe('mcp-router param validation', () => {
+  it('rejects extra properties with -32602', async () => {
+    const strictTools = [{
+      name: 'strict_tool',
+      description: 'Has strict schema',
+      inputSchema: {
+        type: 'object',
+        properties: { service: { type: 'string' } },
+        required: ['service'],
+        additionalProperties: false
+      },
+      handler: async (args) => ({ content: [{ type: 'text', text: JSON.stringify(args) }] })
+    }];
+    const app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: strictTools,
+      serverName: 'param-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: false
+    }));
+    const res = await supertest(app).post('/mcp').send({
+      jsonrpc: '2.0', id: 50, method: 'tools/call',
+      params: { name: 'strict_tool', arguments: { service: 'gw', evil: 'injected' } }
+    });
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error.code).toBe(-32602);
+    expect(res.body.error.data.reason).toBe('invalid_params');
+  });
+
+  it('rejects wrong type with -32602', async () => {
+    const strictTools = [{
+      name: 'typed_tool',
+      description: 'Has typed schema',
+      inputSchema: {
+        type: 'object',
+        properties: { count: { type: 'integer' } },
+        additionalProperties: false
+      },
+      handler: async (args) => ({ content: [{ type: 'text', text: JSON.stringify(args) }] })
+    }];
+    const app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: strictTools,
+      serverName: 'param-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: false
+    }));
+    const res = await supertest(app).post('/mcp').send({
+      jsonrpc: '2.0', id: 51, method: 'tools/call',
+      params: { name: 'typed_tool', arguments: { count: 'not-a-number' } }
+    });
+    expect(res.body.error).toBeDefined();
+    expect(res.body.error.code).toBe(-32602);
+    expect(res.body.error.data.reason).toBe('invalid_params');
+  });
+
+  it('allows valid params through', async () => {
+    const strictTools = [{
+      name: 'valid_tool',
+      description: 'Valid test',
+      inputSchema: {
+        type: 'object',
+        properties: { name: { type: 'string' } },
+        required: ['name'],
+        additionalProperties: false
+      },
+      handler: async (args) => ({ content: [{ type: 'text', text: args.name }] })
+    }];
+    const app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: strictTools,
+      serverName: 'param-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: false
+    }));
+    const res = await supertest(app).post('/mcp').send({
+      jsonrpc: '2.0', id: 52, method: 'tools/call',
+      params: { name: 'valid_tool', arguments: { name: 'hello' } }
+    });
+    expect(res.body.result).toBeDefined();
+    expect(res.body.result.content[0].text).toBe('hello');
+  });
+});

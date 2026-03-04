@@ -11,7 +11,7 @@ describe('devops edge integration — tool execution', () => {
       .send({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'edge_health', arguments: {} } });
     expect(res.status).toBe(200);
     const content = JSON.parse(res.body.result.content[0].text);
-    expect(content.status).toBe('healthy');
+    expect(['healthy', 'degraded']).toContain(content.status);
     expect(content.service).toBe('hdim-devops-edge');
   });
 

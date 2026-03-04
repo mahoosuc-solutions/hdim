@@ -1,0 +1,7 @@
+{
+  "ok": true,
+  "service": "gateway-edge",
+  "stdout": "gateway-edge\n",
+  "stderr": null,
+  "demoMode": true
+}

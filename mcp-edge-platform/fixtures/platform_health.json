@@ -1,0 +1,8 @@
+{
+  "gateway": {
+    "status": 200,
+    "ok": true,
+    "body": "{\"status\":\"UP\"}"
+  },
+  "demoMode": true
+}

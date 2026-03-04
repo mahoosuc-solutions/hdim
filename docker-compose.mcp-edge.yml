@@ -1,0 +1,32 @@
+services:
+  mcp-edge-platform:
+    build:
+      context: .
+      dockerfile: mcp-edge-platform/Dockerfile
+    env_file: ./mcp-edge-platform/.env
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3100/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 2s
+      start_period: 5s
+      retries: 6
+
+  mcp-edge-devops:
+    build:
+      context: .
+      dockerfile: mcp-edge-devops/Dockerfile
+    env_file: ./mcp-edge-devops/.env
+    restart: unless-stopped
+    ports:
+      - "3200:3200"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3200/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 2s
+      start_period: 5s
+      retries: 6

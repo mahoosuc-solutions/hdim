@@ -38,6 +38,10 @@ logs/
 .env.customer-simulation
 monitoring/.env.alertmanager
 
+# Test coverage reports
+coverage-mcp-edge/
+coverage/
+
 # Build artifacts
 .gradle/
 .nx/

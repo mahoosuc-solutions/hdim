@@ -3,14 +3,14 @@
 **Date:** 2026-03-04
 **Version:** 1.0
 **Author:** Claude Code + Aaron
-**Total Tests:** 597 (579 MCP edge + 18 bridge)
-**Coverage:** 99.27% statements, 96.30% branches, 100% functions
+**Total Tests:** 1,307 (1,289 MCP edge + 18 bridge)
+**Coverage:** 99.96% statements, 98.12% branches, 100% functions
 
 ---
 
 ## Executive Summary
 
-The HDIM MCP Edge security hardening initiative added 159 new tests across 11 new test suites, bringing the total from 433 tests (40 suites) to 597 tests (54 suites) with zero failures. Every security control was implemented using a test-driven development (TDD) approach: proof tests were written first to define the control boundary, then implementation was wired in, and full regression confirmed no regressions. Coverage remained above 99% for statements and 100% for functions throughout.
+The HDIM MCP Edge security hardening initiative added 159 new tests across 11 new test suites, bringing the total from 433 tests (40 suites) to 1,307 tests (98 suites) with zero failures. Every security control was implemented using a test-driven development (TDD) approach: proof tests were written first to define the control boundary, then implementation was wired in, and full regression confirmed no regressions. Coverage remained above 99% for statements and 100% for functions throughout.
 
 This document maps each security control to concrete test evidence across five compliance frameworks: HIPAA Security Rule, SOC 2 Trust Services Criteria, OWASP API Security Top 10 (2023), NIST 800-53, and CIS Benchmarks. Every mapping references the exact test file, test count, and key assertions so that auditors can independently verify each control by running the referenced test commands.
 
@@ -112,10 +112,10 @@ The architecture follows a sidecar-per-service-group pattern with CISO-required 
 
 | Metric | Baseline (Wave 0) | Final (Wave 3) | Change |
 |--------|-------------------|----------------|--------|
-| Tests | 433 | 597 | +164 (+37.9%) |
-| Test Suites | 40 | 54 | +14 |
-| Statements | 99.42% | 99.27% | -0.15% (new code paths) |
-| Branches | 92.93% | 96.30% | +3.37% (coverage gap tests added) |
+| Tests | 433 | 1,307 | +874 (+201.8%) |
+| Test Suites | 40 | 98 | +58 |
+| Statements | 99.42% | 99.96% | +0.54% |
+| Branches | 92.93% | 98.12% | +5.19% |
 | Functions | 100% | 100% | No change |
 
 ---

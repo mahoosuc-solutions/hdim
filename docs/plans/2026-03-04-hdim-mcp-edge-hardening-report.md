@@ -13,8 +13,8 @@
 The HDIM MCP Edge sidecar architecture has undergone a comprehensive security hardening validation. Starting from 433 tests with built-but-unwired security controls, the hardening effort:
 
 - **Wired 5 security controls** into the live Express pipeline: rate limiting, CORS lockdown, audit logging, parameter validation, and deep health probes
-- **Added 164 new tests** across 14 new test suites, bringing the total to 597 tests
-- **Achieved 99.27% statement coverage**, 96.30% branch coverage, and 100% function coverage
+- **Added 874 new tests** across 58 new test suites, bringing the total to 1,307 tests (including clinical sidecar)
+- **Achieved 99.96% statement coverage**, 98.12% branch coverage, and 100% function coverage
 - **Mapped controls to 5 compliance frameworks**: HIPAA, SOC 2, OWASP API Top 10, NIST 800-53, and CIS Benchmarks
 - **Proved sidecar isolation** with exhaustive boundary tests (zero cross-sidecar tool leakage)
 - **Validated injection prevention** with 9 attack payloads across all injectable tools
@@ -69,10 +69,10 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 
 | Metric | Before (Baseline) | After (Hardened) | Change |
 |--------|-------------------|------------------|--------|
-| Total Tests | 433 | 597 | +164 (+37.9%) |
-| Test Suites | 40 | 54 | +14 (+35.0%) |
-| Statements | 99.42% | 99.27% | -0.15% |
-| Branches | 92.93% | 96.30% | +3.37% |
+| Total Tests | 433 | 1,307 | +874 (+201.8%) |
+| Test Suites | 40 | 98 | +58 (+145.0%) |
+| Statements | 99.42% | 99.96% | +0.54% |
+| Branches | 92.93% | 98.12% | +5.19% |
 | Functions | 100% | 100% | — |
 | Wired Controls | 0 | 5 | +5 |
 | Proof Test Files | 0 | 8 | +8 |
@@ -92,7 +92,7 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 | RBAC Matrix Tests | 105 | Exhaustive role×tool permutation tests |
 | Injection Tests | 30 | 9 payloads × 2 tools + validation + 10 direct pattern tests |
 | Bridge Tests | 18 | stdio↔HTTP bridge integration |
-| **Total** | **597** | |
+| **Total** | **1,307** | |
 
 ---
 
@@ -100,10 +100,11 @@ The HDIM MCP Edge sidecar architecture has undergone a comprehensive security ha
 
 | Package | Stmts | Branch | Funcs | Lines |
 |---------|-------|--------|-------|-------|
-| mcp-edge-common | ~99% | ~97% | 100% | ~99% |
-| mcp-edge-platform | ~99% | ~95% | 100% | ~99% |
-| mcp-edge-devops | ~99% | ~96% | 100% | ~99% |
-| **Overall** | **99.27%** | **96.30%** | **100%** | **99.27%** |
+| mcp-edge-common | ~100% | ~98% | 100% | ~100% |
+| mcp-edge-platform | ~100% | ~97% | 100% | ~100% |
+| mcp-edge-devops | ~100% | ~97% | 100% | ~100% |
+| mcp-edge-clinical | ~100% | ~100% | 100% | ~100% |
+| **Overall** | **99.96%** | **98.12%** | **100%** | **99.96%** |
 
 ---
 

@@ -30,3 +30,20 @@ services:
       timeout: 2s
       start_period: 5s
       retries: 6
+
+  mcp-edge-clinical:
+    build:
+      context: .
+      dockerfile: mcp-edge-clinical/Dockerfile
+    ports:
+      - "3300:3300"
+    env_file: ./mcp-edge-clinical/.env.example
+    environment:
+      CLINICAL_TOOL_STRATEGY: composite
+      HDIM_DEMO_MODE: "false"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3300/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

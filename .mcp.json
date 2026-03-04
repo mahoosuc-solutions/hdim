@@ -32,6 +32,15 @@
         "MCP_EDGE_URL": "http://localhost:3200/mcp",
         "MCP_EDGE_OPERATOR_ROLE": "platform_admin"
       }
+    },
+    "hdim-clinical-edge": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["scripts/mcp/mcp-edge-clinical-bridge.mjs"],
+      "env": {
+        "MCP_EDGE_URL": "http://localhost:3300/mcp",
+        "MCP_EDGE_OPERATOR_ROLE": "clinical_admin"
+      }
     }
   }
 }

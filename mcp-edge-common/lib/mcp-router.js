@@ -3,6 +3,7 @@ const { jsonRpcResult, jsonRpcError } = require('./jsonrpc');
 const { extractOperatorRole, authorizeToolCall } = require('./auth');
 const { isDemoMode, loadFixture } = require('./demo-mode');
 const { validateToolParams } = require('./param-validator');
+const { scrubSensitive } = require('./audit-log');
 
 const MCP_PROTOCOL_VERSION = '2025-11-25';
 
@@ -73,9 +74,10 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       return jsonRpcResult(id, result);
     } catch (err) {
       const duration_ms = Date.now() - start;
+      const safeMessage = scrubSensitive(err?.message || String(err));
       if (logger) logger.error({ tool: name, role, error_code: -32603, duration_ms, demo: isDemoMode() }, 'tool_error');
       return jsonRpcError(id, -32603, 'Tool execution error', {
-        tool: name, detail: err?.message || String(err)
+        tool: name, detail: safeMessage
       });
     }
   }

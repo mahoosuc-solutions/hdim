@@ -83,6 +83,31 @@ describe('audit logging middleware', () => {
     expect(toolEntries).toHaveLength(0);
   });
 
+  it('scrubs Bearer tokens from tool error responses', async () => {
+    const phiTools = [{
+      name: 'bearer_error_tool',
+      description: 'Throws error with Bearer token',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      handler: async () => { throw new Error('Auth failed: Bearer eyJhbGciOiJSUzI1NiJ9.secret'); }
+    }];
+
+    const capture = captureLogger('scrub-test');
+    const scrubApp = express();
+    scrubApp.use(express.json());
+    scrubApp.use(createMcpRouter({
+      tools: phiTools, serverName: 'scrub-test', serverVersion: '0.1.0',
+      enforceRoleAuth: false, logger: capture.logger
+    }));
+
+    const res = await supertest(scrubApp).post('/mcp').send({
+      jsonrpc: '2.0', id: 99, method: 'tools/call',
+      params: { name: 'bearer_error_tool', arguments: {} }
+    });
+
+    expect(res.body.error.data.detail).not.toContain('eyJhbGciOiJSUzI1NiJ9');
+    expect(res.body.error.data.detail).toContain('Bearer [REDACTED]');
+  });
+
   it('includes demo flag in audit entry', async () => {
     process.env.HDIM_DEMO_MODE = 'true';
     await request.post('/mcp')

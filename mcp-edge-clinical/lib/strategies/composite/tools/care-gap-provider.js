@@ -1,10 +1,27 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_provider',
-    description: 'Get prioritized care gaps for a provider panel',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    description: 'Get prioritized care gaps for a specific provider panel.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        providerId: { type: 'string', description: 'Provider UUID' },
+        tenantId: { type: 'string', description: 'Tenant identifier' }
+      },
+      required: ['providerId', 'tenantId'],
+      additionalProperties: false
+    },
     handler: async (args) => {
-      return { content: [{ type: 'text', text: JSON.stringify({ stub: true, tool: 'care_gap_provider' }, null, 2) }] };
+      const { providerId, tenantId } = args;
+      try {
+        const res = await clinicalClient.get(
+          `/care-gap/providers/${encodeURIComponent(providerId)}/prioritized`,
+          { tenantId }
+        );
+        return { content: [{ type: 'text', text: JSON.stringify({ status: res.status, ok: res.ok, data: res.body }, null, 2) }] };
+      } catch (err) {
+        return { content: [{ type: 'text', text: JSON.stringify({ ok: false, error: err?.message || String(err) }, null, 2) }] };
+      }
     }
   };
 }

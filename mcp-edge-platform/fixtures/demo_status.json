@@ -1,0 +1,6 @@
+{
+  "status": 200,
+  "ok": true,
+  "body": "{\"seeded\":true,\"scenario\":\"default\",\"recordCount\":150}",
+  "demoMode": true
+}

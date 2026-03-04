@@ -1,0 +1,22 @@
+{
+  "services": [
+    {
+      "name": "hdim-gateway",
+      "category": "core",
+      "status": "UP",
+      "healthy": true
+    },
+    {
+      "name": "hdim-fhir-server",
+      "category": "clinical",
+      "status": "UP",
+      "healthy": true
+    }
+  ],
+  "summary": {
+    "total": 2,
+    "healthy": 2,
+    "unhealthy": 0
+  },
+  "demoMode": true
+}

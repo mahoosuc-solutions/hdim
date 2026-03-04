@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "affectedProjects": [
+    "gateway-edge",
+    "fhir-service",
+    "quality-measure-service"
+  ],
+  "count": 3,
+  "stderr": null,
+  "demoMode": true
+}

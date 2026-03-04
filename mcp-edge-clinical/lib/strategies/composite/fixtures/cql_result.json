@@ -1,0 +1,44 @@
+{
+  "status": 200,
+  "ok": true,
+  "data": {
+    "evaluationId": "eval-042",
+    "library": "HbA1c-Control",
+    "version": "2026-01",
+    "patientId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    "evaluatedAt": "2026-03-01T09:15:00Z",
+    "status": "compliant",
+    "populations": {
+      "initialPopulation": true,
+      "denominator": true,
+      "denominatorExclusion": false,
+      "numerator": true,
+      "numeratorExclusion": false,
+      "denominatorException": false
+    },
+    "evidence": {
+      "lastHbA1c": 7.1,
+      "lastHbA1cDate": "2026-02-10",
+      "targetThreshold": 8.0,
+      "diagnosisCode": "E11.65",
+      "diagnosisDescription": "Type 2 diabetes mellitus with hyperglycemia"
+    },
+    "measurementPeriod": {
+      "start": "2025-01-01",
+      "end": "2025-12-31"
+    },
+    "previousEvaluations": [
+      {
+        "evaluationId": "eval-031",
+        "evaluatedAt": "2026-02-01T10:00:00Z",
+        "status": "compliant"
+      },
+      {
+        "evaluationId": "eval-019",
+        "evaluatedAt": "2026-01-02T08:45:00Z",
+        "status": "non-compliant"
+      }
+    ]
+  },
+  "demoMode": true
+}

@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `mcp-edge-platform` (:3100) — 15 platform tools (health, FHIR metadata, service catalog)
   - `mcp-edge-devops` (:3200) — 15 devops tools (Docker, logs, topology, release gates)
   - `mcp-edge-clinical` (:3300) — 68+ clinical tools across 3 strategies (composite/high-value/full-surface)
-- **1,307 tests** with 99.35% statement coverage, 98.12% branch coverage
+- **1,307 MCP Edge tests** with 99.35% statement coverage, 98.12% branch coverage
 - RBAC exhaustive matrix: 7 roles x 108 clinical tools (352+ test cases)
 - PHI leak detection and cross-sidecar isolation proofs
 - Demo mode with per-tool synthetic fixtures
@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CVE remediation wave 1 with dependency overrides and NVD automation
 
 ### Changed
-- Test suite: 259 → 709+ unit tests passing
+- Backend test suite: 259 → 709+ unit tests passing (excludes 1,307 MCP Edge tests)
 - MCP Edge packages: 4 (common + 3 sidecars)
 - Root markdown files reduced from 90+ to 5 (README, CLAUDE, CONTRIBUTING, CHANGELOG, VERSIONS)
 - Landing page domain: healthdatainmotion.com (canonical)

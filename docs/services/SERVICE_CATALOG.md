@@ -1,9 +1,9 @@
 # HDIM Service Catalog
 
-Central index of all 57 microservices in the HDIM platform. Use this to find a specific service and access its documentation.
+Central index of all 60 microservices in the HDIM platform. Use this to find a specific service and access its documentation.
 
-**Last Updated**: March 3, 2026
-**Total Services**: 57 microservices (including event sourcing, AI agents, gateways, and sales services)
+**Last Updated**: March 5, 2026
+**Total Services**: 60 microservices (including event sourcing, AI agents, gateways, MCP Edge sidecars, and sales services)
 **Coverage**: 100% documented with architecture patterns
 
 ---
@@ -133,6 +133,21 @@ Machine learning, natural language processing, intelligent agents.
 | **agent-builder-service** | TBD | Agent creation and configuration UI | PostgreSQL | [README](../../backend/modules/services/agent-builder-service/README.md) |
 | **agent-validation-service** | TBD | Agent output validation, safety checks | PostgreSQL | [README](../../backend/modules/services/agent-validation-service/README.md) |
 | **devops-agent-service** | TBD | DevOps automation, infrastructure management agent | PostgreSQL | [README](../../backend/modules/services/devops-agent-service/README.md) |
+
+---
+
+## MCP Edge Services (v2.9.0)
+
+Claude Desktop/Code integration sidecars providing AI-assisted platform operations via Model Context Protocol. See [MCP Edge Design](../plans/2026-03-04-hdim-mcp-edge-design.md) for architecture.
+
+| Service | Port | Purpose | Tech Stack | Documentation |
+|---------|------|---------|-----------|-----------------|
+| **mcp-edge-platform** | 3100 | Platform health, FHIR metadata, service catalog (15 tools) | Node.js, Express, Pino | [README](../../mcp-edge-platform/README.md) |
+| **mcp-edge-devops** | 3200 | Docker ops, logs, topology, release gates (15 tools) | Node.js, Express, Pino | [README](../../mcp-edge-devops/README.md) |
+| **mcp-edge-clinical** | 3300 | Clinical workflows, care gaps, CDS hooks (68+ tools) | Node.js, Express, Pino | [README](../../mcp-edge-clinical/README.md) |
+
+**Key features:** RBAC matrix (7 roles x 108 tools), PHI leak detection, demo mode, stdio bridges for Claude Desktop.
+**Tests:** 1,307 across 4 packages (99.35% statement coverage, 98.12% branch coverage).
 
 ---
 

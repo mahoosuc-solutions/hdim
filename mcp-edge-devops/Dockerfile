@@ -4,6 +4,11 @@ WORKDIR /app
 # Docker CLI and healthcheck probes require ca-certificates and curl
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl && rm -rf /var/lib/apt/lists/*
 
+COPY mcp-edge-common/package.json mcp-edge-common/package-lock.json* ./mcp-edge-common/
+WORKDIR /app/mcp-edge-common
+RUN npm install --omit=dev
+
+WORKDIR /app
 COPY mcp-edge-common/ ./mcp-edge-common/
 COPY mcp-edge-devops/package.json mcp-edge-devops/package-lock.json* ./mcp-edge-devops/
 WORKDIR /app/mcp-edge-devops

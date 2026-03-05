@@ -7,7 +7,7 @@ MCP edge sidecar exposing HDIM DevOps tools (Docker operations, compose manageme
 | Tool | Description |
 |------|-------------|
 | `edge_health` | Edge sidecar health status |
-| `docker_ps` | Running container status |
+| `docker_status` | Running container status |
 | `docker_logs` | Container log retrieval |
 | `docker_restart` | Container restart operations |
 | `service_dependencies` | Service dependency graph |

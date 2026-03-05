@@ -6,5 +6,6 @@ module.exports = {
   coverageProvider: 'v8',
   coverageThreshold: {
     global: { statements: 95, branches: 95, functions: 95, lines: 95 }
-  }
+  },
+  forceExit: true
 };

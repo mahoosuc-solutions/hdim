@@ -14,29 +14,49 @@ function extractPhiContext(tool, args) {
   return { phi: !!a.phi, write: !!a.write, patientId };
 }
 
-function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies, phiAuditLogger }) {
+function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies, phiAuditLogger, strategyManager }) {
   const router = express.Router();
-  const toolMap = new Map(tools.map((t) => [t.name, t]));
+  // Static fallbacks when no strategyManager is present
+  const staticToolMap = new Map(tools.map((t) => [t.name, t]));
+
+  function getTools() {
+    return strategyManager ? strategyManager.tools : tools;
+  }
+  function getToolMap() {
+    return strategyManager ? strategyManager.toolMap : staticToolMap;
+  }
+  function getRolePolicies() {
+    return strategyManager ? strategyManager.rolePolicies : rolePolicies;
+  }
+  function getFixturesDir() {
+    return strategyManager ? strategyManager.fixturesDir : fixturesDir;
+  }
 
   function handleInitialize(id) {
     return jsonRpcResult(id, {
       protocolVersion: MCP_PROTOCOL_VERSION,
       serverInfo: { name: serverName, version: serverVersion },
-      capabilities: { tools: { listChanged: false } }
+      capabilities: { tools: { listChanged: !!strategyManager } }
     });
   }
 
   function handleToolsList(id) {
-    const toolDefs = tools.map(({ name, description, inputSchema }) => ({
+    const currentTools = getTools();
+    const toolDefs = currentTools.map(({ name, description, inputSchema }) => ({
       name, description, inputSchema
     }));
-    return jsonRpcResult(id, { tools: toolDefs });
+    const result = { tools: toolDefs };
+    if (strategyManager && strategyManager.consumeListChangedFlag()) {
+      result._meta = { listChanged: true };
+    }
+    return jsonRpcResult(id, result);
   }
 
   async function handleToolsCall(id, params, req) {
     const start = Date.now();
     const { name, arguments: args } = params || {};
-    const tool = toolMap.get(name);
+    const currentToolMap = getToolMap();
+    const tool = currentToolMap.get(name);
     if (!tool) {
       return jsonRpcError(id, -32602, `Tool not found: ${name}`, {
         tool: name, reason: 'unknown_tool'
@@ -44,8 +64,9 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     }
 
     const role = extractOperatorRole(req);
+    const currentPolicies = getRolePolicies();
     const authResult = authorizeToolCall({
-      toolName: name, role, enforce: enforceRoleAuth, customPolicies: rolePolicies
+      toolName: name, role, enforce: enforceRoleAuth, customPolicies: currentPolicies
     });
     if (!authResult.allowed) {
       if (logger) logger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');
@@ -64,8 +85,9 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     }
 
     // Demo mode — return fixture if available
-    if (fixturesDir && isDemoMode()) {
-      const fixture = loadFixture(fixturesDir, name);
+    const currentFixturesDir = getFixturesDir();
+    if (currentFixturesDir && isDemoMode()) {
+      const fixture = loadFixture(currentFixturesDir, name);
       if (fixture) {
         const duration_ms = Date.now() - start;
         if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: true }, 'tool_call');
@@ -83,7 +105,14 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     }
 
     try {
-      const result = await tool.handler(args || {}, { req });
+      const handlerContext = { req };
+      if (strategyManager) {
+        handlerContext.strategyManager = strategyManager;
+      }
+      if (phiAuditLogger) {
+        handlerContext.phiAuditLogger = phiAuditLogger;
+      }
+      const result = await tool.handler(args || {}, handlerContext);
       const duration_ms = Date.now() - start;
       if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: isDemoMode() }, 'tool_call');
       if (phiAuditLogger) {

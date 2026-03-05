@@ -7,7 +7,14 @@ const { scrubSensitive } = require('./audit-log');
 
 const MCP_PROTOCOL_VERSION = '2025-11-25';
 
-function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies }) {
+function extractPhiContext(tool, args) {
+  const a = tool.audit;
+  if (!a) return { phi: false, write: false, patientId: undefined };
+  const patientId = a.patientIdArg ? (args?.[a.patientIdArg] ?? undefined) : undefined;
+  return { phi: !!a.phi, write: !!a.write, patientId };
+}
+
+function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies, phiAuditLogger }) {
   const router = express.Router();
   const toolMap = new Map(tools.map((t) => [t.name, t]));
 
@@ -42,6 +49,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     });
     if (!authResult.allowed) {
       if (logger) logger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');
+      if (phiAuditLogger) phiAuditLogger.logAuthDenied({ tool: name, role });
       return jsonRpcError(id, -32603, `Forbidden: ${authResult.reason}`, {
         tool: name, role, reason: authResult.reason
       });
@@ -61,6 +69,13 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       if (fixture) {
         const duration_ms = Date.now() - start;
         if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: true }, 'tool_call');
+        if (phiAuditLogger) {
+          const ctx = extractPhiContext(tool, args);
+          phiAuditLogger.logToolAccess({
+            tool: name, role, tenantId: args?.tenantId ?? null,
+            patientId: ctx.patientId, success: true, durationMs: duration_ms, phi: ctx.phi, write: ctx.write
+          });
+        }
         return jsonRpcResult(id, {
           content: [{ type: 'text', text: JSON.stringify(fixture, null, 2) }]
         });
@@ -71,11 +86,25 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       const result = await tool.handler(args || {}, { req });
       const duration_ms = Date.now() - start;
       if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: isDemoMode() }, 'tool_call');
+      if (phiAuditLogger) {
+        const ctx = extractPhiContext(tool, args);
+        phiAuditLogger.logToolAccess({
+          tool: name, role, tenantId: (args || {}).tenantId ?? null,
+          patientId: ctx.patientId, success: true, durationMs: duration_ms, phi: ctx.phi, write: ctx.write
+        });
+      }
       return jsonRpcResult(id, result);
     } catch (err) {
       const duration_ms = Date.now() - start;
       const safeMessage = scrubSensitive(err?.message || String(err));
       if (logger) logger.error({ tool: name, role, error_code: -32603, duration_ms, demo: isDemoMode() }, 'tool_error');
+      if (phiAuditLogger) {
+        const ctx = extractPhiContext(tool, args);
+        phiAuditLogger.logToolAccess({
+          tool: name, role, tenantId: (args || {}).tenantId ?? null,
+          patientId: ctx.patientId, success: false, durationMs: duration_ms, phi: ctx.phi, write: ctx.write
+        });
+      }
       return jsonRpcError(id, -32603, 'Tool execution error', {
         tool: name, detail: safeMessage
       });

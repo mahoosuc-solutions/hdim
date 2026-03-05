@@ -441,3 +441,181 @@ describe('mcp-router param validation', () => {
     expect(res.body.result.content[0].text).toBe('hello');
   });
 });
+
+describe('phiAuditLogger hooks', () => {
+  const phiTool = {
+    name: 'get_patient',
+    description: 'Get patient record',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        patientId: { type: 'string' },
+        tenantId: { type: 'string' }
+      },
+      required: ['patientId', 'tenantId'],
+      additionalProperties: false
+    },
+    handler: async (args) => ({ content: [{ type: 'text', text: `patient:${args.patientId}` }] })
+  };
+
+  const writeTool = {
+    name: 'update_patient',
+    description: 'Update patient record',
+    audit: { phi: true, write: true },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'string' }
+      },
+      required: ['tenantId'],
+      additionalProperties: false
+    },
+    handler: async () => ({ content: [{ type: 'text', text: 'updated' }] })
+  };
+
+  const nonPhiTool = {
+    name: 'list_services',
+    description: 'List services',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'string' }
+      },
+      required: ['tenantId'],
+      additionalProperties: false
+    },
+    handler: async () => ({ content: [{ type: 'text', text: 'services' }] })
+  };
+
+  const throwingTool = {
+    name: 'bad_tool',
+    description: 'Always throws',
+    audit: { phi: true, write: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tenantId: { type: 'string' }
+      },
+      required: ['tenantId'],
+      additionalProperties: false
+    },
+    handler: async () => { throw new Error('boom'); }
+  };
+
+  let phiAuditLogger;
+  let app;
+  let request;
+
+  beforeEach(() => {
+    phiAuditLogger = {
+      logToolAccess: jest.fn(),
+      logAuthDenied: jest.fn()
+    };
+    app = express();
+    app.use(express.json());
+    app.use(createMcpRouter({
+      tools: [phiTool, writeTool, nonPhiTool, throwingTool],
+      serverName: 'phi-test',
+      serverVersion: '0.1.0',
+      enforceRoleAuth: true,
+      phiAuditLogger
+    }));
+    request = supertest(app);
+  });
+
+  it('logs PHI tool success with full context', async () => {
+    const res = await request.post('/mcp')
+      .set('x-operator-role', 'platform_admin')
+      .send({
+        jsonrpc: '2.0', id: 100, method: 'tools/call',
+        params: { name: 'get_patient', arguments: { patientId: 'P123', tenantId: 'T1' } }
+      });
+    expect(res.body.result).toBeDefined();
+    expect(phiAuditLogger.logToolAccess).toHaveBeenCalledWith({
+      tool: 'get_patient',
+      role: 'platform_admin',
+      tenantId: 'T1',
+      patientId: 'P123',
+      success: true,
+      phi: true,
+      write: false,
+      durationMs: expect.any(Number)
+    });
+  });
+
+  it('logs write tool success with write: true and patientId: undefined', async () => {
+    const res = await request.post('/mcp')
+      .set('x-operator-role', 'platform_admin')
+      .send({
+        jsonrpc: '2.0', id: 101, method: 'tools/call',
+        params: { name: 'update_patient', arguments: { tenantId: 'T1' } }
+      });
+    expect(res.body.result).toBeDefined();
+    expect(phiAuditLogger.logToolAccess).toHaveBeenCalledWith(
+      expect.objectContaining({ write: true, phi: true, patientId: undefined })
+    );
+  });
+
+  it('logs non-PHI tool success with phi: false, write: false', async () => {
+    const res = await request.post('/mcp')
+      .set('x-operator-role', 'platform_admin')
+      .send({
+        jsonrpc: '2.0', id: 102, method: 'tools/call',
+        params: { name: 'list_services', arguments: { tenantId: 'T1' } }
+      });
+    expect(res.body.result).toBeDefined();
+    expect(phiAuditLogger.logToolAccess).toHaveBeenCalledWith(
+      expect.objectContaining({ phi: false, write: false })
+    );
+  });
+
+  it('logs throwing tool with success: false', async () => {
+    const res = await request.post('/mcp')
+      .set('x-operator-role', 'platform_admin')
+      .send({
+        jsonrpc: '2.0', id: 103, method: 'tools/call',
+        params: { name: 'bad_tool', arguments: { tenantId: 'T1' } }
+      });
+    expect(res.body.error).toBeDefined();
+    expect(phiAuditLogger.logToolAccess).toHaveBeenCalledWith(
+      expect.objectContaining({ success: false, phi: true })
+    );
+  });
+
+  it('logs auth denied and does NOT log tool access on forbidden', async () => {
+    const res = await request.post('/mcp')
+      .send({
+        jsonrpc: '2.0', id: 104, method: 'tools/call',
+        params: { name: 'get_patient', arguments: { patientId: 'P123', tenantId: 'T1' } }
+      });
+    expect(res.body.error).toBeDefined();
+    expect(phiAuditLogger.logAuthDenied).toHaveBeenCalledWith(
+      expect.objectContaining({ tool: 'get_patient' })
+    );
+    expect(phiAuditLogger.logToolAccess).not.toHaveBeenCalled();
+  });
+
+  it('does NOT call logger for unknown tool', async () => {
+    await request.post('/mcp')
+      .set('x-operator-role', 'platform_admin')
+      .send({
+        jsonrpc: '2.0', id: 105, method: 'tools/call',
+        params: { name: 'nonexistent_tool', arguments: {} }
+      });
+    expect(phiAuditLogger.logToolAccess).not.toHaveBeenCalled();
+    expect(phiAuditLogger.logAuthDenied).not.toHaveBeenCalled();
+  });
+
+  it('durationMs is a non-negative number', async () => {
+    await request.post('/mcp')
+      .set('x-operator-role', 'platform_admin')
+      .send({
+        jsonrpc: '2.0', id: 106, method: 'tools/call',
+        params: { name: 'get_patient', arguments: { patientId: 'P1', tenantId: 'T1' } }
+      });
+    const call = phiAuditLogger.logToolAccess.mock.calls[0][0];
+    expect(typeof call.durationMs).toBe('number');
+    expect(call.durationMs).toBeGreaterThanOrEqual(0);
+  });
+});

@@ -100,7 +100,9 @@ include(
     "modules:services:quality-measure-event-handler-service",
     "modules:services:clinical-workflow-event-handler-service",
     "modules:services:investor-dashboard-service",
-    "modules:services:agent-validation-service"
+    "modules:services:agent-validation-service",
+    "modules:services:admin-service",
+    "modules:services:devops-agent-service"
 )
 
 // Applications

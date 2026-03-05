@@ -6,6 +6,7 @@ import com.healthdata.admin.dto.AlertConfigRequest;
 import com.healthdata.admin.dto.AlertConfigUpdateRequest;
 import com.healthdata.admin.repository.AlertConfigRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -30,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests full REST API flow with in-memory database.
  * Validates multi-tenant isolation, role-based access control, and CRUD operations.
  */
+@Tag("integration")
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")

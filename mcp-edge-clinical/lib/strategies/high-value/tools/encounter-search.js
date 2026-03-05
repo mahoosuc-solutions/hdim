@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'encounter_search',
-    audit: { phi: true, write: false, patientIdArg: 'patient' },
     description: 'Search FHIR Encounter resources. Filter by patient, status, type, date, or class.',
     inputSchema: {
       type: 'object',
@@ -13,6 +12,7 @@ function createDefinition(clinicalClient) {
       required: ['tenantId'],
       additionalProperties: false
     },
+    audit: { phi: true, write: false, patientIdArg: 'patient' },
     handler: async (args) => {
       const { tenantId, patient, params } = args;
       const qp = new URLSearchParams();

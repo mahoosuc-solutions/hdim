@@ -1,7 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_population',
-    audit: { phi: false, write: false, patientIdArg: undefined },
+    audit: { phi: false, write: false },
     description: 'Get population-level care gap report (non-PHI). Aggregated metrics across all patients.',
     inputSchema: {
       type: 'object',

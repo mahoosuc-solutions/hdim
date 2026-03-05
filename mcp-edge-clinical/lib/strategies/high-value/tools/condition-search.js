@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'condition_search',
-    audit: { phi: true, write: false, patientIdArg: 'patient' },
     description: 'Search FHIR Condition resources. Filter by patient, clinical-status, category, or code.',
     inputSchema: {
       type: 'object',
@@ -13,6 +12,7 @@ function createDefinition(clinicalClient) {
       required: ['tenantId'],
       additionalProperties: false
     },
+    audit: { phi: true, write: false, patientIdArg: 'patient' },
     handler: async (args) => {
       const { tenantId, patient, params } = args;
       const qp = new URLSearchParams();

@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_list',
-    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'List open or high-priority care gaps for a patient.',
     inputSchema: {
       type: 'object',
@@ -18,6 +17,7 @@ function createDefinition(clinicalClient) {
       required: ['patientId', 'tenantId'],
       additionalProperties: false
     },
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     handler: async (args) => {
       const { patientId, tenantId, status } = args;
       try {

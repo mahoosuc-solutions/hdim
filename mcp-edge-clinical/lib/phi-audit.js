@@ -1,3 +1,7 @@
+// PHI-specific audit logger for clinical tool calls.
+// Provides structured action types (PHI_ACCESS, PHI_WRITE, TOOL_CALL, AUTH_DENIED)
+// on top of the generic pino audit logger. Ready for integration into mcp-router
+// when per-tool PHI tracking is enabled (v0.2.0).
 const { createAuditLogger } = require('hdim-mcp-edge-common');
 
 function createPhiAuditLogger({ serviceName, stream } = {}) {

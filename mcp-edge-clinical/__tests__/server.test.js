@@ -89,7 +89,7 @@ describe('clinical edge server', () => {
     expect(res.body.result.protocolVersion).toBe('2025-11-25');
   });
 
-  it('lists 26 tools from composite strategy', async () => {
+  it('lists 29 tools from composite strategy (25 strategy + 4 infra/admin)', async () => {
     const res = await request.post('/mcp')
       .set('x-operator-role', 'platform_admin')
       .send({ jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
@@ -101,7 +101,10 @@ describe('clinical edge server', () => {
     expect(toolNames).toContain('measure_evaluate');
     expect(toolNames).toContain('cql_evaluate');
     expect(toolNames).toContain('edge_health');
-    expect(toolNames.length).toBe(26);
+    expect(toolNames).toContain('admin_preview_strategy');
+    expect(toolNames).toContain('admin_set_strategy');
+    expect(toolNames).toContain('admin_rollback_strategy');
+    expect(toolNames.length).toBe(29);
   });
 
   it('can call a tool in demo mode', async () => {

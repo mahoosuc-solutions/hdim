@@ -27,7 +27,7 @@ describe('full-surface strategy integration (demo mode)', () => {
       .set('x-operator-role', 'clinical_admin')
       .send({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
     expect(res.status).toBe(200);
-    expect(res.body.result.tools).toHaveLength(69);
+    expect(res.body.result.tools).toHaveLength(72);
   });
 
   it('every tool has valid MCP schema', async () => {
@@ -117,7 +117,7 @@ describe('full-surface strategy integration (demo mode)', () => {
     const res = await request.post('/mcp')
       .set('x-operator-role', 'clinician')
       .send({ jsonrpc: '2.0', id: 40, method: 'tools/list', params: {} });
-    expect(res.body.result.tools).toHaveLength(69);
+    expect(res.body.result.tools).toHaveLength(72);
   });
 
   it('returns error for unknown tool', async () => {

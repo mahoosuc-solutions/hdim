@@ -71,7 +71,7 @@ echo "[CLAUDE.md]"
 check "Timestamp updated to March 5" \
   "CLAUDE.md" "March 5, 2026"
 check "MCP Edge port 3100 in ports table" \
-  "CLAUDE.md" "3100.*MCP"
+  "CLAUDE.md" "MCP.*3100|3100.*MCP"
 check "Version bumped to 4.2" \
   "CLAUDE.md" "Version: 4\.2"
 check "v2.9.0 referenced" \

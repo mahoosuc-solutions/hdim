@@ -2,7 +2,7 @@
 
 Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central hub for finding information about the HDIM platform.
 
-**Last Updated**: February 3, 2026
+**Last Updated**: March 5, 2026
 **Total Documentation Files**: 1,411 markdown files organized across architecture, services, operations, and user guides
 
 ---
@@ -57,6 +57,7 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 - **Platform Flows**: [High-level business processes](architecture/PLATFORM_FLOW_OVERVIEW.md)
 - **Technology Decisions**: [21 Architecture Decision Records](architecture/decisions/)
 - **Database Architecture**: [29 databases, schema management](architecture/database/)
+- **MCP Edge Design**: [Claude Desktop/Code integration sidecars](plans/2026-03-04-hdim-mcp-edge-design.md)
 
 ### Services
 - **Service Catalog**: [All 50+ microservices](services/SERVICE_CATALOG.md) ✨ NEW
@@ -158,9 +159,9 @@ Each of the 50+ microservices has detailed documentation in its README:
 
 ## Recent Updates
 
-- **January 19, 2026**: New modular documentation structure with centralized navigation ✨
-- **January 12, 2026**: Liquibase Development Workflow guide
-- **January 10, 2026**: Database architecture standardization complete
+- **March 5, 2026**: v2.9.0 release — MCP Edge Layer v0.1.0 (3 sidecars, 1,307 tests), test coverage improvements (66 new tests across 5 services)
+- **March 3, 2026**: v2.8.0 system remediation — security hardening, CI/CD normalization, docs reorganization
+- **January 19, 2026**: New modular documentation structure with centralized navigation
 - See [Archive](archive/) for historical documentation
 
 ---

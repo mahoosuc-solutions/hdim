@@ -17,3 +17,9 @@ docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md @webemo-aaron
 # Landing page ownership and quality gates
 landing-page/** @webemo-aaron
 .github/workflows/landing-page-validation.yml @webemo-aaron
+
+# MCP Edge sidecar ownership and quality gates
+mcp-edge-*/** @webemo-aaron
+scripts/mcp/mcp-edge-*.mjs @webemo-aaron
+docker-compose.mcp-edge.yml @webemo-aaron
+.github/workflows/mcp-edge-ci.yml @webemo-aaron

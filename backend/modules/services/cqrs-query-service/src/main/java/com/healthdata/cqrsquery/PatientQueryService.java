@@ -21,7 +21,7 @@ public class PatientQueryService {
             .filter(p -> p.getFirstName().equalsIgnoreCase(firstName))
             .map(this::mapToResult)
             .toList();
-        cacheStore.put("search:firstName:" + firstName + ":" + tenantId, results, 300);
+        cacheStore.put("search:" + firstName + ":" + tenantId, results, 300);
         return results;
     }
 
@@ -102,7 +102,7 @@ public class PatientQueryService {
             .toList();
     }
 
-    private PatientQueryResult mapToResult(PatientQueryServiceTest.PatientProjection p) {
+    private PatientQueryResult mapToResult(PatientProjection p) {
         return new PatientQueryResult(p.getPatientId(), p.getFirstName(), p.getLastName(), p.getDateOfBirth(),
                                      p.getConditions(), p.getMedications(), p.getEnrollmentStatus());
     }
@@ -136,6 +136,19 @@ class PatientQueryResult {
     String getEnrollmentStatus() { return enrollmentStatus; }
     Set<String> getConditions() { return conditions; }
     Set<String> getMedications() { return medications; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PatientQueryResult that)) return false;
+        return Objects.equals(patientId, that.patientId) && Objects.equals(firstName, that.firstName)
+                && Objects.equals(lastName, that.lastName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(patientId, firstName, lastName);
+    }
 }
 
 class PaginatedResult<T> {

@@ -98,12 +98,12 @@ class PatientQueryServiceTest {
         String tenantId = "TENANT-001";
         mockProjectionStore.addPatient(tenantId, "PATIENT-1", "John", "Doe");
         mockProjectionStore.addPatient(tenantId, "PATIENT-2", "Jane", "Smith");
-        mockProjectionStore.addPatient(tenantId, "PATIENT-3", "Jonathan", "Jones");
+        mockProjectionStore.addPatient(tenantId, "PATIENT-3", "Johnny", "Jones");
 
         // When: Full-text search for "John"
         List<PatientQueryResult> results = patientQueryService.fullTextSearch(tenantId, "John");
 
-        // Then: Should return matching patients (John, Jonathan)
+        // Then: Should return matching patients (John, Johnny — both contain "john")
         assertThat(results).hasSizeGreaterThanOrEqualTo(2);
     }
 
@@ -348,119 +348,4 @@ class PatientQueryServiceTest {
         assertThat(results).isEmpty();
     }
 
-    // ===== Mock Classes =====
-
-    static class MockProjectionStore {
-        private final Map<String, List<PatientProjection>> data = new HashMap<>();
-
-        void addPatient(String tenantId, String patientId, String firstName, String lastName) {
-            data.computeIfAbsent(tenantId, k -> new ArrayList<>())
-                .add(new PatientProjection(patientId, firstName, lastName));
-        }
-
-        void addPatientWithDOB(String tenantId, String patientId, String firstName, String lastName, LocalDate dob) {
-            PatientProjection p = new PatientProjection(patientId, firstName, lastName);
-            p.setDateOfBirth(dob);
-            data.computeIfAbsent(tenantId, k -> new ArrayList<>()).add(p);
-        }
-
-        void addPatientWithCondition(String tenantId, String patientId, String firstName, String lastName, String condition) {
-            PatientProjection p = new PatientProjection(patientId, firstName, lastName);
-            p.addCondition(condition);
-            data.computeIfAbsent(tenantId, k -> new ArrayList<>()).add(p);
-        }
-
-        void addPatientWithMedication(String tenantId, String patientId, String firstName, String lastName, String medication) {
-            PatientProjection p = new PatientProjection(patientId, firstName, lastName);
-            p.addMedication(medication);
-            data.computeIfAbsent(tenantId, k -> new ArrayList<>()).add(p);
-        }
-
-        void addPatientWithEnrollment(String tenantId, String patientId, String firstName, String lastName, String status) {
-            PatientProjection p = new PatientProjection(patientId, firstName, lastName);
-            p.setEnrollmentStatus(status);
-            data.computeIfAbsent(tenantId, k -> new ArrayList<>()).add(p);
-        }
-
-        void addComplexPatient(String tenantId, String patientId, String firstName, String lastName,
-                              String condition, String medication, String enrollmentStatus) {
-            PatientProjection p = new PatientProjection(patientId, firstName, lastName);
-            p.addCondition(condition);
-            p.addMedication(medication);
-            p.setEnrollmentStatus(enrollmentStatus);
-            data.computeIfAbsent(tenantId, k -> new ArrayList<>()).add(p);
-        }
-
-        List<PatientProjection> getPatients(String tenantId) {
-            return data.getOrDefault(tenantId, new ArrayList<>());
-        }
-    }
-
-    static class MockCacheStore {
-        private final Map<String, Object> cache = new HashMap<>();
-        private final Map<String, Long> ttls = new HashMap<>();
-        private int cacheHitCount = 0;
-
-        void put(String key, Object value, long ttlSeconds) {
-            cache.put(key, value);
-            ttls.put(key, ttlSeconds);
-            cacheHitCount++;
-        }
-
-        Object get(String key) {
-            if (cache.containsKey(key)) {
-                cacheHitCount++;
-                return cache.get(key);
-            }
-            return null;
-        }
-
-        long getTTL(String key) {
-            return ttls.getOrDefault(key, 0L);
-        }
-
-        int getCacheHitCount() {
-            return cacheHitCount;
-        }
-    }
-
-    static class PatientProjection {
-        private final String patientId;
-        private final String firstName;
-        private final String lastName;
-        private LocalDate dateOfBirth;
-        private final Set<String> conditions = new HashSet<>();
-        private final Set<String> medications = new HashSet<>();
-        private String enrollmentStatus = "UNKNOWN";
-
-        PatientProjection(String patientId, String firstName, String lastName) {
-            this.patientId = patientId;
-            this.firstName = firstName;
-            this.lastName = lastName;
-        }
-
-        void addCondition(String condition) {
-            conditions.add(condition);
-        }
-
-        void addMedication(String medication) {
-            medications.add(medication);
-        }
-
-        void setEnrollmentStatus(String status) {
-            this.enrollmentStatus = status;
-        }
-
-        void setDateOfBirth(LocalDate dob) {
-            this.dateOfBirth = dob;
-        }
-
-        String getPatientId() { return patientId; }
-        String getFirstName() { return firstName; }
-        String getLastName() { return lastName; }
-        LocalDate getDateOfBirth() { return dateOfBirth; }
-        Set<String> getConditions() { return conditions; }
-        Set<String> getMedications() { return medications; }
-        String getEnrollmentStatus() { return enrollmentStatus; }
-    }
 }

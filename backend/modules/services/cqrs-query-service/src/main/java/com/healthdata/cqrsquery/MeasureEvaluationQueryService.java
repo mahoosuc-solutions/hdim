@@ -2,6 +2,7 @@ package com.healthdata.cqrsquery;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * MeasureEvaluationQueryService - Quality measure evaluation queries backed by projections
@@ -16,17 +17,24 @@ public class MeasureEvaluationQueryService {
     }
 
     public List<MeasureEvaluationResult> getMeasureScores(String tenantId, String patientId) {
-        List<MeasureEvaluationResult> results = new ArrayList<>();
-        // Stub implementation
-        return results;
+        return measureStore.getByTenantAndPatient(tenantId, patientId).stream()
+            .map(e -> new MeasureEvaluationResult(e.getMeasureCode(), e.getStatus(), e.getScore()))
+            .toList();
     }
 
     public MeasureEvaluationResult getMeasure(String tenantId, String patientId, String measureCode) {
-        return new MeasureEvaluationResult(measureCode, "MET", 1.0f);
+        MockMeasureProjectionStore.MeasureEvaluation eval = measureStore.getMeasureEvaluation(tenantId, patientId, measureCode);
+        if (eval != null) {
+            return new MeasureEvaluationResult(eval.getMeasureCode(), eval.getStatus(), eval.getScore());
+        }
+        return new MeasureEvaluationResult(measureCode, "UNKNOWN", 0.0f);
     }
 
     public List<MeasureEvaluationResult> getMeasuresByStatus(String tenantId, String patientId, String status) {
-        return new ArrayList<>();
+        return measureStore.getByTenantAndPatient(tenantId, patientId).stream()
+            .filter(e -> status.equals(e.getStatus()))
+            .map(e -> new MeasureEvaluationResult(e.getMeasureCode(), e.getStatus(), e.getScore()))
+            .toList();
     }
 
     public float getMeasureRate(String tenantId, String measureCode) {
@@ -34,25 +42,41 @@ public class MeasureEvaluationQueryService {
         Object cached = cacheStore.get(cacheKey);
         if (cached != null) return (float) cached;
 
-        float rate = 0.75f; // Stub
+        List<MockMeasureProjectionStore.MeasureEvaluation> evals = measureStore.getByTenantAndMeasure(tenantId, measureCode);
+        if (evals.isEmpty()) {
+            float rate = 0.0f;
+            cacheStore.put(cacheKey, rate, 300);
+            return rate;
+        }
+        float rate = (float) evals.stream().mapToDouble(MockMeasureProjectionStore.MeasureEvaluation::getScore).average().orElse(0.0);
         cacheStore.put(cacheKey, rate, 300);
         return rate;
     }
 
     public float getNumeratorPercentage(String tenantId, String measureCode) {
-        return 0.8f;
+        List<MockMeasureProjectionStore.MeasureEvaluation> evals = measureStore.getByTenantAndMeasure(tenantId, measureCode);
+        if (evals.isEmpty()) return 0.0f;
+        long numerator = evals.stream().filter(e -> "MET".equals(e.getStatus()) || "NUMERATOR".equals(e.getStatus())).count();
+        return (float) numerator / evals.size();
     }
 
     public List<MeasureEvaluationResult> getMeasuresSortedByRate(String tenantId) {
-        return new ArrayList<>();
+        return measureStore.getAllForTenant(tenantId).stream()
+            .map(e -> new MeasureEvaluationResult(e.getMeasureCode(), e.getStatus(), e.getScore()))
+            .sorted((a, b) -> Float.compare(b.getScore(), a.getScore()))
+            .toList();
     }
 
     public List<MeasureEvaluationResult> getMeasuresBelowTarget(String tenantId, float target) {
-        return new ArrayList<>();
+        return measureStore.getAllForTenant(tenantId).stream()
+            .filter(e -> e.getScore() < target)
+            .map(e -> new MeasureEvaluationResult(e.getMeasureCode(), e.getStatus(), e.getScore()))
+            .toList();
     }
 
     public float getMeasureScoreAsOf(String tenantId, String measureCode, LocalDate date) {
-        return 0.8f;
+        MockMeasureProjectionStore.MeasureEvaluation eval = measureStore.getMeasureEvaluationAtDate(tenantId, measureCode, date);
+        return eval != null ? eval.getScore() : 0.0f;
     }
 }
 

@@ -49,6 +49,9 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.19.3")
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks.withType<Test> {
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
+    systemProperty("spring.profiles.active", "test")
 }

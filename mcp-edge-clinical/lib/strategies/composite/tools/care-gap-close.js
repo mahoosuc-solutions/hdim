@@ -1,7 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_close',
-    audit: { phi: true, write: true, patientIdArg: undefined },
+    audit: { phi: true, write: true },
     description: 'Close a care gap with clinical evidence. This is a WRITE operation.',
     inputSchema: {
       type: 'object',

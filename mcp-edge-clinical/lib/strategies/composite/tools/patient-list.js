@@ -1,7 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'patient_list',
-    audit: { phi: true, write: false, patientIdArg: undefined },
+    audit: { phi: true, write: false },
     description: 'List patients with pagination. No patient-specific PHI in request.',
     inputSchema: {
       type: 'object',

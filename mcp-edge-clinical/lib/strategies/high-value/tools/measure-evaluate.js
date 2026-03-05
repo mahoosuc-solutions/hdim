@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'measure_evaluate',
-    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Evaluate quality measures for a patient. Runs HEDIS/CQL calculation.',
     inputSchema: {
       type: 'object',
@@ -13,6 +12,7 @@ function createDefinition(clinicalClient) {
       required: ['patientId', 'tenantId'],
       additionalProperties: false
     },
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     handler: async (args) => {
       const { patientId, tenantId, measureId } = args;
       try {

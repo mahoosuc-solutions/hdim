@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_stats',
-    audit: { phi: false, write: false, patientIdArg: undefined },
     description: 'Get aggregate care gap statistics (non-PHI). Closure rates, distribution by measure.',
     inputSchema: {
       type: 'object',
@@ -11,6 +10,7 @@ function createDefinition(clinicalClient) {
       required: ['tenantId'],
       additionalProperties: false
     },
+    audit: { phi: false, write: false },
     handler: async (args) => {
       const { tenantId } = args;
       try {

@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'measure_results',
-    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get quality measure evaluation results for a patient.',
     inputSchema: {
       type: 'object',
@@ -12,6 +11,7 @@ function createDefinition(clinicalClient) {
       required: ['patientId', 'tenantId'],
       additionalProperties: false
     },
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     handler: async (args) => {
       const { patientId, tenantId } = args;
       try {

@@ -1,7 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'fhir_bundle',
-    audit: { phi: true, write: true, patientIdArg: undefined },
+    audit: { phi: true, write: true },
     description: 'Submit a FHIR Bundle (transaction or batch). Process multiple resources in one call.',
     inputSchema: {
       type: 'object',

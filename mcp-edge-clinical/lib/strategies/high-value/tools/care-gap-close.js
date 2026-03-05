@@ -1,7 +1,6 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_close',
-    audit: { phi: true, write: true, patientIdArg: undefined },
     description: 'Close a care gap with clinical evidence. This is a WRITE operation.',
     inputSchema: {
       type: 'object',
@@ -14,6 +13,7 @@ function createDefinition(clinicalClient) {
       required: ['gapId', 'tenantId', 'closedBy', 'reason'],
       additionalProperties: false
     },
+    audit: { phi: true, write: true },
     handler: async (args) => {
       const { gapId, tenantId, closedBy, reason } = args;
       try {

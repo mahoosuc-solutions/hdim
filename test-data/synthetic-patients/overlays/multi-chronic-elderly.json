@@ -1,0 +1,55 @@
+{
+  "phenotypeId": "multi-chronic-elderly",
+  "careGaps": [],
+  "qualityMeasures": [
+    {
+      "measureId": "COPD-Management",
+      "status": "compliant",
+      "description": "COPD management plan active with pulmonology follow-up",
+      "lastAssessed": "2026-01-10"
+    },
+    {
+      "measureId": "CKD-Monitoring",
+      "status": "compliant",
+      "description": "GFR monitored within 6 months (current: 45 mL/min/1.73m2)",
+      "lastAssessed": "2026-01-10"
+    },
+    {
+      "measureId": "HTN-Control",
+      "status": "compliant",
+      "description": "Hypertension management with active follow-up",
+      "lastAssessed": "2026-02-05"
+    }
+  ],
+  "cqlTargets": [
+    {
+      "libraryId": "Multi-Chronic-Coordination",
+      "expectedResult": true,
+      "description": "Patient has coordinated care across multiple specialists"
+    },
+    {
+      "libraryId": "CKD-Stage-Monitor",
+      "expectedResult": true,
+      "description": "CKD stage 3 with GFR in 30-59 range, monitored appropriately"
+    }
+  ],
+  "cdsHooks": {
+    "patientView": {
+      "expectedCards": 2,
+      "cards": [
+        {
+          "summary": "Multi-chronic patient: 3 active conditions requiring coordination",
+          "indicator": "info",
+          "detail": "COPD, CKD Stage 3, Essential Hypertension — ensure care plan coordination across pulmonology and nephrology.",
+          "source": "HDIM Care Coordination Engine"
+        },
+        {
+          "summary": "CKD Stage 3: Medication dose adjustment may be needed",
+          "indicator": "warning",
+          "detail": "GFR 45 mL/min/1.73m2 — review all medications for renal dose adjustments.",
+          "source": "HDIM Medication Safety Engine"
+        }
+      ]
+    }
+  }
+}

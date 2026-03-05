@@ -1,0 +1,65 @@
+{
+  "phenotypeId": "t2dm-unmanaged",
+  "careGaps": [
+    {
+      "gapId": "retinopathy-screening",
+      "type": "screening",
+      "description": "Diabetic retinopathy screening overdue",
+      "severity": "high",
+      "measureId": "Diabetic-Eye-Exam",
+      "recommendation": "Schedule dilated eye exam with ophthalmology"
+    },
+    {
+      "gapId": "nephropathy-screening",
+      "type": "screening",
+      "description": "Diabetic nephropathy screening overdue",
+      "severity": "high",
+      "measureId": "Diabetic-Nephropathy-Screen",
+      "recommendation": "Order urine albumin/creatinine ratio"
+    }
+  ],
+  "qualityMeasures": [
+    {
+      "measureId": "HbA1c-Control",
+      "status": "non-compliant",
+      "description": "HbA1c above 7.0% threshold (current: 9.2%)",
+      "lastAssessed": "2026-02-01"
+    },
+    {
+      "measureId": "Diabetic-Eye-Exam",
+      "status": "non-compliant",
+      "description": "No retinopathy screening on record within 12 months",
+      "lastAssessed": null
+    },
+    {
+      "measureId": "Diabetic-Nephropathy-Screen",
+      "status": "non-compliant",
+      "description": "No nephropathy screening on record within 12 months",
+      "lastAssessed": null
+    }
+  ],
+  "cqlTargets": [
+    {
+      "libraryId": "HbA1c-Control",
+      "expectedResult": false,
+      "description": "Patient HbA1c exceeds target range"
+    }
+  ],
+  "cdsHooks": {
+    "patientView": {
+      "expectedCards": 2,
+      "cards": [
+        {
+          "summary": "HbA1c above target",
+          "indicator": "warning",
+          "source": "HDIM Quality Engine"
+        },
+        {
+          "summary": "Overdue diabetic screenings",
+          "indicator": "warning",
+          "source": "HDIM Care Gap Engine"
+        }
+      ]
+    }
+  }
+}

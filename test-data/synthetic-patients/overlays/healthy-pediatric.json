@@ -1,0 +1,30 @@
+{
+  "phenotypeId": "healthy-pediatric",
+  "careGaps": [],
+  "qualityMeasures": [
+    {
+      "measureId": "Immunization-Compliance",
+      "status": "compliant",
+      "description": "Immunizations current per CDC schedule (DTaP, MMR, Influenza)",
+      "lastAssessed": "2025-10-15"
+    },
+    {
+      "measureId": "Well-Child-Visit",
+      "status": "compliant",
+      "description": "Well-child visit completed within 12 months",
+      "lastAssessed": "2025-09-10"
+    }
+  ],
+  "cqlTargets": [
+    {
+      "libraryId": "Childhood-Immunization-Status",
+      "expectedResult": true,
+      "description": "All age-appropriate immunizations are current"
+    }
+  ],
+  "cdsHooks": {
+    "patientView": {
+      "expectedCards": 0
+    }
+  }
+}

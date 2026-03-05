@@ -1,0 +1,299 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "multi-chronic-elderly-patient",
+        "name": [
+          {
+            "use": "official",
+            "family": "Anderson",
+            "given": ["William"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1944-02-18",
+        "address": [
+          {
+            "line": ["890 Cedar Court"],
+            "city": "Boston",
+            "state": "MA",
+            "postalCode": "02101",
+            "country": "US"
+          }
+        ],
+        "identifier": [
+          {
+            "system": "http://hdim.io/fhir/sid/synthetic-mrn",
+            "value": "SYN-MCE-006"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/multi-chronic-elderly-patient"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "multi-chronic-elderly-condition-copd",
+        "subject": {
+          "reference": "Patient/multi-chronic-elderly-patient"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "13645005",
+              "display": "Chronic obstructive pulmonary disease"
+            }
+          ],
+          "text": "Chronic obstructive pulmonary disease"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "onsetDateTime": "2015-04-20"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/multi-chronic-elderly-condition-copd"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "multi-chronic-elderly-condition-ckd",
+        "subject": {
+          "reference": "Patient/multi-chronic-elderly-patient"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "433144002",
+              "display": "Chronic kidney disease stage 3"
+            }
+          ],
+          "text": "Chronic kidney disease stage 3"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "onsetDateTime": "2018-09-12"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/multi-chronic-elderly-condition-ckd"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "multi-chronic-elderly-condition-htn",
+        "subject": {
+          "reference": "Patient/multi-chronic-elderly-patient"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59621000",
+              "display": "Essential hypertension"
+            }
+          ],
+          "text": "Essential hypertension"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "onsetDateTime": "2010-01-05"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/multi-chronic-elderly-condition-htn"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "multi-chronic-elderly-obs-gfr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "33914-3",
+              "display": "Glomerular filtration rate/1.73 sq M.predicted"
+            }
+          ],
+          "text": "Estimated GFR"
+        },
+        "subject": {
+          "reference": "Patient/multi-chronic-elderly-patient"
+        },
+        "effectiveDateTime": "2026-01-10",
+        "valueQuantity": {
+          "value": 45,
+          "unit": "mL/min/1.73m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min/{1.73_m2}"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "L",
+                "display": "Low"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/multi-chronic-elderly-obs-gfr"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "multi-chronic-elderly-encounter-pulm",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "390906007",
+                "display": "Follow-up encounter"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/multi-chronic-elderly-patient"
+        },
+        "period": {
+          "start": "2026-01-10T11:00:00Z",
+          "end": "2026-01-10T11:45:00Z"
+        },
+        "serviceType": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "394583002",
+              "display": "Pulmonology"
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/multi-chronic-elderly-encounter-pulm"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "multi-chronic-elderly-encounter-neph",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "390906007",
+                "display": "Follow-up encounter"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/multi-chronic-elderly-patient"
+        },
+        "period": {
+          "start": "2026-02-05T09:30:00Z",
+          "end": "2026-02-05T10:15:00Z"
+        },
+        "serviceType": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "394589003",
+              "display": "Nephrology"
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/multi-chronic-elderly-encounter-neph"
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'encounter_search',
+    audit: { phi: true, write: false, patientIdArg: 'patient' },
     description: 'Search FHIR Encounter resources. Filter by patient, status, type, date, or class.',
     inputSchema: {
       type: 'object',

@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'cds_patient_view',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Trigger CDS Hooks patient-view to get clinical decision support cards for a patient chart opening.',
     inputSchema: {
       type: 'object',

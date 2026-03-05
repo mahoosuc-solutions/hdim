@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'patient_summary',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get comprehensive patient health record summary (FHIR Bundle with all clinical data).',
     inputSchema: {
       type: 'object',

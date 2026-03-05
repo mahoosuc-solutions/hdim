@@ -14,6 +14,7 @@ function createReadTool(resource, client) {
   const snake = toSnakeCase(resource.type);
   return {
     name: `${snake}_read`,
+    audit: { phi: !!resource.phi, write: false, patientIdArg: undefined },
     description: `Read a FHIR ${resource.type} resource by ID.`,
     inputSchema: {
       type: 'object',
@@ -39,6 +40,7 @@ function createSearchTool(resource, client) {
   const snake = toSnakeCase(resource.type);
   return {
     name: `${snake}_search`,
+    audit: { phi: !!resource.phi, write: false, patientIdArg: resource.phi ? 'patient' : undefined },
     description: `Search FHIR ${resource.type} resources with query parameters.`,
     inputSchema: {
       type: 'object',
@@ -69,6 +71,7 @@ function createCreateTool(resource, client) {
   const snake = toSnakeCase(resource.type);
   return {
     name: `${snake}_create`,
+    audit: { phi: !!resource.phi, write: true, patientIdArg: undefined },
     description: `Create a new FHIR ${resource.type} resource.`,
     inputSchema: {
       type: 'object',

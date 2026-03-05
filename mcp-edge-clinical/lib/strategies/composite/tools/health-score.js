@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'health_score',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get composite health score for a patient combining quality measures and risk factors.',
     inputSchema: {
       type: 'object',

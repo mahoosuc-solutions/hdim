@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'cql_evaluate',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Evaluate a CQL/HEDIS measure library for a patient. Returns numerator/denominator compliance.',
     inputSchema: {
       type: 'object',

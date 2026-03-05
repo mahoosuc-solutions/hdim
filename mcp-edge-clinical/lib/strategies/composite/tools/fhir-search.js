@@ -3,6 +3,7 @@ const { VALID_RESOURCE_TYPES } = require('./fhir-read');
 function createDefinition(clinicalClient) {
   return {
     name: 'fhir_search',
+    audit: { phi: true, write: false, patientIdArg: 'patient' },
     description: 'Search FHIR R4 resources by type with query parameters. Use patient param for patient-scoped searches.',
     inputSchema: {
       type: 'object',

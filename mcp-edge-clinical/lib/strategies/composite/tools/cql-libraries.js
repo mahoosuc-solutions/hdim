@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'cql_libraries',
+    audit: { phi: false, write: false, patientIdArg: undefined },
     description: 'List available CQL measure libraries (non-PHI reference data).',
     inputSchema: {
       type: 'object',

@@ -3,6 +3,7 @@ const { VALID_RESOURCE_TYPES } = require('./fhir-read');
 function createDefinition(clinicalClient) {
   return {
     name: 'fhir_create',
+    audit: { phi: true, write: true, patientIdArg: undefined },
     description: 'Create a FHIR R4 resource. Provide the full resource object.',
     inputSchema: {
       type: 'object',

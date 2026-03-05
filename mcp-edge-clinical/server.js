@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
 const { createClinicalClient } = require('./lib/clinical-client');
+const { createPhiAuditLogger } = require('./lib/phi-audit');
 
 const VALID_STRATEGIES = ['composite', 'high-value', 'full-surface'];
 
@@ -45,6 +46,7 @@ function createApp() {
   }));
 
   const logger = createAuditLogger({ serviceName: 'hdim-clinical-edge' });
+  const phiAuditLogger = createPhiAuditLogger({ serviceName: 'hdim-clinical-edge' });
 
   app.use(createMcpRouter({
     tools,
@@ -53,7 +55,8 @@ function createApp() {
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
     fixturesDir: path.join(__dirname, 'lib', 'strategies', strategyName, 'fixtures'),
     logger,
-    rolePolicies: loadRolePolicies(strategyName)
+    rolePolicies: loadRolePolicies(strategyName),
+    phiAuditLogger
   }));
 
   return app;

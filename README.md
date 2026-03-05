@@ -9,54 +9,39 @@
 
 > **Production-ready, Docker-native healthcare platform** that transforms quality measurement, care gap management, and clinical interoperability into a unified, scalable solution.
 
-## 📊 Project Status (February 1, 2026)
+## 📊 Project Status (March 5, 2026)
 
-**🟢 PRODUCTION-READY FOR HOSPITAL DEPLOYMENT & INVESTOR ENGAGEMENT**
+**🟢 PRODUCTION-READY — v2.9.0**
 
-### Infrastructure Modernization: Complete ✅
+### Platform Highlights
 
-| Phase | Focus | Achievement | Status |
-|-------|-------|-------------|--------|
-| **1-4** | Docker independence, testing, classification, optimization | 75% baseline improvement | ✅ Q4 2025 |
-| **5** | Embedded Kafka migration | 50% test suite improvement | ✅ Q1 2026 |
-| **6** | Thread.sleep() optimization | 33% additional improvement | ✅ Q1 2026 |
-| **7** | CI/CD parallelization | **42.5% PR feedback improvement** | ✅ Q1 2026 |
-| **TOTAL** | 7-phase infrastructure modernization | **90%+ faster feedback loops** | ✅ **COMPLETE** |
+| Area | Metric | Status |
+|------|--------|--------|
+| **Backend** | 51 Java services + 2 Python services compiling | ✅ |
+| **Tests** | 709+ unit tests, 1,307 MCP Edge tests | ✅ |
+| **API Docs** | 62 endpoints with interactive Swagger UI | ✅ |
+| **MCP Edge** | 3 sidecars, 123 tools, 99.35% coverage | ✅ |
+| **CI/CD** | 90%+ faster feedback (Phases 1-7 complete) | ✅ |
+| **HIPAA** | Audit-ready (interceptors, session logging, PHI filtering) | ✅ |
+| **Landing Page** | Live on Vercel (persona-first v3 design) | ✅ |
+| **Security** | Tiers 1-4 remediation complete, CVE wave 1 done | ✅ |
 
-### Q1 2026 Release Highlights
+### Recent Releases
 
-**Infrastructure Performance:**
-- ✅ PR feedback time: 40m → 23-25m (42.5% improvement)
-- ✅ Master validation: 25m → 15-20m (60% improvement)
-- ✅ Parallel job utilization: 85-90% (4x improvement)
-- ✅ Build cache: 25-30% Gradle, 75% Docker
-- ✅ Change detection: 100% accuracy (21 filters)
+| Version | Date | Highlights |
+|---------|------|-----------|
+| **v2.9.0** | Mar 5, 2026 | MCP Edge Layer v0.1.0, Wave-1 revenue APIs, landing page v3, 709+ tests |
+| **v2.8.1** | Mar 3, 2026 | Documentation reorganization (362 files into docs/) |
+| **v2.8.0** | Mar 3, 2026 | System remediation Tiers 1-4 (security, CI/CD, landing page, docs) |
 
-**Code Quality:**
-- ✅ 259+ tests passing (0 regressions)
-- ✅ 51 services compiling successfully
-- ✅ 62 API endpoints documented (OpenAPI 3.0)
-- ✅ HIPAA compliance: Audit-ready
+### Go-to-Market
 
-**Release Documentation (91.5 KB):**
-- ✅ **INVESTOR-PITCH-DECK.md** (38 KB, 25 slides) - Series A ready
-- ✅ **HOSPITAL-DEPLOYMENT-GUIDE.md** (18.5 KB) - Production deployment
-- ✅ **PRODUCTION-READINESS-CHECKLIST.md** (12.8 KB) - 95+ validations
-- ✅ **RELEASE-2026-Q1-SUMMARY.md** (19.5 KB) - Comprehensive overview
-- ✅ **GitHub Formalization** - 8 Phase 7 issues, 5 new labels, 88% milestone complete
-
-**Financial Impact:**
-- Annual savings: $722,250 (1,720% ROI, 22-day payback)
-- Hospital value: $6.8M Year 1 (1.5-month payback)
-- Exit potential: $200-400M (9-13x return)
-
-**Go-to-Market:**
-- Q1 2026: ✅ Technology & documentation complete
+- Q1 2026: ✅ Technology, documentation, landing page complete
 - Q2 2026: Pilot hospital deployment
 - Q3 2026: Series A funding close
 - Q4 2026: Reach $2-4M ARR
 
-**Next Steps:** See [RELEASE-2026-Q1-SUMMARY.md](./docs/RELEASE-2026-Q1-SUMMARY.md)
+**Full changelog:** [CHANGELOG.md](./CHANGELOG.md) | **Release docs:** [RELEASE-2026-Q1-SUMMARY.md](./docs/RELEASE-2026-Q1-SUMMARY.md)
 
 ---
 
@@ -500,17 +485,19 @@ For production deployments, SLAs, and custom development:
 ## 📈 Roadmap
 
 ### ✅ Completed (January–March 2026)
-- [x] **Phase 1–3**: Data Ingestion, GitHub Issue Tracking, Backend Implementation
-- [x] **Phase 4**: API Documentation — 62 endpoints with interactive Swagger UI
-- [x] **Phase 5**: Embedded Kafka Migration — 50% test performance improvement
-- [x] **Phase 6**: Test Infrastructure Modernization — 33% faster test suite
-- [x] **Phase 7**: CI/CD Parallelization — 42.5% faster PR feedback (40m → 23-25m)
+- [x] **Phases 1–7**: Infrastructure modernization (90%+ faster feedback loops)
+- [x] **API Documentation**: 62 endpoints with interactive Swagger UI
 - [x] **HIE Data Pipeline**: End-to-end EHR/CDR/CMS → FHIR → CQL → care gap detection
 - [x] **Contract Testing**: Consumer-driven Pact tests + OpenAPI validation
 - [x] **Event Sourcing**: CQRS pattern with 4 event services
 - [x] **Gateway Modularization**: 4-gateway architecture with shared gateway-core
+- [x] **MCP Edge v0.1.0**: 3 sidecars (platform, devops, clinical), 123 tools, 1,307 tests
+- [x] **System Remediation**: Tiers 1-4 (security, CI/CD, landing page, docs)
+- [x] **Landing Page v3**: Persona-first design, Vercel deployment, SEO/accessibility
+- [x] **Wave-1 Revenue**: Price transparency APIs, ADT handling, assurance runner
 
 ### Q2 2026 (Planned)
+- [ ] MCP Edge Layer 2: Clinical workflow automation (MA intake, CDS hooks)
 - [ ] Advanced AI/ML predictive care gap detection
 - [ ] Mobile companion apps (iOS, Android)
 - [ ] HL7 v2 bidirectional integration
@@ -596,4 +583,4 @@ For licensing inquiries: legal@healthdata-in-motion.com
 
 **Built with ❤️ for better healthcare outcomes**
 
-*Last Updated: March 3, 2026*
+*Last Updated: March 5, 2026*

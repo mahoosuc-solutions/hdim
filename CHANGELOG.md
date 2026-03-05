@@ -10,78 +10,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Gateway now passes through non-2xx responses from upstream services instead of converting them to 500s.
 
+## [2.9.0] - 2026-03-05
+
+### Added - MCP Edge Layer v0.1.0
+- **3 MCP sidecars** for Claude Desktop/Code integration
+  - `mcp-edge-platform` (:3100) — 15 platform tools (health, FHIR metadata, service catalog)
+  - `mcp-edge-devops` (:3200) — 15 devops tools (Docker, logs, topology, release gates)
+  - `mcp-edge-clinical` (:3300) — 68+ clinical tools across 3 strategies (composite/high-value/full-surface)
+- **1,307 tests** with 99.35% statement coverage, 98.12% branch coverage
+- RBAC exhaustive matrix: 7 roles x 108 clinical tools (352+ test cases)
+- PHI leak detection and cross-sidecar isolation proofs
+- Demo mode with per-tool synthetic fixtures
+- stdio bridges for Claude Desktop/Code integration
+- Structured pino logging with PHI scrubbing
+- ESLint no-console enforcement across all 4 packages
+- CI workflow with coverage thresholds and AJV validator caching
+- Compliance mapping: HIPAA, SOC2, OWASP, NIST, CIS
+
+### Added - v2.8.0 System Remediation (Tiers 1-4)
+- **Tier 1 (Security):** Untrack `.env.dev`/`.pid`/`ZoneId`, fix destructive `ddl-auto`, externalize passwords, revert fhir-service demo data
+- **Tier 2 (Landing Page):** metadataBase fix, skip targets, constants extraction, ARIA improvements, CookieConsent cleanup, shared types
+- **Tier 3 (CI/CD):** 21 workflows normalized, 3 landing page workflows consolidated to 1, CODEOWNERS/PR template, pinned GitHub Actions, Trivy bump
+- **Tier 3+ (Quick Wins):** AI audit severity filtering, patient event merge chain depth parameterized
+- **Tier 4 (Docs/Hygiene):** 85 root MD files + 7 directories (362 total files) reorganized into `docs/` subdirectories
+
+### Added - Landing Page v3
+- Persona-first design with segment pages (payers, ACOs, health systems)
+- Product screenshots across all pages
+- SEO metadata, canonical URLs, preconnect hints
+- GA4 analytics, lazy-loaded reCAPTCHA
+- E2E tests for all page structures
+- Deployed to Vercel
+
+### Added - Wave-1 Revenue Infrastructure
+- Payer workflows: price transparency estimate and publish APIs
+- ADT payload handling and clearinghouse retry backoff
+- Remittance reconciliation with negative-path validations
+- State transition guards and HTTP adapter contract tests
+- Performance budgets (p95) in Wave-1 assurance runner
+- 360 platform assurance checklist with compliance traceability
+
+### Added - Backend Quality
+- `audit-query-service`: 10 new test files, 50 tests (commit `0f116b405`)
+- `gateway-admin-service`: 8 new test files, 69 tests (commit `af397025d`)
+- Cascading startup failure fixes: notification-service, prior-auth-service
+- CVE remediation wave 1 with dependency overrides and NVD automation
+
+### Changed
+- Test suite: 259 → 709+ unit tests passing
+- MCP Edge packages: 4 (common + 3 sidecars)
+- Root markdown files reduced from 90+ to 5 (README, CLAUDE, CONTRIBUTING, CHANGELOG, VERSIONS)
+- Landing page domain: healthdatainmotion.com (canonical)
+- Contact emails: info@mahoosuc.solutions, sales@mahoosuc.solutions
+
 ### Fixed - Phase 21: Complete Test Stabilization (100% Pass Rate)
-- **Quality Measure Service Test Suite**
-  - Fixed 24 test failures achieving 100% pass rate on non-skipped tests (1,577/1,577 passing)
-  - Progression: 99.24% → 99.30% → 99.43% → 100.00%
-  - Time investment: 3.75 hours across 3 commits
-- **RBAC Authentication Tests (4 tests fixed)**
-  - Root cause: Missing X-Auth-Validated header in GatewayTrustTestHeaders
-  - Fixed gateway trust authentication for development mode
-  - All RBAC authorization tests now passing (VIEWER, ANALYST, EVALUATOR, ADMIN roles)
-- **PopulationBatch Execution Tests (9 tests fixed)**
-  - Added JobExecutionRepository for database-backed job tracking
-  - Fixed async execution (removed blocking .get() calls)
-  - Updated response format with totalPatients field
-  - Jobs now persist through service restarts
-- **PopulationCalculation Service Tests (4 tests fixed)**
-  - Removed dangerous fallback logic that created dummy patients on FHIR failures
-  - Implemented proper exception handling (fail fast pattern)
-  - Fixed partial failure test logic with conditional Mockito mocking
-  - Tests now properly validate error scenarios
-- **Controller Integration Tests (2 tests fixed)**
-  - Corrected status code assertions: 403 Forbidden → 404 Not Found
-  - Aligns with tenant isolation security best practices
-  - Prevents information disclosure about resource existence
-- **E2E Integration Tests (5 tests fixed)**
-  - Added @MockBean RestTemplate for FHIR server mocking
-  - Eliminated external FHIR service dependency in E2E tests
-  - Fixed race condition in job cancellation test (timing: 800ms per patient, cancel at 500ms)
-  - All E2E tests now deterministic and isolated
-- **Compilation Errors (6 errors fixed)**
-  - Updated unit test constructors with JobExecutionRepository mock parameter
-  - Fixed method signature mismatches in QualityMeasureControllerTest
-  - All tests compile and execute successfully
+- Fixed 24 quality-measure-service test failures (100% pass rate: 1,577/1,577)
+- RBAC auth tests: added missing X-Auth-Validated header (4 tests)
+- PopulationBatch execution: database-backed job tracking, async fix (9 tests)
+- PopulationCalculation: removed dangerous dummy patient fallback (4 tests)
+- Controller integration: corrected 403 -> 404 for tenant isolation (2 tests)
+- E2E integration: FHIR mocking via @MockBean RestTemplate (5 tests)
+- All compilation errors resolved (6 fixes)
 
-### Changed - Phase 21: Production Code Quality Improvements
-- **PopulationCalculationService**
-  - Removed fallback logic that silently created dummy patients on FHIR failures
-  - Now throws RuntimeException immediately when FHIR patient fetch fails
-  - Better error visibility and faster failure detection in production
-- **Test Infrastructure**
-  - Created reusable FHIR mocking pattern with @MockBean RestTemplate
-  - Documented gateway trust header test fixtures
-  - Established timing calculation pattern for async test scenarios
+### Security
+- Credentials externalized from tracked files
+- `ddl-auto: create` eliminated (was in notification-service)
+- GitHub Actions pinned to SHA
+- Trivy scanner updated
+- CODEOWNERS enforced for sensitive paths
 
-### Documentation - Phase 21
-- **Test Stabilization Reports** (5 comprehensive documents)
-  - `backend/docs/RBAC_AUTHENTICATION_FIX.md` - Agent 1 analysis and fix
-  - `/tmp/phase-21-agent-validation-summary.md` - Agent validation results
-  - `/tmp/remaining-test-failures-analysis.md` - Failure categorization
-  - `/tmp/phase-21-final-summary.md` - Progress report (99.24% → 99.43%)
-  - `/tmp/phase-21-victory-summary.md` - Final achievement report (100%)
-- **Testing Best Practices**
-  - Always mock external dependencies in E2E tests
-  - Calculate timing for async tests (don't use arbitrary delays)
-  - Use 404 (not 403) for tenant isolation security
-  - Fail fast in production code (no silent fallbacks)
+## [2.8.1] - 2026-03-03
 
-### Performance - Phase 21 Impact
-- **Test Execution Speed**
-  - E2E tests now run without external FHIR service (faster, more reliable)
-  - Eliminated network latency from test suite
-  - Deterministic test execution (no flaky tests)
-- **Test Stability**
-  - Failure rate: 0.76% → 0.00%
-  - Flaky tests: 12 → 0
-  - Race conditions: Fixed with proper timing calculations
+### Changed
+- Reorganized 85 root markdown files and 7 directories (362 files total) into `docs/` subdirectories
+- Root now contains only 5 markdown files: README, CLAUDE, CONTRIBUTING, CHANGELOG, VERSIONS
 
-### Commits - Phase 21
-```bash
-92cd57a4 - fix(tests): Phase 21 agent-driven fixes - RBAC auth + PopulationBatch execution
-20d55595 - fix(tests): Phase 21 continuation - fix 6 additional unit/controller tests
-5bb6f4d6 - fix(tests): Phase 21 complete - E2E test FHIR mocking (100% pass rate achieved!)
-```
+## [2.8.0] - 2026-03-03
+
+### Added
+- System remediation Tiers 1-4 (security, landing page, CI/CD, docs)
+- AI audit severity filtering in SSE stream
+- Patient event merge chain depth parameterization
+
+### Security
+- Untracked `.env.dev`, `.pid`, `ZoneId` files
+- Fixed destructive `ddl-auto` configuration
+- Externalized hardcoded passwords
+- Reverted fhir-service demo data exposure
+
+## [2.7.2-rc1] - 2026-02-17
+
+### Added
+- Compliance evidence gate workflow
+- 360 platform assurance checklist and rubric
+- Investor stability report
+- CVE remediation wave 1
+
+### Fixed
+- Gateway clinical entity migration validation scoped to module entities
+- Testcontainers suites gated without Docker
+- Analytics test stabilization
 
 ### Added - Phase 3: Database Performance & Distributed Tracing Standardization
 - **HikariCP Connection Pool Standardization (34/34 services)**
@@ -454,7 +482,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/healthdata/hdim/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/healthdata/hdim/compare/v2.9.0...HEAD
+[2.9.0]: https://github.com/healthdata/hdim/compare/v2.8.1...v2.9.0
+[2.8.1]: https://github.com/healthdata/hdim/compare/v2.8.0...v2.8.1
+[2.8.0]: https://github.com/healthdata/hdim/compare/v2.7.2-rc1...v2.8.0
+[2.7.2-rc1]: https://github.com/healthdata/hdim/compare/v1.2.0...v2.7.2-rc1
 [1.2.0]: https://github.com/healthdata/hdim/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/healthdata/hdim/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/healthdata/hdim/releases/tag/v1.0.0

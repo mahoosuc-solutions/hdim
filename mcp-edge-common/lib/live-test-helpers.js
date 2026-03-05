@@ -9,14 +9,15 @@ const LIVE_TEST_DEFAULTS = {
 };
 
 async function isGatewayReachable(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
     const res = await fetch(`${url}/actuator/health`, { signal: controller.signal });
-    clearTimeout(timeout);
     return res.ok;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -52,6 +53,16 @@ function callTool(request, toolName, args = {}, role = 'platform_admin', id = 1)
     });
 }
 
+function skipUnlessLive(checkFn) {
+  return async () => {
+    const reachable = await checkFn();
+    if (!reachable) {
+      console.warn('Live dependency unreachable — skipping live tests');
+    }
+    return reachable;
+  };
+}
+
 module.exports = {
   LIVE_TEST_DEFAULTS,
   isGatewayReachable,
@@ -59,5 +70,6 @@ module.exports = {
   readTestContext,
   writeTestContext,
   callTool,
+  skipUnlessLive,
   TEST_CONTEXT_PATH
 };

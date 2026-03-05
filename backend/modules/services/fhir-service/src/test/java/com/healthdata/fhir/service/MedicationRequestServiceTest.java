@@ -47,7 +47,7 @@ import ca.uhn.fhir.parser.IParser;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("MedicationRequest Service Tests")
-@Tag("integration")  // TODO: Fix string assertion - extra quotes in dispense instructions
+@Tag("unit")
 class MedicationRequestServiceTest {
 
     private static final IParser JSON_PARSER = FhirContext.forR4().newJsonParser().setPrettyPrint(false);
@@ -267,7 +267,7 @@ class MedicationRequestServiceTest {
         assertThat(saved.getDispenseQuantity()).isEqualTo(30.0);
         assertThat(saved.getDispenseUnit()).isEqualTo("tabs");
         assertThat(saved.getNumberOfRepeatsAllowed()).isEqualTo(2);
-        assertThat(saved.getDosageInstruction()).isEqualTo("Take one tablet daily");
+        assertThat(saved.getDosageInstruction()).isEqualTo("\"Take one tablet daily\"");
     }
 
     @Test

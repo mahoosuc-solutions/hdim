@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'cql_batch',
+    audit: { phi: true, write: false, patientIdArg: undefined },
     description: 'Batch-evaluate a CQL library across multiple patients.',
     inputSchema: {
       type: 'object',

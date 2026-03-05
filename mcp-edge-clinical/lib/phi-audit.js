@@ -10,7 +10,7 @@ function createPhiAuditLogger({ serviceName, stream } = {}) {
 
   function logToolAccess({ tool, role, tenantId, patientId, success, durationMs, phi, write }) {
     const action = !phi ? 'TOOL_CALL' : write ? 'PHI_WRITE' : 'PHI_ACCESS';
-    const record = { action, source: name, tool, role, tenantId, success, durationMs };
+    const record = { action, source: name, tool, role, tenantId, success, durationMs, phi: !!phi };
     if (phi && patientId) record.patientId = patientId;
     pino.info(record);
   }

@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'cql_result',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get the latest CQL evaluation result for a specific patient and library.',
     inputSchema: {
       type: 'object',

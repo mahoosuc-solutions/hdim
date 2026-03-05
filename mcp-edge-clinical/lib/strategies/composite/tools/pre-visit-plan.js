@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'pre_visit_plan',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Generate pre-visit summary for a patient-provider encounter.',
     inputSchema: {
       type: 'object',

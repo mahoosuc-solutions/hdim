@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'care_gap_identify',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Identify care gaps for a patient by running measure evaluation.',
     inputSchema: {
       type: 'object',

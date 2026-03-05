@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'measure_score',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get quality measure compliance score for a patient.',
     inputSchema: {
       type: 'object',

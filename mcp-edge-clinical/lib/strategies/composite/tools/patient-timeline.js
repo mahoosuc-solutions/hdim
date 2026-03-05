@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'patient_timeline',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get patient clinical timeline by date range.',
     inputSchema: {
       type: 'object',

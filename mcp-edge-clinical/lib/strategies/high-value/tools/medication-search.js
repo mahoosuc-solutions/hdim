@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'medication_search',
+    audit: { phi: true, write: false, patientIdArg: 'patient' },
     description: 'Search FHIR MedicationRequest resources. Filter by patient, status, intent, or medication code.',
     inputSchema: {
       type: 'object',

@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'observation_search',
+    audit: { phi: true, write: false, patientIdArg: 'patient' },
     description: 'Search FHIR Observation resources. Filter by patient, category (laboratory, vital-signs), code, or date.',
     inputSchema: {
       type: 'object',

@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'measure_population',
+    audit: { phi: false, write: false, patientIdArg: undefined },
     description: 'Get population-level quality measure report (non-PHI aggregate data).',
     inputSchema: {
       type: 'object',

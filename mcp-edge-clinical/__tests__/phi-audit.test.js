@@ -62,6 +62,22 @@ describe('createPhiAuditLogger', () => {
       });
       expect(logged[0].source).toBe('mcp-edge-clinical');
     });
+
+    it('persists phi:true in log output for PHI tools', () => {
+      logger.logToolAccess({
+        tool: 'patient_summary', role: 'clinician', tenantId: 'acme',
+        patientId: 'p-1', success: true, durationMs: 100, phi: true
+      });
+      expect(logged[0].phi).toBe(true);
+    });
+
+    it('persists phi:false in log output for non-PHI tools', () => {
+      logger.logToolAccess({
+        tool: 'care_gap_stats', role: 'admin', tenantId: 'acme',
+        success: true, durationMs: 50, phi: false
+      });
+      expect(logged[0].phi).toBe(false);
+    });
   });
 
   describe('logAuthDenied()', () => {

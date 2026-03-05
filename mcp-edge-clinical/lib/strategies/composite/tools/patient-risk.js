@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'patient_risk',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Get patient risk assessment and stratification scores.',
     inputSchema: {
       type: 'object',

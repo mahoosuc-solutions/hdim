@@ -8,6 +8,7 @@ const VALID_RESOURCE_TYPES = [
 function createDefinition(clinicalClient) {
   return {
     name: 'fhir_read',
+    audit: { phi: true, write: false, patientIdArg: undefined },
     description: 'Read a FHIR R4 resource by type and ID. Supports all 20 HDIM resource types.',
     inputSchema: {
       type: 'object',

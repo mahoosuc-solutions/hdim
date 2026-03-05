@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'measure_evaluate',
+    audit: { phi: true, write: false, patientIdArg: 'patientId' },
     description: 'Evaluate quality measures for a patient. Runs HEDIS/CQL calculation.',
     inputSchema: {
       type: 'object',

@@ -1,6 +1,7 @@
 function createDefinition(clinicalClient) {
   return {
     name: 'encounter_read',
+    audit: { phi: true, write: false, patientIdArg: undefined },
     description: 'Read a FHIR Encounter resource by ID. Returns visit details, participants, and diagnoses.',
     inputSchema: {
       type: 'object',

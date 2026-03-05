@@ -1,0 +1,41 @@
+{
+  "phenotypeId": "t2dm-managed",
+  "careGaps": [],
+  "qualityMeasures": [
+    {
+      "measureId": "HbA1c-Control",
+      "status": "compliant",
+      "description": "HbA1c below 7.0% threshold",
+      "lastAssessed": "2026-01-15"
+    },
+    {
+      "measureId": "Diabetic-Eye-Exam",
+      "status": "compliant",
+      "description": "Retinopathy screening completed within 12 months",
+      "lastAssessed": "2025-11-20"
+    },
+    {
+      "measureId": "Diabetic-Nephropathy-Screen",
+      "status": "compliant",
+      "description": "Urine albumin/creatinine ratio within 12 months",
+      "lastAssessed": "2025-12-05"
+    }
+  ],
+  "cqlTargets": [
+    {
+      "libraryId": "HbA1c-Control",
+      "expectedResult": true,
+      "description": "Patient HbA1c is within target range"
+    },
+    {
+      "libraryId": "Diabetic-Eye-Exam",
+      "expectedResult": true,
+      "description": "Retinopathy screening is current"
+    }
+  ],
+  "cdsHooks": {
+    "patientView": {
+      "expectedCards": 0
+    }
+  }
+}

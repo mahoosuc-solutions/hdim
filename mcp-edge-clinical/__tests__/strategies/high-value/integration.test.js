@@ -30,15 +30,16 @@ describe('high-value strategy integration (demo mode)', () => {
     'encounter_read', 'encounter_search',
     'care_gap_list', 'care_gap_close', 'care_gap_stats',
     'measure_evaluate', 'measure_results',
-    'edge_health'
+    'edge_health',
+    'admin_preview_strategy', 'admin_set_strategy', 'admin_rollback_strategy'
   ];
 
-  it('lists exactly 16 tools', async () => {
+  it('lists exactly 19 tools (15 strategy + 4 infra/admin)', async () => {
     const res = await request.post('/mcp')
       .set('x-operator-role', 'clinical_admin')
       .send({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
     expect(res.status).toBe(200);
-    expect(res.body.result.tools).toHaveLength(16);
+    expect(res.body.result.tools).toHaveLength(19);
 
     const names = res.body.result.tools.map(t => t.name).sort();
     expect(names).toEqual([...EXPECTED_TOOL_NAMES].sort());

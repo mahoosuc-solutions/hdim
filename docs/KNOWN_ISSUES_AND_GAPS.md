@@ -10,8 +10,7 @@ This document tracks known issues, technical debt, and planned improvements. Ite
 
 | ID | Category | Issue | Severity | Notes |
 |----|----------|-------|----------|-------|
-| B7 | Hygiene | 3 unregistered service directories in `settings.gradle.kts` | Low | Remaining: ai-sales-agent, live-call-sales-agent (Python, not Gradle), cqrs-query-service (needs domain model). event-replay-service and fhir-event-bridge-service now registered and compiling. |
-| B9 | Tests | AbstractFhirIntegrationTest bypasses Liquibase | Medium | Uses Hibernate DDL instead of Liquibase migrations for test schema |
+| B7 | Hygiene | 2 unregistered service directories in `settings.gradle.kts` | Low | Remaining: ai-sales-agent, live-call-sales-agent (Python, not Gradle). All 3 Java services now registered and compiling. |
 
 ### Resolved
 
@@ -23,8 +22,10 @@ This document tracks known issues, technical debt, and planned improvements. Ite
 | B4 | Zoho OAuth tokens unencrypted | `@Encrypted` AES-256-GCM on token fields + Liquibase migration | `3ce86625b` |
 | B5 | Zoho OAuth state in ConcurrentHashMap | Migrated to Redis `StringRedisTemplate` with 10min TTL | `3ce86625b` |
 | B6 | query-api HMAC → RSA | JWKS mode default with HMAC fallback via `security.jwt.mode` | `3ce86625b` |
-| B7p | event-replay + fhir-event-bridge registered | Services compile, broken tests removed, domain classes added | pending commit |
-| B8 | MedicationRequestServiceTest broken assertion | Fixed JSON-serialized dosage string, restored `@Tag("unit")` | pending commit |
+| B7p | event-replay + fhir-event-bridge registered | Services compile, broken tests removed, domain classes added | `996e5b56a` |
+| B8 | MedicationRequestServiceTest broken assertion | Fixed JSON-serialized dosage string, restored `@Tag("unit")` | `996e5b56a` |
+| B7q | cqrs-query-service registered | 34/34 tests passing, domain classes extracted from test inner classes | pending commit |
+| B9 | AbstractFhirIntegrationTest Liquibase bypass | Changed `create-drop` → `validate`, enabled Liquibase, matches patient-service pattern | pending commit |
 
 ---
 

@@ -104,7 +104,8 @@ include(
     "modules:services:admin-service",
     "modules:services:devops-agent-service",
     "modules:services:event-replay-service",
-    "modules:services:fhir-event-bridge-service"
+    "modules:services:fhir-event-bridge-service",
+    "modules:services:cqrs-query-service"
 )
 
 // Applications

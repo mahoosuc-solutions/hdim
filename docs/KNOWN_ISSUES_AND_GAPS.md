@@ -14,7 +14,7 @@ This document tracks known issues, technical debt, and planned improvements. Ite
 | B4 | Security | Zoho OAuth tokens stored unencrypted | High | Tokens at rest not encrypted; needs Vault or encrypted column |
 | B5 | Security | Zoho OAuth state not stored in Redis | High | Vulnerable to CSRF replay; state should be Redis-backed with TTL |
 | B6 | Security | query-api-service uses HMAC instead of RSA | High | HMAC shared secret less secure than asymmetric RSA for inter-service auth |
-| B7 | Hygiene | 7 unregistered service directories in `settings.gradle.kts` | Medium | 3 have new test files waiting (admin, devops-agent, fhir-event-bridge); tests compile per-service but not via root Gradle |
+| B7 | Hygiene | 5 unregistered service directories in `settings.gradle.kts` | Low | Remaining: ai-sales-agent, live-call-sales-agent, cqrs-query-service, event-replay-service, fhir-event-bridge-service — all incomplete skeletons with missing domain classes |
 | B8 | Tests | MedicationRequestServiceTest broken assertion | Low | Pre-existing; test asserts wrong value |
 | B9 | Tests | AbstractFhirIntegrationTest bypasses Liquibase | Medium | Uses Hibernate DDL instead of Liquibase migrations for test schema |
 
@@ -46,9 +46,9 @@ These services were flagged by file count but already had 31-39 tests each in si
 
 | Service | New Tests | Verified | Notes |
 |---------|----------|----------|-------|
-| admin-service | 22 (AlertConfigServiceTest) | Pending B7 | Compiles per-service; needs `settings.gradle.kts` registration |
+| admin-service | 22 (AlertConfigServiceTest) | 22/22 passing | Registered in `settings.gradle.kts`, integration test tagged |
 | clinical-workflow-event-service | 12 (WorkflowProjectionControllerTest) | 12/12 passing | Registered service |
-| devops-agent-service | 13 (FhirServiceClientTest + FhirValidationControllerTest) | Pending B7 | Compiles per-service; needs `settings.gradle.kts` registration |
+| devops-agent-service | 13 (FhirServiceClientTest + FhirValidationControllerTest) | 13/13 passing | Registered in `settings.gradle.kts` |
 | fhir-event-bridge-service | 10 (KafkaConfigTest) | Pending B7 | Compiles per-service; needs `settings.gradle.kts` registration |
 | gateway-fhir-service | 9 (GatewayFhirRoutingEdgeCaseTest) | 9/9 passing | Registered service |
 

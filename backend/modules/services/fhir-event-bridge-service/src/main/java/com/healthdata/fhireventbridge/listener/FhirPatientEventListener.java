@@ -44,7 +44,7 @@ public class FhirPatientEventListener {
     @KafkaListener(topics = "fhir.patient.created", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeFhirPatientCreated(
             @Payload FhirPatientEvent fhirEvent,
-            @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+            @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset,
             Acknowledgment ack) {
 

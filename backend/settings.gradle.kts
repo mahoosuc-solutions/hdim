@@ -102,7 +102,9 @@ include(
     "modules:services:investor-dashboard-service",
     "modules:services:agent-validation-service",
     "modules:services:admin-service",
-    "modules:services:devops-agent-service"
+    "modules:services:devops-agent-service",
+    "modules:services:event-replay-service",
+    "modules:services:fhir-event-bridge-service"
 )
 
 // Applications

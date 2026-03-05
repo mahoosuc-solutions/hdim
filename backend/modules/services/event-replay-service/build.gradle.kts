@@ -46,6 +46,9 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks.withType<Test> {
+    useJUnitPlatform {
+        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+    }
+    systemProperty("spring.profiles.active", "test")
 }

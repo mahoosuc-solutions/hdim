@@ -1,6 +1,11 @@
 FROM node:20-slim
 WORKDIR /app
 
+COPY mcp-edge-common/package.json mcp-edge-common/package-lock.json* ./mcp-edge-common/
+WORKDIR /app/mcp-edge-common
+RUN npm install --omit=dev
+
+WORKDIR /app
 COPY mcp-edge-common/ ./mcp-edge-common/
 COPY mcp-edge-clinical/package.json mcp-edge-clinical/package-lock.json* ./mcp-edge-clinical/
 WORKDIR /app/mcp-edge-clinical

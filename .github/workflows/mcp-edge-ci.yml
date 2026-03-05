@@ -145,7 +145,7 @@ jobs:
           HDIM_BASE_URL: http://localhost:18080
 
       - name: Run live tests
-        run: npx jest --testPathPattern=live --runInBand --no-coverage --forceExit
+        run: npx jest --projects mcp-edge-platform mcp-edge-clinical mcp-edge-devops --testPathPatterns='\.live\.' --testPathIgnorePatterns='/node_modules/' --runInBand --no-coverage
         env:
           HDIM_BASE_URL: http://localhost:18080
           HDIM_DEMO_MODE: 'false'

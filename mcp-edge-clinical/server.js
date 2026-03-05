@@ -6,8 +6,7 @@ const helmet = require('helmet');
 const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
 const { createClinicalClient } = require('./lib/clinical-client');
 const { createPhiAuditLogger } = require('./lib/phi-audit');
-
-const VALID_STRATEGIES = ['composite', 'high-value', 'full-surface'];
+const { StrategyManager, VALID_STRATEGIES } = require('./lib/strategy-manager');
 
 function loadStrategy(strategyName, client) {
   if (!VALID_STRATEGIES.includes(strategyName)) {
@@ -26,6 +25,12 @@ function loadRolePolicies(strategyName) {
   }
 }
 
+function parseAllowedStrategies() {
+  const env = process.env.CLINICAL_ALLOWED_STRATEGIES;
+  if (!env) return VALID_STRATEGIES;
+  return env.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
 function createApp() {
   const app = express();
   app.use(helmet());
@@ -35,10 +40,6 @@ function createApp() {
 
   const strategyName = process.env.CLINICAL_TOOL_STRATEGY || 'composite';
   const client = createClinicalClient();
-  const tools = loadStrategy(strategyName, client);
-
-  // Infrastructure tool — loaded regardless of strategy
-  tools.push(require('./lib/tools/edge-health').definition);
 
   app.use(createHealthRouter({
     serviceName: 'hdim-clinical-edge',
@@ -48,18 +49,35 @@ function createApp() {
   const logger = createAuditLogger({ serviceName: 'hdim-clinical-edge' });
   const phiAuditLogger = createPhiAuditLogger({ serviceName: 'hdim-clinical-edge' });
 
+  const strategyManager = new StrategyManager({
+    baselineStrategy: strategyName,
+    allowedStrategies: parseAllowedStrategies(),
+    client,
+    logger,
+    phiAuditLogger
+  });
+
+  // Admin + infrastructure tools — persist across strategy swaps
+  strategyManager.registerAdminTools([
+    require('./lib/tools/edge-health').definition,
+    require('./lib/tools/admin-preview-strategy').definition,
+    require('./lib/tools/admin-set-strategy').definition,
+    require('./lib/tools/admin-rollback-strategy').definition,
+  ]);
+
   app.use(createMcpRouter({
-    tools,
+    tools: strategyManager.tools,
     serverName: 'hdim-clinical-edge',
     serverVersion: '0.1.0',
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
-    fixturesDir: path.join(__dirname, 'lib', 'strategies', strategyName, 'fixtures'),
+    fixturesDir: strategyManager.fixturesDir,
     logger,
-    rolePolicies: loadRolePolicies(strategyName),
-    phiAuditLogger
+    rolePolicies: strategyManager.rolePolicies,
+    phiAuditLogger,
+    strategyManager
   }));
 
   return app;
 }
 
-module.exports = { createApp };
+module.exports = { createApp, loadStrategy, loadRolePolicies };

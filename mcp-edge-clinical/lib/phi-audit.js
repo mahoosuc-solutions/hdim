@@ -19,7 +19,19 @@ function createPhiAuditLogger({ serviceName, stream } = {}) {
     pino.warn({ action: 'AUTH_DENIED', source: name, tool, role });
   }
 
-  return { logToolAccess, logAuthDenied };
+  function logStrategyChange({ previousStrategy, newStrategy, role, previousToolCount, newToolCount }) {
+    pino.info({
+      action: 'STRATEGY_CHANGED',
+      source: name,
+      previousStrategy,
+      newStrategy,
+      role,
+      previousToolCount,
+      newToolCount
+    });
+  }
+
+  return { logToolAccess, logAuthDenied, logStrategyChange };
 }
 
 module.exports = { createPhiAuditLogger };

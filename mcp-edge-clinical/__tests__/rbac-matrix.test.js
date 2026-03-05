@@ -10,7 +10,7 @@ afterAll(() => {
   delete process.env.MCP_EDGE_RATE_LIMIT_MAX;
 });
 
-// All 26 composite tools (25 clinical + 1 infrastructure)
+// All 29 composite tools (25 clinical + 1 infrastructure + 3 admin)
 const ALL_TOOLS = [
   'patient_summary', 'patient_timeline', 'patient_risk', 'patient_list', 'pre_visit_plan',
   'care_gap_list', 'care_gap_identify', 'care_gap_close', 'care_gap_stats', 'care_gap_population', 'care_gap_provider',
@@ -18,7 +18,8 @@ const ALL_TOOLS = [
   'cds_patient_view', 'health_score',
   'measure_evaluate', 'measure_results', 'measure_score', 'measure_population',
   'cql_evaluate', 'cql_batch', 'cql_libraries', 'cql_result',
-  'edge_health'
+  'edge_health',
+  'admin_preview_strategy', 'admin_set_strategy', 'admin_rollback_strategy'
 ];
 
 // Minimum valid arguments per tool (needed when auth passes and param validation runs)
@@ -48,7 +49,10 @@ const TOOL_ARGS = {
   cql_batch:          { library: 'lib1', patientIds: ['p1'], tenantId: 't1' },
   cql_libraries:      { tenantId: 't1' },
   cql_result:         { patientId: 'p1', library: 'lib1', tenantId: 't1' },
-  edge_health:        {}
+  edge_health:        {},
+  admin_preview_strategy: { strategy: 'high-value' },
+  admin_set_strategy:     { confirmationToken: 'will-fail-but-tests-auth-first' },
+  admin_rollback_strategy: {}
 };
 
 // Per-role allowed tool sets
@@ -77,7 +81,7 @@ const EXECUTIVE_TOOLS = new Set([
   'care_gap_stats', 'care_gap_population', 'measure_population', 'health_score'
 ]);
 
-// Build exhaustive 7x26 = 182 matrix
+// Build exhaustive 7x29 = 203 matrix
 function allowed(role, tool) {
   if (['clinical_admin', 'platform_admin', 'developer'].includes(role)) return true;
   if (role === 'clinician') return CLINICIAN_TOOLS.has(tool);
@@ -98,7 +102,7 @@ for (const role of ROLES) {
 
 jest.setTimeout(30_000);
 
-describe('RBAC exhaustive matrix — clinical edge (7 roles x 26 tools = 182 cases)', () => {
+describe('RBAC exhaustive matrix — clinical edge (7 roles x 29 tools = 203 cases)', () => {
   let request;
   beforeAll(() => { request = supertest(createApp()); });
 
@@ -110,10 +114,14 @@ describe('RBAC exhaustive matrix — clinical edge (7 roles x 26 tools = 182 cas
     }
   }
 
-  // Verify we have exactly 182 cases
-  it('matrix covers 182 role-tool pairs', () => {
-    expect(cases).toHaveLength(182);
+  // Verify we have exactly 203 cases
+  it('matrix covers 203 role-tool pairs', () => {
+    expect(cases).toHaveLength(203);
   });
+
+  // Admin tools may throw execution errors even when auth passes (e.g. no pending token).
+  // For RBAC testing, we only care that auth-allowed tools don't get forbidden_for_role.
+  const ADMIN_TOOLS = new Set(['admin_preview_strategy', 'admin_set_strategy', 'admin_rollback_strategy']);
 
   it.each(cases)('%s %s → %s', async (role, tool, isAllowed) => {
     const res = await request.post('/mcp')
@@ -126,8 +134,15 @@ describe('RBAC exhaustive matrix — clinical edge (7 roles x 26 tools = 182 cas
       });
 
     if (isAllowed) {
-      expect(res.body.error).toBeUndefined();
-      expect(res.body.result).toBeDefined();
+      if (ADMIN_TOOLS.has(tool)) {
+        // Admin tools may fail execution but must not be forbidden
+        if (res.body.error) {
+          expect(res.body.error.data.reason).not.toBe('forbidden_for_role');
+        }
+      } else {
+        expect(res.body.error).toBeUndefined();
+        expect(res.body.result).toBeDefined();
+      }
     } else {
       expect(res.body.error).toBeDefined();
       expect(res.body.error.data.reason).toBe('forbidden_for_role');

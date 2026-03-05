@@ -15,7 +15,8 @@ describe('clinical edge isolation boundary', () => {
     'cds_patient_view', 'health_score',
     'measure_evaluate', 'measure_results', 'measure_score', 'measure_population',
     'cql_evaluate', 'cql_batch', 'cql_libraries', 'cql_result',
-    'edge_health'
+    'edge_health',
+    'admin_preview_strategy', 'admin_set_strategy', 'admin_rollback_strategy'
   ].sort();
 
   const DEVOPS_ONLY_TOOLS = [
@@ -28,12 +29,12 @@ describe('clinical edge isolation boundary', () => {
     'demo_status', 'demo_seed'
   ];
 
-  it('exposes exactly 26 tools from composite strategy', async () => {
+  it('exposes exactly 29 tools from composite strategy (25 strategy + 4 infra/admin)', async () => {
     const res = await request.post('/mcp')
       .send({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} });
     const names = res.body.result.tools.map(t => t.name).sort();
     expect(names).toEqual(CLINICAL_TOOLS);
-    expect(names).toHaveLength(26);
+    expect(names).toHaveLength(29);
   });
 
   it('every expected clinical tool is present', async () => {

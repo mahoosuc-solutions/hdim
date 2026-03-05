@@ -1,7 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   testMatch: ['**/__tests__/**/*.test.js'],
-  testPathIgnorePatterns: ['/node_modules/'],
+  testPathIgnorePatterns: ['/node_modules/', '\\.live\\.test\\.js$'],
   collectCoverageFrom: ['lib/**/*.js', 'server.js'],
   coverageProvider: 'v8',
   coverageThreshold: {

@@ -1,0 +1,55 @@
+{
+  "phenotypeId": "preventive-gaps",
+  "careGaps": [
+    {
+      "gapId": "colonoscopy",
+      "type": "screening",
+      "description": "Colorectal cancer screening overdue (age 45+, no colonoscopy on record)",
+      "severity": "moderate",
+      "measureId": "CRC-Screening",
+      "recommendation": "Schedule colonoscopy or order FIT/FOBT"
+    },
+    {
+      "gapId": "flu-vaccine",
+      "type": "immunization",
+      "description": "Annual influenza vaccination not administered this season",
+      "severity": "moderate",
+      "measureId": "Influenza-Immunization",
+      "recommendation": "Administer seasonal influenza vaccine"
+    },
+    {
+      "gapId": "lipid-panel",
+      "type": "screening",
+      "description": "Lipid panel not completed within recommended interval",
+      "severity": "low",
+      "measureId": "Lipid-Screening",
+      "recommendation": "Order fasting lipid panel"
+    }
+  ],
+  "qualityMeasures": [
+    {
+      "measureId": "CRC-Screening",
+      "status": "non-compliant",
+      "description": "No colorectal cancer screening on record",
+      "lastAssessed": null
+    },
+    {
+      "measureId": "Influenza-Immunization",
+      "status": "non-compliant",
+      "description": "No influenza vaccination for current season",
+      "lastAssessed": null
+    },
+    {
+      "measureId": "Lipid-Screening",
+      "status": "non-compliant",
+      "description": "No lipid panel within 5 years",
+      "lastAssessed": null
+    }
+  ],
+  "cqlTargets": [],
+  "cdsHooks": {
+    "patientView": {
+      "expectedCards": 0
+    }
+  }
+}

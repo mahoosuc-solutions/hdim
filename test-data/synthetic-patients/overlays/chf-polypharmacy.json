@@ -1,0 +1,43 @@
+{
+  "phenotypeId": "chf-polypharmacy",
+  "careGaps": [],
+  "qualityMeasures": [
+    {
+      "measureId": "CHF-Management",
+      "status": "compliant",
+      "description": "CHF management plan active with appropriate medications",
+      "lastAssessed": "2026-01-20"
+    },
+    {
+      "measureId": "EF-Monitoring",
+      "status": "compliant",
+      "description": "Ejection fraction assessed within 12 months",
+      "lastAssessed": "2026-01-20"
+    }
+  ],
+  "cqlTargets": [
+    {
+      "libraryId": "CHF-ACEi-ARB",
+      "expectedResult": true,
+      "description": "Patient on ACE inhibitor or ARB for HFrEF"
+    },
+    {
+      "libraryId": "CHF-Beta-Blocker",
+      "expectedResult": true,
+      "description": "Patient on evidence-based beta-blocker for HFrEF"
+    }
+  ],
+  "cdsHooks": {
+    "patientView": {
+      "expectedCards": 1,
+      "cards": [
+        {
+          "summary": "Polypharmacy alert: 8 active medications",
+          "indicator": "warning",
+          "detail": "Patient has 8 active medications. Review for potential interactions and deprescribing opportunities.",
+          "source": "HDIM Medication Safety Engine"
+        }
+      ]
+    }
+  }
+}

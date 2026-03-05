@@ -1,0 +1,167 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "t2dm-unmanaged-patient",
+        "name": [
+          {
+            "use": "official",
+            "family": "Wilson",
+            "given": ["James"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1959-08-22",
+        "address": [
+          {
+            "line": ["789 Oak Avenue"],
+            "city": "Dallas",
+            "state": "TX",
+            "postalCode": "75201",
+            "country": "US"
+          }
+        ],
+        "identifier": [
+          {
+            "system": "http://hdim.io/fhir/sid/synthetic-mrn",
+            "value": "SYN-T2DM-U-002"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/t2dm-unmanaged-patient"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "t2dm-unmanaged-condition-diabetes",
+        "subject": {
+          "reference": "Patient/t2dm-unmanaged-patient"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 diabetes mellitus"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus"
+        },
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active"
+            }
+          ]
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed"
+            }
+          ]
+        },
+        "onsetDateTime": "2018-03-14"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/t2dm-unmanaged-condition-diabetes"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "t2dm-unmanaged-obs-hba1c",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c/Hemoglobin.total in Blood"
+            }
+          ],
+          "text": "HbA1c"
+        },
+        "subject": {
+          "reference": "Patient/t2dm-unmanaged-patient"
+        },
+        "effectiveDateTime": "2026-02-01",
+        "valueQuantity": {
+          "value": 9.2,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "H",
+                "display": "High"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/t2dm-unmanaged-obs-hba1c"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "t2dm-unmanaged-encounter-1",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "390906007",
+                "display": "Follow-up encounter"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/t2dm-unmanaged-patient"
+        },
+        "period": {
+          "start": "2026-02-01T10:00:00Z",
+          "end": "2026-02-01T10:30:00Z"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/t2dm-unmanaged-encounter-1"
+      }
+    }
+  ]
+}

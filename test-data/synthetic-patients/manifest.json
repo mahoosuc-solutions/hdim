@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "description": "Synthetic patient phenotypes for HDIM live gateway integration testing",
+  "generator": "Synthea (MITRE) + hand-crafted overlays",
+  "phenotypes": [
+    {
+      "id": "t2dm-managed",
+      "name": "Type 2 Diabetes — Managed",
+      "bundle": "bundles/t2dm-managed.json",
+      "overlay": "overlays/t2dm-managed.json",
+      "synthea": { "seed": 42, "module": "diabetes", "age": 58, "gender": "F" },
+      "expected": {
+        "careGaps": 0,
+        "hba1c": { "value": 6.8, "unit": "%" },
+        "riskScore": "low",
+        "activeConditions": ["Type 2 diabetes mellitus"],
+        "cqlCompliant": ["HbA1c-Control", "Diabetic-Eye-Exam"]
+      }
+    },
+    {
+      "id": "t2dm-unmanaged",
+      "name": "Type 2 Diabetes — Unmanaged",
+      "bundle": "bundles/t2dm-unmanaged.json",
+      "overlay": "overlays/t2dm-unmanaged.json",
+      "synthea": { "seed": 99, "module": "diabetes", "age": 67, "gender": "M" },
+      "expected": {
+        "careGaps": 2,
+        "careGapTypes": ["retinopathy-screening", "nephropathy-screening"],
+        "hba1c": { "value": 9.2, "unit": "%" },
+        "riskScore": "high",
+        "activeConditions": ["Type 2 diabetes mellitus"],
+        "cqlCompliant": [],
+        "cqlNonCompliant": ["HbA1c-Control"]
+      }
+    },
+    {
+      "id": "chf-polypharmacy",
+      "name": "CHF with Polypharmacy",
+      "bundle": "bundles/chf-polypharmacy.json",
+      "overlay": "overlays/chf-polypharmacy.json",
+      "synthea": { "seed": 137, "module": "congestive_heart_failure", "age": 74, "gender": "F" },
+      "expected": {
+        "medicationCount": 8,
+        "riskScore": "high",
+        "activeConditions": ["Congestive heart failure"],
+        "recentEncounters": true
+      }
+    },
+    {
+      "id": "preventive-gaps",
+      "name": "Preventive Care Gaps",
+      "bundle": "bundles/preventive-gaps.json",
+      "overlay": "overlays/preventive-gaps.json",
+      "synthea": { "seed": 200, "module": "wellness_encounters", "age": 45, "gender": "M" },
+      "expected": {
+        "careGaps": 3,
+        "careGapTypes": ["colonoscopy", "flu-vaccine", "lipid-panel"],
+        "riskScore": "moderate",
+        "activeConditions": []
+      }
+    },
+    {
+      "id": "healthy-pediatric",
+      "name": "Healthy Pediatric",
+      "bundle": "bundles/healthy-pediatric.json",
+      "overlay": "overlays/healthy-pediatric.json",
+      "synthea": { "seed": 55, "module": "wellness_encounters", "age": 12, "gender": "F" },
+      "expected": {
+        "careGaps": 0,
+        "activeConditions": [],
+        "immunizationsCurrent": true,
+        "riskScore": "low"
+      }
+    },
+    {
+      "id": "multi-chronic-elderly",
+      "name": "Multi-Chronic Elderly",
+      "bundle": "bundles/multi-chronic-elderly.json",
+      "overlay": "overlays/multi-chronic-elderly.json",
+      "synthea": { "seed": 300, "module": "copd", "age": 82, "gender": "M" },
+      "expected": {
+        "activeConditions": ["Chronic obstructive pulmonary disease", "Chronic kidney disease stage 3", "Essential hypertension"],
+        "conditionCount": 3,
+        "riskScore": "high",
+        "healthScore": "low"
+      }
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "preventive-gaps-patient",
+        "name": [
+          {
+            "use": "official",
+            "family": "Thompson",
+            "given": ["Robert"]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1981-01-28",
+        "address": [
+          {
+            "line": ["321 Maple Drive"],
+            "city": "Denver",
+            "state": "CO",
+            "postalCode": "80202",
+            "country": "US"
+          }
+        ],
+        "identifier": [
+          {
+            "system": "http://hdim.io/fhir/sid/synthetic-mrn",
+            "value": "SYN-PREV-G-004"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/preventive-gaps-patient"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "preventive-gaps-encounter-1",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "410620009",
+                "display": "Well adult encounter"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/preventive-gaps-patient"
+        },
+        "period": {
+          "start": "2025-06-15T14:00:00Z",
+          "end": "2025-06-15T14:30:00Z"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/preventive-gaps-encounter-1"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "preventive-gaps-encounter-2",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "410620009",
+                "display": "Well adult encounter"
+              }
+            ]
+          }
+        ],
+        "subject": {
+          "reference": "Patient/preventive-gaps-patient"
+        },
+        "period": {
+          "start": "2024-06-10T14:00:00Z",
+          "end": "2024-06-10T14:30:00Z"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/preventive-gaps-encounter-2"
+      }
+    }
+  ]
+}

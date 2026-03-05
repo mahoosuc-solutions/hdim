@@ -27,8 +27,20 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     default-schema: public
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6380}
+      password: ${REDIS_PASSWORD:}
+      timeout: 5000
+
   flyway:
     enabled: false
+
+# Encryption
+encryption:
+  master-key: ${ENCRYPTION_MASTER_KEY:}
+  salt: ${ENCRYPTION_SALT:hdim-investor-salt-2026}
 
 # JWT Configuration
 jwt:

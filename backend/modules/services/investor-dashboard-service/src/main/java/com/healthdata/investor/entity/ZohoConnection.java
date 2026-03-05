@@ -1,5 +1,6 @@
 package com.healthdata.investor.entity;
 
+import com.healthdata.security.encryption.Encrypted;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,16 +53,17 @@ public class ZohoConnection {
     private String tenantId;
 
     /**
-     * Zoho OAuth access token
-     * TODO: Encrypt in production using @Convert(converter = SensitiveDataConverter.class)
+     * Zoho OAuth access token (encrypted at rest via AES-256-GCM)
      */
-    @Column(name = "access_token", nullable = false, length = 2000)
+    @Encrypted(value = "Zoho OAuth access token", category = Encrypted.HipaaCategory.SENSITIVE)
+    @Column(name = "access_token", nullable = false, length = 4000)
     private String accessToken;
 
     /**
-     * Zoho OAuth refresh token (for token renewal)
+     * Zoho OAuth refresh token (encrypted at rest via AES-256-GCM)
      */
-    @Column(name = "refresh_token", length = 2000)
+    @Encrypted(value = "Zoho OAuth refresh token", category = Encrypted.HipaaCategory.SENSITIVE)
+    @Column(name = "refresh_token", length = 4000)
     private String refreshToken;
 
     /**

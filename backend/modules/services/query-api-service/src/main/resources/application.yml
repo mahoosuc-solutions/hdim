@@ -45,6 +45,12 @@ management:
     health:
       show-details: always
 
+# Security / JWT
+security:
+  jwt:
+    mode: ${JWT_MODE:jwks}
+    jwk-set-uri: ${JWK_SET_URI:}
+
 ---
 # Development Profile
 spring:
@@ -53,6 +59,10 @@ spring:
       on-profile: dev
   jpa:
     show-sql: true
+
+security:
+  jwt:
+    mode: hmac
 
 server:
   port: 8090

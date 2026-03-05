@@ -29,12 +29,18 @@ dependencies {
     implementation(libs.jackson.databind)
     implementation(libs.jackson.datatype.jsr310)
 
+    // Redis (Zoho OAuth state storage)
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
     // Monitoring & Metrics
     implementation(libs.bundles.monitoring)
 
     // Lombok
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
+
+    // Security (encryption at rest)
+    implementation(project(":modules:shared:infrastructure:security"))
 
     // Utilities
     implementation(libs.commons.lang3)

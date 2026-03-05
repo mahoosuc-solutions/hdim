@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.27.xsd">
+
+    <changeSet id="0010-widen-zoho-token-columns" author="hdim-security">
+        <comment>Widen access_token and refresh_token columns to support AES-256-GCM encrypted values (B4 security fix)</comment>
+
+        <modifyDataType tableName="zoho_connections" columnName="access_token" newDataType="TEXT"/>
+        <modifyDataType tableName="zoho_connections" columnName="refresh_token" newDataType="TEXT"/>
+
+        <rollback>
+            <modifyDataType tableName="zoho_connections" columnName="access_token" newDataType="VARCHAR(2000)"/>
+            <modifyDataType tableName="zoho_connections" columnName="refresh_token" newDataType="VARCHAR(2000)"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

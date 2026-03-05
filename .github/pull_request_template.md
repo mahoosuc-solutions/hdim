@@ -10,6 +10,7 @@
 - [ ] If frontend session/auth code changed, ran `npm --prefix apps/clinical-portal run test:session-flow`
 - [ ] If session flow UI changed, ran `npm --prefix apps/clinical-portal run e2e:session-flow` (or attached reason if not run)
 - [ ] If `landing-page/**` changed, ran `npm --prefix landing-page run validate:ci`
+- [ ] If `mcp-edge-*` code changed, ran `npm run test:mcp-edge`
 
 ## Merge Gate Checklist
 

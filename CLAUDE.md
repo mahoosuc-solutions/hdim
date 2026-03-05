@@ -124,6 +124,12 @@ Use `/hookify` to create custom automation:
 - **Monitoring:** Prometheus + Grafana
 - **Secrets:** HashiCorp Vault
 
+### MCP Edge (Claude Integration)
+- **Runtime:** Node.js 20+
+- **Framework:** Express 4.x
+- **Protocol:** Model Context Protocol (MCP) over stdio/HTTP
+- **Logging:** Pino with PHI scrubbing
+
 ---
 
 ## Service Ports
@@ -141,6 +147,9 @@ Use `/hookify` to create custom automation:
 | Kafka | 9094 | Message broker |
 | Prometheus | 9090 | Metrics collection |
 | Grafana | 3001 | Dashboard UI |
+| MCP Edge Platform | 3100 | Claude AI platform tools |
+| MCP Edge DevOps | 3200 | Claude AI DevOps tools |
+| MCP Edge Clinical | 3300 | Claude AI clinical tools |
 
 [Complete Service List →](./docs/services/SERVICE_CATALOG.md)
 
@@ -1289,8 +1298,8 @@ Before submitting code, verify:
 
 ---
 
-_Last Updated: March 3, 2026_
-_Version: 4.1_ - **v2.8.0 System Remediation** (March 2026): Security hardening, landing page SEO/accessibility, CI/CD normalization, docs reorganization. See [docs/phases/](./docs/phases/) for phase summaries, [docs/deployment/CI_CD_BEST_PRACTICES.md](./docs/deployment/CI_CD_BEST_PRACTICES.md) for CI/CD procedures. Infrastructure modernization (Phases 1-7) complete. Platform achievements: ✅ HIPAA Compliance, ✅ OCR Document Processing, ✅ API Documentation, ✅ Test Performance Optimization (Phase 6), ✅ CI/CD Parallelization (Phase 7) - all production-ready.
+_Last Updated: March 5, 2026_
+_Version: 4.2_ - **v2.9.0 MCP Edge + Test Coverage** (March 2026): MCP Edge Layer v0.1.0 (3 sidecars, 1,307 tests), 66 new backend tests, system remediation complete. See [docs/phases/](./docs/phases/) for phase summaries, [docs/plans/2026-03-04-hdim-mcp-edge-design.md](./docs/plans/2026-03-04-hdim-mcp-edge-design.md) for MCP Edge architecture. Infrastructure modernization (Phases 1-7) complete. Platform achievements: ✅ HIPAA Compliance, ✅ OCR Document Processing, ✅ API Documentation, ✅ Test Performance Optimization (Phase 6), ✅ CI/CD Parallelization (Phase 7), ✅ MCP Edge Layer (v2.9.0) - all production-ready.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

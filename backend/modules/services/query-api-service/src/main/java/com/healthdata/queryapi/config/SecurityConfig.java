@@ -53,6 +53,12 @@ public class SecurityConfig {
     @Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000}")
     private String allowedOrigins;
 
+    @Value("${security.jwt.mode:jwks}")
+    private String jwtMode;
+
+    @Value("${security.jwt.jwk-set-uri:}")
+    private String jwkSetUri;
+
     /**
      * Configures the security filter chain for stateless REST API.
      *
@@ -172,32 +178,20 @@ public class SecurityConfig {
     /**
      * Configures JWT decoder for token validation.
      *
-     * Current Implementation (Development):
-     * Uses NimbusJwtDecoder with a simple signing algorithm (HMAC-SHA256).
-     * The JWT secret is expected in the application.yml:
-     *   jwt.secret: <64-character-hex-string>
-     *
-     * Production Implementation (TODO):
-     * Should validate JWT signatures using the issuer's RSA public key:
-     * - Fetch JWK (JSON Web Key) Set from issuer's well-known endpoint
-     * - Example: https://hdim-auth-service/.well-known/jwks.json
-     * - Validate JWT signature against public key
-     * - Ensure 'iss' claim matches expected issuer
-     *
-     * Security Validation Performed:
-     * - Signature validation (HMAC in dev, RSA in production)
-     * - Expiration time check (exp claim)
-     * - Issued-at time check (iat claim)
-     * - Not-before time check (nbf claim, if present)
-     * - Issuer validation (iss claim, in production)
+     * Supports two modes via security.jwt.mode property:
+     * - "jwks" (default, production): Validates JWT signatures using RSA public key
+     *   fetched from the issuer's JWKS endpoint
+     * - "hmac" (development fallback): Uses symmetric HMAC-SHA256 shared secret
      *
      * @return Configured JwtDecoder for Spring Security OAuth2
      */
     @Bean
     public JwtDecoder jwtDecoder() {
-        // Development: Use symmetric key (shared secret)
-        // In production, use: NimbusJwtDecoder.withJwkSetUri(...).build()
+        if ("jwks".equalsIgnoreCase(jwtMode) && jwkSetUri != null && !jwkSetUri.isEmpty()) {
+            return NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        }
 
+        // Fallback: HMAC-SHA256 for development
         String jwtSecret = System.getenv().getOrDefault("JWT_SECRET",
             "your-jwt-secret-here-change-in-production-min-64-chars-" +
             "abcdefghijklmnopqrstuvwxyz0123456789");

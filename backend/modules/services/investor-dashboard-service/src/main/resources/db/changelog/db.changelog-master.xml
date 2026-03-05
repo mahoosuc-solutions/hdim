@@ -21,4 +21,7 @@
     <include file="db/changelog/0008-seed-aaron-admin-user.xml"/>
     <include file="db/changelog/0009-seed-investor-contacts.xml"/>
 
+    <!-- Security hardening -->
+    <include file="db/changelog/0010-widen-zoho-token-columns.xml"/>
+
 </databaseChangeLog>

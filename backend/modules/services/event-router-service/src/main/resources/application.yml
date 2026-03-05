@@ -32,7 +32,7 @@ healthdata:
       traffic-tier: LOW  # Event routing: <10 req/sec, async message handling
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
     consumer:
       group-id: event-router-consumer-group
       auto-offset-reset: earliest

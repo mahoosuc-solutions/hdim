@@ -33,7 +33,7 @@ healthdata:
     default-schema: ecr
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
     consumer:
       group-id: ecr-service
       auto-offset-reset: earliest

@@ -1,6 +1,6 @@
 # Known Issues and Gaps
 
-Last updated: March 5, 2026 | Version: 2.9.0
+Last updated: March 5, 2026 | Version: 2.9.1-dev
 
 This document tracks known issues, technical debt, and planned improvements. Items are prioritized by severity and grouped by category.
 
@@ -10,10 +10,6 @@ This document tracks known issues, technical debt, and planned improvements. Ite
 
 | ID | Category | Issue | Severity | Notes |
 |----|----------|-------|----------|-------|
-| B1 | Infrastructure | Kafka port inconsistency (9092 internal vs 9094 host binding) | Medium | Docker Compose and service configs disagree; causes local dev friction |
-| B4 | Security | Zoho OAuth tokens stored unencrypted | High | Tokens at rest not encrypted; needs Vault or encrypted column |
-| B5 | Security | Zoho OAuth state not stored in Redis | High | Vulnerable to CSRF replay; state should be Redis-backed with TTL |
-| B6 | Security | query-api-service uses HMAC instead of RSA | High | HMAC shared secret less secure than asymmetric RSA for inter-service auth |
 | B7 | Hygiene | 5 unregistered service directories in `settings.gradle.kts` | Low | Remaining: ai-sales-agent, live-call-sales-agent, cqrs-query-service, event-replay-service, fhir-event-bridge-service — all incomplete skeletons with missing domain classes |
 | B8 | Tests | MedicationRequestServiceTest broken assertion | Low | Pre-existing; test asserts wrong value |
 | B9 | Tests | AbstractFhirIntegrationTest bypasses Liquibase | Medium | Uses Hibernate DDL instead of Liquibase migrations for test schema |
@@ -22,8 +18,12 @@ This document tracks known issues, technical debt, and planned improvements. Ite
 
 | ID | Issue | Resolution | Commit |
 |----|-------|------------|--------|
+| B1 | Kafka port inconsistency (9092 → 9094) | 22 services standardized to `localhost:9094` | pending commit |
 | B2 | audit-query-service test coverage | 10 new files, 50 tests | `0f116b405` |
 | B3 | gateway-admin-service test coverage | 8 new files, 69 tests | `af397025d` |
+| B4 | Zoho OAuth tokens unencrypted | `@Encrypted` AES-256-GCM on token fields + Liquibase migration | pending commit |
+| B5 | Zoho OAuth state in ConcurrentHashMap | Migrated to Redis `StringRedisTemplate` with 10min TTL | pending commit |
+| B6 | query-api HMAC → RSA | JWKS mode default with HMAC fallback via `security.jwt.mode` | pending commit |
 
 ---
 

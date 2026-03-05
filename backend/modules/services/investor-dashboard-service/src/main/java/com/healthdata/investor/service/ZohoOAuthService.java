@@ -18,10 +18,12 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Service for Zoho ONE OAuth 2.0 integration.
@@ -42,10 +44,11 @@ public class ZohoOAuthService {
 
     private final ZohoConnectionRepository connectionRepository;
     private final InvestorUserRepository userRepository;
+    private final StringRedisTemplate redisTemplate;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // In-memory state token storage (TODO: migrate to Redis for production)
-    private final Map<String, String> stateTokens = new ConcurrentHashMap<>();
+    private static final String STATE_KEY_PREFIX = "zoho:oauth:state:";
+    private static final Duration STATE_TTL = Duration.ofMinutes(10);
 
     @Value("${zoho.oauth2.client-id}")
     private String clientId;
@@ -80,8 +83,8 @@ public class ZohoOAuthService {
             throw new AuthenticationException("Zoho client ID not configured");
         }
 
-        // Store state token for CSRF validation
-        stateTokens.put(state, state);
+        // Store state token for CSRF validation (Redis-backed with TTL)
+        redisTemplate.opsForValue().set(STATE_KEY_PREFIX + state, state, STATE_TTL);
 
         return UriComponentsBuilder.fromHttpUrl(accountsUrl + "/oauth/v2/auth")
                 .queryParam("scope", scope)
@@ -110,11 +113,11 @@ public class ZohoOAuthService {
             String accountsServer,
             UUID userId
     ) {
-        // Validate state token (CSRF protection)
-        if (!stateTokens.containsKey(state)) {
-            throw new AuthenticationException("Invalid state token - possible CSRF attack");
+        // Validate state token (CSRF protection) - atomic get-and-delete from Redis
+        String storedState = redisTemplate.opsForValue().getAndDelete(STATE_KEY_PREFIX + state);
+        if (storedState == null) {
+            throw new AuthenticationException("Invalid or expired state token - possible CSRF attack");
         }
-        stateTokens.remove(state);
 
         // Find user
         InvestorUser user = userRepository.findById(userId)

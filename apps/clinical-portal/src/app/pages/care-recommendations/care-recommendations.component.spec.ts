@@ -195,8 +195,8 @@ describe('CareRecommendationsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CareRecommendationsComponent, NoopAnimationsModule],
       providers: [provideMockStore({ initialState }),
-        { provide: Router, useValue: createMockRouter() },
-        { provide: MatDialog, useValue: createMockMatDialog() },
+        { provide: Router, useValue: mockRouter },
+        { provide: MatDialog, useValue: mockDialog },
         { provide: CareRecommendationService, useValue: mockRecommendationService },
         { provide: ToastService, useValue: mockToastService },
         {

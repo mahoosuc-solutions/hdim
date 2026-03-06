@@ -13,8 +13,6 @@ import { ScheduledEvaluationService } from '../../services/scheduled-evaluation.
 import { ToastService } from '../../services/toast.service';
 import { MeasureInfo } from '../../models/cql-library.model';
 import { PatientSummary } from '../../models/patient.model';
-import { createMockMatDialogRef } from '../../testing/mocks';
-import { createMockRouter } from '../../testing/mocks';
 
 describe('BatchEvaluationDialogComponent', () => {
   let component: BatchEvaluationDialogComponent;
@@ -102,7 +100,7 @@ describe('BatchEvaluationDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [BatchEvaluationDialogComponent, NoopAnimationsModule],
-      providers: [{ provide: MatDialogRef, useValue: dialogRefSpy },
+      providers: [
         { provide: MAT_DIALOG_DATA, useValue: null },
         { provide: MeasureService, useValue: mockMeasureService },
         { provide: PatientService, useValue: mockPatientService },
@@ -112,8 +110,7 @@ describe('BatchEvaluationDialogComponent', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: Router, useValue: mockRouter },
         provideNativeDateAdapter(),
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() },
-        { provide: Router, useValue: createMockRouter() }],
+        { provide: MatDialogRef, useValue: dialogRefSpy }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BatchEvaluationDialogComponent);

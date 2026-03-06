@@ -17,6 +17,7 @@ export function createMockRouter() {
     navigate: jest.fn(() => Promise.resolve(true)),
     navigateByUrl: jest.fn(() => Promise.resolve(true)),
     createUrlTree: jest.fn(),
+    serializeUrl: jest.fn().mockReturnValue('/mock-url'),
     parseUrl: jest.fn(),
     url: '/mock-url',
     events: of({}),

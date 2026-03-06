@@ -39,7 +39,7 @@
 ## Implementation Variants & Operations
 - Demo stack: `docker-compose.demo.yml` with seeding scripts; edge gateway on `http://localhost:18080`.
 - Observability: `docker compose -f docker-compose.observability.yml up -d` for tracing/metrics/logs.
-- External DB: `docker-compose.external-db.yml` + `.env.external-db` for shared storage.
+- External DB: `docker-compose.external-db.yml` + `.env.external-db.example` for shared storage.
 - Monolith variant: see `healthdata-platform/` docs for build/runtime wiring differences.
 - Tenant-aware scheduling: appointment/task vs encounter schedule sources configurable per tenant in `apps/clinical-portal/src/app/config/scheduling.config.ts`.
 

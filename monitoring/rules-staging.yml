@@ -445,6 +445,57 @@ groups:
           impact: "SLO at risk. Customer experience degraded."
           action: "Profile hot paths, optimize queries, check resource utilization"
 
+  # ============================================================================
+  # Intelligence Engine Validation Alerts
+  # ============================================================================
+  - name: intelligence_engine
+    interval: 30s
+    rules:
+      - alert: IntelligenceValidationConsumerLagHigh
+        expr: max by (tenant_id) (intelligence_validation_findings_consumer_lag_seconds) > 120
+        for: 10m
+        labels:
+          severity: warning
+          environment: staging
+          component: intelligence
+        annotations:
+          summary: "Staging intelligence consumer lag high for tenant {{ $labels.tenant_id }}"
+          description: "validation.findings consumer lag is {{ $value }}s (>120s)"
+          impact: "Projection refresh may be delayed during canary"
+          action: "Check event-processing-service consumer and Kafka pipeline in staging"
+
+      - alert: IntelligenceTrustProjectionStale
+        expr: max by (tenant_id) (intelligence_trust_projection_freshness_seconds) > 900
+        for: 10m
+        labels:
+          severity: warning
+          environment: staging
+          component: intelligence
+        annotations:
+          summary: "Staging trust projection stale for tenant {{ $labels.tenant_id }}"
+          description: "Trust projection freshness is {{ $value }}s (>900s)"
+          impact: "Canary trust dashboard may be stale"
+          action: "Investigate validation.findings flow and tenant projection refresh"
+
+      - alert: IntelligenceMutableEndpointAuthzSpike
+        expr: |
+          sum(
+            rate(http_server_requests_seconds_count{
+              uri=~"/api/v1/intelligence/.*(review|status)",
+              status=~"403|404"
+            }[10m])
+          ) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+          environment: staging
+          component: intelligence
+        annotations:
+          summary: "Staging spike in intelligence mutable endpoint 403/404"
+          description: "403/404 response rate is {{ $value }} req/s"
+          impact: "May indicate rollout/authz/tenant mismatch during canary"
+          action: "Verify tenant flags, role propagation, and API path routing"
+
 # ============================================================================
 # Alert Routing & Notifications (Placeholder - configure per environment)
 # ============================================================================

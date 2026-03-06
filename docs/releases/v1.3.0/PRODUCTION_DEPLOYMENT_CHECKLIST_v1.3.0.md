@@ -13,6 +13,7 @@
 - [ ] Review [UPGRADE_GUIDE_v1.3.0.md](./UPGRADE_GUIDE_v1.3.0.md)
 - [ ] Review [KNOWN_ISSUES_v1.3.0.md](./KNOWN_ISSUES_v1.3.0.md)
 - [ ] Review [VERSION_MATRIX_v1.3.0.md](./VERSION_MATRIX_v1.3.0.md)
+- [ ] Review [INTELLIGENCE_ROLLOUT_RUNBOOK_v1.3.0.md](./INTELLIGENCE_ROLLOUT_RUNBOOK_v1.3.0.md)
 
 ### Stakeholder Communication
 - [ ] Notify stakeholders of deployment date/time

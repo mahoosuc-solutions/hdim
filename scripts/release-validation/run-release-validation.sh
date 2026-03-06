@@ -238,12 +238,15 @@ TASKS:
   10. HikariCP Connection Pool Configuration Validation
   11. Kafka Trace Propagation Validation
   12. Gateway Trust Authentication Validation
+  12a. Intelligence Readiness and AuthZ Validation
 
 VALIDATION SCRIPTS:
   - scripts/release-validation/validate-jaeger-integration.sh
   - scripts/release-validation/validate-hikaricp-config.sh
   - scripts/release-validation/validate-kafka-tracing.sh
   - scripts/release-validation/validate-gateway-trust-auth.sh
+  - scripts/release-validation/validate-intelligence-readiness.sh
+  - scripts/release-validation/validate-intelligence-authz.sh
 
 COMPLETION PROMISE: "PHASE_3_COMPLETE"
 
@@ -272,6 +275,16 @@ Read the workflow configuration from docs/releases/release-validation-workflow.j
    - Validate SecurityConfig uses TrustedHeaderAuthFilter
    - Check filter ordering
    - Verify @PreAuthorize annotations on endpoints
+
+5. Run scripts/release-validation/validate-intelligence-readiness.sh
+   - Verify intelligence Liquibase changesets 0005-0007 are applied
+   - Verify intelligence Kafka topics are available
+   - Verify intelligence dashboard endpoint liveness
+
+6. Run scripts/release-validation/validate-intelligence-authz.sh
+   - Validate intelligence mutable endpoints reject unauthenticated calls
+   - Validate viewer role cannot mutate intelligence state (403)
+   - Validate cross-tenant dashboard path is hidden as 404
 
 For each validation script, review generated reports in docs/releases/$VERSION/validation/
 
@@ -442,6 +455,8 @@ VALIDATION REPORTS:
   📊 HikariCP Config: docs/releases/$VERSION/validation/hikaricp-config-report.md
   📊 Kafka Tracing: docs/releases/$VERSION/validation/kafka-tracing-report.md
   📊 Gateway Auth: docs/releases/$VERSION/validation/gateway-trust-auth-report.md
+  📊 Intelligence Readiness: docs/releases/$VERSION/validation/intelligence-readiness-validation-report.md
+  📊 Intelligence AuthZ: docs/releases/$VERSION/validation/intelligence-authz-validation-report.md
   📊 Docker Images: docs/releases/$VERSION/validation/docker-image-manifest.json
   📊 Health Checks: docs/releases/$VERSION/validation/health-check-report.md
   📊 Environment Vars: docs/releases/$VERSION/validation/environment-security-report.md

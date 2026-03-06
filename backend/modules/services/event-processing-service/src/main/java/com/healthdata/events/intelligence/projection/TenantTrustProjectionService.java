@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -29,7 +30,7 @@ public class TenantTrustProjectionService {
     private final IntelligenceTenantTrustProjectionRepository projectionRepository;
     private final ConcurrentMap<String, AtomicLong> trustProjectionLastUpdatedEpochByTenant = new ConcurrentHashMap<>();
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public TenantTrustDashboardResponse refreshForTenant(String tenantId) {
         List<IntelligenceValidationFindingEntity> openFindings =
                 findingRepository.findByTenantIdAndStatusOrderByCreatedAtDesc(tenantId, FindingStatus.OPEN);

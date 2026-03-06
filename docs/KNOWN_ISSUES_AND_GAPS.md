@@ -89,9 +89,9 @@ Design doc: `docs/plans/2026-03-04-hdim-mcp-edge-design.md`
 | Area | Gap | Priority |
 |------|-----|----------|
 | API Documentation | Phase 1B: ~20 undocumented endpoints beyond initial 62 | Medium |
-| Emergency Runbooks | No emergency troubleshooting guide for production incidents | Medium |
-| `.env.external-db` | Tracked template with placeholder passwords; rename to `.example` | Low |
-| `healthdata-platform/.env` | Template with shell expansion; should be `.env.example` | Low |
+| Emergency Runbooks | Troubleshooting guide exists (1,006 lines); missing incident management procedures (escalation, hotfix, failover, postmortem templates) | Medium |
+| ~~`.env.external-db`~~ | ✅ Renamed to `.env.external-db.example` | ~~Low~~ |
+| ~~`healthdata-platform/.env`~~ | ✅ Renamed to `.env.example`, shell expansion replaced with static placeholders | ~~Low~~ |
 
 ---
 

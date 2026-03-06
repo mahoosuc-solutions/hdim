@@ -768,7 +768,7 @@ describe('CareRecommendationsComponent', () => {
         pageIndex: 1,
         pageSize: 25,
         length: 100,
-      });
+      };
 
       component.onPageChange(pageEvent);
 
@@ -785,7 +785,7 @@ describe('CareRecommendationsComponent', () => {
       const sort: Sort = {
         active: 'urgency',
         direction: 'asc',
-      });
+      };
 
       component.onSortChange(sort);
 
@@ -804,7 +804,7 @@ describe('CareRecommendationsComponent', () => {
       const sort: Sort = {
         active: 'urgency',
         direction: '',
-      });
+      };
 
       component.onSortChange(sort);
 

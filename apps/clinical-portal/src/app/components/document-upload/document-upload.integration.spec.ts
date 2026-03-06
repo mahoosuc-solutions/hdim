@@ -23,6 +23,10 @@ describe('DocumentUploadComponent - Integration Tests', () => {
     } as any;
 
     const loggerServiceMock = {
+      info: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      warn: jest.fn(),
       withContext: jest.fn().mockReturnValue({
         info: jest.fn(),
         error: jest.fn(),

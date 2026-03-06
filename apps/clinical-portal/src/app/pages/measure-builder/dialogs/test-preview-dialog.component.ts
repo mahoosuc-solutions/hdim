@@ -70,7 +70,7 @@ interface TestResult {
 
         <!-- Error Message -->
         @if (errorMessage) {
-          <div class="error-banner">
+          <div class="error-banner" role="alert">
             <mat-icon>info</mat-icon>
             <span>{{ errorMessage }}</span>
           </div>
@@ -477,7 +477,9 @@ export class TestPreviewDialogComponent implements OnInit, OnDestroy {
     @Inject(MAT_DIALOG_DATA) public data: TestPreviewDialogData,
     private customMeasureService: CustomMeasureService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('TestPreviewDialogComponent');
+  }
 
   ngOnDestroy(): void {
     // Cancel any pending test execution when dialog closes

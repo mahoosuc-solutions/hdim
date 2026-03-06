@@ -105,7 +105,9 @@ export class EvaluationDetailsDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: EvaluationDetailsDialogData,
     private evaluationService: EvaluationService,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('EvaluationDetailsDialogComponent');
+  }
 
   ngOnInit(): void {
     this.loadEvaluationDetails();

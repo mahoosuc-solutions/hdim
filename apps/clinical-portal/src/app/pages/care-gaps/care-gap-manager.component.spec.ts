@@ -22,16 +22,30 @@ describe('CareGapManagerComponent', () => {
   let mockRouter: jest.Mocked<Router>;
 
   beforeEach(async () => {
+    const mockPatientData = [
+      { id: '1', fullName: 'Anderson, Sarah', mrn: 'MRN001', status: 'Active' },
+      { id: '2', fullName: 'Martinez, Elena', mrn: 'MRN002', status: 'Active' },
+      { id: '3', fullName: 'Johnson, Robert', mrn: 'MRN003', status: 'Active' },
+    ];
+    const mockCareGapData = {
+      content: [
+        { id: 'gap-1', patientId: '1', measureId: 'BCS', measureName: 'BCS', gapStatus: 'OPEN', priority: 'HIGH', gapDescription: 'Mammogram overdue', dueDate: '2025-10-15' },
+        { id: 'gap-2', patientId: '2', measureId: 'BCS', measureName: 'BCS', gapStatus: 'OPEN', priority: 'HIGH', gapDescription: 'Mammogram needed', dueDate: '2025-06-01' },
+        { id: 'gap-3', patientId: '3', measureId: 'COL', measureName: 'COL', gapStatus: 'OPEN', priority: 'MEDIUM', gapDescription: 'Colonoscopy overdue', dueDate: '2024-12-01' },
+      ],
+      totalElements: 3,
+    };
+
     // Create mock services
     mockPatientService = {
-      getPatientsSummary: jest.fn().mockReturnValue(of([])),
-      getPatientsSummaryCached: jest.fn().mockReturnValue(of([])),
+      getPatientsSummary: jest.fn().mockReturnValue(of(mockPatientData)),
+      getPatientsSummaryCached: jest.fn().mockReturnValue(of(mockPatientData)),
       getPatient: jest.fn(),
     } as any;
 
     mockMeasureService = {
-      getCareGaps: jest.fn().mockReturnValue(of([])),
-      getCareGapsPage: jest.fn().mockReturnValue(of({ content: [], totalElements: 0 })),
+      getCareGaps: jest.fn().mockReturnValue(of(mockCareGapData.content)),
+      getCareGapsPage: jest.fn().mockReturnValue(of(mockCareGapData)),
       closeCareGap: jest.fn(),
     } as any;
 
@@ -44,8 +58,8 @@ describe('CareGapManagerComponent', () => {
     } as any;
 
     const mockCareGapService = {
-      getCareGaps: jest.fn().mockReturnValue(of([])),
-      getCareGapsPage: jest.fn().mockReturnValue(of({ content: [], totalElements: 0 })),
+      getCareGaps: jest.fn().mockReturnValue(of(mockCareGapData.content)),
+      getCareGapsPage: jest.fn().mockReturnValue(of(mockCareGapData)),
       closeCareGap: jest.fn().mockReturnValue(of({})),
       closeCareGaps: jest.fn().mockReturnValue(of({})),
     };
@@ -158,7 +172,12 @@ describe('CareGapManagerComponent', () => {
 
     component.viewPatientDetail(mockGap);
 
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/patients', '1']);
+    expect(mockRouter.navigate).toHaveBeenCalledWith(
+      ['/patients', '1'],
+      expect.objectContaining({
+        queryParams: expect.objectContaining({ tab: 'care-gaps', source: 'care-gap-manager' }),
+      })
+    );
   });
 
   it('should open intervention form', () => {

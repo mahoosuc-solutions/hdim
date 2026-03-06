@@ -12,6 +12,10 @@ import { MedicationReconciliationWorkflowComponent } from './medication-reconcil
 import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from '../../../../../../testing/accessibility.helper';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { of } from 'rxjs';
+import { LoggerService } from '../../../../../services/logger.service';
+import { createMockLoggerService } from '../../../../../../testing/mocks';
 
 describe('MedicationReconciliationWorkflowComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   let component: MedicationReconciliationWorkflowComponent;
@@ -20,6 +24,11 @@ describe('MedicationReconciliationWorkflowComponent - Accessibility (WCAG 2.1 Le
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MedicationReconciliationWorkflowComponent, NoopAnimationsModule, HttpClientTestingModule],
+      providers: [
+        { provide: MatDialogRef, useValue: { close: jest.fn(), afterClosed: () => of(null) } },
+        { provide: MAT_DIALOG_DATA, useValue: { reconciliationId: 'test-recon-123', patientId: 'test-patient-456', patientName: 'Test Patient' } },
+        { provide: LoggerService, useValue: createMockLoggerService() },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MedicationReconciliationWorkflowComponent);

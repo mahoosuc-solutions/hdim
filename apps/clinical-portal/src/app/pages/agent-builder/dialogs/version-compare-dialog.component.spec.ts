@@ -13,10 +13,10 @@ import { createMockMatDialogRef } from '../../testing/mocks';
 describe('VersionCompareDialogComponent', () => {
   let component: VersionCompareDialogComponent;
   let fixture: ComponentFixture<VersionCompareDialogComponent>;
-  let mockAgentService: jasmine.SpyObj<AgentBuilderService>;
-  let mockToastService: jasmine.SpyObj<ToastService>;
-  let mockLoggerService: jasmine.SpyObj<LoggerService>;
-  let mockDialogRef: jasmine.SpyObj<MatDialogRef<VersionCompareDialogComponent>>;
+  let mockAgentService: any;
+  let mockToastService: any;
+  let mockLoggerService: any;
+  let mockDialogRef: any;
 
   const mockVersion1: AgentVersion = {
     id: 'v1',
@@ -88,13 +88,13 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   beforeEach(async () => {
-    mockAgentService = jasmine.createSpyObj('AgentBuilderService', ['getVersion']);
-    mockToastService = jasmine.createSpyObj('ToastService', ['error']);
-    mockLoggerService = jasmine.createSpyObj('LoggerService', ['withContext']);
-    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    mockAgentService = { getVersion: jest.fn() };
+    mockToastService = { error: jest.fn() };
+    mockLoggerService = { withContext: jest.fn() };
+    mockDialogRef = { close: jest.fn() };
 
-    const mockLogger = jasmine.createSpyObj('Logger', ['info', 'error']);
-    mockLoggerService.withContext.and.returnValue(mockLogger as any);
+    const mockLogger = { info: jest.fn(), error: jest.fn() };
+    mockLoggerService.withContext.mockReturnValue(mockLogger as any);
 
     await TestBed.configureTestingModule({
       imports: [VersionCompareDialogComponent, NoopAnimationsModule],
@@ -115,10 +115,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should load both versions in parallel on init', () => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -128,10 +125,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should compute diffs after loading versions', (done) => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -146,10 +140,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should calculate changes count correctly', (done) => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -162,7 +153,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should handle version loading error', () => {
-    mockAgentService.getVersion.and.returnValue(
+    mockAgentService.getVersion.mockReturnValue(
       throwError(() => new Error('API error'))
     );
 
@@ -173,10 +164,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should identify changed fields correctly', (done) => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -190,10 +178,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should identify unchanged fields correctly', (done) => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -207,10 +192,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should handle tool configuration changes', (done) => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -222,10 +204,7 @@ describe('VersionCompareDialogComponent', () => {
   };
 
   it('should handle guardrail configuration changes', (done) => {
-    mockAgentService.getVersion.and.returnValues(
-      of(mockVersion1),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(mockVersion1)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -259,10 +238,7 @@ describe('VersionCompareDialogComponent', () => {
       },
     } as AgentVersion;
 
-    mockAgentService.getVersion.and.returnValues(
-      of(version1NoTools),
-      of(mockVersion2)
-    );
+    mockAgentService.getVersion.mockReturnValueOnce(of(version1NoTools)).mockReturnValueOnce(of(mockVersion2));
 
     fixture.detectChanges();
 
@@ -273,7 +249,7 @@ describe('VersionCompareDialogComponent', () => {
   });
 
   it('should show loading spinner while fetching versions', () => {
-    mockAgentService.getVersion.and.returnValue(of(mockVersion1).pipe());
+    mockAgentService.getVersion.mockReturnValue(of(mockVersion1).pipe());
 
     component.loading = true;
     fixture.detectChanges();

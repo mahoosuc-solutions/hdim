@@ -11,6 +11,9 @@ import { DialogService } from '../../services/dialog.service';
 import { FilterPersistenceService } from '../../services/filter-persistence.service';
 import { PatientDeduplicationService } from '../../services/patient-deduplication.service';
 import { AIAssistantService } from '../../services/ai-assistant.service';
+import { RecentPatientsService } from '../../services/recent-patients.service';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
@@ -96,7 +99,10 @@ describe('PatientsComponent (TDD)', () => {
         { provide: FilterPersistenceService, useValue: mockFilterPersistence },
         { provide: PatientDeduplicationService, useValue: mockDeduplicationService },
         { provide: AIAssistantService, useValue: mockAIAssistantService },
-        { provide: Router, useValue: mockRouter }],
+        { provide: Router, useValue: mockRouter },
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: RecentPatientsService, useValue: { getMostRecentPatients: jest.fn().mockReturnValue([]), recentPatients$: of([]), recordPatientAccess: jest.fn(), removePatient: jest.fn(), clearRecentPatients: jest.fn() } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientsComponent);
@@ -458,7 +464,7 @@ describe('PatientsComponent (TDD)', () => {
           { system: 'phone', value: '555-1234', use: 'home' },
           { system: 'email', value: 'patient@example.com', use: 'home' },
         ],
-      });
+      };
       component.patientDetails = patientWithContact;
 
       expect(component.patientDetails?.telecom).toBeDefined();
@@ -477,7 +483,7 @@ describe('PatientsComponent (TDD)', () => {
             postalCode: '62701',
           },
         ],
-      });
+      };
       component.patientDetails = patientWithAddress;
 
       expect(component.patientDetails?.address).toBeDefined();
@@ -519,11 +525,11 @@ describe('PatientsComponent (TDD)', () => {
       const oldEvaluation = {
         ...EvaluationFactory.createCompliantResult(),
         calculationDate: '2024-01-01T00:00:00Z',
-      });
+      };
       const newEvaluation = {
         ...EvaluationFactory.createCompliantResult(),
         calculationDate: '2024-12-01T00:00:00Z',
-      });
+      };
       component.patientEvaluations = [oldEvaluation, newEvaluation].sort((a, b) => {
         const dateA = new Date(a.calculationDate).getTime();
         const dateB = new Date(b.calculationDate).getTime();
@@ -926,7 +932,7 @@ describe('PatientsComponent (TDD)', () => {
         city: 'Springfield',
         state: 'IL',
         postalCode: '62701',
-      });
+      };
       const formatted = component.formatAddress(address);
 
       expect(formatted).toContain('123 Main St');
@@ -954,7 +960,7 @@ describe('PatientsComponent (TDD)', () => {
         ...EvaluationFactory.createNonCompliantResult(),
         denominatorEligible: true,
         numeratorCompliant: false,
-      });
+      };
 
       expect(component.getOutcomeText(nonCompliant)).toBe('Non-Compliant');
       expect(component.getOutcomeBadgeClass(nonCompliant)).toBe('badge-warning');
@@ -965,7 +971,7 @@ describe('PatientsComponent (TDD)', () => {
         ...EvaluationFactory.createNonCompliantResult(),
         denominatorEligible: false,
         numeratorCompliant: false,
-      });
+      };
 
       expect(component.getOutcomeText(notEligible)).toBe('Not Eligible');
       expect(component.getOutcomeBadgeClass(notEligible)).toBe('badge-info');

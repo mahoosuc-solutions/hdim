@@ -1,13 +1,15 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, EMPTY } from 'rxjs';
 import { RNDashboardComponent, CareGapTask, PatientOutreach } from './rn-dashboard.component';
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { CareGapService, InterventionType } from '../../../services/care-gap.service';
 import { ToastService } from '../../../services/toast.service';
-import { createMockStore } from '../../testing/mocks';
+import { createMockStore, createMockLoggerService } from '../../../../testing/mocks';
+import { LoggerService } from '../../../services/logger.service';
+import { HelpService } from '../../../services/help.service';
 import { Store } from '@ngrx/store';
 
 /**
@@ -34,6 +36,8 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
     // Create mock services
     mockRouter = {
       navigate: jest.fn(),
+      events: EMPTY,
+      url: '/',
     } as any;
 
     mockDialogService = {
@@ -69,6 +73,9 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: CareGapService, useValue: mockCareGapService },
         { provide: ToastService, useValue: mockToastService },
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: HelpService, useValue: { toggleHelpPanel: jest.fn(), showHelpPanel$: of(false) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(RNDashboardComponent);

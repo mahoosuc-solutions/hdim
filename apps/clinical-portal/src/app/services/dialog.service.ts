@@ -82,7 +82,9 @@ export class DialogService {
   constructor(
     private dialog: MatDialog,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('DialogService');
+  }
 
   /**
    * Open Patient Edit Dialog

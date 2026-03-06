@@ -7,7 +7,7 @@ import { MeasureAlgorithm, PopulationBlock } from '../../models/measure-builder.
 describe('VisualAlgorithmBuilderComponent - Drag & Drop Suite', () => {
   let component: VisualAlgorithmBuilderComponent;
   let fixture: ComponentFixture<VisualAlgorithmBuilderComponent>;
-  let algorithmService: jasmine.SpyObj<AlgorithmBuilderService>;
+  let algorithmService: any;
 
   const mockAlgorithm: MeasureAlgorithm = {
     id: 'test-algo-001',
@@ -45,17 +45,17 @@ describe('VisualAlgorithmBuilderComponent - Drag & Drop Suite', () => {
   };
 
   beforeEach(async () => {
-    const algorithmServiceSpy = jasmine.createSpyObj('AlgorithmBuilderService', [
-      'getAlgorithm',
-      'updateBlockPosition',
-      'addConnection',
-      'removeConnection',
-      'addExclusionBlock',
-      'removeBlock',
-      'duplicateBlock',
-      'undo',
-      'redo'
-    ]);
+    const algorithmServiceSpy = {
+      getAlgorithm: jest.fn(),
+      updateBlockPosition: jest.fn(),
+      addConnection: jest.fn(),
+      removeConnection: jest.fn(),
+      addExclusionBlock: jest.fn(),
+      removeBlock: jest.fn(),
+      duplicateBlock: jest.fn(),
+      undo: jest.fn(),
+      redo: jest.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [VisualAlgorithmBuilderComponent],
@@ -64,8 +64,8 @@ describe('VisualAlgorithmBuilderComponent - Drag & Drop Suite', () => {
       ]
     }).compileComponents();
 
-    algorithmService = TestBed.inject(AlgorithmBuilderService) as jasmine.SpyObj<AlgorithmBuilderService>;
-    algorithmService.getAlgorithm.and.returnValue(of(mockAlgorithm));
+    algorithmService = TestBed.inject(AlgorithmBuilderService) as any;
+    algorithmService.getAlgorithm.mockReturnValue(of(mockAlgorithm));
 
     fixture = TestBed.createComponent(VisualAlgorithmBuilderComponent);
     component = fixture.componentInstance;
@@ -318,7 +318,7 @@ describe('VisualAlgorithmBuilderComponent - Drag & Drop Suite', () => {
         ]
       };
 
-      algorithmService.getAlgorithm.and.returnValue(of(algorithmWithMultipleConnections));
+      algorithmService.getAlgorithm.mockReturnValue(of(algorithmWithMultipleConnections));
       fixture.detectChanges();
 
       const blockElement = fixture.debugElement.query(el => el.nativeElement.getAttribute('data-block-id') === 'initial-block');
@@ -657,7 +657,7 @@ describe('VisualAlgorithmBuilderComponent - Drag & Drop Suite', () => {
         } as PopulationBlock))
       };
 
-      algorithmService.getAlgorithm.and.returnValue(of(largeAlgorithm));
+      algorithmService.getAlgorithm.mockReturnValue(of(largeAlgorithm));
       fixture.detectChanges();
 
       const startTime = performance.now();

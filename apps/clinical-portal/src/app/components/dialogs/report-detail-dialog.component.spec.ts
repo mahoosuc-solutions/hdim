@@ -3,14 +3,15 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { ReportDetailDialogComponent } from './report-detail-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
-import { LoggerService } from '../services/logger.service';
-import { createMockMatDialogRef } from '../../testing/mocks';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../../testing/mocks';
 
 describe('ReportDetailDialogComponent', () => {
   let fixture: ComponentFixture<ReportDetailDialogComponent>;
   let component: ReportDetailDialogComponent;
   let dialogRef: { close: jest.Mock };
   let evaluationService: jest.Mocked<EvaluationService>;
+  let mockLoggerService: ReturnType<typeof createMockLoggerService>;
 
   const report = {
     id: 'r1',
@@ -33,15 +34,16 @@ describe('ReportDetailDialogComponent', () => {
     evaluationService = {
       exportAndDownloadReport: jest.fn(),
     } as unknown as jest.Mocked<EvaluationService>;
+    mockLoggerService = createMockLoggerService();
 
     await TestBed.configureTestingModule({
       imports: [ReportDetailDialogComponent],
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
+      providers: [
+        { provide: LoggerService, useValue: mockLoggerService },
         { provide: MAT_DIALOG_DATA, useValue: report },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: EvaluationService, useValue: evaluationService },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ReportDetailDialogComponent);
@@ -61,13 +63,13 @@ describe('ReportDetailDialogComponent', () => {
   });
 
   it('handles invalid report data JSON', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     component.report.reportData = '{bad json';
 
     component.ngOnInit();
 
     expect(component.parsedData).toBeNull();
-    expect(errorSpy).toHaveBeenCalled();
+    const loggerContext = mockLoggerService.withContext.mock.results[0]?.value;
+    expect(loggerContext.error).toHaveBeenCalled();
   });
 
   it('formats date time strings', () => {
@@ -94,14 +96,14 @@ describe('ReportDetailDialogComponent', () => {
   });
 
   it('logs export errors', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     evaluationService.exportAndDownloadReport.mockReturnValue(
       throwError(() => new Error('export failed'))
     );
 
     component.onExportCsv();
 
-    expect(errorSpy).toHaveBeenCalled();
+    const loggerContext = mockLoggerService.withContext.mock.results[0]?.value;
+    expect(loggerContext.error).toHaveBeenCalled();
   });
 
   it('closes the dialog', () => {

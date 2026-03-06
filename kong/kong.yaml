@@ -79,4 +79,96 @@ services:
                   regex: "/patients/(?<patient_id>[0-9a-f\\-]+)/"
                   assigning_authority: default
 
+  # ======================================================================
+  # External Integration Adapter Services
+  # ======================================================================
+
+  - name: corehive-adapter
+    url: http://corehive-adapter-service:8120
+    routes:
+      - name: corehive-adapter-api
+        paths:
+          - /external/corehive
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+        plugins:
+          - name: key-auth
+          - name: rate-limiting
+            config:
+              minute: 60
+              policy: local
+
+  - name: healthix-adapter
+    url: http://healthix-adapter-service:8121
+    routes:
+      - name: healthix-adapter-api
+        paths:
+          - /external/healthix
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+        plugins:
+          - name: key-auth
+          - name: rate-limiting
+            config:
+              minute: 300
+              policy: local
+          - name: user-patient-kafka
+            config:
+              require_patient: true
+              patient_sources:
+                - type: header
+                  name: X-Patient-Ids
+                  format: json_array
+                  fields:
+                    id_key: patient_id
+                    assigning_key: assigning_authority
+
+  - name: hedis-adapter
+    url: http://hedis-adapter-service:8122
+    routes:
+      - name: hedis-adapter-api
+        paths:
+          - /external/hedis
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+        plugins:
+          - name: key-auth
+          - name: rate-limiting
+            config:
+              minute: 120
+              policy: local
+
+  # ======================================================================
+  # Event Processing / Intelligence Layer
+  # ======================================================================
+
+  - name: event-processing
+    url: http://event-processing-service:8083
+    routes:
+      - name: intelligence-api
+        paths:
+          - /events/api/v1/intelligence
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+        plugins:
+          - name: user-patient-kafka
+            config:
+              require_patient: true
+              patient_sources:
+                - type: path_regex
+                  regex: "/patients/(?<patient_id>[0-9a-f\\-]+)/"
+                  assigning_authority: default
+                - type: header
+                  name: X-Patient-Ids
+                  format: json_array
+                  fields:
+                    id_key: patient_id
+                    assigning_key: assigning_authority
+
+      - name: event-processing-api
+        paths:
+          - /events
+        strip_path: false
+        methods: [GET, POST, PUT, DELETE]
+
 # Add other services/routes as needed; override require_patient where appropriate.

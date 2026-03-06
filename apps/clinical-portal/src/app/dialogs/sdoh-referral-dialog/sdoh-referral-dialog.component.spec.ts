@@ -201,7 +201,7 @@ describe('SDOHReferralDialogComponent', () => {
       const customDialogData: SDOHReferralDialogData = {
         ...mockDialogData,
         preselectedNeeds: customNeeds,
-      });
+      };
 
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
@@ -232,7 +232,7 @@ describe('SDOHReferralDialogComponent', () => {
         patientId: 'patient-456',
         patientName: 'Jane Smith',
         mode: 'create',
-      });
+      };
 
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({
@@ -833,7 +833,7 @@ describe('SDOHReferralDialogComponent', () => {
         patientId: 'patient-789',
         patientName: 'Test Patient',
         mode: 'create',
-      });
+      };
 
       TestBed.resetTestingModule();
       TestBed.configureTestingModule({

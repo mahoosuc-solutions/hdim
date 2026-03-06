@@ -147,7 +147,7 @@ describe('RiskStratificationService', () => {
           // Should not have made new API calls
           expect(mockPhysicalHealthService.getPhysicalHealthSummary).not.toHaveBeenCalled();
           done();
-        };
+        });
       });
     });
 
@@ -248,7 +248,7 @@ describe('RiskStratificationService', () => {
             onsetDate: new Date(),
           },
         ],
-      });
+      };
 
       mockPhysicalHealthService.getPhysicalHealthSummary.mockReturnValue(of(physicalWithConditions));
 
@@ -296,7 +296,7 @@ describe('RiskStratificationService', () => {
             onsetDate: new Date(),
           },
         ],
-      });
+      };
 
       mockPhysicalHealthService.getPhysicalHealthSummary.mockReturnValue(of(physicalWithConditions));
 
@@ -396,7 +396,7 @@ describe('RiskStratificationService', () => {
         service.getRiskStratification('patient-invalidate').subscribe(() => {
           expect(mockPhysicalHealthService.getPhysicalHealthSummary).toHaveBeenCalled();
           done();
-        };
+        });
       });
     });
   });

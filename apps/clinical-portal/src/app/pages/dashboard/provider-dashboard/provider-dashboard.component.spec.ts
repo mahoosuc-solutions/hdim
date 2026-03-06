@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, throwError, EMPTY } from 'rxjs';
 import { ProviderDashboardComponent, PendingResult, HighPriorityCareGap, QualityMeasure } from './provider-dashboard.component';
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { createMockStore } from '../../testing/mocks';
+import { createMockStore, createMockLoggerService } from '../../../../testing/mocks';
+import { LoggerService } from '../../../services/logger.service';
+import { HelpService } from '../../../services/help.service';
 import { Store } from '@ngrx/store';
 
 /**
@@ -23,7 +25,9 @@ describe('ProviderDashboardComponent', () => {
 
   beforeEach(async () => {
     mockRouter = {
-      navigate: jest.fn()
+      navigate: jest.fn(),
+      events: EMPTY,
+      url: '/',
     } as any;
 
     mockDialogService = {
@@ -44,6 +48,9 @@ describe('ProviderDashboardComponent', () => {
         { provide: Router, useValue: mockRouter },
         { provide: DialogService, useValue: mockDialogService },
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: HelpService, useValue: { toggleHelpPanel: jest.fn(), showHelpPanel$: of(false) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ProviderDashboardComponent);

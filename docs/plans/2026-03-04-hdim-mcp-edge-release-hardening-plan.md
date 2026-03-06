@@ -1,5 +1,7 @@
 # MCP Edge Release Hardening Implementation Plan
 
+> **Status:** COMPLETE
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Harden all 4 MCP edge packages (common, platform, devops, clinical) to release-ready quality with aligned dependencies, structured logging, ESLint enforcement, Docker consistency, documentation, and a Docker smoke test.

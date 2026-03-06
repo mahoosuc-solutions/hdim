@@ -1,5 +1,7 @@
 # HDIM MCP Edge — Hardening Validation Report
 
+> **Status:** COMPLETE
+
 **Date:** 2026-03-04
 **Version:** 1.0
 **Author:** Claude Code + Aaron

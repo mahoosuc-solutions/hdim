@@ -1,5 +1,7 @@
 # HDIM MCP Edge Layer 2 — Testing & Validation Report
 
+> **Status:** COMPLETE
+
 **Date:** 2026-03-04
 **Scope:** mcp-edge-clinical (composite, high-value, full-surface strategies)
 **Protocol:** MCP (Model Context Protocol) JSON-RPC 2.0 over HTTP

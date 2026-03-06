@@ -1,5 +1,7 @@
 # Agent-Browser UI Testing Plan (User Types + User Stories)
 
+> **Status:** COMPLETE
+
 ## Goal
 Build a fully scripted, repeatable agent-browser test suite that exercises core UI workflows by user type and user story. The suite must be deterministic (seeded data), accessible (role-based navigation), and CI-ready with artifacts (screenshots, logs).
 

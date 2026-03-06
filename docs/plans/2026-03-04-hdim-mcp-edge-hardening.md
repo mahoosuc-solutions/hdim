@@ -1,5 +1,7 @@
 # HDIM MCP Edge — Security Hardening Implementation Plan
 
+> **Status:** COMPLETE
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task.
 
 **Goal:** Harden both MCP edge sidecars with rate limiting, CORS lockdown, structured audit logging, request schema validation, deep health checks, and complete devops RBAC coverage — bringing Layer 1 to production-ready security posture.

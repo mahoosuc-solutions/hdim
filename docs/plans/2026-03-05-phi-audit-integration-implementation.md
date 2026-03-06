@@ -1,5 +1,7 @@
 # PHI Audit Integration — Implementation Plan
 
+> **Status:** COMPLETE
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Wire phi-audit.js into the MCP router so every clinical tool call emits structured PHI access events (PHI_ACCESS, PHI_WRITE, TOOL_CALL, AUTH_DENIED), with tool-level audit annotations declaring each tool's PHI classification.

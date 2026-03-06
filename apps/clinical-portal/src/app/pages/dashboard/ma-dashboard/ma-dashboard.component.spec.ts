@@ -9,7 +9,9 @@ import { CareGapService, CareGap, CareGapStatus, GapPriority } from '../../../se
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
 import { ToastService } from '../../../services/toast.service';
-import { createMockMatDialog } from '../../testing/mocks';
+import { MatDialog } from '@angular/material/dialog';
+import { LoggerService } from '../../../services/logger.service';
+import { createMockMatDialog, createMockLoggerService } from '../../../../testing/mocks';
 
 /**
  * TDD Test Suite for MA Dashboard Component - Phase 6.1
@@ -86,7 +88,8 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
         { provide: DialogService, useValue: mockDialogService },
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: ToastService, useValue: mockToastService },
-        { provide: MatDialog, useValue: createMockMatDialog() }],
+        { provide: MatDialog, useValue: createMockMatDialog() },
+        { provide: LoggerService, useValue: createMockLoggerService() }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MADashboardComponent);

@@ -1,13 +1,12 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { of, Subject } from 'rxjs';
+import { EMPTY, of, Subject } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { GlobalSearchComponent, SearchResult } from './global-search.component';
 import { LoggerService } from '../../../services/logger.service';
 import { PatientService } from '../../../services/patient.service';
 import { MeasureService } from '../../../services/measure.service';
-import { createMockMatDialogRef } from '../../testing/mocks';
-import { createMockRouter } from '../../testing/mocks';
+import { createMockLoggerService, createMockMatDialogRef, createMockRouter } from '../../../../testing/mocks';
 
 describe('GlobalSearchComponent', () => {
   let fixture: ComponentFixture<GlobalSearchComponent>;
@@ -20,18 +19,18 @@ describe('GlobalSearchComponent', () => {
   beforeEach(async () => {
     patientService = { searchPatients: jest.fn() };
     measureService = { searchMeasures: jest.fn() };
-    dialogRef = { close: jest.fn() };
-    router = { navigate: jest.fn() };
+    dialogRef = { close: jest.fn(), afterClosed: () => of(null) };
+    router = { navigate: jest.fn(), events: EMPTY, url: '/' };
 
     await TestBed.configureTestingModule({
       imports: [GlobalSearchComponent],
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
+      providers: [
+        { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: PatientService, useValue: patientService },
         { provide: MeasureService, useValue: measureService },
         { provide: MatDialogRef, useValue: dialogRef },
         { provide: Router, useValue: router },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() },
-        { provide: Router, useValue: createMockRouter() }],
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GlobalSearchComponent);

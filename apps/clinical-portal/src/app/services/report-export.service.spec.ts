@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { ReportExportService, ReportOptions, ComplianceSummary } from './report-export.service';
 import { QualityMeasureResult } from '../models/quality-result.model';
+import { LoggerService } from './logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 
 describe('ReportExportService', () => {
   let service: ReportExportService;
@@ -54,7 +56,10 @@ describe('ReportExportService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [ReportExportService],
+      providers: [
+        ReportExportService,
+        { provide: LoggerService, useValue: createMockLoggerService() },
+      ],
     });
     service = TestBed.inject(ReportExportService);
   });
@@ -180,15 +185,12 @@ describe('ReportExportService', () => {
 
     it('should handle popup blocker gracefully', () => {
       windowOpenSpy.mockReturnValue(null);
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      service.generatePDFReport(mockResults);
+      // Should not throw when popup is blocked
+      expect(() => service.generatePDFReport(mockResults)).not.toThrow();
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to open print window. Please allow popups.'
-      );
-
-      consoleSpy.mockRestore();
+      // The print window mock methods should not have been called
+      expect(mockPrintWindow.print).not.toHaveBeenCalled();
     });
   });
 

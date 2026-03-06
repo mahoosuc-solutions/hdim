@@ -57,6 +57,7 @@ export class OfflineStorageService {
 
   constructor(
     private loggerService: LoggerService,) {
+    this.logger = this.loggerService.withContext('OfflineStorageService');
     this.initDatabase();
   }
 

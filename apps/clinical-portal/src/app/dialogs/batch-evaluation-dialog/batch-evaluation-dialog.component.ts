@@ -63,8 +63,8 @@ export interface BatchEvaluationDialogData {
     LoadingButtonComponent,
   ],
   template: `
-    <div class="batch-evaluation-dialog">
-      <h2 mat-dialog-title>
+    <div class="batch-evaluation-dialog" role="dialog" aria-modal="true" aria-labelledby="batch-eval-title">
+      <h2 mat-dialog-title id="batch-eval-title">
         <mat-icon>analytics</mat-icon>
         Batch Quality Measure Evaluation
       </h2>

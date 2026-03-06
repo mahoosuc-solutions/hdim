@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { FilterPersistenceService } from './filter-persistence.service';
 import { LoggerService } from './logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 
 const mockLoggerService = createMockLoggerService();
 

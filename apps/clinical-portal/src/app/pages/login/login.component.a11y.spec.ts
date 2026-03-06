@@ -12,6 +12,8 @@ import { LoginComponent } from './login.component';
 import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from '../../../testing/accessibility.helper';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 
 describe('LoginComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   let component: LoginComponent;
@@ -20,6 +22,16 @@ describe('LoginComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [LoginComponent, NoopAnimationsModule, HttpClientTestingModule],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: { queryParams: {} },
+            queryParams: of({}),
+            params: of({}),
+          },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginComponent);
@@ -56,7 +68,7 @@ describe('LoginComponent - Accessibility (WCAG 2.1 Level AA)', () => {
     it('should have labeled form fields', () => {
       const inputs = fixture.nativeElement.querySelectorAll('input');
       inputs.forEach((input: HTMLElement) => {
-        const hasLabel = input.hasAttribute('aria-label') || input.hasAttribute('aria-labelledby') || input.id;
+        const hasLabel = input.hasAttribute('aria-label') || input.hasAttribute('aria-labelledby') || !!input.id;
         expect(hasLabel).toBe(true);
       });
     });

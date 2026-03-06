@@ -13,8 +13,8 @@ import { testAccessibility, testAriaAttributes, testKeyboardAccessibility } from
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { LoggerService } from '../services/logger.service';
-import { createMockMatDialogRef } from '../../testing/mocks';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../../testing/mocks';
 
 describe('BatchEvaluationDialogComponent - Accessibility (WCAG 2.1 Level AA)', () => {
   let component: BatchEvaluationDialogComponent;
@@ -23,11 +23,11 @@ describe('BatchEvaluationDialogComponent - Accessibility (WCAG 2.1 Level AA)', (
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [BatchEvaluationDialogComponent, NoopAnimationsModule, HttpClientTestingModule],
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
-        { provide: MatDialogRef, useValue: { close: jasmine.createSpy('close') } },
+      providers: [
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: MatDialogRef, useValue: { close: jest.fn() } },
         { provide: MAT_DIALOG_DATA, useValue: {} },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BatchEvaluationDialogComponent);

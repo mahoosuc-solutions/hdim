@@ -13,10 +13,10 @@ import { createMockMatDialogRef } from '../../testing/mocks';
 describe('TemplateLibraryDialogComponent', () => {
   let component: TemplateLibraryDialogComponent;
   let fixture: ComponentFixture<TemplateLibraryDialogComponent>;
-  let mockAgentService: jasmine.SpyObj<AgentBuilderService>;
-  let mockToastService: jasmine.SpyObj<ToastService>;
-  let mockLoggerService: jasmine.SpyObj<LoggerService>;
-  let mockDialogRef: jasmine.SpyObj<MatDialogRef<TemplateLibraryDialogComponent>>;
+  let mockAgentService: any;
+  let mockToastService: any;
+  let mockLoggerService: any;
+  let mockDialogRef: any;
 
   const mockTemplates: PromptTemplate[] = [
     {
@@ -48,13 +48,13 @@ describe('TemplateLibraryDialogComponent', () => {
   ];
 
   beforeEach(async () => {
-    mockAgentService = jasmine.createSpyObj('AgentBuilderService', ['listTemplates']);
-    mockToastService = jasmine.createSpyObj('ToastService', ['success', 'error', 'info']);
-    mockLoggerService = jasmine.createSpyObj('LoggerService', ['withContext']);
-    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    mockAgentService = { listTemplates: jest.fn() };
+    mockToastService = { success: jest.fn(), error: jest.fn(), info: jest.fn() };
+    mockLoggerService = { withContext: jest.fn() };
+    mockDialogRef = { close: jest.fn() };
 
-    const mockLogger = jasmine.createSpyObj('Logger', ['info', 'error']);
-    mockLoggerService.withContext.and.returnValue(mockLogger as any);
+    const mockLogger = { info: jest.fn(), error: jest.fn() };
+    mockLoggerService.withContext.mockReturnValue(mockLogger as any);
 
     await TestBed.configureTestingModule({
       imports: [TemplateLibraryDialogComponent, NoopAnimationsModule],
@@ -66,7 +66,7 @@ describe('TemplateLibraryDialogComponent', () => {
         { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
-    mockAgentService.listTemplates.and.returnValue(of(mockTemplates));
+    mockAgentService.listTemplates.mockReturnValue(of(mockTemplates));
 
     fixture = TestBed.createComponent(TemplateLibraryDialogComponent);
     component = fixture.componentInstance;
@@ -85,7 +85,7 @@ describe('TemplateLibraryDialogComponent', () => {
   };
 
   it('should handle template loading error', () => {
-    mockAgentService.listTemplates.and.returnValue(
+    mockAgentService.listTemplates.mockReturnValue(
       throwError(() => new Error('API error'))
     );
 
@@ -143,7 +143,7 @@ describe('TemplateLibraryDialogComponent', () => {
   };
 
   it('should show empty state when no templates', () => {
-    mockAgentService.listTemplates.and.returnValue(of([]));
+    mockAgentService.listTemplates.mockReturnValue(of([]));
     fixture.detectChanges();
 
     expect(component.dataSource.data.length).toBe(0);

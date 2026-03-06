@@ -15,9 +15,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NavigationComponent } from './navigation.component';
 import { OfflineIndicatorComponent } from '../offline-indicator/offline-indicator.component';
-import { WhatsNewBannerComponent } from '../whats-new-banner/whats-new-banner.component';
-import { HelpPanelComponent } from '../help-panel/help-panel.component';
+import { WhatsNewBannerComponent } from '../help/whats-new-banner.component';
+import { HelpPanelComponent } from '../help/help-panel.component';
 import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../../testing/mocks';
 import {
   testAccessibility,
   testKeyboardAccessibility,

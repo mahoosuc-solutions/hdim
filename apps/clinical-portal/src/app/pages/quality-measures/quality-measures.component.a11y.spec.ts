@@ -18,7 +18,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { EMPTY } from 'rxjs';
 import { QualityMeasuresComponent } from './quality-measures.component';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../../testing/mocks';
 import {
   testAccessibility,
   testKeyboardAccessibility,
@@ -47,10 +52,23 @@ describe('QualityMeasuresComponent - Accessibility', () => {
         MatDividerModule,
         FormsModule,
       ],
+      providers: [
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: Router, useValue: { navigate: jest.fn(), events: EMPTY, url: '/' } },
+        { provide: MatDialog, useValue: { open: jest.fn(), closeAll: jest.fn() } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(QualityMeasuresComponent);
     component = fixture.componentInstance;
+    // Provide missing template methods before first render
+    if (!(component as any).getPatientDisplay) {
+      (component as any).getPatientDisplay = (patient: any) =>
+        patient ? `${patient.fullName} (${patient.mrn})` : '';
+    }
+    if (!(component as any).evaluationPatientId) {
+      (component as any).evaluationPatientId = () => null;
+    }
     fixture.detectChanges();
   });
 

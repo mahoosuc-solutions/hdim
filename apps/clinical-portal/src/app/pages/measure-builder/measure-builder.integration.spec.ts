@@ -120,20 +120,20 @@ class MeasureBuilderIntegrationTestComponent {
       if (block.type === 'initial') {
         cqlParts.push(`define "Initial Population":\n  ${block.cql}`);
       }
-    };
+    });
 
     // Slider CQL
     this.rangeSliders.forEach((slider: any) => {
       if (slider.type === 'range') {
         cqlParts.push(`define "${slider.name}":\n  ${this.formatCQL(slider)}`);
       }
-    };
+    });
 
     this.distributionSliders.forEach((slider: any) => {
       if (slider.type === 'distribution') {
         cqlParts.push(`define "${slider.name}":\n  ${this.formatCQL(slider)}`);
       }
-    };
+    });
 
     this.generatedCQL = cqlParts.join('\n\n');
   }
@@ -173,19 +173,19 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
     fixture = TestBed.createComponent(MeasureBuilderIntegrationTestComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  };
+  });
 
   // ========== CATEGORY 1: Component Rendering Integration (4 tests) ==========
   describe('Category 1: Component Rendering Integration', () => {
     it('should render visual algorithm builder component', () => {
       const visualBuilder = fixture.debugElement.query(By.directive(VisualAlgorithmBuilderComponent));
       expect(visualBuilder).toBeTruthy();
-    };
+    });
 
     it('should render slider configuration panel', () => {
       const sliderPanel = fixture.debugElement.query(By.css('.slider-configuration-panel'));
       expect(sliderPanel).toBeTruthy();
-    };
+    });
 
     it('should render CQL preview panel when measure is loaded', () => {
       component.currentMeasure = {
@@ -197,7 +197,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
 
       const cqlPanel = fixture.debugElement.query(By.css('.cql-preview-panel'));
       expect(cqlPanel).toBeTruthy();
-    };
+    });
 
     it('should render measure details display with loaded measure', () => {
       component.currentMeasure = {
@@ -209,18 +209,18 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
 
       const details = fixture.debugElement.query(By.css('.measure-details'));
       expect(details.nativeElement.textContent).toContain('Diabetes Screening');
-    };
-  };
+    });
+  });
 
   // ========== CATEGORY 2: Measure Creation Workflow (6 tests) ==========
   describe('Category 2: Measure Creation Workflow', () => {
     it('should initialize empty measure with default structure', () => {
-      expect(component.algorithm).toEqual(jasmine.objectContaining({
+      expect(component.algorithm).toEqual(expect.objectContaining({
         id: 'measure-test',
         blocks: [],
         connections: []
       }));
-    };
+    });
 
     it('should load measure configuration with algorithm blocks', fakeAsync(() => {
       component.algorithm = {
@@ -252,7 +252,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       fixture.detectChanges();
 
       expect(component.algorithmBlockCount).toBe(1);
-    };
+    });
 
     it('should add sliders to measure configuration', () => {
       component.rangeSliders = [
@@ -270,7 +270,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       fixture.detectChanges();
 
       expect(component.configurationSliderCount).toBe(1);
-    };
+    });
 
     it('should initialize distribution sliders for component weighting', () => {
       component.distributionSliders = [
@@ -288,7 +288,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       fixture.detectChanges();
 
       expect(component.distributionSliders[0].components.length).toBe(3);
-    };
+    });
 
     it('should create complete measure configuration with all component types', () => {
       component.algorithm = {
@@ -318,8 +318,8 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
 
       expect(component.algorithmBlockCount).toBe(1);
       expect(component.configurationSliderCount).toBe(2);
-    };
-  };
+    });
+  });
 
   // ========== CATEGORY 3: Algorithm Block Manipulation (5 tests) ==========
   describe('Category 3: Algorithm Block Manipulation', () => {
@@ -333,22 +333,22 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         connections: []
       };
       fixture.detectChanges();
-    };
+    });
 
     it('should display all algorithm blocks in visual editor', () => {
       fixture.detectChanges();
       expect(component.algorithmBlockCount).toBe(2);
-    };
+    });
 
     it('should add connection between blocks', () => {
       component.algorithm.connections.push({
         from: 'block-1',
         to: 'block-2'
-      };
+      });
       fixture.detectChanges();
 
       expect(component.algorithm.connections.length).toBe(1);
-    };
+    });
 
     it('should update block position after drag operation', () => {
       component.onAlgorithmChanged({
@@ -357,19 +357,19 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
           { ...component.algorithm.blocks[0], x: 200, y: 150 },
           component.algorithm.blocks[1]
         ]
-      };
+      });
       fixture.detectChanges();
 
       expect(component.algorithm.blocks[0].x).toBe(200);
       expect(component.algorithm.blocks[0].y).toBe(150);
-    };
+    });
 
     it('should remove block from algorithm', () => {
       component.algorithm.blocks = component.algorithm.blocks.filter(b => b.id !== 'block-1');
       fixture.detectChanges();
 
       expect(component.algorithmBlockCount).toBe(1);
-    };
+    });
 
     it('should undo/redo block position changes', () => {
       const originalX = component.algorithm.blocks[0].x;
@@ -381,11 +381,11 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
           { ...component.algorithm.blocks[0], x: originalX },
           component.algorithm.blocks[1]
         ]
-      };
+      });
 
       expect(component.algorithm.blocks[0].x).toBe(originalX);
-    };
-  };
+    });
+  });
 
   // ========== CATEGORY 4: Slider Configuration & Adjustment (6 tests) ==========
   describe('Category 4: Slider Configuration & Adjustment', () => {
@@ -404,23 +404,23 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         }
       ];
       fixture.detectChanges();
-    };
+    });
 
     it('should adjust range slider minimum value', () => {
       component.rangeSliders[0].currentMin = 6;
-      component.onSliderValueChanged({};
+      component.onSliderValueChanged({});
       fixture.detectChanges();
 
       expect(component.rangeSliders[0].currentMin).toBe(6);
-    };
+    });
 
     it('should adjust range slider maximum value', () => {
       component.rangeSliders[0].currentMax = 9;
-      component.onSliderValueChanged({};
+      component.onSliderValueChanged({});
       fixture.detectChanges();
 
       expect(component.rangeSliders[0].currentMax).toBe(9);
-    };
+    });
 
     it('should add threshold slider to configuration', () => {
       const thresholdSlider = {
@@ -439,22 +439,22 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       fixture.detectChanges();
 
       expect(component.configurationSliderCount).toBe(2);
-    };
+    });
 
     it('should validate range slider constraints (min <= max)', () => {
       const isValid = component.rangeSliders[0].currentMin <= component.rangeSliders[0].currentMax;
       expect(isValid).toBe(true);
-    };
+    });
 
     it('should apply preset values to range slider', () => {
       // HbA1c target preset
       component.rangeSliders[0].currentMin = 0;
       component.rangeSliders[0].currentMax = 7;
-      component.onSliderValueChanged({};
+      component.onSliderValueChanged({});
       fixture.detectChanges();
 
       expect(component.rangeSliders[0].currentMax).toBe(7);
-    };
+    });
 
     it('should update multiple sliders independently', () => {
       component.rangeSliders.push({
@@ -466,17 +466,17 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         currentMax: 29.9,
         min: 0,
         max: 50
-      };
+      });
 
       component.rangeSliders[0].currentMin = 6;
       component.rangeSliders[1].currentMin = 20;
-      component.onSliderValueChanged({};
+      component.onSliderValueChanged({});
       fixture.detectChanges();
 
       expect(component.rangeSliders[0].currentMin).toBe(6);
       expect(component.rangeSliders[1].currentMin).toBe(20);
-    };
-  };
+    });
+  });
 
   // ========== CATEGORY 5: Distribution & Period Configuration (5 tests) ==========
   describe('Category 5: Distribution & Period Configuration', () => {
@@ -494,7 +494,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         }
       ];
       fixture.detectChanges();
-    };
+    });
 
     it('should display distribution component weights', () => {
       const totalWeight = component.distributionSliders[0].components.reduce(
@@ -502,15 +502,15 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         0
       );
       expect(totalWeight).toBe(100);
-    };
+    });
 
     it('should adjust individual component weights in distribution', () => {
       component.distributionSliders[0].components[0].weight = 50;
-      component.onSliderValueChanged({};
+      component.onSliderValueChanged({});
       fixture.detectChanges();
 
       expect(component.distributionSliders[0].components[0].weight).toBe(50);
-    };
+    });
 
     it('should add period selector to measure configuration', () => {
       component.distributionSliders.push({
@@ -526,11 +526,11 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
           { id: 'roll', label: 'Rolling Year' },
           { id: 'q', label: 'Quarter' }
         ]
-      };
+      });
       fixture.detectChanges();
 
       expect(component.configurationSliderCount).toBe(2);
-    };
+    });
 
     it('should switch period selection and update dates', () => {
       const periodSlider = {
@@ -549,7 +549,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       fixture.detectChanges();
 
       expect(component.distributionSliders[1].periodType).toBe('fiscal_year');
-    };
+    });
 
     it('should validate distribution weights sum to 100%', () => {
       const totalWeight = component.distributionSliders[0].components.reduce(
@@ -558,8 +558,8 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       );
       const isValid = totalWeight === 100;
       expect(isValid).toBe(true);
-    };
-  };
+    });
+  });
 
   // ========== CATEGORY 6: CQL Generation & Validation (5 tests) ==========
   describe('Category 6: CQL Generation & Validation', () => {
@@ -596,22 +596,22 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
 
       fixture.detectChanges();
       component.generateCQL();
-    };
+    });
 
     it('should generate CQL from algorithm blocks', () => {
       expect(component.generatedCQL).toContain('Initial Population');
       expect(component.generatedCQL).toContain('Patient');
-    };
+    });
 
     it('should include range slider CQL in output', () => {
       expect(component.generatedCQL).toContain('Age >= 18');
       expect(component.generatedCQL).toContain('Age <= 75');
-    };
+    });
 
     it('should include period definition in CQL', () => {
       expect(component.generatedCQL).toContain('from 2024-01-01');
       expect(component.generatedCQL).toContain('to 2024-12-31');
-    };
+    });
 
     it('should validate generated CQL contains required sections', () => {
       const hasInitialPopulation = component.generatedCQL.includes('Initial Population');
@@ -619,20 +619,20 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       const hasPeriodDefinition = component.generatedCQL.includes('from');
 
       expect(hasInitialPopulation && hasAgeDefinition && hasPeriodDefinition).toBe(true);
-    };
+    });
 
     it('should update CQL when slider values change', () => {
       const originalCQL = component.generatedCQL;
 
       component.rangeSliders[0].currentMin = 40;
-      component.onSliderValueChanged({};
+      component.onSliderValueChanged({});
       component.generateCQL();
 
       const updatedCQL = component.generatedCQL;
       expect(updatedCQL).not.toEqual(originalCQL);
       expect(updatedCQL).toContain('Age >= 40');
-    };
-  };
+    });
+  });
 
   // ========== CATEGORY 7: Data Persistence & Export (4 tests) ==========
   describe('Category 7: Data Persistence & Export', () => {
@@ -655,33 +655,33 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       };
 
       fixture.detectChanges();
-    };
+    });
 
     it('should load measure from storage', () => {
       expect(component.currentMeasure.name).toBe('Diabetes HbA1c Screening');
       expect(component.currentMeasure.algorithm.blocks.length).toBe(1);
-    };
+    });
 
     it('should save measure with complete configuration', (done) => {
-      spyOn(component, 'saveMeasure').and.callThrough();
+      jest.spyOn(component, 'saveMeasure');
       component.saveMeasure();
 
       setTimeout(() => {
         expect(component.saveMeasure).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
 
     it('should export measure in CQL format', (done) => {
       component.generateCQL();
-      spyOn(component, 'exportMeasure').and.callThrough();
+      jest.spyOn(component, 'exportMeasure');
       component.exportMeasure();
 
       setTimeout(() => {
         expect(component.exportMeasure).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
 
     it('should include algorithm and sliders in exported data', () => {
       const exportData = {
@@ -1142,7 +1142,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       fixture.detectChanges();
       tick();
 
-      spyOn(component, 'exportMeasure').and.callThrough();
+      jest.spyOn(component, 'exportMeasure');
       component.exportMeasure();
 
       tick();

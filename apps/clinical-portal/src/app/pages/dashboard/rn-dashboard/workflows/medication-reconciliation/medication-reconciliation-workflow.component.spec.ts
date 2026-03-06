@@ -6,21 +6,22 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { MedicationReconciliationWorkflowComponent } from './medication-reconciliation-workflow.component';
-import { MedicationService, MedicationOrder } from '../../../../services/medication/medication.service';
-import { ToastService } from '../../../../services/toast.service';
-import { LoggerService } from '../../../../services/logger.service';
+import { MedicationService, MedicationOrder } from '../../../../../services/medication/medication.service';
+import { ToastService } from '../../../../../services/toast.service';
+import { LoggerService } from '../../../../../services/logger.service';
+import { AuthService } from '../../../../../services/auth.service';
 import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('MedicationReconciliationWorkflowComponent', () => {
   let component: MedicationReconciliationWorkflowComponent;
   let fixture: ComponentFixture<MedicationReconciliationWorkflowComponent>;
-  let medicationService: jasmine.SpyObj<MedicationService>;
-  let toastService: jasmine.SpyObj<ToastService>;
-  let dialogRef: jasmine.SpyObj<MatDialogRef<MedicationReconciliationWorkflowComponent>>;
+  let medicationService: any;
+  let toastService: any;
+  let dialogRef: any;
 
   const mockDialogData = {
     reconciliationId: 'MED_RECON001',
@@ -58,23 +59,31 @@ describe('MedicationReconciliationWorkflowComponent', () => {
   ];
 
   beforeEach(async () => {
-    const medicationSpy = jasmine.createSpyObj('MedicationService', [
-      'getActiveOrdersForPatient',
-      'checkDrugInteractions',
-      'updateMedicationOrder',
-      'createMedicationOrder',
-      'completeMedicationReconciliation',
-      'setTenantContext',
-    ]);
-    const toastSpy = jasmine.createSpyObj('ToastService', ['success', 'error', 'warning']);
-    const dialogRefSpy = jasmine.createSpyObj('MatDialogRef', ['close']);
-    const loggerSpy = jasmine.createSpyObj('LoggerService', ['withContext']);
-    loggerSpy.withContext.and.returnValue({
-      log: jasmine.createSpy(),
-      debug: jasmine.createSpy(),
-      info: jasmine.createSpy(),
-      warn: jasmine.createSpy(),
-      error: jasmine.createSpy(),
+    const medicationSpy = {
+      getActiveOrdersForPatient: jest.fn(),
+      checkDrugInteractions: jest.fn(),
+      checkDrugInteractionsBulk: jest.fn(),
+      updateMedicationOrder: jest.fn(),
+      createMedicationOrder: jest.fn(),
+      completeMedicationReconciliation: jest.fn(),
+      setTenantContext: jest.fn(),
+    };
+    const toastSpy = { success: jest.fn(), error: jest.fn(), warning: jest.fn() };
+    const dialogRefSpy = { close: jest.fn() };
+    const loggerSpy = {
+      withContext: jest.fn(),
+      log: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    loggerSpy.withContext.mockReturnValue({
+      log: jest.fn(),
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
     });
 
     await TestBed.configureTestingModule({
@@ -86,12 +95,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
         { provide: LoggerService, useValue: loggerSpy },
+        { provide: AuthService, useValue: { getTenantId: jest.fn().mockReturnValue('test-tenant') } },
         { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     }).compileComponents();
 
-    medicationService = TestBed.inject(MedicationService) as jasmine.SpyObj<MedicationService>;
-    toastService = TestBed.inject(ToastService) as jasmine.SpyObj<ToastService>;
-    dialogRef = TestBed.inject(MatDialogRef) as jasmine.SpyObj<MatDialogRef<MedicationReconciliationWorkflowComponent>>;
+    medicationService = TestBed.inject(MedicationService) as any;
+    toastService = TestBed.inject(ToastService) as any;
+    dialogRef = TestBed.inject(MatDialogRef) as any;
 
     fixture = TestBed.createComponent(MedicationReconciliationWorkflowComponent);
     component = fixture.componentInstance;
@@ -100,36 +110,36 @@ describe('MedicationReconciliationWorkflowComponent', () => {
   describe('Component Initialization', () => {
     it('should create the component', () => {
       expect(component).toBeTruthy();
-    };
+    });
 
     it('should initialize with dialog data', () => {
       expect(component.reconciliationId).toBe('MED_RECON001');
       expect(component.patientId).toBe('PATIENT001');
       expect(component.patientName).toBe('Jane Doe');
-    };
+    });
 
     it('should set current step to 0 (load medications)', () => {
       expect(component.currentStep).toBe(0);
       expect(component.totalSteps).toBe(6);
-    };
+    });
 
     it('should load system medications on initialization', () => {
-      medicationService.getActiveOrdersForPatient.and.returnValue(
+      medicationService.getActiveOrdersForPatient.mockReturnValue(
         of({ content: mockMedicationOrders, totalElements: 2 })
       );
 
       component.ngOnInit();
 
       expect(medicationService.getActiveOrdersForPatient).toHaveBeenCalledWith('PATIENT001', 0, 100);
-    };
-  };
+    });
+  });
 
   describe('Step 0: Load Current Medications', () => {
     beforeEach(() => {
-      medicationService.getActiveOrdersForPatient.and.returnValue(
+      medicationService.getActiveOrdersForPatient.mockReturnValue(
         of({ content: mockMedicationOrders, totalElements: 2 })
       );
-    };
+    });
 
     it('should display system medications', (done) => {
       component.ngOnInit();
@@ -138,7 +148,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(component.systemMedications.length).toBe(2);
         done();
       }, 100);
-    };
+    });
 
     it('should show medication details in table', () => {
       component.ngOnInit();
@@ -146,7 +156,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.medicationColumns).toContain('dosage');
       expect(component.medicationColumns).toContain('frequency');
       expect(component.medicationColumns).toContain('status');
-    };
+    });
 
     it('should advance to step 1 when medications loaded', (done) => {
       component.ngOnInit();
@@ -156,7 +166,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(component.currentStep).toBe(1);
         done();
       }, 100);
-    };
+    });
   });
 
   describe('Step 1: Compare with Patient Report', () => {
@@ -168,13 +178,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
     it('should initialize patient reported medications form', () => {
       expect(component.form).toBeDefined();
       expect(component.form.get('patientMedications')).toBeDefined();
-    };
+    });
 
     it('should add patient reported medication', () => {
       component.addPatientMedication();
       const medicationsArray = component.form.get('patientMedications') as any;
       expect(medicationsArray.length).toBeGreaterThan(0);
-    };
+    });
 
     it('should remove patient reported medication', () => {
       component.addPatientMedication();
@@ -184,7 +194,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.removePatientMedication(0);
 
       expect(medicationsArray.length).toBe(initialLength - 1);
-    };
+    });
 
     it('should identify discrepancies between lists', () => {
       component.systemMedications = [
@@ -199,14 +209,14 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.compareWithPatientReport();
 
       expect(component.discrepancies.length).toBeGreaterThan(0);
-    };
-  };
+    });
+  });
 
   describe('Step 2: Identify Discrepancies', () => {
     beforeEach(() => {
       component.currentStep = 2;
       component.systemMedications = mockMedicationOrders;
-    };
+    });
 
     it('should flag discontinued medications', () => {
       component.systemMedications[0] = {
@@ -216,10 +226,10 @@ describe('MedicationReconciliationWorkflowComponent', () => {
 
       component.identifyDiscrepancies();
 
-      expect(component.discrepancies).toContain(jasmine.objectContaining({
+      expect(component.discrepancies).toContainEqual(expect.objectContaining({
         type: 'DISCONTINUED',
       }));
-    };
+    });
 
     it('should flag duplicate therapy', () => {
       component.systemMedications = [
@@ -229,22 +239,25 @@ describe('MedicationReconciliationWorkflowComponent', () => {
 
       component.identifyDuplicateTherapy();
 
-      expect(component.discrepancies).toContain(jasmine.objectContaining({
+      expect(component.discrepancies).toContainEqual(expect.objectContaining({
         type: 'DUPLICATE_THERAPY',
       }));
-    };
+    });
 
     it('should flag missing medications', () => {
+      component.systemMedications = [
+        { ...mockMedicationOrders[0], medication: { name: 'Metformin' } } as any,
+      ];
       component.patientReportedMedications = [
-        { name: 'Medication3', dosage: '20 MG', frequency: 'Twice daily' },
+        { name: 'Aspirin', dosage: '20 MG', frequency: 'Twice daily' },
       ];
 
-      component.identifyMissingMedications();
+      (component as any).identifyMissingMedications();
 
-      expect(component.discrepancies).toContain(jasmine.objectContaining({
+      expect(component.discrepancies).toContainEqual(expect.objectContaining({
         type: 'MISSING_MEDICATION',
       }));
-    };
+    });
 
     it('should flag dose discrepancies', () => {
       component.patientReportedMedications = [
@@ -253,23 +266,23 @@ describe('MedicationReconciliationWorkflowComponent', () => {
 
       component.identifyDoseDiscrepancies();
 
-      expect(component.discrepancies).toContain(jasmine.objectContaining({
+      expect(component.discrepancies).toContainEqual(expect.objectContaining({
         type: 'DOSE_DISCREPANCY',
       }));
-    };
-  };
+    });
+  });
 
   describe('Step 3: Mark Duplicates/Discontinued', () => {
     beforeEach(() => {
       component.currentStep = 3;
-    };
+    });
 
     it('should mark medication for discontinuation', () => {
       const medication = { ...mockMedicationOrders[0] };
       component.markForDiscontinuation(medication);
 
       expect(medication.prescriptionStatus).toBe('CANCELLED');
-    };
+    });
 
     it('should mark duplicate medications', () => {
       component.systemMedications = [
@@ -279,11 +292,11 @@ describe('MedicationReconciliationWorkflowComponent', () => {
 
       component.markDuplicateTherapy(0, 1);
 
-      expect(component.medicationMarking).toContain(jasmine.objectContaining({
+      expect(component.medicationMarking).toContainEqual(expect.objectContaining({
         id: 'MED1',
         status: 'DUPLICATE',
       }));
-    };
+    });
 
     it('should allow unmarking medications', () => {
       const medication = mockMedicationOrders[0];
@@ -291,13 +304,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.unmarkMedication(medication.id);
 
       expect(component.medicationMarking.find((m) => m.id === medication.id)).toBeUndefined();
-    };
-  };
+    });
+  });
 
   describe('Step 4: Add Missing Medications', () => {
     beforeEach(() => {
       component.currentStep = 4;
-    };
+    });
 
     it('should initialize form for new medication', () => {
       component.initializeNewMedicationForm();
@@ -305,7 +318,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       expect(component.newMedicationForm).toBeDefined();
       expect(component.newMedicationForm.get('medicationName')).toBeDefined();
       expect(component.newMedicationForm.get('dosage')).toBeDefined();
-    };
+    });
 
     it('should add new medication to list', () => {
       component.newMedicationForm = new FormBuilder().group({
@@ -313,55 +326,55 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         dosage: '15 MG',
         frequency: 'Once daily',
         indication: 'Pain relief',
-      };
+      });
 
       component.addNewMedication();
 
       expect(component.newMedications.length).toBeGreaterThan(0);
-    };
+    });
 
     it('should validate new medication form', () => {
       component.newMedicationForm = new FormBuilder().group({
         medicationName: ['', Validators.required],
         dosage: ['', Validators.required],
-      };
+      });
 
       component.newMedicationForm.patchValue({
         medicationName: '',
         dosage: '',
-      };
+      });
 
       expect(component.newMedicationForm.valid).toBe(false);
 
       component.newMedicationForm.patchValue({
         medicationName: 'Aspirin',
         dosage: '100 MG',
-      };
+      });
 
       expect(component.newMedicationForm.valid).toBe(true);
-    };
-  };
+    });
+  });
 
   describe('Step 5: Check Drug Interactions', () => {
     beforeEach(() => {
       component.currentStep = 5;
       component.systemMedications = mockMedicationOrders;
-    };
+    });
 
     it('should check for drug interactions', (done) => {
       const mockInteractions = {
         interactions: [],
         hasSignificantInteractions: false,
       };
-      medicationService.checkDrugInteractions.and.returnValue(of(mockInteractions));
+      medicationService.checkDrugInteractionsBulk.mockReturnValue(of(mockInteractions));
 
       component.checkDrugInteractions();
 
       setTimeout(() => {
-        expect(medicationService.checkDrugInteractions).toHaveBeenCalled();
+        expect(medicationService.checkDrugInteractionsBulk).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
 
     it('should display significant interactions as warnings', (done) => {
       const mockInteractions = {
@@ -373,7 +386,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         ],
         hasSignificantInteractions: true,
       };
-      medicationService.checkDrugInteractions.and.returnValue(of(mockInteractions));
+      medicationService.checkDrugInteractionsBulk.mockReturnValue(of(mockInteractions));
 
       component.checkDrugInteractions();
 
@@ -381,31 +394,31 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.warning).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
 
     it('should prevent submission if significant interactions exist without acknowledgment', () => {
       component.hasSignificantInteractions = true;
       component.acknowledgedInteractions = false;
 
       expect(component.canCompleteReconciliation()).toBe(false);
-    };
+    });
 
     it('should allow submission if interactions are acknowledged', () => {
       component.hasSignificantInteractions = true;
       component.acknowledgedInteractions = true;
 
       expect(component.canCompleteReconciliation()).toBe(true);
-    };
-  };
+    });
+  });
 
   describe('Workflow Submission', () => {
     beforeEach(() => {
       component.currentStep = 5;
-    };
+    });
 
     it('should save medication reconciliation', (done) => {
       const mockResponse = { id: 'MED_RECON001', status: 'completed' };
-      medicationService.completeMedicationReconciliation.and.returnValue(of(mockResponse));
+      medicationService.completeMedicationReconciliation.mockReturnValue(of(mockResponse));
 
       component.completeReconciliation();
 
@@ -414,22 +427,22 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
 
     it('should close dialog on successful completion', (done) => {
       const mockResponse = { id: 'MED_RECON001', status: 'completed' };
-      medicationService.completeMedicationReconciliation.and.returnValue(of(mockResponse));
+      medicationService.completeMedicationReconciliation.mockReturnValue(of(mockResponse));
 
       component.completeReconciliation();
 
       setTimeout(() => {
-        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse };
+        expect(dialogRef.close).toHaveBeenCalledWith({ success: true, result: mockResponse });
         done();
       }, 100);
     });
 
     it('should handle save errors gracefully', (done) => {
-      medicationService.completeMedicationReconciliation.and.returnValue(
+      medicationService.completeMedicationReconciliation.mockReturnValue(
         throwError(() => new Error('Save failed'))
       );
 
@@ -439,7 +452,7 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
   });
 
   describe('Form Navigation', () => {
@@ -448,26 +461,26 @@ describe('MedicationReconciliationWorkflowComponent', () => {
       component.nextStep();
 
       expect(component.currentStep).toBeGreaterThan(0);
-    };
+    });
 
     it('should go to previous step', () => {
       component.currentStep = 2;
       component.previousStep();
 
       expect(component.currentStep).toBe(1);
-    };
+    });
 
     it('should not go below step 0', () => {
       component.currentStep = 0;
       component.previousStep();
 
       expect(component.currentStep).toBe(0);
-    };
-  };
+    });
+  });
 
   describe('Error Handling', () => {
     it('should handle medication loading errors', (done) => {
-      medicationService.getActiveOrdersForPatient.and.returnValue(
+      medicationService.getActiveOrdersForPatient.mockReturnValue(
         throwError(() => new Error('Failed to load'))
       );
 
@@ -477,13 +490,13 @@ describe('MedicationReconciliationWorkflowComponent', () => {
         expect(toastService.error).toHaveBeenCalled();
         done();
       }, 100);
-    };
+    });
   });
 
   describe('Component Cleanup', () => {
     it('should unsubscribe on destroy', () => {
-      spyOn(component['destroy$'], 'next');
-      spyOn(component['destroy$'], 'complete');
+      jest.spyOn(component['destroy$'], 'next');
+      jest.spyOn(component['destroy$'], 'complete');
 
       component.ngOnDestroy();
 

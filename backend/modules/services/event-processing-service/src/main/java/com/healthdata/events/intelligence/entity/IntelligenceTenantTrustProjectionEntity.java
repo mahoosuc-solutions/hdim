@@ -8,8 +8,10 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 
@@ -18,10 +20,12 @@ import java.time.Instant;
  */
 @Entity
 @Table(name = "intelligence_tenant_trust_projection")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "tenantId")
 public class IntelligenceTenantTrustProjectionEntity {
 
     @Id

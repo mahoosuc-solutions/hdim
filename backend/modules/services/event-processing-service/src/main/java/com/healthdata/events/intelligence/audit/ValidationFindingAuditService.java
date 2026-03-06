@@ -21,7 +21,7 @@ public class ValidationFindingAuditService {
     private static final Logger log = LoggerFactory.getLogger(ValidationFindingAuditService.class);
 
     private final EventRepository eventRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public void recordStateTransition(
             String tenantId,

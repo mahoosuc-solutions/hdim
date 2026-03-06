@@ -6,6 +6,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { PatientHealthOverviewComponent } from './patient-health-overview.component';
+import { Router } from '@angular/router';
 import { PatientHealthService } from '../../services/patient-health.service';
 import { PatientHealthOverview, HealthStatus, RiskLevel } from '../../models/patient-health.model';
 import { createMockStore } from '../../testing/mocks';
@@ -197,6 +198,7 @@ describe('PatientHealthOverviewComponent', () => {
       imports: [PatientHealthOverviewComponent, NoopAnimationsModule],
       providers: [
         { provide: PatientHealthService, useValue: mockHealthService },
+        { provide: Router, useValue: { navigate: jest.fn() } },
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientHealthOverviewComponent);
@@ -596,17 +598,17 @@ describe('PatientHealthOverviewComponent', () => {
     });
 
     it('handles alert actions and dismissals', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      const router = TestBed.inject(Router);
+      component.patientId = 'patient-test-1';
       component.criticalAlerts = [
         { id: 'alert-1', type: 'care-gap', severity: 'high', title: 'Alert', description: '' },
       ] as any;
 
       component.onAlertAction(component.criticalAlerts[0]);
-      expect(logSpy).toHaveBeenCalled();
+      expect(router.navigate).toHaveBeenCalledWith(['/patients', 'patient-test-1', 'care-gaps']);
 
       component.onAlertDismiss(component.criticalAlerts[0]);
       expect(component.criticalAlerts.length).toBe(0);
-      logSpy.mockRestore();
     });
   });
 

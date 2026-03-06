@@ -168,6 +168,7 @@ export class SDOHReferralDialogComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private loggerService: LoggerService
   ) {
+    this.logger = this.loggerService.withContext('SDOHReferralDialogComponent');
     this.initializeForm();
   }
 

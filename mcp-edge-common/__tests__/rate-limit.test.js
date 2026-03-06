@@ -84,4 +84,61 @@ describe('createRateLimiter – integration', () => {
       expect(res.body).toEqual({ status: 'healthy' });
     }
   });
+
+  test('skips /metrics endpoint', async () => {
+    app.get('/metrics', (_req, res) => res.send('# metrics'));
+    for (let i = 0; i < 5; i++) {
+      const res = await request(app).get('/metrics');
+      expect(res.status).toBe(200);
+    }
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Per-key rate limiting                                              */
+/* ------------------------------------------------------------------ */
+describe('createRateLimiter – per-key isolation', () => {
+  let app;
+
+  beforeEach(() => {
+    app = express();
+    const limiter = createRateLimiter({ windowMs: 60000, max: 2 });
+    app.use(limiter);
+    app.get('/ping', (_req, res) => res.json({ ok: true }));
+  });
+
+  test('different API keys get independent rate limit windows', async () => {
+    // Key A: 2 requests (exhausts limit)
+    await request(app).get('/ping').set('Authorization', 'Bearer key-alpha');
+    await request(app).get('/ping').set('Authorization', 'Bearer key-alpha');
+    const blocked = await request(app).get('/ping').set('Authorization', 'Bearer key-alpha');
+    expect(blocked.status).toBe(429);
+
+    // Key B: still has full quota
+    const allowed = await request(app).get('/ping').set('Authorization', 'Bearer key-beta');
+    expect(allowed.status).toBe(200);
+  });
+
+  test('unauthenticated requests use IP-based limiting', async () => {
+    await request(app).get('/ping');
+    await request(app).get('/ping');
+    const res = await request(app).get('/ping');
+    expect(res.status).toBe(429);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Metrics integration                                                */
+/* ------------------------------------------------------------------ */
+describe('createRateLimiter – metrics', () => {
+  test('increments rate limit counter on rejection', async () => {
+    const mockMetrics = { rateLimitCounter: { inc: jest.fn() } };
+    const app = express();
+    app.use(createRateLimiter({ windowMs: 60000, max: 1, metrics: mockMetrics }));
+    app.get('/ping', (_req, res) => res.json({ ok: true }));
+
+    await request(app).get('/ping');
+    await request(app).get('/ping'); // triggers limit
+    expect(mockMetrics.rateLimitCounter.inc).toHaveBeenCalled();
+  });
 });

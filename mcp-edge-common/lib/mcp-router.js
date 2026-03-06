@@ -14,7 +14,7 @@ function extractPhiContext(tool, args) {
   return { phi: !!a.phi, write: !!a.write, patientId };
 }
 
-function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies, phiAuditLogger, strategyManager }) {
+function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = true, fixturesDir, logger, rolePolicies, phiAuditLogger, strategyManager, metrics }) {
   const router = express.Router();
   // Static fallbacks when no strategyManager is present
   const staticToolMap = new Map(tools.map((t) => [t.name, t]));
@@ -71,6 +71,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     if (!authResult.allowed) {
       if (logger) logger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');
       if (phiAuditLogger) phiAuditLogger.logAuthDenied({ tool: name, role });
+      if (metrics) metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'forbidden' });
       return jsonRpcError(id, -32603, `Forbidden: ${authResult.reason}`, {
         tool: name, role, reason: authResult.reason
       });
@@ -98,6 +99,10 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
             patientId: ctx.patientId, success: true, durationMs: duration_ms, phi: ctx.phi, write: ctx.write
           });
         }
+        if (metrics) {
+          metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'success' });
+          metrics.toolDurationHistogram.observe({ tool: name }, duration_ms / 1000);
+        }
         return jsonRpcResult(id, {
           content: [{ type: 'text', text: JSON.stringify(fixture, null, 2) }]
         });
@@ -115,6 +120,10 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       const result = await tool.handler(args || {}, handlerContext);
       const duration_ms = Date.now() - start;
       if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: isDemoMode() }, 'tool_call');
+      if (metrics) {
+        metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'success' });
+        metrics.toolDurationHistogram.observe({ tool: name }, duration_ms / 1000);
+      }
       if (phiAuditLogger) {
         const ctx = extractPhiContext(tool, args);
         phiAuditLogger.logToolAccess({
@@ -127,6 +136,10 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       const duration_ms = Date.now() - start;
       const safeMessage = scrubSensitive(err?.message || String(err));
       if (logger) logger.error({ tool: name, role, error_code: -32603, duration_ms, demo: isDemoMode() }, 'tool_error');
+      if (metrics) {
+        metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'error' });
+        metrics.toolDurationHistogram.observe({ tool: name }, duration_ms / 1000);
+      }
       if (phiAuditLogger) {
         const ctx = extractPhiContext(tool, args);
         phiAuditLogger.logToolAccess({

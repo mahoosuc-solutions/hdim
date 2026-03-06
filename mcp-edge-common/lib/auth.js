@@ -9,6 +9,18 @@ function extractApiKey(req) {
   return token || null;
 }
 
+function parseApiKeys(envValue) {
+  if (!envValue) return [];
+  return envValue.split(',').map((k) => k.trim()).filter(Boolean);
+}
+
+function validateApiKey(requestKey, envValue) {
+  if (!envValue) return true; // no key configured = no auth required
+  const validKeys = parseApiKeys(envValue);
+  if (validKeys.length === 0) return true;
+  return validKeys.includes(requestKey);
+}
+
 function extractOperatorRole(req) {
   const headers = req?.headers || {};
   const role = headers['x-operator-role'] || headers['x-mcp-role'] || null;
@@ -53,5 +65,7 @@ module.exports = {
   extractApiKey,
   extractOperatorRole,
   rolePolicies,
-  authorizeToolCall
+  authorizeToolCall,
+  parseApiKeys,
+  validateApiKey
 };

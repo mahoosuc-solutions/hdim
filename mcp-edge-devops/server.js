@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('node:path');
 const cors = require('cors');
 const helmet = require('helmet');
-const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
+const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger, createMetrics, createMetricsRouter } = require('hdim-mcp-edge-common');
 
 const { createDockerClient } = require('./lib/docker-client');
 
@@ -22,10 +22,12 @@ function loadTools() {
 
 function createApp() {
   const app = express();
+  const metrics = createMetrics();
+
   app.use(helmet());
   app.use(cors(createCorsOptions()));
   app.use(express.json({ limit: '1mb' }));
-  app.use(createRateLimiter());
+  app.use(createRateLimiter({ metrics }));
 
   const tools = loadTools();
 
@@ -33,6 +35,7 @@ function createApp() {
     serviceName: 'hdim-devops-edge',
     version: '0.1.0'
   }));
+  app.use(createMetricsRouter(metrics.registry));
 
   const logger = createAuditLogger({ serviceName: 'hdim-devops-edge' });
 
@@ -42,7 +45,8 @@ function createApp() {
     serverVersion: '0.1.0',
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
     fixturesDir: path.join(__dirname, 'fixtures'),
-    logger
+    logger,
+    metrics
   }));
 
   return app;

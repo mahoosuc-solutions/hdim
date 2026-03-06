@@ -8,5 +8,7 @@ module.exports = {
   ...require('./lib/rate-limit'),
   ...require('./lib/cors-config'),
   ...require('./lib/audit-log'),
-  ...require('./lib/param-validator')
+  ...require('./lib/param-validator'),
+  ...require('./lib/metrics'),
+  ...require('./lib/circuit-breaker')
 };

@@ -3,11 +3,12 @@ const express = require('express');
 const path = require('node:path');
 const cors = require('cors');
 const helmet = require('helmet');
-const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
+const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger, createMetrics, createMetricsRouter, wrapClientWithBreaker } = require('hdim-mcp-edge-common');
 const { createPlatformClient } = require('./lib/platform-client');
 
-function loadTools() {
-  const client = createPlatformClient();
+function loadTools(metrics) {
+  const rawClient = createPlatformClient();
+  const client = wrapClientWithBreaker(rawClient, { name: 'platform', metrics });
   return [
     require('./lib/tools/edge-health').definition,
     require('./lib/tools/platform-health').createDefinition(client),
@@ -22,17 +23,20 @@ function loadTools() {
 
 function createApp() {
   const app = express();
+  const metrics = createMetrics();
+
   app.use(helmet());
   app.use(cors(createCorsOptions()));
   app.use(express.json({ limit: '1mb' }));
-  app.use(createRateLimiter());
+  app.use(createRateLimiter({ metrics }));
 
-  const tools = loadTools();
+  const tools = loadTools(metrics);
 
   app.use(createHealthRouter({
     serviceName: 'hdim-platform-edge',
     version: '0.1.0'
   }));
+  app.use(createMetricsRouter(metrics.registry));
 
   const logger = createAuditLogger({ serviceName: 'hdim-platform-edge' });
 
@@ -42,7 +46,8 @@ function createApp() {
     serverVersion: '0.1.0',
     enforceRoleAuth: process.env.MCP_EDGE_ENFORCE_ROLE_AUTH !== 'false',
     fixturesDir: path.join(__dirname, 'fixtures'),
-    logger
+    logger,
+    metrics
   }));
 
   return app;

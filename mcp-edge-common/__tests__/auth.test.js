@@ -1,4 +1,4 @@
-const { extractApiKey, extractOperatorRole, authorizeToolCall, rolePolicies, normalizeToolName } = require('../lib/auth');
+const { extractApiKey, extractOperatorRole, authorizeToolCall, rolePolicies, normalizeToolName, parseApiKeys, validateApiKey } = require('../lib/auth');
 
 describe('auth', () => {
   describe('extractApiKey', () => {
@@ -163,5 +163,59 @@ describe('extractApiKey edge cases', () => {
   });
   it('handles undefined req', () => {
     expect(extractApiKey(undefined)).toBeNull();
+  });
+});
+
+describe('parseApiKeys', () => {
+  it('parses comma-separated keys', () => {
+    expect(parseApiKeys('key1,key2,key3')).toEqual(['key1', 'key2', 'key3']);
+  });
+
+  it('trims whitespace around keys', () => {
+    expect(parseApiKeys(' key1 , key2 ')).toEqual(['key1', 'key2']);
+  });
+
+  it('filters empty entries', () => {
+    expect(parseApiKeys('key1,,key2,')).toEqual(['key1', 'key2']);
+  });
+
+  it('returns empty array for empty string', () => {
+    expect(parseApiKeys('')).toEqual([]);
+  });
+
+  it('returns empty array for undefined', () => {
+    expect(parseApiKeys(undefined)).toEqual([]);
+  });
+
+  it('handles single key', () => {
+    expect(parseApiKeys('only-one')).toEqual(['only-one']);
+  });
+});
+
+describe('validateApiKey — key rotation', () => {
+  it('accepts new key during rotation', () => {
+    expect(validateApiKey('new-key', 'new-key,old-key')).toBe(true);
+  });
+
+  it('accepts old key during rotation window', () => {
+    expect(validateApiKey('old-key', 'new-key,old-key')).toBe(true);
+  });
+
+  it('rejects expired key after rotation', () => {
+    expect(validateApiKey('old-key', 'new-key')).toBe(false);
+  });
+
+  it('rejects unknown key', () => {
+    expect(validateApiKey('bad-key', 'new-key,old-key')).toBe(false);
+  });
+
+  it('allows any request when no key is configured', () => {
+    expect(validateApiKey('anything', '')).toBe(true);
+    expect(validateApiKey('anything', undefined)).toBe(true);
+  });
+
+  it('single key still works', () => {
+    expect(validateApiKey('my-key', 'my-key')).toBe(true);
+    expect(validateApiKey('wrong', 'my-key')).toBe(false);
   });
 });

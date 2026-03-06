@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0005-create-intelligence-recommendations-table" author="healthdata-system">
+        <comment>Create persisted recommendations for intelligence review workflow</comment>
+
+        <createTable tableName="intelligence_recommendations">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_ref" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_event_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="signal_type" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="risk_tier" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="confidence" type="double precision">
+                <constraints nullable="false"/>
+            </column>
+            <column name="evidence" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(32)" defaultValue="PROPOSED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reviewed_by" type="varchar(128)"/>
+            <column name="review_notes" type="text"/>
+            <column name="reviewed_at" type="timestamp with time zone"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_intel_recommendations_tenant_patient" tableName="intelligence_recommendations">
+            <column name="tenant_id"/>
+            <column name="patient_ref"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_intel_recommendations_status" tableName="intelligence_recommendations">
+            <column name="status"/>
+            <column name="reviewed_at"/>
+        </createIndex>
+
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_intel_recommendations_evidence_gin
+            ON intelligence_recommendations USING GIN (evidence);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_intel_recommendations_evidence_gin;
+            </sql>
+            <dropTable tableName="intelligence_recommendations"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

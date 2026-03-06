@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:tracing"))
     implementation(project(":modules:shared:infrastructure:api-docs"))
+    implementation(project(":modules:shared:infrastructure:event-sourcing"))
 
     // Spring Boot
     implementation(libs.bundles.spring.boot.web)

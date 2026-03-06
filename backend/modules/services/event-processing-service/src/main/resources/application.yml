@@ -132,3 +132,19 @@ logging:
     io.micrometer: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+intelligence:
+  features:
+    ingest-enabled: ${INTELLIGENCE_FEATURE_INGEST_ENABLED:true}
+    recommendation-review-enabled: ${INTELLIGENCE_FEATURE_RECOMMENDATION_REVIEW_ENABLED:true}
+    validation-status-update-enabled: ${INTELLIGENCE_FEATURE_VALIDATION_STATUS_UPDATE_ENABLED:true}
+    trust-dashboard-enabled: ${INTELLIGENCE_FEATURE_TRUST_DASHBOARD_ENABLED:true}
+    ingest-tenant-allowlist: ${INTELLIGENCE_FEATURE_INGEST_TENANTS:}
+    recommendation-review-tenant-allowlist: ${INTELLIGENCE_FEATURE_REVIEW_TENANTS:}
+    validation-status-update-tenant-allowlist: ${INTELLIGENCE_FEATURE_VALIDATION_TENANTS:}
+    trust-dashboard-tenant-allowlist: ${INTELLIGENCE_FEATURE_TRUST_TENANTS:}
+  preflight:
+    enabled: ${INTELLIGENCE_PREFLIGHT_ENABLED:false}
+    kafka-check:
+      enabled: ${INTELLIGENCE_PREFLIGHT_KAFKA_CHECK_ENABLED:false}
+      bootstrap-servers: ${INTELLIGENCE_PREFLIGHT_KAFKA_BOOTSTRAP_SERVERS:${healthdata.kafka.bootstrap-servers}}

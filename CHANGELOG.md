@@ -10,6 +10,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Gateway now passes through non-2xx responses from upstream services instead of converting them to 500s.
 
+## [2.9.2] - 2026-03-06
+
+### Added - Phase 1B API Documentation
+- **95 new OpenAPI annotations** across 3 services: Quality Measure (32), CQL Engine (43), Analytics (20)
+- Total documented endpoints: **157** (up from 62 in Phase 1A)
+- Emergency runbook: `docs/runbooks/EMERGENCY_RUNBOOK.md` — severity classification, hotfix procedures, service recovery, communication templates
+
+### Added - Backlog Closure (v2.9.1)
+- **B1-B9 fully resolved:** Kafka port standardization (22 services), OAuth encryption (AES-256-GCM), JWKS mode, Liquibase bypass fix
+- 68 event-replay-service unit tests (`df39ae8a5`)
+- cqrs-query-service skeleton with 34 passing tests (`b81f89400`)
+- Live gateway integration test framework (platform, devops, clinical sidecars)
+- MCP Edge clinical sidecar PHI audit + strategy hot-swap (`5fc05d6e7`)
+
+### Changed
+- `.env.external-db` → `.env.external-db.example`, `healthdata-platform/.env` → `.env.example` with static placeholders
+- 58 intelligence-layer files branched to `feature/intelligence-layer` (unblocking clean master)
+- CLAUDE.md updated to v4.3
+
+### Fixed
+- Phase 1B API documentation gaps closed (Quality Measure, CQL Engine, Analytics)
+- B7q and B9 commit references in KNOWN_ISSUES updated (were "pending commit", now resolved)
+
 ## [2.9.0] - 2026-03-05
 
 ### Added - MCP Edge Layer v0.1.0

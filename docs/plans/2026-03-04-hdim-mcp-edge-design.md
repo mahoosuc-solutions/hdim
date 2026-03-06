@@ -1,5 +1,7 @@
 # HDIM MCP Edge — Sidecar Architecture Design
 
+> **Status:** COMPLETE
+
 **Date:** 2026-03-04
 **Status:** Approved
 **Author:** Claude Code + Aaron

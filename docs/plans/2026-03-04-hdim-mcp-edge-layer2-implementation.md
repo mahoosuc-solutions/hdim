@@ -1,5 +1,7 @@
 # MCP Edge Layer 2 — Clinical Edge Implementation Plan
 
+> **Status:** COMPLETE
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Build `mcp-edge-clinical` sidecar (port 3300) exposing all 5 HDIM clinical services via 25 MCP tools with 3 interchangeable strategies, HIPAA-compliant PHI audit logging, and comprehensive test coverage.

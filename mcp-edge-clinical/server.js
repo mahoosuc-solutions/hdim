@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('node:path');
 const cors = require('cors');
 const helmet = require('helmet');
-const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger } = require('hdim-mcp-edge-common');
+const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger, createMetrics, createMetricsRouter, wrapClientWithBreaker } = require('hdim-mcp-edge-common');
 const { createClinicalClient } = require('./lib/clinical-client');
 const { createPhiAuditLogger } = require('./lib/phi-audit');
 const { StrategyManager, VALID_STRATEGIES } = require('./lib/strategy-manager');
@@ -33,18 +33,22 @@ function parseAllowedStrategies() {
 
 function createApp() {
   const app = express();
+  const metrics = createMetrics();
+
   app.use(helmet());
   app.use(cors(createCorsOptions()));
   app.use(express.json({ limit: '1mb' }));
-  app.use(createRateLimiter());
+  app.use(createRateLimiter({ metrics }));
 
   const strategyName = process.env.CLINICAL_TOOL_STRATEGY || 'composite';
-  const client = createClinicalClient();
+  const rawClient = createClinicalClient();
+  const client = wrapClientWithBreaker(rawClient, { name: 'clinical', metrics });
 
   app.use(createHealthRouter({
     serviceName: 'hdim-clinical-edge',
     version: '0.1.0'
   }));
+  app.use(createMetricsRouter(metrics.registry));
 
   const logger = createAuditLogger({ serviceName: 'hdim-clinical-edge' });
   const phiAuditLogger = createPhiAuditLogger({ serviceName: 'hdim-clinical-edge' });
@@ -74,7 +78,8 @@ function createApp() {
     logger,
     rolePolicies: strategyManager.rolePolicies,
     phiAuditLogger,
-    strategyManager
+    strategyManager,
+    metrics
   }));
 
   return app;

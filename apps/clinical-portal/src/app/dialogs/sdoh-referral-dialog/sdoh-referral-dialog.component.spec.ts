@@ -5,7 +5,8 @@ import { of, throwError } from 'rxjs';
 import { SDOHReferralDialogComponent } from './sdoh-referral-dialog.component';
 import { SDOHReferralService } from '../../services/sdoh-referral.service';
 import { ToastService } from '../../services/toast.service';
-import { createMockMatDialogRef } from '../../testing/mocks';
+import { LoggerService } from '../../services/logger.service';
+import { createMockMatDialogRef, createMockLoggerService } from '../../testing/mocks';
 import {
   SDOHReferralDialogData,
   StaffMember,
@@ -138,6 +139,7 @@ describe('SDOHReferralDialogComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: mockDialogData },
         { provide: SDOHReferralService, useValue: referralServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
+        { provide: LoggerService, useValue: createMockLoggerService() },
       ],
     }).compileComponents();
 
@@ -209,6 +211,7 @@ describe('SDOHReferralDialogComponent', () => {
           { provide: MAT_DIALOG_DATA, useValue: customDialogData },
           { provide: SDOHReferralService, useValue: referralService },
           { provide: ToastService, useValue: toastService },
+          { provide: LoggerService, useValue: createMockLoggerService() },
         ],
       });
 
@@ -239,6 +242,7 @@ describe('SDOHReferralDialogComponent', () => {
           { provide: MAT_DIALOG_DATA, useValue: emptyDialogData },
           { provide: SDOHReferralService, useValue: referralService },
           { provide: ToastService, useValue: toastService },
+          { provide: LoggerService, useValue: createMockLoggerService() },
         ],
       });
 
@@ -839,6 +843,7 @@ describe('SDOHReferralDialogComponent', () => {
           { provide: MAT_DIALOG_DATA, useValue: dataWithoutScreening },
           { provide: SDOHReferralService, useValue: referralService },
           { provide: ToastService, useValue: toastService },
+          { provide: LoggerService, useValue: createMockLoggerService() },
         ],
       });
 

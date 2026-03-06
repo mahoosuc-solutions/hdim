@@ -14,8 +14,6 @@ import { AIAssistantService } from '../../services/ai-assistant.service';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
-import { createMockRouter } from '../../testing/mocks';
-
 /**
  * TDD Test Suite for Patients Component
  *
@@ -98,9 +96,7 @@ describe('PatientsComponent (TDD)', () => {
         { provide: FilterPersistenceService, useValue: mockFilterPersistence },
         { provide: PatientDeduplicationService, useValue: mockDeduplicationService },
         { provide: AIAssistantService, useValue: mockAIAssistantService },
-        { provide: Router, useValue: mockRouter },
-      
-        { provide: Router, useValue: createMockRouter() }],
+        { provide: Router, useValue: mockRouter }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientsComponent);

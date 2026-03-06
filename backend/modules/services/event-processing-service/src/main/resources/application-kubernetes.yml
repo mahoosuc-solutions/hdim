@@ -47,3 +47,19 @@ management:
       enabled: true
     readinessState:
       enabled: true
+
+intelligence:
+  features:
+    ingest-enabled: ${INTELLIGENCE_FEATURE_INGEST_ENABLED:false}
+    recommendation-review-enabled: ${INTELLIGENCE_FEATURE_RECOMMENDATION_REVIEW_ENABLED:false}
+    validation-status-update-enabled: ${INTELLIGENCE_FEATURE_VALIDATION_STATUS_UPDATE_ENABLED:false}
+    trust-dashboard-enabled: ${INTELLIGENCE_FEATURE_TRUST_DASHBOARD_ENABLED:false}
+    ingest-tenant-allowlist: ${INTELLIGENCE_FEATURE_INGEST_TENANTS:}
+    recommendation-review-tenant-allowlist: ${INTELLIGENCE_FEATURE_REVIEW_TENANTS:}
+    validation-status-update-tenant-allowlist: ${INTELLIGENCE_FEATURE_VALIDATION_TENANTS:}
+    trust-dashboard-tenant-allowlist: ${INTELLIGENCE_FEATURE_TRUST_TENANTS:}
+  preflight:
+    enabled: ${INTELLIGENCE_PREFLIGHT_ENABLED:true}
+    kafka-check:
+      enabled: ${INTELLIGENCE_PREFLIGHT_KAFKA_CHECK_ENABLED:true}
+      bootstrap-servers: ${INTELLIGENCE_PREFLIGHT_KAFKA_BOOTSTRAP_SERVERS:${SPRING_KAFKA_BOOTSTRAP_SERVERS:kafka:9092}}

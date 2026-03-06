@@ -296,6 +296,29 @@
           "blocking": true,
           "timeout_seconds": 600,
           "retry_on_failure": false
+        },
+        {
+          "task_id": "task-12a",
+          "name": "Intelligence Readiness Validation",
+          "prompt": "Validate intelligence engine deployment readiness and authorization behavior.\n\n**Actions:**\n1. Run scripts/release-validation/validate-intelligence-readiness.sh v{VERSION}\n   - Verify Liquibase changesets 0005-0007 are applied\n   - Verify intelligence tables exist\n   - Verify Kafka topics exist (ingest.raw, ingest.normalized, validation.findings, intelligence.signals, recommendations.generated, recommendations.reviewed)\n   - Verify event-processing-service health and intelligence dashboard endpoint are reachable\n2. Run scripts/release-validation/validate-intelligence-authz.sh v{VERSION}\n   - Verify unauthenticated mutable intelligence endpoints are rejected (401/403)\n   - Verify viewer role cannot mutate recommendation/finding state (403)\n   - Verify tenant path/header mismatch is hidden as 404\n   - Verify reviewer role reaches mutable endpoint logic (non-authz error path expected for unknown IDs)\n3. Generate readiness and authz reports in docs/releases/v{VERSION}/validation/\n\n**Completion Criteria:**\n- readiness script exits with code 0 in target environment\n- authz script exits with code 0 in target environment\n- 0005/0006/0007 migrations confirmed\n- all required Kafka intelligence topics confirmed\n- authorization and tenant isolation behavior confirmed\n\n**Validation Commands:**\n./scripts/release-validation/validate-intelligence-readiness.sh v{VERSION}\n./scripts/release-validation/validate-intelligence-authz.sh v{VERSION}\n\n**Expected Outputs:**\n- docs/releases/v{VERSION}/validation/intelligence-readiness-validation-report.md\n- docs/releases/v{VERSION}/validation/intelligence-authz-validation-report.md",
+          "completion_criteria": [
+            "validate-intelligence-readiness.sh exits with code 0",
+            "validate-intelligence-authz.sh exits with code 0",
+            "Liquibase changesets 0005/0006/0007 applied",
+            "All required intelligence Kafka topics exist",
+            "Authz and tenant-isolation checks pass",
+            "Reports created under docs/releases/v{VERSION}/validation/"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-intelligence-readiness.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/intelligence-readiness-validation-report.md",
+            "docs/releases/v{VERSION}/validation/intelligence-authz-validation-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 600,
+          "retry_on_failure": true
         }
       ]
     },
@@ -525,7 +548,7 @@
     "phase_execution_pattern": {
       "phase_1": "/ralph-loop \"Execute Phase 1: Code Quality & Testing Validation. Complete tasks 01-04. Output <promise>PHASE_1_COMPLETE</promise> when all validation reports created and tests pass.\" --max-iterations 10 --completion-promise \"PHASE_1_COMPLETE\"",
       "phase_2": "/ralph-loop \"Execute Phase 2: Documentation Completeness Validation. Complete tasks 05-08. Auto-generate missing docs. Output <promise>PHASE_2_COMPLETE</promise> when all documentation validated.\" --max-iterations 10 --completion-promise \"PHASE_2_COMPLETE\"",
-      "phase_3": "/ralph-loop \"Execute Phase 3: Integration & Configuration Validation. Complete tasks 09-12. Output <promise>PHASE_3_COMPLETE</promise> when all integration checks pass.\" --max-iterations 10 --completion-promise \"PHASE_3_COMPLETE\"",
+      "phase_3": "/ralph-loop \"Execute Phase 3: Integration & Configuration Validation. Complete tasks 09-12 and 12a. Output <promise>PHASE_3_COMPLETE</promise> when all integration checks pass.\" --max-iterations 10 --completion-promise \"PHASE_3_COMPLETE\"",
       "phase_4": "/ralph-loop \"Execute Phase 4: Deployment Readiness Validation. Complete tasks 13-16a and 16. Output <promise>PHASE_4_COMPLETE</promise> when deployment checks, CX access-admin validation, and checklist review are complete.\" --max-iterations 10 --completion-promise \"PHASE_4_COMPLETE\"",
       "phase_5": "/ralph-loop \"Execute Phase 5: Final Release Preparation. Complete tasks 17-20. Output <promise>PHASE_5_COMPLETE</promise> when git tag created and GitHub release published.\" --max-iterations 10 --completion-promise \"PHASE_5_COMPLETE\""
     }

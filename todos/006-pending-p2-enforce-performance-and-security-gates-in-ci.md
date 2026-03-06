@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "006"
 tags: [code-review, qa, ci-cd, performance, security, release-gate]
@@ -39,10 +39,10 @@ Performance and security validation assets exist, but some gating steps are desc
 - Candidate checks: k6 SLA thresholds, security-scan workflow results, strict MCP gate (`pass=true`) artifact retention.
 
 ## Acceptance Criteria
-- [ ] CI fails when performance SLA thresholds are breached.
-- [ ] CI fails when critical security scan findings are present.
-- [ ] Strict release gate output and evidence artifacts are retained per run.
-- [ ] Go/no-go status is visible in deployment and release records.
+- [x] CI fails when performance SLA thresholds are breached.
+- [x] CI fails when critical security scan findings are present.
+- [x] Strict release gate output and evidence artifacts are retained per run.
+- [x] Go/no-go status is visible in deployment and release records.
 
 ## Work Log
 
@@ -81,3 +81,20 @@ Performance and security validation assets exist, but some gating steps are desc
 **Learnings:**
 - Strict gate is currently passing consistently in this environment.
 - Additional visibility in gate artifacts reduces investigation time if a future intermittent failure recurs.
+
+### 2026-03-06 - CI Hard Gate Enforcement Implemented
+
+**By:** Codex
+
+**Actions:**
+- Added `scripts/release-validation/validate-upstream-ci-gates.sh` to enforce upstream CI gate freshness and success for:
+  - `load-tests.yml` (Performance SLO gate)
+  - `security-scan.yml` (Security critical findings gate)
+- Integrated the new validator into `.github/workflows/deploy-docker.yml` `release-policy-gate` as a hard fail step.
+- Added artifact retention for release policy evidence:
+  - `docs/releases/{version}/validation/ci-upstream-gates-report.md`
+  - `docs/releases/{version}/validation/environment-security-report.md`
+- Added explicit Go/No-Go publication to deployment step summary from `ci-upstream-gates-report.md`.
+
+**Learnings:**
+- Using workflow-run freshness checks closes a common blind spot where a previously passing gate can become stale and no longer represent current production risk.

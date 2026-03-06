@@ -176,6 +176,9 @@ jobs:
     name: Release Policy Gate
     needs: build-matrix
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -189,6 +192,40 @@ jobs:
         run: |
           chmod +x ./scripts/release-validation/validate-k8s-digest-deploy.sh
           ./scripts/release-validation/validate-k8s-digest-deploy.sh
+
+      - name: Validate upstream performance and security CI gates
+        env:
+          VERSION: ${{ needs.build-matrix.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          BRANCH_NAME: ${{ github.event.repository.default_branch || 'master' }}
+          MAX_GATE_AGE_HOURS: ${{ vars.RELEASE_GATE_MAX_AGE_HOURS || '168' }}
+          REQUIRE_PERFORMANCE_GATE: "true"
+          REQUIRE_SECURITY_GATE: "true"
+        run: |
+          chmod +x ./scripts/release-validation/validate-upstream-ci-gates.sh
+          ./scripts/release-validation/validate-upstream-ci-gates.sh
+
+      - name: Publish release gate decision summary
+        if: always()
+        run: |
+          REPORT_FILE="docs/releases/${{ needs.build-matrix.outputs.version }}/validation/ci-upstream-gates-report.md"
+          if [ -f "$REPORT_FILE" ]; then
+            echo "## Release Gate Decision" >> "$GITHUB_STEP_SUMMARY"
+            awk '/## Go\\/No-Go/{flag=1} flag{print}' "$REPORT_FILE" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Release Gate Decision" >> "$GITHUB_STEP_SUMMARY"
+            echo "NO-GO (missing ci-upstream-gates-report.md)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload release policy gate artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-policy-gate-${{ needs.build-matrix.outputs.version }}
+          path: |
+            docs/releases/${{ needs.build-matrix.outputs.version }}/validation/environment-security-report.md
+            docs/releases/${{ needs.build-matrix.outputs.version }}/validation/ci-upstream-gates-report.md
 
   deploy-summary:
     name: Deployment Summary
@@ -367,6 +404,40 @@ jobs:
           chmod +x ./scripts/smoke-tests.sh
           ./scripts/smoke-tests.sh https://staging.hdim.example.com --quick --retries 5 --timeout 30
 
+      - name: Run intelligence release gate checks
+        env:
+          VERSION: ${{ needs.build-matrix.outputs.version }}
+          EVENT_SERVICE_BASE_URL: ${{ secrets.STAGING_INTELLIGENCE_EVENT_SERVICE_BASE_URL }}
+          EVENT_TENANT_ID: ${{ secrets.STAGING_INTELLIGENCE_TENANT_ID }}
+          TENANT_ID: ${{ secrets.STAGING_INTELLIGENCE_TENANT_ID }}
+          OTHER_TENANT_ID: ${{ secrets.STAGING_INTELLIGENCE_OTHER_TENANT_ID }}
+          AUTH_VALIDATED: ${{ secrets.STAGING_GATEWAY_VALIDATED_HEADER }}
+          REVIEWER_ROLES: ${{ secrets.STAGING_INTELLIGENCE_REVIEWER_ROLES }}
+          VIEWER_ROLES: ${{ secrets.STAGING_INTELLIGENCE_VIEWER_ROLES }}
+          DATABASE_URL: ${{ secrets.STAGING_INTELLIGENCE_DATABASE_URL }}
+          KAFKA_BOOTSTRAP_SERVERS: ${{ secrets.STAGING_INTELLIGENCE_KAFKA_BOOTSTRAP }}
+          CHECK_MIGRATIONS: ${{ vars.STAGING_INTELLIGENCE_CHECK_MIGRATIONS || 'false' }}
+          CHECK_KAFKA_TOPICS: ${{ vars.STAGING_INTELLIGENCE_CHECK_KAFKA_TOPICS || 'false' }}
+          CHECK_ENDPOINTS: "true"
+        run: |
+          chmod +x ./scripts/release-validation/validate-intelligence-gate-config.sh
+          chmod +x ./scripts/release-validation/validate-intelligence-readiness.sh
+          chmod +x ./scripts/release-validation/validate-intelligence-authz.sh
+
+          ./scripts/release-validation/validate-intelligence-gate-config.sh staging
+
+          ./scripts/release-validation/validate-intelligence-readiness.sh "$VERSION"
+          ./scripts/release-validation/validate-intelligence-authz.sh "$VERSION"
+
+      - name: Upload intelligence release-gate reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intelligence-release-gate-${{ needs.build-matrix.outputs.version }}
+          path: |
+            docs/releases/${{ needs.build-matrix.outputs.version }}/validation/intelligence-readiness-validation-report.md
+            docs/releases/${{ needs.build-matrix.outputs.version }}/validation/intelligence-authz-validation-report.md
+
       - name: Rollback on failure
         if: failure()
         run: |
@@ -439,6 +510,40 @@ jobs:
           echo "Running production smoke tests..."
           chmod +x ./scripts/smoke-tests.sh
           ./scripts/smoke-tests.sh https://hdim.example.com --retries 5 --timeout 30
+
+      - name: Run production intelligence release gate checks
+        env:
+          VERSION: ${{ needs.build-matrix.outputs.version }}
+          EVENT_SERVICE_BASE_URL: ${{ secrets.PRODUCTION_INTELLIGENCE_EVENT_SERVICE_BASE_URL }}
+          EVENT_TENANT_ID: ${{ secrets.PRODUCTION_INTELLIGENCE_TENANT_ID }}
+          TENANT_ID: ${{ secrets.PRODUCTION_INTELLIGENCE_TENANT_ID }}
+          OTHER_TENANT_ID: ${{ secrets.PRODUCTION_INTELLIGENCE_OTHER_TENANT_ID }}
+          AUTH_VALIDATED: ${{ secrets.PRODUCTION_GATEWAY_VALIDATED_HEADER }}
+          REVIEWER_ROLES: ${{ secrets.PRODUCTION_INTELLIGENCE_REVIEWER_ROLES }}
+          VIEWER_ROLES: ${{ secrets.PRODUCTION_INTELLIGENCE_VIEWER_ROLES }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_INTELLIGENCE_DATABASE_URL }}
+          KAFKA_BOOTSTRAP_SERVERS: ${{ secrets.PRODUCTION_INTELLIGENCE_KAFKA_BOOTSTRAP }}
+          CHECK_MIGRATIONS: ${{ vars.PRODUCTION_INTELLIGENCE_CHECK_MIGRATIONS || 'false' }}
+          CHECK_KAFKA_TOPICS: ${{ vars.PRODUCTION_INTELLIGENCE_CHECK_KAFKA_TOPICS || 'false' }}
+          CHECK_ENDPOINTS: "true"
+        run: |
+          chmod +x ./scripts/release-validation/validate-intelligence-gate-config.sh
+          chmod +x ./scripts/release-validation/validate-intelligence-readiness.sh
+          chmod +x ./scripts/release-validation/validate-intelligence-authz.sh
+
+          ./scripts/release-validation/validate-intelligence-gate-config.sh production
+
+          ./scripts/release-validation/validate-intelligence-readiness.sh "$VERSION"
+          ./scripts/release-validation/validate-intelligence-authz.sh "$VERSION"
+
+      - name: Upload production intelligence release-gate reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-intelligence-release-gate-${{ needs.build-matrix.outputs.version }}
+          path: |
+            docs/releases/${{ needs.build-matrix.outputs.version }}/validation/intelligence-readiness-validation-report.md
+            docs/releases/${{ needs.build-matrix.outputs.version }}/validation/intelligence-authz-validation-report.md
 
       - name: Extended monitoring
         run: |

@@ -3,8 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { AuditService, AuditAction, AuditOutcome, AuditEvent } from './audit.service';
 import { AuthService, User } from './auth.service';
-import { LoggerService } from 'services/logger.service';
-import { createMockStore } from '../../testing/mocks';
+import { LoggerService } from './logger.service';
+import { createMockLoggerService, createMockStore } from '../../testing/mocks';
 import { Store } from '@ngrx/store';
 
 /**
@@ -49,7 +49,6 @@ describe('AuditService', () => {
         AuditService,
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
-        HttpTestingController,
       ],
     });
 
@@ -80,7 +79,8 @@ describe('AuditService', () => {
 
       // Create new service instance to trigger flush
       const httpClient = TestBed.inject(HttpClient);
-      const newService = new AuditService(httpClient, authService);
+      const loggerSvc = TestBed.inject(LoggerService);
+      const newService = new AuditService(loggerSvc, httpClient, authService);
 
       tick(100);
 
@@ -144,7 +144,7 @@ describe('AuditService', () => {
 
   describe('immediate logging', () => {
     it('should send event immediately with logImmediate', (done) => {
-      service.logImmediate({ action: AuditAction.ACCESS_DENIED, resourceType: 'Patient' };
+      service.logImmediate({ action: AuditAction.ACCESS_DENIED, resourceType: 'Patient' });
 
       // Use setTimeout to allow the HTTP request to be made
       setTimeout(() => {

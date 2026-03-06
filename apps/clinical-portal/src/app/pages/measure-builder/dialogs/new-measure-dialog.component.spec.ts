@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { NewMeasureDialogComponent } from './new-measure-dialog.component';
-import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('NewMeasureDialogComponent', () => {
   let fixture: ComponentFixture<NewMeasureDialogComponent>;
@@ -13,9 +12,10 @@ describe('NewMeasureDialogComponent', () => {
 
     await TestBed.configureTestingModule({
       imports: [NewMeasureDialogComponent],
-      providers: [{ provide: MatDialogRef, useValue: dialogRef },
+      providers: [
+        { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: {} },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(NewMeasureDialogComponent);
@@ -23,6 +23,7 @@ describe('NewMeasureDialogComponent', () => {
   });
 
   it('does not save when name is empty', () => {
+    component.selectedTabIndex = 1;
     component.name = '   ';
 
     component.save();
@@ -31,6 +32,7 @@ describe('NewMeasureDialogComponent', () => {
   });
 
   it('trims fields and closes with a draft payload', () => {
+    component.selectedTabIndex = 1;
     component.name = '  My Measure  ';
     component.description = '  Description  ';
     component.category = 'CUSTOM';

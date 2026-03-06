@@ -82,7 +82,7 @@ describe('QualityMeasureDetailComponent', () => {
         { provide: MeasureService, useValue: measureServiceSpy },
         { provide: EvaluationService, useValue: evaluationServiceSpy },
         { provide: LoggerService, useValue: loggerSpy },
-        { provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate']) },
+        { provide: Router, useValue: { navigate: jest.fn() } as any },
         {
           provide: ActivatedRoute,
           useValue: {

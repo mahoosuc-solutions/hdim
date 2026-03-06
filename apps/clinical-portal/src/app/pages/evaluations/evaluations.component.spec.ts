@@ -14,7 +14,7 @@ import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factor
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { CSVHelper } from '../../utils/csv-helper';
-import { createMockStore } from '../../testing/mocks';
+import { createMockLoggerService, createMockStore } from '../../../testing/mocks';
 import { Store } from '@ngrx/store';
 
 const mockLoggerService = createMockLoggerService();
@@ -31,8 +31,9 @@ describe('EvaluationsComponent', () => {
   beforeEach(async () => {
     // Create mock services
     mockMeasureService = {
-      getActiveMeasuresInfo: jest.fn(),
-      getAllAvailableMeasures: jest.fn(),
+      getActiveMeasuresInfo: jest.fn().mockReturnValue(of([])),
+      getAllAvailableMeasures: jest.fn().mockReturnValue(of([])),
+      getLocalMeasuresAsInfo: jest.fn().mockReturnValue(of([])),
     } as any;
 
     mockEvaluationService = {

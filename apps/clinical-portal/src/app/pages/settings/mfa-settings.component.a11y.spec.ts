@@ -98,7 +98,8 @@ describe('MfaSettingsComponent - Accessibility (WCAG 2.1 Level AA)', () => {
     });
 
     it('should have accessible save button', () => {
-      const saveButton = fixture.nativeElement.querySelector('button[type="submit"], button:contains("Save")');
+      const buttons = Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLElement[];
+      const saveButton = fixture.nativeElement.querySelector('button[type="submit"]') || buttons.find((b: HTMLElement) => b.textContent?.includes('Save'));
       if (saveButton) {
         const hasAriaLabel = saveButton.hasAttribute('aria-label');
         const hasTextContent = saveButton.textContent?.trim().length! > 0;

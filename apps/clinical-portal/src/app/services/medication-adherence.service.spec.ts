@@ -201,7 +201,7 @@ describe('MedicationAdherenceService', () => {
       service.getActiveMedications(patientId).subscribe((medications) => {
         expect(medications).toEqual([]);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION));
       req.flush('error', { status: 500, statusText: 'Server Error' });
@@ -688,7 +688,7 @@ describe('MedicationAdherenceService', () => {
       service.calculateOverallAdherence(patientId).subscribe((score) => {
         expect(score.overallPDC).toBe(0);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush('error', { status: 500, statusText: 'Server Error' });
@@ -1073,7 +1073,7 @@ describe('MedicationAdherenceService', () => {
       service.getProblematicMedications(patientId).subscribe((medications) => {
         expect(medications).toEqual([]);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush('error', { status: 500, statusText: 'Server Error' });

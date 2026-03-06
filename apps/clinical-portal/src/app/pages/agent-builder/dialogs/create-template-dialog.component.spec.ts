@@ -13,10 +13,10 @@ import { createMockMatDialogRef } from '../../testing/mocks';
 describe('CreateTemplateDialogComponent', () => {
   let component: CreateTemplateDialogComponent;
   let fixture: ComponentFixture<CreateTemplateDialogComponent>;
-  let mockAgentService: jasmine.SpyObj<AgentBuilderService>;
-  let mockToastService: jasmine.SpyObj<ToastService>;
-  let mockLoggerService: jasmine.SpyObj<LoggerService>;
-  let mockDialogRef: jasmine.SpyObj<MatDialogRef<CreateTemplateDialogComponent>>;
+  let mockAgentService: any;
+  let mockToastService: any;
+  let mockLoggerService: any;
+  let mockDialogRef: any;
 
   const mockCreatedTemplate: PromptTemplate = {
     id: 'new-template-id',
@@ -33,13 +33,13 @@ describe('CreateTemplateDialogComponent', () => {
   };
 
   beforeEach(async () => {
-    mockAgentService = jasmine.createSpyObj('AgentBuilderService', ['createTemplate']);
-    mockToastService = jasmine.createSpyObj('ToastService', ['success', 'error']);
-    mockLoggerService = jasmine.createSpyObj('LoggerService', ['withContext']);
-    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
+    mockAgentService = { createTemplate: jest.fn() };
+    mockToastService = { success: jest.fn(), error: jest.fn() };
+    mockLoggerService = { withContext: jest.fn() };
+    mockDialogRef = { close: jest.fn() };
 
-    const mockLogger = jasmine.createSpyObj('Logger', ['info', 'error']);
-    mockLoggerService.withContext.and.returnValue(mockLogger as any);
+    const mockLogger = { info: jest.fn(), error: jest.fn() };
+    mockLoggerService.withContext.mockReturnValue(mockLogger as any);
 
     await TestBed.configureTestingModule({
       imports: [CreateTemplateDialogComponent, NoopAnimationsModule],
@@ -98,7 +98,7 @@ describe('CreateTemplateDialogComponent', () => {
   });
 
   it('should create template successfully', () => {
-    mockAgentService.createTemplate.and.returnValue(of(mockCreatedTemplate));
+    mockAgentService.createTemplate.mockReturnValue(of(mockCreatedTemplate));
 
     component.templateForm.patchValue({
       name: 'Test Template',
@@ -114,7 +114,7 @@ describe('CreateTemplateDialogComponent', () => {
     component.onSave();
 
     expect(mockAgentService.createTemplate).toHaveBeenCalledWith(
-      jasmine.objectContaining({
+      expect.objectContaining({
         name: 'Test Template',
         description: 'Test description',
         category: 'CUSTOM',
@@ -130,7 +130,7 @@ describe('CreateTemplateDialogComponent', () => {
   });
 
   it('should handle create template error', () => {
-    mockAgentService.createTemplate.and.returnValue(
+    mockAgentService.createTemplate.mockReturnValue(
       throwError(() => new Error('API error'))
     );
 

@@ -94,7 +94,7 @@ describe('QualityMeasuresComponent', () => {
         { provide: EvaluationService, useValue: evaluationServiceSpy },
         { provide: PatientService, useValue: patientServiceSpy },
         { provide: LoggerService, useValue: loggerServiceSpy },
-        { provide: Router, useValue: jasmine.createSpyObj<Router>('Router', ['navigate']) },
+        { provide: Router, useValue: { navigate: jest.fn() } },
         { provide: MatDialog, useValue: {} },
       ],
     }).compileComponents();

@@ -3,12 +3,13 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
 import { DialogService } from './dialog.service';
 import { Patient } from '../models/patient.model';
-import { createMockMatDialog } from '../../testing/mocks';
-import { createMockMatDialogRef } from '../../testing/mocks';
+import { LoggerService } from './logger.service';
+import { createMockMatDialog, createMockMatDialogRef, createMockLoggerService } from '../../testing/mocks';
 
 describe('DialogService', () => {
   let service: DialogService;
   let dialog: jest.Mocked<MatDialog>;
+  let mockLoggerService: ReturnType<typeof createMockLoggerService>;
 
   beforeEach(() => {
     const dialogSpy = {
@@ -16,8 +17,11 @@ describe('DialogService', () => {
       closeAll: jest.fn(),
     } as unknown as jest.Mocked<MatDialog>;
 
+    mockLoggerService = createMockLoggerService();
+
     TestBed.configureTestingModule({
       providers: [DialogService, { provide: MatDialog, useValue: dialogSpy },
+        { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialog, useValue: createMockMatDialog() },
         { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
     });
@@ -28,7 +32,7 @@ describe('DialogService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
-  };
+  });
 
   describe('openPatientEdit', () => {
     it('should open patient edit dialog in create mode', () => {
@@ -43,7 +47,7 @@ describe('DialogService', () => {
       expect(dialog.open).toHaveBeenCalled();
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.mode).toBe('create');
-    };
+    });
 
     it('should open patient edit dialog in edit mode with patient', () => {
       const mockPatient: Patient = {
@@ -60,14 +64,14 @@ describe('DialogService', () => {
 
       service.openPatientEdit(mockPatient).subscribe((result) => {
         expect(result).toEqual(mockPatient);
-      };
+      });
 
       expect(dialog.open).toHaveBeenCalled();
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.mode).toBe('edit');
       expect(callArgs[1]?.data?.patient).toEqual(mockPatient);
-    };
-  };
+    });
+  });
 
   describe('openEvaluationDetails', () => {
     it('should open evaluation details dialog', () => {
@@ -84,8 +88,8 @@ describe('DialogService', () => {
       expect(callArgs[1]?.data?.evaluationId).toBe('eval-123');
       expect(callArgs[1]?.data?.patientName).toBe('John Doe');
       expect(callArgs[1]?.data?.measureName).toBe('CMS125');
-    };
-  };
+    });
+  });
 
   describe('openAdvancedFilter', () => {
     it('should open advanced filter dialog', () => {
@@ -104,17 +108,17 @@ describe('DialogService', () => {
       expect(dialog.open).toHaveBeenCalled();
       const callArgs = dialog.open.mock.calls[dialog.open.mock.calls.length - 1];
       expect(callArgs[1]?.data?.availableFields).toEqual(fields);
-    };
-  };
+    });
+  });
 
   describe('openBatchEvaluation', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-    };
+    });
 
     afterEach(() => {
       jest.useRealTimers();
-    };
+    });
 
     it('should emit mock batch result after delay', () => {
       const results: any[] = [];
@@ -128,18 +132,18 @@ describe('DialogService', () => {
         successCount: 10,
         errorCount: 0,
         results: [],
-      };
-    };
-  };
+      });
+    });
+  });
 
   describe('openExportConfig', () => {
     beforeEach(() => {
       jest.useFakeTimers();
-    };
+    });
 
     afterEach(() => {
       jest.useRealTimers();
-    };
+    });
 
     it('should emit export config after delay', () => {
       const results: any[] = [];
@@ -153,26 +157,25 @@ describe('DialogService', () => {
         format: 'csv',
         columns: ['name', 'dob'],
         fileName: 'export.csv',
-      };
-    };
-  };
+      });
+    });
+  });
 
   describe('openErrorDetails', () => {
     it('should log error details from Error', () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      const contextLogger = mockLoggerService.withContext.mock.results[0]?.value;
       const error = new Error('Boom');
 
       service.openErrorDetails(error);
 
-      expect(errorSpy).toHaveBeenCalled();
-      const [, errorInfo] = errorSpy.mock.calls[0];
+      expect(contextLogger.error).toHaveBeenCalled();
+      const [, errorInfo] = contextLogger.error.mock.calls[0];
       expect(errorInfo.message).toBe('Boom');
       expect(errorInfo.severity).toBe('error');
-      errorSpy.mockRestore();
-    };
+    });
 
     it('should log provided error info', () => {
-      const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      const contextLogger = mockLoggerService.withContext.mock.results[0]?.value;
       const errorInfo = {
         message: 'Bad request',
         timestamp: new Date('2024-01-01T00:00:00Z'),
@@ -181,21 +184,19 @@ describe('DialogService', () => {
 
       service.openErrorDetails(errorInfo);
 
-      expect(errorSpy).toHaveBeenCalledWith('Error Details:', errorInfo);
-      errorSpy.mockRestore();
-    };
-  };
+      expect(contextLogger.error).toHaveBeenCalledWith('Error Details', errorInfo);
+    });
+  });
 
   describe('openHelp', () => {
     it('should log help topic', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+      const contextLogger = mockLoggerService.withContext.mock.results[0]?.value;
 
       service.openHelp('patients');
 
-      expect(logSpy).toHaveBeenCalledWith('Opening help for topic:', 'patients');
-      logSpy.mockRestore();
-    };
-  };
+      expect(contextLogger.info).toHaveBeenCalledWith('Opening help for topic', 'patients');
+    });
+  });
 
   describe('confirm', () => {
     it('should open confirmation dialog and return true on confirm', (done) => {
@@ -208,7 +209,7 @@ describe('DialogService', () => {
       service.confirm('Test Title', 'Test message').subscribe((result) => {
         expect(result).toBe(true);
         done();
-      };
+      });
 
       expect(dialog.open).toHaveBeenCalled();
     });
@@ -223,7 +224,7 @@ describe('DialogService', () => {
       service.confirm('Test Title', 'Test message').subscribe((result) => {
         expect(result).toBe(false);
         done();
-      };
+      });
     });
   });
 

@@ -37,6 +37,7 @@ export class AuditService {
     private http: HttpClient,
     private authService: AuthService
   ) {
+    this.logger = this.loggerService.withContext('AuditService');
     this.initializeEventBatching();
     this.flushPendingEventsFromStorage();
   }

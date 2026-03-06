@@ -3,7 +3,8 @@ import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { of, throwError } from 'rxjs';
 import { TestPreviewDialogComponent } from './test-preview-dialog.component';
 import { CustomMeasureService } from '../../../services/custom-measure.service';
-import { createMockMatDialogRef } from '../../testing/mocks';
+import { LoggerService } from '../../../services/logger.service';
+import { createMockLoggerService } from '../../../../testing/mocks';
 import { expectAlertBanner } from '../../../../testing/dialog-a11y.helper';
 
 describe('TestPreviewDialogComponent', () => {
@@ -11,19 +12,23 @@ describe('TestPreviewDialogComponent', () => {
   let component: TestPreviewDialogComponent;
   let dialogRef: { close: jest.Mock };
   let customMeasureService: jest.Mocked<CustomMeasureService>;
+  let mockLoggerService: ReturnType<typeof createMockLoggerService>;
 
   beforeEach(async () => {
     dialogRef = { close: jest.fn() };
     customMeasureService = {
       testMeasure: jest.fn(),
     } as unknown as jest.Mocked<CustomMeasureService>;
+    mockLoggerService = createMockLoggerService();
 
     await TestBed.configureTestingModule({
       imports: [TestPreviewDialogComponent],
-      providers: [{ provide: MatDialogRef, useValue: dialogRef },
+      providers: [
+        { provide: MatDialogRef, useValue: dialogRef },
         { provide: MAT_DIALOG_DATA, useValue: { measureId: 'm1', measureName: 'Measure A' } },
         { provide: CustomMeasureService, useValue: customMeasureService },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+        { provide: LoggerService, useValue: mockLoggerService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestPreviewDialogComponent);
@@ -59,12 +64,12 @@ describe('TestPreviewDialogComponent', () => {
   });
 
   it('falls back to sample data on error', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     customMeasureService.testMeasure.mockReturnValue(throwError(() => new Error('fail')));
 
     component.runTest();
 
-    expect(warnSpy).toHaveBeenCalled();
+    const loggerContext = mockLoggerService.withContext.mock.results[0]?.value;
+    expect(loggerContext.warn).toHaveBeenCalled();
     expect(component.loading).toBe(false);
     expect(component.errorMessage).toContain('Using sample data');
     expect(component.testResults).toHaveLength(5);

@@ -32,6 +32,7 @@ export class PatientDeduplicationService {
   private readonly logger: ReturnType<LoggerService['withContext']>;
 
   constructor(private loggerService: LoggerService) {
+    this.logger = this.loggerService.withContext('PatientDeduplicationService');
     // Initialize with some sample duplicate relationships for demonstration
     this.initializeSampleDuplicates();
   }

@@ -3,8 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { EvaluationDetailsDialogComponent } from './evaluation-details-dialog.component';
 import { EvaluationService } from '../../services/evaluation.service';
-import { LoggerService } from '../services/logger.service';
-import { createMockStore } from '../../testing/mocks';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService, createMockStore } from '../../../testing/mocks';
 import { Store } from '@ngrx/store';
 
 describe('EvaluationDetailsDialogComponent', () => {
@@ -12,17 +12,19 @@ describe('EvaluationDetailsDialogComponent', () => {
   let fixture: ComponentFixture<EvaluationDetailsDialogComponent>;
   let dialogRef: jest.Mocked<MatDialogRef<EvaluationDetailsDialogComponent>>;
   let evaluationService: jest.Mocked<EvaluationService>;
+  let mockLoggerService: ReturnType<typeof createMockLoggerService>;
 
   beforeEach(async () => {
     const dialogRefSpy = { close: jest.fn() } as unknown as MatDialogRef<EvaluationDetailsDialogComponent>;
     const evaluationServiceSpy = {
       getEvaluationDetails: jest.fn(),
     } as unknown as jest.Mocked<EvaluationService>;
+    mockLoggerService = createMockLoggerService();
 
     await TestBed.configureTestingModule({
       imports: [EvaluationDetailsDialogComponent, NoopAnimationsModule],
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
+      providers: [
+        { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: dialogRefSpy },
         { provide: EvaluationService, useValue: evaluationServiceSpy },
         {
@@ -33,6 +35,7 @@ describe('EvaluationDetailsDialogComponent', () => {
             measureName: 'CMS125',
           },
         },
+      ],
     }).compileComponents();
 
     dialogRef = TestBed.inject(MatDialogRef) as jest.Mocked<
@@ -125,13 +128,11 @@ describe('EvaluationDetailsDialogComponent', () => {
   });
 
   it('should log export pdf placeholder', () => {
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
-
     component.onExportPdf();
 
-    expect(logSpy).toHaveBeenCalledWith(
+    const loggerContext = mockLoggerService.withContext.mock.results[0]?.value;
+    expect(loggerContext.info).toHaveBeenCalledWith(
       'Export to PDF functionality would be implemented here'
     );
-    logSpy.mockRestore();
   });
 });

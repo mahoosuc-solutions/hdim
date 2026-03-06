@@ -533,8 +533,8 @@ describe('DistributionPeriodSliderComponent - Team 4 Test Suite', () => {
 
       expect(component.valueChanged.emit).toHaveBeenCalledWith({
         type: 'distribution',
-        components: jasmine.arrayContaining([
-          jasmine.objectContaining({ weight: 40 })
+        components: expect.arrayContaining([
+          expect.objectContaining({ weight: 40 })
         ])
       });
     });

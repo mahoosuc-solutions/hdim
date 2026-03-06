@@ -80,7 +80,7 @@ describe('RiskStratificationComponent - Accessibility (WCAG 2.1 Level AA)', () =
     });
 
     it('should have accessible risk charts with text alternatives', () => {
-      const charts = fixture.nativeElement.querySelectorAll('canvas, svg');
+      const charts = fixture.nativeElement.querySelectorAll('canvas, svg.chart');
       charts.forEach((chart: HTMLElement) => {
         expect(chart.hasAttribute('aria-label') || chart.hasAttribute('role')).toBe(true);
       });

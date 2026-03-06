@@ -1,18 +1,21 @@
 import { UserRoleService, UserRole } from './user-role.service';
+import { createMockLoggerService } from '../../testing/mocks';
 
 describe('UserRoleService', () => {
   let service: UserRoleService;
+  let mockLoggerService: ReturnType<typeof createMockLoggerService>;
 
   beforeEach(() => {
     localStorage.clear();
-    service = new UserRoleService();
+    mockLoggerService = createMockLoggerService();
+    service = new UserRoleService(mockLoggerService as any);
   });
 
   it('sets and gets role with persistence', () => {
     service.setRole(UserRole.ADMIN);
     expect(service.getCurrentRole()).toBe(UserRole.ADMIN);
 
-    const reloaded = new UserRoleService();
+    const reloaded = new UserRoleService(mockLoggerService as any);
     expect(reloaded.getCurrentRole()).toBe(UserRole.ADMIN);
   });
 
@@ -79,15 +82,18 @@ describe('UserRoleService', () => {
     const setItemSpy = jest.spyOn(storageProto, 'setItem').mockImplementation(() => {
       throw new Error('fail');
     });
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    new UserRoleService();
+    const freshLogger = createMockLoggerService();
+    // withContext returns a contextual logger whose error method should be called
+    const contextualLogger = freshLogger.withContext('UserRoleService');
+
+    new UserRoleService(freshLogger as any);
     service.setRole(UserRole.ADMIN);
 
-    expect(errorSpy).toHaveBeenCalled();
+    // The service uses this.logger.error (via withContext) for localStorage errors
+    expect(contextualLogger.error).toHaveBeenCalled();
 
     getItemSpy.mockRestore();
     setItemSpy.mockRestore();
-    errorSpy.mockRestore();
   });
 });

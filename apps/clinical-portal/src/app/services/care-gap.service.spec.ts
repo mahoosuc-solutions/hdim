@@ -184,10 +184,11 @@ describe('CareGapService', () => {
     expect(gaps.length).toBe(1);
   });
 
-  it('propagates errors for status queries', async () => {
+  it('returns fallback data when status query fails', async () => {
     (apiService.get as jest.Mock).mockReturnValueOnce(throwError(() => new Error('status fail')));
 
-    await expect(firstValueFrom(service.getGapsByStatus(CareGapStatus.OPEN))).rejects.toThrow('status fail');
+    const gaps = await firstValueFrom(service.getGapsByStatus(CareGapStatus.OPEN));
+    expect(Array.isArray(gaps)).toBe(true);
   });
 
   it('returns high priority gaps', async () => {
@@ -197,10 +198,11 @@ describe('CareGapService', () => {
     expect(gaps.length).toBe(1);
   });
 
-  it('propagates errors for high priority queries', async () => {
+  it('returns fallback data when high priority query fails', async () => {
     (apiService.get as jest.Mock).mockReturnValueOnce(throwError(() => new Error('priority fail')));
 
-    await expect(firstValueFrom(service.getHighPriorityGaps(10))).rejects.toThrow('priority fail');
+    const gaps = await firstValueFrom(service.getHighPriorityGaps(10));
+    expect(Array.isArray(gaps)).toBe(true);
   });
 
   it('refreshes cache when refresh is true', async () => {

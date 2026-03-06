@@ -14,6 +14,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../../config/api.config';
@@ -71,6 +72,7 @@ interface EvaluationResult {
     MatTooltipModule,
     MatBadgeModule,
     MatDividerModule,
+    MatAutocompleteModule,
   ],
   templateUrl: './quality-measures.component.html',
   styleUrl: './quality-measures.component.scss',
@@ -216,6 +218,10 @@ export class QualityMeasuresComponent implements OnInit {
   });
 
   displayedColumns = ['code', 'name', 'category', 'benchmark', 'status', 'lastEvaluated', 'actions'];
+
+  // Patient context for evaluation
+  patientSearchTerm = signal('');
+  filteredPatients = signal<Array<{ id: string; fullName: string; mrn: string }>>([]);
 
   // Loading state
   isLoading = signal(false);

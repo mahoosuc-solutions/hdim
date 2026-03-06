@@ -7,10 +7,11 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of, throwError } from 'rxjs';
 import { PatientHealthOverviewComponent } from './patient-health-overview.component';
 import { Router } from '@angular/router';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { PatientHealthService } from '../../services/patient-health.service';
+import { LoggerService } from '../../services/logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 import { PatientHealthOverview, HealthStatus, RiskLevel } from '../../models/patient-health.model';
-import { createMockStore } from '../../testing/mocks';
-import { Store } from '@ngrx/store';
 
 describe('PatientHealthOverviewComponent', () => {
   let component: PatientHealthOverviewComponent;
@@ -199,6 +200,9 @@ describe('PatientHealthOverviewComponent', () => {
       providers: [
         { provide: PatientHealthService, useValue: mockHealthService },
         { provide: Router, useValue: { navigate: jest.fn() } },
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: MatSnackBar, useValue: { open: jest.fn().mockReturnValue({ onAction: () => ({ subscribe: jest.fn() }) }) } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientHealthOverviewComponent);
@@ -393,7 +397,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '3', category: 'preventive', title: 'Medium', description: '', priority: 'medium', recommendedActions: [] },
           { id: '4', category: 'preventive', title: 'High', description: '', priority: 'high', recommendedActions: [] },
         ],
-      });
+      };
 
       const sorted = component.getCareGapsByPriority();
 
@@ -412,7 +416,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '3', category: 'treatment', title: 'Medium', description: '', priority: 'medium', evidence: '', rationale: '' },
           { id: '4', category: 'treatment', title: 'Default', description: '', evidence: '', rationale: '' },
         ],
-      });
+      };
 
       const sorted = component.getRecommendationsByPriority();
 
@@ -431,7 +435,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '3', category: 'preventive', title: 'Gap 3', description: '', priority: 'medium', recommendedActions: [] },
           { id: '4', category: 'preventive', title: 'Gap 4', description: '', priority: 'high', recommendedActions: [] },
         ],
-      });
+      };
 
       expect(component.getUrgentCareGapsCount()).toBe(3); // 1 urgent + 2 high
     });
@@ -501,7 +505,7 @@ describe('PatientHealthOverviewComponent', () => {
             } as any,
           ],
         },
-      });
+      };
 
       mockHealthService.getPatientHealthOverview.mockReturnValue(of(overview));
       component.patientId = 'test-patient-123';
@@ -528,7 +532,7 @@ describe('PatientHealthOverviewComponent', () => {
             requiresIntervention: true,
           },
         },
-      });
+      };
 
       component.criticalAlerts = [];
       (component as any).generateCriticalAlerts(overview);
@@ -579,7 +583,7 @@ describe('PatientHealthOverviewComponent', () => {
             } as any,
           ],
         },
-      });
+      };
 
       component.criticalAlerts = [];
       (component as any).generateCriticalAlerts(overview);

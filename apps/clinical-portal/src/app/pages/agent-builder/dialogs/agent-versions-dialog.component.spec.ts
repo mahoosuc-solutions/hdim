@@ -14,11 +14,11 @@ import { createMockMatDialogRef } from '../../testing/mocks';
 describe('AgentVersionsDialogComponent', () => {
   let component: AgentVersionsDialogComponent;
   let fixture: ComponentFixture<AgentVersionsDialogComponent>;
-  let mockAgentService: jasmine.SpyObj<AgentBuilderService>;
-  let mockToastService: jasmine.SpyObj<ToastService>;
-  let mockLoggerService: jasmine.SpyObj<LoggerService>;
-  let mockDialogRef: jasmine.SpyObj<MatDialogRef<AgentVersionsDialogComponent>>;
-  let mockDialog: jasmine.SpyObj<MatDialog>;
+  let mockAgentService: any;
+  let mockToastService: any;
+  let mockLoggerService: any;
+  let mockDialogRef: any;
+  let mockDialog: any;
 
   const mockAgent: AgentConfiguration = {
     id: 'agent-123',
@@ -66,17 +66,14 @@ describe('AgentVersionsDialogComponent', () => {
   };
 
   beforeEach(async () => {
-    mockAgentService = jasmine.createSpyObj('AgentBuilderService', [
-      'listVersions',
-      'rollbackToVersion',
-    ]);
-    mockToastService = jasmine.createSpyObj('ToastService', ['success', 'error', 'info']);
-    mockLoggerService = jasmine.createSpyObj('LoggerService', ['withContext']);
-    mockDialogRef = jasmine.createSpyObj('MatDialogRef', ['close']);
-    mockDialog = jasmine.createSpyObj('MatDialog', ['open']);
+    mockAgentService = { listVersions: jest.fn(), rollbackToVersion: jest.fn() };
+    mockToastService = { success: jest.fn(), error: jest.fn(), info: jest.fn() };
+    mockLoggerService = { withContext: jest.fn() };
+    mockDialogRef = { close: jest.fn() };
+    mockDialog = { open: jest.fn() };
 
-    const mockLogger = jasmine.createSpyObj('Logger', ['info', 'error']);
-    mockLoggerService.withContext.and.returnValue(mockLogger as any);
+    const mockLogger = { info: jest.fn(), error: jest.fn() };
+    mockLoggerService.withContext.mockReturnValue(mockLogger as any);
 
     await TestBed.configureTestingModule({
       imports: [AgentVersionsDialogComponent, NoopAnimationsModule],
@@ -99,7 +96,7 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should load versions on init', () => {
-    mockAgentService.listVersions.and.returnValue(of(mockVersionPage));
+    mockAgentService.listVersions.mockReturnValue(of(mockVersionPage));
 
     fixture.detectChanges(); // Triggers ngOnInit
 
@@ -109,7 +106,7 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should handle version loading error', () => {
-    mockAgentService.listVersions.and.returnValue(
+    mockAgentService.listVersions.mockReturnValue(
       throwError(() => new Error('API error'))
     );
 
@@ -133,10 +130,10 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should open comparison dialog with correct data', () => {
-    mockAgentService.listVersions.and.returnValue(of(mockVersionPage));
-    const mockDialogInstance = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
-    mockDialogInstance.afterClosed.and.returnValue(of(null));
-    mockDialog.open.and.returnValue(mockDialogInstance);
+    mockAgentService.listVersions.mockReturnValue(of(mockVersionPage));
+    const mockDialogInstance = { afterClosed: jest.fn() };
+    mockDialogInstance.afterClosed.mockReturnValue(of(null));
+    mockDialog.open.mockReturnValue(mockDialogInstance);
 
     fixture.detectChanges();
 
@@ -146,9 +143,9 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should show rollback confirmation dialog', () => {
-    const mockConfirmDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
-    mockConfirmDialogRef.afterClosed.and.returnValue(of(false)); // User cancels
-    mockDialog.open.and.returnValue(mockConfirmDialogRef);
+    const mockConfirmDialogRef = { afterClosed: jest.fn() };
+    mockConfirmDialogRef.afterClosed.mockReturnValue(of(false)); // User cancels
+    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
 
     component.rollbackToVersion(mockVersions[1]);
 
@@ -156,12 +153,12 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should perform rollback when confirmed', () => {
-    const mockConfirmDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
-    mockConfirmDialogRef.afterClosed.and.returnValue(of(true)); // User confirms
-    mockDialog.open.and.returnValue(mockConfirmDialogRef);
+    const mockConfirmDialogRef = { afterClosed: jest.fn() };
+    mockConfirmDialogRef.afterClosed.mockReturnValue(of(true)); // User confirms
+    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
 
     const updatedAgent = { ...mockAgent, version: 'v1' };
-    mockAgentService.rollbackToVersion.and.returnValue(of(updatedAgent));
+    mockAgentService.rollbackToVersion.mockReturnValue(of(updatedAgent));
 
     component.rollbackToVersion(mockVersions[1]);
 
@@ -178,11 +175,11 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should handle rollback error', () => {
-    const mockConfirmDialogRef = jasmine.createSpyObj('MatDialogRef', ['afterClosed']);
-    mockConfirmDialogRef.afterClosed.and.returnValue(of(true));
-    mockDialog.open.and.returnValue(mockConfirmDialogRef);
+    const mockConfirmDialogRef = { afterClosed: jest.fn() };
+    mockConfirmDialogRef.afterClosed.mockReturnValue(of(true));
+    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
 
-    mockAgentService.rollbackToVersion.and.returnValue(
+    mockAgentService.rollbackToVersion.mockReturnValue(
       throwError(() => new Error('Rollback failed'))
     );
 
@@ -200,7 +197,7 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should display current version badge correctly', () => {
-    mockAgentService.listVersions.and.returnValue(of(mockVersionPage));
+    mockAgentService.listVersions.mockReturnValue(of(mockVersionPage));
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement;
@@ -211,7 +208,7 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should disable rollback button for current version', () => {
-    mockAgentService.listVersions.and.returnValue(of(mockVersionPage));
+    mockAgentService.listVersions.mockReturnValue(of(mockVersionPage));
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement;

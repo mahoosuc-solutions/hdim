@@ -8,14 +8,14 @@ import { LocalMeasureResult, QualityMeasureResult } from '../models/quality-resu
 describe('EvaluationService', () => {
   let service: EvaluationService;
   let httpMock: HttpTestingController;
-  let auditServiceMock: jasmine.SpyObj<AuditService>;
+  let auditServiceMock: any;
 
   beforeEach(() => {
-    auditServiceMock = jasmine.createSpyObj<AuditService>('AuditService', [
-      'logEvaluation',
-      'logBatchEvaluationStart',
-      'logBatchEvaluationComplete',
-    ]);
+    auditServiceMock = {
+      logEvaluation: jest.fn(),
+      logBatchEvaluationStart: jest.fn(),
+      logBatchEvaluationComplete: jest.fn(),
+    } as any;
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],

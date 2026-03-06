@@ -205,7 +205,7 @@ describe('ConfirmDialogComponent (TDD)', () => {
         confirmColor: 'warn',
         icon: 'delete',
         iconColor: '#f44336',
-      });
+      };
       fixture.detectChanges();
 
       const title = fixture.debugElement.query(By.css('[mat-dialog-title]'));
@@ -222,7 +222,7 @@ describe('ConfirmDialogComponent (TDD)', () => {
       component.data = {
         title: 'Save Changes?',
         message: 'Do you want to save your changes?',
-      });
+      };
       fixture.detectChanges();
 
       const title = fixture.debugElement.query(By.css('[mat-dialog-title]'));
@@ -244,7 +244,7 @@ describe('ConfirmDialogComponent (TDD)', () => {
         confirmColor: 'accent',
         icon: 'warning',
         iconColor: '#ffa726',
-      });
+      };
       fixture.detectChanges();
 
       const title = fixture.debugElement.query(By.css('[mat-dialog-title]'));

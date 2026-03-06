@@ -4,6 +4,8 @@ import { ScheduledEvaluationService } from './scheduled-evaluation.service';
 import { AuthService } from './auth.service';
 import { EvaluationService } from './evaluation.service';
 import { AuditService } from './audit.service';
+import { LoggerService } from './logger.service';
+import { createMockLoggerService } from '../../testing/mocks';
 import { ScheduledEvaluation, ScheduleFrequency } from '../models/scheduled-evaluation.model';
 
 describe('ScheduledEvaluationService', () => {
@@ -42,6 +44,7 @@ describe('ScheduledEvaluationService', () => {
       imports: [HttpClientTestingModule],
       providers: [
         ScheduledEvaluationService,
+        { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: AuthService, useValue: authServiceMock },
         { provide: EvaluationService, useValue: evaluationServiceMock },
         { provide: AuditService, useValue: auditServiceMock },
@@ -66,7 +69,7 @@ describe('ScheduledEvaluationService', () => {
       service.getSchedules().subscribe((schedules) => {
         expect(schedules).toEqual([]);
         done();
-      };
+      });
     });
   });
 
@@ -84,7 +87,7 @@ describe('ScheduledEvaluationService', () => {
           expect(schedule.createdBy).toBe('testuser');
           expect(schedule.nextRun).toBeDefined();
           done();
-        };
+        });
     });
 
     it('should create a weekly schedule with custom options', (done) => {
@@ -102,7 +105,7 @@ describe('ScheduledEvaluationService', () => {
           expect(schedule.dayOfWeek).toBe('monday');
           expect(schedule.measureIds).toEqual(['COL', 'BCS']);
           done();
-        };
+        });
     });
 
     it('should persist schedule to localStorage', fakeAsync(() => {
@@ -347,6 +350,7 @@ describe('ScheduledEvaluationService', () => {
 
       // Create new service instance
       const newService = new ScheduledEvaluationService(
+        TestBed.inject(LoggerService),
         TestBed.inject(HttpClientTestingModule) as any,
         TestBed.inject(AuthService),
         TestBed.inject(EvaluationService),

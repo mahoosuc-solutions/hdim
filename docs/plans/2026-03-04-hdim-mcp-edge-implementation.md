@@ -1,5 +1,7 @@
 # HDIM MCP Edge — Sidecar Implementation Plan
 
+> **Status:** COMPLETE
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Build two isolated MCP edge sidecars (platform + devops) with stdio bridges for Claude Desktop integration, using the west-bethel-motel pattern with CISO-required security boundaries.

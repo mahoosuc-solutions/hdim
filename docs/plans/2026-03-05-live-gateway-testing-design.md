@@ -1,5 +1,7 @@
 # Live Gateway Integration Testing — Design Document
 
+> **Status:** COMPLETE
+
 **Date:** 2026-03-05
 **Status:** Approved
 **Author:** Claude Code + Aaron

@@ -166,6 +166,20 @@ public class QualityMeasureController {
         return ResponseEntity.ok(reportService.getPopulationQualityReport(tenantId, reportYear));
     }
 
+    @Operation(
+        summary = "Quality measure service health check",
+        description = """
+            Returns the current health status of the quality measure service.
+
+            Use for monitoring, load balancer health probes, and operational readiness verification.
+            Returns service name, status, and current timestamp.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Service is healthy and operational"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/_health", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> healthCheck() {
@@ -183,14 +197,34 @@ public class QualityMeasureController {
      * @param createdBy User who triggered the calculation
      * @return Job ID for tracking progress
      */
+    @Operation(
+        summary = "Start batch population quality measure calculation",
+        description = """
+            Initiates an asynchronous batch calculation of HEDIS/CMS quality measures across the
+            entire patient population for a tenant.
+
+            Evaluates all configured measures (or a specified subset) for every patient
+            retrieved from the FHIR server. Returns a job ID for tracking progress via
+            the job status endpoint. Supports configurable concurrency for large populations.
+
+            Use for HEDIS annual reporting, Stars rating preparation, and ACO quality submissions.
+            Requires ADMIN or SUPER_ADMIN role due to high computational cost.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "202", description = "Batch calculation job accepted and started"),
+        @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN or SUPER_ADMIN role"),
+        @ApiResponse(responseCode = "500", description = "Failed to start population calculation")
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/population/calculate", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> startPopulationCalculation(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam(value = "fhirServerUrl", required = false, defaultValue = "http://fhir-service-mock:8080/fhir") String fhirServerUrl,
-            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy,
-            @RequestBody(required = false) Map<String, Object> request
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "FHIR server base URL for patient retrieval", example = "http://fhir-service-mock:8080/fhir") @RequestParam(value = "fhirServerUrl", required = false, defaultValue = "http://fhir-service-mock:8080/fhir") String fhirServerUrl,
+            @Parameter(description = "User who triggered the calculation", example = "admin.user") @RequestParam(value = "createdBy", defaultValue = "system") String createdBy,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Optional configuration: measureIds (list of specific measures) and maxConcurrency (parallel threads)", required = false) @RequestBody(required = false) Map<String, Object> request
     ) {
         log.info("POST /quality-measure/population/calculate - Starting batch calculation for tenant: {}", tenantId);
 
@@ -234,11 +268,31 @@ public class QualityMeasureController {
      * @param jobId Job ID
      * @return Job status details including progress, counts, and errors
      */
+    @Operation(
+        summary = "Get batch calculation job status",
+        description = """
+            Retrieves the current status and progress of a population-level quality measure
+            calculation job.
+
+            Returns detailed metrics including total patients, completed calculations,
+            success/failure counts, progress percentage, duration, estimated time remaining,
+            and any error messages. Enforces tenant isolation - jobs are only visible to
+            the tenant that created them.
+
+            Use for monitoring long-running HEDIS batch evaluations and reporting progress to users.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Job status retrieved successfully"),
+        @ApiResponse(responseCode = "404", description = "Job not found or belongs to a different tenant"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getJobStatus(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("jobId") String jobId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Batch calculation job ID", required = true, example = "job-550e8400-e29b-41d4") @PathVariable("jobId") String jobId
     ) {
         log.info("GET /quality-measure/population/jobs/{} - tenant: {}", jobId, tenantId);
 
@@ -304,10 +358,27 @@ public class QualityMeasureController {
      * @param tenantId Tenant ID
      * @return List of all jobs (active and completed) for the tenant
      */
+    @Operation(
+        summary = "List all batch calculation jobs",
+        description = """
+            Retrieves all population-level quality measure calculation jobs for a tenant,
+            including both active (running) and completed jobs.
+
+            Returns summary information for each job including status, progress, patient/measure
+            counts, and timing. Filtered by tenant for multi-tenant isolation.
+
+            Use for batch job management dashboards and operational monitoring of HEDIS evaluations.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Job list retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Map<String, Object>>> getAllJobs(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId
     ) {
         log.info("GET /quality-measure/population/jobs - tenant: {}", tenantId);
 
@@ -344,12 +415,32 @@ public class QualityMeasureController {
      * @param jobId Job ID to cancel
      * @return Success/failure response
      */
+    @Operation(
+        summary = "Cancel a running batch calculation job",
+        description = """
+            Cancels an in-progress population-level quality measure calculation job.
+
+            Only jobs in CALCULATING status can be cancelled. Already completed or failed jobs
+            cannot be cancelled. Enforces tenant isolation - jobs can only be cancelled by
+            the tenant that created them. Requires ADMIN or SUPER_ADMIN role.
+
+            Use for stopping long-running HEDIS batch evaluations that are no longer needed
+            or were started with incorrect parameters.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Job cancelled successfully"),
+        @ApiResponse(responseCode = "400", description = "Job cannot be cancelled - not in CALCULATING status"),
+        @ApiResponse(responseCode = "404", description = "Job not found or belongs to a different tenant"),
+        @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN or SUPER_ADMIN role")
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.UPDATE, includeRequestPayload = false, includeResponsePayload = false)
     @PutMapping(value = "/population/jobs/{jobId}/cancel", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> cancelJob(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("jobId") String jobId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Batch calculation job ID to cancel", required = true, example = "job-550e8400-e29b-41d4") @PathVariable("jobId") String jobId
     ) {
         log.info("POST /quality-measure/population/jobs/{}/cancel - tenant: {}", jobId, tenantId);
 
@@ -391,11 +482,32 @@ public class QualityMeasureController {
     /**
      * Export batch calculation results to CSV
      */
+    @Operation(
+        summary = "Export batch calculation results to CSV",
+        description = """
+            Exports the results of a completed population-level quality measure calculation
+            job as a CSV file download.
+
+            Only completed jobs can be exported. The CSV includes patient ID, measure ID,
+            numerator/denominator compliance, and calculated score for each evaluation.
+            Enforces tenant isolation and includes HIPAA-compliant cache control headers.
+
+            Use for HEDIS submission file generation, quality reporting to CMS/NCQA, and
+            data analysis in external tools.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "CSV file generated and returned as download"),
+        @ApiResponse(responseCode = "400", description = "Job is not in COMPLETED status - cannot export"),
+        @ApiResponse(responseCode = "403", description = "Access denied - tenant isolation violation"),
+        @ApiResponse(responseCode = "404", description = "Job not found")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/population/jobs/{jobId}/export/csv", produces = "text/csv")
     public ResponseEntity<String> exportJobResultsToCsv(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("jobId") String jobId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Batch calculation job ID to export", required = true, example = "job-550e8400-e29b-41d4") @PathVariable("jobId") String jobId
     ) {
         log.info("GET /quality-measure/population/jobs/{}/export/csv - tenant: {}", jobId, tenantId);
 
@@ -448,14 +560,32 @@ public class QualityMeasureController {
     /**
      * Save patient quality report
      */
+    @Operation(
+        summary = "Save patient quality report",
+        description = """
+            Persists a patient-level quality measure report for future retrieval and export.
+
+            Captures a snapshot of the patient's current quality measure results including
+            all evaluated HEDIS/CMS measures, compliance status, and scores. Saved reports
+            can be retrieved, exported to CSV/Excel, or shared with clinical teams.
+
+            Use for quality review documentation, care coordination, and compliance evidence.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Patient report saved successfully"),
+        @ApiResponse(responseCode = "404", description = "Patient not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - requires EVALUATOR, ADMIN, or SUPER_ADMIN role")
+    })
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/report/patient/save", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> savePatientReport(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
-            @RequestParam("name") @NotBlank(message = "Report name is required") String reportName,
-            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Patient ID (UUID)", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @RequestParam("patient") @NotNull(message = "Patient ID is required") UUID patientId,
+            @Parameter(description = "Report name for identification", required = true, example = "Q1 2026 HEDIS Review") @RequestParam("name") @NotBlank(message = "Report name is required") String reportName,
+            @Parameter(description = "User creating the report", example = "dr.smith") @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
         log.info("POST /quality-measure/report/patient/save - patient: {}, name: {}", patientId, reportName);
         SavedReportEntity savedReport = reportService.savePatientReport(tenantId, patientId, reportName, createdBy);
@@ -465,14 +595,32 @@ public class QualityMeasureController {
     /**
      * Save population quality report
      */
+    @Operation(
+        summary = "Save population quality report",
+        description = """
+            Persists a population-level quality measure report for a specific reporting year.
+
+            Captures aggregate quality metrics across the entire patient population including
+            measure-level compliance rates, population denominators, and overall quality scores.
+            Saved reports support HEDIS annual submissions and value-based care contract reporting.
+
+            Use for ACO quality submissions, Stars rating evidence, and year-over-year trend analysis.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Population report saved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid year parameter"),
+        @ApiResponse(responseCode = "403", description = "Access denied - requires EVALUATOR, ADMIN, or SUPER_ADMIN role")
+    })
     @PreAuthorize("hasAnyRole('EVALUATOR', 'ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.CREATE, includeRequestPayload = false, includeResponsePayload = false)
     @PostMapping(value = "/report/population/save", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> savePopulationReport(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam("year") Integer year,
-            @RequestParam("name") @NotBlank(message = "Report name is required") String reportName,
-            @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Reporting year (e.g., HEDIS measurement year)", required = true, example = "2025") @RequestParam("year") Integer year,
+            @Parameter(description = "Report name for identification", required = true, example = "MY2025 HEDIS Population Report") @RequestParam("name") @NotBlank(message = "Report name is required") String reportName,
+            @Parameter(description = "User creating the report", example = "admin.user") @RequestParam(value = "createdBy", defaultValue = "system") String createdBy
     ) {
         // Validate year is positive (but allow edge cases for testing)
         if (year == null || year <= 0) {
@@ -486,11 +634,28 @@ public class QualityMeasureController {
     /**
      * Get all saved reports for a tenant (optionally filtered by type)
      */
+    @Operation(
+        summary = "List saved quality reports",
+        description = """
+            Retrieves all saved quality reports for a tenant, optionally filtered by report type.
+
+            Returns both patient-level and population-level saved reports. Use the type
+            parameter to filter by 'PATIENT' or 'POPULATION' report types. Reports are
+            scoped to the authenticated tenant for multi-tenant isolation.
+
+            Use for report management, audit trail review, and quality reporting history.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Saved reports retrieved successfully"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<SavedReportEntity>> getSavedReports(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @RequestParam(value = "type", required = false) String reportType
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Filter by report type (PATIENT or POPULATION)", example = "PATIENT") @RequestParam(value = "type", required = false) String reportType
     ) {
         log.info("GET /quality-measure/reports - tenant: {}, type: {}", tenantId, reportType);
         List<SavedReportEntity> reports;
@@ -505,11 +670,30 @@ public class QualityMeasureController {
     /**
      * Get a saved report by ID
      */
+    @Operation(
+        summary = "Get saved quality report by ID",
+        description = """
+            Retrieves a specific saved quality report by its unique identifier.
+
+            Returns the full report including all measure results, scores, and metadata.
+            The report ID must be a valid UUID format. Enforces tenant isolation - reports
+            are only accessible to the tenant that created them.
+
+            Use for viewing previously saved HEDIS quality reports and compliance documentation.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Saved report retrieved successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid report ID format - must be UUID"),
+        @ApiResponse(responseCode = "404", description = "Report not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SavedReportEntity> getSavedReport(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("reportId") String reportId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Saved report ID (UUID)", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @PathVariable("reportId") String reportId
     ) {
         log.info("GET /quality-measure/reports/{} - tenant: {}", reportId, tenantId);
         try {
@@ -529,12 +713,31 @@ public class QualityMeasureController {
     /**
      * Delete a saved report
      */
+    @Operation(
+        summary = "Delete a saved quality report",
+        description = """
+            Permanently deletes a saved quality report by its unique identifier.
+
+            This action is irreversible. The report ID must be a valid UUID format.
+            Enforces tenant isolation - reports can only be deleted by the tenant that
+            created them. Requires ADMIN or SUPER_ADMIN role.
+
+            Use for report lifecycle management and data retention compliance.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Report deleted successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid report ID format - must be UUID"),
+        @ApiResponse(responseCode = "404", description = "Report not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - requires ADMIN or SUPER_ADMIN role")
+    })
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     @Audited(action = AuditAction.DELETE, includeRequestPayload = false, includeResponsePayload = false)
     @DeleteMapping(value = "/reports/{reportId}")
     public ResponseEntity<Void> deleteSavedReport(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("reportId") String reportId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Saved report ID to delete (UUID)", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @PathVariable("reportId") String reportId
     ) {
         log.info("DELETE /quality-measure/reports/{} - tenant: {}", reportId, tenantId);
         try {
@@ -556,11 +759,32 @@ public class QualityMeasureController {
     /**
      * Export report to CSV
      */
+    @Operation(
+        summary = "Export saved report to CSV",
+        description = """
+            Exports a saved quality report as a CSV file download.
+
+            Generates a comma-separated values file containing all measure results from
+            the saved report. The filename is derived from the report name with special
+            characters sanitized. Enforces tenant isolation.
+
+            Use for importing quality data into spreadsheets, HEDIS submission tools,
+            and external analytics platforms.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "CSV file generated and returned as download"),
+        @ApiResponse(responseCode = "400", description = "Invalid report ID format - must be UUID"),
+        @ApiResponse(responseCode = "404", description = "Report not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions"),
+        @ApiResponse(responseCode = "500", description = "Failed to generate CSV export")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportReportToCsv(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("reportId") String reportId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Saved report ID to export (UUID)", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @PathVariable("reportId") String reportId
     ) {
         log.info("GET /quality-measure/reports/{}/export/csv - tenant: {}", reportId, tenantId);
         try {
@@ -593,11 +817,32 @@ public class QualityMeasureController {
     /**
      * Export report to Excel
      */
+    @Operation(
+        summary = "Export saved report to Excel",
+        description = """
+            Exports a saved quality report as an Excel (.xlsx) file download.
+
+            Generates a formatted Excel workbook containing all measure results from
+            the saved report. The filename is derived from the report name with special
+            characters sanitized. Enforces tenant isolation.
+
+            Use for quality review presentations, HEDIS audit evidence, and clinical
+            committee reporting where formatted spreadsheets are preferred.
+            """,
+        security = @SecurityRequirement(name = "Bearer Authentication")
+    )
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Excel file generated and returned as download"),
+        @ApiResponse(responseCode = "400", description = "Invalid report ID format - must be UUID"),
+        @ApiResponse(responseCode = "404", description = "Report not found"),
+        @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions"),
+        @ApiResponse(responseCode = "500", description = "Failed to generate Excel export")
+    })
     @PreAuthorize("hasPermission(\'MEASURE_READ\')") @Audited(action = AuditAction.READ, includeRequestPayload = false, includeResponsePayload = false)
     @GetMapping(value = "/reports/{reportId}/export/excel")
     public ResponseEntity<byte[]> exportReportToExcel(
-            @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
-            @PathVariable("reportId") String reportId
+            @Parameter(description = "Tenant ID", required = true) @RequestHeader("X-Tenant-ID") @NotBlank(message = "Tenant ID is required") String tenantId,
+            @Parameter(description = "Saved report ID to export (UUID)", required = true, example = "550e8400-e29b-41d4-a716-446655440000") @PathVariable("reportId") String reportId
     ) {
         log.info("GET /quality-measure/reports/{}/export/excel - tenant: {}", reportId, tenantId);
         try {

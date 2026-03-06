@@ -10,5 +10,6 @@ module.exports = {
   ...require('./lib/audit-log'),
   ...require('./lib/param-validator'),
   ...require('./lib/metrics'),
-  ...require('./lib/circuit-breaker')
+  ...require('./lib/circuit-breaker'),
+  ...require('./lib/tracing')
 };

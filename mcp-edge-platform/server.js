@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('node:path');
 const cors = require('cors');
 const helmet = require('helmet');
-const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger, createMetrics, createMetricsRouter, wrapClientWithBreaker } = require('hdim-mcp-edge-common');
+const { createHealthRouter, createMcpRouter, createRateLimiter, createCorsOptions, createAuditLogger, createMetrics, createMetricsRouter, wrapClientWithBreaker, traceContextMiddleware } = require('hdim-mcp-edge-common');
 const { createPlatformClient } = require('./lib/platform-client');
 
 function loadTools(metrics) {
@@ -28,6 +28,7 @@ function createApp() {
   app.use(helmet());
   app.use(cors(createCorsOptions()));
   app.use(express.json({ limit: '1mb' }));
+  app.use(traceContextMiddleware());
   app.use(createRateLimiter({ metrics }));
 
   const tools = loadTools(metrics);

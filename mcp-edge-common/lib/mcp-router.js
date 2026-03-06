@@ -3,7 +3,7 @@ const { jsonRpcResult, jsonRpcError } = require('./jsonrpc');
 const { extractOperatorRole, authorizeToolCall } = require('./auth');
 const { isDemoMode, loadFixture } = require('./demo-mode');
 const { validateToolParams } = require('./param-validator');
-const { scrubSensitive } = require('./audit-log');
+const { scrubSensitive, withTraceContext } = require('./audit-log');
 
 const MCP_PROTOCOL_VERSION = '2025-11-25';
 
@@ -55,6 +55,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
   async function handleToolsCall(id, params, req) {
     const start = Date.now();
     const { name, arguments: args } = params || {};
+    const reqLogger = withTraceContext(logger, req?.traceContext);
     const currentToolMap = getToolMap();
     const tool = currentToolMap.get(name);
     if (!tool) {
@@ -69,7 +70,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       toolName: name, role, enforce: enforceRoleAuth, customPolicies: currentPolicies
     });
     if (!authResult.allowed) {
-      if (logger) logger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');
+      if (reqLogger) reqLogger.warn({ tool: name, role, reason: authResult.reason, duration_ms: Date.now() - start }, 'tool_forbidden');
       if (phiAuditLogger) phiAuditLogger.logAuthDenied({ tool: name, role });
       if (metrics) metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'forbidden' });
       return jsonRpcError(id, -32603, `Forbidden: ${authResult.reason}`, {
@@ -91,7 +92,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       const fixture = loadFixture(currentFixturesDir, name);
       if (fixture) {
         const duration_ms = Date.now() - start;
-        if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: true }, 'tool_call');
+        if (reqLogger) reqLogger.info({ tool: name, role, success: true, duration_ms, demo: true }, 'tool_call');
         if (phiAuditLogger) {
           const ctx = extractPhiContext(tool, args);
           phiAuditLogger.logToolAccess({
@@ -119,7 +120,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
       }
       const result = await tool.handler(args || {}, handlerContext);
       const duration_ms = Date.now() - start;
-      if (logger) logger.info({ tool: name, role, success: true, duration_ms, demo: isDemoMode() }, 'tool_call');
+      if (reqLogger) reqLogger.info({ tool: name, role, success: true, duration_ms, demo: isDemoMode() }, 'tool_call');
       if (metrics) {
         metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'success' });
         metrics.toolDurationHistogram.observe({ tool: name }, duration_ms / 1000);
@@ -135,7 +136,7 @@ function createMcpRouter({ tools, serverName, serverVersion, enforceRoleAuth = t
     } catch (err) {
       const duration_ms = Date.now() - start;
       const safeMessage = scrubSensitive(err?.message || String(err));
-      if (logger) logger.error({ tool: name, role, error_code: -32603, duration_ms, demo: isDemoMode() }, 'tool_error');
+      if (reqLogger) reqLogger.error({ tool: name, role, error_code: -32603, duration_ms, demo: isDemoMode() }, 'tool_error');
       if (metrics) {
         metrics.toolCallCounter.inc({ tool: name, role: role || 'none', status: 'error' });
         metrics.toolDurationHistogram.observe({ tool: name }, duration_ms / 1000);

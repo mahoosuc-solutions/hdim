@@ -458,7 +458,7 @@ describe('PatientsComponent (TDD)', () => {
           { system: 'phone', value: '555-1234', use: 'home' },
           { system: 'email', value: 'patient@example.com', use: 'home' },
         ],
-      };
+      });
       component.patientDetails = patientWithContact;
 
       expect(component.patientDetails?.telecom).toBeDefined();
@@ -477,7 +477,7 @@ describe('PatientsComponent (TDD)', () => {
             postalCode: '62701',
           },
         ],
-      };
+      });
       component.patientDetails = patientWithAddress;
 
       expect(component.patientDetails?.address).toBeDefined();
@@ -519,11 +519,11 @@ describe('PatientsComponent (TDD)', () => {
       const oldEvaluation = {
         ...EvaluationFactory.createCompliantResult(),
         calculationDate: '2024-01-01T00:00:00Z',
-      };
+      });
       const newEvaluation = {
         ...EvaluationFactory.createCompliantResult(),
         calculationDate: '2024-12-01T00:00:00Z',
-      };
+      });
       component.patientEvaluations = [oldEvaluation, newEvaluation].sort((a, b) => {
         const dateA = new Date(a.calculationDate).getTime();
         const dateB = new Date(b.calculationDate).getTime();
@@ -926,7 +926,7 @@ describe('PatientsComponent (TDD)', () => {
         city: 'Springfield',
         state: 'IL',
         postalCode: '62701',
-      };
+      });
       const formatted = component.formatAddress(address);
 
       expect(formatted).toContain('123 Main St');
@@ -954,7 +954,7 @@ describe('PatientsComponent (TDD)', () => {
         ...EvaluationFactory.createNonCompliantResult(),
         denominatorEligible: true,
         numeratorCompliant: false,
-      };
+      });
 
       expect(component.getOutcomeText(nonCompliant)).toBe('Non-Compliant');
       expect(component.getOutcomeBadgeClass(nonCompliant)).toBe('badge-warning');
@@ -965,7 +965,7 @@ describe('PatientsComponent (TDD)', () => {
         ...EvaluationFactory.createNonCompliantResult(),
         denominatorEligible: false,
         numeratorCompliant: false,
-      };
+      });
 
       expect(component.getOutcomeText(notEligible)).toBe('Not Eligible');
       expect(component.getOutcomeBadgeClass(notEligible)).toBe('badge-info');

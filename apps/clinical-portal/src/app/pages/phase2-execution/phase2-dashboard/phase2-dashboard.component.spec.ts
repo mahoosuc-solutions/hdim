@@ -17,8 +17,8 @@ import { LoggerService } from '../../../services/logger.service';
 describe('Phase2DashboardComponent - Financial ROI View', () => {
   let component: Phase2DashboardComponent;
   let fixture: ComponentFixture<Phase2DashboardComponent>;
-  let mockExecutionService: jasmine.SpyObj<Phase2ExecutionService>;
-  let mockLoggerService: jasmine.SpyObj<LoggerService>;
+  let mockExecutionService: any;
+  let mockLoggerService: any;
 
   const mockFinancialDashboard = {
     totalBonusCaptured: 150000,
@@ -56,20 +56,25 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
   ];
 
   beforeEach(async () => {
-    mockExecutionService = jasmine.createSpyObj('Phase2ExecutionService', [
-      'getFinancialDashboard',
-      'getMeasureROI',
-      'getCaseStudies',
-      'publishCaseStudy',
-    ]);
+    mockExecutionService = {
+      getFinancialDashboard: jest.fn().mockReturnValue(of({})),
+      getMeasureROI: jest.fn().mockReturnValue(of([])),
+      getCaseStudies: jest.fn().mockReturnValue(of([])),
+      publishCaseStudy: jest.fn().mockReturnValue(of({})),
+    };
 
-    mockLoggerService = jasmine.createSpyObj('LoggerService', ['withContext']);
-    mockLoggerService.withContext.and.returnValue({
-      info: jasmine.createSpy('info'),
-      error: jasmine.createSpy('error'),
-      warn: jasmine.createSpy('warn'),
-      debug: jasmine.createSpy('debug'),
-    });
+    mockLoggerService = {
+      withContext: jest.fn().mockReturnValue({
+        info: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        debug: jest.fn(),
+      }),
+      info: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
 
     await TestBed.configureTestingModule({
       imports: [
@@ -96,7 +101,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
 
   describe('Financial Dashboard Metrics', () => {
     it('should display financial dashboard metrics', (done) => {
-      mockExecutionService.getFinancialDashboard.and.returnValue(
+      mockExecutionService.getFinancialDashboard.mockReturnValue(
         of(mockFinancialDashboard)
       );
 
@@ -113,7 +118,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
 
     it('should handle financial dashboard loading error gracefully', (done) => {
       const error = new Error('Failed to load financial data');
-      mockExecutionService.getFinancialDashboard.and.returnValue(
+      mockExecutionService.getFinancialDashboard.mockReturnValue(
         throwError(() => error)
       );
 
@@ -135,7 +140,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
 
   describe('Measure-Specific ROI Breakdown', () => {
     it('should display measure-specific ROI breakdown', (done) => {
-      mockExecutionService.getMeasureROI.and.returnValue(of(mockMeasureROI));
+      mockExecutionService.getMeasureROI.mockReturnValue(of(mockMeasureROI));
 
       component.ngOnInit();
 
@@ -150,7 +155,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
 
     it('should handle measure ROI loading error gracefully', (done) => {
       const error = new Error('Failed to load measure ROI');
-      mockExecutionService.getMeasureROI.and.returnValue(
+      mockExecutionService.getMeasureROI.mockReturnValue(
         throwError(() => error)
       );
 
@@ -187,7 +192,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
         },
       ];
 
-      mockExecutionService.getMeasureROI.and.returnValue(
+      mockExecutionService.getMeasureROI.mockReturnValue(
         of(unsortedMeasures)
       );
 
@@ -252,10 +257,10 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
 
   describe('Lifecycle Management', () => {
     it('should load financial data on init', (done) => {
-      mockExecutionService.getFinancialDashboard.and.returnValue(
+      mockExecutionService.getFinancialDashboard.mockReturnValue(
         of(mockFinancialDashboard)
       );
-      mockExecutionService.getMeasureROI.and.returnValue(of(mockMeasureROI));
+      mockExecutionService.getMeasureROI.mockReturnValue(of(mockMeasureROI));
 
       component.ngOnInit();
 
@@ -277,10 +282,10 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
     });
 
     it('should use takeUntil to manage subscriptions', (done) => {
-      mockExecutionService.getFinancialDashboard.and.returnValue(
+      mockExecutionService.getFinancialDashboard.mockReturnValue(
         of(mockFinancialDashboard)
       );
-      mockExecutionService.getMeasureROI.and.returnValue(of(mockMeasureROI));
+      mockExecutionService.getMeasureROI.mockReturnValue(of(mockMeasureROI));
 
       component.ngOnInit();
 
@@ -299,10 +304,10 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
     });
 
     it('should display financial metrics cards when data is loaded', (done) => {
-      mockExecutionService.getFinancialDashboard.and.returnValue(
+      mockExecutionService.getFinancialDashboard.mockReturnValue(
         of(mockFinancialDashboard)
       );
-      mockExecutionService.getMeasureROI.and.returnValue(of(mockMeasureROI));
+      mockExecutionService.getMeasureROI.mockReturnValue(of(mockMeasureROI));
 
       component.ngOnInit();
       fixture.detectChanges();
@@ -323,7 +328,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
         { id: 'cs2', title: 'Success Story 2', published: true },
       ];
 
-      mockExecutionService.getCaseStudies.and.returnValue(
+      mockExecutionService.getCaseStudies.mockReturnValue(
         of(caseStudies)
       );
 
@@ -335,7 +340,7 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
 
     it('should publish a case study', (done) => {
       const caseStudyId = 'cs1';
-      mockExecutionService.publishCaseStudy.and.returnValue(
+      mockExecutionService.publishCaseStudy.mockReturnValue(
         of({ id: caseStudyId, published: true })
       );
 

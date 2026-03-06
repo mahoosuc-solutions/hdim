@@ -17,7 +17,6 @@ describe('TenantInterceptor', () => {
       providers: [
         provideHttpClient(withInterceptors([tenantInterceptor])),
         provideHttpClientTesting(),
-        HttpTestingController,
         {
           provide: AuthService,
           useValue: {
@@ -47,7 +46,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should add X-Tenant-ID header to Quality Measure Service requests', (done) => {
       const url = `${API_CONFIG.QUALITY_MEASURE_URL}/quality-measure/calculate`;
@@ -60,7 +59,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should add X-Tenant-ID header to FHIR Server requests', (done) => {
       const url = `${API_CONFIG.FHIR_SERVER_URL}/Patient`;
@@ -73,7 +72,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should NOT add X-Tenant-ID header to external URLs', (done) => {
       const url = 'https://external-api.example.com/data';
@@ -83,7 +82,7 @@ describe('TenantInterceptor', () => {
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has(HTTP_HEADERS.TENANT_ID)).toBe(false);
       req.flush({});
-    };
+    });
   });
 
   describe('Multiple Requests', () => {
@@ -109,7 +108,7 @@ describe('TenantInterceptor', () => {
         );
         req.flush({});
       });
-    };
+    });
   });
 
   describe('HTTP Methods', () => {
@@ -125,7 +124,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should add tenant header to PUT requests', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries/lib-1`;
@@ -139,7 +138,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should add tenant header to DELETE requests', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries/lib-1`;
@@ -152,7 +151,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush(null);
-    };
+    });
   });
 
   describe('Edge Cases', () => {
@@ -166,7 +165,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should handle URLs with fragments', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries#section`;
@@ -178,7 +177,7 @@ describe('TenantInterceptor', () => {
         API_CONFIG.DEFAULT_TENANT_ID
       );
       req.flush({});
-    };
+    });
 
     it('should not interfere with existing headers', (done) => {
       const url = `${API_CONFIG.CQL_ENGINE_URL}/api/v1/cql/libraries`;
@@ -192,6 +191,6 @@ describe('TenantInterceptor', () => {
       );
       expect(req.request.headers.get('X-Custom-Header')).toBe('CustomValue');
       req.flush({});
-    };
+    });
   });
 });

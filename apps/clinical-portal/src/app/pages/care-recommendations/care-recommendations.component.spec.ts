@@ -355,49 +355,49 @@ describe('CareRecommendationsComponent', () => {
       component.recommendations$.subscribe((recommendations) => {
         expect(recommendations).toEqual(mockRecommendations);
         done();
-      };
+      });
     });
 
     it('should select stats from store', (done) => {
       component.stats$.subscribe((stats) => {
         expect(stats).toEqual(mockStats);
         done();
-      };
+      });
     });
 
     it('should select loading state from store', (done) => {
       component.loading$.subscribe((loading) => {
         expect(loading).toBe(false);
         done();
-      };
+      });
     });
 
     it('should select selectedIds from store', (done) => {
       component.selectedIds$.subscribe((ids) => {
         expect(ids).toEqual([]);
         done();
-      };
+      });
     });
 
     it('should select isAllSelected from store', (done) => {
       component.isAllSelected$.subscribe((isAllSelected) => {
         expect(isAllSelected).toBe(false);
         done();
-      };
+      });
     });
 
     it('should select viewMode from store', (done) => {
       component.viewMode$.subscribe((viewMode) => {
         expect(viewMode).toBe('list');
         done();
-      };
+      });
     });
 
     it('should select error from store', (done) => {
       component.error$.subscribe((error) => {
         expect(error).toBeNull();
         done();
-      };
+      });
     });
   });
 
@@ -768,7 +768,7 @@ describe('CareRecommendationsComponent', () => {
         pageIndex: 1,
         pageSize: 25,
         length: 100,
-      };
+      });
 
       component.onPageChange(pageEvent);
 
@@ -785,7 +785,7 @@ describe('CareRecommendationsComponent', () => {
       const sort: Sort = {
         active: 'urgency',
         direction: 'asc',
-      };
+      });
 
       component.onSortChange(sort);
 
@@ -804,7 +804,7 @@ describe('CareRecommendationsComponent', () => {
       const sort: Sort = {
         active: 'urgency',
         direction: '',
-      };
+      });
 
       component.onSortChange(sort);
 

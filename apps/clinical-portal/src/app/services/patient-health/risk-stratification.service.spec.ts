@@ -132,7 +132,7 @@ describe('RiskStratificationService', () => {
         expect(result.predictions).toBeDefined();
         expect(result.categories).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should return cached result on second call', (done) => {
@@ -160,7 +160,7 @@ describe('RiskStratificationService', () => {
         expect(result).toBeDefined();
         expect(result.overallRisk).toBe('low');
         done();
-      };
+      });
     });
 
     it('should include predictions in risk stratification', (done) => {
@@ -171,7 +171,7 @@ describe('RiskStratificationService', () => {
         expect(result.predictions.edVisitRisk30Day).toBeDefined();
         expect(result.predictions.readmissionRisk).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should include category-specific risks', (done) => {
@@ -181,7 +181,7 @@ describe('RiskStratificationService', () => {
         expect(result.categories.cardiovascular).toBeDefined();
         expect(result.categories.mentalHealth).toBeDefined();
         done();
-      };
+      });
     });
   });
 
@@ -197,7 +197,7 @@ describe('RiskStratificationService', () => {
         expect(result.components.sdohRisk).toBeDefined();
         expect(result.components.mentalHealthRisk).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should include weight information in result', (done) => {
@@ -207,7 +207,7 @@ describe('RiskStratificationService', () => {
         expect(result.weights.sdohRisk).toBe(0.3);
         expect(result.weights.mentalHealthRisk).toBe(0.3);
         done();
-      };
+      });
     });
 
     it('should include detailed breakdown in result', (done) => {
@@ -218,7 +218,7 @@ describe('RiskStratificationService', () => {
         expect(result.details.sdohNeedCount).toBeDefined();
         expect(result.details.mentalHealthAssessmentCount).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should calculate higher risk for patient with chronic conditions', (done) => {
@@ -248,7 +248,7 @@ describe('RiskStratificationService', () => {
             onsetDate: new Date(),
           },
         ],
-      };
+      });
 
       mockPhysicalHealthService.getPhysicalHealthSummary.mockReturnValue(of(physicalWithConditions));
 
@@ -270,7 +270,7 @@ describe('RiskStratificationService', () => {
         expect(result.medicationComplexity).toBeDefined();
         expect(result.functionalStatus).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should calculate higher score for patient with comorbidities', (done) => {
@@ -296,7 +296,7 @@ describe('RiskStratificationService', () => {
             onsetDate: new Date(),
           },
         ],
-      };
+      });
 
       mockPhysicalHealthService.getPhysicalHealthSummary.mockReturnValue(of(physicalWithConditions));
 
@@ -314,7 +314,7 @@ describe('RiskStratificationService', () => {
         expect(Array.isArray(assessments)).toBe(true);
         expect(assessments.length).toBeGreaterThan(0);
         done();
-      };
+      });
     });
 
     it('should include diabetes risk assessment', (done) => {
@@ -323,7 +323,7 @@ describe('RiskStratificationService', () => {
         expect(diabetesAssessment).toBeDefined();
         expect(diabetesAssessment?.riskLevel).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should include cardiovascular risk assessment', (done) => {
@@ -332,7 +332,7 @@ describe('RiskStratificationService', () => {
         expect(cvAssessment).toBeDefined();
         expect(cvAssessment?.riskLevel).toBeDefined();
         done();
-      };
+      });
     });
 
     it('should include mental health crisis risk assessment', (done) => {
@@ -341,7 +341,7 @@ describe('RiskStratificationService', () => {
         expect(mhAssessment).toBeDefined();
         expect(mhAssessment?.riskLevel).toBeDefined();
         done();
-      };
+      });
     });
   });
 
@@ -352,7 +352,7 @@ describe('RiskStratificationService', () => {
         expect(assessment.category).toBe('diabetes');
         expect(assessment.riskLevel).toBeDefined();
         done();
-      };
+      });
     });
   });
 

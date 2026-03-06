@@ -629,7 +629,7 @@ sudo service postgresql start
 psql -U postgres -f docker/postgres/external-db-setup.sql
 
 # 3. Set environment
-cp .env.external-db .env
+cp .env.external-db.example .env
 # Edit .env with correct POSTGRES_HOST
 
 # 4. Start external FHIR server

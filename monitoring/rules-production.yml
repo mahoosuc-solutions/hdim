@@ -461,6 +461,49 @@ groups:
           action: "Scale consumers or investigate processing bottlenecks"
           impact: "Delayed event processing"
 
+      - alert: IntelligenceValidationConsumerLagHigh
+        expr: max by (tenant_id) (intelligence_validation_findings_consumer_lag_seconds) > 120
+        for: 10m
+        labels:
+          severity: warning
+          component: intelligence
+        annotations:
+          summary: "Intelligence validation consumer lag high for tenant {{ $labels.tenant_id }}"
+          description: "Validation findings consumer lag is {{ $value }}s (>120s)"
+          action: "Check event-processing-service consumer health and Kafka throughput"
+          impact: "Trust projection updates may be delayed"
+
+      - alert: IntelligenceTrustProjectionStale
+        expr: max by (tenant_id) (intelligence_trust_projection_freshness_seconds) > 900
+        for: 10m
+        labels:
+          severity: critical
+          component: intelligence
+        annotations:
+          summary: "Intelligence trust projection stale for tenant {{ $labels.tenant_id }}"
+          description: "Trust projection has not refreshed for {{ $value }}s (>900s)"
+          action: "Investigate validation.findings flow and projection refresh path"
+          impact: "Trust dashboard may show stale data"
+
+      - alert: IntelligenceMutableEndpointAuthzSpike
+        expr: |
+          sum(
+            rate(http_server_requests_seconds_count{
+              uri=~"/api/v1/intelligence/.*(review|status)",
+              status=~"403|404"
+            }[10m])
+          ) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          component: intelligence
+          security: "true"
+        annotations:
+          summary: "Spike in intelligence mutable endpoint 403/404 responses"
+          description: "403/404 response rate for review/status endpoints is {{ $value }} req/s"
+          action: "Check feature flag rollout, tenant routing, and role header propagation"
+          impact: "Potential authorization or tenant-scoping misconfiguration"
+
 # ====================================================================================================
 # Recording Rules (Pre-computed metrics for faster queries)
 # ====================================================================================================

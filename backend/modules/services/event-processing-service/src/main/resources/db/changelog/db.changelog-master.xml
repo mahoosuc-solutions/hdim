@@ -10,5 +10,8 @@
     <include file="db/changelog/0002-create-event-subscriptions-table.xml"/>
     <include file="db/changelog/0003-create-dead-letter-queue-table.xml"/>
     <include file="db/changelog/0004-add-jsonb-gin-indexes.xml"/>
+    <include file="db/changelog/0005-create-intelligence-recommendations-table.xml"/>
+    <include file="db/changelog/0006-create-intelligence-validation-findings-table.xml"/>
+    <include file="db/changelog/0007-create-intelligence-tenant-trust-projection-table.xml"/>
 
 </databaseChangeLog>

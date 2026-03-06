@@ -1,6 +1,6 @@
 # Known Issues and Gaps
 
-Last updated: March 5, 2026 | Version: 2.9.1-dev
+Last updated: March 6, 2026 | Version: 2.9.2
 
 This document tracks known issues, technical debt, and planned improvements. Items are prioritized by severity and grouped by category.
 
@@ -24,8 +24,8 @@ This document tracks known issues, technical debt, and planned improvements. Ite
 | B6 | query-api HMAC → RSA | JWKS mode default with HMAC fallback via `security.jwt.mode` | `3ce86625b` |
 | B7p | event-replay + fhir-event-bridge registered | Services compile, broken tests removed, domain classes added | `996e5b56a` |
 | B8 | MedicationRequestServiceTest broken assertion | Fixed JSON-serialized dosage string, restored `@Tag("unit")` | `996e5b56a` |
-| B7q | cqrs-query-service registered | 34/34 tests passing, domain classes extracted from test inner classes | pending commit |
-| B9 | AbstractFhirIntegrationTest Liquibase bypass | Changed `create-drop` → `validate`, enabled Liquibase, matches patient-service pattern | pending commit |
+| B7q | cqrs-query-service registered | 34/34 tests passing, domain classes extracted from test inner classes | `b81f89400` |
+| B9 | AbstractFhirIntegrationTest Liquibase bypass | Changed `create-drop` → `validate`, enabled Liquibase, matches patient-service pattern | `b81f89400` |
 
 ---
 

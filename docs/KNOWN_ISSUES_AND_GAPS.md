@@ -88,7 +88,7 @@ Design doc: `docs/plans/2026-03-04-hdim-mcp-edge-design.md`
 
 | Area | Gap | Priority |
 |------|-----|----------|
-| API Documentation | Phase 1B: Priority undocumented endpoints — CQL Engine (76 of 81), Quality Measure (103 of 123), Analytics (51), Consent (20). Clinical-workflow, nurse-workflow, payer-workflows already at 100%. | Medium |
+| ~~API Documentation~~ | ✅ Phase 1B complete: +95 endpoints across Quality Measure (32), CQL Engine (43), Analytics (20). Total documented: 157 endpoints. Remaining: Consent (20), Cost Analysis (15), Admin (6) for Phase 1C. | ~~Medium~~ |
 | ~~Emergency Runbooks~~ | ✅ `docs/runbooks/EMERGENCY_RUNBOOK.md` — severity classification, hotfix procedures, service recovery (DB/Kafka/Redis/FHIR/Gateway/CQL), multi-tenant handling, communication templates, postmortem template | ~~Medium~~ |
 | ~~`.env.external-db`~~ | ✅ Renamed to `.env.external-db.example` | ~~Low~~ |
 | ~~`healthdata-platform/.env`~~ | ✅ Renamed to `.env.example`, shell expansion replaced with static placeholders | ~~Low~~ |

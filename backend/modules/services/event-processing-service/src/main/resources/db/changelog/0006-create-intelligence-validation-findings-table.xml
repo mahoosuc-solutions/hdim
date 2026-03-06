@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0006-create-intelligence-validation-findings-table" author="healthdata-system">
+        <comment>Create validation findings projection for intelligence trust scoring</comment>
+
+        <createTable tableName="intelligence_validation_findings">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="patient_ref" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_event_id" type="varchar(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rule_code" type="varchar(80)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="title" type="varchar(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="severity" type="varchar(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="finding_type" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="varchar(16)" defaultValue="OPEN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="details" type="jsonb">
+                <constraints nullable="false"/>
+            </column>
+            <column name="acted_by" type="varchar(128)"/>
+            <column name="action_notes" type="text"/>
+            <column name="acted_at" type="timestamp with time zone"/>
+            <column name="created_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp with time zone" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_intel_validation_tenant_patient" tableName="intelligence_validation_findings">
+            <column name="tenant_id"/>
+            <column name="patient_ref"/>
+            <column name="created_at" descending="true"/>
+        </createIndex>
+
+        <createIndex indexName="idx_intel_validation_status" tableName="intelligence_validation_findings">
+            <column name="status"/>
+            <column name="severity"/>
+        </createIndex>
+
+        <sql dbms="postgresql">
+            CREATE INDEX IF NOT EXISTS idx_intel_validation_details_gin
+            ON intelligence_validation_findings USING GIN (details);
+        </sql>
+
+        <rollback>
+            <sql dbms="postgresql">
+                DROP INDEX IF EXISTS idx_intel_validation_details_gin;
+            </sql>
+            <dropTable tableName="intelligence_validation_findings"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

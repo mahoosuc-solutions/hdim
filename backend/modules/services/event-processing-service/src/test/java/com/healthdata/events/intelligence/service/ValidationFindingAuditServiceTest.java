@@ -1,5 +1,6 @@
 package com.healthdata.events.intelligence.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.events.entity.EventEntity;
 import com.healthdata.events.intelligence.audit.ValidationFindingAuditService;
 import com.healthdata.events.intelligence.entity.IntelligenceValidationFindingEntity.FindingStatus;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
@@ -23,6 +25,9 @@ class ValidationFindingAuditServiceTest {
 
     @Mock
     private EventRepository eventRepository;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private ValidationFindingAuditService auditService;

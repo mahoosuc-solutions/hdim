@@ -1298,8 +1298,8 @@ Before submitting code, verify:
 
 ---
 
-_Last Updated: March 5, 2026_
-_Version: 4.2_ - **v2.9.0 MCP Edge + Test Coverage** (March 2026): MCP Edge Layer v0.1.0 (3 sidecars, 1,307 tests), 66 new backend tests, system remediation complete. See [docs/phases/](./docs/phases/) for phase summaries, [docs/plans/2026-03-04-hdim-mcp-edge-design.md](./docs/plans/2026-03-04-hdim-mcp-edge-design.md) for MCP Edge architecture. Infrastructure modernization (Phases 1-7) complete. Platform achievements: ✅ HIPAA Compliance, ✅ OCR Document Processing, ✅ API Documentation, ✅ Test Performance Optimization (Phase 6), ✅ CI/CD Parallelization (Phase 7), ✅ MCP Edge Layer (v2.9.0) - all production-ready.
+_Last Updated: March 6, 2026_
+_Version: 4.3_ - **v2.9.2 API Documentation + Release Hardening** (March 2026): Phase 1B API docs (157 total endpoints across 6 services), emergency runbook, B1-B9 backlog closure, .env hygiene, intelligence layer branched. See [docs/phases/](./docs/phases/) for phase summaries, [docs/plans/2026-03-04-hdim-mcp-edge-design.md](./docs/plans/2026-03-04-hdim-mcp-edge-design.md) for MCP Edge architecture. Infrastructure modernization (Phases 1-7) complete. Platform achievements: ✅ HIPAA Compliance, ✅ OCR Document Processing, ✅ API Documentation (157 endpoints), ✅ Test Performance Optimization (Phase 6), ✅ CI/CD Parallelization (Phase 7), ✅ MCP Edge Layer (v2.9.0) - all production-ready.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

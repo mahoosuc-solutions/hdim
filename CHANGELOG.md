@@ -10,6 +10,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Gateway now passes through non-2xx responses from upstream services instead of converting them to 500s.
 
+## [0.2.0] - 2026-03-06
+
+### Added - Sprint 2: Hardening
+- **Prometheus `/metrics` endpoint** on all 3 MCP Edge sidecars (`prom-client` 15.x)
+  - Counters: `mcp_tool_calls_total{tool,role,status}`, `mcp_rate_limit_rejections_total`
+  - Histogram: `mcp_tool_duration_seconds{tool}`
+  - Gauges: `mcp_active_connections`, `mcp_circuit_breaker_state{service}`
+- **API key rotation** — comma-separated `MCP_EDGE_API_KEY` for zero-downtime key rotation
+- **Circuit breaker** (`opossum` 8.x) on platform + clinical HTTP clients
+  - CLOSED → OPEN → HALF_OPEN state machine with metrics emission
+  - Fail-fast fallback (no stale PHI cache)
+- **Per-key rate limiting** — SHA-256 of bearer token as rate limit key for independent windows
+- **User Management Phase 4** — 4 `UserAutoRegistrationIT` integration tests (patient, care-gap, cql-engine, fhir services)
+
+### Added - Sprint 3: Observability
+- **W3C Trace Context propagation** — `traceparent` header parsing, middleware, outbound header injection
+- **ECS-compatible structured logging** — `ecs.version`, `service.name`, `trace.id`, `span.id`, `parent.id`
+- **Deep health probes** — `GET /health/ready` endpoint, pluggable `checks` array with degraded status
+- **TLS termination config** — nginx reverse proxy template (`nginx-tls-proxy.conf`), docker-compose block
+- **Connection pooling** — `keep-alive` headers on platform + clinical HTTP clients
+- **Correlated request logging** — `withTraceContext` child loggers in mcp-router tool call paths
+
+### Changed
+- MCP Edge test count: 1,423 → **1,481** (+58 tests across 4 packages)
+- v0.2.0 roadmap marked COMPLETE (3/3 sprints)
+
 ## [2.9.2] - 2026-03-06
 
 ### Added - Phase 1B API Documentation

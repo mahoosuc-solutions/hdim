@@ -1,4 +1,4 @@
-const { createAuditLogger, scrubSensitive } = require('../lib/audit-log');
+const { createAuditLogger, scrubSensitive, withTraceContext } = require('../lib/audit-log');
 const { Writable } = require('node:stream');
 
 describe('createAuditLogger', () => {
@@ -91,5 +91,75 @@ describe('scrubSensitive', () => {
     for (const key of ['patient_id', 'ssn', 'mrn', 'password', 'secret', 'api_key']) {
       expect(scrubbed[key]).toBe('[REDACTED]');
     }
+  });
+});
+
+describe('ECS compatibility', () => {
+  it('includes ecs.version in log output', () => {
+    const chunks = [];
+    const stream = new Writable({
+      write(chunk, enc, cb) { chunks.push(chunk.toString()); cb(); }
+    });
+    const logger = createAuditLogger({ serviceName: 'ecs-test', stream });
+    logger.info('ecs check');
+    const log = JSON.parse(chunks[0]);
+    expect(log['ecs.version']).toBe('1.6.0');
+  });
+
+  it('includes service.name in log output', () => {
+    const chunks = [];
+    const stream = new Writable({
+      write(chunk, enc, cb) { chunks.push(chunk.toString()); cb(); }
+    });
+    const logger = createAuditLogger({ serviceName: 'my-svc', stream });
+    logger.info('svc check');
+    const log = JSON.parse(chunks[0]);
+    expect(log['service.name']).toBe('my-svc');
+    expect(log.service).toBe('my-svc');
+  });
+});
+
+describe('withTraceContext', () => {
+  it('returns original logger when no traceContext', () => {
+    const logger = createAuditLogger({ serviceName: 'test' });
+    expect(withTraceContext(logger, null)).toBe(logger);
+    expect(withTraceContext(logger, undefined)).toBe(logger);
+  });
+
+  it('returns logger unchanged when logger is null', () => {
+    expect(withTraceContext(null, { traceId: 'abc' })).toBeNull();
+  });
+
+  it('creates child logger with trace fields', () => {
+    const chunks = [];
+    const stream = new Writable({
+      write(chunk, enc, cb) { chunks.push(chunk.toString()); cb(); }
+    });
+    const logger = createAuditLogger({ serviceName: 'trace-test', stream });
+    const child = withTraceContext(logger, {
+      traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
+      spanId: 'eeee5555ffff6666'
+    });
+    child.info('traced');
+    const log = JSON.parse(chunks[0]);
+    expect(log['trace.id']).toBe('aaaa1111bbbb2222cccc3333dddd4444');
+    expect(log['span.id']).toBe('eeee5555ffff6666');
+    expect(log['parent.id']).toBeUndefined();
+  });
+
+  it('includes parent.id when parentSpanId is present', () => {
+    const chunks = [];
+    const stream = new Writable({
+      write(chunk, enc, cb) { chunks.push(chunk.toString()); cb(); }
+    });
+    const logger = createAuditLogger({ serviceName: 'trace-test', stream });
+    const child = withTraceContext(logger, {
+      traceId: 'aaaa1111bbbb2222cccc3333dddd4444',
+      spanId: 'eeee5555ffff6666',
+      parentSpanId: '11112222aaaabbbb'
+    });
+    child.info('traced with parent');
+    const log = JSON.parse(chunks[0]);
+    expect(log['parent.id']).toBe('11112222aaaabbbb');
   });
 });

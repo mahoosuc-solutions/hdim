@@ -1,4 +1,23 @@
 services:
+  # TLS reverse proxy (optional, enable for production HTTPS)
+  # Uncomment the mcp-edge-proxy block and comment out sidecar port mappings
+  # mcp-edge-proxy:
+  #   image: nginx:1.27-alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "443:443"
+  #     - "80:80"
+  #   volumes:
+  #     - ./mcp-edge-common/nginx-tls-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+  #     - ./certs/mcp-edge:/etc/ssl/mcp-edge:ro
+  #   depends_on:
+  #     mcp-edge-platform:
+  #       condition: service_healthy
+  #     mcp-edge-devops:
+  #       condition: service_healthy
+  #     mcp-edge-clinical:
+  #       condition: service_healthy
+
   mcp-edge-platform:
     build:
       context: .

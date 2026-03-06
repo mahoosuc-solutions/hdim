@@ -20,14 +20,34 @@ function createAuditLogger({ serviceName, stream } = {}) {
   const options = {
     name: serviceName || 'mcp-edge',
     level: process.env.LOG_LEVEL || 'info',
-    base: { service: serviceName },
+    base: {
+      'service.name': serviceName,
+      // ECS compat: keep legacy 'service' for backwards compat
+      service: serviceName
+    },
     timestamp: pino.stdTimeFunctions.isoTime,
     formatters: {
       level(label) { return { level: label }; }
+    },
+    mixin() {
+      return { 'ecs.version': '1.6.0' };
     }
   };
 
   return stream ? pino(options, stream) : pino(options);
 }
 
-module.exports = { createAuditLogger, scrubSensitive };
+/**
+ * Create a child logger with trace context fields (ECS-compatible).
+ * Use this in request handlers to correlate logs with distributed traces.
+ */
+function withTraceContext(logger, traceContext) {
+  if (!logger || !traceContext) return logger;
+  return logger.child({
+    'trace.id': traceContext.traceId,
+    'span.id': traceContext.spanId,
+    ...(traceContext.parentSpanId ? { 'parent.id': traceContext.parentSpanId } : {})
+  });
+}
+
+module.exports = { createAuditLogger, scrubSensitive, withTraceContext };

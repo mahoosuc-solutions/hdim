@@ -8,8 +8,10 @@ import { CareGapManagerComponent } from './care-gap-manager.component';
 import { PatientService } from '../../services/patient.service';
 import { MeasureService } from '../../services/measure.service';
 import { DialogService } from '../../services/dialog.service';
+import { CareGapService } from '../../services/care-gap.service';
 import { LoggerService } from '../../services/logger.service';
-import { createMockRouter } from '../../testing/mocks';
+import { MatDialog } from '@angular/material/dialog';
+import { createMockLoggerService } from '../../testing/mocks';
 
 describe('CareGapManagerComponent', () => {
   let component: CareGapManagerComponent;
@@ -22,12 +24,14 @@ describe('CareGapManagerComponent', () => {
   beforeEach(async () => {
     // Create mock services
     mockPatientService = {
-      getPatientsSummary: jest.fn(),
+      getPatientsSummary: jest.fn().mockReturnValue(of([])),
+      getPatientsSummaryCached: jest.fn().mockReturnValue(of([])),
       getPatient: jest.fn(),
     } as any;
 
     mockMeasureService = {
-      getCareGaps: jest.fn(),
+      getCareGaps: jest.fn().mockReturnValue(of([])),
+      getCareGapsPage: jest.fn().mockReturnValue(of({ content: [], totalElements: 0 })),
       closeCareGap: jest.fn(),
     } as any;
 
@@ -39,6 +43,17 @@ describe('CareGapManagerComponent', () => {
       navigate: jest.fn(),
     } as any;
 
+    const mockCareGapService = {
+      getCareGaps: jest.fn().mockReturnValue(of([])),
+      getCareGapsPage: jest.fn().mockReturnValue(of({ content: [], totalElements: 0 })),
+      closeCareGap: jest.fn().mockReturnValue(of({})),
+      closeCareGaps: jest.fn().mockReturnValue(of({})),
+    };
+
+    const mockMatDialog = {
+      open: jest.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [
         CareGapManagerComponent,
@@ -46,14 +61,15 @@ describe('CareGapManagerComponent', () => {
         FormsModule,
         BrowserAnimationsModule,
       ],
-      providers: [{ provide: LoggerService, useValue: createMockLoggerService() },
-        
+      providers: [
+        { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: PatientService, useValue: mockPatientService },
         { provide: MeasureService, useValue: mockMeasureService },
+        { provide: CareGapService, useValue: mockCareGapService },
         { provide: DialogService, useValue: mockDialogService },
+        { provide: MatDialog, useValue: mockMatDialog },
         { provide: Router, useValue: mockRouter },
-      
-        { provide: Router, useValue: createMockRouter() }],
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CareGapManagerComponent);

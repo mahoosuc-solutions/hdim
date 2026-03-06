@@ -3,7 +3,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VisualAlgorithmBuilderComponent } from './components/visual-algorithm-builder/visual-algorithm-builder.component';
-import { RangeThresholdSliderComponent } from './components/range-threshold-slider/range-threshold-slider.component';
+import { RangeThresholdSliderComponent } from './components/measure-config-slider/range-threshold-slider.component';
 import { DistributionPeriodSliderComponent } from './components/measure-config-slider/distribution-period-slider.component';
 import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';

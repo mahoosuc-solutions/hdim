@@ -24,7 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -57,9 +56,6 @@ class IntelligenceControllerTest {
     private TenantTrustProjectionService tenantTrustProjectionService;
 
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
-
-    @Mock
     private IntelligenceFeatureFlags intelligenceFeatureFlags;
 
     @Mock
@@ -74,7 +70,6 @@ class IntelligenceControllerTest {
                 recommendationService,
                 validationService,
                 tenantTrustProjectionService,
-                kafkaTemplate,
                 intelligenceFeatureFlags,
                 actorResolver
         );
@@ -125,7 +120,6 @@ class IntelligenceControllerTest {
                 .andExpect(jsonPath("$[0].signalType").value("CARE_GAP_OPEN"))
                 .andExpect(jsonPath("$[0].status").value("PROPOSED"));
 
-        verify(kafkaTemplate).send(eq("ingest.raw"), eq("tenant-a"), any());
     }
 
     @Test
@@ -291,13 +285,13 @@ class IntelligenceControllerTest {
     }
 
     @Test
-    @DisplayName("GET tenant trust dashboard should return 404 when tenant path mismatches header")
-    void getTenantTrustDashboardShouldReturn404OnTenantMismatch() throws Exception {
+    @DisplayName("GET tenant trust dashboard should return 403 when tenant path mismatches header")
+    void getTenantTrustDashboardShouldReturn403OnTenantMismatch() throws Exception {
         doNothing().when(intelligenceFeatureFlags).requireTrustDashboardEnabled("tenant-b");
 
         mockMvc.perform(get("/api/v1/intelligence/tenants/{tenantId}/trust-dashboard", "tenant-b")
                         .header("X-Tenant-ID", "tenant-a"))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
     }
 }

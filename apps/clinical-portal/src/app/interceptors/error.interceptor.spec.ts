@@ -7,15 +7,16 @@ import {
 import { Router } from '@angular/router';
 import { errorInterceptor } from './error.interceptor';
 import { AuthService } from '../services/auth.service';
-import { LoggerService } from 'services/logger.service';
-import { createMockRouter } from '../../testing/mocks';
+import { LoggerService } from '../services/logger.service';
+import { API_CONFIG } from '../config/api.config';
+import { createMockLoggerService } from '../../testing/mocks';
 
 describe('ErrorInterceptor', () => {
   let httpMock: HttpTestingController;
   let httpClient: HttpClient;
-  let consoleErrorSpy: jest.SpyInstance;
   let authService: jest.Mocked<AuthService>;
   let router: jest.Mocked<Router>;
+  let loggerContext: any;
 
   beforeEach(() => {
     const authServiceMock = {
@@ -36,7 +37,6 @@ describe('ErrorInterceptor', () => {
         { provide: Router, useValue: routerMock },
         provideHttpClient(withInterceptors([errorInterceptor])),
         provideHttpClientTesting(),
-        HttpTestingController,
       ],
     });
 
@@ -45,13 +45,12 @@ describe('ErrorInterceptor', () => {
     authService = TestBed.inject(AuthService) as jest.Mocked<AuthService>;
     router = TestBed.inject(Router) as jest.Mocked<Router>;
 
-    // Spy on console.error to verify logging
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+    const loggerService = TestBed.inject(LoggerService) as any;
+    loggerContext = loggerService.withContext('ErrorInterceptor');
   });
 
   afterEach(() => {
     httpMock.verify();
-    consoleErrorSpy.mockRestore();
     jest.clearAllMocks();
   });
 
@@ -65,10 +64,10 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toBe(
             'Bad Request: Please check your input and try again.'
           );
-          expect(consoleErrorSpy).toHaveBeenCalled();
+          expect(loggerContext.error).toHaveBeenCalled();
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Bad Request', { status: 400, statusText: 'Bad Request' });
@@ -85,7 +84,7 @@ describe('ErrorInterceptor', () => {
           );
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
@@ -102,7 +101,7 @@ describe('ErrorInterceptor', () => {
           );
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Forbidden', { status: 403, statusText: 'Forbidden' });
@@ -119,7 +118,7 @@ describe('ErrorInterceptor', () => {
           );
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Not Found', { status: 404, statusText: 'Not Found' });
@@ -140,7 +139,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toContain('Internal Server Error');
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
@@ -156,7 +155,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toContain('Service Unavailable');
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Service Unavailable', { status: 503, statusText: 'Service Unavailable' });
@@ -174,7 +173,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toBe(customMessage);
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush({ message: customMessage }, { status: 422, statusText: 'Unprocessable Entity' });
@@ -190,7 +189,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toContain('Error Code:');
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Some error', { status: 422, statusText: 'Unprocessable Entity' });
@@ -210,7 +209,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toBeTruthy();
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       const mockError = new ErrorEvent('error', { message: errorMessage });
@@ -227,7 +226,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toBeTruthy();
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       const mockError = new ErrorEvent('error', { message: 'Request timed out' });
@@ -242,21 +241,20 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url).subscribe({
         next: () => fail('should have failed'),
         error: () => {
-          expect(consoleErrorSpy).toHaveBeenCalledWith(
-            'HTTP Error:',
+          expect(loggerContext.error).toHaveBeenCalledWith(
+            'HTTP Error',
             expect.objectContaining({
               url,
               status: 404,
-              statusText: 'Not Found',
             })
           );
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
-      req.flush('Not Found', { status: 404, statusText: 'Not Found' };
-    };
+      req.flush('Not Found', { status: 404, statusText: 'Not Found' });
+    });
 
     it('should include request URL in logged error', (done) => {
       // Use 404 (non-retryable) instead of 500
@@ -265,11 +263,11 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url).subscribe({
         next: () => fail('should have failed'),
         error: () => {
-          const loggedError = consoleErrorSpy.mock.calls[0][1];
+          const loggedError = loggerContext.error.mock.calls[0][1];
           expect(loggedError.url).toBe(url);
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Error', { status: 404, statusText: 'Not Found' });
@@ -289,7 +287,7 @@ describe('ErrorInterceptor', () => {
           expect(error.status).toBe(404);
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Not Found', { status: 404, statusText: 'Not Found' });
@@ -306,7 +304,7 @@ describe('ErrorInterceptor', () => {
           expect(typeof error.userMessage).toBe('string');
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Error', { status: 404, statusText: 'Not Found' });
@@ -322,7 +320,7 @@ describe('ErrorInterceptor', () => {
           expect(typeof error.retryAttempts).toBe('number');
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Error', { status: 404, statusText: 'Not Found' });
@@ -348,7 +346,7 @@ describe('ErrorInterceptor', () => {
             errorCount++;
             if (errorCount === urls.length) done();
           },
-        };
+        });
       });
 
       urls.forEach((url, index) => {
@@ -370,7 +368,7 @@ describe('ErrorInterceptor', () => {
           expect(error.status).toBe(418);
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush("I'm a teapot", { status: 418, statusText: "I'm a teapot" });
@@ -385,11 +383,11 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url).subscribe({
         next: (data) => {
           expect(data).toEqual(successData);
-          expect(consoleErrorSpy).not.toHaveBeenCalled();
+          expect(loggerContext.error).not.toHaveBeenCalled();
           done();
         },
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush(successData);
@@ -406,7 +404,7 @@ describe('ErrorInterceptor', () => {
           expect(authService.logout).toHaveBeenCalled();
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
@@ -421,7 +419,7 @@ describe('ErrorInterceptor', () => {
           expect(authService.logout).not.toHaveBeenCalled();
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Invalid credentials', { status: 401, statusText: 'Unauthorized' });
@@ -437,7 +435,7 @@ describe('ErrorInterceptor', () => {
           expect(authService.logout).not.toHaveBeenCalled();
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
@@ -452,7 +450,7 @@ describe('ErrorInterceptor', () => {
           expect(error.userMessage).toBe('Unauthorized: Please log in to access this resource.');
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
@@ -468,7 +466,7 @@ describe('ErrorInterceptor', () => {
           expect(authService.logout).toHaveBeenCalledTimes(1);
           done();
         },
-      };
+      });
 
       const req = httpMock.expectOne(url);
       req.flush('Session expired', { status: 401, statusText: 'Unauthorized' });
@@ -482,7 +480,7 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.has('X-Tenant-ID')).toBe(true);
@@ -497,7 +495,7 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.get('X-Tenant-ID')).toBe('custom-tenant-456');
@@ -512,10 +510,10 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
-      expect(req.request.headers.get('X-Tenant-ID')).toBe('default-tenant');
+      expect(req.request.headers.get('X-Tenant-ID')).toBe(API_CONFIG.DEFAULT_TENANT_ID);
       req.flush({ success: true });
     });
 
@@ -526,7 +524,7 @@ describe('ErrorInterceptor', () => {
       httpClient.post(url, body).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.get('X-Tenant-ID')).toBe('tenant-123');
@@ -540,7 +538,7 @@ describe('ErrorInterceptor', () => {
       httpClient.put(url, body).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.get('X-Tenant-ID')).toBe('tenant-123');
@@ -553,7 +551,7 @@ describe('ErrorInterceptor', () => {
       httpClient.delete(url).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.get('X-Tenant-ID')).toBe('tenant-123');
@@ -567,7 +565,7 @@ describe('ErrorInterceptor', () => {
       httpClient.get(url, { headers }).subscribe({
         next: () => done(),
         error: () => fail('should not have failed'),
-      };
+      });
 
       const req = httpMock.expectOne(url);
       expect(req.request.headers.get('X-Tenant-ID')).toBe('tenant-123');

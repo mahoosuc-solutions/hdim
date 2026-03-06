@@ -207,7 +207,7 @@ describe('PhysicalHealthService', () => {
         expect(mockFhirObservationService.getLabResults).toHaveBeenCalledWith('patient-1');
         expect(mockFhirConditionService.getActiveConditions).toHaveBeenCalledWith('patient-1');
         done();
-      };
+      });
     });
 
     it('should return cached result on second call', (done) => {
@@ -233,7 +233,7 @@ describe('PhysicalHealthService', () => {
         // Should still return a summary with empty/default vitals
         expect(summary).toBeDefined();
         done();
-      };
+      });
     });
   });
 
@@ -249,7 +249,7 @@ describe('PhysicalHealthService', () => {
         expect(labs).toEqual(mockLabs);
         expect(mockFhirObservationService.getLabHistory).toHaveBeenCalledWith('patient-1', '4548-4', 10);
         done();
-      };
+      });
     });
   });
 
@@ -274,7 +274,7 @@ describe('PhysicalHealthService', () => {
         expect(conditions).toEqual(mockConditions);
         expect(mockFhirConditionService.getChronicConditions).toHaveBeenCalledWith('patient-1');
         done();
-      };
+      });
     });
   });
 
@@ -290,7 +290,7 @@ describe('PhysicalHealthService', () => {
         expect(history).toEqual(mockVitalHistory);
         expect(mockFhirObservationService.getVitalSignHistory).toHaveBeenCalledWith('patient-1', '8480-6', 20);
         done();
-      };
+      });
     });
 
     it('should use default limit of 30', (done) => {
@@ -299,7 +299,7 @@ describe('PhysicalHealthService', () => {
       service.getVitalSignHistory('patient-1').subscribe(() => {
         expect(mockFhirObservationService.getVitalSignHistory).toHaveBeenCalledWith('patient-1', undefined, 30);
         done();
-      };
+      });
     });
   });
 

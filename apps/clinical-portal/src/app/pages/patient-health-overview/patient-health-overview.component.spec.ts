@@ -393,7 +393,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '3', category: 'preventive', title: 'Medium', description: '', priority: 'medium', recommendedActions: [] },
           { id: '4', category: 'preventive', title: 'High', description: '', priority: 'high', recommendedActions: [] },
         ],
-      };
+      });
 
       const sorted = component.getCareGapsByPriority();
 
@@ -412,7 +412,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '3', category: 'treatment', title: 'Medium', description: '', priority: 'medium', evidence: '', rationale: '' },
           { id: '4', category: 'treatment', title: 'Default', description: '', evidence: '', rationale: '' },
         ],
-      };
+      });
 
       const sorted = component.getRecommendationsByPriority();
 
@@ -431,7 +431,7 @@ describe('PatientHealthOverviewComponent', () => {
           { id: '3', category: 'preventive', title: 'Gap 3', description: '', priority: 'medium', recommendedActions: [] },
           { id: '4', category: 'preventive', title: 'Gap 4', description: '', priority: 'high', recommendedActions: [] },
         ],
-      };
+      });
 
       expect(component.getUrgentCareGapsCount()).toBe(3); // 1 urgent + 2 high
     });
@@ -501,7 +501,7 @@ describe('PatientHealthOverviewComponent', () => {
             } as any,
           ],
         },
-      };
+      });
 
       mockHealthService.getPatientHealthOverview.mockReturnValue(of(overview));
       component.patientId = 'test-patient-123';
@@ -528,7 +528,7 @@ describe('PatientHealthOverviewComponent', () => {
             requiresIntervention: true,
           },
         },
-      };
+      });
 
       component.criticalAlerts = [];
       (component as any).generateCriticalAlerts(overview);
@@ -579,7 +579,7 @@ describe('PatientHealthOverviewComponent', () => {
             } as any,
           ],
         },
-      };
+      });
 
       component.criticalAlerts = [];
       (component as any).generateCriticalAlerts(overview);

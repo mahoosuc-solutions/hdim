@@ -3,8 +3,6 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { YearSelectionDialogComponent } from './year-selection-dialog.component';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { createMockMatDialogRef } from '../../testing/mocks';
-
 /**
  * TDD Test Suite for YearSelectionDialog Component
  *
@@ -26,8 +24,7 @@ describe('YearSelectionDialogComponent (TDD)', () => {
 
     await TestBed.configureTestingModule({
       imports: [YearSelectionDialogComponent, NoopAnimationsModule],
-      providers: [{ provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+      providers: [{ provide: MatDialogRef, useValue: mockDialogRef }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(YearSelectionDialogComponent);

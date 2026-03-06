@@ -5,13 +5,16 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -20,11 +23,17 @@ import java.util.UUID;
  * Persisted validation finding generated during intelligence ingestion.
  */
 @Entity
-@Table(name = "intelligence_validation_findings")
-@Data
+@Table(name = "intelligence_validation_findings", indexes = {
+        @Index(name = "idx_finding_tenant_patient_created", columnList = "tenant_id, patient_ref, created_at DESC"),
+        @Index(name = "idx_finding_tenant_status_created", columnList = "tenant_id, status, created_at DESC"),
+        @Index(name = "idx_finding_id_tenant", columnList = "id, tenant_id")
+})
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = "id")
 public class IntelligenceValidationFindingEntity {
 
     public enum Severity {

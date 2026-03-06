@@ -39,7 +39,7 @@ public class IntelligenceRecommendationService {
     private final IntelligenceValidationService validationService;
     private final RecommendationAuditService recommendationAuditService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public List<RecommendationResponse> ingestAndGenerate(CanonicalEventEnvelope envelope) {

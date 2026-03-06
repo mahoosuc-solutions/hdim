@@ -40,7 +40,7 @@ public class IntelligenceValidationService {
     private final TenantTrustProjectionService tenantTrustProjectionService;
     private final ValidationFindingAuditService validationFindingAuditService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     @Transactional
     public List<ValidationFindingResponse> runValidation(CanonicalEventEnvelope envelope) {

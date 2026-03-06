@@ -10,10 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Consumer that updates tenant trust projection when validation findings are emitted.
@@ -24,9 +27,12 @@ public class ValidationFindingsProjectionConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(ValidationFindingsProjectionConsumer.class);
 
+    private static final Duration REFRESH_COOLDOWN = Duration.ofSeconds(5);
+
     private final TenantTrustProjectionService tenantTrustProjectionService;
     private final ConcurrentMap<String, AtomicLong> consumerLagSecondsByTenant = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, AtomicLong> consumerLastProcessedEpochByTenant = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, AtomicReference<Instant>> lastRefreshedByTenant = new ConcurrentHashMap<>();
 
     @KafkaListener(
             topics = IntelligenceTopics.VALIDATION_FINDINGS,
@@ -42,7 +48,17 @@ public class ValidationFindingsProjectionConsumer {
 
         String tenantId = String.valueOf(tenantIdRaw);
         recordConsumerMetrics(tenantId, findingEvent);
-        tenantTrustProjectionService.refreshForTenant(tenantId);
+
+        AtomicReference<Instant> lastRefreshed = lastRefreshedByTenant
+                .computeIfAbsent(tenantId, k -> new AtomicReference<>(Instant.EPOCH));
+        Instant now = Instant.now();
+        Instant previous = lastRefreshed.get();
+        if (Duration.between(previous, now).compareTo(REFRESH_COOLDOWN) >= 0
+                && lastRefreshed.compareAndSet(previous, now)) {
+            tenantTrustProjectionService.refreshForTenant(tenantId);
+        } else {
+            log.debug("Skipping projection refresh for tenant {} (cooldown active)", tenantId);
+        }
     }
 
     private void recordConsumerMetrics(String tenantId, Map<String, Object> findingEvent) {

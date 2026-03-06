@@ -1,5 +1,6 @@
 package com.healthdata.events.intelligence.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.events.intelligence.audit.ValidationFindingAuditService;
 import com.healthdata.events.intelligence.dto.UpdateValidationFindingStatusRequest;
 import com.healthdata.events.intelligence.entity.IntelligenceValidationFindingEntity;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -47,6 +49,9 @@ class IntelligenceValidationServiceTest {
 
     @Mock
     private ValidationFindingAuditService validationFindingAuditService;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private IntelligenceValidationService service;

@@ -7,8 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Intelligence Layer activation** — 8 REST endpoints live behind per-tenant feature flags (`IntelligenceFeatureFlags`), 175 tests passing
+  - POST `/api/v1/intelligence/ingest` — ingest signals and generate recommendations
+  - GET `/api/v1/intelligence/patients/{id}/signals` — patient signal history
+  - GET `/api/v1/intelligence/patients/{id}/recommendations` — AI-generated recommendations
+  - POST `/api/v1/intelligence/recommendations/{id}/review` — clinician review workflow
+  - GET `/api/v1/intelligence/patients/{id}/trust-profile` — data quality trust score
+  - GET `/api/v1/intelligence/tenants/{id}/trust-dashboard` — tenant-wide trust projection
+
 ### Fixed
 - Gateway now passes through non-2xx responses from upstream services instead of converting them to 500s.
+- Intelligence layer test drift: 7 test files updated for `ObjectMapper` constructor parameter and `KafkaTemplate` removal from controller
+- Clinical portal `measure-builder.integration.spec.ts` import path fixed (`range-threshold-slider` component)
 
 ## [0.2.0] - 2026-03-06
 

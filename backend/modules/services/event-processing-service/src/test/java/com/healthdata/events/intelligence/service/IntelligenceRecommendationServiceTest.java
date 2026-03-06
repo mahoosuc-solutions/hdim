@@ -1,5 +1,6 @@
 package com.healthdata.events.intelligence.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.events.intelligence.dto.ReviewRecommendationRequest;
 import com.healthdata.events.intelligence.dto.ValidationFindingResponse;
 import com.healthdata.events.intelligence.audit.RecommendationAuditService;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 
@@ -48,6 +50,9 @@ class IntelligenceRecommendationServiceTest {
 
     @Mock
     private RecommendationAuditService recommendationAuditService;
+
+    @Spy
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     @InjectMocks
     private IntelligenceRecommendationService service;

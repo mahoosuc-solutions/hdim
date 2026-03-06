@@ -1,5 +1,6 @@
 package com.healthdata.events.intelligence.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthdata.events.entity.EventEntity;
 import com.healthdata.events.intelligence.audit.RecommendationAuditService;
 import com.healthdata.events.intelligence.audit.ValidationFindingAuditService;
@@ -46,6 +47,7 @@ class IntelligenceWorkflowConsistencyTest {
         IntelligenceTenantTrustProjectionRepository projectionRepository = mock(IntelligenceTenantTrustProjectionRepository.class);
         EventRepository eventRepository = mock(EventRepository.class);
         KafkaTemplate<String, Object> kafkaTemplate = mock(KafkaTemplate.class);
+        ObjectMapper objectMapper = new ObjectMapper();
 
         Map<UUID, IntelligenceValidationFindingEntity> findingStore = new HashMap<>();
         Map<UUID, IntelligenceRecommendationEntity> recommendationStore = new HashMap<>();
@@ -152,22 +154,24 @@ class IntelligenceWorkflowConsistencyTest {
         TenantTrustProjectionService tenantTrustProjectionService =
                 new TenantTrustProjectionService(findingRepository, projectionRepository);
         ValidationFindingAuditService validationFindingAuditService =
-                new ValidationFindingAuditService(eventRepository);
+                new ValidationFindingAuditService(eventRepository, objectMapper);
         IntelligenceValidationService validationService =
                 new IntelligenceValidationService(
                         findingRepository,
                         tenantTrustProjectionService,
                         validationFindingAuditService,
-                        kafkaTemplate
+                        kafkaTemplate,
+                        objectMapper
                 );
         RecommendationAuditService recommendationAuditService =
-                new RecommendationAuditService(eventRepository);
+                new RecommendationAuditService(eventRepository, objectMapper);
         IntelligenceRecommendationService recommendationService =
                 new IntelligenceRecommendationService(
                         recommendationRepository,
                         validationService,
                         recommendationAuditService,
-                        kafkaTemplate
+                        kafkaTemplate,
+                        objectMapper
                 );
 
         CanonicalEventEnvelope envelope = CanonicalEventEnvelope.builder()

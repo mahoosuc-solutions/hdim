@@ -159,29 +159,30 @@ class IntelligenceApiWorkflowConsistencyTest {
         TenantTrustProjectionService tenantTrustProjectionService =
                 new TenantTrustProjectionService(findingRepository, projectionRepository);
         ValidationFindingAuditService validationFindingAuditService =
-                new ValidationFindingAuditService(eventRepository);
+                new ValidationFindingAuditService(eventRepository, objectMapper);
         IntelligenceValidationService validationService =
                 new IntelligenceValidationService(
                         findingRepository,
                         tenantTrustProjectionService,
                         validationFindingAuditService,
-                        kafkaTemplate
+                        kafkaTemplate,
+                        objectMapper
                 );
         RecommendationAuditService recommendationAuditService =
-                new RecommendationAuditService(eventRepository);
+                new RecommendationAuditService(eventRepository, objectMapper);
         IntelligenceRecommendationService recommendationService =
                 new IntelligenceRecommendationService(
                         recommendationRepository,
                         validationService,
                         recommendationAuditService,
-                        kafkaTemplate
+                        kafkaTemplate,
+                        objectMapper
                 );
 
         IntelligenceController controller = new IntelligenceController(
                 recommendationService,
                 validationService,
                 tenantTrustProjectionService,
-                kafkaTemplate,
                 new IntelligenceFeatureFlags(),
                 actorResolver
         );

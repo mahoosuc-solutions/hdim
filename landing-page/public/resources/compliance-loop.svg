@@ -1,0 +1,33 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 680' role='img'>
+  <rect width='1280' height='680' fill='#ffffff'/>
+  <text x='70' y='80' font-family='Space Grotesk, sans-serif' font-size='34' fill='#0d1b2a' font-weight='700'>Release Compliance Loop</text>
+  <text x='70' y='112' font-family='Manrope, sans-serif' font-size='15' fill='#486178'>From runtime checks to release go/no-go decisions.</text>
+
+  <g font-family='Manrope, sans-serif'>
+    <rect x='120' y='210' width='210' height='120' rx='16' fill='#e7f7ff' stroke='#95d8eb'/>
+    <text x='144' y='258' font-size='20' fill='#0d1b2a' font-weight='700'>Validators</text>
+    <text x='144' y='286' font-size='14' fill='#36516b'>Security, contract, DR</text>
+
+    <rect x='390' y='210' width='210' height='120' rx='16' fill='#e8fff7' stroke='#8de2c9'/>
+    <text x='414' y='258' font-size='20' fill='#0d1b2a' font-weight='700'>Gap Register</text>
+    <text x='414' y='286' font-size='14' fill='#36516b'>Critical and high status</text>
+
+    <rect x='660' y='210' width='210' height='120' rx='16' fill='#f2f1ff' stroke='#c5c2f6'/>
+    <text x='684' y='258' font-size='20' fill='#0d1b2a' font-weight='700'>Control Matrix</text>
+    <text x='684' y='286' font-size='14' fill='#36516b'>Evidence mapping</text>
+
+    <rect x='930' y='210' width='210' height='120' rx='16' fill='#fff8e8' stroke='#f2d9a2'/>
+    <text x='955' y='258' font-size='20' fill='#0d1b2a' font-weight='700'>Go / No-Go</text>
+    <text x='955' y='286' font-size='14' fill='#36516b'>Release decision</text>
+  </g>
+
+  <g stroke='#17b7c8' stroke-width='4' fill='none' stroke-linecap='round'>
+    <path d='M334 270h50'/><path d='M604 270h50'/><path d='M874 270h50'/>
+    <path d='M1040 336v120H240v-120'/>
+  </g>
+
+  <g font-family='Manrope, sans-serif' fill='#0d1b2a'>
+    <text x='390' y='500' font-size='22' font-weight='700'>Continuous oversight rail</text>
+    <text x='390' y='530' font-size='15' fill='#486178'>All release controls fail closed; each artifact is versioned and reviewable.</text>
+  </g>
+</svg>

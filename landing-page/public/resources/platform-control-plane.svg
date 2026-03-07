@@ -1,0 +1,55 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 700' role='img' aria-labelledby='title desc'>
+  <title id='title'>HDIM Platform Control Plane</title>
+  <desc id='desc'>AI-generated conceptual control plane for event-driven healthcare automation.</desc>
+  <defs>
+    <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='#071a2d'/>
+      <stop offset='100%' stop-color='#145272'/>
+    </linearGradient>
+    <linearGradient id='node' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='#2dd4a8'/>
+      <stop offset='100%' stop-color='#17b7c8'/>
+    </linearGradient>
+  </defs>
+  <rect width='1280' height='700' fill='url(#bg)' rx='24'/>
+  <g fill='none' stroke='rgba(255,255,255,.18)' stroke-width='2'>
+    <path d='M120 170h1040'/><path d='M120 340h1040'/><path d='M120 510h1040'/>
+  </g>
+  <g font-family='Space Grotesk, sans-serif' fill='#ecf4fb'>
+    <text x='80' y='72' font-size='32' font-weight='700'>HDIM AGUI Control Plane</text>
+    <text x='80' y='106' font-size='16' opacity='.9'>Event ingestion, policy enforcement, introspection, and release evidence loop</text>
+  </g>
+  <g>
+    <rect x='120' y='210' width='220' height='100' rx='16' fill='url(#node)'/>
+    <text x='140' y='253' font-family='Manrope, sans-serif' font-size='20' font-weight='700' fill='#042935'>FHIR + HL7 Intake</text>
+    <text x='140' y='279' font-family='Manrope, sans-serif' font-size='14' fill='#053447'>Adapters, validation, normalization</text>
+
+    <rect x='390' y='210' width='220' height='100' rx='16' fill='url(#node)'/>
+    <text x='410' y='253' font-family='Manrope, sans-serif' font-size='20' font-weight='700' fill='#042935'>Event Fabric</text>
+    <text x='410' y='279' font-family='Manrope, sans-serif' font-size='14' fill='#053447'>Kafka topics, replay, DLQ controls</text>
+
+    <rect x='660' y='210' width='220' height='100' rx='16' fill='url(#node)'/>
+    <text x='680' y='253' font-family='Manrope, sans-serif' font-size='20' font-weight='700' fill='#042935'>AI Orchestration</text>
+    <text x='680' y='279' font-family='Manrope, sans-serif' font-size='14' fill='#053447'>Detection, recommendation, explainability</text>
+
+    <rect x='930' y='210' width='220' height='100' rx='16' fill='url(#node)'/>
+    <text x='950' y='253' font-family='Manrope, sans-serif' font-size='20' font-weight='700' fill='#042935'>Control Gates</text>
+    <text x='950' y='279' font-family='Manrope, sans-serif' font-size='14' fill='#053447'>Contract tests, preflight, CI freshness</text>
+  </g>
+
+  <g stroke='#f5c65d' stroke-width='4' fill='none' stroke-linecap='round'>
+    <path d='M344 260h40'/><path d='M614 260h40'/><path d='M884 260h40'/>
+    <path d='M1040 314v130H240v-130'/>
+  </g>
+
+  <g fill='rgba(236,244,251,.95)' font-family='Manrope, sans-serif'>
+    <text x='250' y='388' font-size='19' font-weight='700'>Introspection Loop</text>
+    <text x='250' y='414' font-size='14'>Unknown signal detection, policy escalation, and evidence publication.</text>
+  </g>
+
+  <g>
+    <rect x='120' y='520' width='1030' height='110' rx='16' fill='rgba(255,255,255,.08)' stroke='rgba(255,255,255,.16)'/>
+    <text x='150' y='568' font-family='Space Grotesk, sans-serif' font-size='22' fill='#ecf4fb' font-weight='700'>Release Evidence Chain</text>
+    <text x='150' y='598' font-family='Manrope, sans-serif' font-size='15' fill='#ecf4fb'>Gap Register → Control Matrix → Scorecard → Go/No-Go Report</text>
+  </g>
+</svg>

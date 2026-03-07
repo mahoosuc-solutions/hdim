@@ -28,7 +28,7 @@ jaxb-api = "2.3.1"
 jaxb-runtime = "4.0.4"
 
 # Schematron/QRDA Validation
-ph-schematron = "8.0.3"
+ph-schematron = "8.0.6"
 ph-commons = "11.1.6"
 
 # Databases & Persistence

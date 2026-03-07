@@ -1,0 +1,347 @@
+/* AGUI Portal Design System — scoped CSS module */
+/* Ported from docs/marketing/web/assets/css/agui-portal.css */
+
+.portalShell {
+  width: min(1200px, calc(100% - 3rem));
+  margin: 0 auto;
+}
+
+.portalNav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: blur(12px);
+  background: rgba(248, 251, 255, 0.88);
+  border-bottom: 1px solid rgba(13, 27, 42, 0.08);
+}
+
+.portalNavInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 76px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brandBadge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  font-weight: 800;
+  background: linear-gradient(135deg, #0d1b2a, #17b7c8);
+}
+
+.brandName {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.navLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.navLink {
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a2a3e;
+  padding: 0.48rem 0.85rem;
+  border-radius: 999px;
+  transition: 160ms ease;
+}
+
+.navLink:hover,
+.navLinkActive {
+  background: rgba(23, 183, 200, 0.13);
+  color: #0b5162;
+}
+
+.langToggle {
+  border: 1px solid rgba(13, 27, 42, 0.16);
+  border-radius: 999px;
+  padding: 0.25rem;
+  display: inline-flex;
+  background: #ffffff;
+}
+
+.langBtn {
+  border: 0;
+  background: transparent;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: #1a2a3e;
+  border-radius: 999px;
+  padding: 0.32rem 0.62rem;
+  cursor: pointer;
+}
+
+.langBtnActive {
+  background: #0d1b2a;
+  color: #ffffff;
+}
+
+.hero {
+  padding: 4.6rem 0 2rem;
+}
+
+.heroPanel {
+  border-radius: 30px;
+  padding: 3rem;
+  color: #ffffff;
+  background:
+    radial-gradient(circle at 85% -20%, rgba(245, 198, 93, 0.3), transparent 45%),
+    linear-gradient(142deg, #071a2d 0%, #112844 44%, #124d66 100%);
+  box-shadow: 0 18px 50px rgba(6, 18, 31, 0.2);
+}
+
+.kicker {
+  display: inline-flex;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  padding: 0.36rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 5vw, 3.45rem);
+  line-height: 1.08;
+  margin: 1rem 0 0.9rem;
+}
+
+.heroBody {
+  font-size: 1.02rem;
+  line-height: 1.7;
+  max-width: 67ch;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.heroActions {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.btn {
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.65rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  transition: 160ms ease;
+  display: inline-block;
+}
+
+.btnPrimary {
+  composes: btn;
+  background: linear-gradient(135deg, #2dd4a8, #79f0cf);
+  color: #063525;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(45, 212, 168, 0.28);
+}
+
+.btnGhost {
+  composes: btn;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+}
+
+.btnGhost:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.metricsGrid,
+.cardGrid,
+.personaGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.metricsGrid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  margin-top: 1.35rem;
+}
+
+.metricCard {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.21);
+  border-radius: 12px;
+  padding: 0.95rem;
+}
+
+.metricValue {
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.metricLabel {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.section {
+  padding: 2.2rem 0;
+}
+
+.sectionTitle {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  margin: 0 0 0.6rem;
+}
+
+.sectionLead {
+  color: #2d435a;
+  max-width: 72ch;
+  line-height: 1.7;
+}
+
+.cardGrid {
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid rgba(13, 27, 42, 0.09);
+  border-radius: 18px;
+  padding: 1.15rem;
+  box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
+}
+
+.cardTitle {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.cardBody {
+  margin: 0;
+  color: #3d5367;
+  line-height: 1.65;
+  font-size: 0.92rem;
+}
+
+.personaGrid {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.personaCard {
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(13, 27, 42, 0.08);
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
+}
+
+.personaTop {
+  min-height: 118px;
+  padding: 1rem;
+  color: #ffffff;
+  display: flex;
+  align-items: flex-end;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.personaTopExec { background: linear-gradient(125deg, #0d1b2a, #24486f); }
+.personaTopClinical { background: linear-gradient(125deg, #164e63, #0891b2); }
+.personaTopTechnical { background: linear-gradient(125deg, #1f3f6c, #345ca8); }
+
+.personaBody {
+  padding: 1rem;
+}
+
+.personaBody ul {
+  margin: 0.8rem 0 0;
+  padding-left: 1rem;
+  color: #325068;
+}
+
+.personaBody li { margin-bottom: 0.45rem; }
+
+.figure {
+  background: #ffffff;
+  border: 1px solid rgba(13, 27, 42, 0.08);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
+}
+
+.figureImg {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.figureCaption {
+  color: #3a5168;
+  font-size: 0.82rem;
+  margin-top: 0.65rem;
+}
+
+.footer {
+  margin-top: 2rem;
+  border-top: 1px solid rgba(13, 27, 42, 0.1);
+  padding: 1.4rem 0 2rem;
+  color: #3a546d;
+  font-size: 0.82rem;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.badge {
+  background: rgba(23, 183, 200, 0.12);
+  color: #0b5162;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  padding: 0.3rem 0.55rem;
+  font-weight: 700;
+}
+
+.notice {
+  border-left: 4px solid #f5c65d;
+  background: #fffdf6;
+  padding: 0.8rem 0.95rem;
+  border-radius: 0 10px 10px 0;
+  color: #6d5614;
+  font-size: 0.86rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 900px) {
+  .portalShell { width: min(1200px, calc(100% - 1.4rem)); }
+  .portalNavInner { min-height: 84px; align-items: flex-start; padding: 0.55rem 0; }
+  .heroPanel { padding: 1.35rem; border-radius: 20px; }
+  .hero { padding-top: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btnPrimary:hover { transform: none; }
+}

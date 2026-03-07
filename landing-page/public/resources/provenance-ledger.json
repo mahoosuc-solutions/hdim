@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-03-07T07:00:00Z",
+  "policy": {
+    "name": "HDIM AI Asset Provenance Policy",
+    "requirements": [
+      "Prompt and model/version recorded",
+      "License and usage rights documented",
+      "PHI-safe review complete",
+      "Human approval captured before publication"
+    ]
+  },
+  "assets": [
+    {
+      "asset_id": "ai-asset-001",
+      "file": "assets/ai-generated/platform-control-plane.svg",
+      "title": "HDIM Platform Control Plane",
+      "generation_method": "LLM-assisted vector generation",
+      "model": "gpt-5-codex",
+      "prompt_summary": "Create a healthcare event-driven control-plane diagram with release-evidence loop.",
+      "license": "Project-owned generated asset",
+      "contains_phi": false,
+      "phi_safety_reviewed_by": "Security Lead",
+      "approval": "approved",
+      "approved_by": "Compliance Lead"
+    },
+    {
+      "asset_id": "ai-asset-002",
+      "file": "assets/ai-generated/persona-map.svg",
+      "title": "Persona Navigation Map",
+      "generation_method": "LLM-assisted vector generation",
+      "model": "gpt-5-codex",
+      "prompt_summary": "Create a persona navigation map for executive, clinical, and technical paths.",
+      "license": "Project-owned generated asset",
+      "contains_phi": false,
+      "phi_safety_reviewed_by": "Security Lead",
+      "approval": "approved",
+      "approved_by": "Compliance Lead"
+    },
+    {
+      "asset_id": "ai-asset-003",
+      "file": "assets/ai-generated/compliance-loop.svg",
+      "title": "Release Compliance Loop",
+      "generation_method": "LLM-assisted vector generation",
+      "model": "gpt-5-codex",
+      "prompt_summary": "Illustrate validators through go/no-go decision as a closed loop.",
+      "license": "Project-owned generated asset",
+      "contains_phi": false,
+      "phi_safety_reviewed_by": "Security Lead",
+      "approval": "approved",
+      "approved_by": "Compliance Lead"
+    },
+    {
+      "asset_id": "ai-asset-004",
+      "file": "assets/ai-generated/event-fabric.svg",
+      "title": "Event Fabric and Introspection",
+      "generation_method": "LLM-assisted vector generation",
+      "model": "gpt-5-codex",
+      "prompt_summary": "Show known-to-unknown event processing flow with evidence output.",
+      "license": "Project-owned generated asset",
+      "contains_phi": false,
+      "phi_safety_reviewed_by": "Security Lead",
+      "approval": "approved",
+      "approved_by": "Compliance Lead"
+    }
+  ]
+}

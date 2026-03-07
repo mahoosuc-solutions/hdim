@@ -1,0 +1,41 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 640' role='img' aria-labelledby='title'>
+  <title id='title'>Persona Map</title>
+  <defs>
+    <linearGradient id='a' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='#0d1b2a'/>
+      <stop offset='100%' stop-color='#175a7f'/>
+    </linearGradient>
+  </defs>
+  <rect width='1200' height='640' fill='#f7fbff'/>
+  <text x='70' y='74' font-family='Space Grotesk, sans-serif' font-size='34' font-weight='700' fill='#0d1b2a'>HDIM Persona Navigation</text>
+  <text x='70' y='105' font-family='Manrope, sans-serif' font-size='15' fill='#35506a'>One portal, three depth paths, shared evidence backbone.</text>
+
+  <rect x='70' y='170' width='1060' height='410' rx='20' fill='url(#a)'/>
+
+  <g font-family='Manrope, sans-serif'>
+    <rect x='130' y='240' width='280' height='260' rx='18' fill='rgba(255,255,255,.12)' stroke='rgba(255,255,255,.22)'/>
+    <text x='160' y='285' font-size='24' font-weight='700' fill='#ecf4fb'>Executive</text>
+    <text x='160' y='312' font-size='24' font-weight='700' fill='#ecf4fb'>& Compliance</text>
+    <text x='160' y='355' font-size='14' fill='#d8e9f5'>Controls, auditability,</text>
+    <text x='160' y='378' font-size='14' fill='#d8e9f5'>release policy and risk</text>
+
+    <rect x='460' y='240' width='280' height='260' rx='18' fill='rgba(255,255,255,.12)' stroke='rgba(255,255,255,.22)'/>
+    <text x='495' y='285' font-size='24' font-weight='700' fill='#ecf4fb'>Clinical</text>
+    <text x='495' y='312' font-size='24' font-weight='700' fill='#ecf4fb'>Leadership</text>
+    <text x='495' y='355' font-size='14' fill='#d8e9f5'>Care-gap impact,</text>
+    <text x='495' y='378' font-size='14' fill='#d8e9f5'>quality outcomes, workflow</text>
+
+    <rect x='790' y='240' width='280' height='260' rx='18' fill='rgba(255,255,255,.12)' stroke='rgba(255,255,255,.22)'/>
+    <text x='826' y='285' font-size='24' font-weight='700' fill='#ecf4fb'>Technical</text>
+    <text x='826' y='312' font-size='24' font-weight='700' fill='#ecf4fb'>Evaluation</text>
+    <text x='826' y='355' font-size='14' fill='#d8e9f5'>Architecture, tests, runtime</text>
+    <text x='826' y='378' font-size='14' fill='#d8e9f5'>orchestration, tenant safety</text>
+  </g>
+
+  <g fill='none' stroke='#f5c65d' stroke-width='3' stroke-dasharray='8 8'>
+    <path d='M410 370h50'/>
+    <path d='M740 370h50'/>
+  </g>
+
+  <text x='458' y='560' font-family='Space Grotesk, sans-serif' font-size='18' fill='#ecf4fb' font-weight='700'>Shared evidence and governance rail</text>
+</svg>

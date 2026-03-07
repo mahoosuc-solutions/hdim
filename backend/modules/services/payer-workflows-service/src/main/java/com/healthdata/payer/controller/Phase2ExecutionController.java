@@ -6,6 +6,8 @@ import com.healthdata.payer.dto.CaseStudyResponse;
 import com.healthdata.payer.dto.MeasureROIResponse;
 import com.healthdata.payer.service.Phase2ExecutionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -238,6 +241,11 @@ public class Phase2ExecutionController {
     @GetMapping("/financial/dashboard")
     @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Operation(summary = "Get financial dashboard with aggregated ROI metrics")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Financial summary returned"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Insufficient role")
+    })
     public ResponseEntity<Phase2ExecutionService.FinancialSummary> getFinancialDashboard(
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
@@ -248,6 +256,11 @@ public class Phase2ExecutionController {
     @GetMapping("/financial/by-measure")
     @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Operation(summary = "Get ROI analysis broken down by HEDIS measure")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Measure ROI breakdown returned"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Insufficient role")
+    })
     public ResponseEntity<List<MeasureROIResponse>> getMeasureROIAnalysis(
             @RequestHeader("X-Tenant-ID") String tenantId) {
 
@@ -292,6 +305,11 @@ public class Phase2ExecutionController {
     @GetMapping("/case-studies")
     @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Operation(summary = "Get case studies (published or draft)")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Case study list returned"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Insufficient role")
+    })
     public ResponseEntity<List<CaseStudyResponse>> getCaseStudies(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam(defaultValue = "false") Boolean published) {
@@ -310,6 +328,12 @@ public class Phase2ExecutionController {
     @PostMapping("/case-studies/{caseStudyId}/publish")
     @PreAuthorize("hasAnyRole('ADMIN')")
     @Operation(summary = "Publish a case study")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Case study published successfully"),
+            @ApiResponse(responseCode = "404", description = "Case study not found"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Insufficient role")
+    })
     public ResponseEntity<CaseStudyResponse> publishCaseStudy(
             @RequestHeader("X-Tenant-ID") String tenantId,
             @PathVariable String caseStudyId) {
@@ -332,6 +356,16 @@ public class Phase2ExecutionController {
                 .customerQuote(task.getCustomerQuote())
                 .published(task.getCaseStudyPublished())
                 .build();
+    }
+
+    // ===== Exception Handling =====
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        if (ex.getMessage() != null && ex.getMessage().startsWith("Task not found")) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+        }
+        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 
     // ===== Request DTOs =====

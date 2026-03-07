@@ -24,7 +24,7 @@ RUN npx nx build clinical-portal --configuration=production
 # =============================================================================
 # Stage 2: Serve with Nginx
 # =============================================================================
-FROM nginx:1.25-alpine
+FROM nginx:1.29-alpine
 
 # Install bash for health checks (optional)
 RUN apk add --no-cache bash

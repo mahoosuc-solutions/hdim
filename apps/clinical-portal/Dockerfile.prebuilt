@@ -4,7 +4,7 @@
 # Then build this image:
 #   docker build -f apps/clinical-portal/Dockerfile.prebuilt -t hdim-master-clinical-portal .
 
-FROM nginx:1.25-alpine
+FROM nginx:1.29-alpine
 
 RUN apk add --no-cache bash
 

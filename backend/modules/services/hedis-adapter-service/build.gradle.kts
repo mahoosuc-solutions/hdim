@@ -26,6 +26,7 @@ dependencies {
     testImplementation(libs.bundles.testing)
     testImplementation(libs.h2)
     testImplementation(libs.spring.security.test)
+    testImplementation(libs.spring.kafka.test)
 }
 
 tasks.withType<Test> {

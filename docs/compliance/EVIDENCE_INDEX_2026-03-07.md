@@ -18,6 +18,15 @@
 - `docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md`
 - `docs/compliance/GAP_REGISTER_2026-03-07.md`
 - `docs/compliance/OVERSIGHT_RESPONSE_PACK_v0.0.0-test_2026-03-07.md`
+- `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` (open)
+- `docs/compliance/ACCESS_REVIEW_2026-03-07.md` (open)
+- `docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md` (open)
+
+## TDD Closure Plans
+- `docs/plans/2026-03-07-gap-closure-tdd-program.md`
+- `docs/plans/2026-03-07-gap-002-dr-validation-tdd-plan.md`
+- `docs/plans/2026-03-07-gap-003-access-review-tdd-plan.md`
+- `docs/plans/2026-03-07-gap-004-third-party-risk-tdd-plan.md`
 
 ## Legacy Assurance Sets (Reference)
 - `docs/compliance/PLATFORM_360_EVIDENCE_INDEX_2026-02-27.md`

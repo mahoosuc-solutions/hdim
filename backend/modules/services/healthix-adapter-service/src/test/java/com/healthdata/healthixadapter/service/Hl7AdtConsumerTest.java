@@ -71,4 +71,87 @@ class Hl7AdtConsumerTest {
 
         assertThat(envelopeCaptor.getValue()).isNotNull();
     }
+
+    @Test
+    void processAdtMessage_A02Transfer_shouldPublishEncounterUpdated() {
+        Map<String, Object> message = Map.of(
+                "messageType", "ADT",
+                "triggerEvent", "A02",
+                "patientId", "patient-transfer");
+
+        hl7AdtConsumer.processAdtMessage(message, "tenant-1");
+
+        verify(kafkaTemplate).send(eq("external.healthix.hl7"), eq("tenant-1"), any());
+        ArgumentCaptor<Object> patientCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(kafkaTemplate).send(eq("external.healthix.patients"), eq("tenant-1"), patientCaptor.capture());
+        assertThat(patientCaptor.getValue().toString()).contains("fhir.encounter.updated");
+    }
+
+    @Test
+    void processAdtMessage_A03Discharge_shouldPublishEncounterCompleted() {
+        Map<String, Object> message = Map.of(
+                "messageType", "ADT",
+                "triggerEvent", "A03",
+                "patientId", "patient-discharge");
+
+        hl7AdtConsumer.processAdtMessage(message, "tenant-1");
+
+        verify(kafkaTemplate, times(2)).send(any(String.class), eq("tenant-1"), any());
+        ArgumentCaptor<Object> patientCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(kafkaTemplate).send(eq("external.healthix.patients"), eq("tenant-1"), patientCaptor.capture());
+        assertThat(patientCaptor.getValue().toString()).contains("fhir.encounter.completed");
+    }
+
+    @Test
+    void processAdtMessage_A04Register_shouldPublishPatientCreated() {
+        Map<String, Object> message = Map.of(
+                "messageType", "ADT",
+                "triggerEvent", "A04",
+                "patientId", "patient-register");
+
+        hl7AdtConsumer.processAdtMessage(message, "tenant-1");
+
+        ArgumentCaptor<Object> patientCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(kafkaTemplate).send(eq("external.healthix.patients"), eq("tenant-1"), patientCaptor.capture());
+        assertThat(patientCaptor.getValue().toString()).contains("fhir.patient.created");
+    }
+
+    @Test
+    void processAdtMessage_A08Update_shouldPublishPatientUpdated() {
+        Map<String, Object> message = Map.of(
+                "messageType", "ADT",
+                "triggerEvent", "A08",
+                "patientId", "patient-update");
+
+        hl7AdtConsumer.processAdtMessage(message, "tenant-1");
+
+        ArgumentCaptor<Object> patientCaptor = ArgumentCaptor.forClass(Object.class);
+        verify(kafkaTemplate).send(eq("external.healthix.patients"), eq("tenant-1"), patientCaptor.capture());
+        assertThat(patientCaptor.getValue().toString()).contains("fhir.patient.updated");
+    }
+
+    @Test
+    void processAdtMessage_A31Update_shouldPublishPatientUpdated() {
+        Map<String, Object> message = Map.of(
+                "messageType", "ADT",
+                "triggerEvent", "A31",
+                "patientId", "patient-a31-update");
+
+        hl7AdtConsumer.processAdtMessage(message, "tenant-1");
+
+        verify(kafkaTemplate).send(eq("external.healthix.patients"), eq("tenant-1"), any());
+    }
+
+    @Test
+    void processAdtMessage_A05NonPatientEvent_shouldOnlyPublishToHl7Topic() {
+        Map<String, Object> message = Map.of(
+                "messageType", "ADT",
+                "triggerEvent", "A05",
+                "patientId", "patient-other");
+
+        hl7AdtConsumer.processAdtMessage(message, "tenant-1");
+
+        verify(kafkaTemplate, times(1)).send(any(String.class), any(String.class), any());
+        verify(kafkaTemplate).send(eq("external.healthix.hl7"), eq("tenant-1"), any());
+    }
 }

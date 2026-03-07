@@ -1,5 +1,6 @@
 package com.healthdata.hedisadapter.measures;
 
+import com.healthdata.hedisadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
@@ -26,39 +27,46 @@ public class CqlDelegationService {
 
     private final RestTemplate cqlRestTemplate;
     private final CircuitBreaker circuitBreaker;
+    private final AdapterSpanHelper spanHelper;
 
     public CqlDelegationService(
             @Qualifier("hedisCqlRestTemplate") RestTemplate cqlRestTemplate,
-            CircuitBreakerRegistry registry) {
+            CircuitBreakerRegistry registry,
+            AdapterSpanHelper spanHelper) {
         this.cqlRestTemplate = cqlRestTemplate;
         this.circuitBreaker = registry.circuitBreaker("hedis-cql");
+        this.spanHelper = spanHelper;
     }
 
     public CalculationResult calculateMeasure(CalculationRequest request) {
-        log.info("Delegating measure calculation to hedis CQL engine: measure={}",
-                request.getMeasureId());
+        return spanHelper.traced("hedis.cql.delegate_calculation", () -> {
+            log.info("Delegating measure calculation to hedis CQL engine: measure={}",
+                    request.getMeasureId());
 
-        Supplier<CalculationResult> supplier = CircuitBreaker.decorateSupplier(
-                circuitBreaker,
-                () -> cqlRestTemplate.postForObject(
-                        "/api/measures/calculate",
-                        request,
-                        CalculationResult.class));
+            Supplier<CalculationResult> supplier = CircuitBreaker.decorateSupplier(
+                    circuitBreaker,
+                    () -> cqlRestTemplate.postForObject(
+                            "/api/measures/calculate",
+                            request,
+                            CalculationResult.class));
 
-        return supplier.get();
+            return supplier.get();
+        }, "phi.level", "LIMITED", "measure.id", request.getMeasureId());
     }
 
     public CalculationResult calculateStarMeasure(CalculationRequest request) {
-        log.info("Delegating STAR measure calculation: measure={}", request.getMeasureId());
+        return spanHelper.traced("hedis.cql.delegate_calculation", () -> {
+            log.info("Delegating STAR measure calculation: measure={}", request.getMeasureId());
 
-        Supplier<CalculationResult> supplier = CircuitBreaker.decorateSupplier(
-                circuitBreaker,
-                () -> cqlRestTemplate.postForObject(
-                        "/api/star/calculate",
-                        request,
-                        CalculationResult.class));
+            Supplier<CalculationResult> supplier = CircuitBreaker.decorateSupplier(
+                    circuitBreaker,
+                    () -> cqlRestTemplate.postForObject(
+                            "/api/star/calculate",
+                            request,
+                            CalculationResult.class));
 
-        return supplier.get();
+            return supplier.get();
+        }, "phi.level", "LIMITED", "measure.id", request.getMeasureId(), "measure.type", "STAR");
     }
 
     @Data

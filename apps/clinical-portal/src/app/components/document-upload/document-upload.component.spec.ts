@@ -110,7 +110,7 @@ describe('DocumentUploadComponent', () => {
 
   describe('file upload', () => {
     it('should upload file and start OCR polling', (done) => {
-      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' };
+      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' });
       const mockResponse = {
         attachmentId: 'attach-123',
         fileName: 'test.pdf',
@@ -169,6 +169,30 @@ describe('DocumentUploadComponent', () => {
 
       // Status should update through PROCESSING to COMPLETED
       expect(component.ocrStatus).toBeDefined();
+    });
+  });
+
+  describe('subscription cleanup', () => {
+    it('should unsubscribe from all subscriptions on destroy', () => {
+      const file = new File(['test'], 'test.pdf', { type: 'application/pdf' });
+      uploadService.uploadDocument.mockReturnValue(of({
+        attachmentId: 'attach-123',
+        fileName: 'test.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 4,
+        uploadDate: '2026-01-24T12:00:00Z',
+        ocrStatus: 'PENDING'
+      }));
+      uploadService.pollOcrStatus.mockReturnValue(of('COMPLETED'));
+
+      component.onFileSelected({ target: { files: [file] } } as any);
+
+      // Subscriptions should exist
+      expect((component as any).subscriptions.length).toBeGreaterThan(0);
+
+      // Destroy should clean up
+      component.ngOnDestroy();
+      expect((component as any).subscriptions.length).toBe(0);
     });
   });
 

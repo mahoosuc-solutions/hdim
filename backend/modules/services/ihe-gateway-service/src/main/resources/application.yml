@@ -1,0 +1,102 @@
+server:
+  port: 8125
+  servlet:
+    context-path: /ihe-gateway
+
+spring:
+  application:
+    name: ihe-gateway-service
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: ihe-gateway
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.healthdata.*,java.util,java.lang"
+        spring.json.value.default.type: "java.util.LinkedHashMap"
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:ihe_gateway_db}
+    username: ${DB_USERNAME:healthdata}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  flyway:
+    enabled: false
+
+external:
+  ihe:
+    enabled: ${IHE_GATEWAY_ENABLED:false}
+    healthix-fhir-url: ${HEALTHIX_FHIR_URL:http://localhost:8080}
+    healthix-mpi-url: ${HEALTHIX_MPI_URL:http://localhost:8000}
+    healthix-document-url: ${HEALTHIX_DOCUMENT_URL:http://localhost:3010}
+    timeout-ms: ${IHE_TIMEOUT_MS:10000}
+    connect-timeout-ms: ${IHE_CONNECT_TIMEOUT_MS:5000}
+    mtls:
+      enabled: ${IHE_MTLS_ENABLED:false}
+      keystore-path: ${IHE_MTLS_KEYSTORE_PATH:}
+      keystore-password: ${IHE_MTLS_KEYSTORE_PASSWORD:}
+      truststore-path: ${IHE_MTLS_TRUSTSTORE_PATH:}
+      truststore-password: ${IHE_MTLS_TRUSTSTORE_PASSWORD:}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      ihe-document-query:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+      ihe-document-retrieve:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+      ihe-pix-query:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+  retry:
+    instances:
+      ihe-api:
+        max-attempts: 3
+        wait-duration: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+
+tracing:
+  enabled: true
+  url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://jaeger:4318/v1/traces}
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.ihegateway: DEBUG

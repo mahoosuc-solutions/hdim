@@ -1,6 +1,8 @@
 package com.healthdata.healthixadapter.service;
 
 import com.healthdata.healthixadapter.hl7.Hl7AdtConsumer;
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +16,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -25,8 +29,17 @@ class Hl7AdtConsumerTest {
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Mock
+    private AdapterSpanHelper spanHelper;
+
     @InjectMocks
     private Hl7AdtConsumer hl7AdtConsumer;
+
+    @BeforeEach
+    void setUp() {
+        doAnswer(inv -> { ((Runnable) inv.getArgument(1)).run(); return null; })
+                .when(spanHelper).tracedRun(anyString(), any(Runnable.class), any(String[].class));
+    }
 
     @Test
     void processAdtMessage_shouldPublishToHl7Topic() {

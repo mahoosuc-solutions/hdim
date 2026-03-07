@@ -1,7 +1,9 @@
 package com.healthdata.corehiveadapter.event;
 
+import com.healthdata.corehiveadapter.observability.AdapterSpanHelper;
 import com.healthdata.corehiveadapter.service.CorehiveAdapterService;
 import com.healthdata.corehiveadapter.service.PhiDeIdentificationService;
+import io.opentelemetry.api.trace.TracerProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -33,7 +35,9 @@ class CareGapEventListenerTest {
     @BeforeEach
     void setUp() {
         deIdentificationService = new PhiDeIdentificationService();
-        listener = new CareGapEventListener(adapterService, deIdentificationService);
+        AdapterSpanHelper spanHelper = new AdapterSpanHelper(
+                TracerProvider.noop().get("test"));
+        listener = new CareGapEventListener(adapterService, deIdentificationService, spanHelper);
     }
 
     @Test

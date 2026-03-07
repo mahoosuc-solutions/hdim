@@ -4,6 +4,7 @@ import com.healthdata.common.external.ExternalEventEnvelope;
 import com.healthdata.common.external.ExternalEventMetadata;
 import com.healthdata.common.external.PhiLevel;
 import com.healthdata.common.external.SourceSystem;
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,48 +32,53 @@ public class FhirSubscriptionClient {
     @Qualifier("healthixFhirRestTemplate")
     private final RestTemplate fhirRestTemplate;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final AdapterSpanHelper spanHelper;
 
     private static final String TOPIC_FHIR = "external.healthix.fhir";
 
     public void handleFhirNotification(Map<String, Object> fhirResource, String tenantId) {
-        String resourceType = (String) fhirResource.getOrDefault("resourceType", "Unknown");
-        String resourceId = (String) fhirResource.getOrDefault("id", "");
+        spanHelper.tracedRun("healthix.fhir.notification_received", () -> {
+            String resourceType = (String) fhirResource.getOrDefault("resourceType", "Unknown");
+            String resourceId = (String) fhirResource.getOrDefault("id", "");
 
-        log.info("Received FHIR {} notification from Healthix, id={}",
-                resourceType, resourceId);
+            log.info("Received FHIR {} notification from Healthix, id={}",
+                    resourceType, resourceId);
 
-        ExternalEventEnvelope<Map<String, Object>> envelope = ExternalEventEnvelope.of(
-                "external.healthix.fhir." + resourceType.toLowerCase() + ".received",
-                "healthix-adapter-service",
-                tenantId,
-                fhirResource,
-                ExternalEventMetadata.builder()
-                        .sourceSystem(SourceSystem.HEALTHIX)
-                        .phiLevel(PhiLevel.FULL)
-                        .build());
+            ExternalEventEnvelope<Map<String, Object>> envelope = ExternalEventEnvelope.of(
+                    "external.healthix.fhir." + resourceType.toLowerCase() + ".received",
+                    "healthix-adapter-service",
+                    tenantId,
+                    fhirResource,
+                    ExternalEventMetadata.builder()
+                            .sourceSystem(SourceSystem.HEALTHIX)
+                            .phiLevel(PhiLevel.FULL)
+                            .build());
 
-        kafkaTemplate.send(TOPIC_FHIR, tenantId, envelope);
+            kafkaTemplate.send(TOPIC_FHIR, tenantId, envelope);
+        }, "adapter", "healthix", "phi.level", "FULL");
     }
 
     /**
      * Register HDIM as a FHIR Subscription consumer on Healthix.
      */
     public void registerSubscription(String callbackUrl, String resourceType) {
-        log.info("Registering FHIR subscription for resourceType={}, callback={}",
-                resourceType, callbackUrl);
+        spanHelper.tracedRun("healthix.fhir.register_subscription", () -> {
+            log.info("Registering FHIR subscription for resourceType={}, callback={}",
+                    resourceType, callbackUrl);
 
-        Map<String, Object> subscription = Map.of(
-                "resourceType", "Subscription",
-                "status", "requested",
-                "criteria", resourceType + "?",
-                "channel", Map.of(
-                        "type", "rest-hook",
-                        "endpoint", callbackUrl,
-                        "payload", "application/fhir+json"
-                )
-        );
+            Map<String, Object> subscription = Map.of(
+                    "resourceType", "Subscription",
+                    "status", "requested",
+                    "criteria", resourceType + "?",
+                    "channel", Map.of(
+                            "type", "rest-hook",
+                            "endpoint", callbackUrl,
+                            "payload", "application/fhir+json"
+                    )
+            );
 
-        fhirRestTemplate.postForEntity("/fhir/Subscription", subscription, Map.class);
-        log.info("FHIR subscription registered for {}", resourceType);
+            fhirRestTemplate.postForEntity("/fhir/Subscription", subscription, Map.class);
+            log.info("FHIR subscription registered for {}", resourceType);
+        }, "adapter", "healthix", "phi.level", "FULL");
     }
 }

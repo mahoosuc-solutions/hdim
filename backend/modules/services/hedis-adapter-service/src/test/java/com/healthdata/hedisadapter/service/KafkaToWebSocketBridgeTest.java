@@ -1,11 +1,17 @@
 package com.healthdata.hedisadapter.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.hedisadapter.observability.AdapterSpanHelper;
 import com.healthdata.hedisadapter.websocket.KafkaToWebSocketBridge;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -15,17 +21,28 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @Tag("unit")
 @ExtendWith(MockitoExtension.class)
 class KafkaToWebSocketBridgeTest {
 
+    @Mock private Tracer tracer;
+    @Mock private SpanBuilder spanBuilder;
+    @Mock private Span span;
+    @Mock private Scope scope;
+
     private KafkaToWebSocketBridge bridge;
 
     @BeforeEach
     void setUp() {
-        bridge = new KafkaToWebSocketBridge(new ObjectMapper());
+        lenient().when(tracer.spanBuilder(anyString())).thenReturn(spanBuilder);
+        lenient().when(spanBuilder.startSpan()).thenReturn(span);
+        lenient().when(span.makeCurrent()).thenReturn(scope);
+        lenient().when(span.setAttribute(anyString(), anyString())).thenReturn(span);
+        AdapterSpanHelper spanHelper = new AdapterSpanHelper(tracer);
+        bridge = new KafkaToWebSocketBridge(new ObjectMapper(), spanHelper);
     }
 
     @Test

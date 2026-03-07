@@ -13,7 +13,7 @@
 | RC-MCP-001 | Runtime Orchestration | MCP orchestration/go-no-go runtime tests pass | `test-results/mcp-orchestration-tests-2026-03-07.log` | Platform Lead | Per RC | PASS |
 | RC-CI-001 | CI Gate Freshness | Upstream security/performance CI gate validation succeeds with fresh successful runs | `test-results/upstream-ci-gates-2026-03-07.log` | Release Manager | Per RC | PASS |
 | RC-EVD-001 | Evidence Provenance | RC proof artifact exists with command-level evidence | `docs/releases/v0.0.0-test/validation/rc-implementation-proof-2026-03-07.md` | Compliance Lead | Per RC | PASS |
-| RC-DR-001 | Business Continuity | Recovery drill report with timed RTO/RPO for current release lane | `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` | SRE Lead | Quarterly / Pre-prod | FAIL (Missing current-cycle artifact) |
+| RC-DR-001 | Business Continuity | Recovery drill report with timed RTO/RPO for current release lane | `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` | SRE Lead | Quarterly / Pre-prod | PASS |
 | RC-ACC-001 | Access Governance | Access recertification and stale access review evidence | `docs/compliance/ACCESS_REVIEW_2026-03-07.md` | Security Lead | Monthly | FAIL (Missing current-cycle artifact) |
 | RC-TPR-001 | Third-Party Risk | Vendor inventory includes BAA/DPA/SOC mappings and exceptions | `docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md` | Compliance Lead | Quarterly | FAIL (Missing current-cycle artifact) |
 

@@ -13,7 +13,7 @@
 | Upstream CI Security/Performance Freshness | Critical | PASS | `test-results/upstream-ci-gates-2026-03-07.log` |
 | Runtime Orchestration Validation | High | PASS | `test-results/mcp-orchestration-tests-2026-03-07.log` |
 | Evidence Provenance Completeness | High | PASS | `docs/releases/v0.0.0-test/validation/rc-implementation-proof-2026-03-07.md` |
-| DR Recovery Validation | High | FAIL | `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` (missing) |
+| DR Recovery Validation | High | PASS | `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` |
 | Access Recertification | High | FAIL | `docs/compliance/ACCESS_REVIEW_2026-03-07.md` (missing) |
 | Third-Party Risk Review | High | FAIL | `docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md` (missing) |
 

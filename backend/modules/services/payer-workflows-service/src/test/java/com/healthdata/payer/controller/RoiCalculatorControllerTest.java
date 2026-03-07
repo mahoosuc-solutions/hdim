@@ -20,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.healthdata.payer.service.RoiPdfExportService;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -48,6 +50,9 @@ class RoiCalculatorControllerTest {
 
     @MockBean
     private RoiCalculationService roiCalculationService;
+
+    @MockBean
+    private RoiPdfExportService roiPdfExportService;
 
     private static final String TENANT_ID = "hdim-test";
 
@@ -147,6 +152,40 @@ class RoiCalculatorControllerTest {
 
         mockMvc.perform(get("/api/v1/payer/roi/nonexistent"))
                 .andExpect(status().isNotFound());
+    }
+
+    // ===== GET /api/v1/payer/roi/recent =====
+
+    @Test
+    @DisplayName("POST /calculate - Should return 400 for invalid org type")
+    void shouldReturn400ForInvalidOrgType() throws Exception {
+        when(roiCalculationService.calculate(any(), any()))
+                .thenThrow(new IllegalArgumentException("Unknown organization type: BOGUS"));
+
+        String requestBody = objectMapper.writeValueAsString(
+                RoiCalculationRequest.builder()
+                        .orgType("BOGUS")
+                        .patientPopulation(25000)
+                        .currentQualityScore(70.0)
+                        .currentStarRating(3.5)
+                        .manualReportingHours(40)
+                        .build()
+        );
+
+        mockMvc.perform(post("/api/v1/payer/roi/calculate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("POST /calculate - Should return 400 for missing required fields")
+    void shouldReturn400ForMissingFields() throws Exception {
+        // Empty body - all required fields missing
+        mockMvc.perform(post("/api/v1/payer/roi/calculate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 
     // ===== GET /api/v1/payer/roi/recent =====

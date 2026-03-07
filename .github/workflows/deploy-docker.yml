@@ -199,6 +199,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           BRANCH_NAME: ${{ github.event.repository.default_branch || 'master' }}
+          PERFORMANCE_WORKFLOW_FILE: release-performance-gate.yml
+          SECURITY_WORKFLOW_FILE: release-security-gate.yml
           MAX_GATE_AGE_HOURS: ${{ vars.RELEASE_GATE_MAX_AGE_HOURS || '168' }}
           REQUIRE_PERFORMANCE_GATE: "true"
           REQUIRE_SECURITY_GATE: "true"

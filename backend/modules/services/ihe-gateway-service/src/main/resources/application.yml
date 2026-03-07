@@ -18,9 +18,18 @@ spring:
       properties:
         spring.json.trusted.packages: "com.healthdata.*,java.util,java.lang"
         spring.json.value.default.type: "java.util.LinkedHashMap"
+        fetch.min.bytes: 1048576
+        fetch.max.wait.ms: 500
+        max.poll.records: 500
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      batch-size: 32768
+      properties:
+        linger.ms: 10
+        buffer.memory: 67108864
+        compression.type: lz4
+      acks: 1
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:ihe_gateway_db}
@@ -49,6 +58,15 @@ external:
     healthix-document-url: ${HEALTHIX_DOCUMENT_URL:http://localhost:3010}
     timeout-ms: ${IHE_TIMEOUT_MS:10000}
     connect-timeout-ms: ${IHE_CONNECT_TIMEOUT_MS:5000}
+    connection-pool:
+      max-connections: 200
+      max-connections-per-route: 50
+      connection-timeout-ms: 3000
+      socket-timeout-ms: 10000
+      keep-alive-ms: 30000
+    xca:
+      remote-community-url: ${IHE_XCA_REMOTE_URL:http://localhost:8080}
+      enabled: ${IHE_XCA_ENABLED:true}
     mtls:
       enabled: ${IHE_MTLS_ENABLED:false}
       keystore-path: ${IHE_MTLS_KEYSTORE_PATH:}

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import styles from '@/styles/content-page.module.css';
 
@@ -84,6 +85,33 @@ export default function FHIRPipelinePage() {
       </section>
 
       <div className={styles.container}>
+        {/* Pipeline Architecture Diagram */}
+        <section className={styles.section}>
+          <figure style={{ margin: 0 }}>
+            <Image
+              src={
+                activeTab === 'technical'
+                  ? '/resources/race-track-technical.svg'
+                  : activeTab === 'mixed'
+                    ? '/resources/race-track-mixed.svg'
+                    : '/resources/race-track-overview.svg'
+              }
+              alt={`FHIR pipeline ${activeTab} architecture view`}
+              width={1600}
+              height={900}
+              style={{ width: '100%', height: 'auto', borderRadius: '12px' }}
+              priority
+            />
+            <figcaption style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem', textAlign: 'center' }}>
+              {activeTab === 'technical'
+                ? 'Technical view: Kafka topology, Redis cache layers, and consumer group detail'
+                : activeTab === 'mixed'
+                  ? 'Hybrid view: race-track metaphor mapped to Kafka, services, and Redis internals'
+                  : 'Overview: patient journey from FHIR ingestion through care gap detection to action delivery'}
+            </figcaption>
+          </figure>
+        </section>
+
         {/* Canonical Journey */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Canonical Journey (Same Across All Tabs)</h2>

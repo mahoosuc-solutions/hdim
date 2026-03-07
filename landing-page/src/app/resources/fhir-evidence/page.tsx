@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '@/styles/content-page.module.css';
 
 export const metadata: Metadata = {
@@ -76,6 +77,23 @@ export default function FHIREvidencePage() {
               </ul>
             </div>
           </div>
+        </section>
+
+        {/* Real Output */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>What Validation Looks Like</h2>
+          <figure style={{ margin: 0 }}>
+            <Image
+              src="/resources/screenshots/results-evaluation.jpg"
+              alt="HDIM Clinical Portal showing HEDIS evaluation results with Breast Cancer Screening measure detail"
+              width={1916}
+              height={922}
+              style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+            />
+            <figcaption style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
+              Clinical Portal: HEDIS evaluation results with measure-level detail (BCS, CCS, CDC, CBP, SPC). Each row shows patient context, severity, HEDIS category, and compliance outcome.
+            </figcaption>
+          </figure>
         </section>
 
         {/* Continuous Evidence */}

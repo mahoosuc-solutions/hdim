@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#f5f7f0"/>
+  <text x="60" y="70" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#173a42">Patient Race Track: From Data to Better Outcomes</text>
+  <text x="60" y="108" font-family="Arial, sans-serif" font-size="22" fill="#3f5d64">Non-technical view: same journey, story-first language</text>
+
+  <rect x="60" y="140" width="1480" height="95" rx="14" fill="#e7f2ef" stroke="#bfd7d2"/>
+  <text x="84" y="178" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#174854">Credibility</text>
+  <text x="84" y="210" font-family="Arial, sans-serif" font-size="20" fill="#234d57">Built from Healthix + HealthInfoNet operational patterns and Verato identity strategy.</text>
+
+  <ellipse cx="800" cy="560" rx="620" ry="220" fill="none" stroke="#1f4f58" stroke-width="24"/>
+  <ellipse cx="800" cy="560" rx="460" ry="130" fill="#ffffff" stroke="#d6e4df" stroke-width="2"/>
+
+  <circle cx="350" cy="560" r="54" fill="#eb6f2d"/>
+  <text x="325" y="568" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#fff">P1</text>
+
+  <rect x="210" y="300" width="250" height="95" rx="12" fill="#fff" stroke="#c3d9d4"/>
+  <text x="226" y="338" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1f4f58">Customer FHIR + CDR</text>
+  <text x="226" y="368" font-family="Arial, sans-serif" font-size="19" fill="#48656c">FHIR standards in</text>
+
+  <rect x="540" y="225" width="250" height="95" rx="12" fill="#fff" stroke="#c3d9d4"/>
+  <text x="556" y="263" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1f4f58">Smart Processing</text>
+  <text x="556" y="293" font-family="Arial, sans-serif" font-size="19" fill="#48656c">Events move in real time</text>
+
+  <rect x="875" y="225" width="250" height="95" rx="12" fill="#fff" stroke="#c3d9d4"/>
+  <text x="891" y="263" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1f4f58">Decision Checkpoint</text>
+  <text x="891" y="293" font-family="Arial, sans-serif" font-size="19" fill="#48656c">Clinical context applied</text>
+
+  <rect x="1180" y="300" width="290" height="95" rx="12" fill="#fff" stroke="#c3d9d4"/>
+  <text x="1196" y="338" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#1f4f58">Action Delivered</text>
+  <text x="1196" y="368" font-family="Arial, sans-serif" font-size="19" fill="#48656c">Standard actions back</text>
+
+  <text x="90" y="820" font-family="Arial, sans-serif" font-size="25" fill="#2d555e">Plug-and-play workflows using healthcare standards, not custom interfaces.</text>
+</svg>

@@ -99,6 +99,26 @@ export default function ClinicalHub() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Risk stratification in action
+        </h2>
+        <div className={styles.cardGrid}>
+          <figure className={styles.figure}>
+            <Image
+              src="/resources/screenshots/risk-stratification.jpg"
+              alt="Risk stratification dashboard showing Critical, High, Moderate, and Low risk patient categories with scores"
+              width={1915}
+              height={924}
+              className={styles.figureImg}
+            />
+            <figcaption className={styles.figureCaption}>
+              Patients categorized by risk level with condition tags, care gap counts, and trend indicators for clinical prioritization.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Clinical data flow
         </h2>
         <div className={styles.cardGrid}>

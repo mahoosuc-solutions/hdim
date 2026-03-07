@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '@/styles/content-page.module.css';
 
 export const metadata: Metadata = {
@@ -33,6 +34,19 @@ export default function OriginStoryPage() {
           I started with a Node.js prototype. It worked for validation, but healthcare&apos;s core libraries — HAPI FHIR and the CQL Engine — are Java-native. Within a month, I made the harder decision: rebuild in Java using specification-driven AI development.
         </p>
       </div>
+
+      <figure style={{ margin: '1.5rem 0' }}>
+        <Image
+          src="/resources/screenshots/provider-dashboard.jpg"
+          alt="HDIM Clinical Portal provider dashboard showing role-based views, quality score, and quick actions"
+          width={1915}
+          height={925}
+          style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+        />
+        <figcaption style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
+          The platform that came out: role-based dashboards, real-time quality scores, and clinical quick actions — built in 6 weeks.
+        </figcaption>
+      </figure>
 
       <div className={styles.card}>
         <h2 className={styles.cardTitle}>What Came Out</h2>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '@/styles/content-page.module.css';
 
 export const metadata: Metadata = {
@@ -28,6 +29,19 @@ export default function AISolutioningBlogPage() {
 
       <p className={styles.sectionBody}>HDIM applied this approach to a multi-service healthcare platform and demonstrated meaningful improvements in delivery speed, consistency, and validation readiness.</p>
       <p className={styles.sectionBody}>The Race Track FHIR assets and evidence reports show how communication, architecture, and runtime validation can stay aligned from narrative to implementation.</p>
+
+      <figure style={{ margin: '1.5rem 0' }}>
+        <Image
+          src="/resources/screenshots/patient-management.jpg"
+          alt="HDIM patient management dashboard showing 100 patients with demographics, MPI status, and search filters"
+          width={1916}
+          height={921}
+          style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+        />
+        <figcaption style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
+          Patient management with demographics, MPI linkage status, and duplicate detection — built from specification, not iteration.
+        </figcaption>
+      </figure>
 
       <h2 className={styles.sectionTitle}>Architectural Leadership Through Delivery</h2>
       <p className={styles.sectionBody}>This build was guided as an architecture program, not a design-only sprint. The sequence below shows how platform foundations, proof systems, and go-to-market surfaces were intentionally connected.</p>

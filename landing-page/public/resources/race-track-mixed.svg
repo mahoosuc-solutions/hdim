@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <rect width="1600" height="980" fill="#f6f8f3"/>
+  <text x="60" y="70" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#183a42">Standards + Streaming Pipeline</text>
+  <text x="60" y="106" font-family="Arial, sans-serif" font-size="22" fill="#43626a">Mixed view: race-track metaphor with platform architecture detail</text>
+
+  <rect x="60" y="140" width="460" height="165" rx="12" fill="#fff" stroke="#bfd7d2"/>
+  <text x="80" y="178" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f4f58">Customer Domain</text>
+  <text x="80" y="216" font-family="Arial, sans-serif" font-size="21" fill="#2e535b">Customer FHIR Server (FHIR R4 APIs)</text>
+  <text x="80" y="248" font-family="Arial, sans-serif" font-size="21" fill="#2e535b">Customer CDR / EHR</text>
+
+  <rect x="570" y="140" width="460" height="165" rx="12" fill="#fff" stroke="#bfd7d2"/>
+  <text x="590" y="178" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f4f58">Interoperability + Internal FHIR</text>
+  <text x="590" y="216" font-family="Arial, sans-serif" font-size="21" fill="#2e535b">Interoperability Gateway (FHIR R4)</text>
+  <text x="590" y="248" font-family="Arial, sans-serif" font-size="21" fill="#2e535b">Internal FHIR Server (normalized records)</text>
+
+  <rect x="1080" y="140" width="460" height="165" rx="12" fill="#fff" stroke="#bfd7d2"/>
+  <text x="1100" y="178" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f4f58">Write-Back Domain</text>
+  <text x="1100" y="216" font-family="Arial, sans-serif" font-size="21" fill="#2e535b">Task / CarePlan / Communication APIs</text>
+  <text x="1100" y="248" font-family="Arial, sans-serif" font-size="21" fill="#2e535b">Consumer delivery to care teams</text>
+
+  <rect x="60" y="360" width="1480" height="230" rx="14" fill="#ffffff" stroke="#bfd7d2"/>
+  <text x="80" y="400" font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#1f4f58">Kafka + Services + Redis Core</text>
+  <text x="80" y="440" font-family="Arial, sans-serif" font-size="22" fill="#345861">Topics: hdim.patient.events.v1, hdim.care_gap.events.v1, hdim.quality.events.v1, hdim.actions.events.v1</text>
+  <text x="80" y="474" font-family="Arial, sans-serif" font-size="22" fill="#345861">Services: Patient, Care Gap, Quality Measure, Event</text>
+  <text x="80" y="508" font-family="Arial, sans-serif" font-size="22" fill="#345861">Redis: Snapshot Cache, Rule Context Cache, Idempotency Keys</text>
+  <text x="80" y="542" font-family="Arial, sans-serif" font-size="22" fill="#345861">Flow: Normalize and enrich -> publish/subscribe -> low-latency context lookup -> FHIR-native write-back</text>
+
+  <rect x="60" y="640" width="1480" height="220" rx="14" fill="#e7f2ef" stroke="#bfd7d2"/>
+  <text x="80" y="682" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#1f4f58">Canonical Journey</text>
+  <text x="80" y="720" font-family="Arial, sans-serif" font-size="20" fill="#3c6169">1 Patient Event Created -> 2 Data Ingested -> 3 Kafka Stream Routed -> 4 Service Processing</text>
+  <text x="80" y="752" font-family="Arial, sans-serif" font-size="20" fill="#3c6169">5 Redis Context Lookup -> 6 Care Rule Evaluation -> 7 Action Generated -> 8 Consumer Delivery -> 9 Outcome + Audit</text>
+  <text x="80" y="800" font-family="Arial, sans-serif" font-size="20" fill="#29535c">Designed from high-scale HIE experience (Healthix, HealthInfoNet) and modern identity strategy (Verato).</text>
+</svg>

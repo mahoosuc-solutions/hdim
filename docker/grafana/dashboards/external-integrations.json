@@ -1,0 +1,171 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "hdim-external-integrations",
+    "title": "HDIM External Integration Adapters",
+    "tags": ["hdim", "external", "adapters"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": { "from": "now-1h", "to": "now" },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Total Adapter Requests (all adapters)",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "expr": "sum(rate(hdim_adapter_corehive_scoring_requests_total[5m]))",
+            "legendFormat": "CoreHive Scoring"
+          },
+          {
+            "expr": "sum(rate(hdim_adapter_healthix_fhir_notifications_total[5m]))",
+            "legendFormat": "Healthix FHIR"
+          },
+          {
+            "expr": "sum(rate(hdim_adapter_healthix_hl7_messages_total[5m]))",
+            "legendFormat": "Healthix HL7"
+          },
+          {
+            "expr": "sum(rate(hdim_adapter_hedis_measures_synced_total[5m]))",
+            "legendFormat": "hedis Measures"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "CoreHive Adapter — Scoring & ROI",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "expr": "rate(hdim_adapter_corehive_scoring_requests_total[5m])",
+            "legendFormat": "Scoring req/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_corehive_roi_requests_total[5m])",
+            "legendFormat": "ROI req/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_corehive_scoring_errors_total[5m])",
+            "legendFormat": "Scoring errors/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_corehive_phi_blocked_total[5m])",
+            "legendFormat": "PHI blocked/s"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "CoreHive Latency (p99)",
+        "type": "gauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(hdim_adapter_corehive_scoring_latency_seconds_bucket[5m]))",
+            "legendFormat": "Scoring p99"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(hdim_adapter_corehive_roi_latency_seconds_bucket[5m]))",
+            "legendFormat": "ROI p99"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Healthix Adapter — FHIR, C-CDA, MPI, HL7",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "targets": [
+          {
+            "expr": "rate(hdim_adapter_healthix_fhir_notifications_total[5m])",
+            "legendFormat": "FHIR notifications/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_healthix_ccda_documents_total[5m])",
+            "legendFormat": "C-CDA docs/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_healthix_mpi_queries_total[5m])",
+            "legendFormat": "MPI queries/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_healthix_hl7_messages_total[5m])",
+            "legendFormat": "HL7 messages/s"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Healthix Latency (p99)",
+        "type": "gauge",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.99, rate(hdim_adapter_healthix_fhir_latency_seconds_bucket[5m]))",
+            "legendFormat": "FHIR p99"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(hdim_adapter_healthix_mpi_latency_seconds_bucket[5m]))",
+            "legendFormat": "MPI p99"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(hdim_adapter_healthix_ccda_latency_seconds_bucket[5m]))",
+            "legendFormat": "C-CDA p99"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "hedis Adapter — Measures, CQL, CRM",
+        "type": "timeseries",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+        "targets": [
+          {
+            "expr": "rate(hdim_adapter_hedis_measures_synced_total[5m])",
+            "legendFormat": "Measures synced/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_hedis_cql_delegations_total[5m])",
+            "legendFormat": "CQL delegations/s"
+          },
+          {
+            "expr": "rate(hdim_adapter_hedis_crm_webhooks_total[5m])",
+            "legendFormat": "CRM webhooks/s"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "hedis WebSocket Connections",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 24 },
+        "targets": [
+          {
+            "expr": "hdim_adapter_hedis_websocket_connections_active",
+            "legendFormat": "Active connections"
+          },
+          {
+            "expr": "rate(hdim_adapter_hedis_websocket_messages_total[5m])",
+            "legendFormat": "Messages/s"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Circuit Breaker States",
+        "type": "table",
+        "gridPos": { "h": 6, "w": 24, "x": 0, "y": 32 },
+        "targets": [
+          {
+            "expr": "resilience4j_circuitbreaker_state{application=~\".*adapter.*|.*ihe.*\"}",
+            "legendFormat": "{{name}} ({{application}})",
+            "format": "table",
+            "instant": true
+          }
+        ]
+      }
+    ]
+  }
+}

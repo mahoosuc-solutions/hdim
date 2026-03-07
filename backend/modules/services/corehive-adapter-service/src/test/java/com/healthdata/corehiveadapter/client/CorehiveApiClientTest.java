@@ -4,7 +4,10 @@ import com.healthdata.corehiveadapter.model.CareGapScoringRequest;
 import com.healthdata.corehiveadapter.model.CareGapScoringResponse;
 import com.healthdata.corehiveadapter.model.VbcRoiRequest;
 import com.healthdata.corehiveadapter.model.VbcRoiResponse;
+import com.healthdata.corehiveadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.TracerProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -39,7 +42,9 @@ class CorehiveApiClientTest {
     @BeforeEach
     void setUp() {
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
-        client = new CorehiveApiClient(restTemplate, registry);
+        AdapterSpanHelper spanHelper = new AdapterSpanHelper(
+                TracerProvider.noop().get("test"));
+        client = new CorehiveApiClient(restTemplate, registry, spanHelper);
     }
 
     @Test

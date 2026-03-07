@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +6,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatListModule } from '@angular/material/list';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { Subscription } from 'rxjs';
 import { DocumentUploadService, AttachmentUploadResponse, OcrStatus } from '../../services/document-upload.service';
 import { validateFileSize, validateFileType, formatFileSize } from '../../utils/file-validation';
 import { LoggerService } from '../../services/logger.service';
@@ -47,7 +48,7 @@ export interface OcrCompletionEvent {
   templateUrl: './document-upload.component.html',
   styleUrls: ['./document-upload.component.scss']
 })
-export class DocumentUploadComponent {
+export class DocumentUploadComponent implements OnDestroy {
   @Input() documentId!: string;
   @Input() patientId!: string;
   @Input() allowedFileTypes: string[] = ['pdf', 'png', 'jpg', 'jpeg', 'tiff'];
@@ -62,12 +63,17 @@ export class DocumentUploadComponent {
   errorMessage = '';
   ocrStatus: OcrStatus | null = null;
   uploadedFiles: AttachmentUploadResponse[] = [];
-
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private uploadService: DocumentUploadService,
     private logger: LoggerService
   ) {
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions = [];
   }
 
   get acceptedFileTypes(): string {
@@ -103,7 +109,7 @@ export class DocumentUploadComponent {
     this.uploading = true;
     this.logger.info('Uploading file', this.documentId);
 
-    this.uploadService.uploadDocument(this.documentId, file).subscribe({
+    const sub = this.uploadService.uploadDocument(this.documentId, file).subscribe({
       next: (response) => {
         this.uploading = false;
         this.uploadSuccess.emit(response);
@@ -120,12 +126,13 @@ export class DocumentUploadComponent {
         this.logger.error('File upload failed', error);
       }
     });
+    this.subscriptions.push(sub);
   }
 
   private startOcrPolling(attachmentId: string): void {
     this.logger.info('Starting OCR status polling', attachmentId);
 
-    this.uploadService.pollOcrStatus(attachmentId).subscribe({
+    const sub = this.uploadService.pollOcrStatus(attachmentId).subscribe({
       next: (status) => {
         this.ocrStatus = status;
         this.logger.info('OCR status update', { attachmentId, status });
@@ -141,12 +148,13 @@ export class DocumentUploadComponent {
         this.logger.error('OCR status polling failed', error);
       }
     });
+    this.subscriptions.push(sub);
   }
 
   retryOcr(attachmentId: string): void {
     this.logger.info('Retrying OCR processing', attachmentId);
 
-    this.uploadService.retryOcr(attachmentId).subscribe({
+    const retrySub = this.uploadService.retryOcr(attachmentId).subscribe({
       next: () => {
         this.logger.info('OCR retry initiated', attachmentId);
         this.startOcrPolling(attachmentId);
@@ -155,6 +163,7 @@ export class DocumentUploadComponent {
         this.logger.error('OCR retry failed', error);
       }
     });
+    this.subscriptions.push(retrySub);
   }
 
   getFileIcon(mimeType: string): string {

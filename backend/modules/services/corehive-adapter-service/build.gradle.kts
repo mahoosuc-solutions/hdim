@@ -10,6 +10,8 @@ dependencies {
     implementation(project(":modules:shared:infrastructure:database-config"))
     implementation(project(":modules:shared:infrastructure:audit"))
     implementation(project(":modules:shared:infrastructure:feature-flags"))
+    implementation(project(":modules:shared:infrastructure:tracing"))
+    implementation(project(":modules:shared:infrastructure:metrics"))
     implementation(libs.bundles.spring.boot.web)
     implementation(libs.bundles.spring.boot.data)
     implementation(libs.bundles.kafka)

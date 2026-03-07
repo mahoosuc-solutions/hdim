@@ -1,5 +1,6 @@
 package com.healthdata.healthixadapter.mpi;
 
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
@@ -27,29 +28,34 @@ public class VeratoMpiProxy {
 
     private final RestTemplate mpiRestTemplate;
     private final CircuitBreaker circuitBreaker;
+    private final AdapterSpanHelper spanHelper;
 
     public VeratoMpiProxy(
             @Qualifier("healthixMpiRestTemplate") RestTemplate mpiRestTemplate,
-            CircuitBreakerRegistry registry) {
+            CircuitBreakerRegistry registry,
+            AdapterSpanHelper spanHelper) {
         this.mpiRestTemplate = mpiRestTemplate;
         this.circuitBreaker = registry.circuitBreaker("healthix-mpi");
+        this.spanHelper = spanHelper;
     }
 
     /**
      * Query Healthix MPI for cross-reference identifiers.
      */
     public MpiMatchResult queryPatientMatch(MpiMatchRequest request) {
-        log.info("Querying Verato MPI for patient match, identifiers={}",
-                request.getIdentifiers().size());
+        return spanHelper.traced("healthix.mpi.query_match", () -> {
+            log.info("Querying Verato MPI for patient match, identifiers={}",
+                    request.getIdentifiers().size());
 
-        Supplier<MpiMatchResult> supplier = CircuitBreaker.decorateSupplier(
-                circuitBreaker,
-                () -> mpiRestTemplate.postForObject(
-                        "/api/v1/patient-identity/match",
-                        request,
-                        MpiMatchResult.class));
+            Supplier<MpiMatchResult> supplier = CircuitBreaker.decorateSupplier(
+                    circuitBreaker,
+                    () -> mpiRestTemplate.postForObject(
+                            "/api/v1/patient-identity/match",
+                            request,
+                            MpiMatchResult.class));
 
-        return supplier.get();
+            return supplier.get();
+        }, "adapter", "healthix", "phi.level", "FULL");
     }
 
     @Data

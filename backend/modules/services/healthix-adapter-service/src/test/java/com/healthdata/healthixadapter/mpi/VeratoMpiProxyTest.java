@@ -4,6 +4,7 @@ import com.healthdata.healthixadapter.mpi.VeratoMpiProxy.CrossReference;
 import com.healthdata.healthixadapter.mpi.VeratoMpiProxy.MpiMatchRequest;
 import com.healthdata.healthixadapter.mpi.VeratoMpiProxy.MpiMatchResult;
 import com.healthdata.healthixadapter.mpi.VeratoMpiProxy.PatientIdentifier;
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,12 +35,18 @@ class VeratoMpiProxyTest {
     @Mock
     private RestTemplate mpiRestTemplate;
 
+    @Mock
+    private AdapterSpanHelper spanHelper;
+
     private VeratoMpiProxy proxy;
 
+    @SuppressWarnings("unchecked")
     @BeforeEach
     void setUp() {
+        when(spanHelper.traced(anyString(), any(Supplier.class), any(String[].class)))
+                .thenAnswer(inv -> ((Supplier<?>) inv.getArgument(1)).get());
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
-        proxy = new VeratoMpiProxy(mpiRestTemplate, registry);
+        proxy = new VeratoMpiProxy(mpiRestTemplate, registry, spanHelper);
     }
 
     @Test

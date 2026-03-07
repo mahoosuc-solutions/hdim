@@ -77,6 +77,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Live Call Sales Agent (Customer Deployments)
     CREATE DATABASE customer_deployments_db;
 
+    -- External Integration Adapter Services
+    CREATE DATABASE corehive_adapter_db;
+    CREATE DATABASE healthix_adapter_db;
+    CREATE DATABASE hedis_adapter_db;
+    CREATE DATABASE ihe_gateway_db;
+
     -- Grant privileges to postgres user
     GRANT ALL PRIVILEGES ON DATABASE fhir_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE cql_db TO "$POSTGRES_USER";
@@ -118,6 +124,10 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE event_store_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE investor_dashboard_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE customer_deployments_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE corehive_adapter_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE healthix_adapter_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE hedis_adapter_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE ihe_gateway_db TO "$POSTGRES_USER";
 EOSQL
 
 # Note: PostgreSQL extensions are now managed by service Liquibase migrations

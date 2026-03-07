@@ -2,7 +2,12 @@ package com.healthdata.hedisadapter.measures;
 
 import com.healthdata.hedisadapter.measures.CqlDelegationService.CalculationRequest;
 import com.healthdata.hedisadapter.measures.CqlDelegationService.CalculationResult;
+import com.healthdata.hedisadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanBuilder;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -22,15 +27,23 @@ import static org.mockito.Mockito.when;
 @DisplayName("CqlDelegationService")
 class CqlDelegationServiceTest {
 
-    @Mock
-    private RestTemplate cqlRestTemplate;
+    @Mock private RestTemplate cqlRestTemplate;
+    @Mock private Tracer tracer;
+    @Mock private SpanBuilder spanBuilder;
+    @Mock private Span span;
+    @Mock private Scope scope;
 
     private CqlDelegationService service;
 
     @BeforeEach
     void setUp() {
+        when(tracer.spanBuilder(anyString())).thenReturn(spanBuilder);
+        when(spanBuilder.startSpan()).thenReturn(span);
+        when(span.makeCurrent()).thenReturn(scope);
+        when(span.setAttribute(anyString(), anyString())).thenReturn(span);
+        AdapterSpanHelper spanHelper = new AdapterSpanHelper(tracer);
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
-        service = new CqlDelegationService(cqlRestTemplate, registry);
+        service = new CqlDelegationService(cqlRestTemplate, registry, spanHelper);
     }
 
     @Test

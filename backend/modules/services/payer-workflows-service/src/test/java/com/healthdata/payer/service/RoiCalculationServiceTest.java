@@ -252,6 +252,74 @@ class RoiCalculationServiceTest {
         assertThat(result.getQualityImprovement().doubleValue()).isLessThan(10.0);
     }
 
+    // ===== Negative ROI Scenario =====
+
+    @Test
+    @DisplayName("Should handle very small population with minimal quality gap (low ROI)")
+    void shouldHandleSmallPopulationLowGap() {
+        // 1K patients, high quality score = very small value vs investment
+        RoiCalculationRequest request = buildRequest(1000, "ACO", 90.0, 4.5, 5);
+        RoiCalculationResponse result = service.calculate(request, null);
+        // Verify calculation completes without error
+        assertThat(result.getYear1Investment()).isEqualByComparingTo("24000");
+        assertThat(result.getTotalYear1Value()).isNotNull();
+        assertThat(result.getPaybackDays()).isNotNull();
+    }
+
+    // ===== Null Org Type =====
+
+    @Test
+    @DisplayName("Should reject null org type")
+    void shouldRejectNullOrgType() {
+        assertThatThrownBy(() -> RoiCalculationService.parseOrgType(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Organization type is required");
+    }
+
+    // ===== Boundary: Exactly 100% Quality Score =====
+
+    @Test
+    @DisplayName("Should handle 100% quality score — projected score capped at 95")
+    void shouldHandleMaxQualityScore() {
+        RoiCalculationRequest request = buildRequest(25000, "ACO", 100.0, 5.0, 40);
+        RoiCalculationResponse result = service.calculate(request, null);
+        // gapFactor = (100-100)/30 = 0, projectedImprovement = 0
+        // projectedScore = min(100 * 1.0, 95) = 95 (capped)
+        // qualityImprovement = 95 - 100 = -5 (negative because cap applies)
+        // NOTE: This is a known edge case — at 100% input the cap at 95 causes a
+        // "regression" display. The TSX frontend enforces max input of 99%.
+        assertThat(result.getProjectedScore()).isEqualByComparingTo("95.0");
+        assertThat(result.getQualityImprovement()).isEqualByComparingTo("-5.0");
+    }
+
+    // ===== Null save field =====
+
+    @Test
+    @DisplayName("Should not save when save is null")
+    void shouldNotSaveWhenNull() {
+        RoiCalculationRequest request = buildRequest(25000, "ACO", 70.0, 3.5, 40);
+        request.setSave(null);
+
+        RoiCalculationResponse result = service.calculate(request, "test-tenant");
+
+        assertThat(result.getId()).isNull();
+        verify(repository, never()).save(any());
+    }
+
+    // ===== Tenant isolation: getRecent =====
+
+    @Test
+    @DisplayName("Should pass tenant ID to repository for getRecent")
+    void shouldFilterByTenantOnGetRecent() {
+        when(repository.findByTenantIdOrderByCreatedAtDesc(eq("tenant-A"), any()))
+                .thenReturn(org.springframework.data.domain.Page.empty());
+
+        service.getRecent("tenant-A", org.springframework.data.domain.PageRequest.of(0, 10));
+
+        verify(repository).findByTenantIdOrderByCreatedAtDesc(eq("tenant-A"), any());
+        verify(repository, never()).findByTenantIdOrderByCreatedAtDesc(eq("tenant-B"), any());
+    }
+
     private RoiCalculationRequest buildRequest(int population, String orgType,
             double qualityScore, double starRating, int hours) {
         return RoiCalculationRequest.builder()

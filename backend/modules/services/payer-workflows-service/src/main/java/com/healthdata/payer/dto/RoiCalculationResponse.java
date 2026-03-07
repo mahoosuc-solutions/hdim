@@ -1,6 +1,7 @@
 package com.healthdata.payer.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Schema(description = "ROI calculation results with projected financial impact")
 public class RoiCalculationResponse {
 
     @JsonProperty("id")

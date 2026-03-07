@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="0001-create-healthix-audit-log" author="hdim-platform">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="healthix_audit_log"/></not>
+        </preConditions>
+
+        <createTable tableName="healthix_audit_log">
+            <column name="id" type="UUID">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="event_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="source_system" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="resource_type" type="VARCHAR(50)"/>
+            <column name="resource_id" type="VARCHAR(255)"/>
+            <column name="patient_id" type="VARCHAR(255)"/>
+            <column name="phi_level" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="correlation_id" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="SUCCESS">
+                <constraints nullable="false"/>
+            </column>
+            <column name="error_message" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="healthix_audit_log" indexName="idx_healthix_audit_tenant_time">
+            <column name="tenant_id"/>
+            <column name="created_at"/>
+        </createIndex>
+
+        <createIndex tableName="healthix_audit_log" indexName="idx_healthix_audit_patient">
+            <column name="patient_id"/>
+        </createIndex>
+
+        <rollback>
+            <dropTable tableName="healthix_audit_log"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

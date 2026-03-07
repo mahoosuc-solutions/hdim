@@ -1,0 +1,20 @@
+# CoreHive Adapter - Docker profile overrides
+# Tuned for <200ms round-trip AI scoring
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+
+external:
+  corehive:
+    timeout-ms: 3000
+    connect-timeout-ms: 1000
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      corehive-api:
+        slow-call-duration-threshold: 200ms
+        slow-call-rate-threshold: 80

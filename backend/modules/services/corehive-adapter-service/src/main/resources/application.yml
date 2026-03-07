@@ -1,0 +1,78 @@
+server:
+  port: 8120
+  servlet:
+    context-path: /corehive-adapter
+
+spring:
+  application:
+    name: corehive-adapter-service
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: corehive-adapter
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:corehive_adapter_db}
+    username: ${DB_USERNAME:healthdata}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  flyway:
+    enabled: false
+
+external:
+  corehive:
+    enabled: ${COREHIVE_ENABLED:false}
+    base-url: ${COREHIVE_BASE_URL:http://localhost:3067}
+    api-key: ${COREHIVE_API_KEY:}
+    timeout-ms: ${COREHIVE_TIMEOUT_MS:5000}
+    connect-timeout-ms: ${COREHIVE_CONNECT_TIMEOUT_MS:3000}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      corehive-api:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      corehive-api:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - java.io.IOException
+          - java.net.SocketTimeoutException
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.corehiveadapter: DEBUG

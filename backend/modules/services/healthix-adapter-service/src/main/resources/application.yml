@@ -1,0 +1,94 @@
+server:
+  port: 8121
+  servlet:
+    context-path: /healthix-adapter
+
+spring:
+  application:
+    name: healthix-adapter-service
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    consumer:
+      group-id: healthix-adapter
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:healthix_adapter_db}
+    username: ${DB_USERNAME:healthdata}
+    password: ${DB_PASSWORD:}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  flyway:
+    enabled: false
+
+external:
+  healthix:
+    api-key: ${HEALTHIX_API_KEY:}
+    enabled: ${HEALTHIX_ENABLED:false}
+    gateway-url: ${HEALTHIX_GATEWAY_URL:http://localhost:3000}
+    fhir-url: ${HEALTHIX_FHIR_URL:http://localhost:8080}
+    mpi-url: ${HEALTHIX_MPI_URL:http://localhost:8000}
+    document-service-url: ${HEALTHIX_DOCUMENT_URL:http://localhost:3010}
+    hl7-service-url: ${HEALTHIX_HL7_URL:http://localhost:3020}
+    timeout-ms: ${HEALTHIX_TIMEOUT_MS:10000}
+    connect-timeout-ms: ${HEALTHIX_CONNECT_TIMEOUT_MS:5000}
+    health-check-interval-ms: ${HEALTHIX_HEALTH_CHECK_MS:60000}
+    mtls:
+      enabled: ${HEALTHIX_MTLS_ENABLED:false}
+      keystore-path: ${HEALTHIX_MTLS_KEYSTORE_PATH:}
+      keystore-password: ${HEALTHIX_MTLS_KEYSTORE_PASSWORD:}
+      truststore-path: ${HEALTHIX_MTLS_TRUSTSTORE_PATH:}
+      truststore-password: ${HEALTHIX_MTLS_TRUSTSTORE_PASSWORD:}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      healthix-fhir:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+      healthix-mpi:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+      healthix-documents:
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 60s
+        sliding-window-size: 20
+        minimum-number-of-calls: 10
+  retry:
+    instances:
+      healthix-api:
+        max-attempts: 3
+        wait-duration: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.healthdata.healthixadapter: DEBUG

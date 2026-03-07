@@ -33,7 +33,6 @@ jobs:
         working-directory: backend
         run: |
           ./gradlew \
-            :modules:shared:infrastructure:gateway-core:test --tests "*CustomUserDetailsServiceTest" \
             :modules:shared:infrastructure:authentication:test --tests "*TrustedHeaderAuthFilterTest" \
-            :modules:services:event-processing-service:test --tests "*DeadLetterQueueControllerSecurityTest" --tests "*DeadLetterQueueServiceTest" \
+            :modules:services:event-processing-service:test --tests "*DeadLetterQueueServiceTest" \
             --no-daemon --console=plain

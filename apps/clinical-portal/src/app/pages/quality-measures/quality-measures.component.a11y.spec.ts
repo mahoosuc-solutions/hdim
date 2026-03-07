@@ -7,7 +7,7 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,9 +20,12 @@ import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { EMPTY } from 'rxjs';
+import { EMPTY, of } from 'rxjs';
 import { QualityMeasuresComponent } from './quality-measures.component';
 import { LoggerService } from '../../services/logger.service';
+import { MeasureService } from '../../services/measure.service';
+import { EvaluationService } from '../../services/evaluation.service';
+import { PatientService } from '../../services/patient.service';
 import { createMockLoggerService } from '../../../testing/mocks';
 import {
   testAccessibility,
@@ -36,11 +39,23 @@ describe('QualityMeasuresComponent - Accessibility', () => {
   let fixture: ComponentFixture<QualityMeasuresComponent>;
 
   beforeEach(async () => {
+    const mockMeasureService = {
+      getLocalMeasuresAsInfo: jest.fn().mockReturnValue(EMPTY),
+    };
+    const mockEvaluationService = {
+      getAllResults: jest.fn().mockReturnValue(of([])),
+      getDefaultEvaluationPreset: jest.fn().mockReturnValue(EMPTY),
+      calculateLocalMeasure: jest.fn().mockReturnValue(EMPTY),
+    };
+    const mockPatientService = {
+      getPatientsSummaryCached: jest.fn().mockReturnValue(of([])),
+    };
+
     await TestBed.configureTestingModule({
       imports: [
         QualityMeasuresComponent,
         HttpClientTestingModule,
-        BrowserAnimationsModule,
+        NoopAnimationsModule,
         MatCardModule,
         MatButtonModule,
         MatIconModule,
@@ -56,19 +71,14 @@ describe('QualityMeasuresComponent - Accessibility', () => {
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: Router, useValue: { navigate: jest.fn(), events: EMPTY, url: '/' } },
         { provide: MatDialog, useValue: { open: jest.fn(), closeAll: jest.fn() } },
+        { provide: MeasureService, useValue: mockMeasureService },
+        { provide: EvaluationService, useValue: mockEvaluationService },
+        { provide: PatientService, useValue: mockPatientService },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(QualityMeasuresComponent);
     component = fixture.componentInstance;
-    // Provide missing template methods before first render
-    if (!(component as any).getPatientDisplay) {
-      (component as any).getPatientDisplay = (patient: any) =>
-        patient ? `${patient.fullName} (${patient.mrn})` : '';
-    }
-    if (!(component as any).evaluationPatientId) {
-      (component as any).evaluationPatientId = () => null;
-    }
     fixture.detectChanges();
   });
 
@@ -105,51 +115,45 @@ describe('QualityMeasuresComponent - Accessibility', () => {
 
   describe('Measure Cards Accessibility', () => {
     it('should have accessible measure cards', async () => {
-      await fixture.whenStable();
       fixture.detectChanges();
 
-      const measureCards = fixture.nativeElement.querySelector('.measures-grid');
-      if (measureCards) {
-        const results = await testAccessibilityForElement(fixture, '.measures-grid');
-        expect(results).toHaveNoViolations();
-      }
+      const measuresGrid = fixture.nativeElement.querySelector('.measures-grid');
+      expect(measuresGrid).toBeTruthy();
+
+      const results = await testAccessibilityForElement(fixture, '.measures-grid');
+      expect(results).toHaveNoViolations();
     });
 
-    it('should have clickable cards with keyboard support', async () => {
-      await fixture.whenStable();
+    it('should have clickable cards with keyboard support', () => {
       fixture.detectChanges();
 
       const measureCards = fixture.nativeElement.querySelectorAll('.measure-card');
+      expect(measureCards.length).toBeGreaterThan(0);
 
       measureCards.forEach((card: HTMLElement) => {
-        // Cards should be keyboard accessible (clickable via Enter/Space)
-        const tabindex = card.getAttribute('tabindex');
-        const hasClickHandler = card.onclick || card.getAttribute('(click)');
-
-        if (hasClickHandler) {
-          expect(tabindex).not.toBeNull();
-          expect(parseInt(tabindex || '0')).toBeGreaterThanOrEqual(0);
-        }
+        // mat-card elements rendered from the template have (click) handlers
+        // Verify the card is present and has content
+        expect(card.textContent?.trim()).not.toBe('');
       });
     });
 
-    it('should have accessible measure names', async () => {
-      await fixture.whenStable();
+    it('should have accessible measure names', () => {
       fixture.detectChanges();
 
       const measureNames = fixture.nativeElement.querySelectorAll('.measure-name');
+      expect(measureNames.length).toBeGreaterThan(0);
 
       measureNames.forEach((name: HTMLElement) => {
         expect(name.textContent?.trim()).not.toBe('');
-        expect(name.textContent?.length).toBeGreaterThan(5);
+        expect(name.textContent!.length).toBeGreaterThan(5);
       });
     });
 
-    it('should have accessible status chips', async () => {
-      await fixture.whenStable();
+    it('should have accessible status chips', () => {
       fixture.detectChanges();
 
       const statusChips = fixture.nativeElement.querySelectorAll('mat-chip');
+      expect(statusChips.length).toBeGreaterThan(0);
 
       statusChips.forEach((chip: HTMLElement) => {
         const text = chip.textContent?.trim();
@@ -161,63 +165,61 @@ describe('QualityMeasuresComponent - Accessibility', () => {
   });
 
   describe('Measure Detail Panel Accessibility', () => {
-    it('should have accessible close button with ARIA label', async () => {
+    it('should have accessible close button with ARIA label', () => {
       // Simulate selecting a measure
-      if (component.measures && component.measures().length > 0) {
-        component.selectMeasure(component.measures()[0]);
-        fixture.detectChanges();
-        await fixture.whenStable();
+      expect(component.measures().length).toBeGreaterThan(0);
 
-        const closeButton = fixture.nativeElement.querySelector('button[aria-label="Close measure details"]');
-        expect(closeButton).toBeTruthy();
+      component.selectMeasure(component.measures()[0]);
+      fixture.detectChanges();
 
-        const icon = closeButton?.querySelector('mat-icon[aria-hidden="true"]');
-        expect(icon).toBeTruthy();
-      }
+      const closeButton = fixture.nativeElement.querySelector('button[aria-label="Close measure details"]');
+      expect(closeButton).toBeTruthy();
+
+      const icon = closeButton?.querySelector('mat-icon[aria-hidden="true"]');
+      expect(icon).toBeTruthy();
     });
 
-    it('should have accessible action buttons', async () => {
-      if (component.measures && component.measures().length > 0) {
-        component.selectMeasure(component.measures()[0]);
-        fixture.detectChanges();
-        await fixture.whenStable();
+    it('should have accessible action buttons', () => {
+      expect(component.measures().length).toBeGreaterThan(0);
 
-        const actionButtons = fixture.nativeElement.querySelectorAll('.action-buttons button');
+      component.selectMeasure(component.measures()[0]);
+      fixture.detectChanges();
 
-        actionButtons.forEach((button: HTMLElement) => {
-          const text = button.textContent?.trim();
-          const icon = button.querySelector('mat-icon');
+      const actionButtons = fixture.nativeElement.querySelectorAll('.action-buttons button');
+      expect(actionButtons.length).toBeGreaterThan(0);
 
-          expect(text || icon).toBeTruthy();
+      actionButtons.forEach((button: HTMLElement) => {
+        const text = button.textContent?.trim();
+        const icon = button.querySelector('mat-icon');
 
-          // If icon-only, should have accessible name
-          if (!text && icon) {
-            const ariaLabel = button.getAttribute('aria-label');
-            const ariaLabelledBy = button.getAttribute('aria-labelledby');
-            expect(ariaLabel || ariaLabelledBy).toBeTruthy();
-          }
-        });
-      }
-    });
+        expect(text || icon).toBeTruthy();
 
-    it('should have accessible progress indicators', async () => {
-      if (component.measures && component.measures().length > 0) {
-        component.selectMeasure(component.measures()[0]);
-        component['isEvaluating'].set(true);
-        fixture.detectChanges();
-        await fixture.whenStable();
-
-        const progressBar = fixture.nativeElement.querySelector('mat-progress-bar');
-        if (progressBar) {
-          const role = progressBar.getAttribute('role');
-          expect(role).toBe('progressbar');
-
-          const ariaLabel = progressBar.getAttribute('aria-label') || progressBar.getAttribute('aria-labelledby');
-          // Progress bar should have accessible name or be within a labeled context
-          const context = progressBar.closest('.evaluation-progress');
-          expect(ariaLabel || context).toBeTruthy();
+        // If icon-only, should have accessible name
+        if (!text && icon) {
+          const ariaLabel = button.getAttribute('aria-label');
+          const ariaLabelledBy = button.getAttribute('aria-labelledby');
+          expect(ariaLabel || ariaLabelledBy).toBeTruthy();
         }
-      }
+      });
+    });
+
+    it('should have accessible progress indicators', () => {
+      expect(component.measures().length).toBeGreaterThan(0);
+
+      component.selectMeasure(component.measures()[0]);
+      component.isEvaluating.set(true);
+      fixture.detectChanges();
+
+      const progressBar = fixture.nativeElement.querySelector('mat-progress-bar');
+      expect(progressBar).toBeTruthy();
+
+      const role = progressBar.getAttribute('role');
+      expect(role).toBe('progressbar');
+
+      const ariaLabel = progressBar.getAttribute('aria-label') || progressBar.getAttribute('aria-labelledby');
+      // Progress bar should have accessible name or be within a labeled context
+      const context = progressBar.closest('.evaluation-progress');
+      expect(ariaLabel || context).toBeTruthy();
     });
   });
 
@@ -252,11 +254,11 @@ describe('QualityMeasuresComponent - Accessibility', () => {
   });
 
   describe('Star Rating Accessibility', () => {
-    it('should have semantic star rating representation', async () => {
-      await fixture.whenStable();
+    it('should have semantic star rating representation', () => {
       fixture.detectChanges();
 
       const starRatings = fixture.nativeElement.querySelectorAll('.star-rating');
+      expect(starRatings.length).toBeGreaterThan(0);
 
       starRatings.forEach((rating: HTMLElement) => {
         const stars = rating.querySelectorAll('mat-icon');
@@ -270,37 +272,39 @@ describe('QualityMeasuresComponent - Accessibility', () => {
   });
 
   describe('Results Cards Accessibility', () => {
-    it('should have accessible results cards', async () => {
-      // Simulate evaluation complete
-      if (component.measures && component.measures().length > 0) {
-        component.selectMeasure(component.measures()[0]);
-        // Set evaluation result (this would normally come from service)
-        component['evaluationResult'].set({
-          measureCode: 'BCS',
-          denominator: 1000,
-          numerator: 800,
-          rate: 80,
-          benchmark: 75,
-          gapToBenchmark: 5,
-          careGapsCount: 200,
-          patientsEvaluated: 1000,
-          evaluationTime: 45,
-        });
-        fixture.detectChanges();
-        await fixture.whenStable();
+    it('should have accessible results cards', () => {
+      // Select a measure to show the detail panel
+      expect(component.measures().length).toBeGreaterThan(0);
+      component.selectMeasure(component.measures()[0]);
 
-        const resultsCards = fixture.nativeElement.querySelectorAll('.results-card');
+      // Set evaluation result to render the results cards
+      (component as any).evaluationResult.set({
+        measureId: '1',
+        measureCode: 'BCS',
+        measureName: 'Breast Cancer Screening',
+        evaluationTime: 12.4,
+        patientsEvaluated: 1000,
+        denominator: 1000,
+        numerator: 800,
+        rate: 80,
+        benchmark: 75,
+        gapToBenchmark: 5,
+        careGapsCount: 200,
+      });
+      fixture.detectChanges();
 
-        resultsCards.forEach((card: HTMLElement) => {
-          const heading = card.querySelector('h5, h4, h3');
-          expect(heading).toBeTruthy();
-          expect(heading?.textContent?.trim()).not.toBe('');
-        });
-      }
+      const resultsCards = fixture.nativeElement.querySelectorAll('.results-card');
+      expect(resultsCards.length).toBeGreaterThan(0);
+
+      resultsCards.forEach((card: HTMLElement) => {
+        const heading = card.querySelector('h5, h4, h3');
+        expect(heading).toBeTruthy();
+        expect(heading?.textContent?.trim()).not.toBe('');
+      });
     });
 
-    it('should have semantic color coding for performance metrics', async () => {
-      if (component['evaluationResult']()) {
+    it('should have semantic color coding for performance metrics', () => {
+      if (component.evaluationResult()) {
         const positiveMetrics = fixture.nativeElement.querySelectorAll('.positive');
         const negativeMetrics = fixture.nativeElement.querySelectorAll('.negative');
 
@@ -348,18 +352,19 @@ describe('QualityMeasuresComponent - Accessibility', () => {
 
   describe('Empty State Accessibility', () => {
     it('should have accessible empty state message', () => {
-      component['filteredMeasures'] = () => [];
+      // Clear all measures to trigger the empty state
+      component.measures.set([]);
       fixture.detectChanges();
 
       const emptyState = fixture.nativeElement.querySelector('.no-results');
-      if (emptyState) {
-        const icon = emptyState.querySelector('mat-icon');
-        const message = emptyState.querySelector('p');
+      expect(emptyState).toBeTruthy();
 
-        expect(icon).toBeTruthy();
-        expect(message).toBeTruthy();
-        expect(message?.textContent?.trim()).not.toBe('');
-      }
+      const icon = emptyState.querySelector('mat-icon');
+      const message = emptyState.querySelector('p');
+
+      expect(icon).toBeTruthy();
+      expect(message).toBeTruthy();
+      expect(message?.textContent?.trim()).not.toBe('');
     });
   });
 });

@@ -15,15 +15,25 @@ import {
   MedicationRequest,
 } from '../models/medication-adherence.model';
 import { API_CONFIG, FHIR_ENDPOINTS, buildFhirUrl } from '../config/api.config';
+import { LoggerService } from './logger.service';
 
 describe('MedicationAdherenceService', () => {
   let service: MedicationAdherenceService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
+    const mockLoggerService = {
+      withContext: jest.fn().mockReturnValue({
+        info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+      }),
+      info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+    };
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [MedicationAdherenceService],
+      providers: [
+        MedicationAdherenceService,
+        { provide: LoggerService, useValue: mockLoggerService },
+      ],
     });
     service = TestBed.inject(MedicationAdherenceService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -519,7 +529,7 @@ describe('MedicationAdherenceService', () => {
         expect(score.totalMedications).toBe(0);
         expect(score.overallPDC).toBe(0);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush({ resourceType: 'Bundle', entry: [] });
@@ -533,7 +543,7 @@ describe('MedicationAdherenceService', () => {
         expect(score.overallPDC).toBeLessThanOrEqual(100);
         expect(score.totalMedications).toBeGreaterThan(0);
         done();
-      };
+      });
 
       // Mock active medications
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
@@ -586,7 +596,7 @@ describe('MedicationAdherenceService', () => {
         expect(score.adherentCount).toBeGreaterThanOrEqual(0);
         expect(score.adherentCount).toBeLessThanOrEqual(score.totalMedications);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush({
@@ -620,7 +630,7 @@ describe('MedicationAdherenceService', () => {
         expect(score.problematicMedications).toBeDefined();
         expect(Array.isArray(score.problematicMedications)).toBe(true);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush({
@@ -655,7 +665,7 @@ describe('MedicationAdherenceService', () => {
         expect(score.overallPDC).toBeGreaterThanOrEqual(0);
         expect(score.overallPDC).toBeLessThanOrEqual(100);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush({
@@ -850,7 +860,7 @@ describe('MedicationAdherenceService', () => {
       service.getProblematicMedications(patientId).subscribe((medications) => {
         expect(medications).toEqual([]);
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush({ resourceType: 'Bundle', entry: [] });
@@ -863,7 +873,7 @@ describe('MedicationAdherenceService', () => {
         expect(medications.length).toBeGreaterThanOrEqual(0);
         medications.forEach((med) => {
           expect(med.pdc).toBeLessThan(80);
-        };
+        });
         done();
       });
 
@@ -916,7 +926,7 @@ describe('MedicationAdherenceService', () => {
         medications.forEach((med) => {
           expect(med.daysOverdue).toBeGreaterThanOrEqual(0);
           expect(typeof med.daysOverdue).toBe('number');
-        };
+        });
         done();
       });
 
@@ -953,7 +963,7 @@ describe('MedicationAdherenceService', () => {
           expect(med.recommendation).toBeDefined();
           expect(typeof med.recommendation).toBe('string');
           expect(med.recommendation.length).toBeGreaterThan(0);
-        };
+        });
         done();
       });
 
@@ -988,7 +998,7 @@ describe('MedicationAdherenceService', () => {
       service.getProblematicMedications(patientId).subscribe((medications) => {
         expect(medications[0].medicationName).toBe('Custom Med');
         done();
-      };
+      });
 
       const req1 = httpMock.expectOne((request) => request.url.includes(FHIR_ENDPOINTS.MEDICATION) && request.params.get('status') === 'active');
       req1.flush({

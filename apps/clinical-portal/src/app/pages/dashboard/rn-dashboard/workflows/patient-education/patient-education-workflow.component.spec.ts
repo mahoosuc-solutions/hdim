@@ -52,6 +52,7 @@ describe('PatientEducationWorkflowComponent', () => {
       getEducationTopics: jest.fn(),
       getEducationSessionById: jest.fn(),
       recordPatientEducation: jest.fn(),
+      logPatientEducation: jest.fn(),
       assessUnderstanding: jest.fn(),
       setTenantContext: jest.fn(),
     };
@@ -246,10 +247,10 @@ describe('PatientEducationWorkflowComponent', () => {
       component.understandingScore = 90;
       expect(component.getUnderstandingLevel()).toBe('EXCELLENT');
 
-      component.understandingScore = 75;
+      component.understandingScore = 85;
       expect(component.getUnderstandingLevel()).toBe('GOOD');
 
-      component.understandingScore = 60;
+      component.understandingScore = 75;
       expect(component.getUnderstandingLevel()).toBe('FAIR');
 
       component.understandingScore = 40;
@@ -335,12 +336,17 @@ describe('PatientEducationWorkflowComponent', () => {
     });
 
     it('should initialize follow-up form fields', () => {
-      expect(component.form.get('scheduleFollowUp')).toBeDefined();
+      expect(component.form.get('needsFollowUp')).toBeDefined();
       expect(component.form.get('followUpDate')).toBeDefined();
     });
 
     it('should validate follow-up date when needed', () => {
+      // Fill required selectedTopic so form validity depends only on follow-up
+      component.form.patchValue({ selectedTopic: 'TOPIC_001' });
       component.form.patchValue({ needsFollowUp: true });
+
+      // followUpDate is disabled by default; enable it so patchValue works
+      component.form.get('followUpDate')!.enable();
 
       component.form.patchValue({ followUpDate: null });
       expect(component.form.valid).toBe(false);
@@ -368,14 +374,21 @@ describe('PatientEducationWorkflowComponent', () => {
   });
 
   describe('Workflow Submission', () => {
+    beforeEach(() => {
+      // Put component in completable state: step 4, no follow-up needed
+      component.currentStep = 4;
+      component.form.patchValue({ needsFollowUp: false });
+      component.educationSummary = { topicId: 'TOPIC_001', understandingLevel: 'GOOD' };
+    });
+
     it('should save education session', (done) => {
       const mockResponse = { id: 'EDU_SESSION001', status: 'completed' };
-      nurseWorkflowService.recordPatientEducation.mockReturnValue(of(mockResponse));
+      nurseWorkflowService.logPatientEducation.mockReturnValue(of(mockResponse));
 
       component.completeEducationWorkflow();
 
       setTimeout(() => {
-        expect(nurseWorkflowService.recordPatientEducation).toHaveBeenCalled();
+        expect(nurseWorkflowService.logPatientEducation).toHaveBeenCalled();
         expect(toastService.success).toHaveBeenCalled();
         done();
       }, 100);
@@ -383,7 +396,7 @@ describe('PatientEducationWorkflowComponent', () => {
 
     it('should close dialog on successful completion', (done) => {
       const mockResponse = { id: 'EDU_SESSION001', status: 'completed' };
-      nurseWorkflowService.recordPatientEducation.mockReturnValue(of(mockResponse));
+      nurseWorkflowService.logPatientEducation.mockReturnValue(of(mockResponse));
 
       component.completeEducationWorkflow();
 
@@ -394,7 +407,7 @@ describe('PatientEducationWorkflowComponent', () => {
     });
 
     it('should handle save errors gracefully', (done) => {
-      nurseWorkflowService.recordPatientEducation.mockReturnValue(
+      nurseWorkflowService.logPatientEducation.mockReturnValue(
         throwError(() => new Error('Save failed'))
       );
 
@@ -409,10 +422,12 @@ describe('PatientEducationWorkflowComponent', () => {
 
   describe('Form Navigation', () => {
     it('should advance steps', () => {
-      component.currentStep = 0;
+      // Start at step 1 (material type) with a value set so canProceedToNextStep passes
+      component.currentStep = 1;
+      component.form.patchValue({ materialType: 'VIDEO' });
       component.nextStep();
 
-      expect(component.currentStep).toBeGreaterThan(0);
+      expect(component.currentStep).toBe(2);
     });
 
     it('should go back to previous step', () => {

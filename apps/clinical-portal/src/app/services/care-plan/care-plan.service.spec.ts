@@ -50,6 +50,7 @@ import {
   ReviewType,
   TransitionType,
 } from './care-plan.models';
+import { LoggerService } from '../logger.service';
 
 describe('CarePlanService', () => {
   let service: CarePlanService;
@@ -172,9 +173,24 @@ describe('CarePlanService', () => {
   };
 
   beforeEach(() => {
+    const mockLoggerService = {
+      withContext: jest.fn().mockReturnValue({
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn(),
+      }),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [CarePlanService],
+      providers: [
+        CarePlanService,
+        { provide: LoggerService, useValue: mockLoggerService },
+      ],
     });
     service = TestBed.inject(CarePlanService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -194,10 +210,12 @@ describe('CarePlanService', () => {
     });
 
     it('should throw error when making requests without tenant context', () => {
-      const unsetService = new CarePlanService(TestBed.inject(HttpClientTestingModule) as any);
+      const freshService = TestBed.inject(CarePlanService);
+      // Reset tenant context by creating a fresh state
+      (freshService as any).tenantContext$.next(null);
       expect(() =>
-        unsetService.getCarePlanById('plan-001').subscribe()
-      ).toThrowError('Tenant context not set');
+        freshService.getCarePlanById('plan-001').subscribe()
+      ).toThrow('Tenant context not set');
     });
   });
 
@@ -210,7 +228,7 @@ describe('CarePlanService', () => {
         expect(result.patientId).toBe(patientId);
         expect(result.status).toBe(CarePlanStatus.ACTIVE);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans') && r.method === 'POST'
@@ -224,7 +242,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBe('plan-001');
         expect(result.title).toBe('Diabetes Management Care Plan');
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001')
@@ -272,7 +290,7 @@ describe('CarePlanService', () => {
       service.closeCarePlan('plan-001', 'Goals achieved').subscribe((result) => {
         expect(result.status).toBe(CarePlanStatus.COMPLETED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/close')
@@ -311,7 +329,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe(ProblemStatus.ACTIVE);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/problems') && r.method === 'POST'
@@ -359,7 +377,7 @@ describe('CarePlanService', () => {
       service.resolveProblem('prob-001', 'Patient achieved diabetes control').subscribe((result) => {
         expect(result.status).toBe(ProblemStatus.RESOLVED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('problems/prob-001/resolve')
@@ -376,7 +394,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe(GoalStatus.IN_PROGRESS);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/goals') && r.method === 'POST'
@@ -424,7 +442,7 @@ describe('CarePlanService', () => {
       service.achieveGoal('goal-001').subscribe((result) => {
         expect(result.status).toBe(GoalStatus.ACHIEVED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('goals/goal-001/achieve')
@@ -463,7 +481,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.status).toBe(InterventionStatus.IN_PROGRESS);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/interventions') && r.method === 'POST'
@@ -511,7 +529,7 @@ describe('CarePlanService', () => {
         expect(result.status).toBe(InterventionStatus.COMPLETED);
         expect(result.completionDate).toBeDefined();
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('interventions/int-001/complete')
@@ -550,7 +568,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.role).toBe(TeamMemberRole.PRIMARY_CARE_PHYSICIAN);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/team') && r.method === 'POST'
@@ -585,7 +603,7 @@ describe('CarePlanService', () => {
       service.removeTeamMember('plan-001', 'team-001').subscribe((result) => {
         expect(result).toBeTruthy();
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/team/team-001') && r.method === 'DELETE'
@@ -602,7 +620,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.engagementLevel).toBe(PatientEngagementLevel.HIGHLY_ENGAGED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/engagement') && r.method === 'POST'
@@ -614,7 +632,7 @@ describe('CarePlanService', () => {
       service.getPatientEngagement('plan-001').subscribe((result) => {
         expect(result.engagementLevel).toBe(PatientEngagementLevel.HIGHLY_ENGAGED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/engagement')
@@ -644,7 +662,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.reviewType).toBe(ReviewType.SCHEDULED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/reviews') && r.method === 'POST'
@@ -683,7 +701,7 @@ describe('CarePlanService', () => {
         expect(result.id).toBeDefined();
         expect(result.transitionType).toBe(TransitionType.HOSPITAL_TO_HOME);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/plan-001/transitions') && r.method === 'POST'
@@ -762,13 +780,16 @@ describe('CarePlanService', () => {
 
   describe('Error Handling', () => {
     it('should handle 404 errors gracefully', (done) => {
-      service.getCarePlanById('nonexistent').subscribe(
-        () => fail('should not succeed'),
-        (error) => {
+      service.getCarePlanById('nonexistent').subscribe({
+        next: () => {
+          done.fail('should not succeed');
+        },
+        error: (error) => {
           expect(error.status).toBe(404);
+          expect(error.context).toBe('getCarePlanById');
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans/nonexistent')
@@ -777,13 +798,15 @@ describe('CarePlanService', () => {
     });
 
     it('should handle 401 Unauthorized errors', (done) => {
-      service.createCarePlan(mockCarePlan).subscribe(
-        () => fail('should not succeed'),
-        (error) => {
+      service.createCarePlan(mockCarePlan).subscribe({
+        next: () => {
+          done.fail('should not succeed');
+        },
+        error: (error) => {
           expect(error.status).toBe(401);
           done();
-        }
-      );
+        },
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('care-plans') && r.method === 'POST'
@@ -797,15 +820,12 @@ describe('CarePlanService', () => {
   describe('Caching Behavior', () => {
     it('should cache care plan results with TTL', (done) => {
       service.getCarePlanById('plan-001').subscribe(() => {
-        // Second call should use cache
-        service.getCarePlanById('plan-001').subscribe(() => {
-          // Verify only one HTTP call was made
-          const requests = httpMock.match((r) =>
-            r.url.includes('care-plans/plan-001')
-          );
-          expect(requests.length).toBe(1);
+        // Second call should use cache — no new HTTP request expected
+        service.getCarePlanById('plan-001').subscribe((result) => {
+          expect(result).toBeTruthy();
+          // httpMock.verify() in afterEach confirms no unexpected requests
           done();
-        };
+        });
       });
 
       const req = httpMock.expectOne((r) =>
@@ -819,7 +839,7 @@ describe('CarePlanService', () => {
         // Cache should be invalidated
         service.getCarePlanById('plan-001').subscribe(() => {
           done();
-        };
+        });
 
         const secondReq = httpMock.expectOne((r) =>
           r.url.includes('care-plans/plan-001') && r.method === 'GET'

@@ -8,7 +8,6 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { PromptTemplate, PromptVariable } from '../models/agent.model';
-import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('CreateTemplateDialogComponent', () => {
   let component: CreateTemplateDialogComponent;
@@ -47,8 +46,7 @@ describe('CreateTemplateDialogComponent', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: { isEdit: false } },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+        { provide: MAT_DIALOG_DATA, useValue: { isEdit: false } }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(CreateTemplateDialogComponent);

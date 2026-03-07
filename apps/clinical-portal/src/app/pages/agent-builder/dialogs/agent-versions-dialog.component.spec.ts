@@ -8,8 +8,6 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { AgentConfiguration, AgentVersion, Page } from '../models/agent.model';
-import { createMockMatDialog } from '../../testing/mocks';
-import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('AgentVersionsDialogComponent', () => {
   let component: AgentVersionsDialogComponent;
@@ -81,11 +79,10 @@ describe('AgentVersionsDialogComponent', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MatDialog, useValue: mockDialog },
-        { provide: MAT_DIALOG_DATA, useValue: { agent: mockAgent } },
-        { provide: MatDialog, useValue: createMockMatDialog() },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
-    }).compileComponents();
+        { provide: MAT_DIALOG_DATA, useValue: { agent: mockAgent } }],
+    })
+    .overrideProvider(MatDialog, { useValue: mockDialog })
+    .compileComponents();
 
     fixture = TestBed.createComponent(AgentVersionsDialogComponent);
     component = fixture.componentInstance;
@@ -131,8 +128,7 @@ describe('AgentVersionsDialogComponent', () => {
 
   it('should open comparison dialog with correct data', () => {
     mockAgentService.listVersions.mockReturnValue(of(mockVersionPage));
-    const mockDialogInstance = { afterClosed: jest.fn() };
-    mockDialogInstance.afterClosed.mockReturnValue(of(null));
+    const mockDialogInstance = { afterClosed: () => of(null) };
     mockDialog.open.mockReturnValue(mockDialogInstance);
 
     fixture.detectChanges();
@@ -143,8 +139,7 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should show rollback confirmation dialog', () => {
-    const mockConfirmDialogRef = { afterClosed: jest.fn() };
-    mockConfirmDialogRef.afterClosed.mockReturnValue(of(false)); // User cancels
+    const mockConfirmDialogRef = { afterClosed: () => of(false) };
     mockDialog.open.mockReturnValue(mockConfirmDialogRef);
 
     component.rollbackToVersion(mockVersions[1]);
@@ -153,42 +148,34 @@ describe('AgentVersionsDialogComponent', () => {
   });
 
   it('should perform rollback when confirmed', () => {
-    const mockConfirmDialogRef = { afterClosed: jest.fn() };
-    mockConfirmDialogRef.afterClosed.mockReturnValue(of(true)); // User confirms
-    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
-
     const updatedAgent = { ...mockAgent, version: 'v1' };
     mockAgentService.rollbackToVersion.mockReturnValue(of(updatedAgent));
+    const mockConfirmDialogRef = { afterClosed: () => of(true) };
+    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
 
     component.rollbackToVersion(mockVersions[1]);
 
-    mockConfirmDialogRef.afterClosed().subscribe(() => {
-      expect(mockAgentService.rollbackToVersion).toHaveBeenCalledWith(
-        'agent-123',
-        'v1'
-      );
-      expect(mockToastService.success).toHaveBeenCalledWith(
-        'Rolled back to version 1.0.0'
-      );
-      expect(mockDialogRef.close).toHaveBeenCalledWith(true);
-    });
+    expect(mockAgentService.rollbackToVersion).toHaveBeenCalledWith(
+      'agent-123',
+      'v1'
+    );
+    expect(mockToastService.success).toHaveBeenCalledWith(
+      'Rolled back to version 1.0.0'
+    );
+    expect(mockDialogRef.close).toHaveBeenCalledWith(true);
   });
 
   it('should handle rollback error', () => {
-    const mockConfirmDialogRef = { afterClosed: jest.fn() };
-    mockConfirmDialogRef.afterClosed.mockReturnValue(of(true));
-    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
-
     mockAgentService.rollbackToVersion.mockReturnValue(
       throwError(() => new Error('Rollback failed'))
     );
+    const mockConfirmDialogRef = { afterClosed: () => of(true) };
+    mockDialog.open.mockReturnValue(mockConfirmDialogRef);
 
     component.rollbackToVersion(mockVersions[1]);
 
-    mockConfirmDialogRef.afterClosed().subscribe(() => {
-      expect(mockToastService.error).toHaveBeenCalledWith('Failed to rollback version');
-      expect(component.rollingBack).toBe(false);
-    });
+    expect(mockToastService.error).toHaveBeenCalledWith('Failed to rollback version');
+    expect(component.rollingBack).toBe(false);
   });
 
   it('should close dialog when onClose is called', () => {

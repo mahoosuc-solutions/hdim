@@ -20,6 +20,10 @@ describe('MentalHealthService', () => {
   let httpMock: HttpTestingController;
 
   const mockLoggerService = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
     withContext: jest.fn().mockReturnValue({
       info: jest.fn(),
       debug: jest.fn(),
@@ -37,7 +41,7 @@ describe('MentalHealthService', () => {
     getConditions: jest.fn().mockReturnValue(of({ entry: [] })),
     getMentalHealthConditions: jest.fn().mockReturnValue(of([])),
     invalidatePatientConditions: jest.fn(),
-  });
+  };
 
   beforeEach(() => {
     TestBed.configureTestingModule({

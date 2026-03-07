@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0-rc1] - 2026-03-07 — "Shield"
+
+### Added
+- **External Integration Adapters** — 3 production-hardened adapter services (corehive, healthix, hedis) bridging external projects via REST/Kafka
+- **IHE Gateway Service** — New microservice (port 8125) implementing IHE document exchange via FHIR MHD
+- **IHE PIXv3 Client** — Patient cross-referencing via ITI-45 in healthix-adapter
+- **IHE XDS.b Document Exchange** — ITI-18 query, ITI-41 submit, ITI-43 retrieve via FHIR MHD
+- **IHE XCA Federation** — ITI-38 Cross Gateway Query and ITI-39 Cross Gateway Retrieve for OR-HIE participation
+- **OpenTelemetry Custom Spans** — 12+ span points across all adapter services with PHI-aware attributes
+- **Prometheus Metrics** — Per-adapter counters, timers, and gauges (AdapterMetrics)
+- **Structured ECS Logging** — Logback with traceId/spanId/correlationId MDC fields
+- **ATNA Audit Record Repository** — Kafka-based forwarding to ihe.audit.events topic
+- **Grafana Dashboard** — 8-panel external-integrations.json for adapter monitoring
+- **E2E Smoke Test** — 3-scenario integration test script (scripts/e2e/smoke-test.sh)
+- **Performance Validation** — Throughput and latency validation script (scripts/e2e/perf-validate.sh)
+- **HTTP Connection Pooling** — Configurable per-adapter connection pools for FHIR throughput
+- **Kafka Batch Tuning** — Producer/consumer optimization for 500+ msg/sec
+
+### Security
+- Spring Security on all adapter endpoints
+- @ControllerAdvice error handling on all 3 adapters
+- PHI de-identification enforced on CoreHive adapter (NONE level)
+- mTLS configuration for Healthix adapter (FULL PHI level)
+- JWT + RBAC for hedis adapter (LIMITED PHI level)
+- Feature toggles: COREHIVE_ENABLED, HEALTHIX_ENABLED, HEDIS_ENABLED
+
+### Testing
+- 50+ unit tests across 4 services (corehive, healthix, hedis, ihe-gateway)
+- Circuit breaker fault tolerance tests
+- Kafka event publishing verification tests
+- IHE transaction unit tests (PIXv3, XDS.b, XCA)
+
+### Infrastructure
+- Docker Compose overlay: docker-compose.external-integrations.yml
+- Kong gateway routes for /external/corehive, /external/healthix, /external/hedis, /ihe
+- PostgreSQL schemas: corehive_adapter_db, healthix_adapter_db, hedis_adapter_db, ihe_gateway_db
+- Kafka topics: external.*, ihe.* namespaces
+
 ## [Unreleased]
 
 ### Added
@@ -542,7 +580,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-[Unreleased]: https://github.com/healthdata/hdim/compare/v2.9.0...HEAD
+[Unreleased]: https://github.com/healthdata/hdim/compare/v3.0.0-rc1...HEAD
+[3.0.0-rc1]: https://github.com/healthdata/hdim/compare/v2.9.2...v3.0.0-rc1
 [2.9.0]: https://github.com/healthdata/hdim/compare/v2.8.1...v2.9.0
 [2.8.1]: https://github.com/healthdata/hdim/compare/v2.8.0...v2.8.1
 [2.8.0]: https://github.com/healthdata/hdim/compare/v2.7.2-rc1...v2.8.0

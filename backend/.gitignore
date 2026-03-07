@@ -1,6 +1,8 @@
 # Gradle
 .gradle/
 build/
+target/
+**/target/
 gradle-home/
 !gradle-wrapper.jar
 *.class

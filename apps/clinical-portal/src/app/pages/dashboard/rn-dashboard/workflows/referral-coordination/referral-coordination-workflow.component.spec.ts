@@ -322,6 +322,11 @@ describe('ReferralCoordinationWorkflowComponent', () => {
   });
 
   describe('Workflow Submission', () => {
+    beforeEach(() => {
+      // Put component in completable state: step 4 always returns true for canProceedToNextStep
+      component.currentStep = 4;
+    });
+
     it('should save referral coordination', (done) => {
       const mockResponse = { id: 'REF_001', status: 'completed' };
       nurseWorkflowService.completeReferralCoordination.mockReturnValue(of(mockResponse));
@@ -363,10 +368,13 @@ describe('ReferralCoordinationWorkflowComponent', () => {
 
   describe('Form Navigation', () => {
     it('should advance steps', () => {
-      component.currentStep = 0;
+      // Step 2 with no prior auth → canProceedToNextStep returns true
+      component.currentStep = 2;
+      component.requiresPriorAuth = false;
+      nurseWorkflowService.verifyInsuranceCoverage.mockReturnValue(of({ covered: true }));
       component.nextStep();
 
-      expect(component.currentStep).toBeGreaterThan(0);
+      expect(component.currentStep).toBe(3);
     });
 
     it('should go back to previous step', () => {

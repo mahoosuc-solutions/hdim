@@ -1,15 +1,45 @@
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NgZone } from '@angular/core';
 import { ThreeSceneService, SceneConfig } from './three-scene.service';
+
+// Mock the entire 'three' module to avoid read-only ESM property issues.
+// The MockWebGLRenderer class must be defined inside the factory because
+// jest.mock is hoisted above all other statements.
+jest.mock('three', () => {
+  const actualThree = jest.requireActual('three');
+
+  class MockWebGLRenderer {
+    domElement = document.createElement('canvas');
+    shadowMap = { enabled: false, type: actualThree.PCFSoftShadowMap };
+    setSize = jest.fn(function (this: any, width?: number, height?: number) {
+      this.domElement.style.width = width !== undefined ? `${width}px` : '';
+      this.domElement.style.height = height !== undefined ? `${height}px` : '';
+    });
+    setPixelRatio = jest.fn();
+    setAnimationLoop = jest.fn();
+    render = jest.fn();
+    dispose = jest.fn();
+  }
+
+  return {
+    ...actualThree,
+    WebGLRenderer: MockWebGLRenderer,
+  };
+});
+
+// Import THREE after the mock is set up
 import * as THREE from 'three';
 
 jest.mock('three/examples/jsm/controls/OrbitControls.js', () => {
-  const THREE = require('three');
+  const actualThree = jest.requireActual('three');
   return {
     OrbitControls: class {
       enableDamping = false;
       dampingFactor = 0;
-      target = new THREE.Vector3();
+      maxPolarAngle = 0;
+      minDistance = 0;
+      maxDistance = 0;
+      target = new actualThree.Vector3();
       update = jest.fn();
       dispose = jest.fn();
     },
@@ -29,27 +59,12 @@ jest.mock('three/examples/jsm/libs/stats.module.js', () => {
   return { __esModule: true, default: StatsMock };
 });
 
-class MockWebGLRenderer {
-  domElement = document.createElement('canvas');
-  shadowMap = { enabled: false };
-  setSize = jest.fn((width?: number, height?: number) => {
-    this.domElement.style.width = width !== undefined ? `${width}px` : '';
-    this.domElement.style.height = height !== undefined ? `${height}px` : '';
-  });
-  setPixelRatio = jest.fn();
-  setAnimationLoop = jest.fn();
-  render = jest.fn();
-  dispose = jest.fn();
-}
-
 describe('ThreeSceneService', () => {
   let service: ThreeSceneService;
   let mockContainer: HTMLElement;
   let ngZone: NgZone;
-  const originalWebGLRenderer = THREE.WebGLRenderer;
 
   beforeEach(() => {
-    (THREE as any).WebGLRenderer = MockWebGLRenderer as any;
     TestBed.configureTestingModule({
       providers: [ThreeSceneService],
     });
@@ -74,7 +89,6 @@ describe('ThreeSceneService', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    (THREE as any).WebGLRenderer = originalWebGLRenderer as any;
     // Clean up service
     if (service) {
       service.dispose();

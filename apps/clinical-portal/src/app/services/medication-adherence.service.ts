@@ -53,7 +53,9 @@ export class MedicationAdherenceService {
   constructor(
     private http: HttpClient,
     private loggerService: LoggerService
-  ) {}
+  ) {
+    this.logger = this.loggerService.withContext('MedicationAdherenceService');
+  }
 
   /**
    * Get HTTP headers with tenant ID

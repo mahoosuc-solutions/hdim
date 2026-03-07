@@ -8,7 +8,6 @@ import { AgentBuilderService } from '../services/agent-builder.service';
 import { ToastService } from '../../../services/toast.service';
 import { LoggerService } from '../../../services/logger.service';
 import { PromptTemplate } from '../models/agent.model';
-import { createMockMatDialogRef } from '../../testing/mocks';
 
 describe('TemplateLibraryDialogComponent', () => {
   let component: TemplateLibraryDialogComponent;
@@ -62,8 +61,7 @@ describe('TemplateLibraryDialogComponent', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
         { provide: MatDialogRef, useValue: mockDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: { mode: 'select' } },
-        { provide: MatDialogRef, useValue: createMockMatDialogRef() }],
+        { provide: MAT_DIALOG_DATA, useValue: { mode: 'select' } }],
     }).compileComponents();
 
     mockAgentService.listTemplates.mockReturnValue(of(mockTemplates));
@@ -74,7 +72,7 @@ describe('TemplateLibraryDialogComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
-  };
+  });
 
   it('should load templates on init', () => {
     fixture.detectChanges();
@@ -82,7 +80,7 @@ describe('TemplateLibraryDialogComponent', () => {
     expect(mockAgentService.listTemplates).toHaveBeenCalled();
     expect(component.templates.length).toBe(2);
     expect(component.dataSource.data.length).toBe(2);
-  };
+  });
 
   it('should handle template loading error', () => {
     mockAgentService.listTemplates.mockReturnValue(
@@ -93,7 +91,7 @@ describe('TemplateLibraryDialogComponent', () => {
 
     expect(component.loading).toBe(false);
     expect(mockToastService.error).toHaveBeenCalledWith('Failed to load templates');
-  };
+  });
 
   it('should filter templates by category', () => {
     fixture.detectChanges();
@@ -103,7 +101,7 @@ describe('TemplateLibraryDialogComponent', () => {
 
     expect(component.dataSource.data.length).toBe(1);
     expect(component.dataSource.data[0].category).toBe('CLINICAL_SAFETY');
-  };
+  });
 
   it('should filter templates by search text', (done) => {
     fixture.detectChanges();
@@ -116,7 +114,7 @@ describe('TemplateLibraryDialogComponent', () => {
       expect(component.dataSource.data[0].name).toBe('Care Gap Analysis');
       done();
     }, 350);
-  };
+  });
 
   it('should select a template', () => {
     fixture.detectChanges();
@@ -125,7 +123,7 @@ describe('TemplateLibraryDialogComponent', () => {
     component.selectTemplate(template);
 
     expect(component.selectedTemplate).toBe(template);
-  };
+  });
 
   it('should close dialog with selected template when using', () => {
     fixture.detectChanges();
@@ -134,20 +132,20 @@ describe('TemplateLibraryDialogComponent', () => {
     component.useTemplate();
 
     expect(mockDialogRef.close).toHaveBeenCalledWith(mockTemplates[0]);
-  };
+  });
 
   it('should format category labels correctly', () => {
     expect(component.formatCategory('CLINICAL_SAFETY')).toBe('Clinical Safety');
     expect(component.formatCategory('SYSTEM_PROMPT')).toBe('System Prompt');
     expect(component.formatCategory('CUSTOM')).toBe('Custom');
-  };
+  });
 
   it('should show empty state when no templates', () => {
     mockAgentService.listTemplates.mockReturnValue(of([]));
     fixture.detectChanges();
 
     expect(component.dataSource.data.length).toBe(0);
-  };
+  });
 
   it('should apply both category and search filters', (done) => {
     fixture.detectChanges();
@@ -160,5 +158,5 @@ describe('TemplateLibraryDialogComponent', () => {
       expect(component.dataSource.data[0].category).toBe('CLINICAL_SAFETY');
       done();
     }, 350);
-  };
+  });
 });

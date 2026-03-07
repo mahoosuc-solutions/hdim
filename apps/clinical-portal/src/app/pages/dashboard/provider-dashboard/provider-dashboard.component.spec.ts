@@ -1,9 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { of, throwError, EMPTY } from 'rxjs';
+import { of, throwError, EMPTY, Subject } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { ProviderDashboardComponent, PendingResult, HighPriorityCareGap, QualityMeasure } from './provider-dashboard.component';
 import { DialogService } from '../../../services/dialog.service';
 import { NotificationService } from '../../../services/notification.service';
+import { CareGapService } from '../../../services/care-gap.service';
+import { EvaluationService } from '../../../services/evaluation.service';
+import { PatientService } from '../../../services/patient.service';
+import { SchedulingService } from '../../../services/scheduling.service';
+import { KeyboardShortcutsService } from '../../../services/keyboard-shortcuts.service';
+import { GuidedTourService } from '../../../services/guided-tour.service';
+import { ErrorValidationService } from '../../../services/error-validation.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { createMockStore, createMockLoggerService } from '../../../../testing/mocks';
 import { LoggerService } from '../../../services/logger.service';
@@ -22,6 +30,14 @@ describe('ProviderDashboardComponent', () => {
   let mockRouter: jest.Mocked<Router>;
   let mockDialogService: jest.Mocked<DialogService>;
   let mockNotificationService: jest.Mocked<NotificationService>;
+  let mockCareGapService: any;
+  let mockEvaluationService: any;
+  let mockPatientService: any;
+  let mockSchedulingService: any;
+  let mockShortcutsService: any;
+  let mockTourService: any;
+  let mockErrorValidationService: any;
+  let mockMatDialog: any;
 
   beforeEach(async () => {
     mockRouter = {
@@ -42,6 +58,57 @@ describe('ProviderDashboardComponent', () => {
       info: jest.fn()
     } as any;
 
+    mockCareGapService = {
+      getHighPriorityGaps: jest.fn().mockReturnValue(throwError(() => new Error('API not available'))),
+      getCareGaps: jest.fn().mockReturnValue(of({ content: [], totalElements: 0 })),
+      getCareGapsPage: jest.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, number: 0, size: 0 })),
+      closeCareGap: jest.fn().mockReturnValue(of({})),
+    };
+
+    mockEvaluationService = {
+      getAllResults: jest.fn().mockReturnValue(of([])),
+      getRecentResults: jest.fn().mockReturnValue(of([])),
+      getPopulationReport: jest.fn().mockReturnValue(throwError(() => new Error('API not available'))),
+      getEvaluationStats: jest.fn().mockReturnValue(of({ total: 0, last30Days: 0, successRate: 0 })),
+    };
+
+    mockPatientService = {
+      getPatient: jest.fn().mockReturnValue(of({})),
+      getPatients: jest.fn().mockReturnValue(of([])),
+      getPatientsSummary: jest.fn().mockReturnValue(of([])),
+    };
+
+    mockSchedulingService = {
+      getAppointmentsForDate: jest.fn().mockReturnValue(of([])),
+      getTasksForDate: jest.fn().mockReturnValue(of([])),
+    };
+
+    mockShortcutsService = {
+      register: jest.fn(),
+      unregister: jest.fn(),
+      setHelpDialogCallback: jest.fn(),
+      refresh$: EMPTY,
+      search$: EMPTY,
+      navigation$: EMPTY,
+      action$: EMPTY,
+      quickAction$: EMPTY,
+    };
+
+    mockTourService = {
+      isFirstVisit: jest.fn().mockReturnValue(false),
+      isTourCompleted: jest.fn().mockReturnValue(true),
+      startTour: jest.fn(),
+    };
+
+    mockErrorValidationService = {
+      isFallbackAllowed: jest.fn().mockReturnValue(true),
+      trackError: jest.fn(),
+    };
+
+    mockMatDialog = {
+      open: jest.fn().mockReturnValue({ afterClosed: () => of(null) }),
+    };
+
     await TestBed.configureTestingModule({
       imports: [ProviderDashboardComponent, NoopAnimationsModule],
       providers: [
@@ -50,6 +117,14 @@ describe('ProviderDashboardComponent', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: HelpService, useValue: { toggleHelpPanel: jest.fn(), showHelpPanel$: of(false) } },
+        { provide: CareGapService, useValue: mockCareGapService },
+        { provide: EvaluationService, useValue: mockEvaluationService },
+        { provide: PatientService, useValue: mockPatientService },
+        { provide: SchedulingService, useValue: mockSchedulingService },
+        { provide: KeyboardShortcutsService, useValue: mockShortcutsService },
+        { provide: GuidedTourService, useValue: mockTourService },
+        { provide: ErrorValidationService, useValue: mockErrorValidationService },
+        { provide: MatDialog, useValue: mockMatDialog },
       ],
     }).compileComponents();
 
@@ -427,7 +502,7 @@ describe('ProviderDashboardComponent', () => {
   });
 
   describe('Care Gap Management', () => {
-    it('should navigate to patient detail when addressing care gap', () => {
+    it('should open care gap closure dialog when addressing care gap', async () => {
       const gap: HighPriorityCareGap = {
         id: '1',
         patientName: 'Test Patient',
@@ -439,12 +514,24 @@ describe('ProviderDashboardComponent', () => {
         requiresAction: 'Medication adjustment'
       };
 
-      component.addressCareGap(gap);
+      // Spy on the component's private dialog instance
+      const dialogInstance = (component as any).dialog;
+      const openSpy = jest.spyOn(dialogInstance, 'open').mockReturnValue({ afterClosed: () => of(null) } as any);
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patients', gap.id],
-        { queryParams: { action: 'clinical-review', gapId: gap.id } }
+      await component.addressCareGap(gap);
+
+      expect(openSpy).toHaveBeenCalledWith(
+        expect.any(Function),
+        expect.objectContaining({
+          width: '600px',
+          data: expect.objectContaining({
+            patientName: 'Test Patient',
+            patientMRN: 'MRN-001',
+          }),
+        })
       );
+
+      openSpy.mockRestore();
     });
 
     it('should navigate to patient detail by id', () => {

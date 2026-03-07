@@ -9,6 +9,7 @@ import { LoggerService } from '../../services/logger.service';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { CSVHelper } from '../../utils/csv-helper';
+import { enhanceResults } from './result-enhancement.config';
 import { createMockLoggerService, createMockStore } from '../../../testing/mocks';
 import { Store } from '@ngrx/store';
 
@@ -58,6 +59,7 @@ describe('ResultsComponent (TDD)', () => {
         { provide: EvaluationService, useValue: mockEvaluationService },
         { provide: PatientService, useValue: mockPatientService },
         { provide: LoggerService, useValue: mockLoggerService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(ResultsComponent);
@@ -156,6 +158,8 @@ describe('ResultsComponent (TDD)', () => {
         EvaluationFactory.createNotEligibleResult(),
       ];
       component.results = mockResults;
+      component.enhancedResults = enhanceResults(mockResults);
+      component.filteredResults = component.enhancedResults;
     });
 
     it('should filter results by date range', () => {
@@ -591,16 +595,17 @@ describe('ResultsComponent (TDD)', () => {
 
   describe('Chart and Selection Helpers', () => {
     it('should update chart data based on filtered results', () => {
-      component.filteredResults = [
+      const mockResults = [
         EvaluationFactory.createCompliantResult(),
         EvaluationFactory.createNonCompliantResult(),
         EvaluationFactory.createNotEligibleResult(),
       ];
+      component.filteredResults = enhanceResults(mockResults);
 
       component.updateChartData();
 
-      expect(component.outcomeDistributionChartData.length).toBe(3);
-      expect(component.categoryComplianceChartData.length).toBeGreaterThan(0);
+      expect(component.outcomeDistributionChartData.labels?.length).toBe(3);
+      expect(component.categoryComplianceChartData.labels?.length).toBeGreaterThan(0);
     });
 
     it('should handle total pages when page size is zero', () => {

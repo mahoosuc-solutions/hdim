@@ -272,8 +272,8 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
     });
 
     it('should unsubscribe on destroy', () => {
-      spyOn(component['destroy$'], 'next');
-      spyOn(component['destroy$'], 'complete');
+      jest.spyOn(component['destroy$'], 'next');
+      jest.spyOn(component['destroy$'], 'complete');
 
       component.ngOnDestroy();
 
@@ -308,6 +308,15 @@ describe('Phase2DashboardComponent - Financial ROI View', () => {
         of(mockFinancialDashboard)
       );
       mockExecutionService.getMeasureROI.mockReturnValue(of(mockMeasureROI));
+
+      // Set dashboard @Input so the template can access dashboard.completionPercentage etc.
+      component.dashboard = {
+        completionPercentage: 45,
+        totalTasks: 100,
+        completedTasks: 45,
+        tasksByCategory: {},
+        tasksByWeek: {},
+      };
 
       component.ngOnInit();
       fixture.detectChanges();

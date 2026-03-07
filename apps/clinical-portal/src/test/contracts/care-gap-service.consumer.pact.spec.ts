@@ -16,6 +16,16 @@
  * @see CareGapServiceProviderTest (backend)
  * @see CareGapContractStateSetup (backend)
  */
+
+// Polyfill fetch for jsdom test environment (Node.js 20+ has native fetch but jsdom may not expose it)
+if (typeof globalThis.fetch === 'undefined') {
+  const nodeFetch = require('node-fetch') as typeof import('node-fetch');
+  (globalThis as any).fetch = nodeFetch.default ?? nodeFetch;
+  (globalThis as any).Request = nodeFetch.Request;
+  (globalThis as any).Response = nodeFetch.Response;
+  (globalThis as any).Headers = nodeFetch.Headers;
+}
+
 import { MatchersV3 } from '@pact-foundation/pact';
 import {
   createPactProvider,

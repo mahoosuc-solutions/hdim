@@ -9,6 +9,16 @@ type DeploymentStatus = {
   timestamp?: string;
   services?: Array<{ name: string; state: string; health?: string; ports?: string }>;
   seedingTail?: string[];
+  seedingProgress?: {
+    phase: 'idle' | 'waiting-service' | 'seeding' | 'syncing-cql' | 'completed' | 'failed';
+    percent: number;
+    counts?: {
+      patientsCreated?: number;
+      patientsLoaded?: number;
+    };
+    lastError?: string;
+    updatedAt?: string;
+  };
   lastCommand?: { action: string; exitCode: number; durationMs: number; outputTail?: string[] };
   error?: string;
 };
@@ -22,6 +32,7 @@ type DeploymentStatus = {
 })
 export class DeploymentConsoleComponent implements OnInit, OnDestroy {
   opsBaseUrl = (window as any).__HDIM_OPS_BASE_URL || 'http://localhost:4710';
+  private readonly statusPollMs = this.resolveStatusPollMs((window as any).__HDIM_OPS_POLL_MS);
   deploymentMode: 'onprem' | 'cloud' = 'onprem';
   patientCount = 1200;
   batchSize = 50;
@@ -41,7 +52,7 @@ export class DeploymentConsoleComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.refreshOverride();
-    this.statusSub = timer(0, 5000)
+    this.statusSub = timer(0, this.statusPollMs)
       .pipe(switchMap(() => this.http.get<DeploymentStatus>(`${this.opsBaseUrl}/ops/status`)))
       .subscribe({
         next: (status) => {
@@ -101,5 +112,30 @@ export class DeploymentConsoleComponent implements OnInit, OnDestroy {
     } finally {
       this.commandBusy = false;
     }
+  }
+
+  formatPhase(phase?: string): string {
+    switch (phase) {
+      case 'waiting-service':
+        return 'Waiting for service';
+      case 'seeding':
+        return 'Seeding data';
+      case 'syncing-cql':
+        return 'Syncing CQL libraries';
+      case 'completed':
+        return 'Completed';
+      case 'failed':
+        return 'Failed';
+      default:
+        return 'Idle';
+    }
+  }
+
+  private resolveStatusPollMs(rawValue: unknown): number {
+    const parsed = Number(rawValue ?? 10000);
+    if (!Number.isFinite(parsed)) {
+      return 10000;
+    }
+    return Math.min(60000, Math.max(2000, Math.trunc(parsed)));
   }
 }

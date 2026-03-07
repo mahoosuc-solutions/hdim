@@ -145,11 +145,16 @@ Demo-only gate (for media capture readiness):
 **Usage**:
 ```bash
 ./scripts/dev-shell-deployment.sh
+
+# Force rebuild of ops-service image (recommended for contract/e2e work)
+DEV_SHELL_BUILD_OPS=1 ./scripts/dev-shell-deployment.sh
 ```
 
 **Notes**:
 - Use this when you only need the deployment portal.
 - Other MFEs are intentionally not started to avoid `remoteEntry` errors.
+- `DEV_SHELL_BUILD_OPS=1` prevents stale ops-service payload shapes during strict contract tests.
+- Startup waits for critical demo services to become healthy by default (`DEV_SHELL_WAIT_HEALTH=1`, timeout via `DEV_SHELL_HEALTH_TIMEOUT_SECONDS`, default `300`).
 
 ### 7. `dev-shell-all.sh`
 
@@ -165,34 +170,62 @@ Demo-only gate (for media capture readiness):
 **Usage**:
 ```bash
 ./scripts/dev-shell-all.sh
+
+# Optional: also rebuild ops-service before bringing stack up
+DEV_SHELL_BUILD_OPS=1 ./scripts/dev-shell-all.sh
+
+# Skip health wait gate (not recommended for e2e)
+DEV_SHELL_WAIT_HEALTH=0 ./scripts/dev-shell-all.sh
 ```
 
-### 8. `shell-app-e2e` (Deployment Console UI Tests)
+### 8. `dev-shell-stop.sh`
+
+**Purpose**: Stop the demo compose stack and dev shell MFEs started by dev-shell scripts.
+
+**What it does**:
+- Stops the demo Docker stack (`docker-compose.demo.yml`)
+- Terminates tracked `nx serve` processes using PID files under `.tmp/dev-shell`
+- Verifies command identity before terminating any PID to avoid unrelated process kills
+
+**Usage**:
+```bash
+./scripts/dev-shell-stop.sh
+```
+
+### 9. `shell-app-e2e` (Deployment Console UI Tests)
 
 **Purpose**: Exercise the deployment console UI and local ops backend.
 
 **What it does**:
 - Launches the demo stack + shell + deployment MFE (via `dev-shell-deployment.sh`)
 - Verifies the deployment console renders and connects to the ops service
-- Validates `/ops/status` returns services
+- Validates `/ops/status` returns services and strict `seedingProgress` contract by default
 
 **Usage**:
 ```bash
 BASE_URL=http://localhost:4300 OPS_BASE_URL=http://localhost:4710 npx nx e2e shell-app-e2e
+
+# Transitional mode for older ops-service payloads (legacy seedingTail contract)
+ALLOW_LEGACY_OPS_STATUS=true BASE_URL=http://localhost:4300 OPS_BASE_URL=http://localhost:4710 npx nx e2e shell-app-e2e
 ```
+
+**Runtime polling controls**:
+- Frontend poll interval: set `window.__HDIM_OPS_POLL_MS` (clamped to `2000-60000`, default `10000`).
+- Backend status cache/coalescing TTL: set `STATUS_CACHE_TTL_MS` on ops-service (default `5000`, min `500`).
 
 **Convenience**:
 ```bash
 npm run e2e:deployment-console
 ```
 
-### 9. `verify-seeding-counts.sh`
+### 10. `verify-seeding-counts.sh`
 
 **Purpose**: Validate seeded record counts per tenant across FHIR and care-gap services.
 
 **What it does**:
 - Queries FHIR `/Patient?_summary=count`
 - Queries care-gap `/api/v1/care-gaps?page=0&size=1` and reads `totalElements`
+- Validates patient and care-gap counts using exact and range expectations (global or per-tenant)
 
 **Usage**:
 ```bash
@@ -201,11 +234,19 @@ npm run e2e:deployment-console
 # With expectations (exit non-zero on mismatch)
 EXPECTED_PATIENTS_PER_TENANT=100 ./scripts/verify-seeding-counts.sh
 
+# Per-tenant patient expectations
+EXPECTED_PATIENTS_BY_TENANT=summit-care-2026=1200,valley-health-2026=1200 \
+  ./scripts/verify-seeding-counts.sh
+
+# Per-tenant care-gap range expectations
+EXPECTED_CARE_GAPS_RANGE_BY_TENANT=summit-care-2026=250-500,valley-health-2026=250-500 \
+  ./scripts/verify-seeding-counts.sh
+
 # Custom tenants
 TENANTS=summit-care-2026,valley-health-2026 ./scripts/verify-seeding-counts.sh
 ```
 
-### 10. `release-validation/validate-cx-access-admin.sh`
+### 11. `release-validation/validate-cx-access-admin.sh`
 
 **Purpose**: Validate CX access-admin API rollout (health, auth enforcement, optional admin CRUD checks).
 
@@ -235,6 +276,41 @@ ADMIN_BEARER_TOKEN=<admin-jwt> \
 ALLOW_WRITE=true \
 TEST_EMAIL=cx-access-test@example.com \
   ./scripts/release-validation/validate-cx-access-admin.sh
+```
+
+### 12. `release-validation/validate-demo-seeding-counts.sh`
+
+**Purpose**: Enforce tenant-level seeded patient/care-gap count expectations for release validation.
+
+**Usage**:
+```bash
+# Default tenants + patient expectations
+VERSION=v0.0.0-test ./scripts/release-validation/validate-demo-seeding-counts.sh
+
+# Custom tenant expectations and care-gap ranges
+TENANTS=summit-care-2026,valley-health-2026 \
+EXPECTED_PATIENTS_BY_TENANT=summit-care-2026=1200,valley-health-2026=1200 \
+EXPECTED_CARE_GAPS_RANGE_BY_TENANT=summit-care-2026=250-500,valley-health-2026=250-500 \
+VERSION=v0.0.0-test ./scripts/release-validation/validate-demo-seeding-counts.sh
+```
+
+### 13. `release-validation/validate-release-preflight.sh`
+
+**Purpose**: Enforce preflight stack health and emit release evidence before Phase 1.
+
+**What it does**:
+- Verifies critical demo containers are `healthy`/`running`
+- Captures `docker compose ps` snapshot
+- Writes release artifact: `docs/releases/<version>/validation/preflight-stability-report.md`
+- Exits non-zero if any required container is unhealthy/missing
+
+**Usage**:
+```bash
+./scripts/release-validation/validate-release-preflight.sh v0.0.0-test
+
+# Optional: override required container set
+RELEASE_PREFLIGHT_CONTAINERS=hdim-demo-postgres,hdim-demo-fhir \
+  ./scripts/release-validation/validate-release-preflight.sh v0.0.0-test
 ```
 
 ---

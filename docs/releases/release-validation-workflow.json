@@ -8,7 +8,20 @@
     "created_date": "2026-01-20",
     "max_iterations_per_phase": 10,
     "require_phase_confirmation": true,
-    "estimated_duration_minutes": 120
+    "estimated_duration_minutes": 120,
+    "orchestration_guide": "docs/releases/AI_HUMAN_RELEASE_ORCHESTRATION.md",
+    "human_approval_required_between_phases": true,
+    "manual_tagging_required": true,
+    "preflight_stability_gate_required": true,
+    "preflight_script": "scripts/release-validation/validate-release-preflight.sh",
+    "preflight_report": "docs/releases/v{VERSION}/validation/preflight-stability-report.md",
+    "human_approval_tokens": [
+      "PHASE_0_APPROVED",
+      "PHASE_1_APPROVED",
+      "PHASE_2_APPROVED",
+      "PHASE_3_APPROVED",
+      "PHASE_4_APPROVED"
+    ]
   },
   "phases": [
     {
@@ -318,6 +331,26 @@
           ],
           "blocking": true,
           "timeout_seconds": 600,
+          "retry_on_failure": true
+        },
+        {
+          "task_id": "task-12b",
+          "name": "Demo Seeding Count Validation",
+          "prompt": "Validate tenant-scoped seeded data counts for multi-tenant demo scenarios.\n\n**Actions:**\n1. Run scripts/release-validation/validate-demo-seeding-counts.sh v{VERSION}\n2. Set TENANTS and EXPECTED_PATIENTS_BY_TENANT for the release target tenants\n3. Optionally set EXPECTED_CARE_GAPS_RANGE_BY_TENANT to enforce care-gap range expectations\n4. Review generated report under docs/releases/v{VERSION}/validation/\n\n**Completion Criteria:**\n- validate-demo-seeding-counts.sh exits with code 0\n- Expected patients per tenant are met\n- Expected care-gap ranges (if provided) are met\n\n**Validation Command:**\nTENANTS=<tenant-csv> EXPECTED_PATIENTS_BY_TENANT=<tenant=count,...> ./scripts/release-validation/validate-demo-seeding-counts.sh v{VERSION}\n\n**Expected Output:**\n- docs/releases/v{VERSION}/validation/demo-seeding-count-validation-report.md",
+          "completion_criteria": [
+            "validate-demo-seeding-counts.sh exits with code 0",
+            "Patient counts match EXPECTED_PATIENTS_BY_TENANT",
+            "Care-gap ranges match EXPECTED_CARE_GAPS_RANGE_BY_TENANT (when provided)",
+            "Report created: docs/releases/v{VERSION}/validation/demo-seeding-count-validation-report.md"
+          ],
+          "agent": "manual",
+          "commands": [],
+          "validation_script": "scripts/release-validation/validate-demo-seeding-counts.sh",
+          "expected_artifacts": [
+            "docs/releases/v{VERSION}/validation/demo-seeding-count-validation-report.md"
+          ],
+          "blocking": true,
+          "timeout_seconds": 900,
           "retry_on_failure": true
         }
       ]

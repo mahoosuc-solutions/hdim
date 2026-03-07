@@ -11,6 +11,9 @@
     "src/**/*.test.ts",
     "jest.config.ts",
     "jest.config.cts",
-    "src/test-setup.ts"
+    "src/test-setup.ts",
+    "src/app/nx-welcome.ts",
+    "src/app/components/care-gap-metrics.component.ts",
+    "src/app/components/health-score-metrics.component.ts"
   ]
 }

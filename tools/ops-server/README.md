@@ -3,8 +3,11 @@
 Lightweight HTTP service that orchestrates on-prem deployment steps for the MFE Deployment Console.
 
 ## Endpoints
-- `GET /ops/status` — Returns docker compose status + seeding log tail.
+- `GET /ops/status` — Returns docker compose status, seeding log tail, and structured `seedingProgress` (`phase`, `percent`, `counts`, `lastError`).
 - `POST /ops/command` — Executes a whitelisted command (`start`, `stop`, `seed`, `validate`, `capture-logs`).
+
+## Runtime Tuning
+- `STATUS_CACHE_TTL_MS` (default: `5000`) — Caches/coalesces expensive `docker compose ps` and `docker logs` work for `/ops/status`.
 
 ## Local Run
 ```bash

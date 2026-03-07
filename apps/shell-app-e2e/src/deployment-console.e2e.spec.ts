@@ -1,6 +1,7 @@
 import { test, expect, APIRequestContext } from '@playwright/test';
 
 const OPS_BASE_URL = process.env['OPS_BASE_URL'] || 'http://localhost:4710';
+const ALLOW_LEGACY_OPS_STATUS = process.env['ALLOW_LEGACY_OPS_STATUS'] === 'true';
 
 test.describe('Deployment Console', () => {
   let apiContext: APIRequestContext;
@@ -25,6 +26,7 @@ test.describe('Deployment Console', () => {
 
     await expect(page.getByText('Deployment & Seeding Console')).toBeVisible({ timeout: 20000 });
     await expect(page.getByText('Ops service connected')).toBeVisible({ timeout: 20000 });
+    await expect(page.getByText('Seeding Progress')).toBeVisible({ timeout: 20000 });
 
     await expect(page.getByText('Compose Override')).toBeVisible();
     await expect(page.locator('textarea[readonly]')).toBeVisible();
@@ -37,5 +39,18 @@ test.describe('Deployment Console', () => {
     const payload = await response.json();
     expect(Array.isArray(payload.services)).toBeTruthy();
     expect(payload.services.length).toBeGreaterThan(0);
+    if (ALLOW_LEGACY_OPS_STATUS) {
+      if (payload.seedingProgress) {
+        expect(typeof payload.seedingProgress.phase).toBe('string');
+        expect(typeof payload.seedingProgress.percent).toBe('number');
+      } else {
+        expect(Array.isArray(payload.seedingTail)).toBeTruthy();
+      }
+      return;
+    }
+
+    expect(payload.seedingProgress).toBeTruthy();
+    expect(typeof payload.seedingProgress.phase).toBe('string');
+    expect(typeof payload.seedingProgress.percent).toBe('number');
   });
 });

@@ -33,7 +33,7 @@ import { takeUntil } from 'rxjs/operators';
           <div class="score-number" [attr.data-testid]="'health-score-value'">
             {{ currentScore }}
           </div>
-          <div class="score-category" [attr.data-testid]="'health-score-category'">
+          <div class="score-category" [ngClass]="scoreCategoryClass" [attr.data-testid]="'health-score-category'">
             {{ scoreCategory }}
           </div>
         </div>
@@ -235,9 +235,10 @@ import { takeUntil } from 'rxjs/operators';
 export class HealthScoreMetricsComponent implements OnInit, OnDestroy {
   currentScore = 0;
   scoreCategory = 'Unknown';
+  scoreCategoryClass = 'unknown';
   trendText = 'Stable';
   trendValue = '';
-  trendClass = '';
+  trendClass = 'trend-stable';
   factors: string[] = [];
   scoreClass = '';
   updatedTime = '';
@@ -271,6 +272,7 @@ export class HealthScoreMetricsComponent implements OnInit, OnDestroy {
     // Update score and category
     this.currentScore = data.score || 0;
     this.scoreCategory = this.getCategoryLabel(data.category);
+    this.scoreCategoryClass = this.getCategoryClass(data.category);
 
     // Determine trend
     if (data.score > oldScore) {
@@ -310,6 +312,14 @@ export class HealthScoreMetricsComponent implements OnInit, OnDestroy {
       poor: 'Poor',
     };
     return categoryMap[category?.toLowerCase()] || 'Unknown';
+  }
+
+  private getCategoryClass(category: string): string {
+    const normalized = (category || 'unknown').toLowerCase();
+    if (normalized === 'excellent' || normalized === 'good' || normalized === 'fair' || normalized === 'poor') {
+      return normalized;
+    }
+    return 'unknown';
   }
 
   formatFactorName(factor: string): string {

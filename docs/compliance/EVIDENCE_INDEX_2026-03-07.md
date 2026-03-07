@@ -28,6 +28,11 @@
 - `docs/plans/2026-03-07-gap-003-access-review-tdd-plan.md`
 - `docs/plans/2026-03-07-gap-004-third-party-risk-tdd-plan.md`
 
+## TDD Red-State Logs (Expected Fail Until Closure)
+- `test-results/validate-dr-evidence-2026-03-07.log`
+- `test-results/validate-access-review-evidence-2026-03-07.log`
+- `test-results/validate-third-party-risk-evidence-2026-03-07.log`
+
 ## Legacy Assurance Sets (Reference)
 - `docs/compliance/PLATFORM_360_EVIDENCE_INDEX_2026-02-27.md`
 - `docs/compliance/HIPAA_SOC2_EVIDENCE_BUNDLE_INDEX_2026-02-27.md`

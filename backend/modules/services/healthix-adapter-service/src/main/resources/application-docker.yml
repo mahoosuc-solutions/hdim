@@ -1,0 +1,27 @@
+# Healthix Adapter - Docker profile overrides
+# Sized for 16M patient scale when used with docker-compose.healthix.yml
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 20
+      connection-timeout: 30000
+
+  kafka:
+    consumer:
+      # Batch consumption for high-volume HL7/FHIR feeds
+      max-poll-records: 500
+      fetch-min-size: 1048576
+      fetch-max-wait: 500
+    producer:
+      batch-size: 65536
+      buffer-memory: 67108864
+      linger-ms: 10
+
+  task:
+    execution:
+      pool:
+        core-size: 16
+        max-size: 64
+        queue-capacity: 1000

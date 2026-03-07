@@ -29,6 +29,8 @@
   - required sections in DR report
   - numeric RTO/RPO fields present
   - pass/fail decision exists
+ - Current red-state proof:
+   - `test-results/validate-dr-evidence-2026-03-07.log` (failing as expected before evidence completion)
 
 ## Implementation Steps
 1. Draft DR drill scope and thresholds.

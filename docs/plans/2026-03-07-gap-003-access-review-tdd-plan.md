@@ -26,6 +26,8 @@
 ### Proposed Automation
 - Add script: `scripts/release-validation/validate-access-review-evidence.sh`
 - Script checks required sections and closure metadata.
+ - Current red-state proof:
+   - `test-results/validate-access-review-evidence-2026-03-07.log` (failing as expected before evidence completion)
 
 ## Implementation Steps
 1. Extract role/account inventory from auth source of truth.

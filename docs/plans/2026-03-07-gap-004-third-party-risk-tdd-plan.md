@@ -26,6 +26,8 @@
 ### Proposed Automation
 - Add script: `scripts/release-validation/validate-third-party-risk-evidence.sh`
 - Script checks schema completeness and unresolved high-risk exceptions.
+ - Current red-state proof:
+   - `test-results/validate-third-party-risk-evidence-2026-03-07.log` (failing as expected before evidence completion)
 
 ## Implementation Steps
 1. Build vendor inventory from infra, code, and procurement inputs.

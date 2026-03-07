@@ -24,6 +24,7 @@
 
 ## TDD Closure Plans
 - `docs/plans/2026-03-07-gap-closure-tdd-program.md`
+- `docs/plans/2026-03-07-open-items-integration-tdd-matrix.md`
 - `docs/plans/2026-03-07-gap-002-dr-validation-tdd-plan.md`
 - `docs/plans/2026-03-07-gap-003-access-review-tdd-plan.md`
 - `docs/plans/2026-03-07-gap-004-third-party-risk-tdd-plan.md`

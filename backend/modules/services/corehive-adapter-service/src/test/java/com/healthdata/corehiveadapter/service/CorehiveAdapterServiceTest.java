@@ -2,6 +2,8 @@ package com.healthdata.corehiveadapter.service;
 
 import com.healthdata.corehiveadapter.client.CorehiveApiClient;
 import com.healthdata.corehiveadapter.config.CorehiveProperties;
+import com.healthdata.corehiveadapter.observability.AdapterSpanHelper;
+import io.opentelemetry.api.trace.TracerProvider;
 import com.healthdata.corehiveadapter.model.CareGapScoringRequest;
 import com.healthdata.corehiveadapter.model.CareGapScoringResponse;
 import com.healthdata.corehiveadapter.model.VbcRoiRequest;
@@ -42,7 +44,9 @@ class CorehiveAdapterServiceTest {
         deIdentificationService = new PhiDeIdentificationService();
         properties = new CorehiveProperties();
         properties.setEnabled(true);
-        service = new CorehiveAdapterService(apiClient, deIdentificationService, kafkaTemplate, properties);
+        AdapterSpanHelper spanHelper = new AdapterSpanHelper(
+                TracerProvider.noop().get("test"));
+        service = new CorehiveAdapterService(apiClient, deIdentificationService, kafkaTemplate, properties, spanHelper);
     }
 
     @Test

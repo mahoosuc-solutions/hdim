@@ -138,6 +138,31 @@ services:
               minute: 120
               policy: local
 
+  - name: ihe-gateway
+    url: http://ihe-gateway-service:8125
+    routes:
+      - name: ihe-api
+        paths:
+          - /ihe
+        strip_path: false
+        methods: [GET, POST, PUT]
+        plugins:
+          - name: key-auth
+          - name: rate-limiting
+            config:
+              minute: 300
+              policy: local
+          - name: user-patient-kafka
+            config:
+              require_patient: true
+              patient_sources:
+                - type: header
+                  name: X-Patient-Ids
+                  format: json_array
+                  fields:
+                    id_key: patient_id
+                    assigning_key: assigning_authority
+
   # ======================================================================
   # Event Processing / Intelligence Layer
   # ======================================================================

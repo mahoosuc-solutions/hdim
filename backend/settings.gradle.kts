@@ -105,7 +105,13 @@ include(
     "modules:services:devops-agent-service",
     "modules:services:event-replay-service",
     "modules:services:fhir-event-bridge-service",
-    "modules:services:cqrs-query-service"
+    "modules:services:cqrs-query-service",
+
+    // External Integration Adapters
+    "modules:services:corehive-adapter-service",
+    "modules:services:healthix-adapter-service",
+    "modules:services:hedis-adapter-service",
+    "modules:services:ihe-gateway-service"
 )
 
 // Applications

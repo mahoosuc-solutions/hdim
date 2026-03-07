@@ -1,6 +1,7 @@
 package com.healthdata.hedisadapter.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthdata.hedisadapter.observability.AdapterSpanHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class KafkaToWebSocketBridge extends TextWebSocketHandler {
 
     private final ObjectMapper objectMapper;
+    private final AdapterSpanHelper spanHelper;
     private final Set<WebSocketSession> sessions = ConcurrentHashMap.newKeySet();
 
     @Override
@@ -53,23 +55,25 @@ public class KafkaToWebSocketBridge extends TextWebSocketHandler {
     public void onHdimEvent(Map<String, Object> event) {
         if (sessions.isEmpty()) return;
 
-        try {
-            String message = objectMapper.writeValueAsString(event);
-            TextMessage textMessage = new TextMessage(message);
+        spanHelper.tracedRun("hedis.websocket.kafka_bridge", () -> {
+            try {
+                String message = objectMapper.writeValueAsString(event);
+                TextMessage textMessage = new TextMessage(message);
 
-            for (WebSocketSession session : sessions) {
-                if (session.isOpen()) {
-                    try {
-                        session.sendMessage(textMessage);
-                    } catch (IOException e) {
-                        log.warn("Failed to send WebSocket message, removing session");
-                        sessions.remove(session);
+                for (WebSocketSession session : sessions) {
+                    if (session.isOpen()) {
+                        try {
+                            session.sendMessage(textMessage);
+                        } catch (IOException e) {
+                            log.warn("Failed to send WebSocket message, removing session");
+                            sessions.remove(session);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                log.error("Error broadcasting Kafka event to WebSocket: {}", e.getMessage());
             }
-        } catch (Exception e) {
-            log.error("Error broadcasting Kafka event to WebSocket: {}", e.getMessage());
-        }
+        }, "phi.level", "LIMITED");
     }
 
     public int getActiveConnectionCount() {

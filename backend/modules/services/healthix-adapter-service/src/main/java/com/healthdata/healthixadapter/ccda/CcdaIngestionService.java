@@ -4,6 +4,7 @@ import com.healthdata.common.external.ExternalEventEnvelope;
 import com.healthdata.common.external.ExternalEventMetadata;
 import com.healthdata.common.external.PhiLevel;
 import com.healthdata.common.external.SourceSystem;
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -29,51 +30,56 @@ public class CcdaIngestionService {
     private final RestTemplate documentRestTemplate;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final CircuitBreaker circuitBreaker;
+    private final AdapterSpanHelper spanHelper;
 
     private static final String TOPIC_DOCUMENTS = "external.healthix.documents";
 
     public CcdaIngestionService(
             @Qualifier("healthixDocumentRestTemplate") RestTemplate documentRestTemplate,
             KafkaTemplate<String, Object> kafkaTemplate,
-            CircuitBreakerRegistry registry) {
+            CircuitBreakerRegistry registry,
+            AdapterSpanHelper spanHelper) {
         this.documentRestTemplate = documentRestTemplate;
         this.kafkaTemplate = kafkaTemplate;
         this.circuitBreaker = registry.circuitBreaker("healthix-documents");
+        this.spanHelper = spanHelper;
     }
 
     /**
      * Fetch and process a C-CDA document from Healthix.
      */
     public void ingestDocument(String documentId, String tenantId) {
-        log.info("Ingesting C-CDA document from Healthix: documentId={}", documentId);
+        spanHelper.tracedRun("healthix.ccda.fetch_and_ingest", () -> {
+            log.info("Ingesting C-CDA document from Healthix: documentId={}", documentId);
 
-        @SuppressWarnings("unchecked")
-        Supplier<Map<String, Object>> supplier = CircuitBreaker.decorateSupplier(
-                circuitBreaker,
-                () -> documentRestTemplate.getForObject(
-                        "/api/v1/documents/{id}",
-                        Map.class,
-                        documentId));
+            @SuppressWarnings("unchecked")
+            Supplier<Map<String, Object>> supplier = CircuitBreaker.decorateSupplier(
+                    circuitBreaker,
+                    () -> documentRestTemplate.getForObject(
+                            "/api/v1/documents/{id}",
+                            Map.class,
+                            documentId));
 
-        Map<String, Object> document = supplier.get();
+            Map<String, Object> document = supplier.get();
 
-        if (document == null) {
-            log.warn("Document not found in Healthix: {}", documentId);
-            return;
-        }
+            if (document == null) {
+                log.warn("Document not found in Healthix: {}", documentId);
+                return;
+            }
 
-        ExternalEventEnvelope<Map<String, Object>> envelope = ExternalEventEnvelope.of(
-                "external.healthix.documents.received",
-                "healthix-adapter-service",
-                tenantId,
-                document,
-                ExternalEventMetadata.builder()
-                        .sourceSystem(SourceSystem.HEALTHIX)
-                        .phiLevel(PhiLevel.FULL)
-                        .build());
+            ExternalEventEnvelope<Map<String, Object>> envelope = ExternalEventEnvelope.of(
+                    "external.healthix.documents.received",
+                    "healthix-adapter-service",
+                    tenantId,
+                    document,
+                    ExternalEventMetadata.builder()
+                            .sourceSystem(SourceSystem.HEALTHIX)
+                            .phiLevel(PhiLevel.FULL)
+                            .build());
 
-        kafkaTemplate.send(TOPIC_DOCUMENTS, tenantId, envelope);
-        log.info("Published C-CDA document event for downstream FHIR conversion");
+            kafkaTemplate.send(TOPIC_DOCUMENTS, tenantId, envelope);
+            log.info("Published C-CDA document event for downstream FHIR conversion");
+        }, "adapter", "healthix", "phi.level", "FULL");
     }
 
     /**
@@ -81,16 +87,18 @@ public class CcdaIngestionService {
      * when a new document is available.
      */
     public void onDocumentWebhook(Map<String, Object> webhookPayload, String tenantId) {
-        String documentId = (String) webhookPayload.get("documentId");
-        String documentType = (String) webhookPayload.getOrDefault("documentType", "C-CDA");
+        spanHelper.tracedRun("healthix.ccda.document_webhook", () -> {
+            String documentId = (String) webhookPayload.get("documentId");
+            String documentType = (String) webhookPayload.getOrDefault("documentType", "C-CDA");
 
-        log.info("Received document webhook from Healthix: type={}, id={}",
-                documentType, documentId);
+            log.info("Received document webhook from Healthix: type={}, id={}",
+                    documentType, documentId);
 
-        if ("C-CDA".equals(documentType) || "CDA".equals(documentType)) {
-            ingestDocument(documentId, tenantId);
-        } else {
-            log.info("Skipping non-C-CDA document type: {}", documentType);
-        }
+            if ("C-CDA".equals(documentType) || "CDA".equals(documentType)) {
+                ingestDocument(documentId, tenantId);
+            } else {
+                log.info("Skipping non-C-CDA document type: {}", documentType);
+            }
+        }, "adapter", "healthix", "phi.level", "FULL");
     }
 }

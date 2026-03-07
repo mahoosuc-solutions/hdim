@@ -1,0 +1,190 @@
+# =============================================================================
+# HDIM - External Integration Adapter Services
+# =============================================================================
+#
+# Docker Compose overlay for CoreHive, Healthix, and hedis adapters.
+# Each adapter bridges an external project with HDIM via REST/Kafka.
+#
+# Usage:
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f docker-compose.external-integrations.yml \
+#     --profile external up -d
+#
+# Individual adapters can be started independently:
+#   docker compose -f docker-compose.yml -f docker-compose.external-integrations.yml \
+#     up -d corehive-adapter-service
+#
+# Feature toggles (set in .env or environment):
+#   COREHIVE_ENABLED=true|false
+#   HEALTHIX_ENABLED=true|false
+#   HEDIS_ENABLED=true|false
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # CoreHive AI Engine Adapter (Port 8120)
+  # PHI Level: NONE - all data de-identified before crossing boundary
+  # ===========================================================================
+  corehive-adapter-service:
+    container_name: healthdata-corehive-adapter
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/corehive-adapter-service/Dockerfile
+    profiles: ["external", "external-corehive"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/corehive_adapter_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8120
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      COREHIVE_ENABLED: ${COREHIVE_ENABLED:-false}
+      COREHIVE_BASE_URL: ${COREHIVE_BASE_URL:-http://host.docker.internal:3067}
+      COREHIVE_API_KEY: ${COREHIVE_API_KEY:-}
+      COREHIVE_TIMEOUT_MS: ${COREHIVE_TIMEOUT_MS:-5000}
+    ports:
+      - "8120:8120"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8120/corehive-adapter/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ===========================================================================
+  # Healthix HIE/PDR Adapter (Port 8121)
+  # PHI Level: FULL - requires mTLS, BAA, HIPAA audit logging
+  # ===========================================================================
+  healthix-adapter-service:
+    container_name: healthdata-healthix-adapter
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/healthix-adapter-service/Dockerfile
+    profiles: ["external", "external-healthix"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healthix_adapter_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8121
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      HEALTHIX_ENABLED: ${HEALTHIX_ENABLED:-false}
+      HEALTHIX_GATEWAY_URL: ${HEALTHIX_GATEWAY_URL:-http://host.docker.internal:3000}
+      HEALTHIX_FHIR_URL: ${HEALTHIX_FHIR_URL:-http://host.docker.internal:8080}
+      HEALTHIX_MPI_URL: ${HEALTHIX_MPI_URL:-http://host.docker.internal:8000}
+      HEALTHIX_DOCUMENT_URL: ${HEALTHIX_DOCUMENT_URL:-http://host.docker.internal:3010}
+      HEALTHIX_HL7_URL: ${HEALTHIX_HL7_URL:-http://host.docker.internal:3020}
+      HEALTHIX_MTLS_ENABLED: ${HEALTHIX_MTLS_ENABLED:-false}
+    ports:
+      - "8121:8121"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8121/healthix-adapter/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ===========================================================================
+  # HEDIS/MIPS/STAR Adapter (Port 8122)
+  # PHI Level: LIMITED - JWT auth + RBAC required
+  # ===========================================================================
+  hedis-adapter-service:
+    container_name: healthdata-hedis-adapter
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/hedis-adapter-service/Dockerfile
+    profiles: ["external", "external-hedis"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hedis_adapter_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8122
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      HEDIS_ENABLED: ${HEDIS_ENABLED:-false}
+      HEDIS_BASE_URL: ${HEDIS_BASE_URL:-http://host.docker.internal:3333}
+      HEDIS_CQL_URL: ${HEDIS_CQL_URL:-http://host.docker.internal:8090}
+      HEDIS_API_KEY: ${HEDIS_API_KEY:-}
+    ports:
+      - "8122:8122"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8122/hedis-adapter/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
+  # ===========================================================================
+  # IHE Gateway Service (Port 8125)
+  # PHI Level: FULL - IHE transactions carry clinical data
+  # ===========================================================================
+  ihe-gateway-service:
+    container_name: healthdata-ihe-gateway
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/ihe-gateway-service/Dockerfile
+    profiles: ["external", "external-ihe"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ihe_gateway_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SERVER_PORT: 8125
+      IHE_GATEWAY_ENABLED: "true"
+      HEALTHIX_FHIR_URL: ${HEALTHIX_FHIR_URL:-http://healthix-fhir:8080}
+      HEALTHIX_MPI_URL: ${HEALTHIX_MPI_URL:-http://healthix-mpi:8000}
+      HEALTHIX_DOCUMENT_URL: ${HEALTHIX_DOCUMENT_URL:-http://healthix-document:3010}
+      SPRING_FLYWAY_ENABLED: "false"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+    ports:
+      - "8125:8125"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8125/ihe-gateway/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network

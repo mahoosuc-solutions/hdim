@@ -1,5 +1,6 @@
 package com.healthdata.healthixadapter.ccda;
 
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,12 +29,17 @@ class CcdaIngestionServiceTest {
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Mock
+    private AdapterSpanHelper spanHelper;
+
     private CcdaIngestionService service;
 
     @BeforeEach
     void setUp() {
+        doAnswer(inv -> { ((Runnable) inv.getArgument(1)).run(); return null; })
+                .when(spanHelper).tracedRun(anyString(), any(Runnable.class), any(String[].class));
         CircuitBreakerRegistry registry = CircuitBreakerRegistry.ofDefaults();
-        service = new CcdaIngestionService(documentRestTemplate, kafkaTemplate, registry);
+        service = new CcdaIngestionService(documentRestTemplate, kafkaTemplate, registry, spanHelper);
     }
 
     @Test

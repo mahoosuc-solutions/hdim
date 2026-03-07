@@ -1,5 +1,6 @@
 package com.healthdata.healthixadapter.fhir;
 
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 
 @Tag("unit")
@@ -29,11 +31,16 @@ class FhirSubscriptionClientTest {
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Mock
+    private AdapterSpanHelper spanHelper;
+
     private FhirSubscriptionClient client;
 
     @BeforeEach
     void setUp() {
-        client = new FhirSubscriptionClient(fhirRestTemplate, kafkaTemplate);
+        doAnswer(inv -> { ((Runnable) inv.getArgument(1)).run(); return null; })
+                .when(spanHelper).tracedRun(anyString(), any(Runnable.class), any(String[].class));
+        client = new FhirSubscriptionClient(fhirRestTemplate, kafkaTemplate, spanHelper);
     }
 
     @Test

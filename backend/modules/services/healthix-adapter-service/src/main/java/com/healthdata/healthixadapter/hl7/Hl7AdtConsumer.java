@@ -1,5 +1,6 @@
 package com.healthdata.healthixadapter.hl7;
 
+import com.healthdata.healthixadapter.observability.AdapterSpanHelper;
 import com.healthdata.common.external.ExternalEventEnvelope;
 import com.healthdata.common.external.ExternalEventMetadata;
 import com.healthdata.common.external.PhiLevel;
@@ -27,6 +28,7 @@ import java.util.Map;
 public class Hl7AdtConsumer {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final AdapterSpanHelper spanHelper;
 
     private static final String TOPIC_HL7 = "external.healthix.hl7";
     private static final String TOPIC_PATIENTS = "external.healthix.patients";
@@ -35,30 +37,16 @@ public class Hl7AdtConsumer {
      * Process an HL7 ADT message received from Healthix.
      */
     public void processAdtMessage(Map<String, Object> hl7Message, String tenantId) {
-        String messageType = (String) hl7Message.getOrDefault("messageType", "ADT");
-        String triggerEvent = (String) hl7Message.getOrDefault("triggerEvent", "A01");
-        String patientId = (String) hl7Message.getOrDefault("patientId", "");
+        spanHelper.tracedRun("healthix.hl7.adt_received", () -> {
+            String messageType = (String) hl7Message.getOrDefault("messageType", "ADT");
+            String triggerEvent = (String) hl7Message.getOrDefault("triggerEvent", "A01");
+            String patientId = (String) hl7Message.getOrDefault("patientId", "");
 
-        log.info("Processing HL7 ADT message: type={}, trigger={}, patient={}",
-                messageType, triggerEvent, patientId);
+            log.info("Processing HL7 ADT message: type={}, trigger={}, patient={}",
+                    messageType, triggerEvent, patientId);
 
-        ExternalEventEnvelope<Map<String, Object>> envelope = ExternalEventEnvelope.of(
-                "external.healthix.hl7.adt." + triggerEvent.toLowerCase(),
-                "healthix-adapter-service",
-                tenantId,
-                hl7Message,
-                ExternalEventMetadata.builder()
-                        .sourceSystem(SourceSystem.HEALTHIX)
-                        .phiLevel(PhiLevel.FULL)
-                        .build());
-
-        kafkaTemplate.send(TOPIC_HL7, tenantId, envelope);
-
-        // Also publish patient event for downstream processing
-        if (isPatientEvent(triggerEvent)) {
-            String patientEventType = mapToPatientEventType(triggerEvent);
-            ExternalEventEnvelope<Map<String, Object>> patientEnvelope = ExternalEventEnvelope.of(
-                    patientEventType,
+            ExternalEventEnvelope<Map<String, Object>> envelope = ExternalEventEnvelope.of(
+                    "external.healthix.hl7.adt." + triggerEvent.toLowerCase(),
                     "healthix-adapter-service",
                     tenantId,
                     hl7Message,
@@ -66,8 +54,24 @@ public class Hl7AdtConsumer {
                             .sourceSystem(SourceSystem.HEALTHIX)
                             .phiLevel(PhiLevel.FULL)
                             .build());
-            kafkaTemplate.send(TOPIC_PATIENTS, tenantId, patientEnvelope);
-        }
+
+            kafkaTemplate.send(TOPIC_HL7, tenantId, envelope);
+
+            // Also publish patient event for downstream processing
+            if (isPatientEvent(triggerEvent)) {
+                String patientEventType = mapToPatientEventType(triggerEvent);
+                ExternalEventEnvelope<Map<String, Object>> patientEnvelope = ExternalEventEnvelope.of(
+                        patientEventType,
+                        "healthix-adapter-service",
+                        tenantId,
+                        hl7Message,
+                        ExternalEventMetadata.builder()
+                                .sourceSystem(SourceSystem.HEALTHIX)
+                                .phiLevel(PhiLevel.FULL)
+                                .build());
+                kafkaTemplate.send(TOPIC_PATIENTS, tenantId, patientEnvelope);
+            }
+        }, "adapter", "healthix", "phi.level", "FULL");
     }
 
     private boolean isPatientEvent(String triggerEvent) {

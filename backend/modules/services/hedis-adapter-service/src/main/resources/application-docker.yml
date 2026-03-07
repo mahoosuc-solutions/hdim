@@ -1,0 +1,26 @@
+# HEDIS Adapter - Docker profile overrides
+# WebSocket tuning for 1000+ concurrent connections
+
+server:
+  tomcat:
+    threads:
+      max: 400
+    max-connections: 20000
+    accept-count: 200
+
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+
+  kafka:
+    consumer:
+      max-poll-records: 200
+
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 32
+        queue-capacity: 500

@@ -462,8 +462,8 @@ subprojects {
         }
 
         // Lombok for all modules
-        compileOnly("org.projectlombok:lombok:1.18.34")
-        annotationProcessor("org.projectlombok:lombok:1.18.34")
+        compileOnly("org.projectlombok:lombok:1.18.42")
+        annotationProcessor("org.projectlombok:lombok:1.18.42")
 
         // Testing for all modules
         testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")

@@ -66,7 +66,7 @@ subprojects {
             "io.ktor:ktor-http-jvm:2.3.13",
             "io.ktor:ktor-io-jvm:2.3.13",
             // CVE remediation overrides (wave-2 dependency hardening)
-            "org.apache.kafka:kafka-clients:3.9.1",
+            "org.apache.kafka:kafka-clients:3.9.2",
             "commons-beanutils:commons-beanutils:1.9.4",
             "com.azure:azure-identity:1.15.3",
             "org.apache.jena:jena-arq:4.10.0",
@@ -166,7 +166,7 @@ subprojects {
                 dependency("org.apache.tomcat.embed:tomcat-embed-websocket:10.1.52")
                 dependency("org.quartz-scheduler:quartz:2.5.2")
                 dependency("org.xerial:sqlite-jdbc:3.51.2.0")
-                dependency("org.apache.kafka:kafka-clients:3.9.1")
+                dependency("org.apache.kafka:kafka-clients:3.9.2")
                 dependency("com.azure:azure-identity:1.15.3")
             }
         }

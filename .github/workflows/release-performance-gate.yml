@@ -1,0 +1,25 @@
+name: Release Performance Gate
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'tools/ops-server/**'
+      - 'scripts/README.md'
+      - 'scripts/release-validation/validate-runtime-polling-budget.sh'
+      - '.github/workflows/release-performance-gate.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * *'
+
+jobs:
+  runtime-polling-budget:
+    name: Runtime Polling Budget Policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate runtime polling budget controls
+        run: |
+          bash scripts/release-validation/validate-runtime-polling-budget.sh

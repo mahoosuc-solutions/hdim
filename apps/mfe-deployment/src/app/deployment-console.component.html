@@ -99,7 +99,7 @@
         </div>
       }
       <div class="status-grid">
-        @for (svc of status?.services; track svc?.name) {
+        @for (svc of status.services ?? []; track svc.name) {
           <div class="status-card">
             <h3>{{ svc.name }}</h3>
             <p>State: {{ svc.state }}</p>
@@ -112,9 +112,34 @@
           </div>
         }
       </div>
+      <div class="progress-card">
+        <h3>Seeding Progress</h3>
+        <p>
+          Phase: {{ formatPhase(status.seedingProgress?.phase) }} |
+          {{ status.seedingProgress?.percent ?? 0 }}%
+        </p>
+        <div class="progress-track">
+          <div
+            class="progress-fill"
+            [style.width.%]="status.seedingProgress?.percent ?? 0"
+            [class.failed]="status.seedingProgress?.phase === 'failed'"
+          ></div>
+        </div>
+        <div class="progress-counts">
+          @if (status.seedingProgress?.counts?.patientsCreated !== undefined) {
+            <p>Patients created: {{ status.seedingProgress?.counts?.patientsCreated }}</p>
+          }
+          @if (status.seedingProgress?.counts?.patientsLoaded !== undefined) {
+            <p>Patients loaded: {{ status.seedingProgress?.counts?.patientsLoaded }}</p>
+          }
+        </div>
+        @if (status.seedingProgress?.lastError) {
+          <p class="progress-error">Last error: {{ status.seedingProgress?.lastError }}</p>
+        }
+      </div>
       <div class="log">
         <h3>Seeding Tail</h3>
-        @for (line of status?.seedingTail; track $index) {
+        @for (line of status.seedingTail ?? []; track $index) {
           <pre>{{ line }}</pre>
         }
       </div>

@@ -7,8 +7,74 @@ const WORKSPACE_DIR = process.env.WORKSPACE_DIR || '/workspace';
 const COMPOSE_FILE =
   process.env.COMPOSE_FILE || `${WORKSPACE_DIR}/docker-compose.demo.yml`;
 const DEMO_SEEDING_URL = process.env.DEMO_SEEDING_URL || 'http://demo-seeding-service:8098';
+const STATUS_CACHE_TTL_MS = Number.isFinite(Number(process.env.STATUS_CACHE_TTL_MS))
+  ? Math.max(500, Number(process.env.STATUS_CACHE_TTL_MS))
+  : 5000;
 
 let lastCommand = null;
+let cachedStatusPayload = null;
+let cachedStatusExpiresAt = 0;
+let pendingStatusPromise = null;
+
+function createDefaultSeedingProgress() {
+  return {
+    phase: 'idle',
+    percent: 0,
+    counts: {},
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function parseSeedingProgress(seedingTail) {
+  const progress = createDefaultSeedingProgress();
+
+  for (const rawLine of seedingTail) {
+    const line = String(rawLine || '').trim();
+    if (!line) {
+      continue;
+    }
+
+    const patientsCreatedMatch = line.match(/Created\s+(\d+)\s+patients/i);
+    if (patientsCreatedMatch) {
+      progress.counts.patientsCreated = Number(patientsCreatedMatch[1]);
+    }
+
+    const patientsLoadedMatch = line.match(/Loaded\s+(\d+)\s+patients/i);
+    if (patientsLoadedMatch) {
+      progress.counts.patientsLoaded = Number(patientsLoadedMatch[1]);
+    }
+
+    if (/Checking demo-seeding-service availability/i.test(line)) {
+      progress.phase = 'waiting-service';
+      progress.percent = Math.max(progress.percent, 10);
+    }
+
+    if (/Loading SMOKE seed|Loading HEDIS|Seeding:/i.test(line)) {
+      progress.phase = 'seeding';
+      progress.percent = Math.max(progress.percent, 50);
+    }
+
+    if (/Syncing CQL libraries/i.test(line)) {
+      progress.phase = 'syncing-cql';
+      progress.percent = Math.max(progress.percent, 80);
+    }
+
+    if (/Data seeding completed|Non-interactive mode/i.test(line)) {
+      progress.phase = 'completed';
+      progress.percent = 100;
+      delete progress.lastError;
+    }
+
+    if (/✗|Error:|is not available/i.test(line)) {
+      progress.phase = 'failed';
+      progress.percent = Math.min(progress.percent, 95);
+      progress.lastError = line;
+    }
+  }
+
+  progress.updatedAt = new Date().toISOString();
+  return progress;
+}
 
 function json(res, status, payload) {
   res.writeHead(status, {
@@ -80,6 +146,42 @@ async function getSeedingTail() {
     return [];
   }
   return logs.stdout.split('\n').filter(Boolean).slice(-60);
+}
+
+async function buildStatusPayload(commandOverride = null) {
+  const status = await getComposeStatus();
+  const seedingTail = await getSeedingTail();
+  const seedingProgress = parseSeedingProgress(seedingTail);
+  return {
+    ...status,
+    seedingTail,
+    seedingProgress,
+    lastCommand: commandOverride || lastCommand,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+async function getStatusPayload({ forceRefresh = false, commandOverride = null } = {}) {
+  const now = Date.now();
+  if (!forceRefresh && cachedStatusPayload && now < cachedStatusExpiresAt) {
+    return cachedStatusPayload;
+  }
+
+  if (!forceRefresh && pendingStatusPromise) {
+    return pendingStatusPromise;
+  }
+
+  pendingStatusPromise = buildStatusPayload(commandOverride)
+    .then((payload) => {
+      cachedStatusPayload = payload;
+      cachedStatusExpiresAt = Date.now() + STATUS_CACHE_TTL_MS;
+      return payload;
+    })
+    .finally(() => {
+      pendingStatusPromise = null;
+    });
+
+  return pendingStatusPromise;
 }
 
 async function handleCommand(payload) {
@@ -159,28 +261,19 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host}`);
 
   if (req.method === 'GET' && url.pathname === '/ops/status') {
-    const status = await getComposeStatus();
-    const seedingTail = await getSeedingTail();
-    return json(res, 200, {
-      ...status,
-      seedingTail,
-      lastCommand,
-      timestamp: new Date().toISOString(),
-    });
+    const payload = await getStatusPayload();
+    return json(res, 200, payload);
   }
 
   if (req.method === 'POST' && url.pathname === '/ops/command') {
     try {
       const payload = await readBody(req);
       const commandResult = await handleCommand(payload);
-      const status = await getComposeStatus();
-      const seedingTail = await getSeedingTail();
-      return json(res, 200, {
-        ...status,
-        seedingTail,
-        lastCommand: commandResult,
-        timestamp: new Date().toISOString(),
+      const statusPayload = await getStatusPayload({
+        forceRefresh: true,
+        commandOverride: commandResult,
       });
+      return json(res, 200, statusPayload);
     } catch (err) {
       return json(res, 500, { error: err.message || 'Command failed' });
     }

@@ -1,44 +1,58 @@
 # Contributing to HDIM
 
-Thank you for contributing to HealthData-in-Motion.
+Thanks for contributing to HealthData-in-Motion.
 
-## Pull Request Workflow
+## Before You Start
 
-1. Create a focused branch from `develop` (or `main`, based on team policy).
-2. Keep changes scoped to a single objective.
-3. Run relevant local validation before opening a PR.
-4. Complete the PR checklist in `.github/pull_request_template.md`.
+- Read the [LICENSE](./LICENSE) to understand source-available terms.
+- Review our [Code of Conduct](./CODE_OF_CONDUCT.md).
+- For security issues, follow [SECURITY.md](./SECURITY.md) and do not file public issues.
 
-## Required Validation
+## Workflow
 
-- Run tests relevant to the files changed.
-- For frontend session/auth or connection-status changes, run:
-  - `npm --prefix frontend run test:session-flow`
-- For browser validation of session expiry flow, run:
-  - `npm --prefix frontend run e2e:session-flow`
-- For `landing-page-v0/**` changes, run:
-  - `npm --prefix landing-page-v0 run validate:ci`
-- For `mcp-edge-*/**` changes, run:
-  - `npm run test:mcp-edge`
+1. Fork the repository and create a focused branch.
+2. Keep changes scoped to one objective.
+3. Add or update tests where relevant.
+4. Open a pull request using the PR template.
 
-## Merge Gates and Branch Protection
+## Lightweight CLA Acknowledgement
 
-Before merge, ensure branch protection and required checks are satisfied:
+By opening a pull request, you confirm:
 
-- `MCP Release Gate / release-gate`
-- `Frontend Session Flow E2E / session-flow` (for `frontend/**` changes)
-- `Landing Page Validation` (for `landing-page-v0/**` changes)
-- `MCP Edge CI` (for `mcp-edge-*/**` changes)
+- You have the right to submit the contribution.
+- You grant Grateful House Incorporated the rights needed to use,
+  modify, and relicense your contribution under the project license model.
+- You understand this project is source-available under BSL 1.1 and may
+  include commercial licensing.
 
-Reference: `docs/runbooks/CI_BRANCH_PROTECTION_CHECKLIST.md`
+To make this explicit, check the CLA checkbox in the PR template.
 
-## CI/CD Policy
+## Development Validation
 
-- CI runs on code changes and manual workflow dispatch.
-- No nightly/scheduled requirement for these merge gates.
+Run validation relevant to your changes.
 
-## Additional References
+Examples:
 
-- PR template: `.github/pull_request_template.md`
-- Session flow workflow: `.github/workflows/frontend-session-flow-e2e.yml`
-- Frontend test commands: `frontend/README.md`
+- Backend tests: `cd backend && ./gradlew test`
+- Frontend tests: `npm test`
+- Docker/local stack: `docker compose --profile core up -d`
+
+## Pull Request Expectations
+
+- Clear summary and rationale
+- Risk and rollout notes when applicable
+- Evidence of testing
+- No unrelated changes bundled in the same PR
+
+## Issue Types
+
+Use issue templates for:
+
+- Bug reports
+- Feature requests
+- Incomplete feature tracking
+
+## Questions
+
+If you are unsure where to contribute, open a feature request issue with context,
+proposed scope, and acceptance criteria.

@@ -5,7 +5,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 // Enable automatic JDK provisioning
 plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+    id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
 }
 
 // Shared Domain Modules

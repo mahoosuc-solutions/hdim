@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '@/styles/content-page.module.css';
 
 export const metadata: Metadata = {
@@ -315,6 +316,22 @@ export default function PerformancePage() {
             <strong>Key Insight:</strong> CQL/FHIR maintains better performance under load, with{' '}
             <strong>2-3x advantage</strong> even at high concurrency.
           </p>
+        </section>
+
+        {/* Production Screenshot */}
+        <section className={styles.section}>
+          <figure style={{ margin: 0 }}>
+            <Image
+              src="/resources/screenshots/results-detail.jpg"
+              alt="HDIM results table showing 150 HEDIS evaluations with severity, trend, and compliance rate columns"
+              width={1915}
+              height={924}
+              style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+            />
+            <figcaption style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
+              150 HEDIS evaluations processed and displayed with severity classification, compliance trending, and one-click outreach actions.
+            </figcaption>
+          </figure>
         </section>
 
         {/* Why CQL/FHIR is Faster */}

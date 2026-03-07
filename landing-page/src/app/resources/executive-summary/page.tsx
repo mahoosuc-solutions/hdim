@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '@/styles/content-page.module.css';
 
 export const metadata: Metadata = {
@@ -181,6 +182,23 @@ export default function ExecutiveSummaryPage() {
           <p className={styles.subText} style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
             * Traditional cost based on 10-14 senior healthcare engineers at $150K-$200K/year for 12-18 months (Glassdoor/Levels.fyi 2024). HDIM cost includes architect compensation, AI tool subscriptions, and infrastructure for the build period.
           </p>
+        </section>
+
+        {/* The Product */}
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>The Result</h2>
+          <figure style={{ margin: 0 }}>
+            <Image
+              src="/resources/screenshots/care-gaps-interventions.jpg"
+              alt="HDIM care gap management showing patient detail with recommended interventions and success rates"
+              width={1913}
+              height={922}
+              style={{ width: '100%', height: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+            />
+            <figcaption style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.5rem' }}>
+              Care gap management with patient-level detail, urgency prioritization, and recommended interventions with historical success rates.
+            </figcaption>
+          </figure>
         </section>
 
         {/* Honest Assessment */}

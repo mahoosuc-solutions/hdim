@@ -15,20 +15,32 @@ on:
       - master
     paths:
       - 'apps/clinical-portal/**'
+      - 'apps/mfe-deployment/**'
+      - 'apps/shell-app/**'
+      - 'apps/shell-app-e2e/**'
       - 'backend/modules/services/patient-service/**'
       - 'backend/modules/services/care-gap-service/**'
       - 'backend/modules/shared/contract-testing/**'
       - 'backend/modules/shared/openapi-validation/**'
+      - 'scripts/dev-shell-*.sh'
+      - 'scripts/release-validation/validate-release-preflight.sh'
+      - 'tools/ops-server/**'
       - '.github/workflows/contract-testing.yml'
   pull_request:
     branches:
       - master
     paths:
       - 'apps/clinical-portal/**'
+      - 'apps/mfe-deployment/**'
+      - 'apps/shell-app/**'
+      - 'apps/shell-app-e2e/**'
       - 'backend/modules/services/patient-service/**'
       - 'backend/modules/services/care-gap-service/**'
       - 'backend/modules/shared/contract-testing/**'
       - 'backend/modules/shared/openapi-validation/**'
+      - 'scripts/dev-shell-*.sh'
+      - 'scripts/release-validation/validate-release-preflight.sh'
+      - 'tools/ops-server/**'
       - '.github/workflows/contract-testing.yml'
   workflow_dispatch:
     inputs:
@@ -323,7 +335,46 @@ jobs:
           retention-days: 7
 
   # ============================================================================
-  # Job 4: Contract Testing Gate
+  # Job 4: Deployment Console Contract E2E (Strict)
+  # ============================================================================
+  deployment-console-contract-e2e:
+    name: Deployment Console Contract E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run strict deployment console e2e
+        run: NX_DAEMON=false BASE_URL=http://localhost:4300 OPS_BASE_URL=http://localhost:4710 npx nx e2e shell-app-e2e --skipInstall
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-console-contract-e2e-artifacts
+          path: |
+            dist/.playwright/
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ============================================================================
+  # Job 5: Contract Testing Gate
   # ============================================================================
   # Merge gate that ensures all contract tests pass
   # Required status check for PRs modifying API contracts
@@ -335,6 +386,7 @@ jobs:
       - consumer-contracts
       - provider-verification
       - openapi-validation
+      - deployment-console-contract-e2e
     if: always()
     timeout-minutes: 5
 
@@ -344,11 +396,13 @@ jobs:
           CONSUMER_RESULT: ${{ needs.consumer-contracts.result }}
           PROVIDER_RESULT: ${{ needs.provider-verification.result }}
           OPENAPI_RESULT: ${{ needs.openapi-validation.result }}
+          DEPLOYMENT_CONTRACT_E2E_RESULT: ${{ needs.deployment-console-contract-e2e.result }}
         run: |
           echo "=== Contract Testing Results ==="
           echo "Consumer Contracts: $CONSUMER_RESULT"
           echo "Provider Verification: $PROVIDER_RESULT"
           echo "OpenAPI Validation: $OPENAPI_RESULT"
+          echo "Deployment Console Contract E2E: $DEPLOYMENT_CONTRACT_E2E_RESULT"
           echo ""
 
           # Check for failures
@@ -367,10 +421,16 @@ jobs:
             exit 1
           fi
 
+          if [[ "$DEPLOYMENT_CONTRACT_E2E_RESULT" == "failure" ]]; then
+            echo "Deployment console contract e2e FAILED"
+            exit 1
+          fi
+
           # Check for cancellations
           if [[ "$CONSUMER_RESULT" == "cancelled" ]] || \
              [[ "$PROVIDER_RESULT" == "cancelled" ]] || \
-             [[ "$OPENAPI_RESULT" == "cancelled" ]]; then
+             [[ "$OPENAPI_RESULT" == "cancelled" ]] || \
+             [[ "$DEPLOYMENT_CONTRACT_E2E_RESULT" == "cancelled" ]]; then
             echo "One or more jobs were cancelled"
             exit 1
           fi
@@ -389,6 +449,7 @@ jobs:
           CONSUMER_RESULT: ${{ needs.consumer-contracts.result }}
           PROVIDER_RESULT: ${{ needs.provider-verification.result }}
           OPENAPI_RESULT: ${{ needs.openapi-validation.result }}
+          DEPLOYMENT_CONTRACT_E2E_RESULT: ${{ needs.deployment-console-contract-e2e.result }}
         run: |
           echo "## Contract Testing Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -422,11 +483,21 @@ jobs:
             echo "| OpenAPI Validation | Failed |" >> $GITHUB_STEP_SUMMARY
           fi
 
+          # Deployment console contract e2e status
+          if [[ "$DEPLOYMENT_CONTRACT_E2E_RESULT" == "success" ]]; then
+            echo "| Deployment Console Contract E2E | Passed |" >> $GITHUB_STEP_SUMMARY
+          elif [[ "$DEPLOYMENT_CONTRACT_E2E_RESULT" == "skipped" ]]; then
+            echo "| Deployment Console Contract E2E | Skipped |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Deployment Console Contract E2E | Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [[ "$CONSUMER_RESULT" == "success" ]] && \
              [[ "$PROVIDER_RESULT" == "success" ]] && \
-             [[ "$OPENAPI_RESULT" == "success" ]]; then
+             [[ "$OPENAPI_RESULT" == "success" ]] && \
+             [[ "$DEPLOYMENT_CONTRACT_E2E_RESULT" == "success" ]]; then
             echo "**All contract tests passed successfully.**" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Contract testing has issues. Review the failed jobs above.**" >> $GITHUB_STEP_SUMMARY

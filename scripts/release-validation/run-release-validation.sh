@@ -35,6 +35,7 @@ cd "$(dirname "$0")/../.." || exit 1
 RELEASE_DIR="docs/releases/${VERSION}"
 VALIDATION_DIR="$RELEASE_DIR/validation"
 WORKFLOW_FILE="docs/releases/release-validation-workflow.json"
+ORCHESTRATION_GUIDE="docs/releases/AI_HUMAN_RELEASE_ORCHESTRATION.md"
 SCRIPTS_DIR="scripts/release-validation"
 
 # Create release directory structure
@@ -53,6 +54,20 @@ log_section() {
     log "$1"
     log "=========================================="
     log ""
+}
+
+require_approval_token() {
+    local prompt="$1"
+    local token="$2"
+    local entered=""
+    echo -e "${YELLOW}${prompt}${NC}"
+    while true; do
+        read -r -p "Type ${token} to continue: " entered
+        if [ "$entered" = "$token" ]; then
+            break
+        fi
+        echo -e "${RED}Approval token mismatch. Expected ${token}.${NC}"
+    done
 }
 
 # Step 1: Generate release documentation
@@ -76,6 +91,11 @@ fi
 
 log_section "Step 2: Loading Workflow Configuration"
 log "Workflow file: $WORKFLOW_FILE"
+if [ -f "$ORCHESTRATION_GUIDE" ]; then
+    log "Orchestration guide: $ORCHESTRATION_GUIDE"
+else
+    echo -e "${YELLOW}WARNING: Missing orchestration guide: $ORCHESTRATION_GUIDE${NC}"
+fi
 
 # Extract phase count (simple grep-based parsing for bash)
 PHASE_COUNT=$(grep -c '"phase_id"' "$WORKFLOW_FILE" || echo "0")
@@ -86,6 +106,15 @@ if [ "$PHASE_COUNT" != "5" ]; then
 fi
 
 log ""
+
+# Step 2a: Mandatory preflight stability gate
+log_section "Step 2a: Preflight Stability Gate"
+log "Running scripts/release-validation/validate-release-preflight.sh..."
+if ! "$SCRIPTS_DIR/validate-release-preflight.sh" "$VERSION" | tee -a "$LOG_FILE"; then
+    echo -e "${RED}ERROR: Preflight stability gate failed${NC}"
+    echo -e "${RED}Fix unhealthy services, then re-run release validation.${NC}"
+    exit 1
+fi
 
 # Step 3: Phase execution instructions
 log_section "Step 3: Phase Execution Instructions"
@@ -104,6 +133,7 @@ REQUIREMENTS:
 - Ralph Wiggum plugin must be installed
 - Claude Code session must be active
 - All validation scripts must be executable
+- Preflight stack health must be verified before Phase 1
 
 WORKFLOW STRUCTURE:
 - Phase 1: Code Quality & Testing (5 tasks)
@@ -112,10 +142,21 @@ WORKFLOW STRUCTURE:
 - Phase 4: User Acceptance & Deployment (5 tasks)
 - Phase 5: Release & Communication (3 tasks)
 
+MANDATORY ORCHESTRATION:
+- Follow docs/releases/AI_HUMAN_RELEASE_ORCHESTRATION.md
+- Human release manager approval is required between phases
+- Phase transitions require explicit approval tokens (PHASE_0_APPROVED ... PHASE_4_APPROVED)
+- Do not create git tag automatically; final tag remains human-owned
+
+PREFLIGHT CHECK (before PHASE_1):
+- scripts/release-validation/validate-release-preflight.sh $VERSION
+- Confirm report exists: docs/releases/$VERSION/validation/preflight-stability-report.md
+- Confirm required services are healthy before approving PHASE_0_APPROVED
+
 EOF
 
 echo ""
-read -p "Press ENTER to begin Phase 1..." -r
+require_approval_token "Release manager must approve preflight + orchestration before Phase 1." "PHASE_0_APPROVED"
 echo ""
 
 # Phase 1: Code Quality & Testing Validation
@@ -166,7 +207,7 @@ ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━�
 
 EOF
 
-read -p "After Phase 1 completes, press ENTER to continue to Phase 2..." -r
+require_approval_token "Human approval required after Phase 1 completion summary." "PHASE_1_APPROVED"
 echo ""
 
 # Phase 2: Documentation & Examples
@@ -221,7 +262,7 @@ ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━�
 
 EOF
 
-read -p "After Phase 2 completes, press ENTER to continue to Phase 3..." -r
+require_approval_token "Human approval required after Phase 2 completion summary." "PHASE_2_APPROVED"
 echo ""
 
 # Phase 3: Integration Testing
@@ -239,6 +280,7 @@ TASKS:
   11. Kafka Trace Propagation Validation
   12. Gateway Trust Authentication Validation
   12a. Intelligence Readiness and AuthZ Validation
+  12b. Demo Seeding Count Validation
 
 VALIDATION SCRIPTS:
   - scripts/release-validation/validate-jaeger-integration.sh
@@ -247,6 +289,7 @@ VALIDATION SCRIPTS:
   - scripts/release-validation/validate-gateway-trust-auth.sh
   - scripts/release-validation/validate-intelligence-readiness.sh
   - scripts/release-validation/validate-intelligence-authz.sh
+  - scripts/release-validation/validate-demo-seeding-counts.sh
 
 COMPLETION PROMISE: "PHASE_3_COMPLETE"
 
@@ -286,6 +329,11 @@ Read the workflow configuration from docs/releases/release-validation-workflow.j
    - Validate viewer role cannot mutate intelligence state (403)
    - Validate cross-tenant dashboard path is hidden as 404
 
+7. Run scripts/release-validation/validate-demo-seeding-counts.sh
+   - Validate seeded counts with TENANTS and EXPECTED_PATIENTS_BY_TENANT
+   - Optionally enforce care gap ranges with EXPECTED_CARE_GAPS_RANGE_BY_TENANT
+   - Fail phase when expected seeded counts are not met
+
 For each validation script, review generated reports in docs/releases/$VERSION/validation/
 
 When all Phase 3 tasks are complete and all integration tests pass, output exactly: PHASE_3_COMPLETE
@@ -296,7 +344,7 @@ ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━�
 
 EOF
 
-read -p "After Phase 3 completes, press ENTER to continue to Phase 4..." -r
+require_approval_token "Human approval required after Phase 3 completion summary." "PHASE_3_APPROVED"
 echo ""
 
 # Phase 4: User Acceptance & Deployment Readiness
@@ -365,7 +413,7 @@ ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━�
 
 EOF
 
-read -p "After Phase 4 completes, press ENTER to continue to Phase 5..." -r
+require_approval_token "Human approval required after Phase 4 completion summary." "PHASE_4_APPROVED"
 echo ""
 
 # Phase 5: Final Release Preparation

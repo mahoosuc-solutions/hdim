@@ -48,6 +48,7 @@ import {
   AdministrationStatus,
   InteractionSeverity,
 } from './medication.models';
+import { LoggerService } from '../logger.service';
 
 describe('MedicationService', () => {
   let service: MedicationService;
@@ -133,9 +134,18 @@ describe('MedicationService', () => {
   };
 
   beforeEach(() => {
+    const mockLoggerService = {
+      withContext: jest.fn().mockReturnValue({
+        info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+      }),
+      info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(),
+    };
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [MedicationService],
+      providers: [
+        MedicationService,
+        { provide: LoggerService, useValue: mockLoggerService },
+      ],
     });
     service = TestBed.inject(MedicationService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -155,10 +165,11 @@ describe('MedicationService', () => {
     });
 
     it('should throw error when making requests without tenant context', () => {
-      const unsetService = new MedicationService(TestBed.inject(HttpClientTestingModule) as any);
+      const freshService = TestBed.inject(MedicationService);
+      (freshService as any).tenantContext$.next(null);
       expect(() =>
-        unsetService.getMedicationById('med-001').subscribe()
-      ).toThrowError('Tenant context not set');
+        freshService.getMedicationById('med-001').subscribe()
+      ).toThrow('Tenant context not set');
     });
   });
 
@@ -171,7 +182,7 @@ describe('MedicationService', () => {
         expect(result.name).toBe('Metformin');
         expect(result.tenantId).toBe(tenantId);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('medications') && r.method === 'POST'
@@ -185,7 +196,7 @@ describe('MedicationService', () => {
         expect(result.id).toBe('med-001');
         expect(result.name).toBe('Metformin');
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('medications/med-001')
@@ -265,7 +276,7 @@ describe('MedicationService', () => {
         expect(result.patientId).toBe(patientId);
         expect(result.prescriptionStatus).toBe(PrescriptionStatus.FILLED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('orders') && r.method === 'POST'
@@ -279,7 +290,7 @@ describe('MedicationService', () => {
         expect(result.id).toBe('order-001');
         expect(result.medicationId).toBe('med-001');
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('orders/order-001')
@@ -349,7 +360,7 @@ describe('MedicationService', () => {
       service.refillMedicationOrder('order-001').subscribe((result) => {
         expect(result.refillsRemaining).toBeLessThan(mockMedicationOrder.refills!);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('orders/order-001/refill')
@@ -361,7 +372,7 @@ describe('MedicationService', () => {
       service.cancelMedicationOrder('order-001', 'Patient request').subscribe((result) => {
         expect(result.prescriptionStatus).toBe(PrescriptionStatus.CANCELLED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('orders/order-001/cancel')
@@ -373,7 +384,7 @@ describe('MedicationService', () => {
       service.sendOrderToPharmacy('order-001').subscribe((result) => {
         expect(result.prescriptionStatus).toBe(PrescriptionStatus.SENT_TO_PHARMACY);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('orders/order-001/send-pharmacy')
@@ -390,7 +401,7 @@ describe('MedicationService', () => {
         expect(result.prescriptionId).toBe('order-001');
         expect(result.fulfillmentStatus).toBe(FulfillmentStatus.READY_FOR_PICKUP);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('fulfillments/order-001')
@@ -424,7 +435,7 @@ describe('MedicationService', () => {
       service.getFulfillmentsReadyForPickup(patientId, 0, 10).subscribe((result) => {
         expect(result.content[0].fulfillmentStatus).toBe(FulfillmentStatus.READY_FOR_PICKUP);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('fulfillments/patient') && r.url.includes('ready')
@@ -463,7 +474,7 @@ describe('MedicationService', () => {
         expect(result.eventType).toBe(AdverseEventType.ALLERGY);
         expect(result.severity).toBe(AdverseEventSeverity.MODERATE);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('adverse-events') && r.method === 'POST'
@@ -540,7 +551,7 @@ describe('MedicationService', () => {
         expect(result.status).toBe(AdministrationStatus.ADMINISTERED);
         expect(result.administeredTime).toBeDefined();
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('administration') && r.method === 'POST'
@@ -578,7 +589,7 @@ describe('MedicationService', () => {
         expect(result.length).toBeGreaterThan(0);
         expect(result[0].status).toBe(AdministrationStatus.ADMINISTERED);
         done();
-      };
+      });
 
       const req = httpMock.expectOne((r) =>
         r.url.includes('administration/patient') && r.url.includes('today')
@@ -882,15 +893,12 @@ describe('MedicationService', () => {
   describe('Caching Behavior', () => {
     it('should cache medication catalog results with TTL', (done) => {
       service.getMedicationById('med-001').subscribe(() => {
-        // Second call should use cache
-        service.getMedicationById('med-001').subscribe(() => {
-          // Verify only one HTTP call was made
-          const requests = httpMock.match((r) =>
-            r.url.includes('medications/med-001')
-          );
-          expect(requests.length).toBe(1);
+        // Second call should use cache (no new HTTP request)
+        service.getMedicationById('med-001').subscribe((result) => {
+          expect(result).toBeDefined();
+          // If cache works, httpMock.verify() in afterEach confirms no outstanding requests
           done();
-        };
+        });
       });
 
       const req = httpMock.expectOne((r) =>
@@ -904,7 +912,7 @@ describe('MedicationService', () => {
         // Cache should be invalidated, next fetch should hit backend
         service.getActiveOrdersForPatient(patientId, 0, 10).subscribe(() => {
           done();
-        };
+        });
 
         const secondReq = httpMock.expectOne((r) =>
           r.url.includes('orders/patient')
@@ -931,7 +939,7 @@ describe('MedicationService', () => {
         // Cache should be invalidated
         service.getPatientAllergies(patientId, 0, 10).subscribe(() => {
           done();
-        };
+        });
 
         const secondReq = httpMock.expectOne((r) =>
           r.url.includes('adverse-events/patient')

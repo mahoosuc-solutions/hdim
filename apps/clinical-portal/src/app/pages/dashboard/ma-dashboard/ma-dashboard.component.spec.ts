@@ -11,6 +11,7 @@ import { NotificationService } from '../../../services/notification.service';
 import { ToastService } from '../../../services/toast.service';
 import { MatDialog } from '@angular/material/dialog';
 import { LoggerService } from '../../../services/logger.service';
+import { SchedulingService } from '../../../services/scheduling.service';
 import { createMockMatDialog, createMockLoggerService } from '../../../../testing/mocks';
 
 /**
@@ -33,6 +34,7 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
   let mockDialogService: jest.Mocked<DialogService>;
   let mockNotificationService: jest.Mocked<NotificationService>;
   let mockToastService: jest.Mocked<ToastService>;
+  let mockSchedulingService: any;
 
   beforeEach(async () => {
     // Create mock services
@@ -78,6 +80,14 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       warning: jest.fn(),
     } as any;
 
+    mockSchedulingService = {
+      getAppointmentsForDate: jest.fn().mockReturnValue(of([
+        { id: 'appt-1', patientId: 'p1', patientName: 'Smith, John', patientMRN: 'MRN-001', start: new Date(), end: new Date(), status: 'booked', type: 'follow-up' },
+        { id: 'appt-2', patientId: 'p2', patientName: 'Doe, Jane', patientMRN: 'MRN-002', start: new Date(), end: new Date(), status: 'booked', type: 'check-up' },
+      ])),
+      getTasksForDate: jest.fn().mockReturnValue(of([])),
+    };
+
     await TestBed.configureTestingModule({
       imports: [MADashboardComponent, NoopAnimationsModule],
       providers: [
@@ -89,7 +99,8 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
         { provide: NotificationService, useValue: mockNotificationService },
         { provide: ToastService, useValue: mockToastService },
         { provide: MatDialog, useValue: createMockMatDialog() },
-        { provide: LoggerService, useValue: createMockLoggerService() }],
+        { provide: LoggerService, useValue: createMockLoggerService() },
+        { provide: SchedulingService, useValue: mockSchedulingService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(MADashboardComponent);
@@ -190,7 +201,7 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
 
       expect(task.status).toBe('completed');
       expect(task.taskType).toBe('vitals');
-      expect(component.patientsCheckedIn).toBe(5);
+      expect(component.patientsCheckedIn).toBe(2);
       expect(mockNotificationService.success).toHaveBeenCalled();
     }));
 
@@ -277,7 +288,7 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
       tick();
 
       expect(task.status).toBe('in-progress');
-      expect(component.roomsReady).toBe(3);
+      expect(component.roomsReady).toBe(2);
       expect(mockNotificationService.success).toHaveBeenCalled();
     }));
 
@@ -325,7 +336,8 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
     });
 
     it('should handle empty schedule gracefully', () => {
-      mockPatientService.getTodaySchedule = jest.fn().mockReturnValue(of([]));
+      mockSchedulingService.getAppointmentsForDate.mockReturnValue(of([]));
+      mockSchedulingService.getTasksForDate.mockReturnValue(of([]));
 
       component.loadScheduleData();
 
@@ -775,7 +787,7 @@ describe('MADashboardComponent (TDD - Phase 6.1)', () => {
 
       expect(mockDialogService.confirm).toHaveBeenCalled();
       expect(mockToastService.success).toHaveBeenCalled();
-    });
+    }));
 
     it('should mark outreach as completed', () => {
       const outreach = {

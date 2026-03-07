@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -17,8 +17,14 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { switchMap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { API_CONFIG } from '../../config/api.config';
 import { LoggerService } from '../../services/logger.service';
+import { MeasureService } from '../../services/measure.service';
+import { EvaluationService } from '../../services/evaluation.service';
+import { PatientService } from '../../services/patient.service';
 
 interface QualityMeasure {
   id: string;
@@ -77,7 +83,7 @@ interface EvaluationResult {
   templateUrl: './quality-measures.component.html',
   styleUrl: './quality-measures.component.scss',
 })
-export class QualityMeasuresComponent implements OnInit {
+export class QualityMeasuresComponent implements OnInit, OnDestroy {
   // Signals for reactive state
   searchTerm = signal('');
   selectedCategory = signal<string>('all');
@@ -222,6 +228,8 @@ export class QualityMeasuresComponent implements OnInit {
   // Patient context for evaluation
   patientSearchTerm = signal('');
   filteredPatients = signal<Array<{ id: string; fullName: string; mrn: string }>>([]);
+  patients = signal<Array<{ id: string; fullName: string; mrn: string; status: string }>>([]);
+  evaluationPatientId = signal<string | null>(null);
 
   // Loading state
   isLoading = signal(false);
@@ -229,7 +237,13 @@ export class QualityMeasuresComponent implements OnInit {
 
   private http = inject(HttpClient);
   private loggerService = inject(LoggerService);
+  private measureService = inject(MeasureService);
+  private evaluationService = inject(EvaluationService);
+  private patientService = inject(PatientService);
+  private destroyRef = inject(DestroyRef);
   private logger: ReturnType<LoggerService['withContext']>;
+  private presetPollingInterval: ReturnType<typeof setInterval> | null = null;
+  private presetPollingTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private router: Router,
@@ -241,6 +255,14 @@ export class QualityMeasuresComponent implements OnInit {
   ngOnInit(): void {
     this.loadCareGapStatistics();
     this.loadPatientCount();
+    this.loadMeasuresFromService();
+    this.loadPatientsFromService();
+    this.loadDefaultPreset();
+  }
+
+  ngOnDestroy(): void {
+    if (this.presetPollingInterval) clearInterval(this.presetPollingInterval);
+    if (this.presetPollingTimeout) clearTimeout(this.presetPollingTimeout);
   }
 
   /**
@@ -439,6 +461,185 @@ export class QualityMeasuresComponent implements OnInit {
   getCategoryLabel(category: string): string {
     const cat = this.categories.find(c => c.value === category);
     return cat?.label || category;
+  }
+
+  /**
+   * Load measures from MeasureService and merge into measures signal
+   */
+  private loadMeasuresFromService(): void {
+    this.measureService.getLocalMeasuresAsInfo().pipe(
+      switchMap((infos) =>
+        this.evaluationService.getAllResults(0, 100).pipe(
+          catchError(() => of([] as any[])),
+          switchMap((results) => {
+            const gapsByMeasure = new Map<string, number>();
+            results.forEach((r: any) => {
+              const mId = r.measureId || r.measureName;
+              if (mId && r.denominatorEligible && !r.numeratorCompliant) {
+                gapsByMeasure.set(mId, (gapsByMeasure.get(mId) || 0) + 1);
+              }
+            });
+            const mapped: QualityMeasure[] = infos.map(info => {
+              const existing = this.measures().find(m => m.code === info.name);
+              return {
+                id: info.id,
+                code: info.name,
+                name: info.displayName || info.name,
+                description: info.description || '',
+                category: info.category || 'HEDIS',
+                measureType: existing?.measureType ?? 'HEDIS',
+                steward: existing?.steward ?? 'NCQA',
+                starRating: existing?.starRating ?? 0,
+                benchmark: existing?.benchmark ?? 0,
+                status: existing?.status ?? 'Active' as const,
+                careGaps: gapsByMeasure.get(info.name) || 0,
+                lastEvaluated: existing?.lastEvaluated ?? null,
+              };
+            });
+            this.measures.set(mapped);
+            return of(mapped);
+          }),
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      error: (error) => {
+        this.logger.error('Failed to load measures from service', error);
+      }
+    });
+  }
+
+  /**
+   * Load patients from PatientService
+   */
+  private loadPatientsFromService(): void {
+    if (!this.patientService.getPatientsSummaryCached) {
+      this.logger.warn('getPatientsSummaryCached not available on PatientService');
+      return;
+    }
+    this.patientService.getPatientsSummaryCached().pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (summaries: any[]) => {
+        this.patients.set(summaries);
+        this.filteredPatients.set(summaries);
+      },
+      error: () => {
+        // Patients list remains empty — non-critical
+      }
+    });
+  }
+
+  /**
+   * Load default evaluation preset
+   */
+  private loadDefaultPreset(): void {
+    if (!this.evaluationService.getDefaultEvaluationPreset) {
+      return;
+    }
+    this.evaluationService.getDefaultEvaluationPreset().pipe(
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      next: (preset: any) => {
+        if (preset?.patientId) {
+          this.evaluationPatientId.set(preset.patientId);
+          const patient = this.patients().find(p => p.id === preset.patientId);
+          if (patient) {
+            this.patientSearchTerm.set(this.getPatientDisplay(patient));
+          } else {
+            // Poll for patient data with tracked interval for cleanup
+            this.presetPollingInterval = setInterval(() => {
+              const found = this.patients().find(p => p.id === preset.patientId);
+              if (found) {
+                this.patientSearchTerm.set(this.getPatientDisplay(found));
+                if (this.presetPollingInterval) clearInterval(this.presetPollingInterval);
+                this.presetPollingInterval = null;
+              }
+            }, 200);
+            this.presetPollingTimeout = setTimeout(() => {
+              if (this.presetPollingInterval) clearInterval(this.presetPollingInterval);
+              this.presetPollingInterval = null;
+            }, 5000);
+          }
+        }
+      },
+      error: () => {
+        // No default preset available — non-critical
+      }
+    });
+  }
+
+  /**
+   * Display function for patient autocomplete
+   */
+  getPatientDisplay(patient: any): string {
+    if (!patient) return '';
+    if (typeof patient === 'string') return patient;
+    return patient.mrn ? `${patient.fullName} (MRN: ${patient.mrn})` : patient.fullName;
+  }
+
+  /**
+   * Handle patient selection from autocomplete
+   */
+  selectEvaluationPatient(patient: any): void {
+    this.evaluationPatientId.set(patient.id);
+    this.patientSearchTerm.set(this.getPatientDisplay(patient));
+  }
+
+  /**
+   * Handle patient search input changes
+   */
+  onPatientSearchChange(term: string): void {
+    this.patientSearchTerm.set(term);
+    if (!term) {
+      this.filteredPatients.set(this.patients());
+      return;
+    }
+    const lower = term.toLowerCase();
+    this.filteredPatients.set(
+      this.patients().filter(p =>
+        p.fullName.toLowerCase().includes(lower) ||
+        p.mrn?.toLowerCase().includes(lower)
+      )
+    );
+  }
+
+  /**
+   * Run evaluation for selected measure and patient
+   */
+  async runEvaluation(): Promise<void> {
+    const measure = this.selectedMeasure();
+    const patientId = this.evaluationPatientId();
+    if (!measure || !patientId) return;
+
+    this.isEvaluating.set(true);
+    this.evaluationResult.set(null);
+
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        this.evaluationService.calculateLocalMeasure(patientId, measure.code).subscribe({
+          next: (r) => resolve(r),
+          error: (e) => reject(e),
+        });
+      });
+
+      this.evaluationResult.set({
+        measureCode: result.measureId || measure.code,
+        measureName: result.measureName || measure.name,
+        totalPatients: 1,
+        patientsEvaluated: 1,
+        denominatorCount: result.denominatorMembership ? 1 : 0,
+        numeratorCount: (result.eligible && !result.denominatorExclusion) ? (result.subMeasures && Object.keys(result.subMeasures).length > 0 ? 0 : 1) : 0,
+        complianceRate: result.eligible ? 100 : 0,
+        careGapsCount: result.careGaps?.length || 0,
+        executionTimeMs: 0,
+        timestamp: result.calculatedAt || new Date().toISOString(),
+      });
+    } catch (error) {
+      this.logger.error('Evaluation failed', error);
+    } finally {
+      this.isEvaluating.set(false);
+    }
   }
 
   formatDate(date: string | null): string {

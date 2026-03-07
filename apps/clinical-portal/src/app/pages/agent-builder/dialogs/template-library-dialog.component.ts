@@ -14,6 +14,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { AgentBuilderService } from '../services/agent-builder.service';
@@ -47,6 +48,7 @@ export interface TemplateLibraryDialogData {
     MatDividerModule,
     MatSelectModule,
     MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   template: `
     <div class="template-library-dialog">

@@ -108,17 +108,34 @@ describe('QualityMeasuresComponent', () => {
     httpMock.verify();
   });
 
-  function flushFhirPatientCount(): void {
-    const req = httpMock.expectOne('/fhir/Patient?_count=1');
-    req.flush({
+  function flushPendingRequests(): void {
+    // Flush care gap statistics request — include a CDC gap so loadCareGapStatistics
+    // counts it correctly (this HTTP response fires AFTER the synchronous
+    // loadMeasuresFromService has already set measures via the mocked services).
+    const careGapReq = httpMock.match('/care-gap/api/v1/care-gaps');
+    careGapReq.forEach(req => req.flush({
+      content: [
+        { id: 'gap-1', patientId: 'patient-1', measureId: 'CDC', measureName: 'Comprehensive Diabetes Care', gapStatus: 'OPEN', priority: 'HIGH', gapDescription: 'HbA1c not controlled' },
+      ],
+      totalElements: 1,
+      totalPages: 1,
+    }));
+
+    // Flush FHIR Patient count request
+    const patientReq = httpMock.match((req) => req.url.includes('/fhir/Patient'));
+    patientReq.forEach(req => req.flush({
       total: 12,
       entry: [{ resource: { id: 'fhir-patient-1' } }],
-    });
+    }));
   }
 
   it('loads measures and maps backend results on init', () => {
     fixture.detectChanges();
-    flushFhirPatientCount();
+    flushPendingRequests();
+
+    // Verify service calls were made
+    expect(measureServiceSpy.getLocalMeasuresAsInfo).toHaveBeenCalled();
+    expect(evaluationServiceSpy.getAllResults).toHaveBeenCalled();
 
     expect(component.measures().length).toBe(1);
     expect(component.measures()[0].code).toBe('CDC');
@@ -145,7 +162,7 @@ describe('QualityMeasuresComponent', () => {
     );
 
     fixture.detectChanges();
-    flushFhirPatientCount();
+    flushPendingRequests();
 
     component.selectMeasure(component.measures()[0]);
     await component.runEvaluation();
@@ -157,7 +174,7 @@ describe('QualityMeasuresComponent', () => {
 
   it('selects patient context from autocomplete option', () => {
     fixture.detectChanges();
-    flushFhirPatientCount();
+    flushPendingRequests();
 
     const patient = component.patients()[1];
     component.selectEvaluationPatient(patient);

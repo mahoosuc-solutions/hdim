@@ -93,6 +93,10 @@ describe('HealthScoringService', () => {
     };
 
     const loggerMock = {
+      info: jest.fn(),
+      debug: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
       withContext: jest.fn().mockReturnValue({
         info: jest.fn(),
         debug: jest.fn(),
@@ -109,7 +113,6 @@ describe('HealthScoringService', () => {
         { provide: MentalHealthService, useValue: mentalHealthMock },
         { provide: SDOHService, useValue: sdohMock },
         { provide: LoggerService, useValue: loggerMock },
-        HttpTestingController,
       ],
     });
 

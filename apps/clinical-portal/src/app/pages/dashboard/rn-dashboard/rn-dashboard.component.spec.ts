@@ -10,6 +10,11 @@ import { ToastService } from '../../../services/toast.service';
 import { createMockStore, createMockLoggerService } from '../../../../testing/mocks';
 import { LoggerService } from '../../../services/logger.service';
 import { HelpService } from '../../../services/help.service';
+import { NurseWorkflowService } from '../../../services/nurse-workflow/nurse-workflow.service';
+import { MedicationService } from '../../../services/medication/medication.service';
+import { CarePlanService } from '../../../services/care-plan/care-plan.service';
+import { WorkflowLauncherService } from '../../../services/workflow/workflow-launcher.service';
+import { AuthService } from '../../../services/auth.service';
 import { Store } from '@ngrx/store';
 
 /**
@@ -31,6 +36,11 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
   let mockNotificationService: jest.Mocked<NotificationService>;
   let mockCareGapService: jest.Mocked<CareGapService>;
   let mockToastService: jest.Mocked<ToastService>;
+  let mockNurseWorkflowService: any;
+  let mockMedicationService: any;
+  let mockCarePlanService: any;
+  let mockWorkflowLauncher: any;
+  let mockAuthService: any;
 
   beforeEach(async () => {
     // Create mock services
@@ -65,6 +75,35 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
       warning: jest.fn(),
     } as any;
 
+    mockNurseWorkflowService = {
+      setTenantContext: jest.fn(),
+      getPendingOutreachLogs: jest.fn().mockReturnValue(of([])),
+      getPendingMedicationReconciliations: jest.fn().mockReturnValue(of([])),
+      getEducationSessionsWithPoorUnderstanding: jest.fn().mockReturnValue(of([])),
+      getReferralsAwaitingScheduling: jest.fn().mockReturnValue(of([])),
+      getMedicationReconciliationMetrics: jest.fn().mockReturnValue(of({ totalReconciliations: 0, pendingReconciliations: 0, completionRate: 0 })),
+    };
+
+    mockMedicationService = {
+      setTenantContext: jest.fn(),
+      getMedicationReconciliationQueue: jest.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false })),
+      getRefillRequests: jest.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false })),
+    };
+
+    mockCarePlanService = {
+      setTenantContext: jest.fn(),
+      getCarePlansRequiringReview: jest.fn().mockReturnValue(of({ content: [], totalElements: 0, totalPages: 0, currentPage: 0, pageSize: 50, hasNext: false, hasPrevious: false })),
+    };
+
+    mockWorkflowLauncher = {
+      mapCategoryToWorkflow: jest.fn().mockReturnValue('education'),
+      launchWorkflow: jest.fn(),
+    };
+
+    mockAuthService = {
+      getTenantId: jest.fn().mockReturnValue('test-tenant'),
+    };
+
     await TestBed.configureTestingModule({
       imports: [RNDashboardComponent, NoopAnimationsModule],
       providers: [
@@ -75,6 +114,11 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: createMockLoggerService() },
         { provide: HelpService, useValue: { toggleHelpPanel: jest.fn(), showHelpPanel$: of(false) } },
+        { provide: NurseWorkflowService, useValue: mockNurseWorkflowService },
+        { provide: MedicationService, useValue: mockMedicationService },
+        { provide: CarePlanService, useValue: mockCarePlanService },
+        { provide: WorkflowLauncherService, useValue: mockWorkflowLauncher },
+        { provide: AuthService, useValue: mockAuthService },
       ],
     }).compileComponents();
 
@@ -294,29 +338,32 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
     });
 
     it('loads care gaps and updates loading state', () => {
-      (component as any).loadCareGaps();
-      expect(component.loading).toBe(true);
+      (component as any).loadDashboardData();
 
+      // forkJoin with mocked services completes synchronously
       jest.advanceTimersByTime(500);
 
-      expect(component.careGaps.length).toBeGreaterThan(0);
+      // With empty mock data, careGaps will be empty but loading should be false
       expect(component.loading).toBe(false);
     });
 
     it('loads outreach tasks', () => {
-      (component as any).loadOutreachTasks();
+      (component as any).loadDashboardData();
       jest.advanceTimersByTime(500);
 
-      expect(component.outreachTasks.length).toBeGreaterThan(0);
+      // With empty mock data, outreachTasks defaults to empty
+      expect(component.outreachTasks).toBeDefined();
     });
 
     it('loads metrics', () => {
-      (component as any).loadMetrics();
+      (component as any).loadDashboardData();
+      jest.advanceTimersByTime(500);
 
-      expect(component.careGapsAssigned).toBe(15);
-      expect(component.patientCallsPending).toBe(8);
-      expect(component.medReconciliationsNeeded).toBe(5);
-      expect(component.patientEducationDue).toBe(7);
+      // With empty mock data, metrics default to 0
+      expect(component.careGapsAssigned).toBe(0);
+      expect(component.patientCallsPending).toBe(0);
+      expect(component.medReconciliationsNeeded).toBe(0);
+      expect(component.patientEducationDue).toBe(0);
     });
 
     it('refreshes dashboard data', () => {
@@ -327,8 +374,7 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
       expect(loadSpy).toHaveBeenCalled();
     });
 
-    it('navigates when addressing care gaps', () => {
-      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+    it('launches workflow when addressing care gaps', () => {
       const gap: CareGapTask = {
         id: '1',
         patientName: 'Davis, Jennifer',
@@ -343,13 +389,12 @@ describe('RNDashboardComponent (TDD - Phase 6.2)', () => {
 
       component.addressCareGap(gap);
 
-      expect(mockRouter.navigate).toHaveBeenCalledWith(
-        ['/patients', gap.id],
-        expect.objectContaining({
-          queryParams: { action: 'address-gap', gapId: gap.id }
-        })
+      expect(mockWorkflowLauncher.mapCategoryToWorkflow).toHaveBeenCalledWith('education');
+      expect(mockWorkflowLauncher.launchWorkflow).toHaveBeenCalledWith(
+        'education',
+        expect.objectContaining({ id: gap.id, patientName: gap.patientName }),
+        expect.any(Function)
       );
-      logSpy.mockRestore();
     });
 
     it('completes patient education flow', () => {

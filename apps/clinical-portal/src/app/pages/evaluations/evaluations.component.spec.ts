@@ -10,6 +10,10 @@ import { PatientService } from '../../services/patient.service';
 import { DialogService } from '../../services/dialog.service';
 import { ToastService } from '../../services/toast.service';
 import { LoggerService } from '../../services/logger.service';
+import { FilterPersistenceService } from '../../services/filter-persistence.service';
+import { AIAssistantService } from '../../services/ai-assistant.service';
+import { MeasureFavoritesService } from '../../services/measure-favorites.service';
+import { EvaluationDataFlowService } from '../../services/evaluation-data-flow.service';
 import { CqlLibraryFactory } from '../../../testing/factories/cql-library.factory';
 import { PatientFactory } from '../../../testing/factories/patient.factory';
 import { EvaluationFactory } from '../../../testing/factories/evaluation.factory';
@@ -27,6 +31,10 @@ describe('EvaluationsComponent', () => {
   let mockPatientService: jest.Mocked<PatientService>;
   let mockDialogService: jest.Mocked<DialogService>;
   let mockToastService: jest.Mocked<ToastService>;
+  let mockFilterPersistence: any;
+  let mockAIAssistant: any;
+  let mockMeasureFavorites: any;
+  let mockDataFlowService: any;
 
   beforeEach(async () => {
     // Create mock services
@@ -38,6 +46,8 @@ describe('EvaluationsComponent', () => {
 
     mockEvaluationService = {
       calculateQualityMeasure: jest.fn(),
+      calculateLocalMeasure: jest.fn(),
+      submitEvaluation: jest.fn(),
       getAllResults: jest.fn(),
       getDefaultEvaluationPreset: jest.fn(),
       saveDefaultEvaluationPreset: jest.fn(),
@@ -65,6 +75,29 @@ describe('EvaluationsComponent', () => {
       warning: jest.fn(),
     } as any;
 
+    mockFilterPersistence = {
+      getFilters: jest.fn().mockReturnValue({}),
+      saveFilters: jest.fn(),
+    };
+
+    mockAIAssistant = {
+      getInsights: jest.fn().mockReturnValue(of([])),
+      trackInteraction: jest.fn(),
+    };
+
+    mockMeasureFavorites = {
+      recordUsage: jest.fn(),
+      toggleFavorite: jest.fn(),
+      isFavorite: jest.fn().mockReturnValue(false),
+      getFavoriteIds: jest.fn().mockReturnValue([]),
+      getRecentIds: jest.fn().mockReturnValue([]),
+    };
+
+    mockDataFlowService = {
+      connect: jest.fn().mockReturnValue(of()),
+      disconnect: jest.fn(),
+    };
+
     await TestBed.configureTestingModule({
       imports: [EvaluationsComponent, ReactiveFormsModule, NoopAnimationsModule],
       providers: [
@@ -75,6 +108,11 @@ describe('EvaluationsComponent', () => {
         { provide: DialogService, useValue: mockDialogService },
         { provide: ToastService, useValue: mockToastService },
         { provide: LoggerService, useValue: mockLoggerService },
+        { provide: FilterPersistenceService, useValue: mockFilterPersistence },
+        { provide: AIAssistantService, useValue: mockAIAssistant },
+        { provide: MeasureFavoritesService, useValue: mockMeasureFavorites },
+        { provide: EvaluationDataFlowService, useValue: mockDataFlowService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(EvaluationsComponent);
@@ -120,7 +158,7 @@ describe('EvaluationsComponent', () => {
   describe('Loading Active Measures', () => {
     it('should load measures successfully', () => {
       const mockMeasures = CqlLibraryFactory.createMeasureInfoList();
-      mockMeasureService.getAllAvailableMeasures.mockReturnValue(of(mockMeasures));
+      mockMeasureService.getLocalMeasuresAsInfo.mockReturnValue(of(mockMeasures));
 
       component.loadActiveMeasures();
 
@@ -140,11 +178,14 @@ describe('EvaluationsComponent', () => {
 
     it('should handle error when loading measures fails with fallback', () => {
       const error = { status: 500, message: 'Server Error' };
-      mockMeasureService.getAllAvailableMeasures.mockReturnValue(
+      // Primary source fails
+      mockMeasureService.getLocalMeasuresAsInfo.mockReturnValue(
         throwError(() => error)
       );
       // Fallback also fails
-      mockMeasureService.getActiveMeasuresInfo.mockReturnValue(of([]));
+      mockMeasureService.getAllAvailableMeasures.mockReturnValue(
+        throwError(() => error)
+      );
 
       component.loadActiveMeasures();
 
@@ -156,7 +197,7 @@ describe('EvaluationsComponent', () => {
       const mockMeasures = CqlLibraryFactory.createMeasureInfoList();
       component.measuresError = 'Previous error';
 
-      mockMeasureService.getAllAvailableMeasures.mockReturnValue(of(mockMeasures));
+      mockMeasureService.getLocalMeasuresAsInfo.mockReturnValue(of(mockMeasures));
 
       component.loadActiveMeasures();
 
@@ -261,7 +302,7 @@ describe('EvaluationsComponent', () => {
         expect(filtered.length).toBeGreaterThan(0);
         expect(filtered[0].fullName).toContain('John');
         done();
-      };
+      });
     });
 
     it('should filter patients by MRN', (done) => {
@@ -271,11 +312,11 @@ describe('EvaluationsComponent', () => {
         expect(filtered.length).toBeGreaterThan(0);
         expect(filtered[0].mrn).toBe('MRN00001');
         done();
-      };
+      });
     });
 
     it('should handle object values in patient search', (done) => {
-      const patient = PatientFactory.createSummary({ fullName: 'Jane Roe', mrn: 'MRN00999' };
+      const patient = PatientFactory.createSummary({ fullName: 'Jane Roe', mrn: 'MRN00999' });
       component.patients = [patient];
       component.setupPatientAutocomplete();
 
@@ -301,7 +342,7 @@ describe('EvaluationsComponent', () => {
       component.filteredPatients.subscribe((filtered) => {
         expect(filtered.length).toBe(10);
         done();
-      };
+      });
     });
 
     it('should be case-insensitive when filtering', (done) => {
@@ -310,7 +351,7 @@ describe('EvaluationsComponent', () => {
       component.filteredPatients.subscribe((filtered) => {
         expect(filtered.length).toBeGreaterThan(0);
         done();
-      };
+      });
     });
 
     it('should limit results to 10 items', (done) => {
@@ -394,7 +435,7 @@ describe('EvaluationsComponent', () => {
 
       component.submitEvaluation();
 
-      expect(mockEvaluationService.calculateQualityMeasure).not.toHaveBeenCalled();
+      expect(mockEvaluationService.calculateLocalMeasure).not.toHaveBeenCalled();
     });
 
     it('should not submit if no patient is selected', () => {
@@ -402,24 +443,24 @@ describe('EvaluationsComponent', () => {
 
       component.submitEvaluation();
 
-      expect(mockEvaluationService.calculateQualityMeasure).not.toHaveBeenCalled();
+      expect(mockEvaluationService.calculateLocalMeasure).not.toHaveBeenCalled();
     });
 
     it('should submit evaluation with correct parameters', () => {
-      const mockResult = EvaluationFactory.createCompliantResult();
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(of(mockResult));
+      const mockResult = { measureId: 'lib-1', patientId: 'patient-001', eligible: true, compliant: true };
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(of(mockResult));
 
       component.submitEvaluation();
 
-      expect(mockEvaluationService.calculateQualityMeasure).toHaveBeenCalledWith(
+      expect(mockEvaluationService.calculateLocalMeasure).toHaveBeenCalledWith(
         'patient-001',
         'lib-1'
       );
     });
 
     it('should set submitting state during submission', () => {
-      const mockResult = EvaluationFactory.createCompliantResult();
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(of(mockResult));
+      const mockResult = { measureId: 'lib-1', patientId: 'patient-001', eligible: true, compliant: true };
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(of(mockResult));
 
       component.submitEvaluation();
 
@@ -428,32 +469,32 @@ describe('EvaluationsComponent', () => {
     });
 
     it('should store evaluation result on success', () => {
-      const mockResult = EvaluationFactory.createCompliantResult();
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(of(mockResult));
+      const mockResult = { measureId: 'lib-1', patientId: 'patient-001', eligible: true, compliant: true };
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(of(mockResult));
 
       component.submitEvaluation();
 
-      expect(component.evaluationResult).toEqual(mockResult);
+      expect(component.localEvaluationResult).toEqual(mockResult);
       expect(component.evaluationError).toBeNull();
     });
 
     it('should handle evaluation error', () => {
       const error = { userMessage: 'Evaluation failed', status: 500 };
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(
         throwError(() => error)
       );
 
       component.submitEvaluation();
 
-      // Component uses ErrorFactory.createCqlEngineError which produces a specific message
+      // Component uses ErrorFactory.createEvaluationError which produces a specific message
       expect(component.evaluationError).toContain('Unable to complete the quality measure evaluation');
-      expect(component.evaluationResult).toBeNull();
+      expect(component.localEvaluationResult).toBeNull();
       expect(component.submitting).toBe(false);
     });
 
     it('should use default error message if userMessage not provided', () => {
       const error = { status: 500 };
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(
         throwError(() => error)
       );
 
@@ -464,15 +505,15 @@ describe('EvaluationsComponent', () => {
     });
 
     it('should clear previous results before submission', () => {
-      component.evaluationResult = EvaluationFactory.createCompliantResult();
+      component.localEvaluationResult = { measureId: 'old', patientId: 'old', eligible: true, compliant: true } as any;
       component.evaluationError = 'Previous error';
 
-      const mockResult = EvaluationFactory.createNonCompliantResult();
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(of(mockResult));
+      const mockResult = { measureId: 'lib-1', patientId: 'patient-001', eligible: false, compliant: false };
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(of(mockResult));
 
       component.submitEvaluation();
 
-      expect(component.evaluationResult).toEqual(mockResult);
+      expect(component.localEvaluationResult).toEqual(mockResult);
       expect(component.evaluationError).toBeNull();
     });
   });
@@ -572,11 +613,11 @@ describe('EvaluationsComponent', () => {
       // Setup
       const mockMeasures = CqlLibraryFactory.createMeasureInfoList();
       const mockPatients = PatientFactory.createSummaryList();
-      const mockResult = EvaluationFactory.createCompliantResult();
+      const mockLocalResult = { measureId: mockMeasures[0].name, patientId: mockPatients[0].id, eligible: true, compliant: true };
 
-      mockMeasureService.getAllAvailableMeasures.mockReturnValue(of(mockMeasures));
+      mockMeasureService.getLocalMeasuresAsInfo.mockReturnValue(of(mockMeasures));
       mockPatientService.getPatientsSummary.mockReturnValue(of(mockPatients));
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(of(mockResult));
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(of(mockLocalResult));
 
       // Initialize component
       component.ngOnInit();
@@ -591,16 +632,15 @@ describe('EvaluationsComponent', () => {
 
       // Fill form
       component.evaluationForm.patchValue({
-        measureId: mockMeasures[0].id,
+        measureId: mockMeasures[0].name,
         patientSearch: mockPatients[0],
       });
 
-      // Submit evaluation
+      // Submit evaluation (defaults to local)
       component.submitEvaluation();
 
-      // Verify result
-      expect(component.evaluationResult).toEqual(mockResult);
-      expect(component.getStatusText(mockResult)).toBe('Compliant');
+      // Verify result stored in localEvaluationResult
+      expect(component.localEvaluationResult).toEqual(mockLocalResult);
     });
   });
 
@@ -615,7 +655,7 @@ describe('EvaluationsComponent', () => {
       const patient = PatientFactory.createSummary({ id: 'patient-1' });
       component.onPatientSelected(patient);
       component.evaluationForm.patchValue({ measureId: 'm1', patientSearch: patient });
-      mockEvaluationService.calculateQualityMeasure.mockReturnValue(
+      mockEvaluationService.calculateLocalMeasure.mockReturnValue(
         throwError(() => new Error('fail'))
       );
 

@@ -2,7 +2,7 @@
 # NOTE: Build the JAR locally first: ./gradlew :modules:services:<SERVICE_NAME>:bootJar
 
 # Runtime stage - uses pre-built JAR
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 # Add non-root user for security
 RUN addgroup -g 1001 healthdata && \

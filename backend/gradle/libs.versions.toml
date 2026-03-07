@@ -83,7 +83,7 @@ datafaker = "2.5.4"
 twilio = "9.14.0"
 totp = "1.7.1"
 poi-ooxml = "5.2.5"
-snakeyaml = "2.2"
+snakeyaml = "2.6"
 javafaker = "1.0.2"
 
 # Export Libraries

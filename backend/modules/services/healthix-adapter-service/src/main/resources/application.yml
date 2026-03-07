@@ -18,9 +18,18 @@ spring:
       properties:
         spring.json.trusted.packages: "com.healthdata.*,java.util,java.lang"
         spring.json.value.default.type: "java.util.LinkedHashMap"
+        fetch.min.bytes: 1048576
+        fetch.max.wait.ms: 500
+        max.poll.records: 500
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      batch-size: 32768
+      properties:
+        linger.ms: 10
+        buffer.memory: 67108864
+        compression.type: lz4
+      acks: 1
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5435}/${DB_NAME:healthix_adapter_db}
@@ -53,6 +62,12 @@ external:
     timeout-ms: ${HEALTHIX_TIMEOUT_MS:10000}
     connect-timeout-ms: ${HEALTHIX_CONNECT_TIMEOUT_MS:5000}
     health-check-interval-ms: ${HEALTHIX_HEALTH_CHECK_MS:60000}
+    connection-pool:
+      max-connections: 200
+      max-connections-per-route: 50
+      connection-timeout-ms: 3000
+      socket-timeout-ms: 10000
+      keep-alive-ms: 30000
     mtls:
       enabled: ${HEALTHIX_MTLS_ENABLED:false}
       keystore-path: ${HEALTHIX_MTLS_KEYSTORE_PATH:}

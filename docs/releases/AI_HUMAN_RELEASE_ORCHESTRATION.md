@@ -44,24 +44,20 @@ Define explicit handoff and approval steps between AI agents and human operators
 - Diff of workflow-impacting config changes when applicable.
 
 ## Go/No-Go Rules
-- `NO-GO` if any blocking task in workflow JSON fails without signed waiver.
+- `NO-GO` if any blocking task in workflow JSON fails (no-waiver policy for pilot-readiness lanes).
 - `NO-GO` if authz/tenant-isolation validation fails.
 - `NO-GO` if production rollback procedure is missing or untested for the target version.
 - `GO` requires:
-  - all blocking checks passing or approved waivers,
+  - all blocking checks passing,
   - release manager approval,
   - tag command performed manually by human:
     - `git tag -a <version> -m "Release <version>"`
     - `git push origin <version>`
 
 ## Exception Protocol
-- Any waiver must document:
-  - failing check
-  - impact/risk
-  - mitigation
-  - owner
-  - expiration date
-- Waivers are recorded in `docs/releases/<version>/logs/workflow-summary.md`.
+- Pilot-readiness lane is no-waiver by policy.
+- If a waiver is ever used in non-pilot contexts, it must document failing check, impact/risk, mitigation, owner, and expiration date.
+- Any non-pilot waiver is recorded in `docs/releases/<version>/logs/workflow-summary.md`.
 
 ## Operational Notes
 - Use strict contract testing by default for deployment console ops responses.

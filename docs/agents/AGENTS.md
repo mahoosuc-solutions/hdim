@@ -36,6 +36,24 @@
 - Keep commits focused; include validation steps in PRs (commands + results).
 - UI changes should include screenshots and note which demo scripts were rerun.
 
+## Folder Hygiene (Mandatory For Agents)
+- Run preflight before code edits:
+  - `git status --short --branch`
+  - `npm run hygiene:audit`
+- Run postflight before final response/commit:
+  - `npm run hygiene:audit`
+  - `git status --short --branch`
+- Never leave or commit generated files in forbidden paths:
+  - `backend/modules/**/bin/main/**`
+  - `backend/modules/**/bin/test/**`
+  - `backend/platform/**/bin/main/**`
+  - `backend/platform/**/bin/test/**`
+  - `backend/tools/**/bin/main/**`
+  - `backend/tools/**/bin/test/**`
+- If forbidden generated dirtiness appears, run:
+  - `npm run hygiene:clean`
+- Full policy and recovery runbook: `HYGIENE.md`
+
 ## Implementation Variants & Operations
 - Demo stack: `docker-compose.demo.yml` with seeding scripts; edge gateway on `http://localhost:18080`.
 - Observability: `docker compose -f docker-compose.observability.yml up -d` for tracing/metrics/logs.

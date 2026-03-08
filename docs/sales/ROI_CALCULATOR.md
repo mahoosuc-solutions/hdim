@@ -2,8 +2,8 @@
 
 ## Sales Team Guide for Prospect Conversations
 
-**Document Version**: 1.0
-**Last Updated**: December 2025
+**Document Version**: 1.1
+**Last Updated**: March 8, 2026
 **Confidential - Internal Use Only**
 
 ---

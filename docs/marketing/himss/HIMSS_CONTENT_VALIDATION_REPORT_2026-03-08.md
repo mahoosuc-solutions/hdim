@@ -48,12 +48,19 @@ Use these values consistently in conference-facing materials:
 2. Added validation date note to HIMSS briefing page:
    - `landing-page/src/app/resources/himss-brief/HimssBriefHub.tsx`
 
-## 4) Backlog (Known Drift Outside Immediate HIMSS Core)
-These files contain older timestamps, placeholder metadata, or legacy claim sets and should be refreshed in a scheduled pass:
+## 4) Backlog Status (Updated)
 
-1. Several sales enablement templates still show `2025-12-01` metadata placeholders.
-2. `docs/sales/EXECUTIVE_PITCH_DECK.md` contains older claim variants (for example `61+` references) and December 2025 dating.
-3. `docs/sales/ROI_CALCULATOR.md` and `docs/sales/ZOHO_CRM_WORKFLOW.md` include older dated sections that should be reviewed before external sharing.
+### Completed in follow-up pass
+1. `docs/sales/EXECUTIVE_PITCH_DECK.md`
+   - Updated legacy `61+` measure references to current `52+` public baseline.
+   - Updated document timestamp to March 8, 2026.
+2. `docs/sales/ROI_CALCULATOR.md`
+   - Updated document version/date to current review timestamp.
+3. `docs/sales/ZOHO_CRM_WORKFLOW.md`
+   - Updated stale review dates and corrected next-review schedule.
+
+### Remaining scheduled refresh
+1. Several sales enablement templates still show `2025-12-01` metadata placeholders and should be normalized in a documentation maintenance sweep.
 
 ## 5) Validation Evidence
 
@@ -68,4 +75,3 @@ For all HIMSS-bound content updates this week, require:
 2. Date stamp update.
 3. Build/lint/type-check pass if web-facing.
 4. Evidence-room link verification for proof claims.
-

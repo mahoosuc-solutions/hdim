@@ -11,7 +11,13 @@ export default function ResourcesHub() {
   return (
     <>
       <section className={styles.hero}>
-        <div className={styles.heroPanel}>
+        <div
+          className={styles.heroPanel}
+          style={{
+            background:
+              'linear-gradient(135deg, rgba(7, 26, 45, 0.92), rgba(18, 77, 102, 0.82)), url("/resources/screenshots/results-evaluation.jpg") center/cover',
+          }}
+        >
           <span className={styles.kicker}>{t('hero_kicker')}</span>
           <h1 className={styles.heroTitle} style={{ fontFamily: 'var(--font-space-grotesk), var(--font-manrope), sans-serif' }}>
             {t('hero_title')}
@@ -43,6 +49,41 @@ export default function ResourcesHub() {
               <div className={styles.metricLabel}>HIPAA audit coverage</div>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Human impact behind the metrics
+        </h2>
+        <p className={styles.sectionLead}>
+          The platform is built to help clinicians, care teams, and patients. These views show how technology supports people at the point of action.
+        </p>
+        <div className={styles.cardGrid}>
+          <figure className={styles.figure}>
+            <Image
+              src="/resources/screenshots/provider-dashboard.jpg"
+              alt="Provider dashboard with quality signals and patient-focused actions"
+              width={560}
+              height={360}
+              className={styles.figureImg}
+            />
+            <figcaption className={styles.figureCaption}>
+              Provider workflows prioritize next-best actions for patient outcomes.
+            </figcaption>
+          </figure>
+          <figure className={styles.figure}>
+            <Image
+              src="/resources/screenshots/patient-management.jpg"
+              alt="Patient management panel with outreach and quality context"
+              width={560}
+              height={360}
+              className={styles.figureImg}
+            />
+            <figcaption className={styles.figureCaption}>
+              Care coordination and patient management stay tied to measurable quality goals.
+            </figcaption>
+          </figure>
         </div>
       </section>
 

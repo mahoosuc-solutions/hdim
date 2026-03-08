@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from '@/styles/agui-portal.module.css';
 
 const pillars = [
@@ -67,7 +68,13 @@ export default function HimssBriefHub() {
   return (
     <>
       <section className={styles.hero}>
-        <div className={styles.heroPanel}>
+        <div
+          className={styles.heroPanel}
+          style={{
+            background:
+              'linear-gradient(125deg, rgba(7, 26, 45, 0.92), rgba(17, 40, 68, 0.88)), url("/resources/screenshots/patient-management.jpg") center/cover',
+          }}
+        >
           <span className={styles.kicker}>HIMSS BRIEFING PAGE</span>
           <h1 className={styles.heroTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
             How HDIM communicates the accelerator, platform, validation, and performance.
@@ -80,6 +87,47 @@ export default function HimssBriefHub() {
             <Link className={styles.btnPrimary} href="/resources/trust-center">Open Trust Center</Link>
             <Link className={styles.btnGhost} href="/resources/evidence-room">Open Evidence Room</Link>
           </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          People-first outcomes in real workflows
+        </h2>
+        <p className={styles.sectionLead}>
+          These product views reinforce the story: technology should make care teams more effective and help patients receive timely interventions.
+        </p>
+        <div className={styles.cardGrid}>
+          <figure className={styles.figure}>
+            <Image
+              src="/resources/screenshots/care-gaps-interventions.jpg"
+              alt="Care team intervention workflow with patient gaps and recommended actions"
+              width={560}
+              height={360}
+              className={styles.figureImg}
+            />
+            <figcaption className={styles.figureCaption}>Care-gap interventions prioritized for real people, not abstract dashboards.</figcaption>
+          </figure>
+          <figure className={styles.figure}>
+            <Image
+              src="/resources/screenshots/provider-dashboard.jpg"
+              alt="Provider dashboard showing quality and patient action context"
+              width={560}
+              height={360}
+              className={styles.figureImg}
+            />
+            <figcaption className={styles.figureCaption}>Provider-facing quality context supports faster and safer decisions.</figcaption>
+          </figure>
+          <figure className={styles.figure}>
+            <Image
+              src="/resources/screenshots/patient-management.jpg"
+              alt="Patient management view with status and outreach coordination"
+              width={560}
+              height={360}
+              className={styles.figureImg}
+            />
+            <figcaption className={styles.figureCaption}>Patient management workflows connect analytics to action and follow-through.</figcaption>
+          </figure>
         </div>
       </section>
 

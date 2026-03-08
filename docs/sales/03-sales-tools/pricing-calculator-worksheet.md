@@ -16,6 +16,9 @@ tags:
 relatedDocuments:
   - "docs/sales/03-sales-tools/pricing-guide.md"
   - "docs/investor/yc-application-v2/INNOVATION_STORY_SCRIPTS.md"
+  - "docs/sales/03-sales-tools/pricing-calculator-example-enterprise-health-system.md"
+  - "docs/sales/03-sales-tools/pricing-calculator-example-mid-size-aco.md"
+  - "docs/sales/03-sales-tools/pricing-calculator-example-fqhc.md"
 
 # Content Description
 summary: "One-page worksheet to convert AI-methodology implementation scope into story points and pricing."
@@ -130,3 +133,8 @@ Use this block to explain why this model is different:
 - `[E] = [C] x [D]`
 - `[I] = [F] + [G] + [H]`
 - `[J] = [E] + [I]`
+
+## Completed Examples
+- `docs/sales/03-sales-tools/pricing-calculator-example-enterprise-health-system.md`
+- `docs/sales/03-sales-tools/pricing-calculator-example-mid-size-aco.md`
+- `docs/sales/03-sales-tools/pricing-calculator-example-fqhc.md`

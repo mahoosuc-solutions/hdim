@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import styles from '@/styles/agui-portal.module.css';
+import BookMeetingCta from '@/components/resources/BookMeetingCta';
 
 export default function ResourcesHub() {
   const { t } = useLanguage();
@@ -274,6 +275,20 @@ export default function ResourcesHub() {
               <Link className={styles.btnPrimary} href="/resources/licensing">
                 Open Licensing Transparency
               </Link>
+            </p>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Book a HIMSS meeting</h3>
+            <p className={styles.cardBody}>
+              Use one scheduling path for customer, partner, and investor follow-up conversations.
+            </p>
+            <p>
+              <BookMeetingCta
+                page="resources_hub"
+                personaTrack="mixed_buyer"
+                objectiveTrack="customer_pipeline"
+                label="Book Meeting"
+              />
             </p>
           </article>
           <article className={styles.card}>

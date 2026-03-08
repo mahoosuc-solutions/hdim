@@ -69,6 +69,7 @@ export default function EvidenceRequestForm() {
           requestId: payload.requestId,
         });
         trackEvent('evidence_request_submitted', { outcome: 'approved', packet, role });
+        trackEvent('evidence_request_submit', { outcome: 'approved', packet, role });
         return;
       }
 
@@ -78,12 +79,14 @@ export default function EvidenceRequestForm() {
         requestId: payload.requestId,
       });
       trackEvent('evidence_request_submitted', { outcome: 'pending_review', packet, role });
+      trackEvent('evidence_request_submit', { outcome: 'pending_review', packet, role });
     } catch (error) {
       setSubmitState({
         status: 'error',
         message: error instanceof Error ? error.message : 'Unable to submit request.',
       });
       trackEvent('evidence_request_submitted', { outcome: 'error', packet, role });
+      trackEvent('evidence_request_submit', { outcome: 'error', packet, role });
     }
   }
 

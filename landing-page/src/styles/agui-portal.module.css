@@ -174,6 +174,16 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+.btnGhostDark {
+  composes: btn;
+  border-color: rgba(13, 27, 42, 0.2);
+  color: #0d1b2a;
+}
+
+.btnGhostDark:hover {
+  background: rgba(13, 27, 42, 0.06);
+}
+
 .metricsGrid,
 .cardGrid,
 .personaGrid {
@@ -332,6 +342,86 @@
   color: #6d5614;
   font-size: 0.86rem;
   margin-top: 1rem;
+}
+
+.claimProofCard {
+  background: #ffffff;
+  border: 1px solid rgba(13, 27, 42, 0.09);
+  border-radius: 18px;
+  padding: 1.15rem;
+  box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
+}
+
+.proofList {
+  margin: 0.9rem 0 0;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.proofItem {
+  border: 1px solid rgba(13, 27, 42, 0.08);
+  border-radius: 12px;
+  padding: 0.7rem;
+  background: #f8fbff;
+}
+
+.proofLink {
+  color: #0b5162;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.proofLink:hover {
+  text-decoration: underline;
+}
+
+.proofMeta {
+  margin-top: 0.45rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.badgeObserved {
+  background: rgba(45, 212, 168, 0.2);
+  color: #0b5e42;
+}
+
+.badgeModeled {
+  background: rgba(245, 198, 93, 0.22);
+  color: #6d5614;
+}
+
+.requestForm {
+  background: #ffffff;
+  border: 1px solid rgba(13, 27, 42, 0.09);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
+}
+
+.formGrid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.formLabel {
+  display: grid;
+  gap: 0.35rem;
+  color: #1d3952;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.formInput {
+  border: 1px solid rgba(13, 27, 42, 0.2);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  font-size: 0.9rem;
+  color: #0d1b2a;
 }
 
 @media (max-width: 900px) {

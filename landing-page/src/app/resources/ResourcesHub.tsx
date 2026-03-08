@@ -182,6 +182,55 @@ export default function ResourcesHub() {
           </figure>
         </div>
       </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Enterprise buyer diligence
+        </h2>
+        <p className={styles.sectionLead}>
+          Start with public trust signals, then request role-aligned gated evidence for CIO/CISO and procurement workflows.
+        </p>
+        <div className={styles.cardGrid}>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Trust Center</h3>
+            <p className={styles.cardBody}>
+              Public claim-to-proof mapping with evidence freshness and observed versus modeled data labels.
+            </p>
+            <p>
+              <Link className={styles.btnPrimary} href="/resources/trust-center">
+                Open Trust Center
+              </Link>
+            </p>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Gated Evidence Room</h3>
+            <p className={styles.cardBody}>
+              Request deeper diligence packets for security, reliability, and commercial reviews.
+            </p>
+            <p>
+              <Link className={styles.btnPrimary} href="/resources/evidence-room">
+                Open Evidence Room
+              </Link>
+            </p>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Role-specific pathways</h3>
+            <p className={styles.cardBody}>
+              Access tailored flows for CIO/CISO technical diligence and procurement buyer decision support.
+            </p>
+            <p>
+              <Link className={styles.btnPrimary} href="/resources/cio-ciso">
+                Open CIO/CISO Path
+              </Link>
+            </p>
+            <p>
+              <Link className={styles.btnGhostDark} href="/resources/procurement">
+                Open Procurement Path
+              </Link>
+            </p>
+          </article>
+        </div>
+      </section>
     </>
   );
 }

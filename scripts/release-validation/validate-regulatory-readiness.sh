@@ -46,6 +46,7 @@ check_file "docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md" "Readines
 check_file "docs/compliance/EVIDENCE_INDEX_2026-03-07.md" "Evidence index published"
 check_file "docs/compliance/GAP_REGISTER_2026-03-07.md" "Gap register published"
 check_file "docs/compliance/OVERSIGHT_RESPONSE_PACK_v0.0.0-test_2026-03-07.md" "Oversight response pack published"
+check_file "docs/compliance/SECURITY_COMPLIANCE_RECONCILIATION_2026-03-08.md" "Security/compliance reconciliation published"
 
 check_contains "docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md" "Current Decision: GO" "Scorecard decision is GO"
 
@@ -67,6 +68,14 @@ if bash scripts/release-validation/validate-evidence-freshness.sh "$VERSION" >/d
   echo "| Evidence freshness and no-waiver policy | PASS | validate-evidence-freshness.sh passed |" >> "$REPORT"
 else
   echo "| Evidence freshness and no-waiver policy | FAIL | validate-evidence-freshness.sh failed |" >> "$REPORT"
+  failures=$((failures + 1))
+fi
+
+
+if bash scripts/release-validation/validate-full-go-readiness.sh "$VERSION" >/dev/null; then
+  echo "| Strict full-go validator | PASS | validate-full-go-readiness.sh passed |" >> "$REPORT"
+else
+  echo "| Strict full-go validator | FAIL | validate-full-go-readiness.sh failed |" >> "$REPORT"
   failures=$((failures + 1))
 fi
 

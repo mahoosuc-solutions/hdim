@@ -681,3 +681,27 @@ bash scripts/release-validation/validate-evidence-freshness.sh v0.0.0-test
 ```bash
 bash scripts/release-validation/validate-investor-readiness.sh v0.0.0-test
 ```
+
+### 17. `release-validation/validate-full-go-readiness.sh`
+
+**Purpose**: Enforce strict closure criteria to move from Conditional GO to Full GO.
+
+**What it checks**:
+- Required artifacts exist (scorecard, ROI pack, go-live packet, reconciliation note, safety cases)
+- No `Pending` / `IN PROGRESS` / `TBD` sign-off markers remain
+- Observed KPI and ROI coverage thresholds are met
+- Reconciliation closure statement exists
+
+**Usage**:
+```bash
+bash scripts/release-validation/validate-full-go-readiness.sh v0.0.0-test
+```
+
+### 18. `release-validation/snapshot-weekly-readiness-metrics.sh`
+
+**Purpose**: Preserve weekly KPI/ROI history snapshots for trend-based hardening.
+
+**Usage**:
+```bash
+bash scripts/release-validation/snapshot-weekly-readiness-metrics.sh v0.0.0-test
+```

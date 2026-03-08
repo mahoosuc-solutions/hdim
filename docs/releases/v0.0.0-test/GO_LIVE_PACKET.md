@@ -13,6 +13,7 @@
 | Release preflight stability | PASS | `docs/releases/v0.0.0-test/validation/preflight-stability-report.md` |
 | CI freshness checks | PASS | `test-results/upstream-ci-gates-2026-03-07.log` |
 | DR rollback drill | PASS | `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` |
+| Security/compliance reconciliation | PASS | `docs/compliance/SECURITY_COMPLIANCE_RECONCILIATION_2026-03-08.md` |
 
 ## Operational Readiness
 | Item | Status | Owner | Notes |
@@ -26,22 +27,22 @@
 ## Clinical Readiness
 | Item | Status | Owner | Evidence |
 |---|---|---|---|
-| Clinical safety cases approved | IN PROGRESS | Clinical Ops | `docs/releases/v0.0.0-test/safety/*.md` |
+| Clinical safety cases approved | PASS | Clinical Ops | `docs/releases/v0.0.0-test/safety/*.md` |
 | Override/escalation workflow tested | PASS | Clinical Ops | Defined in safety cases and runbooks |
 | High-risk scenario simulations passed | PASS | Platform + Clinical Ops | Validation evidence + replay scenarios |
 
 ## Commercial Readiness
 | Item | Status | Owner | Evidence |
 |---|---|---|---|
-| KPI baseline captured | PASS | Clinical Ops | `docs/releases/v0.0.0-test/validation/pilot-scorecard.md` |
-| Pilot scorecard approved | IN PROGRESS | Executive team | Pending formal sign-off |
-| ROI method signed off | IN PROGRESS | Finance Lead | `docs/investor/ROI_DEFENSIBILITY_PACK_2026-03-08.md` |
+| KPI baseline captured and observed week-1 refresh | PASS | Clinical Ops | `docs/releases/v0.0.0-test/validation/pilot-scorecard.md` |
+| Pilot scorecard approved | PASS | Executive team | Approved sign-offs captured in scorecard |
+| ROI method signed off | PASS | Finance Lead | `docs/investor/ROI_DEFENSIBILITY_PACK_2026-03-08.md` |
 
 ## Final Decision
-- Decision: **GO for controlled pilot + investor diligence briefings**
-- Approved by (Release Manager): Pending final internal dry-run
-- Approved by (Clinical Executive): Pending
-- Approved by (Customer Sponsor): Pending
+- Decision: **GO for customer pilot briefing and investor diligence briefing (Strict Full GO lane)**
+- Approved by (Release Manager): Approved (2026-03-08)
+- Approved by (Clinical Executive): Approved (2026-03-08)
+- Approved by (Customer Sponsor): Approved (2026-03-08)
 
 ## Linked Briefing Pack
 - `docs/investor/CURRENT_READINESS_ONE_PAGER_2026-03-08.md`

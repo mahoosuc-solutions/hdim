@@ -1,0 +1,44 @@
+name: Strict Readiness Weekly
+
+on:
+  schedule:
+    - cron: '15 12 * * 1'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version"
+        required: false
+        default: "v0.0.0-test"
+
+jobs:
+  strict-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run strict readiness validators
+        run: |
+          VERSION="${{ github.event.inputs.version || 'v0.0.0-test' }}"
+          bash scripts/release-validation/validate-evidence-freshness.sh "$VERSION"
+          bash scripts/release-validation/validate-regulatory-readiness.sh "$VERSION"
+          bash scripts/release-validation/validate-investor-readiness.sh "$VERSION"
+
+      - name: Snapshot weekly readiness metrics
+        run: |
+          VERSION="${{ github.event.inputs.version || 'v0.0.0-test' }}"
+          bash scripts/release-validation/snapshot-weekly-readiness-metrics.sh "$VERSION"
+
+      - name: Upload strict readiness artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strict-readiness-artifacts
+          path: |
+            docs/releases/v0.0.0-test/validation/evidence-freshness-report.md
+            docs/releases/v0.0.0-test/validation/regulatory-readiness-report.md
+            docs/releases/v0.0.0-test/validation/full-go-readiness-report.md
+            docs/investor/INVESTOR_READINESS_REVIEW_*.md
+            docs/releases/v0.0.0-test/metrics-history/*.md

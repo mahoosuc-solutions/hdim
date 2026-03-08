@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import styles from '@/styles/agui-portal.module.css';
+import BookMeetingCta from '@/components/resources/BookMeetingCta';
+import TrackedResourceLink from '@/components/resources/TrackedResourceLink';
 
 const pillars = [
   {
@@ -86,6 +88,12 @@ export default function HimssBriefHub() {
           <div className={styles.heroActions}>
             <Link className={styles.btnPrimary} href="/resources/trust-center">Open Trust Center</Link>
             <Link className={styles.btnGhost} href="/resources/evidence-room">Open Evidence Room</Link>
+            <BookMeetingCta
+              page="himss_brief"
+              personaTrack="mixed_buyer"
+              objectiveTrack="customer_pipeline"
+              label="Book Meeting"
+            />
           </div>
         </div>
       </section>
@@ -169,6 +177,64 @@ export default function HimssBriefHub() {
         <p className={styles.sectionLead} style={{ marginTop: '0.9rem' }}>
           Content validation date: March 8, 2026. Core claims are aligned to Trust Center, Evidence Room, and current sales pricing worksheets.
         </p>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Strategic partner and investor confidence paths
+        </h2>
+        <p className={styles.sectionLead}>
+          Use the same campaign hub for both customer pipeline and partner/investor conversations. Keep one conversion action while preserving role-specific proof paths.
+        </p>
+        <div className={styles.cardGrid}>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Strategic partner motion</h3>
+            <p className={styles.cardBody}>
+              Co-sell and integration partners can validate technical fit, diligence posture, and commercial readiness before formal partner scoping.
+            </p>
+            <div className={styles.heroActions}>
+              <BookMeetingCta
+                page="himss_brief_partner_track"
+                personaTrack="partner"
+                objectiveTrack="strategic_partnership"
+                source="linkedin_groups"
+                medium="social"
+                label="Book Partner Meeting"
+              />
+              <Link className={styles.btnGhostDark} href="/resources/procurement">
+                Open Procurement Path
+              </Link>
+            </div>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Investor confidence packet</h3>
+            <p className={styles.cardBody}>
+              Investors can validate execution discipline through trust posture, evidence governance, and licensing transparency.
+            </p>
+            <div className={styles.heroActions}>
+              <TrackedResourceLink
+                href="/resources/licensing"
+                label="Open Licensing Transparency"
+                page="himss_brief_investor_track"
+                personaTrack="investor"
+                objectiveTrack="investor_credibility"
+              />
+              <TrackedResourceLink
+                href="/resources/trust-center"
+                label="Open Trust Center"
+                page="himss_brief_investor_track"
+                personaTrack="investor"
+                objectiveTrack="investor_credibility"
+              />
+              <BookMeetingCta
+                page="himss_brief_investor_track"
+                personaTrack="investor"
+                objectiveTrack="investor_credibility"
+                label="Book Investor Briefing"
+              />
+            </div>
+          </article>
+        </div>
       </section>
     </>
   );

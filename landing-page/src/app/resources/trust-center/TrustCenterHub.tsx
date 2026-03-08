@@ -2,6 +2,7 @@ import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
 import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
+import BookMeetingCta from '@/components/resources/BookMeetingCta';
 
 export default function TrustCenterHub() {
   const releaseEvidence = getEvidenceArtifact('releaseEvidence');
@@ -29,6 +30,12 @@ export default function TrustCenterHub() {
             <Link className={styles.btnGhost} href="/resources/build-evidence">
               View Release Evidence Narrative
             </Link>
+            <BookMeetingCta
+              page="trust_center"
+              personaTrack="mixed_buyer"
+              objectiveTrack="customer_pipeline"
+              label="Book Meeting"
+            />
           </div>
         </div>
       </section>

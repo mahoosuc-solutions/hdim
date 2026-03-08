@@ -2,6 +2,7 @@ import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
 import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
+import BookMeetingCta from '@/components/resources/BookMeetingCta';
 
 export default function CioCisoHub() {
   const executiveHub = getEvidenceArtifact('executiveHub');
@@ -25,6 +26,12 @@ export default function CioCisoHub() {
           <div className={styles.heroActions}>
             <Link className={styles.btnPrimary} href="/resources/evidence-room">Request deep evidence</Link>
             <Link className={styles.btnGhost} href="/resources/trust-center">Back to trust center</Link>
+            <BookMeetingCta
+              page="cio_ciso_path"
+              personaTrack="cio_ciso"
+              objectiveTrack="customer_pipeline"
+              label="Book Technical Meeting"
+            />
           </div>
         </div>
       </section>

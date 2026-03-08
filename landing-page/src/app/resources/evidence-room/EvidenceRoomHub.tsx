@@ -3,6 +3,7 @@ import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
 import EvidenceRequestForm from '@/components/resources/EvidenceRequestForm';
 import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
+import BookMeetingCta from '@/components/resources/BookMeetingCta';
 
 export default function EvidenceRoomHub() {
   const executiveHub = getEvidenceArtifact('executiveHub');
@@ -27,6 +28,12 @@ export default function EvidenceRoomHub() {
             <Link className={styles.btnPrimary} href="/resources/trust-center">
               Back to Trust Center
             </Link>
+            <BookMeetingCta
+              page="evidence_room"
+              personaTrack="mixed_buyer"
+              objectiveTrack="customer_pipeline"
+              label="Book Meeting"
+            />
           </div>
         </div>
       </section>

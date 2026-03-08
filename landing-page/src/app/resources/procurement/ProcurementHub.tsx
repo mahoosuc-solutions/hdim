@@ -2,6 +2,7 @@ import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
 import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
+import BookMeetingCta from '@/components/resources/BookMeetingCta';
 
 export default function ProcurementHub() {
   const executiveSummary = getEvidenceArtifact('executiveSummary');
@@ -25,6 +26,12 @@ export default function ProcurementHub() {
           <div className={styles.heroActions}>
             <Link className={styles.btnPrimary} href="/resources/evidence-room">Request procurement packet</Link>
             <Link className={styles.btnGhost} href="/resources/trust-center">Back to trust center</Link>
+            <BookMeetingCta
+              page="procurement_path"
+              personaTrack="procurement"
+              objectiveTrack="strategic_partnership"
+              label="Book Procurement Review"
+            />
           </div>
         </div>
       </section>

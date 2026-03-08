@@ -47,6 +47,13 @@ Use these values consistently in conference-facing materials:
    - document date updated to March 8, 2026
 2. Added validation date note to HIMSS briefing page:
    - `landing-page/src/app/resources/himss-brief/HimssBriefHub.tsx`
+3. Added cross-route Book Meeting CTA standardization and HIMSS tracking taxonomy:
+   - `landing-page/src/components/resources/BookMeetingCta.tsx`
+   - `landing-page/src/components/resources/TrackedResourceLink.tsx`
+   - `landing-page/src/components/resources/EvidenceRequestForm.tsx`
+4. Added channel operations and announcement sign-off artifacts:
+   - `docs/runbooks/HIMSS_ANNOUNCEMENT_DAY_OF_RUNBOOK.md`
+   - `docs/marketing/himss/HIMSS_ANNOUNCEMENT_SIGNOFF_2026-03-08.md`
 
 ## 4) Backlog Status (Updated)
 

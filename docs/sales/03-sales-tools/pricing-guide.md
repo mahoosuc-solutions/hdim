@@ -64,7 +64,7 @@ Use this model to explain:
 1. What is included in base HDIM.
 2. What additional intelligence is layered for each customer.
 3. How AI-assisted delivery changes speed and economics.
-4. How to convert scope to a defendable implementation price.
+4. How to convert scope to a defensible implementation price.
 
 ## Core Message (Customer + Investor)
 HDIM is not priced like a generic software license plus undefined services.

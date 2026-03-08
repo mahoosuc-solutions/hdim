@@ -625,3 +625,31 @@ npm run test:measure-builder:queue:local
 - `reports/measure-builder/operational-readiness-*.log`
 - `reports/measure-builder/centralized-test-summary-*.md`
 - `reports/measure-builder/local-runner-queue-summary-*.md`
+
+### 13. `repo-hygiene-audit.sh`
+
+**Purpose**: Block commits and CI passes when generated folder dirtiness leaks into versioned scope.
+
+**What it checks**:
+- Dirty files in forbidden generated folders (`backend/**/bin/main/**`, `backend/**/bin/test/**`)
+- Newly added files in forbidden generated folders
+
+**Usage**:
+```bash
+npm run hygiene:audit
+# or
+bash scripts/repo-hygiene-audit.sh --ci
+```
+
+### 14. `repo-hygiene-clean.sh`
+
+**Purpose**: Clean forbidden generated folders safely and then re-run hygiene audit.
+
+**Usage**:
+```bash
+# apply cleanup
+npm run hygiene:clean
+
+# dry run
+bash scripts/repo-hygiene-clean.sh
+```

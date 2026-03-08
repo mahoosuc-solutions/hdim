@@ -61,6 +61,8 @@ export async function POST(request: Request) {
           requestId,
           status: isAutoApproved ? 'approved' : 'pending_manual_review',
           submittedAt: new Date().toISOString(),
+          approvalConsoleUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://healthdatainmotion.com'}/resources/evidence-room/review`,
+          approvalApiPath: '/api/evidence-request/approve',
           ...body,
         }),
       });

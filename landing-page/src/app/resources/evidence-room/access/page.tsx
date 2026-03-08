@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import { verifyEvidenceToken } from '@/lib/server/evidenceGate';
+import { getPacketAssets } from '@/lib/server/evidenceAssets';
+import EvidenceAccessTelemetry from '@/components/resources/EvidenceAccessTelemetry';
 
 const packetResources: Record<string, Array<{ label: string; href: string; notes: string }>> = {
   security: [
@@ -51,9 +53,11 @@ export default async function EvidenceAccessPage({
 
   const packetKey = verified.payload.packet in packetResources ? verified.payload.packet : 'security';
   const resources = packetResources[packetKey] ?? packetResources.security;
+  const privateAssets = getPacketAssets(packetKey);
 
   return (
     <>
+      <EvidenceAccessTelemetry packet={packetKey} role={verified.payload.role} />
       <section className={styles.hero}>
         <div className={styles.heroPanel}>
           <span className={styles.kicker}>EVIDENCE ROOM ACCESS GRANTED</span>
@@ -79,8 +83,29 @@ export default async function EvidenceAccessPage({
             </article>
           ))}
         </div>
+        {privateAssets.length > 0 ? (
+          <>
+            <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)', marginTop: '1.5rem' }}>
+              Private artifact downloads
+            </h2>
+            <div className={styles.cardGrid}>
+              {privateAssets.map((asset) => (
+                <article className={styles.card} key={asset.key}>
+                  <h3 className={styles.cardTitle}>{asset.label}</h3>
+                  <p className={styles.cardBody}>{asset.notes}</p>
+                  <a
+                    className={styles.btnPrimary}
+                    href={`/api/evidence-download?token=${encodeURIComponent(token)}&asset=${encodeURIComponent(asset.key)}`}
+                  >
+                    Download artifact
+                  </a>
+                </article>
+              ))}
+            </div>
+          </>
+        ) : null}
         <div className={styles.notice}>
-          Private artifact exports are delivered through secure file channels after request verification.
+          Artifact downloads are token-validated and limited to your approved packet scope.
         </div>
       </section>
     </>

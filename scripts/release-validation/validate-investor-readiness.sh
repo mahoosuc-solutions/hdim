@@ -53,6 +53,7 @@ check_file "docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md" "Release 
 check_file "docs/compliance/EVIDENCE_INDEX_2026-03-07.md" "Evidence index exists"
 check_file "docs/compliance/ACCESS_REVIEW_2026-03-07.md" "Access review artifact exists"
 check_file "docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md" "Third-party risk artifact exists"
+check_file "docs/compliance/SECURITY_COMPLIANCE_RECONCILIATION_2026-03-08.md" "Security/compliance reconciliation artifact exists"
 
 check_contains "docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md" "Current Decision: GO" "Scorecard decision is GO"
 check_contains "docs/compliance/REGULATORY_CONTROL_MATRIX_2026-03-07.md" "\| RC-SEC-001 .*\| PASS \|" "Security control is PASS"
@@ -79,6 +80,14 @@ if bash scripts/release-validation/validate-evidence-freshness.sh "$VERSION" >/d
   record "Evidence freshness validator" "PASS" "validate-evidence-freshness.sh"
 else
   record "Evidence freshness validator" "FAIL" "validate-evidence-freshness.sh"
+  failures=$((failures + 1))
+fi
+
+
+if bash scripts/release-validation/validate-full-go-readiness.sh "$VERSION" >/dev/null; then
+  record "Strict full-go validator" "PASS" "validate-full-go-readiness.sh"
+else
+  record "Strict full-go validator" "FAIL" "validate-full-go-readiness.sh"
   failures=$((failures + 1))
 fi
 

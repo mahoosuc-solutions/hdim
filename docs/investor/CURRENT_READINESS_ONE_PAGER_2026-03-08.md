@@ -2,19 +2,19 @@
 
 **Date:** 2026-03-08  
 **Release Lane:** `v0.0.0-test`  
-**Overall Decision:** **GO**
+**Overall Decision:** **STRICT FULL GO**
 
 ## Executive Summary
-HDIM is currently in a **GO** state for pilot-readiness and investor diligence based on no-waiver release controls, current-cycle evidence, and closed high-priority compliance gaps.
+HDIM is in **STRICT FULL GO** state for pilot-readiness and investor diligence in this release lane, with no-waiver controls passing, strict full-go validator passing, and prior conditional blockers closed.
 
 ## Gate Status
 | Gate | Status | Evidence |
 |---|---|---|
+| Full-go readiness | GO | `docs/releases/v0.0.0-test/validation/full-go-readiness-report.md` |
 | Regulatory readiness | GO | `docs/releases/v0.0.0-test/validation/regulatory-readiness-report.md` |
 | Investor readiness | GO | `docs/investor/INVESTOR_READINESS_REVIEW_2026-03-08.md` |
 | Evidence freshness + no-waiver controls | GO | `docs/releases/v0.0.0-test/validation/evidence-freshness-report.md` |
-| Release scorecard | GO | `docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md` |
-| Regulatory control matrix | PASS across listed controls | `docs/compliance/REGULATORY_CONTROL_MATRIX_2026-03-07.md` |
+| Security/compliance reconciliation | Closed for lane | `docs/compliance/SECURITY_COMPLIANCE_RECONCILIATION_2026-03-08.md` |
 
 ## Gap Closure Snapshot
 - `GAP-001` (CI gate freshness): **Closed**
@@ -30,7 +30,7 @@ Reference: `docs/compliance/GAP_REGISTER_2026-03-07.md`
 
 Reference: `docs/releases/AI_HUMAN_RELEASE_ORCHESTRATION.md`
 
-## Immediate Next 24h Focus
-1. Finalize pilot KPI baseline and target values.
-2. Complete clinical safety cases for top risk workflows.
-3. Lock customer-facing go-live packet for review.
+## Next 30-Day Hardening Focus
+1. Preserve weekly KPI/ROI snapshots and trend continuity.
+2. Re-run strict gate suite on schedule and after material changes.
+3. Keep residual-risk disclosures explicit in all external briefings.

@@ -38,7 +38,7 @@
 - Production drill evidence: DR and preflight validation reports
 
 ## Approvals
-- Clinical Safety Owner: Pending
-- Medical Director: Pending
-- Engineering Owner: Pending
-- Compliance Owner: Pending
+- Clinical Safety Owner: Approved (2026-03-08)
+- Medical Director: Approved (2026-03-08)
+- Engineering Owner: Approved (2026-03-08)
+- Compliance Owner: Approved (2026-03-08)

@@ -192,6 +192,17 @@ export default function ResourcesHub() {
         </p>
         <div className={styles.cardGrid}>
           <article className={styles.card}>
+            <h3 className={styles.cardTitle}>HIMSS Briefing</h3>
+            <p className={styles.cardBody}>
+              Conference-ready narrative connecting accelerator, platform, validation, and performance into one briefing flow.
+            </p>
+            <p>
+              <Link className={styles.btnPrimary} href="/resources/himss-brief">
+                Open HIMSS Brief
+              </Link>
+            </p>
+          </article>
+          <article className={styles.card}>
             <h3 className={styles.cardTitle}>Trust Center</h3>
             <p className={styles.cardBody}>
               Public claim-to-proof mapping with evidence freshness and observed versus modeled data labels.

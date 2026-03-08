@@ -10,6 +10,7 @@ const navItems = [
   { href: '/resources/executive', labelKey: 'nav_exec' as const },
   { href: '/resources/clinical', labelKey: 'nav_clinical' as const },
   { href: '/resources/technical', labelKey: 'nav_technical' as const },
+  { href: '/resources/himss-brief', labelKey: 'nav_himss' as const },
   { href: '/resources/trust-center', labelKey: 'nav_trust' as const },
   { href: '/resources/build-evidence', labelKey: 'nav_proof' as const },
   { href: '/resources/evidence-room', labelKey: 'nav_evidence_room' as const },

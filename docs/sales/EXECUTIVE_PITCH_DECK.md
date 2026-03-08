@@ -120,7 +120,7 @@
 |  DATA INGESTION         QUALITY ENGINE         INSIGHTS & ACTION  |
 |  +---------------+     +---------------+      +------------------+ |
 |  | FHIR R4 APIs  |     | CQL Execution |      | Real-Time        | |
-|  | Claims Feeds  | --> | 61+ HEDIS     | -->  | Dashboards       | |
+|  | Claims Feeds  | --> | 52+ HEDIS     | -->  | Dashboards       | |
 |  | Lab Results   |     | Measures      |      | Care Gap Worklists|
 |  | ADT Feeds     |     | Custom Metrics|      | Provider Alerts  | |
 |  | CSV Uploads   |     | Risk Scoring  |      | Regulatory Reports|
@@ -183,7 +183,7 @@
 **The Problem:** Care gaps identified too late for intervention. Outreach is reactive, not proactive.
 
 **HDIM Solution:**
-- Gap detection across 61+ HEDIS measures simultaneously
+- Gap detection across 52+ HEDIS measures simultaneously
 - Pre-visit planning reports for every scheduled patient
 - Bulk outreach list generation with contact tracking
 - SMART on FHIR sidebar integration in Epic/Cerner
@@ -613,7 +613,7 @@ FHIR Webhook/Polling -----> HDIM Data Pipeline
 
 **Platform Version 1.6.0 (January 2026)**
 - 28+ production-ready microservices
-- 61 HEDIS measures implemented (MY2024 coverage)
+- 52+ HEDIS measures implemented
 - FHIR R4 native data model
 - Real-time CQL evaluation engine (<200ms)
 - Multi-tenant architecture with tenant isolation
@@ -915,6 +915,6 @@ See HDIM in action with your own quality data. We'll show you:
 
 ---
 
-*Last Updated: December 2025*
+*Last Updated: March 8, 2026*
 *Version: 1.0*
 *Document: EXECUTIVE_PITCH_DECK.md*

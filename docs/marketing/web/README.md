@@ -6,6 +6,7 @@ This directory contains web-ready HTML versions of the AI Solutioning Journey do
 
 ### Main Index
 - **`ai-solutioning-index.html`** - Main landing page with overview, timeline, document cards, and metrics
+- **`licensing-transparency.html`** - BSL rollout transparency, licensing boundaries, and compliance references
 
 ### Document Pages
 - **`ai-solutioning-journey.html`** - The complete development journey narrative

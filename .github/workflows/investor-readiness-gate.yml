@@ -1,0 +1,44 @@
+name: Investor Readiness Gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version"
+        required: false
+        default: "v0.0.0-test"
+  pull_request:
+    branches: [master]
+    paths:
+      - 'docs/compliance/**'
+      - 'docs/investor/**'
+      - 'scripts/release-validation/**'
+      - '.github/workflows/investor-readiness-gate.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'docs/compliance/**'
+      - 'docs/investor/**'
+      - 'scripts/release-validation/**'
+      - '.github/workflows/investor-readiness-gate.yml'
+
+jobs:
+  investor-readiness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run investor readiness validator
+        run: |
+          VERSION="${{ github.event.inputs.version || 'v0.0.0-test' }}"
+          bash scripts/release-validation/validate-investor-readiness.sh "$VERSION"
+
+      - name: Upload investor readiness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: investor-readiness-report
+          path: docs/investor/INVESTOR_READINESS_REVIEW_*.md

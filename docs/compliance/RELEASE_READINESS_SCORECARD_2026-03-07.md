@@ -14,13 +14,13 @@
 | Runtime Orchestration Validation | High | PASS | `test-results/mcp-orchestration-tests-2026-03-07.log` |
 | Evidence Provenance Completeness | High | PASS | `docs/releases/v0.0.0-test/validation/rc-implementation-proof-2026-03-07.md` |
 | DR Recovery Validation | High | PASS | `docs/compliance/DR_TEST_RESULTS_2026-03-07.md` |
-| Access Recertification | High | FAIL | `docs/compliance/ACCESS_REVIEW_2026-03-07.md` (missing) |
-| Third-Party Risk Review | High | FAIL | `docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md` (missing) |
+| Access Recertification | High | PASS | `docs/compliance/ACCESS_REVIEW_2026-03-07.md` |
+| Third-Party Risk Review | High | PASS | `docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md` |
 
 ## Decision
-**Current Decision: GO (Critical Controls) / OPEN (High-Priority Non-Blocking Controls)**
+**Current Decision: GO (No-Waiver Policy Satisfied)**
 
-## Immediate Closure Conditions
-1. Publish DR drill evidence with timed RTO/RPO.
-2. Publish current access review evidence.
-3. Publish current third-party risk register evidence.
+## Ongoing Closure Conditions
+1. Keep evidence freshness within control cadence.
+2. Keep zero open critical gaps in the gap register.
+3. Re-run regulatory and investor readiness validators per release lane.

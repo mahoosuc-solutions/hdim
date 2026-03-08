@@ -653,3 +653,31 @@ npm run hygiene:clean
 # dry run
 bash scripts/repo-hygiene-clean.sh
 ```
+
+### 15. `release-validation/validate-evidence-freshness.sh`
+
+**Purpose**: Enforce evidence freshness windows and no-waiver critical-control policy.
+
+**What it checks**:
+- Freshness windows for control matrix, scorecard, gap register, access review, and third-party risk evidence
+- `RC-SEC/RC-TEN/RC-RBAC/RC-REL/RC-CNT/RC-CI` all `PASS`
+- No open critical/high gaps
+
+**Usage**:
+```bash
+bash scripts/release-validation/validate-evidence-freshness.sh v0.0.0-test
+```
+
+### 16. `release-validation/validate-investor-readiness.sh`
+
+**Purpose**: Validate investor diligence posture against technical, compliance, and governance evidence.
+
+**What it checks**:
+- Presence of investor + compliance artifacts
+- GO decision state in scorecard and closed gap posture
+- Access review, third-party risk, and evidence freshness validators
+
+**Usage**:
+```bash
+bash scripts/release-validation/validate-investor-readiness.sh v0.0.0-test
+```

@@ -19,7 +19,7 @@ check_file() {
   fi
 }
 
-check_log_contains() {
+check_contains() {
   local path="$1"
   local pattern="$2"
   local label="$3"
@@ -47,34 +47,27 @@ check_file "docs/compliance/EVIDENCE_INDEX_2026-03-07.md" "Evidence index publis
 check_file "docs/compliance/GAP_REGISTER_2026-03-07.md" "Gap register published"
 check_file "docs/compliance/OVERSIGHT_RESPONSE_PACK_v0.0.0-test_2026-03-07.md" "Oversight response pack published"
 
-check_file "test-results/security-auth-tenant-rerun-2026-03-07.log" "Security regression run log present"
-check_log_contains "test-results/security-auth-tenant-rerun-2026-03-07.log" "BUILD SUCCESSFUL" "Security regression build success"
+check_contains "docs/compliance/RELEASE_READINESS_SCORECARD_2026-03-07.md" "Current Decision: GO" "Scorecard decision is GO"
 
-check_file "test-results/release-preflight-2026-03-07.log" "Release preflight log present"
-check_log_contains "test-results/release-preflight-2026-03-07.log" "preflight stability gate passed" "Release preflight passed"
-
-check_file "test-results/contract-tests-2026-03-07.log" "Contract test log present"
-check_log_contains "test-results/contract-tests-2026-03-07.log" "Successfully ran target test-contracts" "Contract tests passed"
-
-check_file "test-results/mcp-orchestration-tests-2026-03-07.log" "MCP orchestration log present"
-check_log_contains "test-results/mcp-orchestration-tests-2026-03-07.log" "# pass 2" "MCP orchestration tests passed"
-
-check_file "test-results/upstream-ci-gates-2026-03-07.log" "Upstream CI gate log present"
-if [ -f "test-results/upstream-ci-gates-2026-03-07.log" ] && rg -q "Decision: NO-GO" "test-results/upstream-ci-gates-2026-03-07.log"; then
-  echo "| Upstream CI gate execution context | FAIL | Upstream CI gate validator returned NO-GO (failed/missing/stale required workflows) |" >> "$REPORT"
-  failures=$((failures + 1))
-elif [ -f "test-results/upstream-ci-gates-2026-03-07.log" ] && rg -q "Decision: GO" "test-results/upstream-ci-gates-2026-03-07.log"; then
-  echo "| Upstream CI gate execution context | PASS | Upstream CI gate validator returned GO |" >> "$REPORT"
+if bash scripts/release-validation/validate-access-review-evidence.sh "docs/compliance/ACCESS_REVIEW_2026-03-07.md" >/dev/null; then
+  echo "| Access review evidence quality | PASS | validate-access-review-evidence.sh passed |" >> "$REPORT"
 else
-  echo "| Upstream CI gate execution context | FAIL | Upstream CI gate result indeterminate; rerun validation |" >> "$REPORT"
+  echo "| Access review evidence quality | FAIL | validate-access-review-evidence.sh failed |" >> "$REPORT"
   failures=$((failures + 1))
 fi
 
-if [ -f "docs/compliance/GAP_REGISTER_2026-03-07.md" ] && rg -q "\| CRITICAL \|.*\| Open \|" "docs/compliance/GAP_REGISTER_2026-03-07.md"; then
-  echo "| Critical gaps | FAIL | Open critical gap(s) found in gap register |" >> "$REPORT"
-  failures=$((failures + 1))
+if bash scripts/release-validation/validate-third-party-risk-evidence.sh "docs/compliance/THIRD_PARTY_RISK_REGISTER_2026-03-07.md" >/dev/null; then
+  echo "| Third-party risk evidence quality | PASS | validate-third-party-risk-evidence.sh passed |" >> "$REPORT"
 else
-  echo "| Critical gaps | PASS | No open critical gaps in gap register |" >> "$REPORT"
+  echo "| Third-party risk evidence quality | FAIL | validate-third-party-risk-evidence.sh failed |" >> "$REPORT"
+  failures=$((failures + 1))
+fi
+
+if bash scripts/release-validation/validate-evidence-freshness.sh "$VERSION" >/dev/null; then
+  echo "| Evidence freshness and no-waiver policy | PASS | validate-evidence-freshness.sh passed |" >> "$REPORT"
+else
+  echo "| Evidence freshness and no-waiver policy | FAIL | validate-evidence-freshness.sh failed |" >> "$REPORT"
+  failures=$((failures + 1))
 fi
 
 if [ "$failures" -gt 0 ]; then

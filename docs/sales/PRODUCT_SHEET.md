@@ -34,7 +34,7 @@ Healthcare organizations struggle with fragmented quality measurement systems, d
 
 | Feature | Description |
 |---------|-------------|
-| **Quality Measurement** | Automated HEDIS measure evaluation with real-time calculation across 50+ measures. Instant compliance tracking and trend analysis. |
+| **Quality Measurement** | Automated HEDIS measure evaluation with real-time calculation across 52+ measures. Instant compliance tracking and trend analysis. |
 | **Care Gap Detection** | Real-time identification and prioritization of care gaps. Actionable alerts for clinical teams with patient outreach integration. |
 | **Risk Adjustment** | HCC coding optimization and RAF score calculation. Prospective risk identification for accurate revenue forecasting. |
 | **FHIR Interoperability** | Full FHIR R4 compliance with native EHR integration. Support for Epic, Cerner, AllScripts, and custom connectors. |
@@ -83,7 +83,7 @@ Healthcare organizations struggle with fragmented quality measurement systems, d
 - CQL library support
 - QRDA I/III export
 - Bulk FHIR operations
-- 61 HEDIS measures (MY2024)
+- 52+ HEDIS measures
 
 </td>
 </tr>
@@ -119,7 +119,7 @@ A health system serving 500,000 lives implemented HDIM to stratify their populat
 ## Why Choose HDIM?
 
 - **Proven Results**: Average 1.2 star rating improvement for MA plans
-- **Fast Implementation**: Go-live in 8-12 weeks with certified implementation team
+- **Fast Implementation**: Pilot go-live in 3-4 weeks; enterprise rollout in 8-12 weeks
 - **Healthcare Expertise**: Built by quality measurement and FHIR interoperability experts
 - **Continuous Updates**: Measure library updated annually with CMS specifications
 - **Dedicated Support**: 24/7 technical support with healthcare-trained engineers
@@ -133,15 +133,15 @@ A health system serving 500,000 lives implemented HDIM to stratify their populat
 
 ### Schedule a Demo
 
-**Email**: sales@hdim-platform.com | **Phone**: 1-800-HDIM-QM1
+**Email**: sales@healthdatainmotion.com
 
-**Website**: www.hdim-platform.com
+**Website**: healthdatainmotion.com
 
 ---
 
 <small>
 
-HDIM Platform is a product of HealthData-in-Motion, Inc.
+HDIM Platform is a product of HealthData in Motion.
 
 HIPAA Compliant | SOC 2 Type II | HITRUST CSF Aligned
 
@@ -151,4 +151,4 @@ HIPAA Compliant | SOC 2 Type II | HITRUST CSF Aligned
 
 ---
 
-*Document Version: 1.0 | Last Updated: December 2025*
+*Document Version: 1.1 | Last Updated: March 8, 2026*

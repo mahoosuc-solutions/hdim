@@ -166,6 +166,9 @@ export default function HimssBriefHub() {
           capabilities faster. We do not ask buyers to trust claims alone. We map claims to evidence, enforce release
           governance, and show performance and ROI methods with explicit assumptions.
         </div>
+        <p className={styles.sectionLead} style={{ marginTop: '0.9rem' }}>
+          Content validation date: March 8, 2026. Core claims are aligned to Trust Center, Evidence Room, and current sales pricing worksheets.
+        </p>
       </section>
     </>
   );

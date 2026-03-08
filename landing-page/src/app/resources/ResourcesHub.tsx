@@ -266,6 +266,17 @@ export default function ResourcesHub() {
             </p>
           </article>
           <article className={styles.card}>
+            <h3 className={styles.cardTitle}>BSL & licensing transparency</h3>
+            <p className={styles.cardBody}>
+              Review the Business Source License rollout plan, controlled-content boundaries, and public compliance references.
+            </p>
+            <p>
+              <Link className={styles.btnPrimary} href="/resources/licensing">
+                Open Licensing Transparency
+              </Link>
+            </p>
+          </article>
+          <article className={styles.card}>
             <h3 className={styles.cardTitle}>Role-specific pathways</h3>
             <p className={styles.cardBody}>
               Access tailored flows for CIO/CISO technical diligence and procurement buyer decision support.

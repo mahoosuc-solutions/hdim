@@ -46,6 +46,22 @@ export default function TermsPage() {
               </section>
 
               <section>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">2A. Licensing Transparency</h2>
+                <p className="text-gray-700 leading-relaxed">
+                  HDIM maintains a public licensing transparency page that summarizes Business Source License
+                  (BSL) release planning, distribution boundaries, and compliance reference documents.
+                  For this summary, visit{' '}
+                  <Link href="/resources/licensing" className="text-blue-600 hover:underline">
+                    /resources/licensing
+                  </Link>.
+                </p>
+                <p className="text-gray-700 leading-relaxed mt-4">
+                  Commercial rights, support commitments, and deployment terms are governed by your executed
+                  agreement set (including MSA/BAA and applicable order forms).
+                </p>
+              </section>
+
+              <section>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">3. Acceptable Use</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   You agree not to:

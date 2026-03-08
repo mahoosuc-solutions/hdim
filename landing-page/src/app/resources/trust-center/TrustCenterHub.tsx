@@ -1,8 +1,16 @@
 import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
+import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
 
 export default function TrustCenterHub() {
+  const releaseEvidence = getEvidenceArtifact('releaseEvidence');
+  const technicalHub = getEvidenceArtifact('technicalHub');
+  const executiveHub = getEvidenceArtifact('executiveHub');
+  const fhirEvidence = getEvidenceArtifact('fhirEvidence');
+  const clinicalHub = getEvidenceArtifact('clinicalHub');
+  const executiveSummary = getEvidenceArtifact('executiveSummary');
+
   return (
     <>
       <section className={styles.hero}>
@@ -37,24 +45,24 @@ export default function TrustCenterHub() {
             claim="Release governance is fail-closed"
             outcome="High-risk gaps or stale evidence trigger No-Go outcomes until remediation and revalidation complete."
             proofItems={[
-              { label: 'Release Evidence Hub', href: '/resources/build-evidence', freshness: 'Updated each release', dataStatus: 'Observed' },
-              { label: 'Technical Evaluation Hub', href: '/resources/technical', freshness: 'Monthly architecture review', dataStatus: 'Observed' },
+              releaseEvidence,
+              technicalHub,
             ]}
           />
           <ClaimProofCard
             claim="Security posture is measurable"
             outcome="Control coverage and exceptions are documented with ownership, review cadence, and audit traceability."
             proofItems={[
-              { label: 'Executive & Compliance Hub', href: '/resources/executive', freshness: 'Quarterly control refresh', dataStatus: 'Observed' },
-              { label: 'FHIR Validation Evidence', href: '/resources/fhir-evidence', freshness: 'Pipeline-driven', dataStatus: 'Observed' },
+              executiveHub,
+              fhirEvidence,
             ]}
           />
           <ClaimProofCard
             claim="Clinical impact and ROI are accountable"
             outcome="Clinical and executive stakeholders can tie quality, operational, and financial outcomes to explicit assumptions."
             proofItems={[
-              { label: 'Clinical Leadership Hub', href: '/resources/clinical', freshness: 'Monthly program review', dataStatus: 'Observed' },
-              { label: 'Executive Summary', href: '/resources/executive-summary', freshness: 'Quarterly update', dataStatus: 'Modeled' },
+              clinicalHub,
+              executiveSummary,
             ]}
           />
         </div>

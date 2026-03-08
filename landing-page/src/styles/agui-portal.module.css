@@ -164,6 +164,13 @@
   box-shadow: 0 10px 24px rgba(45, 212, 168, 0.28);
 }
 
+.btnPrimary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .btnGhost {
   composes: btn;
   border-color: rgba(255, 255, 255, 0.4);
@@ -342,6 +349,18 @@
   color: #6d5614;
   font-size: 0.86rem;
   margin-top: 1rem;
+}
+
+.noticeSuccess {
+  border-left-color: #2dd4a8;
+  background: #f3fffb;
+  color: #0b5e42;
+}
+
+.noticeError {
+  border-left-color: #ef4444;
+  background: #fff5f5;
+  color: #991b1b;
 }
 
 .claimProofCard {

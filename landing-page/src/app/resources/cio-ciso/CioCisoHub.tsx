@@ -1,8 +1,16 @@
 import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
+import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
 
 export default function CioCisoHub() {
+  const executiveHub = getEvidenceArtifact('executiveHub');
+  const releaseEvidence = getEvidenceArtifact('releaseEvidence');
+  const technicalHub = getEvidenceArtifact('technicalHub');
+  const architectureEvolution = getEvidenceArtifact('architectureEvolution');
+  const aiMetrics = getEvidenceArtifact('aiMetrics');
+  const performance = getEvidenceArtifact('performance');
+
   return (
     <>
       <section className={styles.hero}>
@@ -30,26 +38,61 @@ export default function CioCisoHub() {
             claim="Security controls are operational, not aspirational"
             outcome="Control ownership, cadence, and exceptions are auditable and tied to release readiness."
             proofItems={[
-              { label: 'Executive & Compliance Hub', href: '/resources/executive', freshness: 'Quarterly', dataStatus: 'Observed' },
-              { label: 'Release Evidence Hub', href: '/resources/build-evidence', freshness: 'Per release', dataStatus: 'Observed' },
+              executiveHub,
+              releaseEvidence,
             ]}
           />
           <ClaimProofCard
             claim="Architecture supports safe scale"
             outcome="Event contracts, tenant isolation, and runtime policies are designed for regulated workloads."
             proofItems={[
-              { label: 'Technical Evaluation Hub', href: '/resources/technical', freshness: 'Monthly', dataStatus: 'Observed' },
-              { label: 'Architecture Evolution', href: '/resources/architecture-evolution', freshness: 'Monthly', dataStatus: 'Observed' },
+              technicalHub,
+              architectureEvolution,
             ]}
           />
           <ClaimProofCard
             claim="Operational risk is measurable"
             outcome="Leadership can evaluate go/no-go status based on current risk posture and not anecdotal confidence."
             proofItems={[
-              { label: 'AI Metrics', href: '/resources/ai-metrics', freshness: 'Monthly', dataStatus: 'Observed' },
-              { label: 'Performance', href: '/resources/performance', freshness: 'Monthly', dataStatus: 'Modeled' },
+              aiMetrics,
+              performance,
             ]}
           />
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Security diligence pack
+        </h2>
+        <div className={styles.cardGrid}>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Architecture deep-dive</h3>
+            <p className={styles.cardBody}>
+              Data flow boundaries, tenant isolation model, gateway controls, and deployment topology.
+            </p>
+            <Link className={styles.btnPrimary} href="/resources/technical">
+              Open architecture details
+            </Link>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Incident response summary</h3>
+            <p className={styles.cardBody}>
+              Escalation ownership, response timelines, and post-incident evidence loop are mapped in governance assets.
+            </p>
+            <Link className={styles.btnPrimary} href="/resources/executive">
+              Open governance posture
+            </Link>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Control ownership matrix</h3>
+            <p className={styles.cardBody}>
+              Control owners, review cadence, and release sign-off conditions are available in the gated packet.
+            </p>
+            <Link className={styles.btnPrimary} href="/resources/evidence-room">
+              Request gated security packet
+            </Link>
+          </article>
         </div>
       </section>
     </>

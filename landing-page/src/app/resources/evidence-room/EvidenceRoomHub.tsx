@@ -2,8 +2,16 @@ import Link from 'next/link';
 import styles from '@/styles/agui-portal.module.css';
 import ClaimProofCard from '@/components/resources/ClaimProofCard';
 import EvidenceRequestForm from '@/components/resources/EvidenceRequestForm';
+import { getEvidenceArtifact } from '@/lib/resources/evidenceManifest';
 
 export default function EvidenceRoomHub() {
+  const executiveHub = getEvidenceArtifact('executiveHub');
+  const architectureHub = getEvidenceArtifact('architectureHub');
+  const releaseEvidence = getEvidenceArtifact('releaseEvidence');
+  const technicalHub = getEvidenceArtifact('technicalHub');
+  const clinicalHub = getEvidenceArtifact('clinicalHub');
+  const executiveSummary = getEvidenceArtifact('executiveSummary');
+
   return (
     <>
       <section className={styles.hero}>
@@ -42,24 +50,24 @@ export default function EvidenceRoomHub() {
             claim="Security and compliance packet"
             outcome="Detailed control mapping, incident readiness process, and latest attestation package."
             proofItems={[
-              { label: 'Executive & Compliance Hub', href: '/resources/executive', freshness: 'Quarterly', dataStatus: 'Observed' },
-              { label: 'Architecture Hub', href: '/resources/architecture', freshness: 'Monthly', dataStatus: 'Observed' },
+              executiveHub,
+              architectureHub,
             ]}
           />
           <ClaimProofCard
             claim="Reliability and release packet"
             outcome="Go/no-go criteria, release scorecards, validation evidence, and operational runbooks."
             proofItems={[
-              { label: 'Release Evidence Hub', href: '/resources/build-evidence', freshness: 'Per release', dataStatus: 'Observed' },
-              { label: 'Technical Evaluation Hub', href: '/resources/technical', freshness: 'Monthly', dataStatus: 'Observed' },
+              releaseEvidence,
+              technicalHub,
             ]}
           />
           <ClaimProofCard
             claim="Commercial and implementation packet"
             outcome="Implementation sequencing, success metrics model, and service expectation documentation."
             proofItems={[
-              { label: 'Clinical Leadership Hub', href: '/resources/clinical', freshness: 'Monthly', dataStatus: 'Observed' },
-              { label: 'Executive Summary', href: '/resources/executive-summary', freshness: 'Quarterly', dataStatus: 'Modeled' },
+              clinicalHub,
+              executiveSummary,
             ]}
           />
         </div>

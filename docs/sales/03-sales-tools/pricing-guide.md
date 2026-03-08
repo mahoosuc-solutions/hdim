@@ -17,6 +17,7 @@ relatedDocuments:
   - "docs/investor/ROI_DEFENSIBILITY_PACK_TEMPLATE.md"
   - "docs/investor/PILOT_OUTCOMES_AND_ROI_METHOD_ONE_PAGER_2026-03-08.md"
   - "docs/investor/yc-application-v2/INNOVATION_STORY_SCRIPTS.md"
+  - "docs/sales/03-sales-tools/pricing-calculator-worksheet.md"
 
 # Content Description
 summary: "How to quantify HDIM AI-delivered intelligence in story points and convert that into pricing."
@@ -180,3 +181,7 @@ For every scoped deal, store these artifacts:
 5. Expected customer outcomes with validation method.
 
 This is required so pricing remains consistent, auditable, and defensible.
+
+## Worksheet
+Use the one-page calculator worksheet for live deal pricing:
+- `docs/sales/03-sales-tools/pricing-calculator-worksheet.md`

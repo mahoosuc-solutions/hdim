@@ -1,7 +1,7 @@
 # Investor Readiness Review
 
 **Version:** v0.0.0-test
-**Generated:** 2026-03-08T17:57:56Z
+**Generated:** 2026-03-08T18:09:11Z
 
 | Check | Status | Details |
 |---|---|---|

@@ -62,7 +62,7 @@
       border: 1px solid var(--line);
       background: #fff;
       color: var(--brand-ink);
-      padding: 8px 11px;
+      padding: 10px 13px;
       border-radius: 999px;
       font-size: 0.85rem;
       font-weight: 700;
@@ -135,7 +135,7 @@
       color: var(--brand-ink);
       font-size: 0.72rem;
       font-weight: 700;
-      padding: 5px 8px;
+      padding: 8px 10px;
       border-radius: 8px;
       cursor: pointer;
       text-decoration: none;
@@ -155,14 +155,28 @@
       padding: 10px;
     }
     @media (max-width: 620px) {
+      main { padding: 12px 10px 28px; }
+      h1 { font-size: 1.2rem; }
+      .sub { font-size: 0.9rem; }
+      .toolbar-wrap {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .btn {
+        flex: 0 0 auto;
+        min-height: 40px;
+      }
+      .grid { grid-template-columns: 1fr; }
       .card { grid-template-columns: 74px 1fr; }
       .card img { width: 74px; height: 74px; }
+      .actions { gap: 8px; }
+      .action { min-height: 34px; }
     }
   </style>
 </head>
 <body>
-  <div id="hdim-shared-nav-root"></div>
-  <script defer src="/assets/js/shared-nav-loader.js"></script>
   <main>
     <section class="hero">
       <h1>HDIM Mobile QR Portal</h1>

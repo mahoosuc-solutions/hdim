@@ -14,14 +14,14 @@ All QR URLs use:
 - `utm_content=<asset-slug>`
 
 ## Included tracked targets
-- `hub.png` (`utm_content=hub`) -> `https://landing-page-ecru-five-65.vercel.app/resources?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=hub`
-- `origin-story.png` (`utm_content=origin-story`) -> `https://landing-page-ecru-five-65.vercel.app/resources/origin-story?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=origin-story`
-- `executive-summary.png` (`utm_content=executive-summary`) -> `https://landing-page-ecru-five-65.vercel.app/resources/executive-summary?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=executive-summary`
-- `java-rebuild.png` (`utm_content=java-rebuild`) -> `https://landing-page-ecru-five-65.vercel.app/resources/java-rebuild?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=java-rebuild`
-- `architecture-evolution.png` (`utm_content=architecture-evolution`) -> `https://landing-page-ecru-five-65.vercel.app/resources/architecture-evolution?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=architecture-evolution`
-- `evidence-room.png` (`utm_content=evidence-room`) -> `https://landing-page-ecru-five-65.vercel.app/resources/evidence-room?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=evidence-room`
-- `technical-path.png` (`utm_content=technical-path`) -> `https://landing-page-ecru-five-65.vercel.app/resources/technical?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=technical-path`
-- `himss-brief.png` (`utm_content=himss-brief`) -> `https://landing-page-ecru-five-65.vercel.app/resources/himss-brief?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=himss-brief`
+- `hub.png` (`utm_content=hub`) -> `https://landing-page-ecru-five-65.vercel.app/resources?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=hub`
+- `origin-story.png` (`utm_content=origin-story`) -> `https://landing-page-ecru-five-65.vercel.app/resources/origin-story?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=origin-story`
+- `executive-summary.png` (`utm_content=executive-summary`) -> `https://landing-page-ecru-five-65.vercel.app/resources/executive-summary?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=executive-summary`
+- `java-rebuild.png` (`utm_content=java-rebuild`) -> `https://landing-page-ecru-five-65.vercel.app/resources/java-rebuild?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=java-rebuild`
+- `architecture-evolution.png` (`utm_content=architecture-evolution`) -> `https://landing-page-ecru-five-65.vercel.app/resources/architecture-evolution?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=architecture-evolution`
+- `evidence-room.png` (`utm_content=evidence-room`) -> `https://landing-page-ecru-five-65.vercel.app/resources/evidence-room?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=evidence-room`
+- `technical-path.png` (`utm_content=technical-path`) -> `https://landing-page-ecru-five-65.vercel.app/resources/technical?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=technical-path`
+- `himss-brief.png` (`utm_content=himss-brief`) -> `https://landing-page-ecru-five-65.vercel.app/resources/himss-brief?share=1&utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=himss-brief`
 
 ## Naming
 PNG filenames and `utm_content` use matching slugs for attribution consistency.

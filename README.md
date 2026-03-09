@@ -13,7 +13,7 @@
 
 - This repository is licensed under **Business Source License 1.1 (BSL 1.1)**.
 - See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) for governing terms.
-- Production use requires a separate commercial agreement with Mahoosuc Solutions LLC.
+- Production use requires a separate commercial agreement with Grateful House Inc.
 - Compliance and boundary references:
   - [docs/compliance/BSL_RELEASE_PLAN.md](./docs/compliance/BSL_RELEASE_PLAN.md)
   - [docs/compliance/LICENSING-BOUNDARY.md](./docs/compliance/LICENSING-BOUNDARY.md)

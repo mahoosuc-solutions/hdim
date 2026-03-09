@@ -21,9 +21,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
 
     // Picocli for CLI
-    implementation("info.picocli:picocli:4.7.6")
-    implementation("info.picocli:picocli-spring-boot-starter:4.7.6")
-    annotationProcessor("info.picocli:picocli-codegen:4.7.6")
+    implementation("info.picocli:picocli:4.7.7")
+    implementation("info.picocli:picocli-spring-boot-starter:4.7.7")
+    annotationProcessor("info.picocli:picocli-codegen:4.7.7")
 
     // HTTP client
     implementation("org.springframework.boot:spring-boot-starter-webflux")

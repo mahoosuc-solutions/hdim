@@ -42,6 +42,56 @@ export default function TrustCenterHub() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Priority risk claims and direct proof
+        </h2>
+        <p className={styles.sectionLead}>
+          The following claims map directly to internal evidence pages so buyers can validate risk-reduction posture quickly.
+        </p>
+        <p className={styles.sectionLead}>
+          Deployment posture is readiness-gated: validated capabilities are live now, and broader scale-up is activated as controls and integration checks pass.
+        </p>
+        <div className={styles.cardGrid}>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Integration risk is reduced by ecosystem alignment</h3>
+            <p className={styles.cardBody}>
+              Proof path:
+              {' '}
+              <Link href="/resources/java-rebuild">Java Rebuild Deep Dive</Link>
+              {' '}
+              |
+              {' '}
+              <Link href="/resources/architecture-evolution">Architecture Evolution Timeline</Link>
+            </p>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Compliance drift risk is reduced by standardized controls</h3>
+            <p className={styles.cardBody}>
+              Proof path:
+              {' '}
+              <Link href="/resources/build-evidence">Release Evidence Narrative</Link>
+              {' '}
+              |
+              {' '}
+              <Link href="/resources/evidence-room">Evidence Room</Link>
+            </p>
+          </article>
+          <article className={styles.card}>
+            <h3 className={styles.cardTitle}>Operational scaling risk is reduced by platform evolution discipline</h3>
+            <p className={styles.cardBody}>
+              Proof path:
+              {' '}
+              <Link href="/resources/architecture-evolution">Architecture Evolution Timeline</Link>
+              {' '}
+              |
+              {' '}
+              <Link href="/resources/executive-summary">Executive Summary</Link>
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
           Claim to proof index
         </h2>
         <p className={styles.sectionLead}>

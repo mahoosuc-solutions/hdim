@@ -96,6 +96,39 @@ export default function JavaRebuildPage() {
 
         {/* Preserved Concepts */}
         <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>What We Kept vs What We Replaced</h2>
+          <p className={styles.sectionBody}>
+            The rebuild followed disciplined evolution: preserve validated domain ideas, replace implementation layers that created integration and compliance drag.
+          </p>
+          <div className={styles.metricsGrid}>
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>What We Kept (Validated in Prototype)</h3>
+              <div className={styles.keyPoints}>
+                <ul>
+                  <li>Domain boundaries for patients, measures, evaluations, and care gaps</li>
+                  <li>FHIR R4 as the canonical clinical data model</li>
+                  <li>REST-first service contracts and versioned APIs</li>
+                  <li>Tenant isolation as a non-negotiable architecture requirement</li>
+                  <li>Event-driven notifications for cross-service state propagation</li>
+                </ul>
+              </div>
+            </div>
+            <div className={styles.card}>
+              <h3 className={styles.cardTitle}>What We Replaced (To Reach Production)</h3>
+              <div className={styles.keyPoints}>
+                <ul>
+                  <li>Manual FHIR parsing replaced with HAPI FHIR validation workflows</li>
+                  <li>Mixed migration practices replaced by Liquibase with rollback discipline</li>
+                  <li>Prototype auth middleware replaced by gateway trust and Spring Security</li>
+                  <li>Ad-hoc service wiring replaced with Spring Cloud and typed contracts</li>
+                  <li>Limited prototype testing replaced with a 613+ test automation baseline</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Preserved from Node.js</h2>
           <p className={styles.sectionBody}>
             The rewrite was not a rejection of the prototype. Several architectural

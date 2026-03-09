@@ -28,6 +28,52 @@ export default function ArchitectureEvolutionPage() {
           </p>
         </div>
 
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>Decision Log Highlights</h2>
+          <table className={styles.comparisonTable}>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Trigger</th>
+                <th>Decision</th>
+                <th>Outcome</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Nov 24, 2024</td>
+                <td>Prototype proved product value but hit ecosystem friction for healthcare-grade delivery.</td>
+                <td className={styles.highlight}>Rebuild platform in Java 21 + Spring Boot.</td>
+                <td>Production-capable architecture delivered in six weeks with 51+ services.</td>
+              </tr>
+              <tr>
+                <td>Jan 2025</td>
+                <td>Schema changes lacked a single enforceable migration standard across services.</td>
+                <td className={styles.highlight}>Standardize on Liquibase with rollback requirements.</td>
+                <td>100% migration rollback coverage and consistent database change governance.</td>
+              </tr>
+              <tr>
+                <td>Feb 2025</td>
+                <td>Token validation repeated in downstream services increased latency and complexity.</td>
+                <td className={styles.highlight}>Adopt gateway trust pattern with trusted identity headers.</td>
+                <td>Centralized auth enforcement and simpler service-level security posture.</td>
+              </tr>
+              <tr>
+                <td>Mar 2025</td>
+                <td>Cross-service diagnosis was slow without request-level visibility.</td>
+                <td className={styles.highlight}>Roll out OpenTelemetry end-to-end tracing.</td>
+                <td>Faster incident triage across HTTP, Kafka, and Redis workflows.</td>
+              </tr>
+              <tr>
+                <td>Apr 2025</td>
+                <td>PR cycle time constrained feature throughput as service count grew.</td>
+                <td className={styles.highlight}>Parallelize CI/CD with targeted test selection.</td>
+                <td>42.5% faster PR feedback and lower operational scaling risk.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         {/* Phase Timeline */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>Evolution Phases</h2>

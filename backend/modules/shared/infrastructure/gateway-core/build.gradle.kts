@@ -27,8 +27,8 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-aop")
 
     // Bucket4j for distributed rate limiting
-    api("com.bucket4j:bucket4j-core:8.7.0")
-    api("com.bucket4j:bucket4j-redis:8.7.0")
+    api("com.bucket4j:bucket4j-core:8.10.1")
+    api("com.bucket4j:bucket4j-redis:8.10.1")
 
     // OpenAPI/Swagger for API documentation
     api("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")

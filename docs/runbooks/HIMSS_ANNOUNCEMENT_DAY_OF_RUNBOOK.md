@@ -19,6 +19,9 @@ Use these links in all outreach:
 - Procurement path: `https://healthdatainmotion.com/resources/procurement`
 - Licensing transparency: `https://healthdatainmotion.com/resources/licensing`
 
+If the custom domain route is unavailable, use fallback aliases from:
+- `docs/marketing/himss/HIMSS_ANNOUNCEMENT_LAUNCH_BRIEF_2026-03-10.md`
+
 ## Channel execution blocks
 
 ## 1) LinkedIn groups

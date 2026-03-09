@@ -234,6 +234,61 @@ export default function ExecutiveSummaryPage() {
           </table>
         </section>
 
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Risk Reduction Claims and Proof</h2>
+          <p className={styles.sectionBody}>
+            The Java rebuild was not only a velocity decision. It reduced delivery and operating risk in three measurable areas.
+          </p>
+          <p className={styles.sectionBody}>
+            Current posture is phased rollout: validated capabilities are active, and additional integrations are enabled through readiness-gated expansion.
+          </p>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Integration Risk Reduced</h3>
+            <p className={styles.cardBody}>
+              Direct alignment with Java-native healthcare libraries removed wrapper-heavy integration paths and reduced mismatch risk across services.
+            </p>
+            <p className={styles.cardBody}>
+              Proof:
+              {' '}
+              <Link href="/resources/java-rebuild">Java Rebuild Deep Dive</Link>
+              {' '}
+              |
+              {' '}
+              <Link href="/resources/architecture-evolution">Architecture Evolution Timeline</Link>
+            </p>
+          </div>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Compliance Drift Risk Reduced</h3>
+            <p className={styles.cardBody}>
+              Standardized controls, migration discipline, and trust-center evidence paths lowered the chance that service behavior diverges from policy over time.
+            </p>
+            <p className={styles.cardBody}>
+              Proof:
+              {' '}
+              <Link href="/resources/trust-center">Trust Center</Link>
+              {' '}
+              |
+              {' '}
+              <Link href="/resources/build-evidence">Release Evidence Narrative</Link>
+            </p>
+          </div>
+          <div className={styles.card}>
+            <h3 className={styles.cardTitle}>Operational Scaling Risk Reduced</h3>
+            <p className={styles.cardBody}>
+              Event architecture, observability, and CI/CD parallelization created predictable scaling and faster feedback as service count expanded.
+            </p>
+            <p className={styles.cardBody}>
+              Proof:
+              {' '}
+              <Link href="/resources/architecture-evolution">Architecture Evolution Timeline</Link>
+              {' '}
+              |
+              {' '}
+              <Link href="/resources/executive-summary">Executive Summary Metrics</Link>
+            </p>
+          </div>
+        </section>
+
         {/* The Product */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>The Result</h2>

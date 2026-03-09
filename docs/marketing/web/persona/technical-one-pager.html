@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HDIM Technical Evaluator One-Pager</title>
+  <meta name="description" content="Technical evaluator one-pager for HDIM architecture, gates, and delivery confidence.">
+  <style>
+    :root { color-scheme: light; }
+    body { margin: 0; font-family: Arial, sans-serif; color: #1e293b; background: #f8fafc; }
+    main { max-width: 860px; margin: 0 auto; padding: 28px; background: #ffffff; }
+    h1, h2 { margin: 0 0 10px; color: #0f172a; }
+    p { margin: 0 0 10px; line-height: 1.45; }
+    .kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; color: #1d4ed8; }
+    .panel { border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-top: 14px; }
+    ul { margin: 8px 0 0 20px; }
+    li { margin-bottom: 6px; }
+    .cta a { display: inline-block; margin: 0 10px 8px 0; color: #1d4ed8; font-weight: 700; text-decoration: none; border-bottom: 1px solid #1d4ed8; }
+    .qr { display: grid; grid-template-columns: 140px 1fr; gap: 14px; align-items: center; }
+    .qr img { width: 140px; height: 140px; border: 1px solid #cbd5e1; }
+    .muted { color: #475569; font-size: 14px; }
+    @media print {
+      body { background: #ffffff; }
+      main { max-width: none; margin: 0; padding: 0.4in; }
+      a { color: #000000; text-decoration: none; }
+      .panel { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="kicker">TECHNICAL EVALUATOR ONE-PAGER</p>
+    <h1>Assess architecture maturity with a delivery model that is built to be verified.</h1>
+    <p>HDIM provides technical evaluators a direct path from architecture choices to release gate evidence and operational outcomes, with phased activation controls.</p>
+
+    <section class="panel">
+      <h2>Transformation Path</h2>
+      <p><strong>Node.js prototype</strong> established event and workflow assumptions quickly.</p>
+      <p><strong>Java rebuild on November 24, 2024</strong> introduced durable services, stronger contracts, and cleaner boundaries.</p>
+      <p><strong>Purpose-built platform</strong> now couples architecture evolution with observable release behavior and scale-up readiness gates.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Proof Points</h2>
+      <ul>
+        <li>Architecture timeline and technical path assets provide traceable implementation evolution.</li>
+        <li>Spec-driven analysis shows alignment between platform decisions and execution flow.</li>
+        <li>Validation and evidence pages connect code changes to release go/no-go decisions.</li>
+      </ul>
+    </section>
+
+    <section class="panel qr">
+      <img src="../assets/qr/technical-path.png" alt="QR code to technical path">
+      <div>
+        <h2>Scan for Technical Path</h2>
+        <p class="muted">QR reference: <code>docs/marketing/web/assets/qr/technical-path.png</code></p>
+      </div>
+    </section>
+
+    <section class="panel cta">
+      <h2>Next Step</h2>
+      <a href="../architecture-evolution-timeline.html">Review architecture timeline</a>
+      <a href="../spec-driven-development-analysis.html">Open spec-driven analysis</a>
+    </section>
+  </main>
+</body>
+</html>

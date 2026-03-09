@@ -8,6 +8,13 @@ import BookMeetingCta from '@/components/resources/BookMeetingCta';
 
 export default function ResourcesHub() {
   const { t } = useLanguage();
+  const transformationPath = [
+    { title: 'Origin Story', href: '/resources/origin-story' },
+    { title: 'Executive Summary', href: '/resources/executive-summary' },
+    { title: 'Java Rebuild', href: '/resources/java-rebuild' },
+    { title: 'Architecture Evolution', href: '/resources/architecture-evolution' },
+    { title: 'Evidence Room', href: '/resources/evidence-room' },
+  ];
 
   return (
     <>
@@ -50,6 +57,29 @@ export default function ResourcesHub() {
               <div className={styles.metricLabel}>HIPAA audit coverage</div>
             </article>
           </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Transformation Path
+        </h2>
+        <p className={styles.sectionLead}>
+          Follow the ordered reading path from origin through executive framing, rebuild details, architecture evolution, and final evidence review.
+        </p>
+        <div className={styles.cardGrid}>
+          {transformationPath.map((step, index) => (
+            <article key={step.href} className={styles.card}>
+              <h3 className={styles.cardTitle}>
+                {index + 1}. {step.title}
+              </h3>
+              <p>
+                <Link className={styles.btnPrimary} href={step.href}>
+                  Open {step.title}
+                </Link>
+              </p>
+            </article>
+          ))}
         </div>
       </section>
 

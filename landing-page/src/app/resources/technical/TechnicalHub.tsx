@@ -5,6 +5,14 @@ import Image from 'next/image';
 import styles from '@/styles/agui-portal.module.css';
 
 export default function TechnicalHub() {
+  const transformationPath = [
+    { title: 'Origin Story', href: '/resources/origin-story' },
+    { title: 'Executive Summary', href: '/resources/executive-summary' },
+    { title: 'Java Rebuild', href: '/resources/java-rebuild' },
+    { title: 'Architecture Evolution', href: '/resources/architecture-evolution' },
+    { title: 'Evidence Room', href: '/resources/evidence-room' },
+  ];
+
   return (
     <>
       <section className={styles.hero}>
@@ -24,6 +32,29 @@ export default function TechnicalHub() {
               View Spec-Driven Model
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <h2 className={styles.sectionTitle} style={{ fontFamily: 'var(--font-space-grotesk)' }}>
+          Transformation Path
+        </h2>
+        <p className={styles.sectionLead}>
+          Follow the ordered path from story context to executive framing, rebuild deep dive, architecture timeline, and final evidence validation.
+        </p>
+        <div className={styles.cardGrid}>
+          {transformationPath.map((step, index) => (
+            <article key={step.href} className={styles.card}>
+              <h3 className={styles.cardTitle}>
+                {index + 1}. {step.title}
+              </h3>
+              <p>
+                <Link className={styles.btnPrimary} href={step.href}>
+                  Open {step.title}
+                </Link>
+              </p>
+            </article>
+          ))}
         </div>
       </section>
 

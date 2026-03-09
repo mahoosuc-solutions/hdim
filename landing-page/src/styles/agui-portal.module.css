@@ -102,6 +102,7 @@
 .heroPanel {
   border-radius: 30px;
   padding: 3rem;
+  overflow: hidden;
   color: #ffffff;
   background:
     radial-gradient(circle at 85% -20%, rgba(245, 198, 93, 0.3), transparent 45%),
@@ -244,6 +245,7 @@
   border: 1px solid rgba(13, 27, 42, 0.09);
   border-radius: 18px;
   padding: 1.15rem;
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
 }
 
@@ -258,6 +260,7 @@
   color: #3d5367;
   line-height: 1.65;
   font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 .personaGrid {
@@ -303,6 +306,7 @@
   border: 1px solid rgba(13, 27, 42, 0.08);
   border-radius: 18px;
   padding: 1rem;
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(6, 18, 31, 0.12);
 }
 

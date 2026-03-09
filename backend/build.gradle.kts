@@ -67,7 +67,7 @@ subprojects {
             "io.ktor:ktor-io-jvm:2.3.13",
             // CVE remediation overrides (wave-2 dependency hardening)
             "org.apache.kafka:kafka-clients:3.9.1",
-            "commons-beanutils:commons-beanutils:1.9.4",
+            "commons-beanutils:commons-beanutils:1.11.0",
             "com.azure:azure-identity:1.15.3",
             "org.apache.jena:jena-arq:4.10.0",
             "org.apache.jena:jena-base:4.10.0",

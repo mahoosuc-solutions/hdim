@@ -30,7 +30,7 @@ export default function TermsPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Agreement</h2>
                 <p className="text-gray-700 leading-relaxed">
                   These Terms of Service (&quot;Terms&quot;) govern your use of the HDIM website and marketing
-                  materials operated by Mahoosuc Solutions LLC (&quot;Company,&quot; &quot;we,&quot; &quot;us&quot;).
+                  materials operated by Grateful House Inc. (&quot;Company,&quot; &quot;we,&quot; &quot;us&quot;).
                   By accessing this website, you agree to these Terms. If you do not agree, do not use this website.
                 </p>
               </section>
@@ -40,7 +40,7 @@ export default function TermsPage() {
                 <p className="text-gray-700 leading-relaxed">
                   Use of the HDIM platform for clinical quality measurement, care gap detection, and related
                   healthcare analytics is governed by a separate Master Service Agreement (MSA) and Business
-                  Associate Agreement (BAA) executed between Mahoosuc Solutions LLC and your organization.
+                  Associate Agreement (BAA) executed between Grateful House Inc. and your organization.
                   These website Terms do not govern platform usage.
                 </p>
               </section>
@@ -79,9 +79,9 @@ export default function TermsPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">4. Intellectual Property</h2>
                 <p className="text-gray-700 leading-relaxed">
                   All content on this website — including text, graphics, architecture diagrams, software
-                  descriptions, trade names, and logos — is the property of Mahoosuc Solutions LLC and is
+                  descriptions, trade names, and logos — is the property of Grateful House Inc. and is
                   protected by applicable intellectual property laws. &quot;HDIM&quot; and
-                  &quot;HealthData-in-Motion&quot; are trademarks of Mahoosuc Solutions LLC.
+                  &quot;HealthData-in-Motion&quot; are trademarks of Grateful House Inc.
                 </p>
               </section>
 
@@ -89,7 +89,7 @@ export default function TermsPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Disclaimer of Warranties</h2>
                 <p className="text-gray-700 leading-relaxed mb-4">
                   This website and its content are provided on an &quot;as-is&quot; and &quot;as-available&quot;
-                  basis. Mahoosuc Solutions LLC makes no warranties, express or implied, regarding:
+                  basis. Grateful House Inc. makes no warranties, express or implied, regarding:
                 </p>
                 <ul className="list-disc pl-6 space-y-2 text-gray-700">
                   <li>The accuracy, completeness, or reliability of website content</li>
@@ -107,7 +107,7 @@ export default function TermsPage() {
               <section>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">6. Limitation of Liability</h2>
                 <p className="text-gray-700 leading-relaxed">
-                  To the maximum extent permitted by applicable law, Mahoosuc Solutions LLC shall not be liable
+                  To the maximum extent permitted by applicable law, Grateful House Inc. shall not be liable
                   for any indirect, incidental, special, consequential, or punitive damages arising from your
                   use of this website, including but not limited to loss of revenue, data, or business
                   opportunity, regardless of the cause of action or theory of liability. Our total aggregate
@@ -119,7 +119,7 @@ export default function TermsPage() {
               <section>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Indemnification</h2>
                 <p className="text-gray-700 leading-relaxed">
-                  You agree to indemnify, defend, and hold harmless Mahoosuc Solutions LLC, its officers,
+                  You agree to indemnify, defend, and hold harmless Grateful House Inc., its officers,
                   directors, employees, and agents from any claims, damages, losses, or expenses (including
                   reasonable attorneys&apos; fees) arising from your use of this website or violation of these
                   Terms.

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import styles from '@/styles/agui-portal.module.css';
 
@@ -20,7 +21,13 @@ const navItems = [
 export default function ResourceNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { locale, setLocale, t } = useLanguage();
+  const shareMode = searchParams.get('share') === '1';
+
+  if (shareMode) {
+    return null;
+  }
 
   return (
     <nav className={styles.portalNav} aria-label="Resources navigation">

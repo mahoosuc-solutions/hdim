@@ -1,6 +1,7 @@
 import { Manrope, Space_Grotesk } from 'next/font/google';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import ResourceNav from '@/components/resources/ResourceNav';
+import ResourcesFooter from '@/components/resources/ResourcesFooter';
 import styles from '@/styles/agui-portal.module.css';
 
 const manrope = Manrope({
@@ -34,11 +35,7 @@ export default function ResourcesLayout({
       >
         <ResourceNav />
         <main className={styles.portalShell}>{children}</main>
-        <footer className={styles.portalShell}>
-          <div className={styles.footer}>
-            <p>HDIM Resources | healthdatainmotion.com</p>
-          </div>
-        </footer>
+        <ResourcesFooter />
       </div>
     </LanguageProvider>
   );

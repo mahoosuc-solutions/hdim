@@ -1,4 +1,5 @@
 import { Manrope, Space_Grotesk } from 'next/font/google';
+import { Suspense } from 'react';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import ResourceNav from '@/components/resources/ResourceNav';
 import ResourcesFooter from '@/components/resources/ResourcesFooter';
@@ -33,9 +34,13 @@ export default function ResourcesLayout({
           minHeight: '100vh',
         }}
       >
-        <ResourceNav />
+        <Suspense fallback={null}>
+          <ResourceNav />
+        </Suspense>
         <main className={styles.portalShell}>{children}</main>
-        <ResourcesFooter />
+        <Suspense fallback={null}>
+          <ResourcesFooter />
+        </Suspense>
       </div>
     </LanguageProvider>
   );

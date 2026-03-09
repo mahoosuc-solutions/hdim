@@ -2,6 +2,10 @@
 
 Generated on 2026-03-09 for conference and field enablement.
 
+## Mobile Portal
+- Phone index page: `/qr-portal.html`
+- Print index page: `/qr-links.html`
+
 ## Tracking convention
 All QR URLs use:
 - `utm_source=himss2026`

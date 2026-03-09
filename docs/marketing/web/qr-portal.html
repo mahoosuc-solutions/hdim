@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>HDIM Mobile QR Portal</title>
+  <meta name="description" content="Mobile index of HDIM QR links for customer and vendor sharing.">
+  <style>
+    :root {
+      --bg: #eef5ef;
+      --card: #ffffff;
+      --text: #1f2f21;
+      --muted: #4a5f4e;
+      --line: #cfe0cf;
+      --brand: #0b5f6d;
+      --brand-ink: #063e47;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #f6fbf7 0%, var(--bg) 100%);
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px 14px 34px;
+    }
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      color: var(--brand-ink);
+    }
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--bg);
+      padding: 8px 0;
+      margin-bottom: 8px;
+    }
+    .toolbar-wrap {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--brand-ink);
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+    .card img {
+      width: 86px;
+      height: 86px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .kicker {
+      margin: 0 0 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #5b7461;
+      text-transform: uppercase;
+    }
+    .title {
+      margin: 0 0 5px;
+      font-size: 1rem;
+      line-height: 1.2;
+      color: var(--brand-ink);
+    }
+    .desc {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+    .link {
+      display: block;
+      font-size: 0.73rem;
+      color: #2e5140;
+      word-break: break-all;
+      margin: 0 0 7px;
+      text-decoration: none;
+    }
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .action {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--brand-ink);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 5px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .action.primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #fff;
+    }
+    .hint {
+      margin-top: 12px;
+      font-size: 0.82rem;
+      color: #415746;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    @media (max-width: 620px) {
+      .card { grid-template-columns: 74px 1fr; }
+      .card img { width: 74px; height: 74px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="hdim-shared-nav-root"></div>
+  <script defer src="/assets/js/shared-nav-loader.js"></script>
+  <main>
+    <section class="hero">
+      <h1>HDIM Mobile QR Portal</h1>
+      <p class="sub">Phone-ready index for sharing story, diligence, and technical links with customers and vendors.</p>
+    </section>
+
+    <section class="toolbar">
+      <div class="toolbar-wrap">
+        <button class="btn active" data-filter="all">All</button>
+        <button class="btn" data-filter="customer">Customer</button>
+        <button class="btn" data-filter="vendor">Vendor/Partner</button>
+        <button class="btn" id="sharePortal">Share This Portal</button>
+        <a class="btn" href="qr-links.html">Print Sheet</a>
+      </div>
+    </section>
+
+    <section class="grid" id="grid"></section>
+
+    <section class="hint">
+      Tip: Open this page on your phone and add to your home screen for booth use. All links include HIMSS tracking tags.
+    </section>
+  </main>
+
+  <script>
+    const entries = [
+      {
+        id: 'hub',
+        audience: ['customer', 'vendor'],
+        label: 'Resources Hub',
+        short: 'Master index for all buyer paths.',
+        qr: 'assets/qr/hub.png',
+        url: 'https://healthdatainmotion.com/resources?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=hub'
+      },
+      {
+        id: 'origin-story',
+        audience: ['customer'],
+        label: 'Origin Story',
+        short: 'Problem-to-platform founder narrative.',
+        qr: 'assets/qr/origin-story.png',
+        url: 'https://healthdatainmotion.com/resources/origin-story?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=origin-story'
+      },
+      {
+        id: 'executive-summary',
+        audience: ['customer', 'vendor'],
+        label: 'Executive Summary',
+        short: 'High-level proof and outcomes.',
+        qr: 'assets/qr/executive-summary.png',
+        url: 'https://healthdatainmotion.com/resources/executive-summary?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=executive-summary'
+      },
+      {
+        id: 'java-rebuild',
+        audience: ['vendor', 'customer'],
+        label: 'Java Rebuild',
+        short: 'Node.js to Java decision deep dive.',
+        qr: 'assets/qr/java-rebuild.png',
+        url: 'https://healthdatainmotion.com/resources/java-rebuild?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=java-rebuild'
+      },
+      {
+        id: 'architecture-evolution',
+        audience: ['vendor', 'customer'],
+        label: 'Architecture Evolution',
+        short: 'Dated decision log and platform phases.',
+        qr: 'assets/qr/architecture-evolution.png',
+        url: 'https://healthdatainmotion.com/resources/architecture-evolution?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=architecture-evolution'
+      },
+      {
+        id: 'evidence-room',
+        audience: ['customer', 'vendor'],
+        label: 'Evidence Room',
+        short: 'Governance and diligence path.',
+        qr: 'assets/qr/evidence-room.png',
+        url: 'https://healthdatainmotion.com/resources/evidence-room?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=evidence-room'
+      },
+      {
+        id: 'technical-path',
+        audience: ['vendor', 'customer'],
+        label: 'Technical Path',
+        short: 'Engineering depth and controls.',
+        qr: 'assets/qr/technical-path.png',
+        url: 'https://healthdatainmotion.com/resources/technical?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=technical-path'
+      },
+      {
+        id: 'himss-brief',
+        audience: ['customer'],
+        label: 'HIMSS Brief',
+        short: 'Conference-ready walkthrough.',
+        qr: 'assets/qr/himss-brief.png',
+        url: 'https://healthdatainmotion.com/resources/himss-brief?utm_source=himss2026&utm_medium=qr&utm_campaign=node-to-java-story&utm_content=himss-brief'
+      }
+    ];
+
+    const grid = document.getElementById('grid');
+    const buttons = Array.from(document.querySelectorAll('[data-filter]'));
+    let currentFilter = 'all';
+
+    function render() {
+      const visible = entries.filter((entry) => currentFilter === 'all' || entry.audience.includes(currentFilter));
+      grid.innerHTML = visible.map((entry) => `
+        <article class="card">
+          <img src="${entry.qr}" alt="QR code for ${entry.label}">
+          <div>
+            <p class="kicker">${entry.audience.join(' / ')}</p>
+            <h2 class="title">${entry.label}</h2>
+            <p class="desc">${entry.short}</p>
+            <a class="link" href="${entry.url}" target="_blank" rel="noopener">${entry.url}</a>
+            <div class="actions">
+              <a class="action primary" href="${entry.url}" target="_blank" rel="noopener">Open</a>
+              <button class="action" data-copy="${entry.url}">Copy</button>
+              <button class="action" data-share="${entry.id}">Share</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function copyText(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        window.alert('Link copied');
+      }).catch(() => {
+        window.prompt('Copy this link:', text);
+      });
+    }
+
+    async function shareEntry(id) {
+      const item = entries.find((x) => x.id === id);
+      if (!item) return;
+      if (navigator.share) {
+        try {
+          await navigator.share({ title: `HDIM: ${item.label}`, text: item.short, url: item.url });
+        } catch (_) {}
+      } else {
+        copyText(item.url);
+      }
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.getAttribute('data-filter');
+        render();
+      });
+    });
+
+    document.getElementById('sharePortal').addEventListener('click', async () => {
+      const portalUrl = `${window.location.origin}${window.location.pathname}`;
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'HDIM Mobile QR Portal',
+            text: 'Phone-ready QR index for HDIM customer and vendor content.',
+            url: portalUrl
+          });
+          return;
+        } catch (_) {}
+      }
+      copyText(portalUrl);
+    });
+
+    grid.addEventListener('click', (event) => {
+      const copy = event.target.getAttribute('data-copy');
+      const share = event.target.getAttribute('data-share');
+      if (copy) copyText(copy);
+      if (share) shareEntry(share);
+    });
+
+    render();
+  </script>
+</body>
+</html>

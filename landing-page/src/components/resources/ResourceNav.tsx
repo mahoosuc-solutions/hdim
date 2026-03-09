@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import styles from '@/styles/agui-portal.module.css';
 
@@ -18,6 +19,7 @@ const navItems = [
 
 export default function ResourceNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { locale, setLocale, t } = useLanguage();
 
   return (
@@ -38,6 +40,22 @@ export default function ResourceNav() {
             </Link>
           ))}
         </div>
+        <label className={styles.mobileNavLabel} htmlFor="resource-nav-select">
+          Section
+        </label>
+        <select
+          id="resource-nav-select"
+          className={styles.mobileNavSelect}
+          value={navItems.some((item) => item.href === pathname) ? pathname : '/resources'}
+          onChange={(event) => router.push(event.target.value)}
+          aria-label="Resources section selector"
+        >
+          {navItems.map(({ href, labelKey }) => (
+            <option key={href} value={href}>
+              {t(labelKey)}
+            </option>
+          ))}
+        </select>
         <div className={styles.langToggle} aria-label="Language toggle">
           <button
             type="button"

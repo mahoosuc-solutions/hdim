@@ -73,14 +73,14 @@ subprojects {
             "org.apache.jena:jena-base:4.10.0",
             "org.apache.jena:jena-core:4.10.0",
             "org.apache.jena:jena-iri:4.10.0",
-            "org.springframework:spring-aop:6.1.14",
-            "org.springframework:spring-beans:6.1.14",
-            "org.springframework:spring-context:6.1.14",
-            "org.springframework:spring-core:6.1.14",
-            "org.springframework:spring-expression:6.1.14",
-            "org.springframework:spring-jcl:6.1.14",
-            "org.springframework:spring-web:6.1.14",
-            "org.springframework:spring-webmvc:6.1.14"
+            "org.springframework:spring-aop:6.2.16",
+            "org.springframework:spring-beans:6.2.16",
+            "org.springframework:spring-context:6.2.16",
+            "org.springframework:spring-core:6.2.16",
+            "org.springframework:spring-expression:6.2.16",
+            "org.springframework:spring-jcl:6.2.16",
+            "org.springframework:spring-web:6.2.16",
+            "org.springframework:spring-webmvc:6.2.16"
         )
         resolutionStrategy.eachDependency {
             if (requested.group == "com.fasterxml.jackson.core") {
@@ -471,7 +471,7 @@ subprojects {
         testImplementation("org.mockito:mockito-junit-jupiter:5.2.0")
         testImplementation("org.mockito:mockito-inline:5.2.0")
         testImplementation("org.assertj:assertj-core:3.27.7")
-        testImplementation("org.springframework.kafka:spring-kafka-test:3.3.12")
+        testImplementation("org.springframework.kafka:spring-kafka-test:3.3.13")
         mockitoAgent("net.bytebuddy:byte-buddy-agent:1.18.5")
     }
 }

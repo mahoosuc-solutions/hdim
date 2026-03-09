@@ -86,7 +86,7 @@ dependencies {
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(libs.bundles.testing)
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("org.testcontainers:kafka:1.19.3")
+    testImplementation("org.testcontainers:kafka:1.21.4")
     testImplementation(libs.postgresql)  // PostgreSQL JDBC driver for Testcontainers
     testCompileOnly(libs.lombok)
     testAnnotationProcessor(libs.lombok)

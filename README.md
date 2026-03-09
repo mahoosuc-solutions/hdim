@@ -51,6 +51,20 @@
 - Q3 2026: Series A funding close
 - Q4 2026: Reach $2-4M ARR
 
+## HDIM Ecosystem
+
+| Repository | Purpose |
+|------------|---------|
+| **hdim** (this repo) | Core platform — backend services, API, landing page |
+| [hdim-validation](https://github.com/mahoosuc-solutions/hdim-validation) | Validation demo — proves platform capabilities with synthetic FHIR data |
+| [hdim-accelerator](https://github.com/mahoosuc-solutions/hdim-accelerator) | Provider starter toolkit — workflow integration templates and portal |
+
+### Built With
+
+| Project | License | Description |
+|---------|---------|-------------|
+| [ServiceHive](https://github.com/webemo-aaron/servicehive-ai) | Apache 2.0 | Open-source event mesh for AI-agent orchestration — the foundational agent framework powering HDIM's intelligence layer |
+
 **Full changelog:** [CHANGELOG.md](./CHANGELOG.md) | **Release docs:** [RELEASE-2026-Q1-SUMMARY.md](./docs/RELEASE-2026-Q1-SUMMARY.md)
 
 ---

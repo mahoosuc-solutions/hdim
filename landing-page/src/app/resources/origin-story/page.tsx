@@ -35,6 +35,16 @@ export default function OriginStoryPage() {
         </p>
       </div>
 
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>Transformation Narrative</h2>
+        <div className={styles.card}>
+          <p className={styles.cardBody}>Problem: The Node.js prototype validated the idea but could not sustain healthcare-grade delivery velocity and compliance depth.</p>
+          <p className={styles.cardBody}>Decision date: November 24, 2024.</p>
+          <p className={styles.cardBody}>Why Java: The healthcare interoperability ecosystem and core implementation libraries are Java-native.</p>
+          <p className={styles.cardBody}>Measurable outcome: In six weeks, the rebuild produced a purpose-built Java platform with 51+ services and 613+ automated tests.</p>
+        </div>
+      </div>
+
       <figure style={{ margin: '1.5rem 0' }}>
         <Image
           src="/resources/screenshots/provider-dashboard.jpg"

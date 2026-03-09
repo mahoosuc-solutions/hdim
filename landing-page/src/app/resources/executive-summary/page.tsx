@@ -69,6 +69,16 @@ export default function ExecutiveSummaryPage() {
           </div>
         </section>
 
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Transformation Narrative</h2>
+          <div className={styles.card}>
+            <p className={styles.cardBody}>Problem: The Node.js prototype validated the idea but could not sustain healthcare-grade delivery velocity and compliance depth.</p>
+            <p className={styles.cardBody}>Decision date: November 24, 2024.</p>
+            <p className={styles.cardBody}>Why Java: The healthcare interoperability ecosystem and core implementation libraries are Java-native.</p>
+            <p className={styles.cardBody}>Measurable outcome: In six weeks, the rebuild produced a purpose-built Java platform with 51+ services and 613+ automated tests.</p>
+          </div>
+        </section>
+
         {/* Timeline */}
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Build Timeline</h2>
@@ -182,6 +192,46 @@ export default function ExecutiveSummaryPage() {
           <p className={styles.subText} style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
             * Traditional cost based on 10-14 senior healthcare engineers at $150K-$200K/year for 12-18 months (Glassdoor/Levels.fyi 2024). HDIM cost includes architect compensation, AI tool subscriptions, and infrastructure for the build period.
           </p>
+        </section>
+
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Node.js Prototype vs Java Platform</h2>
+          <table className={styles.comparisonTable}>
+            <thead>
+              <tr>
+                <th>Node.js Prototype</th>
+                <th>Java Platform</th>
+                <th>Business Impact</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Ecosystem fit:</strong> Ecosystem integration required wrappers for core healthcare dependencies.</td>
+                <td className={styles.highlight}>Direct use of Java-native FHIR and CQL libraries.</td>
+                <td>Lower integration risk and faster delivery of clinical capabilities.</td>
+              </tr>
+              <tr>
+                <td><strong>Compliance posture:</strong> Compliance controls were mostly manual and uneven across services.</td>
+                <td className={styles.highlight}>Compliance patterns standardized through Spring and shared platform controls.</td>
+                <td>Stronger audit readiness and lower regulatory exposure.</td>
+              </tr>
+              <tr>
+                <td><strong>Testing maturity:</strong> Testing focused on prototype validation with limited depth.</td>
+                <td className={styles.highlight}>613+ automated tests with contract and migration validation.</td>
+                <td>Higher release confidence and fewer production regressions.</td>
+              </tr>
+              <tr>
+                <td><strong>Onboarding/maintainability:</strong> Onboarding relied on tribal knowledge around custom patterns.</td>
+                <td className={styles.highlight}>Conventional Java architecture with documented, repeatable service templates.</td>
+                <td>Faster onboarding and improved long-term maintainability.</td>
+              </tr>
+              <tr>
+                <td><strong>Scale profile:</strong> Scale assumptions were acceptable for prototype workloads.</td>
+                <td className={styles.highlight}>Purpose-built for enterprise load, tenant isolation, and observability.</td>
+                <td>Predictable scaling profile for production healthcare operations.</td>
+              </tr>
+            </tbody>
+          </table>
         </section>
 
         {/* The Product */}

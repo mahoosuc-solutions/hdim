@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HDIM QR Quick Access</title>
+  <meta name="description" content="QR pack for HDIM story and diligence pages.">
+  <style>
+    body { margin: 0; font-family: Arial, sans-serif; background: #f7f9f4; color: #1f2f21; }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1 { margin: 0 0 8px; }
+    p { line-height: 1.45; }
+    .meta { color: #425f46; margin-bottom: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: #fff; border: 1px solid #d8e4d8; border-radius: 12px; padding: 12px; }
+    .card img { width: 100%; height: auto; border-radius: 8px; border: 1px solid #d8e4d8; background: #fff; }
+    .label { font-weight: 700; margin: 8px 0 4px; }
+    .url { font-size: 12px; color: #425f46; word-break: break-word; }
+    .print-note { margin-top: 16px; background: #fff; border: 1px solid #d8e4d8; border-radius: 12px; padding: 12px; }
+    @media print {
+      body { background: #fff; }
+      main { padding: 0; }
+      .print-note { break-inside: avoid; }
+      .card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="hdim-shared-nav-root"></div>
+  <script defer src="/assets/js/shared-nav-loader.js"></script>
+  <main>
+    <h1>HDIM QR Quick Access</h1>
+    <p class="meta">Conference-ready QR set for story flow and diligence content.</p>
+
+    <div class="grid">
+      <article class="card">
+        <img src="assets/qr/hub.png" alt="QR to HDIM resources hub">
+        <div class="label">1. Resources Hub</div>
+        <div class="url">https://healthdatainmotion.com/resources</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/origin-story.png" alt="QR to origin story">
+        <div class="label">2. Origin Story</div>
+        <div class="url">https://healthdatainmotion.com/resources/origin-story</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/executive-summary.png" alt="QR to executive summary">
+        <div class="label">3. Executive Summary</div>
+        <div class="url">https://healthdatainmotion.com/resources/executive-summary</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/java-rebuild.png" alt="QR to Java rebuild deep dive">
+        <div class="label">4. Java Rebuild</div>
+        <div class="url">https://healthdatainmotion.com/resources/java-rebuild</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/architecture-evolution.png" alt="QR to architecture evolution">
+        <div class="label">5. Architecture Evolution</div>
+        <div class="url">https://healthdatainmotion.com/resources/architecture-evolution</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/evidence-room.png" alt="QR to evidence room">
+        <div class="label">6. Evidence Room</div>
+        <div class="url">https://healthdatainmotion.com/resources/evidence-room</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/technical-path.png" alt="QR to technical path">
+        <div class="label">7. Technical Path</div>
+        <div class="url">https://healthdatainmotion.com/resources/technical</div>
+      </article>
+
+      <article class="card">
+        <img src="assets/qr/himss-brief.png" alt="QR to HIMSS brief">
+        <div class="label">8. HIMSS Brief</div>
+        <div class="url">https://healthdatainmotion.com/resources/himss-brief</div>
+      </article>
+    </div>
+
+    <section class="print-note">
+      <strong>Use at HIMSS:</strong> Print this page on letter size and mount near booth demos, flyers, and one-pagers. The sequence matches the new transformation story path.
+    </section>
+  </main>
+</body>
+</html>

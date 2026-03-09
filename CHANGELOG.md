@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-03-09 — "Open Gate"
+
+### Changed
+- **BSL Licensor transferred to Grateful House Inc.** — IP ownership and licensing authority moved from Mahoosuc Solutions LLC to Grateful House Inc. (C-Corp). Mahoosuc Solutions continues as the commercial services and implementation partner.
+- **Change Date extended to 2030-03-07** — 4-year conversion window to Apache License 2.0, signaling long-term commitment to open availability.
+- **Terms of Service updated** — All legal entity references updated to Grateful House Inc. across LICENSE, NOTICE, README, and /terms page.
+
 ## [3.0.0-rc1] - 2026-03-07 — "Shield"
 
 ### Added

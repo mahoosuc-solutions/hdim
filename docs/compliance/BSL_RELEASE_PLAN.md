@@ -1,8 +1,8 @@
 # Business Source License (BSL) Release Plan
 
-Last updated: 2026-03-08
+Last updated: 2026-03-09
 Owner: Platform + Compliance + GTM
-Status: Draft for execution
+Status: **EXECUTED** — BSL 1.1 live on master, Licensor: Grateful House Inc.
 
 ## Objective
 
@@ -108,9 +108,17 @@ Use this map when sharing the portal publicly.
 - Risk: Buyer confusion about open vs licensed components.
   - Control: Dedicated transparency page and role-specific diligence links.
 
-## Immediate Next Actions (Execution Order)
+## Execution Record
 
-1. Draft and approve project-specific BSL text with counsel.
-2. Add root `LICENSE` and supporting `NOTICE`/metadata files.
-3. Enable CI release gate for controlled content and notices freshness.
-4. Validate all portal transparency links in staging and production.
+| Step | Status | Date |
+|------|--------|------|
+| Finalize BSL parameters | ✅ Done | 2026-03-09 |
+| Add root LICENSE + NOTICE | ✅ Done | 2026-03-09 |
+| Transfer Licensor to Grateful House Inc. | ✅ Done | 2026-03-09 |
+| Set Change Date to 2030-03-07 (4-year) | ✅ Done | 2026-03-09 |
+| Update Terms of Service | ✅ Done | 2026-03-09 |
+| Update README licensing section | ✅ Done | 2026-03-09 |
+| Publish /resources/licensing page | ✅ Done | 2026-03-09 |
+| Tag v3.0.0 release | ✅ Done | 2026-03-09 |
+| CI release gate for controlled content | ⏳ Planned | — |
+| Validate portal transparency links in production | ⏳ Planned | — |

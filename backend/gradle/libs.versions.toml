@@ -11,7 +11,7 @@ spring-dependency-management = "1.1.7"
 
 # Healthcare Libraries
 hapi-fhir = "7.6.0"
-hapi-hl7 = "2.5.1"
+hapi-hl7 = "2.6.0"
 cql-engine = "3.3.1"
 cql-framework = "3.29.0"
 

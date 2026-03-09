@@ -5,9 +5,19 @@
 [![Docker](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker)](https://www.docker.com/)
 [![FHIR](https://img.shields.io/badge/FHIR-R4-orange)](https://www.hl7.org/fhir/)
 [![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-green)](https://www.hhs.gov/hipaa)
-[![License](https://img.shields.io/badge/License-Proprietary-red)]()
+[![License](https://img.shields.io/badge/License-BSL%201.1-blue)](./LICENSE)
 
 > **Production-ready, Docker-native healthcare platform** that transforms quality measurement, care gap management, and clinical interoperability into a unified, scalable solution.
+
+## Licensing
+
+- This repository is licensed under **Business Source License 1.1 (BSL 1.1)**.
+- See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) for governing terms.
+- Production use requires a separate commercial agreement with Mahoosuc Solutions LLC.
+- Compliance and boundary references:
+  - [docs/compliance/BSL_RELEASE_PLAN.md](./docs/compliance/BSL_RELEASE_PLAN.md)
+  - [docs/compliance/LICENSING-BOUNDARY.md](./docs/compliance/LICENSING-BOUNDARY.md)
+  - [docs/compliance/THIRD_PARTY_NOTICES.md](./docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ## 📊 Project Status (March 5, 2026)
 

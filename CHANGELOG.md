@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Repository licensing baseline (BSL 1.1)** — Added root `LICENSE` and `NOTICE` with Business Source License parameters, production-use boundary, and change-license timeline.
 - **Intelligence Layer activation** — 8 REST endpoints live behind per-tenant feature flags (`IntelligenceFeatureFlags`), 175 tests passing
   - POST `/api/v1/intelligence/ingest` — ingest signals and generate recommendations
   - GET `/api/v1/intelligence/patients/{id}/signals` — patient signal history

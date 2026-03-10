@@ -12,6 +12,7 @@ This folder contains laminate-ready conference poster pages.
 6. `06-procurement-partner-poster.html`
 7. `07-licensing-transparency-poster.html`
 8. `08-announcement-ops-poster.html`
+9. `09-himss-front-back-onepager.html` (2-page duplex handout with QR code)
 
 Shared style:
 - `poster-theme.css`
@@ -40,6 +41,15 @@ python3 -m http.server 4182
 
 Then open:
 - `http://127.0.0.1:4182/01-hdim-overview-poster.html`
+- `http://127.0.0.1:4182/09-himss-front-back-onepager.html`
+
+## Duplex print settings for one-pager
+
+For `09-himss-front-back-onepager.html`:
+- Two-sided print: **On**
+- Flip on: **Long edge**
+- Background graphics: **Enabled**
+- Scale: **100%**
 
 ## Source notes
 

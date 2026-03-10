@@ -75,7 +75,7 @@ export default function HimssLaunchPage() {
           className={styles.heroPanel}
           style={{
             background:
-              'linear-gradient(125deg, rgba(7, 26, 45, 0.94), rgba(17, 40, 68, 0.90)), url("/resources/screenshots/care-gaps-interventions.jpg") center/cover',
+              'linear-gradient(125deg, rgba(7, 26, 45, 0.94), rgba(17, 40, 68, 0.90)), url("/resources/screenshots/provider-dashboard.jpg") center/cover',
           }}
         >
           <span className={styles.kicker}>HIMSS 2026 &mdash; LAS VEGAS</span>
@@ -190,7 +190,7 @@ export default function HimssLaunchPage() {
         <div className={styles.cardGrid}>
           <figure className={styles.figure}>
             <Image
-              src="/resources/screenshots/care-gaps-interventions.jpg"
+              src="/resources/screenshots/care-manager-care-gaps-overview-after.png"
               alt="Care team intervention workflow with patient gaps and recommended actions"
               width={560}
               height={360}

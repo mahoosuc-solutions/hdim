@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HDIM HIMSS One-Pager (Front/Back)</title>
+  <style>
+    @page { size: Letter portrait; margin: 0.22in; }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+      color: #102337;
+      background: #eaf2f7;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .sheet {
+      width: 8.06in;
+      min-height: 10.56in;
+      margin: 0 auto 0.2in;
+      padding: 0.34in;
+      background:
+        radial-gradient(circle at 100% -20%, rgba(0, 160, 150, 0.14), transparent 36%),
+        radial-gradient(circle at 0% 0%, rgba(26, 80, 129, 0.12), transparent 40%),
+        linear-gradient(180deg, #f7fbff 0%, #ffffff 100%);
+      border: 1px solid rgba(16, 35, 55, 0.12);
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.16in;
+      box-shadow: 0 12px 30px rgba(16, 35, 55, 0.12);
+    }
+    .page-break { page-break-after: always; }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #145a6f;
+      font-weight: 700;
+    }
+    .pill {
+      border: 1px solid rgba(20, 90, 111, 0.28);
+      background: rgba(20, 90, 111, 0.08);
+      border-radius: 999px;
+      padding: 5px 12px;
+    }
+    .hero {
+      background: linear-gradient(130deg, #0f1e34 0%, #0f4c67 56%, #0a9f95 100%);
+      color: #fff;
+      border-radius: 18px;
+      padding: 0.22in;
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: 29pt;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      margin: 0.11in 0 0;
+      font-size: 12pt;
+      line-height: 1.4;
+      opacity: 0.98;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.12in;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid rgba(16, 35, 55, 0.15);
+      border-radius: 14px;
+      padding: 0.13in;
+    }
+    .card h2 {
+      margin: 0 0 0.05in;
+      font-size: 13.8pt;
+      line-height: 1.2;
+      color: #173756;
+    }
+    .card p, .card li, .card td, .card th { font-size: 10.5pt; line-height: 1.35; }
+    .card ul { margin: 0.05in 0 0; padding-left: 0.18in; }
+    .accent {
+      background: #e8fffb;
+      border: 1px solid rgba(9, 141, 130, 0.25);
+      color: #0d4f4a;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 11pt;
+      font-weight: 700;
+    }
+    .cta {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 0.12in;
+      align-items: center;
+    }
+    .qr-wrap {
+      background: #fff;
+      border: 1px solid rgba(16, 35, 55, 0.16);
+      border-radius: 12px;
+      padding: 8px;
+      display: grid;
+      place-items: center;
+    }
+    .qr-wrap img {
+      width: 1.95in;
+      height: 1.95in;
+      object-fit: contain;
+      border: 1px solid rgba(16, 35, 55, 0.12);
+      border-radius: 6px;
+      background: #fff;
+    }
+    .url {
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 8.6pt;
+      line-height: 1.35;
+      word-break: break-all;
+      color: #22435f;
+      margin-top: 6px;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.03in;
+    }
+    .table th, .table td {
+      border: 1px solid rgba(16, 35, 55, 0.16);
+      padding: 6px;
+      text-align: left;
+      font-size: 10.3pt;
+    }
+    .table th {
+      background: #e7f1fa;
+      color: #163756;
+      font-weight: 700;
+    }
+    .footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(16, 35, 55, 0.13);
+      padding-top: 8px;
+      font-size: 9pt;
+      color: #35516d;
+    }
+    @media screen {
+      body { padding: 16px 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="sheet page-break">
+    <div class="top">
+      <span class="pill">HealthData-in-Motion (HDIM)</span>
+      <span>HIMSS 2026 · Las Vegas</span>
+    </div>
+
+    <section class="hero">
+      <h1>AI-Priced Healthcare Platform Built for Real-World Adoption</h1>
+      <p>Move from FHIR data to measurable quality and care-gap outcomes quickly, with production licensing and trust-ready evidence from day one.</p>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>What Customers Get</h2>
+        <ul>
+          <li>FHIR-first interoperability workflows</li>
+          <li>Quality and care-gap operational tooling</li>
+          <li>Deployment path for regulated environments</li>
+          <li>Commercial production rights and support</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>Why Vendors and Partners Engage</h2>
+        <ul>
+          <li>API-first architecture for integration acceleration</li>
+          <li>Procurement-friendly proof and governance artifacts</li>
+          <li>Clear co-sell and partner value story</li>
+          <li>Fast qualification to pilot or implementation</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="accent">
+      Built by AI methodology, priced by AI economics, and designed to return value to local communities.
+    </section>
+
+    <section class="cta">
+      <article class="card">
+        <h2>Book a Technical Walkthrough</h2>
+        <p><strong>Scan to open the HIMSS brief and book a meeting.</strong></p>
+        <p>Best for payer, provider/health system, ACO/FQHC, and vendor/partner conversations.</p>
+        <p><strong>Contact:</strong> sales@mahoosuc.solutions</p>
+        <p class="url">https://landing-page-ecru-five-65.vercel.app/resources/himss-brief?utm_source=himss_print&utm_medium=one_pager&utm_campaign=himss_2026&utm_content=front_back_qr</p>
+      </article>
+      <article class="qr-wrap">
+        <img alt="QR code to HDIM HIMSS Brief" src="https://api.qrserver.com/v1/create-qr-code/?size=900x900&margin=12&data=https%3A%2F%2Flanding-page-ecru-five-65.vercel.app%2Fresources%2Fhimss-brief%3Futm_source%3Dhimss_print%26utm_medium%3Done_pager%26utm_campaign%3Dhimss_2026%26utm_content%3Dfront_back_qr" />
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>One-Pager Front · March 10, 2026</span>
+      <span>HDIM Conference Handout</span>
+    </footer>
+  </main>
+
+  <main class="sheet">
+    <div class="top">
+      <span class="pill">Commercial + Trust Snapshot</span>
+      <span>Back Side</span>
+    </div>
+
+    <section class="grid">
+      <article class="card">
+        <h2>AI Pricing Model (Year 1)</h2>
+        <p><strong>Formula:</strong> Implementation + Annual Subscription + Local Impact Allocation</p>
+        <ul>
+          <li>Implementation = Effective Billable Points × Point Rate</li>
+          <li>Subscription = Platform + Integration + Intelligence tiers</li>
+          <li>Local Impact Allocation = % of commercial value</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>Local Impact Allocation</h2>
+        <table class="table">
+          <thead><tr><th>Customer Size</th><th>Allocation</th></tr></thead>
+          <tbody>
+            <tr><td>Growth / SMB</td><td>1%</td></tr>
+            <tr><td>Mid-market</td><td>2%</td></tr>
+            <tr><td>Enterprise</td><td>3%</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top:8px;">Routing: customer MSA/county first, state fallback.</p>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>What Happens in First 90 Days</h2>
+        <ul>
+          <li><strong>Weeks 1-2:</strong> architecture fit and scope lock</li>
+          <li><strong>Weeks 3-6:</strong> integration and workflow wiring</li>
+          <li><strong>Weeks 7-10:</strong> validation, governance, readiness gates</li>
+          <li><strong>Weeks 11-13:</strong> go-live and operating cadence</li>
+        </ul>
+      </article>
+      <article class="card">
+        <h2>Proof Links Used in Buyer Diligence</h2>
+        <ul>
+          <li>HIMSS Brief</li>
+          <li>Trust Center</li>
+          <li>Evidence Room</li>
+          <li>Licensing Transparency</li>
+        </ul>
+        <p class="url">https://landing-page-ecru-five-65.vercel.app/resources/himss-brief</p>
+        <p class="url">https://landing-page-ecru-five-65.vercel.app/resources/trust-center</p>
+        <p class="url">https://landing-page-ecru-five-65.vercel.app/resources/evidence-room</p>
+        <p class="url">https://landing-page-ecru-five-65.vercel.app/resources/licensing</p>
+      </article>
+    </section>
+
+    <section class="accent">
+      Conference close line: "Give us your buyer profile, and we will map your exact implementation, subscription, and local impact model in one call."
+    </section>
+
+    <footer class="footer">
+      <span>One-Pager Back · March 10, 2026</span>
+      <span>sales@mahoosuc.solutions</span>
+    </footer>
+  </main>
+</body>
+</html>

@@ -108,7 +108,7 @@ export default function HimssBriefHub() {
         <div className={styles.cardGrid}>
           <figure className={styles.figure}>
             <Image
-              src="/resources/screenshots/care-gaps-interventions.jpg"
+              src="/resources/screenshots/care-manager-care-gaps-overview-after.png"
               alt="Care team intervention workflow with patient gaps and recommended actions"
               width={560}
               height={360}

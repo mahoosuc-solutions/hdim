@@ -13,6 +13,7 @@ HDIM's pricing strategy positions us as the **value leader** in healthcare data 
 2. **Value-Based** - Pricing aligned with customer outcomes
 3. **Scalability** - Grows with customer needs
 4. **Accessibility** - Entry points for all organization sizes
+5. **Humanity-First** - Every contract includes local economic reinvestment
 
 ### Competitive Positioning
 
@@ -149,6 +150,31 @@ HDIM's pricing strategy positions us as the **value leader** in healthcare data 
 
 ---
 
+## AI Pricing + Local Impact Formula
+
+HDIM launch pricing is calculated as:
+
+1. `Implementation Fee = Effective Billable Points x Point Rate`
+2. `Annual Subscription = Platform Base + Integration Tier + Intelligence Tier`
+3. `Social Allocation = (Implementation Fee + Annual Subscription) x Social Allocation %`
+4. `Year 1 Total = Implementation Fee + Annual Subscription + Social Allocation`
+
+### Social Allocation Tiers (Hard-Wired)
+
+| Customer Size | Social Allocation % of Year 1 Commercial Value |
+|---------------|--------------------------------------------------|
+| Growth / SMB | 1% |
+| Mid-market | 2% |
+| Enterprise | 3% |
+
+### Local Scope Definition
+
+- Primary routing: customer MSA/county
+- Fallback routing: state-level local impact pool
+- Operational vehicle: dedicated Local Impact Fund with quarterly reporting
+
+---
+
 ## ROI Framework
 
 ### Cost Savings
@@ -225,6 +251,8 @@ HDIM's pricing strategy positions us as the **value leader** in healthcare data 
 - No custom pricing below Tier 1
 - Implementation services required for Tier 3+
 - Annual billing for all tiers (monthly available at +10%)
+- Social allocation is mandatory and cannot be discounted away
+- All quotes must include local routing target for social allocation
 
 ---
 

@@ -19,12 +19,14 @@ relatedDocuments:
   - "docs/sales/03-sales-tools/pricing-calculator-example-enterprise-health-system.md"
   - "docs/sales/03-sales-tools/pricing-calculator-example-mid-size-aco.md"
   - "docs/sales/03-sales-tools/pricing-calculator-example-fqhc.md"
+  - "docs/gtm/AI_PRICING_LOCAL_IMPACT_POLICY.md"
+  - "docs/sales/03-sales-tools/ai-pricing-forecast-schema.md"
 
 # Content Description
 summary: "One-page worksheet to convert AI-methodology implementation scope into story points and pricing."
 estimatedReadTime: 5
 difficulty: "beginner"
-lastUpdated: "2026-03-08"
+lastUpdated: "2026-03-10"
 
 # Access & Governance
 targetAudience:
@@ -39,7 +41,7 @@ accessLevel: "internal"
 # Status & Versioning
 status: "active"
 version: "1.0"
-lastReviewed: "2026-03-08"
+lastReviewed: "2026-03-10"
 
 # SEO & Discovery
 seoKeywords:
@@ -66,6 +68,7 @@ This worksheet quantifies that advantage in story points, delivery economics, an
 ## 1) Deal Snapshot
 - Customer:
 - Segment: `Growth / Mid-market / Enterprise`
+- Buyer type: `Payer / Provider-Health System / ACO-FQHC / Vendor-Partner`
 - Primary buyer: `CIO/CISO / Clinical / Procurement / Mixed`
 - Deployment model: `Cloud / Hybrid / On-prem`
 - Target go-live date:
@@ -100,7 +103,10 @@ Subscription (annual):
 - `Annual Subscription [I] = [F] + [G] + [H]`
 
 Commercial total (Year 1):
-- `Year 1 Total [J] = [E] + [I]`
+- Social allocation tier (`Growth=1% / Mid-market=2% / Enterprise=3%`): **[J]**
+- `Social Allocation [K] = ([E] + [I]) x [J]`
+- Local scope routing: `MSA/County first; state fallback` **[L]**
+- `Year 1 Total [M] = [E] + [I] + [K]`
 
 ## 5) Buyer Outcome Commitments
 - Time-to-value target (weeks):
@@ -132,7 +138,8 @@ Use this block to explain why this model is different:
 - `[C] = [A] x [B]`
 - `[E] = [C] x [D]`
 - `[I] = [F] + [G] + [H]`
-- `[J] = [E] + [I]`
+- `[K] = ([E] + [I]) x [J]`
+- `[M] = [E] + [I] + [K]`
 
 ## Completed Examples
 - `docs/sales/03-sales-tools/pricing-calculator-example-enterprise-health-system.md`

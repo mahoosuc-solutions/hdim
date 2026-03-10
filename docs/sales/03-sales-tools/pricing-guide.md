@@ -18,12 +18,14 @@ relatedDocuments:
   - "docs/investor/PILOT_OUTCOMES_AND_ROI_METHOD_ONE_PAGER_2026-03-08.md"
   - "docs/investor/yc-application-v2/INNOVATION_STORY_SCRIPTS.md"
   - "docs/sales/03-sales-tools/pricing-calculator-worksheet.md"
+  - "docs/gtm/AI_PRICING_LOCAL_IMPACT_POLICY.md"
+  - "docs/sales/03-sales-tools/ai-pricing-forecast-schema.md"
 
 # Content Description
 summary: "How to quantify HDIM AI-delivered intelligence in story points and convert that into pricing."
 estimatedReadTime: 12
 difficulty: "intermediate"
-lastUpdated: "2026-03-08"
+lastUpdated: "2026-03-10"
 
 # Access & Governance
 targetAudience:
@@ -38,7 +40,7 @@ accessLevel: "internal"
 # Status & Versioning
 status: "active"
 version: "2.0"
-lastReviewed: "2026-03-08"
+lastReviewed: "2026-03-10"
 
 # SEO & Discovery
 seoKeywords:
@@ -139,15 +141,37 @@ Use a point rate plus platform subscription.
 Formula:
 1. `Implementation Fee = Effective Billable Points x Point Rate`
 2. `Annual Subscription = Platform Base + Integration Tier + Intelligence Tier`
+3. `Social Allocation = (Implementation Fee + Annual Subscription) x Social %`
+4. `Year 1 Total = Implementation Fee + Annual Subscription + Social Allocation`
+
+Social tier defaults by customer size:
+- Growth/SMB: `1%`
+- Mid-market: `2%`
+- Enterprise: `3%`
+
+Local scope default:
+- Customer MSA/county first, with state fallback when an exact local routing path is unavailable.
 
 Point-rate guidance (internal):
 - Growth segment: `$900-$1,200` per effective point
 - Mid-market: `$1,200-$1,600` per effective point
 - Enterprise: `$1,600-$2,200` per effective point
 
-Example (123 raw points, ALF 0.65, $1,750/point):
+Example (123 raw points, ALF 0.65, $1,750/point, enterprise social allocation 3%):
 - Effective Billable Points: `79.95`
 - Implementation Fee: `~$140K`
+- If annual subscription is `$450K`, social allocation is `($140K + $450K) x 3% = $17.7K`
+- Year 1 Total becomes `~$607.7K`
+
+## Humanity-First Local Impact Allocation (Required)
+Every commercial deal includes a hard-wired local impact allocation:
+1. Allocation is computed as a percent of Year 1 commercial value.
+2. Allocation percentage is tied to customer size tier (1/2/3%).
+3. Funds route through the Local Impact Fund with quarterly reporting.
+4. Allocation cannot be removed via standard discounting.
+
+Recommended clause in customer paperwork:
+> A Local Impact Allocation is included in commercial pricing and earmarked for community reinvestment in the customer's MSA/county where feasible, with state-level fallback.
 
 ## Packaging for Sales
 Use three commercial packages to simplify buying:
@@ -178,7 +202,8 @@ For every scoped deal, store these artifacts:
 2. ALF rationale (why acceleration factor chosen).
 3. Effective billable points and rate used.
 4. Subscription tier recommendation and assumptions.
-5. Expected customer outcomes with validation method.
+5. Social allocation tier, amount, and local routing target.
+6. Expected customer outcomes with validation method.
 
 This is required so pricing remains consistent, auditable, and defensible.
 

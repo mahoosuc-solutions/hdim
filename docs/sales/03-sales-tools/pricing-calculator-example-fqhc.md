@@ -53,8 +53,10 @@ Subscription (annual):
 - Integration tier: **$14,000**
 - Intelligence tier: **$16,000**
 - Annual Subscription: `$72,000`
+- Social allocation (growth `1%`): `($34,104 + $72,000) x 1% = $1,061`
+- Local routing target: `Customer MSA/county; state fallback`
 
-- Year 1 Total: `$106,104`
+- Year 1 Total: `$107,165`
 
 ## 5) Buyer Outcome Commitments
 - Time-to-value target: `6 weeks`

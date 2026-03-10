@@ -484,7 +484,7 @@ See [Production Security Guide](./docs/PRODUCTION_SECURITY_GUIDE.md) for complet
 | **Need service information** | [Service Catalog](./docs/services/SERVICE_CATALOG.md) - All 50+ services |
 | **Want to report a bug** | [GitHub Issues](https://github.com/mahoosuc-solutions/hdim/issues) |
 | **Have general questions** | [GitHub Discussions](https://github.com/mahoosuc-solutions/hdim/discussions) |
-| **Need immediate support** | support@healthdata-in-motion.com |
+| **Need immediate support** | sales@mahoosuc.solutions |
 
 ### Contributing
 
@@ -500,7 +500,7 @@ Before opening or merging PRs, also review:
 ### Commercial Support
 
 For production deployments, SLAs, and custom development:
-- **Email:** enterprise@healthdata-in-motion.com
+- **Email:** sales@mahoosuc.solutions
 - **Phone:** 1-800-HEALTHCARE
 - **Website:** https://healthdata-in-motion.com
 
@@ -602,9 +602,9 @@ Compliance references:
 **HealthData-in-Motion Team**
 
 - **Website:** https://healthdata-in-motion.com
-- **Email:** info@healthdata-in-motion.com
-- **Sales:** sales@healthdata-in-motion.com
-- **Support:** support@healthdata-in-motion.com
+- **Email:** sales@mahoosuc.solutions
+- **Sales:** sales@mahoosuc.solutions
+- **Support:** sales@mahoosuc.solutions
 - **LinkedIn:** [Company Page](https://linkedin.com/company/healthdata-in-motion)
 
 ---

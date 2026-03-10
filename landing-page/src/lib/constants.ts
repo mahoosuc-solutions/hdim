@@ -1,7 +1,7 @@
 // Shared URLs and contact info
 export const CALENDAR_URL = 'https://calendar.app.google/zKDs6ZdXW7V61c7i7';
 export const EMAIL_SALES = 'sales@mahoosuc.solutions';
-export const EMAIL_INFO = 'info@mahoosuc.solutions';
+export const EMAIL_INFO = 'sales@mahoosuc.solutions';
 
 // Landing page copy and messaging
 export const MESSAGING = {

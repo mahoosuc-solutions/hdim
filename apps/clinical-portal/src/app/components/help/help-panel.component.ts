@@ -478,7 +478,7 @@ const DEFAULT_HELP: HelpContent = {
     {
       question: 'How do I contact support?',
       answer:
-        'Click the "Contact Support" button in this panel or email support@healthdata.com.',
+        'Click the "Contact Support" button in this panel or email sales@mahoosuc.solutions.',
     },
   ],
   shortcuts: [
@@ -995,7 +995,7 @@ export class HelpPanelComponent implements OnInit, OnDestroy {
   }
 
   contactSupport(): void {
-    window.open('mailto:support@healthdata.com?subject=Clinical Portal Support Request', '_blank');
+    window.open('mailto:sales@mahoosuc.solutions?subject=Clinical Portal Support Request', '_blank');
   }
 
   private updateHelpContent(url: string): void {

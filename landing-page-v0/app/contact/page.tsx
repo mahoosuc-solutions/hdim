@@ -75,9 +75,9 @@ export default function ContactPage() {
     {
       icon: Mail,
       title: 'General Inquiries',
-      detail: 'info@mahoosuc.solutions',
+      detail: 'sales@mahoosuc.solutions',
       description: 'General questions and support',
-      action: 'mailto:info@mahoosuc.solutions'
+      action: 'mailto:sales@mahoosuc.solutions'
     },
     {
       icon: Mail,
@@ -309,11 +309,11 @@ export default function ContactPage() {
                     sales@mahoosuc.solutions
                   </a>
                   <a
-                    href="mailto:info@mahoosuc.solutions"
+                    href="mailto:sales@mahoosuc.solutions"
                     className="flex items-center text-blue-600 hover:text-blue-800 font-medium"
                   >
                     <Mail className="w-5 h-5 mr-3 flex-shrink-0" />
-                    info@mahoosuc.solutions
+                    sales@mahoosuc.solutions
                   </a>
                 </div>
               </div>

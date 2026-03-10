@@ -10,7 +10,7 @@ Personalize the `[bracketed]` sections for each recipient.
 
 **Subject:** HDIM is now open source — free to evaluate for your quality programs
 
-**From:** info@mahoosuc.solutions
+**From:** sales@mahoosuc.solutions
 
 ---
 
@@ -41,7 +41,7 @@ Would that be useful?
 Best,
 Aaron
 Mahoosuc Solutions
-info@mahoosuc.solutions
+sales@mahoosuc.solutions
 
 ---
 
@@ -49,7 +49,7 @@ info@mahoosuc.solutions
 
 **Subject:** Open-source HEDIS/FHIR platform — potential integration opportunity
 
-**From:** info@mahoosuc.solutions
+**From:** sales@mahoosuc.solutions
 
 ---
 
@@ -80,7 +80,7 @@ Platform overview: https://landing-page-ecru-five-65.vercel.app
 Best,
 Aaron
 Mahoosuc Solutions
-info@mahoosuc.solutions
+sales@mahoosuc.solutions
 
 ---
 
@@ -88,7 +88,7 @@ info@mahoosuc.solutions
 
 **Subject:** HDIM v3.0.0 launched — BSL open source, live at HIMSS
 
-**From:** info@mahoosuc.solutions
+**From:** sales@mahoosuc.solutions
 
 ---
 
@@ -138,7 +138,7 @@ Aaron
 
 **Subject:** We just open-sourced a 51-service healthcare quality platform (FHIR R4, HEDIS, CQL)
 
-**From:** info@mahoosuc.solutions
+**From:** sales@mahoosuc.solutions
 
 ---
 

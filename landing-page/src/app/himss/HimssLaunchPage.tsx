@@ -284,7 +284,7 @@ export default function HimssLaunchPage() {
           />
           <a
             className={styles.btnGhost}
-            href="mailto:info@mahoosuc.solutions?subject=HIMSS%202026%20—%20HDIM%20Conversation"
+            href="mailto:sales@mahoosuc.solutions?subject=HIMSS%202026%20—%20HDIM%20Conversation"
           >
             Email Us
           </a>

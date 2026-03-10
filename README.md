@@ -90,7 +90,7 @@ Deploy the entire stack in under 3 minutes:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/healthdata-in-motion.git
+git clone https://github.com/mahoosuc-solutions/hdim.git
 cd healthdata-in-motion
 
 # 2. Deploy with Docker (core profile)
@@ -482,8 +482,8 @@ See [Production Security Guide](./docs/PRODUCTION_SECURITY_GUIDE.md) for complet
 | **Having problems?** | [Troubleshooting Guide](./docs/troubleshooting/README.md) - Decision trees and solutions |
 | **Looking for documentation** | [Documentation Portal](./docs/README.md) - Central hub for all docs |
 | **Need service information** | [Service Catalog](./docs/services/SERVICE_CATALOG.md) - All 50+ services |
-| **Want to report a bug** | [GitHub Issues](https://github.com/your-org/healthdata-in-motion/issues) |
-| **Have general questions** | [GitHub Discussions](https://github.com/your-org/healthdata-in-motion/discussions) |
+| **Want to report a bug** | [GitHub Issues](https://github.com/mahoosuc-solutions/hdim/issues) |
+| **Have general questions** | [GitHub Discussions](https://github.com/mahoosuc-solutions/hdim/discussions) |
 | **Need immediate support** | support@healthdata-in-motion.com |
 
 ### Contributing
@@ -533,13 +533,17 @@ See [Year 1 Strategic Roadmap](./docs/YEAR_1_STRATEGIC_ROADMAP.md) for detailed 
 
 ## 📜 License
 
-**Proprietary License**
+Business Source License 1.1 (BSL 1.1).
 
-Copyright © 2025 HealthData-in-Motion. All rights reserved.
+See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) for governing terms.
 
-This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited.
+Non-production use (development, testing, evaluation, education) is permitted.
+Production use requires a separate commercial agreement with Grateful House Inc.
 
-For licensing inquiries: legal@healthdata-in-motion.com
+Compliance references:
+- [docs/compliance/BSL_RELEASE_PLAN.md](./docs/compliance/BSL_RELEASE_PLAN.md)
+- [docs/compliance/LICENSING-BOUNDARY.md](./docs/compliance/LICENSING-BOUNDARY.md)
+- [docs/compliance/THIRD_PARTY_NOTICES.md](./docs/compliance/THIRD_PARTY_NOTICES.md)
 
 ---
 

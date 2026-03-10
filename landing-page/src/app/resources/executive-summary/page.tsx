@@ -294,7 +294,7 @@ export default function ExecutiveSummaryPage() {
           <h2 className={styles.sectionTitle}>The Result</h2>
           <figure style={{ margin: 0 }}>
             <Image
-              src="/resources/screenshots/care-gaps-interventions.jpg"
+              src="/resources/screenshots/care-manager-care-gaps-overview-after.png"
               alt="HDIM care gap management showing patient detail with recommended interventions and success rates"
               width={1913}
               height={922}

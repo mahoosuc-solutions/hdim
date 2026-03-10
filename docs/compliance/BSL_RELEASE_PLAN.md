@@ -120,5 +120,17 @@ Use this map when sharing the portal publicly.
 | Update README licensing section | ✅ Done | 2026-03-09 |
 | Publish /resources/licensing page | ✅ Done | 2026-03-09 |
 | Tag v3.0.0 release | ✅ Done | 2026-03-09 |
-| CI release gate for controlled content | ⏳ Planned | — |
-| Validate portal transparency links in production | ⏳ Planned | — |
+| CI release gate for controlled content | ✅ Done | 2026-03-10 |
+| Validate portal transparency links in production | ✅ Done | 2026-03-10 |
+
+## Operational Validation Evidence (2026-03-10)
+
+- CI workflow added:
+  - `.github/workflows/bsl-launch-ops-gate.yml`
+- Validation script added:
+  - `scripts/validation/validate-bsl-launch-ops.sh`
+- Validation artifacts:
+  - `validation-reports/bsl-launch-ops-summary.md`
+  - `validation-reports/bsl-launch-ops-summary.json`
+- Launch checklist evidence report:
+  - `docs/compliance/BSL_LAUNCH_OPERATIONAL_VALIDATION_2026-03-10.md`

@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Public licensing and compliance transparency for HDIM, including BSL release planning and controlled-content boundaries.',
   alternates: {
-    canonical: 'https://healthdatainmotion.com/resources/licensing',
+    canonical: 'https://hdim-himss.vercel.app/resources/licensing',
   },
 };
 

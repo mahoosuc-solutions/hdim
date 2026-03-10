@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Unified HIMSS briefing for HDIM accelerator, platform, validation, and performance posture.',
   alternates: {
-    canonical: 'https://healthdatainmotion.com/resources/himss-brief',
+    canonical: 'https://hdim-himss.vercel.app/resources/himss-brief',
   },
 };
 

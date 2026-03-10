@@ -1,0 +1,28 @@
+{
+  "generatedAt": "2026-03-10T13:27:39Z",
+  "checks": [
+    {"key":"bsl_release_plan","status":"pass","detail":"docs/compliance/BSL_RELEASE_PLAN.md"}
+,
+    {"key":"licensing_boundary","status":"pass","detail":"docs/compliance/LICENSING-BOUNDARY.md"}
+,
+    {"key":"third_party_notices","status":"pass","detail":"docs/compliance/THIRD_PARTY_NOTICES.md"}
+,
+    {"key":"licensing_transparency_page","status":"pass","detail":"landing-page/src/app/resources/licensing/LicensingTransparencyHub.tsx"}
+,
+    {"key":"himss_brief_url","status":"pass","detail":"https://hdim-himss.vercel.app/resources/himss-brief (200)"}
+,
+    {"key":"trust_center_url","status":"pass","detail":"https://hdim-himss.vercel.app/resources/trust-center (200)"}
+,
+    {"key":"evidence_room_url","status":"pass","detail":"https://hdim-himss.vercel.app/resources/evidence-room (200)"}
+,
+    {"key":"procurement_url","status":"pass","detail":"https://hdim-himss.vercel.app/resources/procurement (200)"}
+,
+    {"key":"licensing_url","status":"pass","detail":"https://hdim-himss.vercel.app/resources/licensing (200)"}
+,
+    {"key":"terms_url","status":"pass","detail":"https://hdim-himss.vercel.app/terms (200)"}
+,
+    {"key":"controlled_content_scan","status":"pass","detail":"No controlled-content filename patterns found in public artifacts"}
+
+  ],
+  "failures": 0
+}

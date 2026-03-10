@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Gated diligence room for security, release, and procurement evidence packets.',
   alternates: {
-    canonical: 'https://healthdatainmotion.com/resources/evidence-room',
+    canonical: 'https://hdim-himss.vercel.app/resources/evidence-room',
   },
 };
 

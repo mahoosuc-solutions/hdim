@@ -28,7 +28,7 @@ Book a Technical Walkthrough
 Contact: sales@mahoosuc.solutions
 
 QR URL:
-`https://landing-page-ecru-five-65.vercel.app/resources/himss-brief?utm_source=himss_print&utm_medium=one_pager&utm_campaign=himss_2026&utm_content=front_back_qr`
+`https://hdim-himss.vercel.app/resources/himss-brief?utm_source=himss_print&utm_medium=one_pager&utm_campaign=himss_2026&utm_content=front_back_qr`
 
 ## Back Sections
 
@@ -51,10 +51,10 @@ QR URL:
 - Weeks 11-13: go-live and operating cadence
 
 ### Proof Links
-- https://landing-page-ecru-five-65.vercel.app/resources/himss-brief
-- https://landing-page-ecru-five-65.vercel.app/resources/trust-center
-- https://landing-page-ecru-five-65.vercel.app/resources/evidence-room
-- https://landing-page-ecru-five-65.vercel.app/resources/licensing
+- https://hdim-himss.vercel.app/resources/himss-brief
+- https://hdim-himss.vercel.app/resources/trust-center
+- https://hdim-himss.vercel.app/resources/evidence-room
+- https://hdim-himss.vercel.app/resources/licensing
 
 ### Close Line
 "Give us your buyer profile, and we will map your exact implementation, subscription, and local impact model in one call."

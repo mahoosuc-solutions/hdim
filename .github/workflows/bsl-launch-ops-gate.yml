@@ -1,0 +1,45 @@
+name: BSL Launch Ops Gate
+
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - "landing-page/**"
+      - "docs/marketing/**"
+      - "docs/compliance/**"
+      - "scripts/validation/validate-bsl-launch-ops.sh"
+      - ".github/workflows/bsl-launch-ops-gate.yml"
+  push:
+    branches: [master]
+    paths:
+      - "landing-page/**"
+      - "docs/marketing/**"
+      - "docs/compliance/**"
+      - "scripts/validation/validate-bsl-launch-ops.sh"
+      - ".github/workflows/bsl-launch-ops-gate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bsl-launch-gate:
+    name: Validate BSL Launch Operational Controls
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run BSL launch operational validation
+        run: |
+          chmod +x scripts/validation/validate-bsl-launch-ops.sh
+          scripts/validation/validate-bsl-launch-ops.sh
+
+      - name: Upload BSL launch validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bsl-launch-ops-validation
+          path: |
+            validation-reports/bsl-launch-ops-summary.md
+            validation-reports/bsl-launch-ops-summary.json

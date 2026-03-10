@@ -12,12 +12,12 @@ Drive one conversion action from all conference channels:
 
 Use these links in all outreach:
 
-- Campaign hub: `https://healthdatainmotion.com/resources/himss-brief`
-- Trust and proof: `https://healthdatainmotion.com/resources/trust-center`
-- Gated diligence: `https://healthdatainmotion.com/resources/evidence-room`
-- CIO/CISO path: `https://healthdatainmotion.com/resources/cio-ciso`
-- Procurement path: `https://healthdatainmotion.com/resources/procurement`
-- Licensing transparency: `https://healthdatainmotion.com/resources/licensing`
+- Campaign hub: `https://hdim-himss.vercel.app/resources/himss-brief`
+- Trust and proof: `https://hdim-himss.vercel.app/resources/trust-center`
+- Gated diligence: `https://hdim-himss.vercel.app/resources/evidence-room`
+- CIO/CISO path: `https://hdim-himss.vercel.app/resources/cio-ciso`
+- Procurement path: `https://hdim-himss.vercel.app/resources/procurement`
+- Licensing transparency: `https://hdim-himss.vercel.app/resources/licensing`
 
 If the custom domain route is unavailable, use fallback aliases from:
 - `docs/marketing/himss/HIMSS_ANNOUNCEMENT_LAUNCH_BRIEF_2026-03-10.md`

@@ -6,7 +6,7 @@ Scope: Multi-page campaign readiness for customer pipeline + strategic partnersh
 ## Decision baseline
 
 - Campaign shape: Multi-page.
-- Canonical destination: `healthdatainmotion.com/resources/*`.
+- Canonical destination: `hdim-himss.vercel.app/resources/*`.
 - Primary conversion action: `Book Meeting`.
 - Timeline profile: 48-hour sprint.
 

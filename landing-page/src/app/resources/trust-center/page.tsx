@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description:
     'Public trust center with claim-to-proof mapping, evidence freshness, and role-based diligence paths.',
   alternates: {
-    canonical: 'https://healthdatainmotion.com/resources/trust-center',
+    canonical: 'https://hdim-himss.vercel.app/resources/trust-center',
   },
 };
 

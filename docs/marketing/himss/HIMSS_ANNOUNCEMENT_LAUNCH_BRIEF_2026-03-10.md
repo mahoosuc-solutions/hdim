@@ -6,12 +6,12 @@ Prepared on: Monday, March 9, 2026
 ## 1) Live URLs to use tomorrow
 
 Primary launch surface (Next.js resources):
-- `https://landing-page-ecru-five-65.vercel.app/resources/himss-brief`
-- `https://landing-page-ecru-five-65.vercel.app/resources/trust-center`
-- `https://landing-page-ecru-five-65.vercel.app/resources/evidence-room`
-- `https://landing-page-ecru-five-65.vercel.app/resources/cio-ciso`
-- `https://landing-page-ecru-five-65.vercel.app/resources/procurement`
-- `https://landing-page-ecru-five-65.vercel.app/resources/licensing`
+- `https://hdim-himss.vercel.app/resources/himss-brief`
+- `https://hdim-himss.vercel.app/resources/trust-center`
+- `https://hdim-himss.vercel.app/resources/evidence-room`
+- `https://hdim-himss.vercel.app/resources/cio-ciso`
+- `https://hdim-himss.vercel.app/resources/procurement`
+- `https://hdim-himss.vercel.app/resources/licensing`
 
 Supporting static portal:
 - `https://web-liart-seven-73.vercel.app/github-pages-share.html`
@@ -56,7 +56,7 @@ Supporting static portal:
 
 Current status:
 - Vercel alias URLs above are live and return HTTP 200.
-- `www.healthdatainmotion.com/resources/himss-brief` currently returns 404.
+- `https://www.healthdatainmotion.com/resources/himss-brief` currently returns 404.
 
 Fallback decision:
-- Use the deployed alias URLs for tomorrow’s announcement unless custom-domain routing is fixed before launch window.
+- Use `https://hdim-himss.vercel.app/resources/*` for this morning's announcement window unless custom-domain routing is fixed before launch window.

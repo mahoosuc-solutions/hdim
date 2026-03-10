@@ -109,11 +109,7 @@ sh get-docker.sh >> /var/log/healthdata-setup.log 2>&1
 usermod -aG docker ubuntu
 usermod -aG docker $SUDO_USER 2>/dev/null || true
 
-# Install Docker Compose
-echo "Installing Docker Compose..." >> /var/log/healthdata-setup.log
-DOCKER_COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep "tag_name" | cut -d\" -f4)
-curl -L "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose >> /var/log/healthdata-setup.log 2>&1
-chmod +x /usr/local/bin/docker-compose
+# Docker Compose v2 is included as a plugin with Docker Engine — no standalone install needed
 
 # Install utilities
 echo "Installing utilities..." >> /var/log/healthdata-setup.log
@@ -143,13 +139,13 @@ if gcloud compute firewall-rules describe healthdata-allow-demo --project=$PROJE
     echo "Firewall rule already exists, updating..."
     gcloud compute firewall-rules update healthdata-allow-demo \
       --project=$PROJECT_ID \
-      --allow=tcp:4200,tcp:8081,tcp:8083,tcp:8087 \
+      --allow=tcp:4200,tcp:8081,tcp:8083,tcp:8084,tcp:8085,tcp:8086,tcp:8087,tcp:8088,tcp:16686,tcp:18080 \
       --target-tags=healthdata-demo
 else
     echo "Creating firewall rule..."
     gcloud compute firewall-rules create healthdata-allow-demo \
       --project=$PROJECT_ID \
-      --allow=tcp:4200,tcp:8081,tcp:8083,tcp:8087 \
+      --allow=tcp:4200,tcp:8081,tcp:8083,tcp:8084,tcp:8085,tcp:8086,tcp:8087,tcp:8088,tcp:16686,tcp:18080 \
       --target-tags=healthdata-demo \
       --description="Allow HealthData demo application ports"
 fi
@@ -180,9 +176,8 @@ echo "Status:     RUNNING"
 echo ""
 echo "Next Steps:"
 echo "1. SSH into VM:       gcloud compute ssh $VM_NAME --zone=$ZONE"
-echo "2. Clone repository:  cd /opt/healthdata && git clone YOUR_REPO_URL"
-echo "3. Deploy app:        Run docker-compose up -d"
-echo "4. Load demo data:    ./load-demo-data.sh"
+echo "2. Clone repository:  cd /opt/healthdata && git clone https://github.com/mahoosuc-solutions/hdim.git"
+echo "3. Deploy app:        cd hdim && docker compose -f docker-compose.demo.yml up -d"
 echo ""
 echo "Or use the automated deployment script:"
 echo "  ./scripts/gcp-deploy-app.sh"

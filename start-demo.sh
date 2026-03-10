@@ -9,6 +9,9 @@ GATEWAY_URL="${GATEWAY_URL:-http://localhost:18080}"
 
 echo "🚀 Starting HealthData In Motion Demo..."
 
+# Ensure Docker network exists
+docker network create demo_hdim-demo-network 2>/dev/null || true
+
 # Start demo stack
 echo "📦 Starting demo stack..."
 docker compose -f "$COMPOSE_FILE" up -d
@@ -25,7 +28,7 @@ echo "  Clinical Portal:         http://localhost:4200"
 echo ""
 echo "🔐 Test Login:"
 echo "  POST ${GATEWAY_URL}/api/v1/auth/login"
-echo '  Body: {"username":"admin","password":"admin123"}'
+echo '  Body: {"username":"demo_admin","password":"demo123"}'
 echo ""
 echo "📊 Service Logs:"
 echo "  Gateways:                docker compose -f \"$COMPOSE_FILE\" logs -f gateway-admin-service gateway-fhir-service gateway-clinical-service"

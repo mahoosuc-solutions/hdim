@@ -255,7 +255,7 @@ services:
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx256m -Xms128m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=0"
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
@@ -331,7 +331,7 @@ services:
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx256m -Xms128m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=0"
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
@@ -411,7 +411,7 @@ services:
       OTEL_SERVICE_NAME: audit-query-service
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx3g -Xms512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-audit
     ports:
@@ -458,7 +458,7 @@ services:
       SPRING_REDIS_PORT: 6379
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx256m -Xms128m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true -Dsun.net.inetaddr.ttl=60 -Dsun.net.inetaddr.negative.ttl=0"
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY: DEBUG
       LOGGING_LEVEL_COM_HEALTHDATA_GATEWAY_SERVICE: DEBUG
@@ -813,7 +813,7 @@ services:
       LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB_SERVLET_MVC: INFO
       GATEWAY_AUTH_DEV_MODE: "true"
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
-      JAVA_OPTS: "-Xmx1800m -Xms900m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=85.0 -XX:InitialRAMPercentage=40.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-fhir
       HEALTHCHECK_TENANT_ID: acme-health
@@ -885,7 +885,7 @@ services:
       TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: /actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx2g -Xms512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-cql-engine
     ports:
@@ -935,7 +935,7 @@ services:
       OTEL_SERVICE_NAME: patient-service
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx2g -Xms512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-patient
     ports:
@@ -987,7 +987,7 @@ services:
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       FHIR_SERVICE_URL: http://fhir-service:8085
-      JAVA_OPTS: "-Xmx2048m -Xms512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-quality-measure
     ports:
@@ -1039,7 +1039,7 @@ services:
       GATEWAY_AUTH_DEV_MODE: "true"
       SPRING_FLYWAY_ENABLED: "false"
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx1024m -Xms256m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-care-gap
     ports:
@@ -1086,7 +1086,7 @@ services:
       GATEWAY_AUTH_SIGNING_SECRET: '2J3YcbuHgPp0xyMq3GHYJ/MNolqB+Hvp4j/fsA6LQYM='
       JWT_SECRET: DemoSecretKeyForHDIMShouldBeAtLeast256BitsLongForHS256Algorithm12345678
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JAVA_OPTS: "-Xmx1024m -Xms512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-events
     ports:
@@ -1154,7 +1154,7 @@ services:
       # HCC model weights (V24/V28 transition blending)
       HCC_MODEL_V24_WEIGHT: "0.33"
       HCC_MODEL_V28_WEIGHT: "0.67"
-      JAVA_OPTS: "-Xmx1024m -Xms512m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       HEALTH_TENANT_ID: service-health-hcc
     ports:
@@ -1201,7 +1201,7 @@ services:
       SPRING_LIQUIBASE_CLEAR_CHECKSUMS: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       OTEL_SERVICE_NAME: demo-seeding-service
-      JAVA_OPTS: "-Xmx384m -Xms192m"
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0"
       JAVA_TOOL_OPTIONS: "-Djava.net.preferIPv4Stack=true"
       # Downstream service URLs - Use direct service URLs to avoid gateway timeout issues
       FHIR_SERVICE_URL: http://fhir-service:8085/fhir
@@ -1242,7 +1242,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2048M
+          memory: 512M
 
   # Ops Service - orchestrates on-prem deployment steps for MFE console
   ops-service:
@@ -1321,7 +1321,6 @@ services:
 networks:
   hdim-demo-network:
     name: demo_hdim-demo-network
-    external: true
 
 volumes:
   demo_postgres_data:

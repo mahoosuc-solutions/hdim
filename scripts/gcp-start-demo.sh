@@ -59,25 +59,34 @@ echo "Step 2/3: Starting Docker services..."
 # Start Docker containers
 gcloud compute ssh $VM_NAME --project=$PROJECT_ID --zone=$ZONE --command='
     set -e
-    cd /opt/healthdata/healthdata-in-motion
+    cd /opt/healthdata/hdim
+
+    # Ensure network exists
+    docker network create demo_hdim-demo-network 2>/dev/null || true
 
     echo "🐳 Starting containers..."
-    docker-compose up -d
+    docker compose -f docker-compose.demo.yml up -d
 
     echo "⏳ Waiting for services to initialize (30 seconds)..."
     sleep 30
 
     echo ""
     echo "📊 Container Status:"
-    docker-compose ps
+    docker compose -f docker-compose.demo.yml ps
 
     echo ""
     echo "🏥 Service Health Checks:"
     echo -n "FHIR Service:        "
-    curl -sf http://localhost:8083/fhir/actuator/health > /dev/null && echo "✅ UP" || echo "⚠️  Not ready yet"
+    curl -sf http://localhost:8085/fhir/actuator/health > /dev/null && echo "✅ UP" || echo "⚠️  Not ready yet"
 
     echo -n "CQL Engine:          "
     curl -sf http://localhost:8081/cql-engine/actuator/health > /dev/null && echo "✅ UP" || echo "⚠️  Not ready yet"
+
+    echo -n "Patient Service:     "
+    curl -sf http://localhost:8084/patient/actuator/health > /dev/null && echo "✅ UP" || echo "⚠️  Not ready yet"
+
+    echo -n "Care Gap Service:    "
+    curl -sf http://localhost:8086/care-gap/actuator/health > /dev/null && echo "✅ UP" || echo "⚠️  Not ready yet"
 
     echo -n "Quality Measure:     "
     curl -sf http://localhost:8087/quality-measure/actuator/health > /dev/null && echo "✅ UP" || echo "⚠️  Not ready yet"
@@ -94,9 +103,6 @@ VM_IP=$(gcloud compute instances describe $VM_NAME \
   --zone=$ZONE \
   --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
 
-# Calculate uptime cost
-UPTIME_COST=$(echo "scale=2; 0.15" | bc)
-
 echo ""
 echo "================================================"
 echo "  ✅ Demo is Ready!"
@@ -104,14 +110,17 @@ echo "================================================"
 echo ""
 echo "🌐 Access URLs:"
 echo "   Clinical Portal:  http://$VM_IP:4200"
-echo "   FHIR API:         http://$VM_IP:8083/fhir"
+echo "   Gateway Edge:     http://$VM_IP:18080"
+echo "   FHIR API:         http://$VM_IP:8085/fhir"
+echo "   Patient Service:  http://$VM_IP:8084/patient"
+echo "   Care Gap Service: http://$VM_IP:8086/care-gap"
 echo "   CQL Engine:       http://$VM_IP:8081/cql-engine"
 echo "   Quality Measure:  http://$VM_IP:8087/quality-measure"
-echo "   API Documentation: http://$VM_IP:8087/quality-measure/swagger-ui.html"
+echo "   Jaeger Tracing:   http://$VM_IP:16686"
 echo ""
 echo "🔑 Demo Credentials:"
-echo "   Username: demo@healthdata.com"
-echo "   Password: Demo123!"
+echo "   Username: demo_admin@hdim.ai"
+echo "   Password: demo123"
 echo ""
 echo "💡 Tips:"
 echo "   - Services may take 2-3 minutes to fully initialize"
@@ -119,7 +128,7 @@ echo "   - WebSocket real-time updates enabled"
 echo "   - HIPAA-compliant security active"
 echo ""
 echo "💰 Running Cost:"
-echo "   $0.15/hour (~$110/month if left running)"
+echo "   \$0.15/hour (~\$110/month if left running)"
 echo ""
 echo "🛑 When Finished:"
 echo "   ./scripts/gcp-stop-demo.sh"

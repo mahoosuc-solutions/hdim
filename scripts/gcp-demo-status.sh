@@ -59,23 +59,37 @@ if [ "$STATUS" == "RUNNING" ]; then
     gcloud compute ssh $VM_NAME --project=$PROJECT_ID --zone=$ZONE --command='
         set +e
 
-        if [ ! -d "/opt/healthdata/healthdata-in-motion" ]; then
+        if [ ! -d "/opt/healthdata/hdim" ]; then
             echo "⚠️  Application not deployed yet"
             echo ""
             echo "Deploy application:"
-            echo "  ssh into VM and run docker-compose up -d"
+            echo "  ./scripts/gcp-deploy-app.sh"
             exit 0
         fi
 
-        cd /opt/healthdata/healthdata-in-motion
+        cd /opt/healthdata/hdim
 
         echo "Docker Containers:"
-        docker-compose ps 2>/dev/null || echo "  Docker Compose not running"
+        docker compose -f docker-compose.demo.yml ps 2>/dev/null || echo "  Docker Compose not running"
         echo ""
 
         echo "Service Health:"
+        echo -n "  Gateway Edge:        "
+        if curl -sf http://localhost:18080/ > /dev/null 2>&1; then
+            echo "✅ UP"
+        else
+            echo "❌ DOWN"
+        fi
+
         echo -n "  FHIR Service:        "
-        if curl -sf http://localhost:8083/fhir/actuator/health > /dev/null 2>&1; then
+        if curl -sf http://localhost:8085/fhir/actuator/health > /dev/null 2>&1; then
+            echo "✅ UP"
+        else
+            echo "❌ DOWN"
+        fi
+
+        echo -n "  Patient Service:     "
+        if curl -sf http://localhost:8084/patient/actuator/health > /dev/null 2>&1; then
             echo "✅ UP"
         else
             echo "❌ DOWN"
@@ -83,6 +97,13 @@ if [ "$STATUS" == "RUNNING" ]; then
 
         echo -n "  CQL Engine:          "
         if curl -sf http://localhost:8081/cql-engine/actuator/health > /dev/null 2>&1; then
+            echo "✅ UP"
+        else
+            echo "❌ DOWN"
+        fi
+
+        echo -n "  Care Gap Service:    "
+        if curl -sf http://localhost:8086/care-gap/actuator/health > /dev/null 2>&1; then
             echo "✅ UP"
         else
             echo "❌ DOWN"
@@ -96,14 +117,21 @@ if [ "$STATUS" == "RUNNING" ]; then
         fi
 
         echo -n "  PostgreSQL:          "
-        if docker-compose exec -T postgres pg_isready -U healthdata > /dev/null 2>&1; then
+        if docker compose -f docker-compose.demo.yml exec -T postgres pg_isready -U healthdata > /dev/null 2>&1; then
             echo "✅ UP"
         else
             echo "❌ DOWN"
         fi
 
         echo -n "  Redis:               "
-        if docker-compose exec -T redis redis-cli ping > /dev/null 2>&1; then
+        if docker compose -f docker-compose.demo.yml exec -T redis redis-cli ping > /dev/null 2>&1; then
+            echo "✅ UP"
+        else
+            echo "❌ DOWN"
+        fi
+
+        echo -n "  Jaeger:              "
+        if curl -sf http://localhost:16686/ > /dev/null 2>&1; then
             echo "✅ UP"
         else
             echo "❌ DOWN"
@@ -113,20 +141,23 @@ if [ "$STATUS" == "RUNNING" ]; then
     echo ""
     echo "Access URLs:"
     echo "  Clinical Portal:  http://$VM_IP:4200"
-    echo "  FHIR API:         http://$VM_IP:8083/fhir"
+    echo "  Gateway Edge:     http://$VM_IP:18080"
+    echo "  FHIR API:         http://$VM_IP:8085/fhir"
+    echo "  Patient Service:  http://$VM_IP:8084/patient"
+    echo "  Care Gap Service: http://$VM_IP:8086/care-gap"
     echo "  CQL Engine:       http://$VM_IP:8081/cql-engine"
     echo "  Quality Measure:  http://$VM_IP:8087/quality-measure"
-    echo "  Swagger Docs:     http://$VM_IP:8087/quality-measure/swagger-ui.html"
+    echo "  Jaeger Tracing:   http://$VM_IP:16686"
     echo ""
 
-    echo "💰 Current Cost: $0.15/hour (~$110/month)"
+    echo "💰 Current Cost: \$0.15/hour (~\$110/month)"
     echo ""
     echo "To stop and save costs:"
     echo "  ./scripts/gcp-stop-demo.sh"
 
 elif [ "$STATUS" == "TERMINATED" ]; then
     echo "💾 Data Status:    ✅ Preserved"
-    echo "💰 Current Cost:   $0/hour (only storage: ~$17/month)"
+    echo "💰 Current Cost:   \$0/hour (only storage: ~\$17/month)"
     echo ""
     echo "To start demo:"
     echo "  ./scripts/gcp-start-demo.sh"

@@ -29,7 +29,7 @@ STATUS=$(gcloud compute instances describe $VM_NAME \
 if [ "$STATUS" == "TERMINATED" ]; then
     echo "ℹ️  VM is already STOPPED"
     echo "💾 Data preserved for next startup"
-    echo "💰 Current cost: $0/hour (only storage: ~$17/month)"
+    echo "💰 Current cost: \$0/hour (only storage: ~\$17/month)"
     exit 0
 fi
 
@@ -38,14 +38,14 @@ echo "Step 1/2: Stopping Docker services (preserving data)..."
 # Stop Docker containers gracefully
 gcloud compute ssh $VM_NAME --project=$PROJECT_ID --zone=$ZONE --command='
     set -e
-    cd /opt/healthdata/healthdata-in-motion
+    cd /opt/healthdata/hdim
 
     echo "🐳 Stopping Docker containers..."
-    docker-compose stop
+    docker compose -f docker-compose.demo.yml stop
 
     echo ""
     echo "📊 Container Status:"
-    docker-compose ps
+    docker compose -f docker-compose.demo.yml ps
 
     echo ""
     echo "💾 Data volumes preserved for next startup"
@@ -77,8 +77,8 @@ echo "Docker Images:  ✅ Preserved"
 echo "Database:       ✅ Preserved"
 echo ""
 echo "💰 Cost Savings:"
-echo "   Before: $0.15/hour (~$110/month)"
-echo "   After:  $0/hour (only $17/month for storage)"
+echo "   Before: \$0.15/hour (~\$110/month)"
+echo "   After:  \$0/hour (only \$17/month for storage)"
 echo ""
 echo "🚀 To restart:"
 echo "   ./scripts/gcp-start-demo.sh"

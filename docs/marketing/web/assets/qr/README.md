@@ -14,14 +14,14 @@ All QR URLs use:
 - `utm_content=<asset-slug>`
 
 ## Included tracked targets
-- `hub.png` (`utm_content=hub`) -> `https://landing-page-ecru-five-65.vercel.app/resources`
-- `origin-story.png` (`utm_content=origin-story`) -> `https://landing-page-ecru-five-65.vercel.app/resources/origin-story`
-- `executive-summary.png` (`utm_content=executive-summary`) -> `https://landing-page-ecru-five-65.vercel.app/resources/executive-summary`
-- `java-rebuild.png` (`utm_content=java-rebuild`) -> `https://landing-page-ecru-five-65.vercel.app/resources/java-rebuild`
-- `architecture-evolution.png` (`utm_content=architecture-evolution`) -> `https://landing-page-ecru-five-65.vercel.app/resources/architecture-evolution`
-- `evidence-room.png` (`utm_content=evidence-room`) -> `https://landing-page-ecru-five-65.vercel.app/resources/evidence-room`
-- `technical-path.png` (`utm_content=technical-path`) -> `https://landing-page-ecru-five-65.vercel.app/resources/technical`
-- `himss-brief.png` (`utm_content=himss-brief`) -> `https://landing-page-ecru-five-65.vercel.app/resources/himss-brief`
+- `hub.png` (`utm_content=hub`) -> `https://hdim-himss.vercel.app/resources`
+- `origin-story.png` (`utm_content=origin-story`) -> `https://hdim-himss.vercel.app/resources/origin-story`
+- `executive-summary.png` (`utm_content=executive-summary`) -> `https://hdim-himss.vercel.app/resources/executive-summary`
+- `java-rebuild.png` (`utm_content=java-rebuild`) -> `https://hdim-himss.vercel.app/resources/java-rebuild`
+- `architecture-evolution.png` (`utm_content=architecture-evolution`) -> `https://hdim-himss.vercel.app/resources/architecture-evolution`
+- `evidence-room.png` (`utm_content=evidence-room`) -> `https://hdim-himss.vercel.app/resources/evidence-room`
+- `technical-path.png` (`utm_content=technical-path`) -> `https://hdim-himss.vercel.app/resources/technical`
+- `himss-brief.png` (`utm_content=himss-brief`) -> `https://hdim-himss.vercel.app/resources/himss-brief`
 
 ## Naming
 PNG filenames and `utm_content` use matching slugs for attribution consistency.

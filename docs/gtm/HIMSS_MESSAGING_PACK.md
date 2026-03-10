@@ -94,3 +94,38 @@ HealthData-in-Motion (HDIM) is a source-available platform that helps teams:
 - Sales: sales@mahoosuc.solutions
 - Security: sales@mahoosuc.solutions
 - Info: sales@mahoosuc.solutions
+
+## 4. BSL Plain-Language Card
+
+Use this exact wording when licensing questions come up:
+
+1. HDIM is source-available for evaluation and non-production development.
+2. Production and hosted use require commercial rights and support terms.
+3. BSL conversion terms are defined in the public licensing transparency path.
+
+Primary licensing path:
+- `https://hdim-himss.vercel.app/resources/licensing`
+
+## 5. Persona Routing + Next Step Card
+
+| Persona | URL to Share | Immediate Next Step |
+|---|---|---|
+| CIO/CISO | `https://hdim-himss.vercel.app/resources/cio-ciso` | Book 15-minute architecture and security review |
+| Procurement / Partner | `https://hdim-himss.vercel.app/resources/procurement` | Book commercial scoping call |
+| Clinical / Quality Leadership | `https://hdim-himss.vercel.app/resources/clinical` | Book workflow outcomes walkthrough |
+| Mixed executive buyer | `https://hdim-himss.vercel.app/resources/himss-brief` | Book cross-functional briefing |
+| Diligence packet request | `https://hdim-himss.vercel.app/resources/evidence-room` | Submit evidence access request |
+
+## 6. Pricing + Local Impact Card
+
+Use this exact framing:
+
+1. Implementation fee is story-pointed with explicit ALF assumptions.
+2. Annual subscription is platform + integration + intelligence tiers.
+3. Every deal includes a hard-wired local impact allocation (1/2/3% by size tier).
+4. Local impact allocation is not optional line-item discounting.
+
+Pricing and policy references:
+- `docs/sales/03-sales-tools/pricing-guide.md`
+- `docs/sales/03-sales-tools/ai-pricing-forecast-schema.md`
+- `docs/gtm/AI_PRICING_LOCAL_IMPACT_POLICY.md`

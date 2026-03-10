@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdim-common-config
+  labels:
+    app.kubernetes.io/part-of: hdim-platform
+data:
+  SPRING_PROFILES_ACTIVE: "demo"
+  JAVA_OPTS: "-XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=25.0 -XX:+UseG1GC"
+  SERVER_TOMCAT_ACCESSLOG_ENABLED: "true"
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+  MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+  MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED: "true"
+  LOGGING_LEVEL_ROOT: "INFO"
+  LOGGING_LEVEL_COM_HEALTHDATA: "DEBUG"
+  SPRING_FLYWAY_ENABLED: "false"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  GATEWAY_AUTH_DEV_MODE: "true"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318/v1/traces"
+  OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdim-service-urls
+  labels:
+    app.kubernetes.io/part-of: hdim-platform
+data:
+  FHIR_SERVICE_URL: "http://fhir-service:8085/fhir"
+  FHIR_EXTERNAL_URL: "http://fhir-service:8085/fhir"
+  FHIR_SERVER_URL: "http://fhir-service:8085/fhir"
+  PATIENT_SERVICE_URL: "http://patient-service:8084/patient"
+  CARE_GAP_SERVICE_URL: "http://care-gap-service:8086/care-gap"
+  QUALITY_MEASURE_SERVICE_URL: "http://quality-measure-service:8087/quality-measure"
+  CQL_ENGINE_SERVICE_URL: "http://cql-engine-service:8081/cql-engine"
+  EVENT_PROCESSING_SERVICE_URL: "http://event-processing-service:8083/events"
+  GATEWAY_SERVICE_URL: "http://gateway-edge:8080"

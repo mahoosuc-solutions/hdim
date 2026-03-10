@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-seeding-service
+  labels:
+    app: demo-seeding-service
+    app.kubernetes.io/part-of: hdim-platform
+    tier: core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-seeding-service
+  template:
+    metadata:
+      labels:
+        app: demo-seeding-service
+        tier: core
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values: ["demo-seeding-service"]
+                topologyKey: kubernetes.io/hostname
+      containers:
+        - name: demo-seeding-service
+          image: ghcr.io/mahoosuc-solutions/hdim/demo-seeding-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8098
+          envFrom:
+            - configMapRef:
+                name: hdim-common-config
+            - configMapRef:
+                name: hdim-service-urls
+            - configMapRef:
+                name: hdim-demo-config
+            - secretRef:
+                name: hdim-db-credentials
+            - secretRef:
+                name: hdim-redis-credentials
+            - secretRef:
+                name: hdim-kafka-credentials
+            - secretRef:
+                name: hdim-jwt-credentials
+            - secretRef:
+                name: hdim-gateway-db
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: demo-seeding-service
+            - name: HEALTH_TENANT_ID
+              value: service-health-demo-seeding
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://postgres:5432/healthdata_demo
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Djava.net.preferIPv4Stack=true"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /demo/actuator/health/liveness
+              port: 8098
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /demo/actuator/health/readiness
+              port: 8098
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+          volumeMounts:
+            - name: snapshots
+              mountPath: /app/snapshots
+      volumes:
+        - name: snapshots
+          persistentVolumeClaim:
+            claimName: demo-snapshots
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-seeding-service
+  labels:
+    app: demo-seeding-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8098
+      targetPort: 8098
+  selector:
+    app: demo-seeding-service
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: demo-snapshots
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi

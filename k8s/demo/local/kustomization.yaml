@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Local overlay uses components approach to avoid kustomize cycle detection.
+# The k3s-local-up.sh script builds the base first then applies patches.
+# This file is used by: kubectl kustomize k8s/demo/ | kubectl apply -f -
+# Then patches are applied separately.
+
+# For local development, we use the base manifests directly.
+# The k3s-local-up.sh script handles:
+#   1. kubectl apply -k k8s/demo/  (base manifests)
+#   2. Local-specific patches applied via kubectl patch commands

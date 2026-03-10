@@ -1,0 +1,7 @@
+# HDIM Demo (k3d local) — added by k3s-local-up.sh, removed by k3s-local-down.sh
+127.0.0.1 demo.healthdatainmotion.com
+127.0.0.1 api.healthdatainmotion.com
+127.0.0.1 fhir.healthdatainmotion.com
+127.0.0.1 traces.healthdatainmotion.com
+127.0.0.1 docs.healthdatainmotion.com
+127.0.0.1 ops.healthdatainmotion.com

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdim-demo-config
+  labels:
+    app.kubernetes.io/part-of: hdim-platform
+data:
+  DEMO_GENERATION_DEFAULT_PATIENT_COUNT: "200"
+  DEMO_MULTI_TENANT_PATIENTS_PER_TENANT: "100"
+  DEMO_PERFORMANCE_PARALLEL_GENERATION: "false"
+  DEMO_PERFORMANCE_MAX_CONCURRENT_REQUESTS: "2"
+  DEMO_QUALITY_MEASURES_ENABLED: "false"
+  DEMO_PERSISTENCE_ENABLED: "true"
+  FHIR_TARGET: "internal"
+  TENANT_ENFORCEMENT_MODE: "enforce"
+  TENANT_ENFORCEMENT_MISSING_TENANT_PATHS: "/actuator,/swagger-ui,/v3/api-docs,/fhir/metadata,/metadata,/api/v1/auth"

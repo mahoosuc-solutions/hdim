@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ops-service
+  labels:
+    app: ops-service
+    app.kubernetes.io/part-of: hdim-platform
+    tier: ops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ops-service
+  template:
+    metadata:
+      labels:
+        app: ops-service
+        tier: ops
+    spec:
+      containers:
+        - name: ops-service
+          image: ghcr.io/mahoosuc-solutions/hdim/ops-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4710
+          env:
+            - name: PORT
+              value: "4710"
+            - name: DEMO_SEEDING_URL
+              value: "http://demo-seeding-service:8098"
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ops-service
+  labels:
+    app: ops-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 4710
+      targetPort: 4710
+  selector:
+    app: ops-service

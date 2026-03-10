@@ -56,7 +56,6 @@ Supporting static portal:
 
 Current status:
 - Vercel alias URLs above are live and return HTTP 200.
-- `https://www.healthdatainmotion.com/resources/himss-brief` currently returns 404.
 
-Fallback decision:
-- Use `https://hdim-himss.vercel.app/resources/*` for this morning's announcement window unless custom-domain routing is fixed before launch window.
+Launch decision:
+- Use `https://hdim-himss.vercel.app/resources/*` as the canonical route set for this morning launch window.

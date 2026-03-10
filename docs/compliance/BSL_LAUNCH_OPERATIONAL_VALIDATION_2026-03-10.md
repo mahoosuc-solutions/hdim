@@ -79,10 +79,7 @@ Updated artifacts include:
 - `docs/marketing/himss/print-deck-2026-03-10/07-licensing-transparency-poster.html`
 - `docs/marketing/himss/print-deck-2026-03-10/09-himss-front-back-onepager.html`
 
-## 5) Remaining External Dependency
-
-Custom domain status at validation time:
-- `https://www.healthdatainmotion.com/resources/*` still returned 404.
+## 5) Canonical Launch Host
 
 Operational decision:
 - Use `https://hdim-himss.vercel.app/resources/*` as the canonical launch host for this morning window.

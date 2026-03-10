@@ -1,7 +1,16 @@
 # HIMSS Messaging Pack
 
-**Date:** 2026-03-07  
+**Date:** 2026-03-10  
 **Context:** HIMSS 2026 launch conversations
+
+## 0. Conference-Morning Priorities (Do First)
+
+Use this order if you only have a few hours:
+1. Open with 30-second pitch + one segment-specific proof point.
+2. Qualify buyer type (payer, provider/health system, ACO/FQHC, vendor/partner).
+3. Share AI pricing + local impact model (1/2/3% local reinvestment).
+4. Capture next step before ending conversation (demo slot or procurement call).
+5. Log contact + buyer type + urgency in CRM within 5 minutes.
 
 ## 1. Elevator Pitch
 
@@ -82,7 +91,6 @@ HealthData-in-Motion (HDIM) is a source-available platform that helps teams:
 
 ### Contact
 
-- Sales: sales@gratefulhouse.com
-- Security: security@gratefulhouse.com
-- Info: info@gratefulhouse.com
-
+- Sales: sales@mahoosuc.solutions
+- Security: sales@mahoosuc.solutions
+- Info: sales@mahoosuc.solutions

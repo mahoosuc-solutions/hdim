@@ -11,15 +11,15 @@
 | 1 | Missouri PCA | 01-FQHC | 21 | | | | | | | | | | new | Research dossier |
 | 2 | OACHC | 01-FQHC | 21 | | | | | | | | | | new | Research dossier |
 | 3 | WVPCA | 01-FQHC | 19 | | | | | | | | | | new | Research dossier |
-| 4 | IPHCA | 01-FQHC | 19 | | | | | | | | | | new | Research dossier |
+| 4 | IPHCA | 01-FQHC | 19 | CINI launch + 5 MCO partnerships | 2024-11 | | | | | | | | triggered | Initiate T1 outreach |
 | 5 | Priority Health (Corewell) | 02-MA Plan | 21 | | | | | | | | | | new | Research dossier |
 | 6 | Agilon Health | 02-MA Plan | 21 | | | | | | | | | | new | Research dossier |
-| 7 | Fallon Health (MGB acq.) | 02-MA Plan | 21 | MGB acquisition | 2026-01 | | | | | | | | new | Research dossier |
+| 7 | Fallon Health (MGB acq.) | 02-MA Plan | 21 | MGB acquisition announced | 2026-01-08 | | | | | | | | triggered | Initiate T1 outreach |
 | 8 | Greater Regional Health | 03-ACO | 19 | | | | | | | | | | new | Research dossier |
 | 9 | Central Ohio Primary Care | 03-ACO | 21 | | | | | | | | | | new | Research dossier |
-| 10 | Privia Health | 03-ACO | 23 | Evolent ACO acquisition | 2025-12 | | | | | | | | new | Research dossier |
-| 11 | ChristianaCare | 04-Health System | 21 | | | | | | | | | | new | Research dossier |
-| 12 | Gundersen Health | 04-Health System | 23 | | | | | | | | | | new | Research dossier |
+| 10 | Privia Health | 03-ACO | 23 | Evolent ACO acquisition closed | 2025-12-05 | | | | | | | | triggered | Initiate T1 outreach |
+| 11 | ChristianaCare | 04-Health System | 21 | Epic migration + VP EHR hire | 2025-01 | | | | | | | | triggered | Initiate T1 outreach |
+| 12 | Gundersen Health (Emplify) | 04-Health System | 23 | Unified Epic go-live + EmPATH unit | 2025-07 | | | | | | | | triggered | Initiate T1 outreach |
 | 13 | Henry Ford Health | 04-Health System | 19 | | | | | | | | | | new | Research dossier |
 | 14 | Altais / Brown & Toland | 05-Specialty | 21 | | | | | | | | | | new | Dossier complete |
 | 15 | Catalyst Health Network | 05-Specialty | 21 | | | | | | | | | | new | Dossier complete |

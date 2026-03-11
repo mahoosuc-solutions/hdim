@@ -9,7 +9,8 @@ spring:
     allow-circular-references: true
   
   liquibase:
-    enabled: false  # gateway-service manages schema
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   cache:
     type: none  # Disable Redis cache to avoid circular dependencies
@@ -751,3 +752,16 @@ management:
 # Distributed Tracing
 tracing:
   url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+
+hdim:
+  demo-tenant:
+    enabled: ${HDIM_DEMO_TENANT_ENABLED:true}
+    id: ${HDIM_DEMO_TENANT_ID:demo}
+    name: ${HDIM_DEMO_TENANT_NAME:HDIM Demo}
+    admin-username: ${HDIM_DEMO_ADMIN_USERNAME:demo_admin}
+    admin-email: ${HDIM_DEMO_ADMIN_EMAIL:demo_admin@hdim.local}
+    admin-password: ${HDIM_DEMO_ADMIN_PASSWORD:changeme123}
+    analyst-username: ${HDIM_DEMO_ANALYST_USERNAME:demo_analyst}
+    analyst-email: ${HDIM_DEMO_ANALYST_EMAIL:demo_analyst@hdim.local}
+    viewer-username: ${HDIM_DEMO_VIEWER_USERNAME:demo_viewer}
+    viewer-email: ${HDIM_DEMO_VIEWER_EMAIL:demo_viewer@hdim.local}

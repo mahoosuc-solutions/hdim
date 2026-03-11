@@ -1,0 +1,140 @@
+{
+  "archetype": "02-ma-plan-chasing-4-stars",
+  "displayName": "MA Plan — Chasing 4 Stars",
+  "population": {
+    "totalPatients": 120000,
+    "seedPatients": 2400,
+    "payerMix": {
+      "maPD": 0.72,
+      "maOnly": 0.10,
+      "dSNP": 0.18
+    },
+    "ageDistribution": {
+      "0-17": 0.0,
+      "18-44": 0.0,
+      "45-64": 0.08,
+      "65+": 0.92
+    },
+    "chronicConditionPrevalence": {
+      "diabetes": 0.28,
+      "hypertension": 0.54,
+      "chf": 0.12,
+      "copd": 0.14,
+      "depression": 0.19,
+      "ckd": 0.16
+    }
+  },
+  "measures": [
+    {
+      "id": "PDC-DR",
+      "name": "Medication Adherence — Diabetes",
+      "currentRate": 0.78,
+      "targetRate": 0.80,
+      "openGaps": 3200,
+      "recentClosures": 89,
+      "starsWeight": 0.15
+    },
+    {
+      "id": "PDC-RASA",
+      "name": "Medication Adherence — RAS Antagonists",
+      "currentRate": 0.79,
+      "targetRate": 0.81,
+      "openGaps": 2870,
+      "recentClosures": 74,
+      "starsWeight": 0.15
+    },
+    {
+      "id": "PDC-STA",
+      "name": "Medication Adherence — Statins",
+      "currentRate": 0.77,
+      "targetRate": 0.80,
+      "openGaps": 3640,
+      "recentClosures": 82,
+      "starsWeight": 0.15
+    },
+    {
+      "id": "BCS",
+      "name": "Breast Cancer Screening",
+      "currentRate": 0.71,
+      "targetRate": 0.74,
+      "openGaps": 4120,
+      "recentClosures": 0,
+      "starsWeight": 0.08
+    },
+    {
+      "id": "COL",
+      "name": "Colorectal Cancer Screening",
+      "currentRate": 0.68,
+      "targetRate": 0.72,
+      "openGaps": 5340,
+      "recentClosures": 0,
+      "starsWeight": 0.08
+    },
+    {
+      "id": "HBD",
+      "name": "HbA1c Control (<8%)",
+      "currentRate": 0.62,
+      "targetRate": 0.67,
+      "openGaps": 6080,
+      "recentClosures": 31,
+      "starsWeight": 0.06
+    },
+    {
+      "id": "CBP",
+      "name": "Controlling High Blood Pressure",
+      "currentRate": 0.66,
+      "targetRate": 0.70,
+      "openGaps": 5100,
+      "recentClosures": 18,
+      "starsWeight": 0.06
+    },
+    {
+      "id": "EED",
+      "name": "Diabetic Eye Exam",
+      "currentRate": 0.59,
+      "targetRate": 0.65,
+      "openGaps": 7200,
+      "recentClosures": 0,
+      "starsWeight": 0.06
+    },
+    {
+      "id": "SPC",
+      "name": "Statin Therapy for CVD",
+      "currentRate": 0.74,
+      "targetRate": 0.78,
+      "openGaps": 2950,
+      "recentClosures": 45,
+      "starsWeight": 0.06
+    },
+    {
+      "id": "PCR",
+      "name": "Plan All-Cause Readmissions",
+      "currentRate": 0.148,
+      "targetRate": 0.135,
+      "openGaps": 412,
+      "recentClosures": 3,
+      "starsWeight": 0.10
+    }
+  ],
+  "providers": {
+    "pcpCount": 480,
+    "specialistCount": 1200,
+    "careManagerCount": 28,
+    "pharmacyOutreachCount": 6,
+    "qualityAnalystCount": 4
+  },
+  "facilities": [],
+  "starsProjection": {
+    "currentRating": 3.5,
+    "projectedRating": 3.72,
+    "qualityBonusAtStake": 12000000,
+    "measurementDaysRemaining": 142,
+    "measuresNearCutPoint": 6
+  },
+  "mondayMorningHighlights": {
+    "gapsClosedThisWeek": 297,
+    "rateImprovement": "77.8% → 78.1% (PDC-DR)",
+    "topOutreachList": 3200,
+    "urgentAlerts": 6
+  }
+}

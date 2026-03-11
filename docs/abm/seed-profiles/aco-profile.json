@@ -1,0 +1,148 @@
+{
+  "archetype": "03-aco-under-the-gun",
+  "displayName": "ACO — Under the Gun",
+  "population": {
+    "totalPatients": 52000,
+    "seedPatients": 1800,
+    "practiceSites": 34,
+    "payerMix": {
+      "traditionalMedicare": 1.0,
+      "dualEligibleSubset": 0.22
+    },
+    "ageDistribution": {
+      "0-17": 0.0,
+      "18-44": 0.0,
+      "45-64": 0.15,
+      "65+": 0.85
+    },
+    "chronicConditionPrevalence": {
+      "hypertension": 0.48,
+      "diabetes": 0.26,
+      "chf": 0.10,
+      "copd": 0.12,
+      "depression": 0.17,
+      "ckd": 0.14,
+      "osteoporosis": 0.09
+    }
+  },
+  "measures": [
+    {
+      "id": "FLU",
+      "name": "Preventive Care — Flu Vaccination",
+      "currentRate": 0.61,
+      "targetRate": 0.70,
+      "openGaps": 1404,
+      "recentClosures": 87,
+      "qualityGateStatus": "FAILING"
+    },
+    {
+      "id": "COL",
+      "name": "Colorectal Cancer Screening",
+      "currentRate": 0.63,
+      "targetRate": 0.72,
+      "openGaps": 1190,
+      "recentClosures": 0,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "HBD",
+      "name": "HbA1c Control (<8%)",
+      "currentRate": 0.59,
+      "targetRate": 0.68,
+      "openGaps": 1612,
+      "recentClosures": 22,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "CBP",
+      "name": "Controlling High Blood Pressure",
+      "currentRate": 0.64,
+      "targetRate": 0.72,
+      "openGaps": 1247,
+      "recentClosures": 15,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "DSF",
+      "name": "Depression Screening & Follow-Up",
+      "currentRate": 0.48,
+      "targetRate": 0.60,
+      "openGaps": 2314,
+      "recentClosures": 31,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "SPC",
+      "name": "Statin Therapy for CVD",
+      "currentRate": 0.72,
+      "targetRate": 0.80,
+      "openGaps": 924,
+      "recentClosures": 18,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "TSC",
+      "name": "Tobacco Screening & Cessation",
+      "currentRate": 0.71,
+      "targetRate": 0.82,
+      "openGaps": 1073,
+      "recentClosures": 42,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "FRS",
+      "name": "Falls Risk Screening",
+      "currentRate": 0.55,
+      "targetRate": 0.65,
+      "openGaps": 1890,
+      "recentClosures": 0,
+      "qualityGateStatus": "FAILING"
+    },
+    {
+      "id": "ACR",
+      "name": "All-Cause Readmission",
+      "currentRate": 0.151,
+      "targetRate": 0.14,
+      "openGaps": 287,
+      "recentClosures": 2,
+      "qualityGateStatus": "PASSING"
+    },
+    {
+      "id": "CAHPS",
+      "name": "CAHPS Composite (Patient Experience)",
+      "currentRate": 0.78,
+      "targetRate": 0.85,
+      "openGaps": null,
+      "recentClosures": null,
+      "qualityGateStatus": "PASSING"
+    }
+  ],
+  "qualityGateSummary": {
+    "totalGates": 10,
+    "passing": 8,
+    "failing": 2,
+    "failingMeasures": ["FLU", "FRS"],
+    "sharedSavingsAtRisk": 4200000,
+    "reportingDeadlineDays": 60,
+    "participatingProviders": 120
+  },
+  "providers": {
+    "pcpCount": 120,
+    "specialistCount": 0,
+    "careCoordinatorCount": 6,
+    "qualityAnalystCount": 2,
+    "pharmacistCount": 1
+  },
+  "facilities": [
+    { "name": "Epic Cluster (15 sites)", "ehr": "Epic", "patientCount": 23400, "ehrShare": 0.45 },
+    { "name": "Cerner Cluster (9 sites)", "ehr": "Cerner", "patientCount": 13000, "ehrShare": 0.25 },
+    { "name": "athenahealth Cluster (7 sites)", "ehr": "athenahealth", "patientCount": 10400, "ehrShare": 0.20 },
+    { "name": "eClinicalWorks Cluster (3 sites)", "ehr": "eClinicalWorks", "patientCount": 5200, "ehrShare": 0.10 }
+  ],
+  "mondayMorningHighlights": {
+    "gapsClosedThisWeek": 153,
+    "rateImprovement": "60.4% → 61.1% (Flu Vaccination)",
+    "topOutreachList": 380,
+    "urgentAlerts": 2
+  }
+}

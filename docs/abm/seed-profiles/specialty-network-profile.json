@@ -1,0 +1,131 @@
+{
+  "archetype": "05-specialty-network-value",
+  "displayName": "Specialty Network — Proving Value (Cardiology)",
+  "population": {
+    "totalPatients": 18000,
+    "seedPatients": 900,
+    "practiceCount": 8,
+    "locationCount": 12,
+    "payerMix": {
+      "commercial": 0.38,
+      "medicare": 0.35,
+      "medicaid": 0.20,
+      "selfPay": 0.07
+    },
+    "ageDistribution": {
+      "0-17": 0.01,
+      "18-44": 0.08,
+      "45-64": 0.34,
+      "65+": 0.57
+    },
+    "chronicConditionPrevalence": {
+      "hypertension": 0.72,
+      "hyperlipidemia": 0.64,
+      "cad": 0.38,
+      "chf": 0.22,
+      "atrialFibrillation": 0.18,
+      "diabetes": 0.34,
+      "ckd": 0.19
+    }
+  },
+  "measures": [
+    {
+      "id": "SPC",
+      "name": "Statin Therapy for CVD",
+      "currentRate": 0.71,
+      "targetRate": 0.82,
+      "openGaps": 1620,
+      "recentClosures": 28
+    },
+    {
+      "id": "CBP",
+      "name": "Controlling High Blood Pressure",
+      "currentRate": 0.64,
+      "targetRate": 0.75,
+      "openGaps": 2340,
+      "recentClosures": 19
+    },
+    {
+      "id": "BB-MI",
+      "name": "Beta-Blocker Post-MI (12 months)",
+      "currentRate": 0.76,
+      "targetRate": 0.85,
+      "openGaps": 410,
+      "recentClosures": 7
+    },
+    {
+      "id": "ACE-LVSD",
+      "name": "ACE/ARB for LVSD",
+      "currentRate": 0.79,
+      "targetRate": 0.88,
+      "openGaps": 380,
+      "recentClosures": 5
+    },
+    {
+      "id": "CRR",
+      "name": "Cardiac Rehab Referral Post-Event",
+      "currentRate": 0.34,
+      "targetRate": 0.60,
+      "openGaps": 890,
+      "recentClosures": 0
+    },
+    {
+      "id": "FU-30",
+      "name": "30-Day Post-Discharge Follow-Up",
+      "currentRate": 0.62,
+      "targetRate": 0.80,
+      "openGaps": 520,
+      "recentClosures": 12
+    },
+    {
+      "id": "RLC",
+      "name": "Referral Loop Closure",
+      "currentRate": 0.58,
+      "targetRate": 0.80,
+      "openGaps": 312,
+      "recentClosures": 8
+    },
+    {
+      "id": "CHF-COST",
+      "name": "Cost per CHF Admission",
+      "currentRate": 18400,
+      "targetRate": 15500,
+      "openGaps": null,
+      "recentClosures": null
+    }
+  ],
+  "providers": {
+    "cardiologistCount": 24,
+    "npPaCount": 6,
+    "careCoordinatorCount": 3,
+    "qualityManagerCount": 1,
+    "referringPCPs": 180
+  },
+  "facilities": [
+    { "name": "Heart Center — Main Campus", "ehr": "Epic", "patientCount": 4800 },
+    { "name": "Cardiology Associates East", "ehr": "athenahealth", "patientCount": 3200 },
+    { "name": "Patel Cardiovascular Group", "ehr": "eClinicalWorks", "patientCount": 2600 },
+    { "name": "Chen Heart & Vascular", "ehr": "Epic", "patientCount": 2100 },
+    { "name": "Riverside Cardiology", "ehr": "athenahealth", "patientCount": 1800 },
+    { "name": "Lakeside Heart Clinic", "ehr": "Cerner", "patientCount": 1400 },
+    { "name": "Valley Cardiac Care", "ehr": "eClinicalWorks", "patientCount": 1200 },
+    { "name": "Summit Cardiology", "ehr": "athenahealth", "patientCount": 900 }
+  ],
+  "contractAlignment": {
+    "totalPayerContracts": 40,
+    "commonMeasureCount": 5,
+    "contractsCoveredByCommonMeasures": 32,
+    "competitorComparison": {
+      "networkStatinRate": 0.71,
+      "hospitalGroupStatinRate": 0.68,
+      "networkCostPerCHF": 18400,
+      "hospitalGroupCostPerCHF": 21200
+    }
+  },
+  "mondayMorningHighlights": {
+    "gapsClosedThisWeek": 71,
+    "rateImprovement": "71% → 71.2% (SPC statin therapy)",
+    "topOutreachList": 340,
+    "urgentAlerts": 1
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "archetype": "04-health-system-integrating",
+  "displayName": "Health System — Post-M&A Integration",
+  "population": {
+    "totalPatients": 280000,
+    "seedPatients": 3600,
+    "facilityCount": 4,
+    "providerCount": 520,
+    "payerMix": {
+      "commercial": 0.42,
+      "medicare": 0.33,
+      "medicaid": 0.18,
+      "selfPay": 0.07
+    },
+    "ageDistribution": {
+      "0-17": 0.18,
+      "18-44": 0.30,
+      "45-64": 0.28,
+      "65+": 0.24
+    },
+    "chronicConditionPrevalence": {
+      "hypertension": 0.38,
+      "diabetes": 0.22,
+      "depression": 0.16,
+      "obesity": 0.34,
+      "copd": 0.09,
+      "chf": 0.07,
+      "asthma": 0.11
+    }
+  },
+  "measures": [
+    {
+      "id": "HBD",
+      "name": "HbA1c Control (<8%)",
+      "currentRate": 0.58,
+      "targetRate": 0.70,
+      "openGaps": 14200,
+      "recentClosures": 67
+    },
+    {
+      "id": "CBP",
+      "name": "Controlling High Blood Pressure",
+      "currentRate": 0.62,
+      "targetRate": 0.72,
+      "openGaps": 11800,
+      "recentClosures": 43
+    },
+    {
+      "id": "BCS",
+      "name": "Breast Cancer Screening",
+      "currentRate": 0.66,
+      "targetRate": 0.76,
+      "openGaps": 9400,
+      "recentClosures": 0
+    },
+    {
+      "id": "COL",
+      "name": "Colorectal Cancer Screening",
+      "currentRate": 0.59,
+      "targetRate": 0.70,
+      "openGaps": 13100,
+      "recentClosures": 0
+    },
+    {
+      "id": "DSF",
+      "name": "Depression Screening & Follow-Up",
+      "currentRate": 0.51,
+      "targetRate": 0.65,
+      "openGaps": 16800,
+      "recentClosures": 28
+    },
+    {
+      "id": "SPC",
+      "name": "Statin Therapy for CVD",
+      "currentRate": 0.69,
+      "targetRate": 0.78,
+      "openGaps": 7200,
+      "recentClosures": 34
+    },
+    {
+      "id": "ACR",
+      "name": "All-Cause Readmission",
+      "currentRate": 0.162,
+      "targetRate": 0.14,
+      "openGaps": 890,
+      "recentClosures": 5
+    },
+    {
+      "id": "MIPS",
+      "name": "MIPS Composite Score",
+      "currentRate": 0.62,
+      "targetRate": 0.80,
+      "openGaps": null,
+      "recentClosures": null
+    }
+  ],
+  "providers": {
+    "employedPhysicians": 340,
+    "affiliatedPhysicians": 180,
+    "qualityCoordinatorCount": 12,
+    "careManagerCount": 8,
+    "qualityAnalystCount": 3
+  },
+  "facilities": [
+    {
+      "name": "Facility A (Flagship Hospital)",
+      "ehr": "Epic",
+      "patientCount": 98000,
+      "facilityMeasures": {
+        "diabetesControl": 0.68,
+        "bpControl": 0.71,
+        "depressionScreening": 0.62
+      }
+    },
+    {
+      "name": "Facility B (Acquired Hospital)",
+      "ehr": "Meditech",
+      "patientCount": 62000,
+      "facilityMeasures": {
+        "diabetesControl": 0.43,
+        "bpControl": 0.52,
+        "depressionScreening": 0.34
+      }
+    },
+    {
+      "name": "Facility C (Community Hospital)",
+      "ehr": "Epic",
+      "patientCount": 72000,
+      "facilityMeasures": {
+        "diabetesControl": 0.61,
+        "bpControl": 0.65,
+        "depressionScreening": 0.55
+      }
+    },
+    {
+      "name": "Facility D (Physician Group)",
+      "ehr": "eClinicalWorks",
+      "patientCount": 48000,
+      "facilityMeasures": {
+        "diabetesControl": 0.52,
+        "bpControl": 0.58,
+        "depressionScreening": 0.41
+      }
+    }
+  ],
+  "financialImpact": {
+    "vbpPenaltiesLastYear": 8300000,
+    "facilityBPenaltyShare": 5100000,
+    "qualityContingentRevenue": 14000000,
+    "payerContractsWithQualityTiers": 6,
+    "duplicatePatientsResolved": 340
+  },
+  "mondayMorningHighlights": {
+    "gapsClosedThisWeek": 177,
+    "rateImprovement": "58% system-wide (HbA1c) — first unified number",
+    "topOutreachList": 14200,
+    "urgentAlerts": 4
+  }
+}

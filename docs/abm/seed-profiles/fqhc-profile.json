@@ -1,0 +1,101 @@
+{
+  "archetype": "01-fqhc-closing-the-gap",
+  "displayName": "FQHC — Closing the Gap",
+  "population": {
+    "totalPatients": 28000,
+    "seedPatients": 1200,
+    "sites": 8,
+    "payerMix": {
+      "medicaid": 0.65,
+      "medicare": 0.10,
+      "commercial": 0.07,
+      "uninsured": 0.18
+    },
+    "ageDistribution": {
+      "0-17": 0.24,
+      "18-44": 0.38,
+      "45-64": 0.26,
+      "65+": 0.12
+    },
+    "chronicConditionPrevalence": {
+      "diabetes": 0.19,
+      "hypertension": 0.32,
+      "depression": 0.24,
+      "obesity": 0.38,
+      "substanceUseDisorder": 0.11
+    }
+  },
+  "measures": [
+    {
+      "id": "NQF-0059",
+      "name": "HbA1c Poor Control (<8%)",
+      "currentRate": 0.52,
+      "targetRate": 0.65,
+      "openGaps": 847,
+      "recentClosures": 23
+    },
+    {
+      "id": "NQF-0018",
+      "name": "Controlling High Blood Pressure",
+      "currentRate": 0.58,
+      "targetRate": 0.68,
+      "openGaps": 614,
+      "recentClosures": 11
+    },
+    {
+      "id": "NQF-0032",
+      "name": "Cervical Cancer Screening",
+      "currentRate": 0.44,
+      "targetRate": 0.58,
+      "openGaps": 1102,
+      "recentClosures": 8
+    },
+    {
+      "id": "NQF-0418",
+      "name": "Depression Screening & Follow-Up",
+      "currentRate": 0.39,
+      "targetRate": 0.55,
+      "openGaps": 1340,
+      "recentClosures": 14
+    },
+    {
+      "id": "NQF-0034",
+      "name": "Colorectal Cancer Screening",
+      "currentRate": 0.31,
+      "targetRate": 0.45,
+      "openGaps": 982,
+      "recentClosures": 0
+    },
+    {
+      "id": "BMI-SF",
+      "name": "BMI Screening & Follow-Up",
+      "currentRate": 0.61,
+      "targetRate": 0.72,
+      "openGaps": 497,
+      "recentClosures": 12
+    }
+  ],
+  "providers": {
+    "pcpCount": 14,
+    "specialistCount": 3,
+    "careCoordinatorCount": 4,
+    "communityHealthWorkerCount": 2,
+    "qualityAnalystCount": 1
+  },
+  "facilities": [
+    { "name": "Site 1 — Main Clinic", "ehr": "eClinicalWorks", "patientCount": 5200 },
+    { "name": "Site 2 — Westside", "ehr": "eClinicalWorks", "patientCount": 4100 },
+    { "name": "Site 3 — Hernandez Clinic", "ehr": "NextGen", "patientCount": 3800 },
+    { "name": "Site 4 — Eastside", "ehr": "eClinicalWorks", "patientCount": 3200 },
+    { "name": "Site 5 — Pediatrics", "ehr": "eClinicalWorks", "patientCount": 2800 },
+    { "name": "Site 6 — Behavioral Health", "ehr": "NextGen", "patientCount": 2600 },
+    { "name": "Site 7 — Patel Clinic", "ehr": "athenahealth", "patientCount": 3400 },
+    { "name": "Site 8 — Mobile/Outreach", "ehr": "eClinicalWorks", "patientCount": 2900 }
+  ],
+  "mondayMorningHighlights": {
+    "gapsClosedThisWeek": 68,
+    "rateImprovement": "52% → 52.1% (HbA1c)",
+    "topOutreachList": 147,
+    "urgentAlerts": 2
+  }
+}

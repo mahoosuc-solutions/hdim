@@ -1,0 +1,14 @@
+{
+  "targetOverlay": {
+    "organizationName": "[ORG_NAME]",
+    "geography": "[STATE, CITY]",
+    "patientVolumeMultiplier": 1.0,
+    "priorityMeasures": ["MEASURE_1", "MEASURE_2"],
+    "localContext": "[Medicaid program name, local references]",
+    "openingNarrative": "[From dossier pain hypothesis + trigger]",
+    "customBranding": {
+      "orgDisplayName": "[ORG_NAME]",
+      "primaryColor": "#000000"
+    }
+  }
+}

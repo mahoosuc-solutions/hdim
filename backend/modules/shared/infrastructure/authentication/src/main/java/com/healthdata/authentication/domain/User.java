@@ -191,6 +191,12 @@ public class User {
     @Column(nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "deactivated_at")
+    private Instant deactivatedAt;
+
+    @Column(name = "deactivated_by")
+    private UUID deactivatedBy;
+
     @Column
     private Instant deletedAt;
 

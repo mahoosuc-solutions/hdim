@@ -88,6 +88,13 @@ public class JwtAuthenticationResponse {
     private Boolean mfaEnabled = false;
 
     /**
+     * Whether the user must change their password before accessing the application.
+     * True when force_password_change is set on the user account.
+     */
+    @Builder.Default
+    private Boolean mustChangePassword = false;
+
+    /**
      * Additional message or information.
      */
     private String message;

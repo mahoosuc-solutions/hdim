@@ -269,7 +269,8 @@ public class AuthController {
                     .email(user.getEmail())
                     .roles(user.getRoles())
                     .tenantIds(user.getTenantIds())
-                    .mfaEnabled(false);
+                    .mfaEnabled(false)
+                    .mustChangePassword(Boolean.TRUE.equals(user.getForcePasswordChange()));
 
             // Add MFA warning if admin is in grace period
             if (mfaPolicyService.isMfaRequired(user) && !user.isMfaConfigured()) {

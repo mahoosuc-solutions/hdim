@@ -83,6 +83,10 @@ public class User {
     @Builder.Default
     private Boolean emailVerified = false;
 
+    @Column(name = "force_password_change", nullable = false)
+    @Builder.Default
+    private Boolean forcePasswordChange = false;
+
     @Column
     private Instant lastLoginAt;
 
@@ -189,6 +193,14 @@ public class User {
 
     @Column
     private Instant deletedAt;
+
+    public Boolean getForcePasswordChange() {
+        return forcePasswordChange;
+    }
+
+    public void setForcePasswordChange(Boolean forcePasswordChange) {
+        this.forcePasswordChange = forcePasswordChange;
+    }
 
     /**
      * Check if user is locked due to failed login attempts.

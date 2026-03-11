@@ -173,6 +173,14 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_REPORTS'] },
   },
   {
+    path: 'change-password',
+    loadComponent: () =>
+      import('./pages/change-password/change-password.component').then(
+        (m) => m.ChangePasswordComponent
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: 'admin/users',
     loadComponent: () =>
       import('./pages/admin/admin-users.component').then((m) => m.AdminUsersComponent),

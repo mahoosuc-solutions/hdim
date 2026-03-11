@@ -122,6 +122,24 @@ export class NavigationComponent {
       route: '/admin/demo-seeding',
       description: 'Manage demo data seeding',
     },
+    {
+      label: 'User Management',
+      icon: 'manage_accounts',
+      route: '/admin/users',
+      description: 'Manage users, roles, and permissions',
+    },
+    {
+      label: 'Tenant Settings',
+      icon: 'domain',
+      route: '/admin/tenant-settings',
+      description: 'Configure tenant settings',
+    },
+    {
+      label: 'Audit Logs',
+      icon: 'policy',
+      route: '/admin/audit-logs',
+      description: 'View security and access audit logs',
+    },
 
   ];
 

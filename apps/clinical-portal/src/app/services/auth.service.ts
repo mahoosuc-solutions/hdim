@@ -471,6 +471,11 @@ export class AuthService {
     this.applyDefaultTenant(user);
     this.startTokenRefreshTimer();
     this.logger.info('Login successful', { username: user.username });
+
+    // Redirect to password change if required
+    if (response.mustChangePassword) {
+      this.router.navigate(['/change-password']);
+    }
   }
 
   /**
@@ -580,6 +585,7 @@ export interface LoginResponse {
   tenantIds: string[];
   roleDetails?: Role[];
   mfaEnabled?: boolean;
+  mustChangePassword?: boolean;
   message?: string;
 }
 

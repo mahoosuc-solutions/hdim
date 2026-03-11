@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: kafka
-          image: confluentinc/cp-kafka:7.5.0
+          image: apache/kafka:3.7.0
           ports:
             - containerPort: 9092
           env:
@@ -53,12 +53,14 @@ spec:
             - name: KAFKA_LOG_RETENTION_HOURS
               value: "24"
             - name: CLUSTER_ID
-              value: demo-cluster-hdim-2024
+              value: MkU3UWo5YVFTcmV2SERJLVFR
             - name: KAFKA_HEAP_OPTS
               value: "-Xms256m -Xmx512m"
+            - name: KAFKA_LOG_DIRS
+              value: /tmp/kraft-combined-logs
           volumeMounts:
             - name: kafka-data
-              mountPath: /var/lib/kafka/data
+              mountPath: /tmp/kraft-combined-logs
           resources:
             requests:
               cpu: "250m"

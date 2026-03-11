@@ -15,6 +15,8 @@ data:
   LOGGING_LEVEL_COM_HEALTHDATA: "DEBUG"
   SPRING_FLYWAY_ENABLED: "false"
   SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+  SPRING_LIQUIBASE_CHANGE_LOG: "classpath:db/changelog/db.changelog-master.xml"
+  SPRING_SESSION_STORE_TYPE: "none"
   GATEWAY_AUTH_DEV_MODE: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4318/v1/traces"
   OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"

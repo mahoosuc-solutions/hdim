@@ -1,4 +1,4 @@
-# HealthData-in-Motion
+# HealthData-in-Motion (HDIM)
 
 **Enterprise Healthcare Interoperability & Quality Measurement Platform**
 
@@ -9,47 +9,74 @@
 
 > **Production-ready, Docker-native healthcare platform** that transforms quality measurement, care gap management, and clinical interoperability into a unified, scalable solution.
 
-## Licensing
+## License Model
 
-- This repository is licensed under **Business Source License 1.1 (BSL 1.1)**.
-- See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) for governing terms.
-- Production use requires a separate commercial agreement with Grateful House Inc.
-- Compliance and boundary references:
-  - [docs/compliance/BSL_RELEASE_PLAN.md](./docs/compliance/BSL_RELEASE_PLAN.md)
-  - [docs/compliance/LICENSING-BOUNDARY.md](./docs/compliance/LICENSING-BOUNDARY.md)
-  - [docs/compliance/THIRD_PARTY_NOTICES.md](./docs/compliance/THIRD_PARTY_NOTICES.md)
+This project is **source-available** under the Business Source License 1.1.
+See [LICENSE](./LICENSE) and [NOTICE](./NOTICE) for allowed use and commercial terms.
+Production use requires a separate commercial agreement with Grateful House Inc.
 
-## 📊 Project Status (March 5, 2026)
+- [docs/compliance/BSL_RELEASE_PLAN.md](./docs/compliance/BSL_RELEASE_PLAN.md)
+- [docs/compliance/LICENSING-BOUNDARY.md](./docs/compliance/LICENSING-BOUNDARY.md)
+- [docs/compliance/THIRD_PARTY_NOTICES.md](./docs/compliance/THIRD_PARTY_NOTICES.md)
 
-**🟢 PRODUCTION-READY — v2.9.0**
+## Security Reporting
 
-### Platform Highlights
+Report vulnerabilities privately via the process in [SECURITY.md](./SECURITY.md).
+Do not open public issues for undisclosed security vulnerabilities.
 
-| Area | Metric | Status |
-|------|--------|--------|
-| **Backend** | 51 Java services + 2 Python services compiling | ✅ |
-| **Tests** | 709+ unit tests, 1,307 MCP Edge tests | ✅ |
-| **API Docs** | 62 endpoints with interactive Swagger UI | ✅ |
-| **MCP Edge** | 3 sidecars, 123 tools, 99.35% coverage | ✅ |
-| **CI/CD** | 90%+ faster feedback (Phases 1-7 complete) | ✅ |
-| **HIPAA** | Audit-ready (interceptors, session logging, PHI filtering) | ✅ |
-| **Landing Page** | Live on Vercel (persona-first v3 design) | ✅ |
-| **Security** | Tiers 1-4 remediation complete, CVE wave 1 done | ✅ |
+## What HDIM Provides
 
-### Recent Releases
+- FHIR R4 interoperability services
+- Quality measure and care-gap workflows
+- Multi-service event processing with Kafka
+- Clinical and operations portals
+- Deployment patterns for local, staging, and production environments
 
-| Version | Date | Highlights |
-|---------|------|-----------|
-| **v2.9.0** | Mar 5, 2026 | MCP Edge Layer v0.1.0, Wave-1 revenue APIs, landing page v3, 709+ tests |
-| **v2.8.1** | Mar 3, 2026 | Documentation reorganization (362 files into docs/) |
-| **v2.8.0** | Mar 3, 2026 | System remediation Tiers 1-4 (security, CI/CD, landing page, docs) |
+## Architecture
 
-### Go-to-Market
+Primary components:
 
-- Q1 2026: ✅ Technology, documentation, landing page complete
-- Q2 2026: Pilot hospital deployment
-- Q3 2026: Series A funding close
-- Q4 2026: Reach $2-4M ARR
+- `backend/` - Java/Spring service modules
+- `apps/` - Web portals and frontends
+- `mcp-edge-*` - Node.js edge sidecars and integrations
+- `docker-compose*.yml` - Local and environment-specific orchestration
+- `docs/` - Architecture, operations, compliance, and release documentation
+
+See [docs/architecture](./docs/architecture) for design records and flow docs.
+
+## Quick Start (Local)
+
+Prerequisites:
+
+- Docker + Docker Compose
+- Node.js 20+
+- Java 21 (for backend builds/tests)
+
+Run core stack:
+
+```bash
+docker compose --profile core up -d
+```
+
+Common endpoints (default local):
+
+- API gateway: `http://localhost:8080`
+- Clinical portal: `http://localhost:4200`
+- Grafana (when enabled): `http://localhost:3001`
+
+## Documentation
+
+- Main docs index: [docs/README.md](./docs/README.md)
+- Deployment and runbooks: [docs/deployment](./docs/deployment)
+- Troubleshooting: [docs/troubleshooting](./docs/troubleshooting)
+- Security policy: [SECURITY.md](./SECURITY.md)
+- Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Developer Quick Reference: [CLAUDE.md](./CLAUDE.md)
+
+## Project Status
+
+Repository is under active development with frequent updates.
+For release and validation artifacts, see [docs/releases](./docs/releases).
 
 ## HDIM Ecosystem
 
@@ -65,7 +92,7 @@
 |---------|---------|-------------|
 | [ServiceHive](https://github.com/webemo-aaron/servicehive-ai) | Apache 2.0 | Open-source event mesh for AI-agent orchestration — the foundational agent framework powering HDIM's intelligence layer |
 
-**Full changelog:** [CHANGELOG.md](./CHANGELOG.md) | **Release docs:** [RELEASE-2026-Q1-SUMMARY.md](./docs/RELEASE-2026-Q1-SUMMARY.md)
+**Full changelog:** [CHANGELOG.md](./CHANGELOG.md) | **Release docs:** [docs/releases](./docs/releases)
 
 ---
 
@@ -611,4 +638,4 @@ Compliance references:
 
 **Built with ❤️ for better healthcare outcomes**
 
-*Last Updated: March 5, 2026*
+*Last Updated: March 10, 2026*

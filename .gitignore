@@ -46,6 +46,8 @@ coverage/
 .gradle/
 .nx/
 build/
+target/
+**/target/
 build-user/
 .docker-tmp/
 .tmp-*/

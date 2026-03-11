@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability Report
+    url: https://github.com/grateful-house/hdim/security/advisories/new
+    about: Report vulnerabilities privately via GitHub Security Advisories.
+  - name: Security Policy
+    url: https://github.com/grateful-house/hdim/blob/master/SECURITY.md
+    about: Review disclosure guidelines and safe-harbor boundaries.

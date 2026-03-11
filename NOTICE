@@ -1,21 +1,230 @@
 HealthData-in-Motion (HDIM)
-Copyright (c) Grateful House Inc.
+Copyright 2024-2026 Grateful House Incorporated
 
-This repository is licensed under the Business Source License 1.1 (BSL 1.1).
-See LICENSE for the controlling terms, including:
-- Additional Use Grant
-- Change Date
-- Change License
+This product includes software developed at
+Grateful House Incorporated (https://gratefulhouse.com).
 
-Compliance references:
-- docs/compliance/BSL_RELEASE_PLAN.md
-- docs/compliance/LICENSING-BOUNDARY.md
-- docs/compliance/THIRD_PARTY_NOTICES.md
+This product includes the following third-party software:
 
-Operational transparency pages:
-- /resources/licensing
-- /resources/trust-center
-- /resources/evidence-room
+This NOTICE is a curated attribution summary and may not be exhaustive for every
+transitive dependency. Verify exact versions and licenses from generated
+dependency/SBOM reports before release.
 
-This NOTICE is informational. If there is any conflict between this file and
-LICENSE, the LICENSE file governs.
+---
+
+HAPI FHIR (https://hapifhir.io/)
+License: Apache License 2.0
+Copyright: University Health Network
+
+Spring Boot (https://spring.io/projects/spring-boot)
+License: Apache License 2.0
+Copyright: VMware, Inc.
+
+Spring Framework (https://spring.io/projects/spring-framework)
+License: Apache License 2.0
+Copyright: VMware, Inc.
+
+Spring Security (https://spring.io/projects/spring-security)
+License: Apache License 2.0
+Copyright: VMware, Inc.
+
+Apache Kafka (https://kafka.apache.org/)
+License: Apache License 2.0
+Copyright: The Apache Software Foundation
+
+PostgreSQL (https://www.postgresql.org/)
+License: PostgreSQL License (MIT-style)
+Copyright: The PostgreSQL Global Development Group
+
+Redis (https://redis.io/)
+License: Redis Source Available License 2.0 / BSD 3-Clause (pre-7.4)
+Copyright: Redis Ltd.
+
+Angular (https://angular.io/)
+License: MIT License
+Copyright: Google LLC
+
+Angular Material (https://material.angular.io/)
+License: MIT License
+Copyright: Google LLC
+
+RxJS (https://rxjs.dev/)
+License: Apache License 2.0
+Copyright: Google LLC and contributors
+
+Next.js (https://nextjs.org/)
+License: MIT License
+Copyright: Vercel, Inc.
+
+Kong Gateway (https://konghq.com/)
+License: Apache License 2.0
+Copyright: Kong Inc.
+
+OpenTelemetry (https://opentelemetry.io/)
+License: Apache License 2.0
+Copyright: The OpenTelemetry Authors
+
+Prometheus (https://prometheus.io/)
+License: Apache License 2.0
+Copyright: The Prometheus Authors
+
+Grafana (https://grafana.com/)
+License: AGPL 3.0
+Copyright: Grafana Labs
+
+Liquibase (https://www.liquibase.org/)
+License: Apache License 2.0
+Copyright: Liquibase Inc.
+
+Jackson (https://github.com/FasterXML/jackson)
+License: Apache License 2.0
+Copyright: FasterXML, LLC
+
+Lombok (https://projectlombok.org/)
+License: MIT License
+Copyright: The Project Lombok Authors
+
+SLF4J (https://www.slf4j.org/)
+License: MIT License
+Copyright: QOS.ch Sarl
+
+Logback (https://logback.qos.ch/)
+License: Eclipse Public License 1.0 / LGPL 2.1
+Copyright: QOS.ch Sarl
+
+JUnit 5 (https://junit.org/junit5/)
+License: Eclipse Public License 2.0
+Copyright: The JUnit Team
+
+Mockito (https://site.mockito.org/)
+License: MIT License
+Copyright: Mockito contributors
+
+Docker (https://www.docker.com/)
+License: Apache License 2.0
+Copyright: Docker, Inc.
+
+Pino (https://getpino.io/)
+License: MIT License
+Copyright: Pino contributors
+
+Express.js (https://expressjs.com/)
+License: MIT License
+Copyright: TJ Holowaychuk and contributors
+
+Opossum (https://nodeshift.dev/opossum/)
+License: Apache License 2.0
+Copyright: Red Hat, Inc.
+
+---
+
+For complete dependency trees, run:
+  Backend:  cd backend && ./gradlew dependencies
+  Frontend: cd apps/clinical-portal && npm ls
+  MCP Edge: cd mcp-edge-platform && npm ls
+
+NOTICE curated on: 2026-03-07
+
+Version evidence sources:
+  Backend catalog: backend/gradle/libs.versions.toml
+  Frontend lockfile: package-lock.json
+  Landing page lockfile: landing-page/package-lock.json
+  Infrastructure images: docker-compose.yml, kong/docker-compose-kong.yml
+
+Pinned versions (as of 2026-03-07):
+
+HAPI FHIR
+Version: 7.6.0
+Source: backend/gradle/libs.versions.toml
+
+Spring Boot
+Version: 3.3.13
+Source: backend/gradle/libs.versions.toml
+
+Spring Security
+Version: 6.5.7
+Source: backend/gradle/libs.versions.toml
+
+Apache Kafka (kafka-clients)
+Version: 3.9.1
+Source: backend/gradle/libs.versions.toml
+
+PostgreSQL (JDBC driver)
+Version: 42.7.7
+Source: backend/gradle/libs.versions.toml
+
+Redis (Spring Data Redis client)
+Version: 3.5.8
+Source: backend/gradle/libs.versions.toml
+
+Angular
+Version: 21.2.0
+Source: package-lock.json
+
+Angular Material
+Version: 21.2.0
+Source: package-lock.json
+
+RxJS
+Version: 7.8.2
+Source: package-lock.json
+
+Next.js
+Version: 15.5.12
+Source: landing-page/package-lock.json
+
+Kong Gateway
+Version: 3.4
+Source: kong/docker-compose-kong.yml
+
+Prometheus
+Version: v2.48.1
+Source: docker-compose.yml
+
+Grafana
+Version: 10.2.0
+Source: docker-compose.yml
+
+Liquibase
+Version: 4.29.2
+Source: backend/gradle/libs.versions.toml
+
+Jackson
+Version: 2.17.2
+Source: backend/gradle/libs.versions.toml
+
+Lombok
+Version: 1.18.34
+Source: backend/gradle/libs.versions.toml
+
+SLF4J
+Version: managed by Spring Boot BOM (3.3.13 baseline)
+Source: backend/gradle/libs.versions.toml
+
+Logback
+Version: 1.5.19
+Source: backend/gradle/libs.versions.toml
+
+JUnit 5
+Version: 5.14.3
+Source: backend/gradle/libs.versions.toml
+
+Mockito
+Version: 5.2.0
+Source: backend/gradle/libs.versions.toml
+
+Express.js
+Version: 4.22.1
+Source: package-lock.json
+
+Pino
+Version: 8.21.0
+Source: package-lock.json
+
+OpenTelemetry
+Version: 1.38.0
+Source: backend/gradle/libs.versions.toml
+
+Docker
+Version: Not pinned in-repo (runtime/platform dependency)
+Source: N/A

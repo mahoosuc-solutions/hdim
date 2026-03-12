@@ -4,7 +4,7 @@
     "tags": ["hdim", "database", "postgresql", "performance"],
     "timezone": "browser",
     "schemaVersion": 38,
-    "version": 1,
+    "version": 2,
     "refresh": "30s",
     "time": {
       "from": "now-1h",
@@ -171,6 +171,48 @@
         ],
         "xaxis": {"mode": "time"},
         "legend": {"show": true}
+      },
+      {
+        "id": 7,
+        "title": "Connection Acquire Time (p95)",
+        "description": "Time waiting for a database connection from the pool",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+        "targets": [{
+          "expr": "histogram_quantile(0.95, sum(rate(hikaricp_connections_acquire_seconds_bucket[5m])) by (le, pool))",
+          "legendFormat": "{{pool}}",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 0.1, "color": "yellow"},
+                {"value": 0.5, "color": "red"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Connection Creation Time",
+        "description": "Time to create new database connections",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+        "targets": [{
+          "expr": "histogram_quantile(0.95, sum(rate(hikaricp_connections_creation_seconds_bucket[5m])) by (le, pool))",
+          "legendFormat": "{{pool}}",
+          "refId": "A"
+        }],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s"
+          }
+        }
       }
     ]
   }

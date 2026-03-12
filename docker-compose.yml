@@ -376,6 +376,11 @@ services:
       BACKEND_SERVICES_PRIOR_AUTH_URL: http://prior-auth-service:8102
       BACKEND_SERVICES_PAYER_WORKFLOWS_URL: http://payer-workflows-service:8098/api/v1/revenue
       BACKEND_SERVICES_DATA_INGESTION_URL: http://data-ingestion-service:8080/api/v1/interoperability/adt
+      BACKEND_SERVICES_NURSE_WORKFLOW_URL: http://nurse-workflow-service:8093/nurse-workflow
+      BACKEND_SERVICES_CLINICAL_WORKFLOW_URL: http://clinical-workflow-service:8110/clinical-workflow
+      BACKEND_SERVICES_ANALYTICS_URL: http://analytics-service:8089/analytics
+      BACKEND_SERVICES_NOTIFICATION_URL: http://notification-service:8107/notification
+      BACKEND_SERVICES_DEMO_SEEDING_URL: http://demo-seeding-service:8098
       # Authentication enforcement - require JWT tokens for all protected endpoints
       GATEWAY_AUTH_ENFORCED: "false"
       GATEWAY_AUTH_DEMO_USER_USER_ID: "00000000-0000-0000-0000-000000000001"
@@ -411,7 +416,7 @@ services:
     ports:
       - "18080:8080"  # Use 18080 on host to avoid conflicts
     volumes:
-      - ./docker/gateway-edge/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/gateway-edge/default.conf:/etc/nginx/conf.d/default.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "nginx -t >/dev/null 2>&1"]
       interval: 10s
@@ -979,6 +984,110 @@ services:
       start_period: 60s
     networks:
       - healthdata-network
+
+  # ============================================
+  # CLINICAL WORKFLOW SERVICES (8093, 8110)
+  # ============================================
+
+  # Port 8093 - Nurse Workflow Service
+  nurse-workflow-service:
+    container_name: healthdata-nurse-workflow-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/nurse-workflow-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nurse_workflow_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8093
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: simple
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: nurse-workflow-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8093:8093"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8093/nurse-workflow/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+      - hdim-clinical-network
+
+  # Port 8110 - Clinical Workflow Service
+  clinical-workflow-service:
+    container_name: healthdata-clinical-workflow-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/clinical-workflow-service/Dockerfile
+    profiles: ["core", "full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/clinical_workflow_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8110
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_LIQUIBASE_ENABLED: "true"
+      SPRING_LIQUIBASE_CHANGE_LOG: classpath:db/changelog/db.changelog-master.xml
+      SPRING_FLYWAY_ENABLED: "false"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: simple
+      # OpenTelemetry OTLP HTTP Exporter
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: clinical-workflow-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      # Gateway Trust Authentication
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8110:8110"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8110/clinical-workflow/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+      - hdim-clinical-network
 
   # ============================================
   # AI SERVICES (8088, 8090, 8096)

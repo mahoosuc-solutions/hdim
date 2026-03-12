@@ -23,17 +23,23 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE hcc_db;           -- hcc-service
     CREATE DATABASE healthdata_demo;  -- demo-seeding-service
 
+    -- ── Clinical Workflow ─────────────────────────────────────────────────────
+    CREATE DATABASE nurse_workflow_db;       -- nurse-workflow-service
+    CREATE DATABASE clinical_workflow_db;    -- clinical-workflow-service
+
     -- ── Grant Privileges ───────────────────────────────────────────────────────
-    GRANT ALL PRIVILEGES ON DATABASE gateway_db       TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE fhir_db          TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE cql_db           TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE quality_db       TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE patient_db       TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE caregap_db       TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE event_db         TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE audit_db         TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE hcc_db           TO "$POSTGRES_USER";
-    GRANT ALL PRIVILEGES ON DATABASE healthdata_demo  TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE gateway_db              TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE fhir_db                 TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE cql_db                  TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE quality_db              TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE patient_db              TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE caregap_db              TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE event_db                TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE audit_db                TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE hcc_db                  TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE healthdata_demo         TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE nurse_workflow_db       TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE clinical_workflow_db    TO "$POSTGRES_USER";
 EOSQL
 
 # Note: PostgreSQL extensions are managed by service Liquibase migrations
@@ -43,4 +49,4 @@ EOSQL
 # - patient-service manages pg_trgm in patient_db
 # See: backend/modules/services/*/src/main/resources/db/changelog/0000-enable-extensions.xml
 
-echo "All HDIM databases created successfully! (10 databases)"
+echo "All HDIM databases created successfully! (12 databases)"

@@ -58,6 +58,9 @@ public class GatewayClinicalController {
     @Value("${backend.services.nurse-workflow.url}")
     private String nurseWorkflowUrl;
 
+    @Value("${backend.services.clinical-workflow.url}")
+    private String clinicalWorkflowUrl;
+
     @Value("${backend.services.payer-workflows.url}")
     private String payerWorkflowsUrl;
 
@@ -230,6 +233,14 @@ public class GatewayClinicalController {
         @RequestBody(required = false) String body
     ) {
         return forwarder.forwardRequest(request, body, nurseWorkflowUrl, "/nurse-workflow");
+    }
+
+    @RequestMapping(value = "/clinical-workflow/**", method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+    public ResponseEntity<?> routeToClinicalWorkflow(
+        HttpServletRequest request,
+        @RequestBody(required = false) String body
+    ) {
+        return forwarder.forwardRequest(request, body, clinicalWorkflowUrl, "/clinical-workflow");
     }
 
     /**

@@ -2,10 +2,10 @@
   "id": null,
   "uid": "business-kpi-live",
   "title": "Business KPI Live",
-  "tags": ["phase4", "observability"],
+  "tags": ["hdim", "business", "kpi", "observability"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "editable": true,
   "time": {
@@ -17,7 +17,7 @@
       {
         "name": "service",
         "type": "query",
-        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
         "query": "label_values(up, job)",
         "refresh": 2,
         "includeAll": true,
@@ -28,54 +28,142 @@
         "name": "tenant",
         "type": "textbox",
         "query": "acme-health",
-        "current": { "text": "acme-health", "value": "acme-health" }
+        "current": {"text": "acme-health", "value": "acme-health"}
       }
     ]
   },
   "panels": [
     {
+      "id": 1,
       "type": "timeseries",
-      "title": "Request Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "targets": [
-        {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])) by (job)",
-          "legendFormat": "{{job}}"
-        }
-      ]
+      "title": "Request Rate by Service",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])) by (job)",
+        "legendFormat": "{{job}}"
+      }],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
     },
     {
+      "id": 2,
       "type": "timeseries",
-      "title": "P95 Latency",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le,job))",
-          "legendFormat": "{{job}}"
-        }
-      ]
+      "title": "P95 Latency by Service",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [{
+        "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le, job))",
+        "legendFormat": "{{job}}"
+      }],
+      "fieldConfig": {"defaults": {"unit": "s"}}
     },
     {
+      "id": 3,
       "type": "stat",
-      "title": "Error Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "targets": [
-        {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])), 1)",
-          "legendFormat": "error_rate"
+      "title": "Error Rate (%)",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])), 1) * 100",
+        "legendFormat": "error_rate"
+      }],
+      "options": {"colorMode": "background", "graphMode": "area"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "green"},
+              {"value": 1, "color": "yellow"},
+              {"value": 5, "color": "red"}
+            ]
+          }
         }
-      ]
+      }
     },
     {
+      "id": 4,
       "type": "stat",
-      "title": "Auth/Tenant Security Events",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "targets": [
-        {
-          "expr": "sum(rate(auth_failure_total[5m]) + rate(tenant_violations_total[5m]) + rate(hmac_validation_failures_total[5m]))",
-          "legendFormat": "security_events"
+      "title": "Security Events/min",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 8},
+      "targets": [{
+        "expr": "sum(rate(auth_failure_total[5m]) + rate(tenant_violations_total[5m]) + rate(hmac_validation_failures_total[5m])) * 60",
+        "legendFormat": "security_events"
+      }],
+      "options": {"colorMode": "background", "graphMode": "area"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "green"},
+              {"value": 5, "color": "yellow"},
+              {"value": 20, "color": "red"}
+            ]
+          }
         }
-      ]
+      }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Total Requests (24h)",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+      "targets": [{
+        "expr": "sum(increase(http_server_requests_seconds_count{job=~\"$service\"}[24h]))",
+        "legendFormat": "Total"
+      }],
+      "options": {"colorMode": "value", "graphMode": "area"},
+      "fieldConfig": {"defaults": {"unit": "short"}}
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Platform Uptime (%)",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+      "targets": [{
+        "expr": "avg(avg_over_time(up{job=~\"$service\"}[24h])) * 100",
+        "legendFormat": "Uptime"
+      }],
+      "options": {"colorMode": "background", "graphMode": "none"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 2,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"value": 0, "color": "red"},
+              {"value": 95, "color": "yellow"},
+              {"value": 99, "color": "green"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "CQL Evaluation Throughput",
+      "description": "Quality measure evaluation rate",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=\"cql-engine-service\"}[5m]))",
+        "legendFormat": "CQL Evaluations"
+      }],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Care Gap Detection Rate",
+      "description": "Care gap identification throughput",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "targets": [{
+        "expr": "sum(rate(http_server_requests_seconds_count{job=\"care-gap-service\"}[5m]))",
+        "legendFormat": "Care Gap Operations"
+      }],
+      "fieldConfig": {"defaults": {"unit": "reqps"}}
     }
   ]
 }

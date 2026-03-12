@@ -2,10 +2,10 @@
   "id": null,
   "uid": "deployment-operations",
   "title": "Deployment Operations",
-  "tags": ["phase4", "observability"],
+  "tags": ["hdim", "deployment", "operations"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "editable": true,
   "time": {
@@ -34,46 +34,134 @@
   },
   "panels": [
     {
-      "type": "timeseries",
-      "title": "Request Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "targets": [
-        {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])) by (job)",
-          "legendFormat": "{{job}}"
+      "type": "stat",
+      "title": "Running Instances",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "P95 Latency",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le,job))",
-          "legendFormat": "{{job}}"
+          "expr": "count(up{job=~\"$service\"} == 1)",
+          "legendFormat": "instances"
         }
       ]
     },
     {
       "type": "stat",
-      "title": "Error Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "title": "Avg Uptime",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "yellow", "value": 3600 }, { "color": "green", "value": 86400 }] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])), 1)",
-          "legendFormat": "error_rate"
+          "expr": "avg(process_uptime_seconds{job=~\"$service\"})",
+          "legendFormat": "uptime"
         }
       ]
     },
     {
       "type": "stat",
-      "title": "Auth/Tenant Security Events",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "title": "Last Restart",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeFromNow",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "sum(rate(auth_failure_total[5m]) + rate(tenant_violations_total[5m]) + rate(hmac_validation_failures_total[5m]))",
-          "legendFormat": "security_events"
+          "expr": "min(process_start_time_seconds{job=~\"$service\"}) * 1000",
+          "legendFormat": "last_restart"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Health Check Failures",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(increase(http_server_requests_seconds_count{uri=~\".*health.*|.*actuator/health.*\",status!=\"200\",job=~\"$service\"}[1h]))",
+          "legendFormat": "failures"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Instance Uptime",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "process_uptime_seconds{job=~\"$service\"}",
+          "legendFormat": "{{job}} {{instance}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Restart Events",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 80, "lineWidth": 1 } } },
+      "targets": [
+        {
+          "expr": "changes(process_start_time_seconds{job=~\"$service\"}[5m])",
+          "legendFormat": "{{job}} restarts"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory After Deploy",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "bytes", "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "jvm_memory_used_bytes{area=\"heap\",job=~\"$service\"}",
+          "legendFormat": "{{job}} heap used"
+        },
+        {
+          "expr": "jvm_memory_max_bytes{area=\"heap\",job=~\"$service\"}",
+          "legendFormat": "{{job}} heap max"
+        },
+        {
+          "expr": "jvm_memory_committed_bytes{area=\"heap\",job=~\"$service\"}",
+          "legendFormat": "{{job}} heap committed"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Startup Time",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "bars", "fillOpacity": 50, "lineWidth": 1 } } },
+      "targets": [
+        {
+          "expr": "application_started_time_seconds{job=~\"$service\"}",
+          "legendFormat": "{{job}} startup"
+        },
+        {
+          "expr": "application_ready_time_seconds{job=~\"$service\"}",
+          "legendFormat": "{{job}} ready"
         }
       ]
     }

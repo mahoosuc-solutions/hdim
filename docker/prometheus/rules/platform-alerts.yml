@@ -1,0 +1,164 @@
+groups:
+  - name: service_availability
+    interval: 30s
+    rules:
+      # Service down for more than 5 minutes
+      - alert: ServiceDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} ({{ $labels.instance }}) has been down for more than 5 minutes."
+
+      # Multiple services down simultaneously
+      - alert: MultipleServicesDown
+        expr: count(up == 0) > 3
+        for: 2m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "{{ $value }} services are down simultaneously"
+          description: "Multiple HDIM services are unavailable. Check infrastructure health (PostgreSQL, Kafka, Redis)."
+
+  - name: error_rate
+    interval: 30s
+    rules:
+      # Error rate above 5% for any service
+      - alert: HighErrorRate
+        expr: >
+          (sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job)
+          / sum(rate(http_server_requests_seconds_count[5m])) by (job)) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          category: reliability
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Service {{ $labels.job }} has a 5xx error rate of {{ $value | humanizePercentage }} (threshold: 5%)."
+
+      # Error rate above 20% — critical
+      - alert: CriticalErrorRate
+        expr: >
+          (sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job)
+          / sum(rate(http_server_requests_seconds_count[5m])) by (job)) > 0.20
+        for: 2m
+        labels:
+          severity: critical
+          category: reliability
+        annotations:
+          summary: "Critical error rate on {{ $labels.job }}"
+          description: "Service {{ $labels.job }} has a 5xx error rate of {{ $value | humanizePercentage }} (threshold: 20%). Immediate investigation required."
+
+  - name: latency
+    interval: 30s
+    rules:
+      # P99 latency above 2 seconds
+      - alert: HighLatencyP99
+        expr: >
+          histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "High p99 latency on {{ $labels.job }}"
+          description: "Service {{ $labels.job }} has p99 latency of {{ $value }}s (threshold: 2s)."
+
+      # P95 latency above 1 second
+      - alert: HighLatencyP95
+        expr: >
+          histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, job)) > 1
+        for: 10m
+        labels:
+          severity: warning
+          category: performance
+        annotations:
+          summary: "Elevated p95 latency on {{ $labels.job }}"
+          description: "Service {{ $labels.job }} has p95 latency of {{ $value }}s (threshold: 1s) for 10+ minutes."
+
+  - name: infrastructure
+    interval: 30s
+    rules:
+      # Kafka consumer lag above 1000
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumer_records_lag_max > 1000
+        for: 5m
+        labels:
+          severity: warning
+          category: messaging
+        annotations:
+          summary: "High Kafka consumer lag"
+          description: "Consumer group {{ $labels.group }} on topic {{ $labels.topic }} has lag of {{ $value }} messages."
+
+      # Kafka consumer lag above 10000 — critical
+      - alert: KafkaConsumerLagCritical
+        expr: kafka_consumer_records_lag_max > 10000
+        for: 2m
+        labels:
+          severity: critical
+          category: messaging
+        annotations:
+          summary: "Critical Kafka consumer lag"
+          description: "Consumer group {{ $labels.group }} on topic {{ $labels.topic }} has lag of {{ $value }} messages. Event processing is severely behind."
+
+      # Database connection pool exhaustion
+      - alert: DatabaseConnectionPoolExhausted
+        expr: (hikaricp_connections_active / hikaricp_connections_max) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Service {{ $labels.job }} pool {{ $labels.pool }} is at {{ $value | humanizePercentage }} utilization."
+
+      # Database connection pool fully saturated
+      - alert: DatabaseConnectionPoolSaturated
+        expr: hikaricp_connections_pending > 0
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "Database connections queued — pool saturated"
+          description: "Service {{ $labels.job }} has {{ $value }} threads waiting for database connections."
+
+  - name: jvm_resources
+    interval: 30s
+    rules:
+      # JVM heap usage above 85%
+      - alert: JVMHeapUsageHigh
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High JVM heap usage on {{ $labels.job }}"
+          description: "Service {{ $labels.job }} heap usage is {{ $value | humanizePercentage }}. Consider increasing memory or investigating leaks."
+
+      # JVM heap usage above 95% — imminent OOM
+      - alert: JVMHeapUsageCritical
+        expr: (jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"}) > 0.95
+        for: 2m
+        labels:
+          severity: critical
+          category: resources
+        annotations:
+          summary: "Critical JVM heap usage on {{ $labels.job }} — OOM risk"
+          description: "Service {{ $labels.job }} heap usage is {{ $value | humanizePercentage }}. OutOfMemoryError is imminent."
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: process_cpu_usage > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          category: resources
+        annotations:
+          summary: "High CPU usage on {{ $labels.job }}"
+          description: "Service {{ $labels.job }} CPU usage is {{ $value | humanizePercentage }} for 10+ minutes."

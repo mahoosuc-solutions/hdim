@@ -77,6 +77,11 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     -- Live Call Sales Agent (Customer Deployments)
     CREATE DATABASE customer_deployments_db;
 
+    -- Clinical Workflow Services
+    CREATE DATABASE nurse_workflow_db;
+    CREATE DATABASE clinical_workflow_db;
+    CREATE DATABASE healthdata_cost_analysis;
+
     -- External Integration Adapter Services
     CREATE DATABASE corehive_adapter_db;
     CREATE DATABASE healthix_adapter_db;
@@ -124,6 +129,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     GRANT ALL PRIVILEGES ON DATABASE event_store_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE investor_dashboard_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE customer_deployments_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE nurse_workflow_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE clinical_workflow_db TO "$POSTGRES_USER";
+    GRANT ALL PRIVILEGES ON DATABASE healthdata_cost_analysis TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE corehive_adapter_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE healthix_adapter_db TO "$POSTGRES_USER";
     GRANT ALL PRIVILEGES ON DATABASE hedis_adapter_db TO "$POSTGRES_USER";

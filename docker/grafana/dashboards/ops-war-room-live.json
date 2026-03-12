@@ -2,14 +2,14 @@
   "id": null,
   "uid": "ops-war-room-live",
   "title": "Ops War Room Live",
-  "tags": ["phase4", "observability"],
+  "tags": ["hdim", "ops", "war-room", "live"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
-  "refresh": "30s",
+  "version": 2,
+  "refresh": "10s",
   "editable": true,
   "time": {
-    "from": "now-6h",
+    "from": "now-1h",
     "to": "now"
   },
   "templating": {
@@ -34,46 +34,154 @@
   },
   "panels": [
     {
-      "type": "timeseries",
-      "title": "Request Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "targets": [
-        {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])) by (job)",
-          "legendFormat": "{{job}}"
+      "type": "stat",
+      "title": "Services Status",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
         }
-      ]
-    },
-    {
-      "type": "timeseries",
-      "title": "P95 Latency",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] }, "textMode": "value_and_name" },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le,job))",
-          "legendFormat": "{{job}}"
+          "expr": "count(up{job=~\"$service\"} == 1)",
+          "legendFormat": "UP"
+        },
+        {
+          "expr": "count(up{job=~\"$service\"} == 0) OR on() vector(0)",
+          "legendFormat": "DOWN"
         }
       ]
     },
     {
       "type": "stat",
       "title": "Error Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.01 }, { "color": "red", "value": 0.05 }] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])), 1)",
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])), 1e-10)",
           "legendFormat": "error_rate"
         }
       ]
     },
     {
       "type": "stat",
-      "title": "Auth/Tenant Security Events",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "title": "P95 Latency",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 2.0 }] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "sum(rate(auth_failure_total[5m]) + rate(tenant_violations_total[5m]) + rate(hmac_validation_failures_total[5m]))",
-          "legendFormat": "security_events"
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Kafka Consumer Lag",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1000 }, { "color": "red", "value": 10000 }] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(kafka_consumer_records_lag_max{job=~\"$service\"}) OR sum(spring_kafka_listener_seconds_count{job=~\"$service\"} - spring_kafka_listener_seconds_count{job=~\"$service\"} offset 5m)",
+          "legendFormat": "lag"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Service Map",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Status" },
+            "properties": [
+              { "id": "custom.displayMode", "value": "color-background" },
+              { "id": "mappings", "value": [{ "type": "value", "options": { "1": { "text": "UP", "color": "green" }, "0": { "text": "DOWN", "color": "red" } } }] }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true, "sortBy": [{ "displayName": "Status", "desc": false }] },
+      "targets": [
+        {
+          "expr": "up{job=~\"$service\"}",
+          "legendFormat": "{{job}}",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true, "__name__": true }, "renameByName": { "job": "Service", "instance": "Instance", "Value": "Status" } } }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Rate Trend",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.05 }] } } },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) by (job) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])) by (job), 1e-10)",
+          "legendFormat": "{{job}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency Trend",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "s", "custom": { "drawStyle": "line", "fillOpacity": 10, "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le, job))",
+          "legendFormat": "{{job}} p95"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le, job))",
+          "legendFormat": "{{job}} p50"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Resource Saturation",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1, "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{area=\"heap\",job=~\"$service\"}) by (job) / sum(jvm_memory_max_bytes{area=\"heap\",job=~\"$service\"}) by (job)",
+          "legendFormat": "{{job}} heap%"
+        },
+        {
+          "expr": "avg(system_cpu_usage{job=~\"$service\"}) by (job)",
+          "legendFormat": "{{job}} cpu%"
+        },
+        {
+          "expr": "hikaricp_connections_active{job=~\"$service\"} / clamp_min(hikaricp_connections_max{job=~\"$service\"}, 1)",
+          "legendFormat": "{{job}} db_pool%"
         }
       ]
     }

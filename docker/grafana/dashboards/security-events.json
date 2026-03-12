@@ -2,10 +2,10 @@
   "id": null,
   "uid": "security-events",
   "title": "Security Events",
-  "tags": ["phase4", "observability"],
+  "tags": ["hdim", "security", "compliance"],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "editable": true,
   "time": {
@@ -34,46 +34,134 @@
   },
   "panels": [
     {
-      "type": "timeseries",
-      "title": "Request Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "type": "stat",
+      "title": "Total Security Events",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 200 }] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
       "targets": [
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])) by (job)",
+          "expr": "sum(increase(auth_failure_total{job=~\"$service\"}[1h])) + sum(increase(tenant_violations_total{job=~\"$service\"}[1h])) + sum(increase(hmac_validation_failures_total{job=~\"$service\"}[1h])) + sum(increase(http_server_requests_seconds_count{status=~\"401|403\",job=~\"$service\"}[1h]))",
+          "legendFormat": "events/hr"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Critical Events",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 1 }, { "color": "red", "value": 5 }] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(increase(hmac_validation_failures_total{job=~\"$service\"}[1h])) + sum(increase(tenant_violations_total{job=~\"$service\"}[1h]))",
+          "legendFormat": "critical"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Auth Failures",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "red", "value": 50 }] }
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(increase(auth_failure_total{job=~\"$service\"}[1h]))",
+          "legendFormat": "auth_failures"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Tenant Violations",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "expr": "sum(increase(tenant_violations_total{job=~\"$service\"}[1h]))",
+          "legendFormat": "violations"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Security Event Rate",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2 } } },
+      "targets": [
+        {
+          "expr": "sum(rate(auth_failure_total{job=~\"$service\"}[5m]))",
+          "legendFormat": "auth_failures"
+        },
+        {
+          "expr": "sum(rate(tenant_violations_total{job=~\"$service\"}[5m]))",
+          "legendFormat": "tenant_violations"
+        },
+        {
+          "expr": "sum(rate(hmac_validation_failures_total{job=~\"$service\"}[5m]))",
+          "legendFormat": "hmac_failures"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Failed Auth by IP",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1, "stacking": { "mode": "normal" } } } },
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"401|403\",job=~\"$service\"}[5m])) by (instance)",
+          "legendFormat": "{{instance}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HMAC Validation Failures",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "ops", "custom": { "drawStyle": "line", "fillOpacity": 20, "lineWidth": 2 }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.1 }] } } },
+      "targets": [
+        {
+          "expr": "sum(rate(hmac_validation_failures_total{job=~\"$service\"}[5m])) by (job)",
           "legendFormat": "{{job}}"
         }
       ]
     },
     {
       "type": "timeseries",
-      "title": "P95 Latency",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "title": "401/403 Response Codes",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "drawStyle": "line", "fillOpacity": 15, "lineWidth": 2 } } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{job=~\"$service\"}[5m])) by (le,job))",
-          "legendFormat": "{{job}}"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Error Rate",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "targets": [
+          "expr": "sum(rate(http_server_requests_seconds_count{status=\"401\",job=~\"$service\"}[5m])) by (job)",
+          "legendFormat": "{{job}} 401"
+        },
         {
-          "expr": "sum(rate(http_server_requests_seconds_count{status=~\"5..\",job=~\"$service\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{job=~\"$service\"}[5m])), 1)",
-          "legendFormat": "error_rate"
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "title": "Auth/Tenant Security Events",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "targets": [
-        {
-          "expr": "sum(rate(auth_failure_total[5m]) + rate(tenant_violations_total[5m]) + rate(hmac_validation_failures_total[5m]))",
-          "legendFormat": "security_events"
+          "expr": "sum(rate(http_server_requests_seconds_count{status=\"403\",job=~\"$service\"}[5m])) by (job)",
+          "legendFormat": "{{job}} 403"
         }
       ]
     }

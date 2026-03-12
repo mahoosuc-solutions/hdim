@@ -1,0 +1,42 @@
+# ──────────────────────────────────────────────────────────────────
+# HDIM SSL/TLS Override
+#
+# Enables HTTPS for the gateway-edge service using nginx-ssl.conf.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.ssl.yml --profile core up -d
+#
+# Prerequisites:
+#   1. Place your SSL certificate and private key:
+#      - docker/nginx/certs/certificate.pem
+#      - docker/nginx/certs/private-key.pem
+#
+#   2. For Let's Encrypt (certbot):
+#      certbot certonly --standalone -d api.yourdomain.com
+#      cp /etc/letsencrypt/live/api.yourdomain.com/fullchain.pem docker/nginx/certs/certificate.pem
+#      cp /etc/letsencrypt/live/api.yourdomain.com/privkey.pem docker/nginx/certs/private-key.pem
+#
+#   3. For self-signed (development only):
+#      openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+#        -keyout docker/nginx/certs/private-key.pem \
+#        -out docker/nginx/certs/certificate.pem \
+#        -subj "/CN=localhost"
+#
+# Certificate Rotation:
+#   1. Replace cert files in docker/nginx/certs/
+#   2. docker compose -f docker-compose.yml -f docker-compose.ssl.yml exec gateway-edge nginx -s reload
+#   3. No downtime required — nginx reloads gracefully
+#
+# RTO/RPO for cert expiry:
+#   - Set up a cron to auto-renew with certbot: certbot renew --deploy-hook "docker compose exec gateway-edge nginx -s reload"
+#   - Monitor expiry: openssl x509 -enddate -noout -in docker/nginx/certs/certificate.pem
+# ──────────────────────────────────────────────────────────────────
+
+services:
+  gateway-edge:
+    ports:
+      - "443:443"
+      - "18080:8080"  # Keep HTTP for redirect
+    volumes:
+      - ./docker/nginx/nginx-ssl.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/nginx/certs:/etc/ssl/production:ro

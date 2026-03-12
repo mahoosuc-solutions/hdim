@@ -223,6 +223,37 @@ services:
     networks:
       - healthdata-network
 
+  # Elasticsearch - Full-Text Patient Search (optional)
+  # Access at http://localhost:9200
+  elasticsearch:
+    container_name: healthdata-elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.4
+    restart: unless-stopped
+    profiles: ["search", "full"]
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=hdim-search
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
+
   # ============================================
   # CORE CLINICAL SERVICES (8080-8087)
   # ============================================
@@ -1088,6 +1119,51 @@ services:
     networks:
       - healthdata-network
       - hdim-clinical-network
+
+  # ============================================
+  # CQRS QUERY API (8130)
+  # ============================================
+
+  # Port 8130 - Query API Service (CQRS Read-Optimized)
+  query-api-service:
+    container_name: healthdata-query-api-service
+    restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: modules/services/query-api-service/Dockerfile
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/patient_event_db
+      SPRING_DATASOURCE_USERNAME: healthdata
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SERVER_PORT: 8130
+      JWT_SECRET: ${JWT_SECRET}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_CACHE_TYPE: simple
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+      OTEL_SERVICE_NAME: query-api-service
+      _JAVA_OPTIONS: "-Djava.net.preferIPv4Stack=true"
+      GATEWAY_AUTH_DEV_MODE: "true"
+      GATEWAY_AUTH_SIGNING_SECRET: ${GATEWAY_AUTH_SIGNING_SECRET:-}
+    ports:
+      - "8130:8130"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8130/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - healthdata-network
 
   # ============================================
   # COST ANALYSIS (8096)
@@ -2700,3 +2776,4 @@ volumes:
   demo-snapshots:
   prometheus_data:
   grafana_data:
+  elasticsearch_data:

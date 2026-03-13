@@ -17,6 +17,7 @@ dependencyManagement {
 dependencies {
     // Shared modules
     implementation(project(":modules:shared:domain:common"))
+    implementation(project(":modules:shared:domain:star-ratings"))
     implementation(project(":modules:shared:infrastructure:authentication"))
     implementation(project(":modules:shared:infrastructure:authentication-headers"))
     implementation(project(":modules:shared:infrastructure:security"))
@@ -76,7 +77,7 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)
-    // testcontainers.kafka removed - using @EmbeddedKafka instead for faster, Docker-free testing
+    testImplementation(libs.testcontainers.kafka)
 
     // Mockito for unit tests
     testImplementation("org.mockito:mockito-core:5.8.0")
@@ -90,8 +91,26 @@ dependencies {
 }
 
 tasks.withType<Test> {
+    val taskNames = gradle.startParameter.taskNames
     useJUnitPlatform {
-        excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+        if (taskNames.any { it.contains("testIntegration") }) {
+            includeTags("integration")
+            excludeTags("slow", "heavyweight", "e2e", "contract")
+        } else {
+            excludeTags("integration", "e2e", "heavyweight", "slow", "contract")
+        }
+    }
+    systemProperty("spring.profiles.active", "test")
+}
+
+tasks.register<Test>("testIntegrationCareGap") {
+    group = "verification"
+    description = "Run care-gap-event-service integration tests"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("integration")
+        excludeTags("slow", "heavyweight", "e2e", "contract")
     }
     systemProperty("spring.profiles.active", "test")
 }

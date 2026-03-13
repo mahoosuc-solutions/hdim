@@ -44,6 +44,12 @@ public interface CareGapProjectionRepository extends JpaRepository<CareGapProjec
         @Param("tenantId") String tenantId
     );
 
+    @Query("SELECT c FROM CareGapHandlerProjection c WHERE c.tenantId = :tenantId")
+    List<CareGapProjection> findAllByTenantId(@Param("tenantId") String tenantId);
+
+    @Query("SELECT DISTINCT c.tenantId FROM CareGapHandlerProjection c")
+    List<String> findDistinctTenantIds();
+
     /**
      * Count open gaps by severity for tenant
      */

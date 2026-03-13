@@ -19,7 +19,7 @@ public class KafkaConfig {
      */
     @Bean
     public NewTopic careGapEventsTopic() {
-        return TopicBuilder.name("caregap.events")
+        return TopicBuilder.name("gap.events")
             .partitions(3)
             .replicas(1)
             .config("retention.ms", "86400000")  // 24 hours

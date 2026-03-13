@@ -14,7 +14,8 @@ include(
     "modules:shared:domain:hedis-models",
     "modules:shared:domain:cql-models",
     "modules:shared:domain:common",
-    "modules:shared:domain:risk-models"
+    "modules:shared:domain:risk-models",
+    "modules:shared:domain:star-ratings"
 )
 
 // Shared Infrastructure Modules

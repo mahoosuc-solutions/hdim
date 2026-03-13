@@ -78,7 +78,7 @@ public class TestKafkaTopicsConfiguration {
 
     @Bean
     public NewTopic careGapEventsTopic() {
-        return TopicBuilder.name("care-gap.events")
+        return TopicBuilder.name("gap.events")
             .partitions(DEFAULT_PARTITIONS)
             .replicas(DEFAULT_REPLICAS)
             .build();

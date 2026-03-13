@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.23.xsd">
+
+    <changeSet id="0005-create-star-rating-snapshots" author="codex">
+        <createTable tableName="star_rating_snapshots">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="tenant_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="snapshot_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="snapshot_granularity" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="overall_rating" type="DECIMAL(4,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rounded_rating" type="DECIMAL(3,1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="measure_count" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="open_gap_count" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="closed_gap_count" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quality_bonus_eligible" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="captured_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex indexName="idx_star_rating_snapshots_tenant_date" tableName="star_rating_snapshots">
+            <column name="tenant_id"/>
+            <column name="snapshot_date"/>
+        </createIndex>
+
+        <addUniqueConstraint
+            tableName="star_rating_snapshots"
+            columnNames="tenant_id, snapshot_date, snapshot_granularity"
+            constraintName="uk_star_rating_snapshot_tenant_date_granularity"/>
+    </changeSet>
+
+</databaseChangeLog>

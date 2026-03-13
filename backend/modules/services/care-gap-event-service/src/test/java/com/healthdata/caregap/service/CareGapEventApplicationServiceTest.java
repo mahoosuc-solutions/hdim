@@ -57,6 +57,9 @@ class CareGapEventApplicationServiceTest {
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Mock
+    private StarsProjectionService starsProjectionService;
+
     @InjectMocks
     private CareGapEventApplicationService applicationService;
 

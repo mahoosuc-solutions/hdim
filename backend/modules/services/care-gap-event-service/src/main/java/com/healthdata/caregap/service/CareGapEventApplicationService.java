@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -51,6 +52,7 @@ public class CareGapEventApplicationService {
     private final CareGapProjectionRepository gapRepository;
     private final PopulationHealthRepository populationRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final StarsProjectionService starsProjectionService;
 
     private static final String GAP_EVENTS_TOPIC = "gap.events";
 
@@ -63,9 +65,9 @@ public class CareGapEventApplicationService {
 
         // Create domain event
         CareGapDetectedEvent event = new CareGapDetectedEvent(
+            tenantId,
             request.getPatientId(),
             request.getGapCode(),
-            tenantId,
             request.getDescription(),
             request.getSeverity()
         );
@@ -73,11 +75,14 @@ public class CareGapEventApplicationService {
         // Delegate to Phase 4 event handler
         gapEventHandler.handle(event);
 
+        persistDetectedGap(request, tenantId);
+
         // Update population health
         updatePopulationHealth(tenantId, request.getSeverity(), true);
 
         // Publish to Kafka
         kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
+        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.detected:" + request.getGapCode());
 
         log.info("Gap detected: {}, severity: {}", request.getGapCode(), request.getSeverity());
 
@@ -118,11 +123,14 @@ public class CareGapEventApplicationService {
         // Delegate to Phase 4 event handler
         gapEventHandler.handle(event);
 
+        markGapClosed(projection, "CLOSED");
+
         // Update population health (decrement open, increment closed)
         updatePopulationHealth(tenantId, severity, false);
 
         // Publish to Kafka
         kafkaTemplate.send(GAP_EVENTS_TOPIC, projection.getPatientId(), event);
+        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.closed:" + projection.getGapCode());
 
         log.info("Gap closed: {}", gapId);
 
@@ -149,7 +157,10 @@ public class CareGapEventApplicationService {
         );
 
         gapEventHandler.handle(event);
+        findGapProjection(request.getPatientId(), tenantId, request.getGapCode())
+            .ifPresent(projection -> markGapClosed(projection, "CLOSED"));
         kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
+        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.closed:" + request.getGapCode());
 
         return CareGapEventResponse.builder()
             .gapCode(request.getGapCode())
@@ -173,6 +184,12 @@ public class CareGapEventApplicationService {
         );
 
         gapEventHandler.handle(event);
+        findGapProjection(request.getPatientId(), tenantId, request.getGapCode())
+            .ifPresent(projection -> {
+                projection.setQualified(true);
+                projection.incrementVersion();
+                gapRepository.save(projection);
+            });
         kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
 
         return CareGapEventResponse.builder()
@@ -196,6 +213,12 @@ public class CareGapEventApplicationService {
         );
 
         gapEventHandler.handle(event);
+        findGapProjection(request.getPatientId(), tenantId, request.getGapCode())
+            .ifPresent(projection -> {
+                projection.setRecommendedIntervention(request.getRecommendation());
+                projection.incrementVersion();
+                gapRepository.save(projection);
+            });
         kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
 
         return CareGapEventResponse.builder()
@@ -263,5 +286,38 @@ public class CareGapEventApplicationService {
         // Calculate closure rate and update
         health.calculateClosureRate();
         populationRepository.save(health);
+    }
+
+    private void persistDetectedGap(DetectGapRequest request, String tenantId) {
+        findGapProjection(request.getPatientId(), tenantId, request.getGapCode())
+            .ifPresentOrElse(existing -> {
+                existing.setGapDescription(request.getDescription());
+                existing.setSeverity(request.getSeverity());
+                existing.setStatus("OPEN");
+                existing.setClosureDate(null);
+                existing.setDetectionDate(LocalDate.now());
+                existing.incrementVersion();
+                gapRepository.save(existing);
+            }, () -> gapRepository.save(new CareGapProjection(
+                request.getPatientId(),
+                tenantId,
+                request.getGapCode(),
+                request.getDescription(),
+                request.getSeverity()
+            )));
+    }
+
+    private Optional<CareGapProjection> findGapProjection(String patientId, String tenantId, String gapCode) {
+        List<CareGapProjection> projections = gapRepository.findByGapCodeAndTenant(gapCode, tenantId);
+        return projections.stream()
+            .filter(projection -> patientId.equals(projection.getPatientId()))
+            .findFirst();
+    }
+
+    private void markGapClosed(CareGapProjection projection, String status) {
+        projection.setStatus(status);
+        projection.setClosureDate(LocalDate.now());
+        projection.incrementVersion();
+        gapRepository.save(projection);
     }
 }

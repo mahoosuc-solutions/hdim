@@ -17,5 +17,7 @@
 
     <include file="db/changelog/0002-create-population-health-projections-table.xml"/>
     <include file="db/changelog/0003-population-health-version-not-null.xml"/>
+    <include file="db/changelog/0004-create-star-rating-projections.xml"/>
+    <include file="db/changelog/0005-create-star-rating-snapshots.xml"/>
 
 </databaseChangeLog>

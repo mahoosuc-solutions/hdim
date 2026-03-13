@@ -102,3 +102,8 @@ logging:
     com.healthdata: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+stars:
+  snapshots:
+    weekly-cron: ${STARS_WEEKLY_SNAPSHOT_CRON:0 0 2 * * MON}
+    monthly-cron: ${STARS_MONTHLY_SNAPSHOT_CRON:0 0 3 1 * *}

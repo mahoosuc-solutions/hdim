@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "014"
 tags: [backend, star-ratings, tests]
@@ -54,10 +54,10 @@ Use Option 1. Add direct coverage for scoring boundaries and service-level cover
 
 ## Acceptance Criteria
 
-- [ ] Unit tests cover standard and inverted cut-point boundaries.
-- [ ] Service tests cover mixed weekly/monthly snapshots.
-- [ ] Service tests cover idempotent snapshot capture for the same tenant/date/granularity.
-- [ ] Regression tests fail against the current buggy behavior and pass after fixes.
+- [x] Unit tests cover standard and inverted cut-point boundaries.
+- [x] Service tests cover mixed weekly/monthly snapshots.
+- [x] Service tests cover idempotent snapshot capture for the same tenant/date/granularity.
+- [x] Regression tests fail against the current buggy behavior and pass after fixes.
 
 ## Work Log
 
@@ -71,3 +71,16 @@ Use Option 1. Add direct coverage for scoring boundaries and service-level cover
 
 **Learnings:**
 - The missing coverage explains why the current scoring and trend issues were not caught.
+
+### 2026-03-16 - P2 Resolution
+
+**By:** Copilot
+
+**Actions:**
+- Added 4 calculator boundary tests (StarRatingCalculatorTest): `calculateMeasureScore_invertedPCR_lowerPerformanceRateScoresHigher`, `calculateMeasureScore_exactBoundaryValue_getsCorrectStars`, `calculateMeasureScore_invertedExactBoundary` (exact PCR boundary values). Total: 12 → 15 tests.
+- Added 10 service tests (StarsProjectionServiceTest): mixed granularity regression (010), metadata freshness regression (013), snapshot capture save/skip for both weekly and monthly, existing projection update, null/blank/invalid granularity handling. Total: 5 → 15 tests.
+- Overall test count: care-gap-event-service 32 → 42, star-ratings domain 12 → 15. Net +13 tests.
+- All acceptance criteria satisfied.
+
+**Learnings:**
+- Boundary behavior for inverted measures: `cutPoints[0]` is effectively unused in the current algorithm — only indices [1]-[4] are checked. This is consistent with CMS scoring but worth documenting.

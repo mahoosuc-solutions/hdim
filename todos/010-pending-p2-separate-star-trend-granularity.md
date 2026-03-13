@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "010"
 tags: [backend, api, star-ratings, trends]
@@ -54,9 +54,9 @@ Use Option 1. Treat granularity as part of the query contract and add coverage f
 
 ## Acceptance Criteria
 
-- [ ] Trend queries can request a specific snapshot granularity.
-- [ ] Weekly and monthly snapshots no longer appear interleaved in the same default response.
-- [ ] Tests cover a tenant with both weekly and monthly snapshots on overlapping dates.
+- [x] Trend queries can request a specific snapshot granularity.
+- [x] Weekly and monthly snapshots no longer appear interleaved in the same default response.
+- [x] Tests cover a tenant with both weekly and monthly snapshots on overlapping dates.
 
 ## Work Log
 
@@ -70,3 +70,16 @@ Use Option 1. Treat granularity as part of the query contract and add coverage f
 
 **Learnings:**
 - The bug is in the query contract, not just the UI. The backend currently cannot return a clean single-granularity trend.
+
+### 2026-03-16 - P2 Resolution
+
+**By:** Copilot
+
+**Actions:**
+- Verified granularity filtering already wired: controller `@RequestParam(defaultValue="WEEKLY") String granularity` → service `normalizeGranularity()` → repository query filters by `snapshotGranularity`.
+- Added `getTrend_weeklyQueryExcludesMonthlySnapshots` test: mixed weekly/monthly snapshots, verifies weekly query returns only weekly points.
+- Added `getTrend_nullGranularityDefaultsToWeekly`, `getTrend_blankGranularityDefaultsToWeekly`, `getTrend_invalidGranularityThrowsException` tests.
+- All acceptance criteria satisfied.
+
+**Learnings:**
+- Code was already correct from prior P1 work; only test evidence was missing.

@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "013"
 tags: [backend, star-ratings, api]
@@ -53,9 +53,9 @@ Use Option 1. Define clear semantics for `calculatedAt` and `lastTriggerEvent` o
 
 ## Acceptance Criteria
 
-- [ ] `/current` no longer returns stale metadata alongside fresh scores.
-- [ ] First-time tenants receive sensible metadata rather than nulls for a fresh computation.
-- [ ] Tests cover both persisted and never-persisted tenants.
+- [x] `/current` no longer returns stale metadata alongside fresh scores.
+- [x] First-time tenants receive sensible metadata rather than nulls for a fresh computation.
+- [x] Tests cover both persisted and never-persisted tenants.
 
 ## Work Log
 
@@ -69,3 +69,17 @@ Use Option 1. Define clear semantics for `calculatedAt` and `lastTriggerEvent` o
 
 **Learnings:**
 - The bug is semantic rather than computational, but it still makes the API misleading.
+
+### 2026-03-16 - P2 Resolution
+
+**By:** Copilot
+
+**Actions:**
+- Verified `getCurrentRating()` already computes fresh `Instant.now()` and passes `ON_DEMAND_READ` directly to `toResponse()`, bypassing persisted `StarRatingProjection` entirely.
+- Existing test `getCurrentRating_returnsFreshOnDemandMetadata` confirms with `verifyNoInteractions(starRatingProjectionRepository)`.
+- Added `getCurrentRating_firstTimeTenantReceivesSensibleMetadata` — verifies zero-gap tenant gets proper metadata with `calculatedAt` bounded between before/after instants.
+- Added `simulate_returnsFreshMetadataNotPersistedMetadata` — verifies simulation path also returns fresh metadata.
+- All acceptance criteria satisfied.
+
+**Learnings:**
+- Code was already correct; `getCurrentRating` never reads from persisted projection. Test evidence now proves this conclusively.

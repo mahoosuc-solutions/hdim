@@ -52,7 +52,6 @@ public class CareGapEventApplicationService {
     private final CareGapProjectionRepository gapRepository;
     private final PopulationHealthRepository populationRepository;
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final StarsProjectionService starsProjectionService;
 
     private static final String GAP_EVENTS_TOPIC = "gap.events";
 
@@ -80,9 +79,8 @@ public class CareGapEventApplicationService {
         // Update population health
         updatePopulationHealth(tenantId, request.getSeverity(), true);
 
-        // Publish to Kafka
+        // Publish to Kafka (Stars projection recomputes via StarsGapEventListener)
         kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
-        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.detected:" + request.getGapCode());
 
         log.info("Gap detected: {}, severity: {}", request.getGapCode(), request.getSeverity());
 
@@ -128,9 +126,8 @@ public class CareGapEventApplicationService {
         // Update population health (decrement open, increment closed)
         updatePopulationHealth(tenantId, severity, false);
 
-        // Publish to Kafka
+        // Publish to Kafka (Stars projection recomputes via StarsGapEventListener)
         kafkaTemplate.send(GAP_EVENTS_TOPIC, projection.getPatientId(), event);
-        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.closed:" + projection.getGapCode());
 
         log.info("Gap closed: {}", gapId);
 
@@ -159,8 +156,8 @@ public class CareGapEventApplicationService {
         gapEventHandler.handle(event);
         findGapProjection(request.getPatientId(), tenantId, request.getGapCode())
             .ifPresent(projection -> markGapClosed(projection, "CLOSED"));
+        // Publish to Kafka (Stars projection recomputes via StarsGapEventListener)
         kafkaTemplate.send(GAP_EVENTS_TOPIC, request.getPatientId(), event);
-        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.closed:" + request.getGapCode());
 
         return CareGapEventResponse.builder()
             .gapCode(request.getGapCode())

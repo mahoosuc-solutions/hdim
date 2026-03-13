@@ -27,32 +27,6 @@ public class KafkaConfig {
     }
 
     /**
-     * Gap detected topic
-     * Publishes newly detected care gaps for intervention recommendation
-     */
-    @Bean
-    public NewTopic gapDetectedTopic() {
-        return TopicBuilder.name("gap.detected")
-            .partitions(3)
-            .replicas(1)
-            .config("retention.ms", "86400000")  // 24 hours
-            .build();
-    }
-
-    /**
-     * Gap closed topic
-     * Publishes when care gaps are closed/remediated
-     */
-    @Bean
-    public NewTopic gapClosedTopic() {
-        return TopicBuilder.name("gap.closed")
-            .partitions(3)
-            .replicas(1)
-            .config("retention.ms", "86400000")  // 24 hours
-            .build();
-    }
-
-    /**
      * Intervention recommended topic
      * Publishes recommended clinical interventions for detected gaps
      */

@@ -27,14 +27,14 @@ public class StarRatingController {
     private final StarsProjectionService starsProjectionService;
 
     @GetMapping("/current")
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST')")
     @Operation(summary = "Get current Stars projection")
     public ResponseEntity<StarRatingResponse> getCurrent(@RequestHeader("X-Tenant-ID") String tenantId) {
         return ResponseEntity.ok(starsProjectionService.getCurrentRating(tenantId));
     }
 
     @GetMapping("/trend")
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST')")
     @Operation(summary = "Get weekly/monthly Stars trend")
     public ResponseEntity<StarRatingTrendResponse> getTrend(
         @RequestHeader("X-Tenant-ID") String tenantId,
@@ -45,7 +45,7 @@ public class StarRatingController {
     }
 
     @PostMapping("/simulate")
-    @PreAuthorize("hasPermission('CARE_GAP_READ')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     @Operation(summary = "Run on-demand Stars simulation")
     public ResponseEntity<StarRatingResponse> simulate(
         @RequestHeader("X-Tenant-ID") String tenantId,

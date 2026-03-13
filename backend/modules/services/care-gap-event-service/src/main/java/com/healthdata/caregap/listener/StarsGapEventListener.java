@@ -2,6 +2,8 @@ package com.healthdata.caregap.listener;
 
 import com.healthdata.caregap.event.CareGapDetectedEvent;
 import com.healthdata.caregap.event.GapClosedEvent;
+import com.healthdata.caregap.event.InterventionRecommendedEvent;
+import com.healthdata.caregap.event.PatientQualifiedEvent;
 import com.healthdata.caregap.service.StarsProjectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,12 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * Kafka listener that recomputes the CMS Star Ratings projection
+ * whenever a care gap lifecycle event occurs.
+ *
+ * Handles: detect, close, reopen, qualify, intervention
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -21,12 +29,22 @@ public class StarsGapEventListener {
     @KafkaListener(topics = "gap.events", groupId = "care-gap-stars-projection")
     public void onGapEvent(@Payload Object payload) {
         if (payload instanceof CareGapDetectedEvent event) {
-            recalculateAfterDetection(event.getTenantId(), event.getGapCode());
+            recalculate(event.getTenantId(), "gap.detected:" + event.getGapCode());
             return;
         }
 
         if (payload instanceof GapClosedEvent event) {
-            recalculateAfterClosure(event.getTenantId(), event.getGapCode());
+            recalculate(event.getTenantId(), "gap.closed:" + event.getGapCode());
+            return;
+        }
+
+        if (payload instanceof PatientQualifiedEvent event) {
+            recalculate(event.getTenantId(), "patient.qualified:" + event.getGapCode());
+            return;
+        }
+
+        if (payload instanceof InterventionRecommendedEvent event) {
+            recalculate(event.getTenantId(), "intervention.recommended:" + event.getGapCode());
             return;
         }
 
@@ -38,24 +56,26 @@ public class StarsGapEventListener {
             }
 
             if (mapPayload.containsKey("closureStatus") || mapPayload.containsKey("closureReason")) {
-                recalculateAfterClosure(tenantId, gapCode);
+                recalculate(tenantId, "gap.closed:" + gapCode);
                 return;
             }
 
             if (mapPayload.containsKey("severity") || mapPayload.containsKey("gapDescription")) {
-                recalculateAfterDetection(tenantId, gapCode);
+                recalculate(tenantId, "gap.detected:" + gapCode);
+                return;
+            }
+
+            // Catch-all for any other lifecycle event from Map payload
+            if (mapPayload.containsKey("qualified") || mapPayload.containsKey("recommendation")
+                || mapPayload.containsKey("priority")) {
+                recalculate(tenantId, "lifecycle:" + gapCode);
             }
         }
     }
 
-    private void recalculateAfterDetection(String tenantId, String gapCode) {
-        log.debug("Recalculating Stars projection after gap detection for tenant {}", tenantId);
-        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.detected:" + gapCode);
-    }
-
-    private void recalculateAfterClosure(String tenantId, String gapCode) {
-        log.debug("Recalculating Stars projection after gap closure for tenant {}", tenantId);
-        starsProjectionService.recalculateCurrentProjection(tenantId, "gap.closed:" + gapCode);
+    private void recalculate(String tenantId, String triggerEvent) {
+        log.debug("Recalculating Stars projection for tenant {} (trigger: {})", tenantId, triggerEvent);
+        starsProjectionService.recalculateCurrentProjection(tenantId, triggerEvent);
     }
 
     private String asString(Object value) {

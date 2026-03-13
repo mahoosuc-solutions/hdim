@@ -69,7 +69,6 @@ public class StarsProjectionService {
         projection.setQualityBonusEligible(computation.getRoundedRating() >= 4.0d);
         projection.setLastTriggerEvent(triggerEvent);
         projection.setLastCalculatedAt(Instant.now());
-        projection.setVersion(projection.getVersion() + 1);
         starRatingProjectionRepository.save(projection);
 
         return toResponse(tenantId, computation, projection.getLastTriggerEvent(), projection.getLastCalculatedAt());

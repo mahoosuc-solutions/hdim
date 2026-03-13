@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -50,6 +51,7 @@ public class StarRatingProjection {
     @Column(name = "last_calculated_at")
     private Instant lastCalculatedAt;
 
+    @Version
     @Column(name = "version", nullable = false)
     @Builder.Default
     private long version = 0L;

@@ -51,6 +51,14 @@
             tableName="star_rating_snapshots"
             columnNames="tenant_id, snapshot_date, snapshot_granularity"
             constraintName="uk_star_rating_snapshot_tenant_date_granularity"/>
+
+        <rollback>
+            <dropUniqueConstraint tableName="star_rating_snapshots"
+                constraintName="uk_star_rating_snapshot_tenant_date_granularity"/>
+            <dropIndex tableName="star_rating_snapshots"
+                indexName="idx_star_rating_snapshots_tenant_date"/>
+            <dropTable tableName="star_rating_snapshots"/>
+        </rollback>
     </changeSet>
 
 </databaseChangeLog>

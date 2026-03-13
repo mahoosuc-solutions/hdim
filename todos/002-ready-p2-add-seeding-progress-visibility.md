@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p2
 issue_id: "002"
 tags: [seeding, observability, ui, ops]
@@ -24,9 +24,9 @@ Operators need clear progress and last-error visibility during seeding to know w
 Extend ops-service `/ops/status` to include a summarized seeding progress block (phase, counts, last error). Update the deployment console to render this block.
 
 ## Acceptance Criteria
-- [ ] Progress percent and phase visible in UI
-- [ ] Last error surfaced in UI
-- [ ] Works without manual log digging
+- [x] Progress percent and phase visible in UI
+- [x] Last error surfaced in UI
+- [x] Works without manual log digging
 
 ## Work Log
 
@@ -39,3 +39,20 @@ Extend ops-service `/ops/status` to include a summarized seeding progress block 
 
 **Learnings:**
 - TBD
+
+### 2026-03-15 - Verified already implemented — closing
+
+**By:** Copilot
+
+**Actions:**
+- Verified ops-server `tools/ops-server/server.js` already returns structured `seedingProgress` in `GET /ops/status` (phase, percent, counts, lastError, updatedAt)
+- Verified `parseSeedingProgress()` extracts phase transitions (idle → waiting-service → seeding → syncing-cql → completed/failed) with regex pattern matching on docker log lines
+- Verified deployment console (`apps/mfe-deployment/src/app/deployment-console.component.html`) renders all three acceptance criteria:
+  - Progress bar with `[style.width.%]` bound to percent, phase label via `formatPhase()`
+  - Patient counts (created/loaded) displayed when present
+  - `lastError` surfaced with CSS class `progress-error`
+- Verified polling runs automatically every 10s — no manual log digging required
+- E2E spec exists at `apps/shell-app-e2e/src/deployment-console.e2e.spec.ts` validating the `/ops/status` contract
+
+**Learnings:**
+- Implementation predates the todo — ops-server and deployment console were built with full seeding progress support from the start

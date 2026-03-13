@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,6 +47,7 @@ public class CareGapEventController {
      * @return 202 Accepted with CareGapEventResponse
      */
     @PostMapping(path = "/detect", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     public ResponseEntity<CareGapEventResponse> detectGap(
             @Valid @RequestBody DetectGapRequest request,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -62,6 +64,7 @@ public class CareGapEventController {
      * Qualify patient for a care gap
      */
     @PostMapping(path = "/qualify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     public ResponseEntity<CareGapEventResponse> qualifyGap(
             @Valid @RequestBody QualifyGapRequest request,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -77,6 +80,7 @@ public class CareGapEventController {
      * Recommend intervention for a care gap
      */
     @PostMapping(path = "/intervene", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     public ResponseEntity<CareGapEventResponse> recommendIntervention(
             @Valid @RequestBody InterventionRequest request,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -92,6 +96,7 @@ public class CareGapEventController {
      * Close care gap by request payload
      */
     @PostMapping(path = "/close", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     public ResponseEntity<CareGapEventResponse> closeGap(
             @Valid @RequestBody CloseGapRequest request,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -111,6 +116,7 @@ public class CareGapEventController {
      * @return 202 Accepted with updated gap status
      */
     @PostMapping(path = "/close/{gapId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR')")
     public ResponseEntity<CareGapEventResponse> closeGapById(
             @PathVariable String gapId,
             @RequestHeader("X-Tenant-ID") String tenantId) {
@@ -129,6 +135,7 @@ public class CareGapEventController {
      * @return 200 OK with aggregated gap metrics
      */
     @GetMapping(path = "/population/health", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN', 'EVALUATOR', 'ANALYST')")
     public ResponseEntity<CareGapEventResponse> getPopulationHealth(
             @RequestHeader("X-Tenant-ID") String tenantId) {
 

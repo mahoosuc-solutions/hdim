@@ -64,3 +64,31 @@
 ## Security & Configuration Tips
 - Use `.env` or `portal-env.sample` for local config; do not commit secrets.
 - Tenant headers are required for protected APIs; demo allowlists cover `/actuator`, `/fhir/metadata`, and auth endpoints.
+
+## Star Ratings Feature (P1 Complete — March 2026)
+
+The CMS Star Ratings feature lives in two modules:
+
+### Domain Library: `backend/modules/shared/domain/star-ratings/`
+- **StarRatingCalculator**: Pure Java scoring engine. 42 CMS measures across 6 domains (STAYING_HEALTHY, MANAGING_CHRONIC_CONDITIONS, MEMBER_EXPERIENCE, COMPLAINTS_AND_PERFORMANCE, DRUG_PLAN, DRUG_SAFETY).
+- Supports normal and inverted measures (e.g., PCR — lower is better).
+- Cut points per measure in `DEFAULT_CUT_POINTS` map; fallback `{0.50, 0.60, 0.70, 0.80, 0.90}`.
+- Weighted domain scoring, overall star rating capped at 5.0, half-star rounding.
+- **StarRatingMeasure** enum: 42 constants with code, name, domain, and weight.
+- **StarRatingDomain** enum: 6 domains with weight field.
+- **Tests**: 12 unit tests in `StarRatingCalculatorTest` covering all scoring paths and edge cases.
+
+### Service: `backend/modules/services/care-gap-event-service/` (port 8111)
+- **REST API** (`StarRatingController`): GET `/current`, GET `/trend`, POST `/simulate` — secured with `hasAnyRole('ADMIN','EVALUATOR','ANALYST')`.
+- **Persistence**: `star_rating_projections` table (one row per tenant, JPA `@Version` for optimistic locking), `star_rating_snapshots` table (historical weekly/monthly).
+- **Kafka**: Single `gap.events` topic for all care gap lifecycle events. `StarsGapEventListener` handles `CareGapDetectedEvent`, `GapClosedEvent`, `PatientQualifiedEvent`, `InterventionRecommendedEvent`, and Map-based fallback.
+- **Event flow**: CQRS command side publishes to `gap.events` → listener triggers `StarsProjectionService.recalculateCurrentProjection()`. No synchronous recalculation in command path.
+- **Scheduled snapshots**: Weekly (MON 2AM) and Monthly (1st 3AM) via `@Scheduled` in `StarsProjectionService`.
+- **Liquibase**: Migrations 0004 (projections table) and 0005 (snapshots table), both with rollback directives.
+- **Tests**: 9 listener tests, 32 total service tests.
+
+### Key Design Decisions
+- Stars recomputation is event-driven only (via Kafka listener), never synchronous from the command path.
+- JPA `@Version` handles optimistic locking; no manual version management.
+- The `gap.events` topic is the single source of truth for all gap lifecycle events.
+- Orphan topics `gap.detected` and `gap.closed` were removed; only `gap.events` and `intervention.recommended` are declared.

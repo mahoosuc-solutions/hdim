@@ -18,4 +18,7 @@ public class MeasureScore {
     private int denominator;
     private double weight;
     private double[] cutPoints;
+    private boolean rewardMeasure;
+    private Double priorYearRate;
+    private Double improvement;
 }

@@ -1,6 +1,8 @@
 package com.healthdata.payer.service;
 
 import com.healthdata.payer.domain.*;
+import com.healthdata.starrating.domain.MeasureScore;
+import com.healthdata.starrating.domain.StarRatingMeasure;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

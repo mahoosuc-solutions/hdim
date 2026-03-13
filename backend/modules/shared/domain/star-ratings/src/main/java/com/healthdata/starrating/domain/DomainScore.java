@@ -19,4 +19,5 @@ public class DomainScore {
     private double domainWeight;
     private int measureCount;
     private double averagePerformanceRate;
+    private Double domainImprovement;
 }

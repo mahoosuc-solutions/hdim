@@ -1,6 +1,8 @@
 package com.healthdata.payer.service;
 
 import com.healthdata.payer.domain.*;
+import com.healthdata.starrating.domain.MeasureScore;
+import com.healthdata.starrating.domain.StarRatingMeasure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

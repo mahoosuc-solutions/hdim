@@ -1,5 +1,6 @@
 package com.healthdata.payer.domain;
 
+import com.healthdata.starrating.domain.StarRatingMeasure;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -2,6 +2,10 @@ package com.healthdata.payer.service;
 
 import com.healthdata.payer.domain.*;
 import com.healthdata.payer.service.StarRatingCalculator.MeasureData;
+import com.healthdata.starrating.domain.DomainScore;
+import com.healthdata.starrating.domain.MeasureScore;
+import com.healthdata.starrating.domain.StarRatingDomain;
+import com.healthdata.starrating.domain.StarRatingMeasure;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -69,8 +73,8 @@ class StarRatingCalculatorTest {
     @Test
     @DisplayName("Should calculate 3 stars for mid-range performance")
     void shouldCalculateThreeStars() {
-        // Given
-        double performanceRate = 0.62;
+        // Given — sequential cutpoint mapping: [1]=2★, [2]=3★, [3]=4★, [4]=5★
+        double performanceRate = 0.67;
         double[] cutPoints = {0.55, 0.60, 0.65, 0.70, 0.75};
 
         // When
@@ -83,8 +87,8 @@ class StarRatingCalculatorTest {
     @Test
     @DisplayName("Should calculate 2 stars for performance between 2-star and 3-star cut points")
     void shouldCalculateTwoStars() {
-        // Given
-        double performanceRate = 0.57;
+        // Given — between [1]=0.60 and [2]=0.65
+        double performanceRate = 0.62;
         double[] cutPoints = {0.55, 0.60, 0.65, 0.70, 0.75};
 
         // When
@@ -97,8 +101,8 @@ class StarRatingCalculatorTest {
     @Test
     @DisplayName("Should calculate 1 star for performance below 2-star cut point")
     void shouldCalculateOneStarForLowPerformance() {
-        // Given
-        double performanceRate = 0.50;
+        // Given — below [1]=0.60
+        double performanceRate = 0.57;
         double[] cutPoints = {0.55, 0.60, 0.65, 0.70, 0.75};
 
         // When

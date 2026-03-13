@@ -3,6 +3,8 @@ package com.healthdata.payer.controller;
 import com.healthdata.authentication.config.AuthenticationAutoConfiguration;
 import com.healthdata.payer.domain.*;
 import com.healthdata.payer.service.*;
+import com.healthdata.starrating.domain.MeasureScore;
+import com.healthdata.starrating.domain.StarRatingMeasure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

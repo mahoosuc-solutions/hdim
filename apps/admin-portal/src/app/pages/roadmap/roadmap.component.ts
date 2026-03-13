@@ -358,7 +358,7 @@ const MOCK_MILESTONES: RoadmapMilestone[] = [
                       </span>
                       @if (milestone.dependencies?.length) {
                         <span class="dependency-badge" title="Has dependencies">
-                          {{ milestone.dependencies.length }} dep
+                          {{ milestone.dependencies?.length }} dep
                         </span>
                       }
                     </div>

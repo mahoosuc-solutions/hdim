@@ -220,6 +220,16 @@ export interface Activity {
   updatedAt: string;
 }
 
+export interface ActivityForm {
+  type: ActivityType;
+  subject: string;
+  description: string;
+  dueDate: string;
+  duration: number | undefined;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH';
+  outcome: string;
+}
+
 export interface ActivityCreateRequest {
   type: ActivityType;
   subject: string;

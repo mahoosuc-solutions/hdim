@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { SalesService } from '../../../services/sales.service';
-import { Activity, ActivityType } from '../../../models/sales.model';
+import { Activity, ActivityForm, ActivityType } from '../../../models/sales.model';
 
 @Component({
   selector: 'app-sales-activities',
@@ -988,7 +988,7 @@ export class SalesActivitiesComponent implements OnInit, OnDestroy {
     return new Date(activity.dueDate) < new Date();
   }
 
-  getEmptyForm(): Record<string, unknown> {
+  getEmptyForm(): ActivityForm {
     return {
       type: 'TASK' as ActivityType,
       subject: '',

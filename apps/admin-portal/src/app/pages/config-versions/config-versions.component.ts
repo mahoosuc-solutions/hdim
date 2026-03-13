@@ -67,23 +67,23 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
             <div class="panel-body">
               <div class="meta-row">
                 <span class="label">Version</span>
-                <span class="value">v{{ currentVersion?.versionNumber }}</span>
+                <span class="value">v{{ currentVersion.versionNumber }}</span>
               </div>
               <div class="meta-row">
                 <span class="label">Change</span>
-                <span class="value">{{ currentVersion?.changeSummary || 'No summary' }}</span>
+                <span class="value">{{ currentVersion.changeSummary || 'No summary' }}</span>
               </div>
               <div class="meta-row">
                 <span class="label">Hash</span>
-                <span class="value monospace">{{ currentVersion?.configHash }}</span>
+                <span class="value monospace">{{ currentVersion.configHash }}</span>
               </div>
               <div class="meta-row">
                 <span class="label">Created By</span>
-                <span class="value">{{ currentVersion?.createdBy }}</span>
+                <span class="value">{{ currentVersion.createdBy }}</span>
               </div>
               <div class="meta-row">
                 <span class="label">Created</span>
-                <span class="value">{{ currentVersion?.createdAt | date:'medium' }}</span>
+                <span class="value">{{ currentVersion.createdAt | date:'medium' }}</span>
               </div>
             </div>
           } @else {

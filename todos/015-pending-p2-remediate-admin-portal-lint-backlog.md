@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p2
 issue_id: "015"
 tags: [frontend, admin-portal, lint, eslint, nx]
@@ -72,7 +72,7 @@ Use Option 1. Keep the standard Nx executor in place and reduce the warning back
 ## Acceptance Criteria
 
 - [x] `admin-portal:lint` runs through the standard Nx executor with actionable output and no target-shape regressions.
-- [ ] The current warning inventory is reduced through intentional code cleanup rather than lint-rule suppression.
+- [x] The current warning inventory is reduced through intentional code cleanup rather than lint-rule suppression.
 - [x] The highest-density files in alert config and core services have an agreed first-pass remediation plan.
 
 ## Work Log
@@ -147,3 +147,20 @@ Use Option 1. Keep the standard Nx executor in place and reduce the warning back
 - The legacy audit logs page had `13` warnings and is now clean.
 - This reduced the overall `admin-portal` warning count from `462` to `449`.
 - The next best frontend cleanup target is [`config-versions.component.ts`](/mnt/wdblack/dev/projects/hdim-master/apps/admin-portal/src/app/pages/config-versions/config-versions.component.ts), while the largest TypeScript-only debt still sits in [`admin.service.ts`](/mnt/wdblack/dev/projects/hdim-master/apps/admin-portal/src/app/services/admin.service.ts).
+
+### 2026-03-13 - Complete Lint Remediation (449 → 0)
+
+**By:** Copilot
+
+**Actions:**
+- Remediated all remaining 449 ESLint warnings across 36 files in `apps/admin-portal/`.
+- Converted 205 structural directives (`*ngIf`/`*ngFor`) to Angular built-in control flow (`@if`/`@for`/`@empty`).
+- Added `for`/`id` label associations (54 warnings), typed HTTP generics and mapper params (52 `no-explicit-any`), keyboard/focus accessibility (96 warnings), removed dead imports (18), migrated to `inject()` (11), replaced non-null assertions with narrowing guards (9), and fixed 3 misc warnings.
+- Created `ActivityForm` interface in `sales.model.ts` to resolve index-signature compile errors from `Record<string, unknown>` return type.
+- Removed redundant optional chaining inside narrowed `@if` blocks.
+- Verified with `npx eslint "apps/admin-portal/**/*.{ts,html}"` → 0 warnings, 0 errors.
+- Committed as `b08fa8375` (lint cleanup) and `38dab8f93` (regression fixes).
+
+**Learnings:**
+- The full remediation from 558 → 0 was achieved through 6 focused passes (services → alert-config → audit-logs → config-versions/sales → remaining pages → API layer).
+- `Record<string, unknown>` is unsuitable for Angular template `[(ngModel)]` bindings — a typed interface is required to avoid index-signature access errors.

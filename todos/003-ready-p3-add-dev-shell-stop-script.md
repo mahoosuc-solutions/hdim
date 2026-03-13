@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p3
 issue_id: "003"
 tags: [devx, scripts]
@@ -23,9 +23,9 @@ We start multiple services via scripts but lack a consistent stop script to clea
 Create `scripts/dev-shell-stop.sh` to stop docker compose demo stack and terminate any `nx serve shell-app`/`mfeDeployment` dev servers started by the dev scripts.
 
 ## Acceptance Criteria
-- [ ] Single command stops docker compose demo stack
-- [ ] Terminates shell/MFE dev servers cleanly
-- [ ] Does not kill unrelated processes
+- [x] Single command stops docker compose demo stack
+- [x] Terminates shell/MFE dev servers cleanly
+- [x] Does not kill unrelated processes
 
 ## Work Log
 
@@ -38,3 +38,15 @@ Create `scripts/dev-shell-stop.sh` to stop docker compose demo stack and termina
 
 **Learnings:**
 - TBD
+
+### 2026-03-13 - Verified Complete
+
+**By:** Copilot
+
+**Actions:**
+- Confirmed `scripts/dev-shell-stop.sh` already exists (77 lines, created by 2026-03-09).
+- Verified it satisfies all 3 acceptance criteria:
+  1. Runs `docker compose -f docker-compose.demo.yml down -v` to stop the demo stack.
+  2. Terminates MFE/shell dev servers via PID files: shell-app, mfeDeployment, mfePatients, mfeMeasureBuilder.
+  3. Uses command-matching verification (`ps -p PID -o args=`) to avoid killing unrelated processes — skips PIDs whose command does not contain the expected token.
+- Marked all acceptance criteria and set status to done.

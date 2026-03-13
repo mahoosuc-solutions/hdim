@@ -6,6 +6,7 @@
  */
 
 import type { VercelResponse } from '@vercel/node';
+import type { Contact } from '@prisma/client';
 import prisma from '../../lib/db';
 import {
   withAuth,
@@ -128,7 +129,7 @@ async function createContact(
 /**
  * Format contact for API response.
  */
-function formatContactResponse(contact: any): ContactResponse {
+function formatContactResponse(contact: Contact): ContactResponse {
   return {
     id: contact.id,
     name: contact.name,

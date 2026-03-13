@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
@@ -14,9 +14,11 @@ import { Subject, takeUntil } from 'rxjs';
       <div class="page-header">
         <div class="header-left">
           <h2>User Management</h2>
-          <span class="user-count" *ngIf="usersResponse">
-            {{ usersResponse.totalElements }} users
-          </span>
+          @if (usersResponse) {
+            <span class="user-count">
+              {{ usersResponse.totalElements }} users
+            </span>
+          }
         </div>
         <button class="btn-primary" (click)="openCreateModal()">
           <span class="btn-icon">+</span>
@@ -38,7 +40,9 @@ import { Subject, takeUntil } from 'rxjs';
         <div class="filter-group">
           <select [(ngModel)]="roleFilter" (change)="filterUsers()">
             <option value="">All Roles</option>
-            <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+            @for (role of roles; track role) {
+              <option [value]="role">{{ role }}</option>
+            }
           </select>
           <select [(ngModel)]="statusFilter" (change)="filterUsers()">
             <option value="">All Status</option>
@@ -62,7 +66,8 @@ import { Subject, takeUntil } from 'rxjs';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let user of filteredUsers" [class.inactive]="!user.active">
+            @for (user of filteredUsers; track user.id) {
+            <tr [class.inactive]="!user.active">
               <td class="user-cell">
                 <div class="user-avatar">{{ getInitials(user) }}</div>
                 <div class="user-info">
@@ -92,22 +97,28 @@ import { Subject, takeUntil } from 'rxjs';
                 <button class="action-btn delete" (click)="confirmDelete(user)" title="Delete">🗑️</button>
               </td>
             </tr>
+            }
           </tbody>
         </table>
 
-        <div class="empty-state" *ngIf="filteredUsers.length === 0 && !loading">
+        @if (filteredUsers.length === 0 && !loading) {
+        <div class="empty-state">
           <span class="empty-icon">👥</span>
           <span>No users found</span>
         </div>
+        }
 
-        <div class="loading-state" *ngIf="loading">
+        @if (loading) {
+        <div class="loading-state">
           <div class="spinner"></div>
           <span>Loading users...</span>
         </div>
+        }
       </div>
 
       <!-- Pagination -->
-      <div class="pagination" *ngIf="usersResponse && usersResponse.totalPages > 1">
+      @if (usersResponse && usersResponse.totalPages > 1) {
+      <div class="pagination">
         <button
           class="page-btn"
           [disabled]="currentPage === 0"
@@ -126,39 +137,47 @@ import { Subject, takeUntil } from 'rxjs';
           Next
         </button>
       </div>
+      }
 
       <!-- Create/Edit Modal -->
-      <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-        <div class="modal" (click)="$event.stopPropagation()">
+      @if (showModal) {
+      <div class="modal-overlay" (click)="closeModal()" (keydown.escape)="closeModal()" tabindex="0" role="dialog">
+        <div class="modal" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="modal-header">
             <h3>{{ editingUser ? 'Edit User' : 'Create User' }}</h3>
             <button class="close-btn" (click)="closeModal()">×</button>
           </div>
           <div class="modal-body">
             <div class="form-group">
-              <label>First Name</label>
-              <input type="text" [(ngModel)]="userForm.firstName" placeholder="Enter first name" />
+              <label for="userFirstName">First Name</label>
+              <input id="userFirstName" type="text" [(ngModel)]="userForm.firstName" placeholder="Enter first name" />
             </div>
             <div class="form-group">
-              <label>Last Name</label>
-              <input type="text" [(ngModel)]="userForm.lastName" placeholder="Enter last name" />
+              <label for="userLastName">Last Name</label>
+              <input id="userLastName" type="text" [(ngModel)]="userForm.lastName" placeholder="Enter last name" />
             </div>
             <div class="form-group">
-              <label>Email</label>
-              <input type="email" [(ngModel)]="userForm.email" placeholder="Enter email" [disabled]="!!editingUser" />
+              <label for="userEmail">Email</label>
+              <input id="userEmail" type="email" [(ngModel)]="userForm.email" placeholder="Enter email" [disabled]="!!editingUser" />
             </div>
-            <div class="form-group" *ngIf="!editingUser">
-              <label>Username</label>
-              <input type="text" [(ngModel)]="userForm.username" placeholder="Enter username" />
-            </div>
-            <div class="form-group" *ngIf="!editingUser">
-              <label>Password</label>
-              <input type="password" [(ngModel)]="userForm.password" placeholder="Enter password" />
-            </div>
+            @if (!editingUser) {
             <div class="form-group">
-              <label>Role</label>
-              <select [(ngModel)]="userForm.role">
-                <option *ngFor="let role of roles" [value]="role">{{ role }}</option>
+              <label for="userUsername">Username</label>
+              <input id="userUsername" type="text" [(ngModel)]="userForm.username" placeholder="Enter username" />
+            </div>
+            }
+            @if (!editingUser) {
+            <div class="form-group">
+              <label for="userPassword">Password</label>
+              <input id="userPassword" type="password" [(ngModel)]="userForm.password" placeholder="Enter password" />
+            </div>
+            }
+            <div class="form-group">
+              <label for="userRole">Role</label>
+              <select id="userRole" [(ngModel)]="userForm.role">
+                @for (role of roles; track role) {
+                <option [value]="role">{{ role }}</option>
+                }
               </select>
             </div>
           </div>
@@ -170,10 +189,12 @@ import { Subject, takeUntil } from 'rxjs';
           </div>
         </div>
       </div>
+      }
 
       <!-- Delete Confirmation Modal -->
-      <div class="modal-overlay" *ngIf="showDeleteConfirm" (click)="closeDeleteConfirm()">
-        <div class="modal confirm-modal" (click)="$event.stopPropagation()">
+      @if (showDeleteConfirm) {
+      <div class="modal-overlay" (click)="closeDeleteConfirm()" (keydown.escape)="closeDeleteConfirm()" tabindex="0" role="dialog">
+        <div class="modal confirm-modal" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="modal-header">
             <h3>Confirm Delete</h3>
           </div>
@@ -187,18 +208,20 @@ import { Subject, takeUntil } from 'rxjs';
           </div>
         </div>
       </div>
+      }
 
       <!-- Reset Password Modal -->
-      <div class="modal-overlay" *ngIf="showResetPasswordModal" (click)="closeResetPasswordModal()">
-        <div class="modal confirm-modal" (click)="$event.stopPropagation()">
+      @if (showResetPasswordModal) {
+      <div class="modal-overlay" (click)="closeResetPasswordModal()" (keydown.escape)="closeResetPasswordModal()" tabindex="0" role="dialog">
+        <div class="modal confirm-modal" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="modal-header">
             <h3>Reset Password</h3>
           </div>
           <div class="modal-body">
             <p>Reset password for <strong>{{ userToResetPassword?.firstName }} {{ userToResetPassword?.lastName }}</strong>.</p>
             <div class="form-group">
-              <label>New Temporary Password</label>
-              <input type="password" [(ngModel)]="resetPasswordValue" placeholder="Enter temporary password" />
+              <label for="resetPasswordInput">New Temporary Password</label>
+              <input id="resetPasswordInput" type="password" [(ngModel)]="resetPasswordValue" placeholder="Enter temporary password" />
             </div>
             <label class="checkbox-row">
               <input type="checkbox" [(ngModel)]="forcePasswordChangeOnNextLogin" />
@@ -211,30 +234,39 @@ import { Subject, takeUntil } from 'rxjs';
           </div>
         </div>
       </div>
+      }
 
       <!-- User Activity Log Modal -->
-      <div class="modal-overlay" *ngIf="showActivityLogModal" (click)="closeActivityLogModal()">
-        <div class="modal activity-modal" (click)="$event.stopPropagation()">
+      @if (showActivityLogModal) {
+      <div class="modal-overlay" (click)="closeActivityLogModal()" (keydown.escape)="closeActivityLogModal()" tabindex="0" role="dialog">
+        <div class="modal activity-modal" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="modal-header">
             <h3>User Activity Log</h3>
             <button class="close-btn" (click)="closeActivityLogModal()">×</button>
           </div>
           <div class="modal-body">
-            <p *ngIf="selectedUserForActivity" class="activity-user">
+            @if (selectedUserForActivity) {
+            <p class="activity-user">
               {{ selectedUserForActivity.firstName }} {{ selectedUserForActivity.lastName }} ({{ selectedUserForActivity.email }})
             </p>
+            }
 
-            <div class="loading-state" *ngIf="activityLoading">
+            @if (activityLoading) {
+            <div class="loading-state">
               <div class="spinner"></div>
               <span>Loading activity...</span>
             </div>
+            }
 
-            <div class="empty-state" *ngIf="!activityLoading && userActivityLogs.length === 0">
+            @if (!activityLoading && userActivityLogs.length === 0) {
+            <div class="empty-state">
               <span class="empty-icon">📝</span>
               <span>No activity found for this user.</span>
             </div>
+            }
 
-            <table class="activity-table" *ngIf="!activityLoading && userActivityLogs.length > 0">
+            @if (!activityLoading && userActivityLogs.length > 0) {
+            <table class="activity-table">
               <thead>
                 <tr>
                   <th>Time</th>
@@ -245,7 +277,8 @@ import { Subject, takeUntil } from 'rxjs';
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let log of userActivityLogs">
+                @for (log of userActivityLogs; track $index) {
+                <tr>
                   <td>{{ log.timestamp | date:'short' }}</td>
                   <td>{{ log.action }}</td>
                   <td>{{ log.resourceType }}</td>
@@ -256,14 +289,17 @@ import { Subject, takeUntil } from 'rxjs';
                   </td>
                   <td>{{ log.details }}</td>
                 </tr>
+                }
               </tbody>
             </table>
+            }
           </div>
           <div class="modal-footer">
             <button class="btn-secondary" (click)="closeActivityLogModal()">Close</button>
           </div>
         </div>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -770,7 +806,7 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private adminService: AdminService) {}
+  private adminService = inject(AdminService);
 
   ngOnInit(): void {
     this.loadUsers();

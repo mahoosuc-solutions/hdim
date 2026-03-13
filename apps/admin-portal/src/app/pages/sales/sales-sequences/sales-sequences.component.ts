@@ -10,8 +10,6 @@ import {
   SequenceEnrollment,
   SequenceAnalytics,
   SequenceStatus,
-  SequenceType,
-  TargetType,
   Lead,
 } from '../../../models/sales.model';
 
@@ -46,9 +44,11 @@ import {
         <div class="filter-group">
           <select [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All Statuses</option>
-            <option *ngFor="let status of statuses" [value]="status">
-              {{ formatStatus(status) }}
-            </option>
+            @for (status of statuses; track status) {
+              <option [value]="status">
+                {{ formatStatus(status) }}
+              </option>
+            }
           </select>
           <button class="btn btn-secondary" (click)="loadSequences()">
             Refresh
@@ -57,13 +57,16 @@ import {
       </div>
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading()">
-        <div class="spinner"></div>
-        <span>Loading sequences...</span>
-      </div>
+      @if (isLoading()) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading sequences...</span>
+        </div>
+      }
 
       <!-- Sequences Table -->
-      <div class="table-container" *ngIf="!isLoading()">
+      @if (!isLoading()) {
+        <div class="table-container">
         <table class="sequences-table">
           <thead>
             <tr>
@@ -77,86 +80,96 @@ import {
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let sequence of filteredSequences()" (click)="selectSequence(sequence)">
-              <td class="name-cell">
-                <div class="sequence-icon">📋</div>
-                <div class="sequence-name">
-                  <span class="name">{{ sequence.name }}</span>
-                  <span class="description" *ngIf="sequence.description">{{ sequence.description }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="status-badge" [class]="sequence.status.toLowerCase()">
-                  {{ formatStatus(sequence.status) }}
-                </span>
-              </td>
-              <td>{{ sequence.steps?.length || 0 }}</td>
-              <td>{{ sequence.enrollmentCount }}</td>
-              <td>{{ sequence.completedCount }}</td>
-              <td>
-                <span class="rate-value">{{ (sequence.replyRate * 100) | number:'1.1-1' }}%</span>
-              </td>
-              <td class="actions-cell" (click)="$event.stopPropagation()">
-                <button
-                  class="action-btn"
-                  [title]="sequence.status === 'ACTIVE' ? 'Deactivate' : 'Activate'"
-                  (click)="toggleSequenceStatus(sequence)"
-                >
-                  {{ sequence.status === 'ACTIVE' ? '⏸️' : '▶️' }}
-                </button>
-                <button class="action-btn" title="Edit" (click)="editSequence(sequence)">✏️</button>
-                <button class="action-btn" title="Enroll" (click)="openEnrollDialog(sequence)">👤</button>
-                <button class="action-btn delete" title="Delete" (click)="deleteSequence(sequence)">🗑️</button>
-              </td>
-            </tr>
-            <tr *ngIf="!filteredSequences().length">
-              <td colspan="7" class="empty-state">
-                No sequences found. Create your first sequence to get started.
-              </td>
-            </tr>
+            @for (sequence of filteredSequences(); track sequence.id) {
+              <tr (click)="selectSequence(sequence)" (keydown.enter)="selectSequence(sequence)" tabindex="0" role="row">
+                <td class="name-cell">
+                  <div class="sequence-icon">📋</div>
+                  <div class="sequence-name">
+                    <span class="name">{{ sequence.name }}</span>
+                    @if (sequence.description) {
+                      <span class="description">{{ sequence.description }}</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [class]="sequence.status.toLowerCase()">
+                    {{ formatStatus(sequence.status) }}
+                  </span>
+                </td>
+                <td>{{ sequence.steps?.length || 0 }}</td>
+                <td>{{ sequence.enrollmentCount }}</td>
+                <td>{{ sequence.completedCount }}</td>
+                <td>
+                  <span class="rate-value">{{ (sequence.replyRate * 100) | number:'1.1-1' }}%</span>
+                </td>
+                <td class="actions-cell" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="cell">
+                  <button
+                    class="action-btn"
+                    [title]="sequence.status === 'ACTIVE' ? 'Deactivate' : 'Activate'"
+                    (click)="toggleSequenceStatus(sequence)"
+                  >
+                    {{ sequence.status === 'ACTIVE' ? '⏸️' : '▶️' }}
+                  </button>
+                  <button class="action-btn" title="Edit" (click)="editSequence(sequence)">✏️</button>
+                  <button class="action-btn" title="Enroll" (click)="openEnrollDialog(sequence)">👤</button>
+                  <button class="action-btn delete" title="Delete" (click)="deleteSequence(sequence)">🗑️</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-state">
+                  No sequences found. Create your first sequence to get started.
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
-      </div>
+        </div>
+      }
 
       <!-- Pagination -->
-      <div class="pagination" *ngIf="totalPages > 1">
+      @if (totalPages > 1) {
+        <div class="pagination">
         <button [disabled]="currentPage === 0" (click)="changePage(currentPage - 1)">Previous</button>
         <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
         <button [disabled]="currentPage >= totalPages - 1" (click)="changePage(currentPage + 1)">Next</button>
-      </div>
+        </div>
+      }
 
       <!-- Create/Edit Dialog -->
-      <div class="dialog-overlay" *ngIf="showCreateDialog" (click)="closeDialog()">
-        <div class="dialog large" (click)="$event.stopPropagation()">
+      @if (showCreateDialog) {
+        <div class="dialog-overlay" (click)="closeDialog()" (keydown.escape)="closeDialog()" tabindex="0" role="dialog">
+          <div class="dialog large" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>{{ editingSequence ? 'Edit Sequence' : 'Create New Sequence' }}</h3>
             <button class="close-btn" (click)="closeDialog()">×</button>
           </div>
           <form (ngSubmit)="saveSequence()" class="dialog-form">
             <div class="form-group">
-              <label>Sequence Name *</label>
-              <input type="text" [(ngModel)]="sequenceForm.name" name="name" required />
+              <label for="seqName">Sequence Name *</label>
+              <input id="seqName" type="text" [(ngModel)]="sequenceForm.name" name="name" required />
             </div>
             <div class="form-group">
-              <label>Description</label>
-              <textarea [(ngModel)]="sequenceForm.description" name="description" rows="2"></textarea>
+              <label for="seqDescription">Description</label>
+              <textarea id="seqDescription" [(ngModel)]="sequenceForm.description" name="description" rows="2"></textarea>
             </div>
 
             <!-- Steps Builder -->
             <div class="steps-section">
               <div class="steps-header">
-                <label>Sequence Steps</label>
+                <label for="seqSteps">Sequence Steps</label>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="addStep()">
                   + Add Step
                 </button>
               </div>
 
-              <div class="steps-list" *ngIf="sequenceForm.steps.length > 0">
-                <div
-                  class="step-item"
-                  *ngFor="let step of sequenceForm.steps; let i = index"
-                  [class.dragging]="draggingIndex === i"
-                >
+              @if (sequenceForm.steps.length > 0) {
+                <div id="seqSteps" class="steps-list">
+                  @for (step of sequenceForm.steps; track $index; let i = $index) {
+                    <div
+                      class="step-item"
+                      [class.dragging]="draggingIndex === i"
+                    >
                   <div class="step-number">{{ i + 1 }}</div>
                   <div class="step-content">
                     <div class="step-row">
@@ -186,8 +199,9 @@ import {
                         <span>hours</span>
                       </div>
                     </div>
-                    <div class="step-row" *ngIf="step.type === 'EMAIL'">
-                      <input
+                    @if (step.type === 'EMAIL') {
+                      <div class="step-row">
+                        <input
                         type="text"
                         [(ngModel)]="step.subject"
                         [name]="'subject' + i"
@@ -195,8 +209,10 @@ import {
                         class="full-width"
                       />
                     </div>
-                    <div class="step-row" *ngIf="step.type === 'EMAIL' || step.type === 'TASK'">
-                      <textarea
+                    }
+                    @if (step.type === 'EMAIL' || step.type === 'TASK') {
+                      <div class="step-row">
+                        <textarea
                         [(ngModel)]="step.content"
                         [name]="'content' + i"
                         placeholder="{{ step.type === 'EMAIL' ? 'Email content...' : 'Task description...' }}"
@@ -204,6 +220,7 @@ import {
                         class="full-width"
                       ></textarea>
                     </div>
+                    }
                   </div>
                   <button
                     type="button"
@@ -214,11 +231,15 @@ import {
                     ×
                   </button>
                 </div>
+                }
               </div>
+              }
 
-              <div class="empty-steps" *ngIf="sequenceForm.steps.length === 0">
-                <p>No steps yet. Add steps to build your sequence.</p>
-              </div>
+              @if (sequenceForm.steps.length === 0) {
+                <div class="empty-steps">
+                  <p>No steps yet. Add steps to build your sequence.</p>
+                </div>
+              }
             </div>
 
             <div class="dialog-actions">
@@ -227,27 +248,31 @@ import {
             </div>
           </form>
         </div>
-      </div>
+        </div>
+      }
 
       <!-- Enroll Dialog -->
-      <div class="dialog-overlay" *ngIf="showEnrollDialog" (click)="closeEnrollDialog()">
-        <div class="dialog" (click)="$event.stopPropagation()">
+      @if (showEnrollDialog) {
+        <div class="dialog-overlay" (click)="closeEnrollDialog()" (keydown.escape)="closeEnrollDialog()" tabindex="0" role="dialog">
+          <div class="dialog" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>Enroll in Sequence</h3>
             <button class="close-btn" (click)="closeEnrollDialog()">×</button>
           </div>
           <div class="dialog-form">
             <div class="form-group">
-              <label>Sequence</label>
-              <input type="text" [value]="enrollingSequence?.name" disabled />
+              <label for="enrollSeqName">Sequence</label>
+              <input id="enrollSeqName" type="text" [value]="enrollingSequence?.name" disabled />
             </div>
             <div class="form-group">
-              <label>Select Lead to Enroll</label>
-              <select [(ngModel)]="selectedLeadId">
+              <label for="enrollLeadSelect">Select Lead to Enroll</label>
+              <select id="enrollLeadSelect" [(ngModel)]="selectedLeadId">
                 <option value="">-- Select a Lead --</option>
-                <option *ngFor="let lead of leads()" [value]="lead.id">
-                  {{ lead.firstName }} {{ lead.lastName }} ({{ lead.company }})
-                </option>
+                @for (lead of leads(); track lead.id) {
+                  <option [value]="lead.id">
+                    {{ lead.firstName }} {{ lead.lastName }} ({{ lead.company }})
+                  </option>
+                }
               </select>
             </div>
             <div class="dialog-actions">
@@ -263,25 +288,23 @@ import {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      }
 
       <!-- Sequence Detail Panel -->
-      <div class="detail-panel" *ngIf="selectedSequence()" (click)="selectedSequence.set(null)">
-        <div class="detail-content" (click)="$event.stopPropagation()">
+      @if (selectedSequence()) {
+        <div class="detail-panel" (click)="selectedSequence.set(null)" (keydown.escape)="selectedSequence.set(null)" tabindex="0" role="dialog">
+          <div class="detail-content" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="detail-header">
             <div class="sequence-info">
               <div class="sequence-icon large">📋</div>
               <div>
                 <h3>{{ selectedSequence()!.name }}</h3>
-                <p *ngIf="selectedSequence()!.description">{{ selectedSequence()!.description }}</p>
+                @if (selectedSequence()!.description) {
+                  <p>{{ selectedSequence()!.description }}</p>
+                }
               </div>
             </div>
-            <button class="close-btn" (click)="selectedSequence.set(null)">×</button>
-          </div>
-
-          <div class="detail-body">
-            <div class="detail-section">
-              <h4>Status</h4>
               <div class="status-toggle">
                 <span class="status-badge large" [class]="selectedSequence()!.status.toLowerCase()">
                   {{ formatStatus(selectedSequence()!.status) }}
@@ -298,28 +321,34 @@ import {
             <div class="detail-section">
               <h4>Steps ({{ selectedSequence()!.steps?.length || 0 }})</h4>
               <div class="steps-timeline">
-                <div class="timeline-item" *ngFor="let step of selectedSequence()!.steps; let i = index">
-                  <div class="timeline-icon" [class]="step.type.toLowerCase()">
-                    {{ getStepIcon(step.type) }}
+                @for (step of selectedSequence()!.steps; track $index; let i = $index) {
+                  <div class="timeline-item">
+                    <div class="timeline-icon" [class]="step.type.toLowerCase()">
+                      {{ getStepIcon(step.type) }}
+                    </div>
+                    <div class="timeline-content">
+                      <span class="timeline-label">{{ formatStepType(step.type) }}</span>
+                      @if (step.subject) {
+                        <span class="timeline-subject">{{ step.subject }}</span>
+                      }
+                      <span class="timeline-delay">
+                        {{ step.delayDays > 0 ? step.delayDays + 'd' : '' }}
+                        {{ step.delayHours > 0 ? step.delayHours + 'h' : '' }}
+                        {{ step.delayDays === 0 && step.delayHours === 0 ? 'Immediate' : 'delay' }}
+                      </span>
+                    </div>
                   </div>
-                  <div class="timeline-content">
-                    <span class="timeline-label">{{ formatStepType(step.type) }}</span>
-                    <span class="timeline-subject" *ngIf="step.subject">{{ step.subject }}</span>
-                    <span class="timeline-delay">
-                      {{ step.delayDays > 0 ? step.delayDays + 'd' : '' }}
-                      {{ step.delayHours > 0 ? step.delayHours + 'h' : '' }}
-                      {{ step.delayDays === 0 && step.delayHours === 0 ? 'Immediate' : 'delay' }}
-                    </span>
+                } @empty {
+                  <div class="empty-timeline">
+                    No steps defined
                   </div>
-                </div>
-                <div class="empty-timeline" *ngIf="!selectedSequence()!.steps?.length">
-                  No steps defined
-                </div>
+                }
               </div>
             </div>
 
-            <div class="detail-section" *ngIf="sequenceAnalytics()">
-              <h4>Analytics</h4>
+            @if (sequenceAnalytics()) {
+              <div class="detail-section">
+                <h4>Analytics</h4>
               <div class="analytics-grid">
                 <div class="analytics-item">
                   <span class="analytics-value">{{ sequenceAnalytics()!.emailsSent }}</span>
@@ -352,48 +381,54 @@ import {
                   <span class="rate-value">{{ (sequenceAnalytics()!.replyRate * 100) | number:'1.1-1' }}%</span>
                 </div>
               </div>
-            </div>
+              </div>
+            }
 
             <div class="detail-section">
               <h4>Enrollments ({{ enrollments().length }})</h4>
               <div class="enrollments-list">
-                <div class="enrollment-item" *ngFor="let enrollment of enrollments()">
-                  <div class="enrollment-info">
-                    <span class="enrollment-step">Step {{ enrollment.currentStep }}</span>
-                    <span class="enrollment-status" [class]="enrollment.status.toLowerCase()">
-                      {{ formatEnrollmentStatus(enrollment.status) }}
-                    </span>
+                @for (enrollment of enrollments(); track enrollment.id) {
+                  <div class="enrollment-item">
+                    <div class="enrollment-info">
+                      <span class="enrollment-step">Step {{ enrollment.currentStep }}</span>
+                      <span class="enrollment-status" [class]="enrollment.status.toLowerCase()">
+                        {{ formatEnrollmentStatus(enrollment.status) }}
+                      </span>
+                    </div>
+                    <div class="enrollment-actions">
+                      @if (enrollment.status === 'ACTIVE') {
+                        <button
+                          class="btn btn-sm"
+                          (click)="pauseEnrollment(enrollment)"
+                        >
+                          Pause
+                        </button>
+                      }
+                      @if (enrollment.status === 'PAUSED') {
+                        <button
+                          class="btn btn-sm"
+                          (click)="resumeEnrollment(enrollment)"
+                        >
+                          Resume
+                        </button>
+                      }
+                    </div>
                   </div>
-                  <div class="enrollment-actions">
-                    <button
-                      class="btn btn-sm"
-                      *ngIf="enrollment.status === 'ACTIVE'"
-                      (click)="pauseEnrollment(enrollment)"
-                    >
-                      Pause
-                    </button>
-                    <button
-                      class="btn btn-sm"
-                      *ngIf="enrollment.status === 'PAUSED'"
-                      (click)="resumeEnrollment(enrollment)"
-                    >
-                      Resume
-                    </button>
+                } @empty {
+                  <div class="empty-enrollments">
+                    No active enrollments
                   </div>
-                </div>
-                <div class="empty-enrollments" *ngIf="!enrollments().length">
-                  No active enrollments
-                </div>
+                }
               </div>
             </div>
-          </div>
 
           <div class="detail-actions">
             <button class="btn btn-secondary" (click)="editSequence(selectedSequence()!)">Edit Sequence</button>
             <button class="btn btn-primary" (click)="openEnrollDialog(selectedSequence()!)">Enroll Lead</button>
           </div>
         </div>
-      </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -1204,8 +1239,8 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
     this.sequenceForm = {
       name: sequence.name,
       description: sequence.description,
-      sequenceType: (sequence as any).sequenceType || 'NURTURE',
-      targetType: (sequence as any).targetType || 'LEAD',
+      sequenceType: (sequence as Record<string, unknown>)['sequenceType'] as string || 'NURTURE',
+      targetType: (sequence as Record<string, unknown>)['targetType'] as string || 'LEAD',
       steps: sequence.steps.map((step) => ({
         stepNumber: step.stepNumber,
         type: step.type,
@@ -1234,9 +1269,12 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
             this.closeDialog();
             this.loadSequences();
             if (this.selectedSequence()?.id === this.editingSequence?.id) {
-              this.sequenceService.getSequence(this.editingSequence!.id)
-                .pipe(takeUntil(this.destroy$))
-                .subscribe((seq) => this.selectedSequence.set(seq));
+              const editId = this.editingSequence?.id;
+              if (editId) {
+                this.sequenceService.getSequence(editId)
+                  .pipe(takeUntil(this.destroy$))
+                  .subscribe((seq) => this.selectedSequence.set(seq));
+              }
             }
           },
         });
@@ -1319,8 +1357,9 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           this.closeEnrollDialog();
-          if (this.selectedSequence()?.id === this.enrollingSequence?.id) {
-            this.loadSequenceDetails(this.enrollingSequence!.id);
+          const enrollId = this.enrollingSequence?.id;
+          if (enrollId && this.selectedSequence()?.id === enrollId) {
+            this.loadSequenceDetails(enrollId);
           }
           this.loadSequences();
         },
@@ -1332,8 +1371,9 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          if (this.selectedSequence()) {
-            this.loadSequenceDetails(this.selectedSequence()!.id);
+          const selected = this.selectedSequence();
+          if (selected) {
+            this.loadSequenceDetails(selected.id);
           }
         },
       });
@@ -1344,8 +1384,9 @@ export class SalesSequencesComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          if (this.selectedSequence()) {
-            this.loadSequenceDetails(this.selectedSequence()!.id);
+          const selected = this.selectedSequence();
+          if (selected) {
+            this.loadSequenceDetails(selected.id);
           }
         },
       });

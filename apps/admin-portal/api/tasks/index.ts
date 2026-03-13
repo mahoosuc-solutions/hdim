@@ -6,6 +6,7 @@
  */
 
 import type { VercelResponse } from '@vercel/node';
+import type { Task } from '@prisma/client';
 import prisma from '../../lib/db';
 import {
   withAuth,
@@ -113,7 +114,7 @@ async function createTask(
 /**
  * Format task for API response.
  */
-function formatTaskResponse(task: any): TaskResponse {
+function formatTaskResponse(task: Task): TaskResponse {
   return {
     id: task.id,
     subject: task.subject,

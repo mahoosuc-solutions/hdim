@@ -1,17 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { Subject, takeUntil, forkJoin } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { SalesService } from '../../../services/sales.service';
-import {
-  SalesDashboard,
-  Lead,
-  Opportunity,
-  Activity,
-  LeadMetrics,
-  PipelineSummary,
-  ActivityMetrics,
-} from '../../../models/sales.model';
 
 @Component({
   selector: 'app-sales-dashboard',
@@ -35,19 +26,23 @@ import {
       </div>
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading()">
-        <div class="spinner"></div>
-        <span>Loading dashboard...</span>
-      </div>
+      @if (isLoading()) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading dashboard...</span>
+        </div>
+      }
 
       <!-- Error State -->
-      <div class="error-banner" *ngIf="error()">
-        <span>{{ error() }}</span>
-        <button class="btn-link" (click)="refreshData()">Retry</button>
-      </div>
+      @if (error()) {
+        <div class="error-banner">
+          <span>{{ error() }}</span>
+          <button class="btn-link" (click)="refreshData()">Retry</button>
+        </div>
+      }
 
       <!-- Dashboard Content -->
-      <ng-container *ngIf="!isLoading() && dashboard()">
+      @if (!isLoading() && dashboard()) {
         <!-- Lead Metrics -->
         <section class="metrics-section">
           <h3>Lead Performance</h3>
@@ -138,15 +133,17 @@ import {
               </div>
             </div>
 
-            <div class="metric-card at-risk" *ngIf="dashboard()!.pipelineMetrics.atRiskDeals > 0">
-              <div class="metric-icon warning">
-                <span>⚠️</span>
+            @if (dashboard()!.pipelineMetrics.atRiskDeals > 0) {
+              <div class="metric-card at-risk">
+                <div class="metric-icon warning">
+                  <span>⚠️</span>
+                </div>
+                <div class="metric-content">
+                  <span class="metric-value warning">{{ dashboard()!.pipelineMetrics.atRiskDeals }}</span>
+                  <span class="metric-label">At Risk</span>
+                </div>
               </div>
-              <div class="metric-content">
-                <span class="metric-value warning">{{ dashboard()!.pipelineMetrics.atRiskDeals }}</span>
-                <span class="metric-label">At Risk</span>
-              </div>
-            </div>
+            }
           </div>
         </section>
 
@@ -184,15 +181,17 @@ import {
               </div>
             </div>
 
-            <div class="metric-card overdue" *ngIf="dashboard()!.activityMetrics.overdueCount > 0">
-              <div class="metric-icon warning">
-                <span>🔴</span>
+            @if (dashboard()!.activityMetrics.overdueCount > 0) {
+              <div class="metric-card overdue">
+                <div class="metric-icon warning">
+                  <span>🔴</span>
+                </div>
+                <div class="metric-content">
+                  <span class="metric-value warning">{{ dashboard()!.activityMetrics.overdueCount }}</span>
+                  <span class="metric-label">Overdue</span>
+                </div>
               </div>
-              <div class="metric-content">
-                <span class="metric-value warning">{{ dashboard()!.activityMetrics.overdueCount }}</span>
-                <span class="metric-label">Overdue</span>
-              </div>
-            </div>
+            }
           </div>
         </section>
 
@@ -205,19 +204,22 @@ import {
               <a routerLink="/sales/leads" class="view-all">View All</a>
             </div>
             <div class="recent-list">
-              <div class="recent-item" *ngFor="let lead of dashboard()!.recentLeads">
-                <div class="item-avatar">{{ getInitials(lead.firstName, lead.lastName) }}</div>
-                <div class="item-content">
-                  <span class="item-name">{{ lead.firstName }} {{ lead.lastName }}</span>
-                  <span class="item-detail">{{ lead.company }}</span>
+              @for (lead of dashboard()!.recentLeads; track $index) {
+                <div class="recent-item">
+                  <div class="item-avatar">{{ getInitials(lead.firstName, lead.lastName) }}</div>
+                  <div class="item-content">
+                    <span class="item-name">{{ lead.firstName }} {{ lead.lastName }}</span>
+                    <span class="item-detail">{{ lead.company }}</span>
+                  </div>
+                  <span class="status-badge" [class]="lead.status.toLowerCase()">
+                    {{ formatStatus(lead.status) }}
+                  </span>
                 </div>
-                <span class="status-badge" [class]="lead.status.toLowerCase()">
-                  {{ formatStatus(lead.status) }}
-                </span>
-              </div>
-              <div class="empty-state" *ngIf="!dashboard()!.recentLeads?.length">
-                No recent leads
-              </div>
+              } @empty {
+                <div class="empty-state">
+                  No recent leads
+                </div>
+              }
             </div>
           </section>
 
@@ -228,19 +230,22 @@ import {
               <a routerLink="/sales/opportunities" class="view-all">View All</a>
             </div>
             <div class="recent-list">
-              <div class="recent-item" *ngFor="let opp of dashboard()!.recentOpportunities">
-                <div class="item-icon">💼</div>
-                <div class="item-content">
-                  <span class="item-name">{{ opp.name }}</span>
-                  <span class="item-detail">{{ opp.amount | currency:'USD':'symbol':'1.0-0' }}</span>
+              @for (opp of dashboard()!.recentOpportunities; track $index) {
+                <div class="recent-item">
+                  <div class="item-icon">💼</div>
+                  <div class="item-content">
+                    <span class="item-name">{{ opp.name }}</span>
+                    <span class="item-detail">{{ opp.amount | currency:'USD':'symbol':'1.0-0' }}</span>
+                  </div>
+                  <span class="stage-badge" [class]="opp.stage.toLowerCase()">
+                    {{ formatStage(opp.stage) }}
+                  </span>
                 </div>
-                <span class="stage-badge" [class]="opp.stage.toLowerCase()">
-                  {{ formatStage(opp.stage) }}
-                </span>
-              </div>
-              <div class="empty-state" *ngIf="!dashboard()!.recentOpportunities?.length">
-                No recent opportunities
-              </div>
+              } @empty {
+                <div class="empty-state">
+                  No recent opportunities
+                </div>
+              }
             </div>
           </section>
 
@@ -251,19 +256,22 @@ import {
               <a routerLink="/sales/activities" class="view-all">View All</a>
             </div>
             <div class="recent-list">
-              <div class="recent-item" *ngFor="let activity of dashboard()!.upcomingActivities">
-                <div class="item-icon">{{ getActivityIcon(activity.type) }}</div>
-                <div class="item-content">
-                  <span class="item-name">{{ activity.subject }}</span>
-                  <span class="item-detail">{{ activity.dueDate | date:'shortDate' }}</span>
+              @for (activity of dashboard()!.upcomingActivities; track $index) {
+                <div class="recent-item">
+                  <div class="item-icon">{{ getActivityIcon(activity.type) }}</div>
+                  <div class="item-content">
+                    <span class="item-name">{{ activity.subject }}</span>
+                    <span class="item-detail">{{ activity.dueDate | date:'shortDate' }}</span>
+                  </div>
+                  <span class="priority-badge" [class]="activity.priority.toLowerCase()">
+                    {{ activity.priority }}
+                  </span>
                 </div>
-                <span class="priority-badge" [class]="activity.priority.toLowerCase()">
-                  {{ activity.priority }}
-                </span>
-              </div>
-              <div class="empty-state" *ngIf="!dashboard()!.upcomingActivities?.length">
-                No upcoming activities
-              </div>
+              } @empty {
+                <div class="empty-state">
+                  No upcoming activities
+                </div>
+              }
             </div>
           </section>
         </div>
@@ -302,7 +310,7 @@ import {
             </button>
           </div>
         </section>
-      </ng-container>
+      }
     </div>
   `,
   styles: [`

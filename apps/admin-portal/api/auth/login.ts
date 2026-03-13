@@ -5,7 +5,7 @@
  * Returns JWT access and refresh tokens.
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelResponse } from '@vercel/node';
 import prisma from '../../lib/db';
 import {
   generateTokens,
@@ -20,14 +20,14 @@ import {
   sendSuccess,
   sendError,
 } from '../../lib/middleware';
-import type { LoginRequest, LoginResponse } from '../../lib/types';
+import type { AuthenticatedRequest, LoginRequest, LoginResponse } from '../../lib/types';
 
 async function handler(
-  req: VercelRequest,
+  req: AuthenticatedRequest,
   res: VercelResponse
 ): Promise<void> {
   // Handle CORS
-  if (handleCors(req as any, res)) return;
+  if (handleCors(req, res)) return;
 
   // Only allow POST
   if (req.method !== 'POST') {
@@ -55,8 +55,9 @@ async function handler(
 
   // Check if account is locked
   if (isLockedOut(user.lockedUntil)) {
+    const lockedUntil = user.lockedUntil as Date;
     const minutesRemaining = Math.ceil(
-      (user.lockedUntil!.getTime() - Date.now()) / 60000
+      (lockedUntil.getTime() - Date.now()) / 60000
     );
     sendError(
       res,
@@ -140,8 +141,8 @@ async function handler(
 
 // Apply rate limiting: 5 attempts per 15 minutes per IP
 export default withErrorHandler(
-  withRateLimit(handler as any, {
+  withRateLimit(handler, {
     windowMs: 900000, // 15 minutes
     maxRequests: 5,
-  }) as any
+  })
 );

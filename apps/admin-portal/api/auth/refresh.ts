@@ -5,7 +5,7 @@
  * Returns new access and refresh tokens.
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelResponse } from '@vercel/node';
 import prisma from '../../lib/db';
 import { generateTokens, verifyRefreshToken } from '../../lib/auth';
 import {
@@ -14,14 +14,14 @@ import {
   sendSuccess,
   sendError,
 } from '../../lib/middleware';
-import type { RefreshRequest, LoginResponse } from '../../lib/types';
+import type { AuthenticatedRequest, RefreshRequest, LoginResponse } from '../../lib/types';
 
 async function handler(
-  req: VercelRequest,
+  req: AuthenticatedRequest,
   res: VercelResponse
 ): Promise<void> {
   // Handle CORS
-  if (handleCors(req as any, res)) return;
+  if (handleCors(req, res)) return;
 
   // Only allow POST
   if (req.method !== 'POST') {
@@ -83,4 +83,4 @@ async function handler(
   }
 }
 
-export default withErrorHandler(handler as any);
+export default withErrorHandler(handler);

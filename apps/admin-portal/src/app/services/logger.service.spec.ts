@@ -146,7 +146,7 @@ describe('LoggerService - Admin Portal', () => {
         errorType: 'Error',
         message: jasmine.any(String),
       });
-      expect((filtered as any).stack).toBeUndefined();
+      expect((filtered as Record<string, unknown>).stack).toBeUndefined();
     });
 
     it('should preserve safe identifiers', () => {
@@ -198,14 +198,14 @@ describe('LoggerService - Admin Portal', () => {
       service.setUserId('admin-user-123');
 
       // Access private property for testing
-      expect((service as any).userId).toBe('admin-user-123');
+      expect(service['userId']).toBe('admin-user-123');
     });
 
     it('should clear user ID when set to null', () => {
       service.setUserId('admin-user-123');
       service.setUserId(null);
 
-      expect((service as any).userId).toBeNull();
+      expect(service['userId']).toBeNull();
     });
   });
 

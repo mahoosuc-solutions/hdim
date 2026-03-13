@@ -36,27 +36,34 @@ import { Lead, LeadStatus, LeadSource, LeadFilter, LeadCreateRequest } from '../
         <div class="filter-group">
           <select [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All Statuses</option>
-            <option *ngFor="let status of statuses" [value]="status">
-              {{ formatStatus(status) }}
-            </option>
+            @for (status of statuses; track status) {
+              <option [value]="status">
+                {{ formatStatus(status) }}
+              </option>
+            }
           </select>
           <select [(ngModel)]="sourceFilter" (change)="applyFilters()">
             <option value="">All Sources</option>
-            <option *ngFor="let source of sources" [value]="source">
-              {{ formatSource(source) }}
-            </option>
+            @for (source of sources; track source) {
+              <option [value]="source">
+                {{ formatSource(source) }}
+              </option>
+            }
           </select>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading()">
-        <div class="spinner"></div>
-        <span>Loading leads...</span>
-      </div>
+      @if (isLoading()) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading leads...</span>
+        </div>
+      }
 
       <!-- Leads Table -->
-      <div class="table-container" *ngIf="!isLoading()">
+      @if (!isLoading()) {
+        <div class="table-container">
         <table class="leads-table">
           <thead>
             <tr>
@@ -71,60 +78,71 @@ import { Lead, LeadStatus, LeadSource, LeadFilter, LeadCreateRequest } from '../
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let lead of leads()" (click)="selectLead(lead)">
-              <td class="name-cell">
-                <div class="lead-avatar">{{ getInitials(lead.firstName, lead.lastName) }}</div>
-                <div class="lead-name">
-                  <span class="name">{{ lead.firstName }} {{ lead.lastName }}</span>
-                  <span class="title" *ngIf="lead.title">{{ lead.title }}</span>
-                </div>
-              </td>
-              <td>{{ lead.company }}</td>
-              <td>{{ lead.email }}</td>
-              <td>
-                <span class="source-badge" [class]="lead.source.toLowerCase()">
-                  {{ formatSource(lead.source) }}
-                </span>
-              </td>
-              <td>
-                <div class="score-cell">
-                  <div class="score-bar">
-                    <div class="score-fill" [style.width.%]="lead.score" [class.high]="lead.score >= 70" [class.medium]="lead.score >= 40 && lead.score < 70"></div>
+            @for (lead of leads(); track lead.id) {
+              <tr (click)="selectLead(lead)" (keydown.enter)="selectLead(lead)" tabindex="0" role="row">
+                <td class="name-cell">
+                  <div class="lead-avatar">{{ getInitials(lead.firstName, lead.lastName) }}</div>
+                  <div class="lead-name">
+                    <span class="name">{{ lead.firstName }} {{ lead.lastName }}</span>
+                    @if (lead.title) {
+                      <span class="title">{{ lead.title }}</span>
+                    }
                   </div>
-                  <span class="score-value">{{ lead.score }}</span>
-                </div>
-              </td>
-              <td>
-                <span class="status-badge" [class]="lead.status.toLowerCase()">
-                  {{ formatStatus(lead.status) }}
-                </span>
-              </td>
-              <td>{{ lead.createdAt | date:'shortDate' }}</td>
-              <td class="actions-cell" (click)="$event.stopPropagation()">
-                <button class="action-btn" title="Edit" (click)="editLead(lead)">✏️</button>
-                <button class="action-btn" title="Convert" (click)="convertLead(lead)" *ngIf="lead.status === 'QUALIFIED'">🔄</button>
-                <button class="action-btn delete" title="Delete" (click)="deleteLead(lead)">🗑️</button>
-              </td>
-            </tr>
-            <tr *ngIf="!leads().length">
-              <td colspan="8" class="empty-state">
-                No leads found. Create your first lead to get started.
-              </td>
-            </tr>
+                </td>
+                <td>{{ lead.company }}</td>
+                <td>{{ lead.email }}</td>
+                <td>
+                  <span class="source-badge" [class]="lead.source.toLowerCase()">
+                    {{ formatSource(lead.source) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="score-cell">
+                    <div class="score-bar">
+                      <div class="score-fill" [style.width.%]="lead.score" [class.high]="lead.score >= 70" [class.medium]="lead.score >= 40 && lead.score < 70"></div>
+                    </div>
+                    <span class="score-value">{{ lead.score }}</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge" [class]="lead.status.toLowerCase()">
+                    {{ formatStatus(lead.status) }}
+                  </span>
+                </td>
+                <td>{{ lead.createdAt | date:'shortDate' }}</td>
+                <td class="actions-cell" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="cell">
+                  <button class="action-btn" title="Edit" (click)="editLead(lead)">✏️</button>
+                  @if (lead.status === 'QUALIFIED') {
+                    <button class="action-btn" title="Convert" (click)="convertLead(lead)">🔄</button>
+                  }
+                  <button class="action-btn delete" title="Delete" (click)="deleteLead(lead)">🗑️</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="8" class="empty-state">
+                  No leads found. Create your first lead to get started.
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
-      </div>
+        </div>
+      }
 
       <!-- Pagination -->
-      <div class="pagination" *ngIf="totalPages > 1">
+      @if (totalPages > 1) {
+        <div class="pagination">
         <button [disabled]="currentPage === 0" (click)="changePage(currentPage - 1)">Previous</button>
         <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
         <button [disabled]="currentPage >= totalPages - 1" (click)="changePage(currentPage + 1)">Next</button>
-      </div>
+        </div>
+      }
 
       <!-- Create/Edit Dialog -->
-      <div class="dialog-overlay" *ngIf="showCreateDialog" (click)="closeDialog()">
-        <div class="dialog" (click)="$event.stopPropagation()">
+      @if (showCreateDialog) {
+        <div class="dialog-overlay" (click)="closeDialog()" (keydown.escape)="closeDialog()" tabindex="0" role="dialog">
+          <div class="dialog" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>{{ editingLead ? 'Edit Lead' : 'Create New Lead' }}</h3>
             <button class="close-btn" (click)="closeDialog()">×</button>
@@ -132,49 +150,51 @@ import { Lead, LeadStatus, LeadSource, LeadFilter, LeadCreateRequest } from '../
           <form (ngSubmit)="saveLead()" class="dialog-form">
             <div class="form-row">
               <div class="form-group">
-                <label>First Name *</label>
-                <input type="text" [(ngModel)]="leadForm.firstName" name="firstName" required />
+                <label for="leadFirstName">First Name *</label>
+                <input id="leadFirstName" type="text" [(ngModel)]="leadForm.firstName" name="firstName" required />
               </div>
               <div class="form-group">
-                <label>Last Name *</label>
-                <input type="text" [(ngModel)]="leadForm.lastName" name="lastName" required />
+                <label for="leadLastName">Last Name *</label>
+                <input id="leadLastName" type="text" [(ngModel)]="leadForm.lastName" name="lastName" required />
               </div>
             </div>
             <div class="form-group">
-              <label>Email *</label>
-              <input type="email" [(ngModel)]="leadForm.email" name="email" required />
+              <label for="leadEmail">Email *</label>
+              <input id="leadEmail" type="email" [(ngModel)]="leadForm.email" name="email" required />
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Company *</label>
-                <input type="text" [(ngModel)]="leadForm.company" name="company" required />
+                <label for="leadCompany">Company *</label>
+                <input id="leadCompany" type="text" [(ngModel)]="leadForm.company" name="company" required />
               </div>
               <div class="form-group">
-                <label>Title</label>
-                <input type="text" [(ngModel)]="leadForm.title" name="title" />
+                <label for="leadTitle">Title</label>
+                <input id="leadTitle" type="text" [(ngModel)]="leadForm.title" name="title" />
               </div>
             </div>
             <div class="form-row">
               <div class="form-group">
-                <label>Phone</label>
-                <input type="tel" [(ngModel)]="leadForm.phone" name="phone" />
+                <label for="leadPhone">Phone</label>
+                <input id="leadPhone" type="tel" [(ngModel)]="leadForm.phone" name="phone" />
               </div>
               <div class="form-group">
-                <label>Source *</label>
-                <select [(ngModel)]="leadForm.source" name="source" required>
-                  <option *ngFor="let source of sources" [value]="source">
-                    {{ formatSource(source) }}
-                  </option>
+                <label for="leadSource">Source *</label>
+                <select id="leadSource" [(ngModel)]="leadForm.source" name="source" required>
+                  @for (source of sources; track source) {
+                    <option [value]="source">
+                      {{ formatSource(source) }}
+                    </option>
+                  }
                 </select>
               </div>
             </div>
             <div class="form-group">
-              <label>LinkedIn URL</label>
-              <input type="url" [(ngModel)]="leadForm.linkedInUrl" name="linkedInUrl" />
+              <label for="leadLinkedInUrl">LinkedIn URL</label>
+              <input id="leadLinkedInUrl" type="url" [(ngModel)]="leadForm.linkedInUrl" name="linkedInUrl" />
             </div>
             <div class="form-group">
-              <label>Notes</label>
-              <textarea [(ngModel)]="leadForm.notes" name="notes" rows="3"></textarea>
+              <label for="leadNotes">Notes</label>
+              <textarea id="leadNotes" [(ngModel)]="leadForm.notes" name="notes" rows="3"></textarea>
             </div>
             <div class="dialog-actions">
               <button type="button" class="btn btn-secondary" (click)="closeDialog()">Cancel</button>
@@ -182,11 +202,13 @@ import { Lead, LeadStatus, LeadSource, LeadFilter, LeadCreateRequest } from '../
             </div>
           </form>
         </div>
-      </div>
+        </div>
+      }
 
       <!-- Lead Detail Panel -->
-      <div class="detail-panel" *ngIf="selectedLead()" (click)="selectedLead.set(null)">
-        <div class="detail-content" (click)="$event.stopPropagation()">
+      @if (selectedLead()) {
+        <div class="detail-panel" (click)="selectedLead.set(null)" (keydown.escape)="selectedLead.set(null)" tabindex="0" role="dialog">
+          <div class="detail-content" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="detail-header">
             <div class="lead-info">
               <div class="lead-avatar large">{{ getInitials(selectedLead()!.firstName, selectedLead()!.lastName) }}</div>
@@ -205,14 +227,18 @@ import { Lead, LeadStatus, LeadSource, LeadFilter, LeadCreateRequest } from '../
                 <span class="label">Email:</span>
                 <a [href]="'mailto:' + selectedLead()!.email">{{ selectedLead()!.email }}</a>
               </div>
-              <div class="detail-row" *ngIf="selectedLead()!.phone">
-                <span class="label">Phone:</span>
-                <span>{{ selectedLead()!.phone }}</span>
-              </div>
-              <div class="detail-row" *ngIf="selectedLead()!.linkedInUrl">
-                <span class="label">LinkedIn:</span>
-                <a [href]="selectedLead()!.linkedInUrl" target="_blank">View Profile</a>
-              </div>
+              @if (selectedLead()!.phone) {
+                <div class="detail-row">
+                  <span class="label">Phone:</span>
+                  <span>{{ selectedLead()!.phone }}</span>
+                </div>
+              }
+              @if (selectedLead()!.linkedInUrl) {
+                <div class="detail-row">
+                  <span class="label">LinkedIn:</span>
+                  <a [href]="selectedLead()!.linkedInUrl" target="_blank">View Profile</a>
+                </div>
+              }
             </div>
 
             <div class="detail-section">
@@ -230,27 +256,34 @@ import { Lead, LeadStatus, LeadSource, LeadFilter, LeadCreateRequest } from '../
               <div class="detail-row">
                 <span class="label">Status:</span>
                 <select [(ngModel)]="selectedLead()!.status" (change)="updateLeadStatus(selectedLead()!)">
-                  <option *ngFor="let status of statuses" [value]="status">
-                    {{ formatStatus(status) }}
-                  </option>
+                  @for (status of statuses; track status) {
+                    <option [value]="status">
+                      {{ formatStatus(status) }}
+                    </option>
+                  }
                 </select>
               </div>
             </div>
 
-            <div class="detail-section" *ngIf="selectedLead()!.notes">
-              <h4>Notes</h4>
-              <p class="notes-text">{{ selectedLead()!.notes }}</p>
-            </div>
+            @if (selectedLead()!.notes) {
+              <div class="detail-section">
+                <h4>Notes</h4>
+                <p class="notes-text">{{ selectedLead()!.notes }}</p>
+              </div>
+            }
           </div>
 
           <div class="detail-actions">
             <button class="btn btn-secondary" (click)="editLead(selectedLead()!)">Edit Lead</button>
-            <button class="btn btn-primary" (click)="convertLead(selectedLead()!)" *ngIf="selectedLead()!.status === 'QUALIFIED'">
-              Convert to Opportunity
-            </button>
+            @if (selectedLead()!.status === 'QUALIFIED') {
+              <button class="btn btn-primary" (click)="convertLead(selectedLead()!)">
+                Convert to Opportunity
+              </button>
+            }
           </div>
         </div>
-      </div>
+        </div>
+      }
     </div>
   `,
   styles: [`

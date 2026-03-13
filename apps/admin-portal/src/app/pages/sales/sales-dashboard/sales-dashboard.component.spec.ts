@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { signal, WritableSignal } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
-import { of, throwError } from 'rxjs';
+import { of } from 'rxjs';
 import { SalesDashboardComponent } from './sales-dashboard.component';
 import { SalesService } from '../../../services/sales.service';
 import { SalesDashboard } from '../../../models/sales.model';

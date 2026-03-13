@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { interval, Subject, forkJoin, of } from 'rxjs';
@@ -30,6 +30,8 @@ import { SERVICE_DEFINITIONS, ServiceDefinitionMetadata } from '../../models/ser
   styleUrls: ['./real-time-metrics.component.scss'],
 })
 export class RealTimeMetricsComponent implements OnInit, OnDestroy {
+  private readonly prometheusService = inject(PrometheusService);
+  private readonly loggerService = inject(LoggerService);
   private destroy$ = new Subject<void>();
   private logger!: ReturnType<LoggerService['withContext']>;
 
@@ -54,10 +56,7 @@ export class RealTimeMetricsComponent implements OnInit, OnDestroy {
     { label: '24 hours', value: '24h' },
   ];
 
-  constructor(
-    private prometheusService: PrometheusService,
-    private loggerService: LoggerService
-  ) {
+  constructor() {
     this.logger = this.loggerService.withContext('RealTimeMetricsComponent');
   }
 

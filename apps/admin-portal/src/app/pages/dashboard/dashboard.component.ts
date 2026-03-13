@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
-import { DashboardSnapshot, ServiceStatus, SystemAlert } from '../../models/admin.model';
+import { DashboardSnapshot } from '../../models/admin.model';
 import { Subject, takeUntil, interval, switchMap, startWith } from 'rxjs';
 
 @Component({
@@ -12,13 +12,16 @@ import { Subject, takeUntil, interval, switchMap, startWith } from 'rxjs';
     <div class="dashboard">
       <div class="dashboard-header">
         <h2>System Dashboard</h2>
-        <span class="last-updated" *ngIf="dashboard">
-          Last updated: {{ dashboard.timestamp | date:'medium' }}
-        </span>
+        @if (dashboard) {
+          <span class="last-updated">
+            Last updated: {{ dashboard.timestamp | date:'medium' }}
+          </span>
+        }
       </div>
 
       <!-- Metrics Cards -->
-      <div class="metrics-grid" *ngIf="dashboard">
+      @if (dashboard) {
+      <div class="metrics-grid">
         <div class="metric-card">
           <div class="metric-icon patients">👥</div>
           <div class="metric-content">
@@ -67,13 +70,15 @@ import { Subject, takeUntil, interval, switchMap, startWith } from 'rxjs';
           </div>
         </div>
       </div>
+      }
 
       <!-- Services Status -->
       <div class="section">
         <h3>Service Status</h3>
-        <div class="services-grid" *ngIf="dashboard">
+        @if (dashboard) {
+        <div class="services-grid">
+          @for (service of dashboard.services; track service.name) {
           <div
-            *ngFor="let service of dashboard.services"
             class="service-card"
             [class.up]="service.status === 'UP'"
             [class.down]="service.status === 'DOWN'"
@@ -86,15 +91,18 @@ import { Subject, takeUntil, interval, switchMap, startWith } from 'rxjs';
             </div>
             <span class="service-status-badge">{{ service.status }}</span>
           </div>
+          }
         </div>
+        }
       </div>
 
       <!-- Alerts -->
-      <div class="section" *ngIf="dashboard?.alerts?.length">
+      @if (dashboard?.alerts?.length) {
+      <div class="section">
         <h3>Active Alerts</h3>
         <div class="alerts-list">
+          @for (alert of dashboard!.alerts; track $index) {
           <div
-            *ngFor="let alert of dashboard?.alerts"
             class="alert-item"
             [class.info]="alert.severity === 'INFO'"
             [class.warning]="alert.severity === 'WARNING'"
@@ -111,22 +119,28 @@ import { Subject, takeUntil, interval, switchMap, startWith } from 'rxjs';
               <span class="alert-source">{{ alert.source }} - {{ alert.timestamp | date:'short' }}</span>
             </div>
           </div>
+          }
         </div>
       </div>
+      }
 
       <!-- No Alerts -->
-      <div class="section no-alerts" *ngIf="!dashboard?.alerts?.length">
+      @if (!dashboard?.alerts?.length) {
+      <div class="section no-alerts">
         <div class="no-alerts-content">
           <span class="check-icon">✅</span>
           <span>No active alerts</span>
         </div>
       </div>
+      }
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="loading">
+      @if (loading) {
+      <div class="loading">
         <div class="spinner"></div>
         <span>Loading dashboard...</span>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -381,8 +395,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   dashboard: DashboardSnapshot | null = null;
   loading = true;
   private destroy$ = new Subject<void>();
-
-  constructor(private adminService: AdminService) {}
+  private adminService = inject(AdminService);
 
   ngOnInit(): void {
     // Fetch dashboard data every 30 seconds

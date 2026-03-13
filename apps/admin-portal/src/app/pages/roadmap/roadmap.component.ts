@@ -326,6 +326,9 @@ const MOCK_MILESTONES: RoadmapMilestone[] = [
                     [class.in-progress]="milestone.status === 'in_progress'"
                     [class.blocked]="milestone.status === 'blocked'"
                     (click)="selectMilestone(milestone)"
+                    (keydown.enter)="selectMilestone(milestone)"
+                    tabindex="0"
+                    role="button"
                   >
                     <div class="milestone-header">
                       <span class="milestone-status-icon" [class]="milestone.status + '-icon'"></span>
@@ -450,6 +453,9 @@ const MOCK_MILESTONES: RoadmapMilestone[] = [
                         class="dependency-item"
                         [class.resolved]="isDependencyResolved(depId)"
                         (click)="selectMilestoneById(depId)"
+                        (keydown.enter)="selectMilestoneById(depId)"
+                        tabindex="0"
+                        role="button"
                       >
                         <span class="dep-status" [class.resolved]="isDependencyResolved(depId)"></span>
                         <span class="dep-name">{{ getMilestoneName(depId) }}</span>

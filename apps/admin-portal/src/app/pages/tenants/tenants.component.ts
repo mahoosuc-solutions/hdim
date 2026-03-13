@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
@@ -43,9 +43,10 @@ import { LoggerService } from '../../services/logger.service';
       </div>
 
       <!-- Tenant Cards -->
-      <div class="tenants-grid" *ngIf="!loading">
+      @if (!loading) {
+      <div class="tenants-grid">
+        @for (tenant of tenants; track tenant.id) {
         <div
-          *ngFor="let tenant of tenants"
           class="tenant-card"
           [class.active]="tenant.status === 'ACTIVE'"
           [class.inactive]="tenant.status !== 'ACTIVE'"
@@ -91,12 +92,22 @@ import { LoggerService } from '../../services/logger.service';
             </div>
           </div>
 
-          <div class="feature-flags" *ngIf="tenant.featureFlags">
-            <span class="flag" *ngIf="tenant.featureFlags.advancedAnalytics">Analytics</span>
-            <span class="flag" *ngIf="tenant.featureFlags.aiAssistant">AI</span>
-            <span class="flag" *ngIf="tenant.featureFlags.predictiveModels">Predictive</span>
-            <span class="flag" *ngIf="tenant.featureFlags.customReports">Reports</span>
+          @if (tenant.featureFlags) {
+          <div class="feature-flags">
+            @if (tenant.featureFlags.advancedAnalytics) {
+            <span class="flag">Analytics</span>
+            }
+            @if (tenant.featureFlags.aiAssistant) {
+            <span class="flag">AI</span>
+            }
+            @if (tenant.featureFlags.predictiveModels) {
+            <span class="flag">Predictive</span>
+            }
+            @if (tenant.featureFlags.customReports) {
+            <span class="flag">Reports</span>
+            }
           </div>
+          }
 
           <div class="tenant-actions">
             <button class="btn-icon" title="Edit" (click)="editTenant(tenant)">
@@ -117,25 +128,32 @@ import { LoggerService } from '../../services/logger.service';
             </button>
           </div>
         </div>
+        }
       </div>
+      }
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="loading">
+      @if (loading) {
+      <div class="loading">
         <div class="spinner"></div>
         <span>Loading tenants...</span>
       </div>
+      }
 
       <!-- Empty State -->
-      <div class="empty-state" *ngIf="!loading && tenants.length === 0">
+      @if (!loading && tenants.length === 0) {
+      <div class="empty-state">
         <span class="empty-icon">🏢</span>
         <h3>No Tenants</h3>
         <p>Get started by creating your first tenant organization.</p>
         <button class="btn-primary" (click)="openCreateModal()">Create Tenant</button>
       </div>
+      }
 
       <!-- Create/Edit Modal -->
-      <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-        <div class="modal" (click)="$event.stopPropagation()">
+      @if (showModal) {
+      <div class="modal-overlay" tabindex="0" role="dialog" (click)="closeModal()" (keydown.escape)="closeModal()">
+        <div class="modal" tabindex="-1" role="document" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
           <div class="modal-header">
             <h3>{{ editingTenant ? 'Edit Tenant' : 'Create Tenant' }}</h3>
             <button class="close-btn" (click)="closeModal()">×</button>
@@ -143,8 +161,9 @@ import { LoggerService } from '../../services/logger.service';
 
           <div class="modal-body">
             <div class="form-group">
-              <label>Tenant Name *</label>
+              <label for="tenantName">Tenant Name *</label>
               <input
+                id="tenantName"
                 type="text"
                 [(ngModel)]="formData.name"
                 placeholder="Organization Name"
@@ -153,8 +172,9 @@ import { LoggerService } from '../../services/logger.service';
             </div>
 
             <div class="form-group">
-              <label>Contact Email *</label>
+              <label for="contactEmail">Contact Email *</label>
               <input
+                id="contactEmail"
                 type="email"
                 [(ngModel)]="formData.contactEmail"
                 placeholder="contact@organization.com"
@@ -163,8 +183,9 @@ import { LoggerService } from '../../services/logger.service';
             </div>
 
             <div class="form-group">
-              <label>Domain</label>
+              <label for="tenantDomain">Domain</label>
               <input
+                id="tenantDomain"
                 type="text"
                 [(ngModel)]="formData.domain"
                 placeholder="organization.com"
@@ -174,8 +195,8 @@ import { LoggerService } from '../../services/logger.service';
 
             <div class="form-row">
               <div class="form-group">
-                <label>Subscription Plan</label>
-                <select [(ngModel)]="formData.subscription" class="form-select">
+                <label for="subscriptionPlan">Subscription Plan</label>
+                <select id="subscriptionPlan" [(ngModel)]="formData.subscription" class="form-select">
                   <option value="FREE">Free</option>
                   <option value="BASIC">Basic</option>
                   <option value="PROFESSIONAL">Professional</option>
@@ -184,8 +205,9 @@ import { LoggerService } from '../../services/logger.service';
               </div>
 
               <div class="form-group">
-                <label>Max Users</label>
+                <label for="maxUsers">Max Users</label>
                 <input
+                  id="maxUsers"
                   type="number"
                   [(ngModel)]="formData.maxUsers"
                   placeholder="10"
@@ -195,10 +217,10 @@ import { LoggerService } from '../../services/logger.service';
             </div>
 
             <div class="form-group">
-              <label>Feature Flags</label>
+              <label for="flagAdvancedAnalytics">Feature Flags</label>
               <div class="checkbox-group">
                 <label class="checkbox-label">
-                  <input type="checkbox" [(ngModel)]="formData.featureFlags.advancedAnalytics" />
+                  <input id="flagAdvancedAnalytics" type="checkbox" [(ngModel)]="formData.featureFlags.advancedAnalytics" />
                   Advanced Analytics
                 </label>
                 <label class="checkbox-label">
@@ -225,10 +247,12 @@ import { LoggerService } from '../../services/logger.service';
           </div>
         </div>
       </div>
+      }
 
       <!-- Delete Confirmation Modal -->
-      <div class="modal-overlay" *ngIf="showDeleteModal" (click)="showDeleteModal = false">
-        <div class="modal delete-modal" (click)="$event.stopPropagation()">
+      @if (showDeleteModal) {
+      <div class="modal-overlay" tabindex="0" role="dialog" (click)="showDeleteModal = false" (keydown.escape)="showDeleteModal = false">
+        <div class="modal delete-modal" tabindex="-1" role="document" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
           <div class="modal-header">
             <h3>Confirm Delete</h3>
             <button class="close-btn" (click)="showDeleteModal = false">×</button>
@@ -243,6 +267,7 @@ import { LoggerService } from '../../services/logger.service';
           </div>
         </div>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -676,14 +701,13 @@ export class TenantsComponent implements OnInit, OnDestroy {
   editingTenant: Tenant | null = null;
   tenantToDelete: Tenant | null = null;
   private destroy$ = new Subject<void>();
+  private adminService = inject(AdminService);
+  private loggerService = inject(LoggerService);
 
   formData: CreateTenantRequest = this.getEmptyFormData();
   private logger: ReturnType<LoggerService['withContext']>;
 
-  constructor(
-    private adminService: AdminService,
-    private loggerService: LoggerService
-  ) {
+  constructor() {
     this.logger = this.loggerService.withContext('TenantsComponent');
   }
 

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, catchError, map } from 'rxjs';
 import {
@@ -30,13 +30,15 @@ import {
   AuditSearchRequest,
   AuditSearchResponse,
   AuditStatistics,
+  AuditAction,
+  AuditOutcome,
 } from '../models/admin.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AdminService {
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({
@@ -50,7 +52,7 @@ export class AdminService {
   // =====================
 
   getDashboard(): Observable<DashboardSnapshot> {
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.DASHBOARD), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.DASHBOARD), {
       headers: this.getHeaders(),
     }).pipe(
       map((response) => ({
@@ -71,29 +73,29 @@ export class AdminService {
   }
 
   getSystemHealth(): Observable<SystemHealth> {
-    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.ADMIN_SERVICES_HEALTH), {
+    return this.http.get<Record<string, unknown>>(buildGatewayUrl(GATEWAY_ENDPOINTS.ADMIN_SERVICES_HEALTH), {
       headers: this.getHeaders(),
     }).pipe(
       map((response) => {
-        const services = (response.services || []).map((service: any) => ({
+        const services = ((response['services'] as Record<string, unknown>[]) || []).map((service: Record<string, unknown>) => ({
           ...service,
-          lastDeploymentAt: service.lastDeploymentAt
-            ? new Date(service.lastDeploymentAt)
+          lastDeploymentAt: service['lastDeploymentAt']
+            ? new Date(service['lastDeploymentAt'] as string)
             : undefined,
         }));
 
         return {
           services,
           metrics: {
-            cpuUsage: response.cpuUsage || 0,
-            memoryUsage: response.memoryUsage || 0,
-            diskUsage: response.diskUsage || 0,
-            activeConnections: response.activeConnections || 0,
-            requestsPerSecond: response.requestsPerSecond || 0,
-            avgResponseTimeMs: response.avgResponseTimeMs || 0,
+            cpuUsage: (response['cpuUsage'] as number) || 0,
+            memoryUsage: (response['memoryUsage'] as number) || 0,
+            diskUsage: (response['diskUsage'] as number) || 0,
+            activeConnections: (response['activeConnections'] as number) || 0,
+            requestsPerSecond: (response['requestsPerSecond'] as number) || 0,
+            avgResponseTimeMs: (response['avgResponseTimeMs'] as number) || 0,
           },
-          overallStatus: response.overallStatus || 'healthy',
-          timestamp: new Date(response.timestamp || Date.now()),
+          overallStatus: (response['overallStatus'] as string) || 'healthy',
+          timestamp: new Date((response['timestamp'] as string) || Date.now()),
         };
       }),
       catchError(() => of(this.getMockSystemHealthV2()))
@@ -101,7 +103,7 @@ export class AdminService {
   }
 
   getSystemHealthSnapshot(): Observable<SystemHealthSnapshot> {
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.SYSTEM_HEALTH), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.SYSTEM_HEALTH), {
       headers: this.getHeaders(),
     }).pipe(
       map((response) => ({
@@ -115,7 +117,7 @@ export class AdminService {
   }
 
   getServiceCatalog(): Observable<ServiceDefinition[]> {
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.SERVICE_CATALOG), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.SERVICE_CATALOG), {
       headers: this.getHeaders(),
     }).pipe(
       map((response) => response.services || []),
@@ -124,7 +126,7 @@ export class AdminService {
   }
 
   getApiPresets(): Observable<ApiPreset[]> {
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.API_PRESETS), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.API_PRESETS), {
       headers: this.getHeaders(),
     }).pipe(
       map((response) => response.presets || []),
@@ -141,7 +143,7 @@ export class AdminService {
       .set('page', page.toString())
       .set('size', pageSize.toString());
 
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.USERS), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.USERS), {
       headers: this.getHeaders(),
       params,
     }).pipe(
@@ -215,7 +217,7 @@ export class AdminService {
       .set('page', page.toString())
       .set('size', pageSize.toString());
 
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.TENANTS), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.TENANTS), {
       headers: this.getHeaders(),
       params,
     }).pipe(
@@ -304,7 +306,7 @@ export class AdminService {
     if (filter?.startDate) params = params.set('startDate', filter.startDate.toISOString());
     if (filter?.endDate) params = params.set('endDate', filter.endDate.toISOString());
 
-    return this.http.get<any>(buildAdminUrl(ADMIN_ENDPOINTS.AUDIT_LOGS), {
+    return this.http.get<Record<string, unknown>>(buildAdminUrl(ADMIN_ENDPOINTS.AUDIT_LOGS), {
       headers: this.getHeaders(),
       params,
     }).pipe(
@@ -408,16 +410,16 @@ export class AdminService {
   // =====================
 
   getConfigVersions(serviceName: string, tenantId: string): Observable<ConfigVersion[]> {
-    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_VERSIONS(serviceName, tenantId)), {
+    return this.http.get<Record<string, unknown>[]>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_VERSIONS(serviceName, tenantId)), {
       headers: this.getHeaders(),
     }).pipe(
-      map((response) => (response || []).map((item: any) => this.mapConfigVersion(item))),
+      map((response) => (response || []).map((item: Record<string, unknown>) => this.mapConfigVersion(item))),
       catchError(() => of([]))
     );
   }
 
   getConfigCurrent(serviceName: string, tenantId: string): Observable<ConfigVersion | null> {
-    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_CURRENT(serviceName, tenantId)), {
+    return this.http.get<Record<string, unknown>>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_CURRENT(serviceName, tenantId)), {
       headers: this.getHeaders(),
     }).pipe(
       map((response) => (response ? this.mapConfigVersion(response) : null)),
@@ -430,7 +432,7 @@ export class AdminService {
     tenantId: string,
     payload: { config: Record<string, unknown>; changeSummary?: string; activate?: boolean }
   ): Observable<ConfigVersion> {
-    return this.http.post<any>(
+    return this.http.post<Record<string, unknown>>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_VERSIONS(serviceName, tenantId)),
       payload,
       { headers: this.getHeaders() }
@@ -444,7 +446,7 @@ export class AdminService {
     tenantId: string,
     payload: { sourceVersionId: string; changeSummary?: string; activate?: boolean }
   ): Observable<ConfigVersion> {
-    return this.http.post<any>(
+    return this.http.post<Record<string, unknown>>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_PROMOTE(serviceName, tenantId)),
       payload,
       { headers: this.getHeaders() }
@@ -459,7 +461,7 @@ export class AdminService {
     versionId: string,
     reason?: string
   ): Observable<ConfigVersion> {
-    return this.http.post<any>(
+    return this.http.post<Record<string, unknown>>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_ACTIVATE(serviceName, tenantId, versionId)),
       reason ? { reason } : {},
       { headers: this.getHeaders() }
@@ -469,20 +471,20 @@ export class AdminService {
   }
 
   getConfigAudit(serviceName: string, tenantId: string): Observable<ConfigAuditEntry[]> {
-    return this.http.get<any>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_AUDIT(serviceName, tenantId)), {
+    return this.http.get<Record<string, unknown>[]>(buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_AUDIT(serviceName, tenantId)), {
       headers: this.getHeaders(),
     }).pipe(
-      map((response) => (response || []).map((item: any) => this.mapConfigAudit(item))),
+      map((response) => (response || []).map((item: Record<string, unknown>) => this.mapConfigAudit(item))),
       catchError(() => of([]))
     );
   }
 
   getConfigApprovals(serviceName: string, tenantId: string, versionId: string): Observable<ConfigApproval[]> {
-    return this.http.get<any>(
+    return this.http.get<Record<string, unknown>[]>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVALS(serviceName, tenantId, versionId)),
       { headers: this.getHeaders() }
     ).pipe(
-      map((response) => (response || []).map((item: any) => this.mapConfigApproval(item))),
+      map((response) => (response || []).map((item: Record<string, unknown>) => this.mapConfigApproval(item))),
       catchError(() => of([]))
     );
   }
@@ -493,7 +495,7 @@ export class AdminService {
     versionId: string,
     comment?: string
   ): Observable<ConfigApproval> {
-    return this.http.post<any>(
+    return this.http.post<Record<string, unknown>>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVAL_REQUEST(serviceName, tenantId, versionId)),
       comment ? { comment } : {},
       { headers: this.getHeaders() }
@@ -508,7 +510,7 @@ export class AdminService {
     versionId: string,
     comment?: string
   ): Observable<ConfigApproval> {
-    return this.http.post<any>(
+    return this.http.post<Record<string, unknown>>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVAL_APPROVE(serviceName, tenantId, versionId)),
       comment ? { comment } : {},
       { headers: this.getHeaders() }
@@ -523,7 +525,7 @@ export class AdminService {
     versionId: string,
     comment?: string
   ): Observable<ConfigApproval> {
-    return this.http.post<any>(
+    return this.http.post<Record<string, unknown>>(
       buildGatewayUrl(GATEWAY_ENDPOINTS.CONFIG_APPROVAL_REJECT(serviceName, tenantId, versionId)),
       comment ? { comment } : {},
       { headers: this.getHeaders() }
@@ -532,46 +534,46 @@ export class AdminService {
     );
   }
 
-  private mapConfigVersion(response: any): ConfigVersion {
+  private mapConfigVersion(response: Record<string, unknown>): ConfigVersion {
     return {
-      id: response.id,
-      tenantId: response.tenantId,
-      serviceName: response.serviceName,
-      versionNumber: response.versionNumber,
-      status: response.status,
-      config: response.config ?? null,
-      configHash: response.configHash,
-      changeSummary: response.changeSummary,
-      sourceVersionId: response.sourceVersionId,
-      createdBy: response.createdBy,
-      createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
-      updatedAt: response.updatedAt ? new Date(response.updatedAt) : undefined,
+      id: response['id'] as string,
+      tenantId: response['tenantId'] as string,
+      serviceName: response['serviceName'] as string,
+      versionNumber: response['versionNumber'] as number,
+      status: response['status'] as string,
+      config: (response['config'] as Record<string, unknown>) ?? null,
+      configHash: response['configHash'] as string,
+      changeSummary: response['changeSummary'] as string,
+      sourceVersionId: response['sourceVersionId'] as string,
+      createdBy: response['createdBy'] as string,
+      createdAt: response['createdAt'] ? new Date(response['createdAt'] as string) : undefined,
+      updatedAt: response['updatedAt'] ? new Date(response['updatedAt'] as string) : undefined,
     };
   }
 
-  private mapConfigAudit(response: any): ConfigAuditEntry {
+  private mapConfigAudit(response: Record<string, unknown>): ConfigAuditEntry {
     return {
-      id: response.id,
-      tenantId: response.tenantId,
-      serviceName: response.serviceName,
-      versionId: response.versionId,
-      action: response.action,
-      actor: response.actor,
-      details: response.details ?? null,
-      createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
+      id: response['id'] as string,
+      tenantId: response['tenantId'] as string,
+      serviceName: response['serviceName'] as string,
+      versionId: response['versionId'] as string,
+      action: response['action'] as string,
+      actor: response['actor'] as string,
+      details: (response['details'] as string) ?? null,
+      createdAt: response['createdAt'] ? new Date(response['createdAt'] as string) : undefined,
     };
   }
 
-  private mapConfigApproval(response: any): ConfigApproval {
+  private mapConfigApproval(response: Record<string, unknown>): ConfigApproval {
     return {
-      id: response.id,
-      tenantId: response.tenantId,
-      serviceName: response.serviceName,
-      versionId: response.versionId,
-      action: response.action,
-      actor: response.actor,
-      comment: response.comment,
-      createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
+      id: response['id'] as string,
+      tenantId: response['tenantId'] as string,
+      serviceName: response['serviceName'] as string,
+      versionId: response['versionId'] as string,
+      action: response['action'] as string,
+      actor: response['actor'] as string,
+      comment: response['comment'] as string,
+      createdAt: response['createdAt'] ? new Date(response['createdAt'] as string) : undefined,
     };
   }
 
@@ -994,10 +996,10 @@ export class AdminService {
           role: 'ADMIN',
           ipAddress: '192.168.1.100',
           userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0',
-          action: 'CREATE' as any,
+          action: AuditAction.CREATE,
           resourceType: 'PATIENT',
           resourceId: 'patient-12345',
-          outcome: 'SUCCESS' as any,
+          outcome: AuditOutcome.SUCCESS,
           serviceName: 'patient-service',
           durationMs: 145,
         },
@@ -1010,10 +1012,10 @@ export class AdminService {
           role: 'ANALYST',
           ipAddress: '192.168.1.101',
           userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1',
-          action: 'READ' as any,
+          action: AuditAction.READ,
           resourceType: 'CARE_GAP',
           resourceId: 'gap-789',
-          outcome: 'SUCCESS' as any,
+          outcome: AuditOutcome.SUCCESS,
           serviceName: 'care-gap-service',
           durationMs: 98,
         },

@@ -539,63 +539,63 @@ export class InvestorService {
   // API Data Mapping
   // ==========================================
 
-  private mapApiTasksToModel(apiTasks: any[]): InvestorTask[] {
+  private mapApiTasksToModel(apiTasks: Record<string, unknown>[]): InvestorTask[] {
     return apiTasks.map((t) => this.mapApiTaskToModel(t));
   }
 
-  private mapApiTaskToModel(t: any): InvestorTask {
+  private mapApiTaskToModel(t: Record<string, unknown>): InvestorTask {
     return {
-      id: t.id,
-      taskNumber: t.sortOrder || 0,
-      subject: t.subject,
-      description: t.description || '',
-      status: t.status as InvestorTask['status'],
-      category: this.mapApiCategoryToModel(t.category),
-      week: t.week,
-      deliverable: t.deliverable,
-      dueDate: t.dueDate,
-      completedDate: t.completedAt ? new Date(t.completedAt).toISOString().split('T')[0] : undefined,
-      assignee: t.owner,
-      notes: t.notes,
+      id: t['id'] as string,
+      taskNumber: (t['sortOrder'] as number) || 0,
+      subject: t['subject'] as string,
+      description: (t['description'] as string) || '',
+      status: t['status'] as InvestorTask['status'],
+      category: this.mapApiCategoryToModel(t['category'] as string),
+      week: t['week'] as number,
+      deliverable: t['deliverable'] as string,
+      dueDate: t['dueDate'] as string,
+      completedDate: t['completedAt'] ? new Date(t['completedAt'] as string).toISOString().split('T')[0] : undefined,
+      assignee: t['owner'] as string,
+      notes: t['notes'] as string,
     };
   }
 
-  private mapApiContactsToModel(apiContacts: any[]): Contact[] {
+  private mapApiContactsToModel(apiContacts: Record<string, unknown>[]): Contact[] {
     return apiContacts.map((c) => this.mapApiContactToModel(c));
   }
 
-  private mapApiContactToModel(c: any): Contact {
+  private mapApiContactToModel(c: Record<string, unknown>): Contact {
     return {
-      id: c.id,
-      name: c.name,
-      title: c.title || '',
-      organization: c.organization || '',
-      email: c.email,
-      phone: c.phone,
-      linkedInUrl: c.linkedInUrl,
-      category: this.mapApiCategoryToContactModel(c.category),
-      tier: this.mapApiTierToModel(c.tier),
-      status: this.mapApiStatusToModel(c.status),
-      lastContactDate: c.lastContacted ? new Date(c.lastContacted).toISOString().split('T')[0] : undefined,
-      nextFollowUpDate: c.nextFollowUp ? new Date(c.nextFollowUp).toISOString().split('T')[0] : undefined,
-      notes: c.notes,
+      id: c['id'] as string,
+      name: c['name'] as string,
+      title: (c['title'] as string) || '',
+      organization: (c['organization'] as string) || '',
+      email: c['email'] as string,
+      phone: c['phone'] as string,
+      linkedInUrl: c['linkedInUrl'] as string,
+      category: this.mapApiCategoryToContactModel(c['category'] as string),
+      tier: this.mapApiTierToModel(c['tier'] as string),
+      status: this.mapApiStatusToModel(c['status'] as string),
+      lastContactDate: c['lastContacted'] ? new Date(c['lastContacted'] as string).toISOString().split('T')[0] : undefined,
+      nextFollowUpDate: c['nextFollowUp'] ? new Date(c['nextFollowUp'] as string).toISOString().split('T')[0] : undefined,
+      notes: c['notes'] as string,
     };
   }
 
-  private mapApiActivitiesToModel(apiActivities: any[]): OutreachActivity[] {
+  private mapApiActivitiesToModel(apiActivities: Record<string, unknown>[]): OutreachActivity[] {
     return apiActivities.map((a) => this.mapApiActivityToModel(a));
   }
 
-  private mapApiActivityToModel(a: any): OutreachActivity {
+  private mapApiActivityToModel(a: Record<string, unknown>): OutreachActivity {
     return {
-      id: a.id,
-      contactId: a.contactId,
-      contactName: a.contactName || '',
-      type: this.mapApiActivityTypeToModel(a.activityType),
-      status: this.mapApiActivityStatusToModel(a.status),
-      date: a.activityDate,
-      subject: a.subject,
-      notes: a.notes || a.content,
+      id: a['id'] as string,
+      contactId: a['contactId'] as string,
+      contactName: (a['contactName'] as string) || '',
+      type: this.mapApiActivityTypeToModel(a['activityType'] as string),
+      status: this.mapApiActivityStatusToModel(a['status'] as string),
+      date: a['activityDate'] as string,
+      subject: a['subject'] as string,
+      notes: (a['notes'] as string) || (a['content'] as string),
     };
   }
 

@@ -44,7 +44,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
           <p class="subtitle">Series A Fundraise & Customer Acquisition Tracker</p>
         </div>
         <div class="header-actions">
-          <app-search-bar (search)="onSearch($event)"></app-search-bar>
+          <app-search-bar (searchChange)="onSearch($event)"></app-search-bar>
           <select [(ngModel)]="selectedView" class="view-select">
             <option value="overview">Overview</option>
             <option value="tasks">Task Tracker</option>
@@ -135,7 +135,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
               <div class="search-section">
                 <h3>Tasks ({{ searchResults().tasks.length }})</h3>
                 @for (task of searchResults().tasks; track task.id) {
-                  <div class="search-item" (click)="openTaskDialog('edit', task)">
+                  <div class="search-item" tabindex="0" role="button" (click)="openTaskDialog('edit', task)" (keydown.enter)="openTaskDialog('edit', task)">
                     <span class="status-icon">{{ getStatusIcon(task.status) }}</span>
                     <span>{{ task.subject }}</span>
                     <span class="category-badge" [class]="task.category">{{ task.category }}</span>
@@ -147,7 +147,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
               <div class="search-section">
                 <h3>Contacts ({{ searchResults().contacts.length }})</h3>
                 @for (contact of searchResults().contacts; track contact.id) {
-                  <div class="search-item" (click)="openContactDialog('edit', contact)">
+                  <div class="search-item" tabindex="0" role="button" (click)="openContactDialog('edit', contact)" (keydown.enter)="openContactDialog('edit', contact)">
                     <span>{{ contact.name }}</span>
                     <span class="org">{{ contact.organization }}</span>
                   </div>
@@ -193,7 +193,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
             </div>
             <div class="task-list">
               @for (task of week1Tasks(); track task.id) {
-                <div class="task-item" [class.completed]="task.status === 'completed'" [class.in-progress]="task.status === 'in_progress'" (click)="openTaskDialog('edit', task)">
+                <div class="task-item" [class.completed]="task.status === 'completed'" [class.in-progress]="task.status === 'in_progress'" tabindex="0" role="button" (click)="openTaskDialog('edit', task)" (keydown.enter)="openTaskDialog('edit', task)">
                   <button class="task-toggle" (click)="toggleTask(task); $event.stopPropagation()">
                     {{ getStatusIcon(task.status) }}
                   </button>
@@ -217,7 +217,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
             </div>
             <div class="task-list">
               @for (task of week2Tasks(); track task.id) {
-                <div class="task-item" [class.completed]="task.status === 'completed'" [class.in-progress]="task.status === 'in_progress'" [class.blocked]="hasBlockers(task)" (click)="openTaskDialog('edit', task)">
+                <div class="task-item" [class.completed]="task.status === 'completed'" [class.in-progress]="task.status === 'in_progress'" [class.blocked]="hasBlockers(task)" tabindex="0" role="button" (click)="openTaskDialog('edit', task)" (keydown.enter)="openTaskDialog('edit', task)">
                   <button class="task-toggle" (click)="toggleTask(task); $event.stopPropagation()">
                     {{ hasBlockers(task) ? '🔒' : getStatusIcon(task.status) }}
                   </button>
@@ -317,7 +317,7 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
                 <span class="col-deliverable">Deliverable</span>
               </div>
               @for (task of filteredTasks(); track task.id) {
-                <div class="table-row" [class.completed]="task.status === 'completed'" (click)="openTaskDialog('edit', task)">
+                <div class="table-row" [class.completed]="task.status === 'completed'" tabindex="0" role="button" (click)="openTaskDialog('edit', task)" (keydown.enter)="openTaskDialog('edit', task)">
                   <span class="col-status">
                     <select [ngModel]="task.status" (ngModelChange)="updateTaskStatus(task.id, $event)" (click)="$event.stopPropagation()">
                       <option value="pending">⬜ Pending</option>
@@ -373,14 +373,14 @@ import { ProgressChartComponent, ProgressChartData } from './components/progress
             } @else {
               <div class="contacts-table">
                 @for (contact of filteredContacts(); track contact.id) {
-                  <div class="contact-row" (click)="openContactDialog('edit', contact)">
+                  <div class="contact-row" tabindex="0" role="button" (click)="openContactDialog('edit', contact)" (keydown.enter)="openContactDialog('edit', contact)">
                     <div class="contact-info">
                       <span class="contact-name">{{ contact.name }}</span>
                       <span class="contact-title">{{ contact.title }}</span>
                       <span class="contact-org">{{ contact.organization }}</span>
                     </div>
                     <span class="contact-status" [class]="contact.status">{{ contact.status.replace('_', ' ') }}</span>
-                    <div class="contact-actions" (click)="$event.stopPropagation()">
+                    <div class="contact-actions" tabindex="0" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
                       @if (contact.linkedInUrl) {
                         <a [href]="contact.linkedInUrl" target="_blank" class="action-link" matTooltip="Open LinkedIn">🔗</a>
                       }

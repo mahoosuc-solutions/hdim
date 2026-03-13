@@ -7,6 +7,7 @@
  */
 
 import type { VercelResponse } from '@vercel/node';
+import type { OutreachActivity } from '@prisma/client';
 import prisma from '../../lib/db';
 import {
   withAuth,
@@ -177,7 +178,7 @@ async function deleteActivity(id: string, res: VercelResponse): Promise<void> {
  * Format activity for API response.
  */
 function formatActivityResponse(
-  activity: any,
+  activity: OutreachActivity,
   contactName?: string
 ): ActivityResponse {
   return {

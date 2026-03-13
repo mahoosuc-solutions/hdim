@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, forkJoin } from 'rxjs';
 import { SalesService } from '../../../services/sales.service';
-import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../../../models/sales.model';
+import { Activity, ActivityType } from '../../../models/sales.model';
 
 @Component({
   selector: 'app-sales-activities',
@@ -41,13 +41,15 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
             <span class="summary-label">Due Today</span>
           </div>
         </div>
-        <div class="summary-card overdue" *ngIf="overdueActivities().length > 0">
+        @if (overdueActivities().length > 0) {
+        <div class="summary-card overdue">
           <div class="summary-icon">⚠️</div>
           <div class="summary-content">
             <span class="summary-value warning">{{ overdueActivities().length }}</span>
             <span class="summary-label">Overdue</span>
           </div>
         </div>
+        }
         <div class="summary-card upcoming">
           <div class="summary-icon">🗓️</div>
           <div class="summary-content">
@@ -80,7 +82,9 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
             (click)="setTab('overdue')"
           >
             Overdue
-            <span class="badge" *ngIf="overdueActivities().length">{{ overdueActivities().length }}</span>
+            @if (overdueActivities().length) {
+            <span class="badge">{{ overdueActivities().length }}</span>
+            }
           </button>
           <button
             class="tab"
@@ -107,27 +111,33 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
         <div class="filter-group">
           <select [(ngModel)]="typeFilter" (change)="applyFilters()">
             <option value="">All Types</option>
-            <option *ngFor="let type of activityTypes" [value]="type">
+            @for (type of activityTypes; track type) {
+            <option [value]="type">
               {{ formatType(type) }}
             </option>
+            }
           </select>
         </div>
       </div>
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading()">
+      @if (isLoading()) {
+      <div class="loading">
         <div class="spinner"></div>
         <span>Loading activities...</span>
       </div>
-
+      } @else {
       <!-- Activities List -->
-      <div class="activities-list" *ngIf="!isLoading()">
+      <div class="activities-list">
+        @for (activity of filteredActivities(); track activity.id) {
         <div
           class="activity-item"
-          *ngFor="let activity of filteredActivities()"
           [class.overdue]="isOverdue(activity)"
           [class.completed]="activity.status === 'COMPLETED'"
           (click)="selectActivity(activity)"
+          (keydown.enter)="selectActivity(activity)"
+          tabindex="0"
+          role="button"
         >
           <div class="activity-icon" [class]="activity.type.toLowerCase()">
             {{ getTypeIcon(activity.type) }}
@@ -146,55 +156,63 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
                 {{ activity.priority }}
               </span>
             </div>
-            <p class="activity-description" *ngIf="activity.description">
+            @if (activity.description) {
+            <p class="activity-description">
               {{ activity.description | slice:0:100 }}{{ activity.description.length > 100 ? '...' : '' }}
             </p>
+            }
           </div>
 
-          <div class="activity-actions" (click)="$event.stopPropagation()">
+          <div class="activity-actions" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="0" role="button">
+            @if (activity.status !== 'COMPLETED') {
             <button
               class="complete-btn"
-              *ngIf="activity.status !== 'COMPLETED'"
               (click)="completeActivity(activity)"
               title="Mark Complete"
             >
               ✓
             </button>
+            }
           </div>
         </div>
-
-        <div class="empty-state" *ngIf="!filteredActivities().length">
+        } @empty {
+        <div class="empty-state">
           <span class="empty-icon">📋</span>
           <span>No activities found</span>
           <button class="btn btn-primary" (click)="showLogDialog('TASK')">Create Activity</button>
         </div>
+        }
       </div>
+      }
 
       <!-- Log Activity Dialog -->
-      <div class="dialog-overlay" *ngIf="showDialog" (click)="closeDialog()">
-        <div class="dialog" (click)="$event.stopPropagation()">
+      @if (showDialog) {
+      <div class="dialog-overlay" (click)="closeDialog()" (keydown.escape)="closeDialog()" tabindex="0" role="dialog">
+        <div class="dialog" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>{{ dialogTitle }}</h3>
             <button class="close-btn" (click)="closeDialog()">×</button>
           </div>
           <form (ngSubmit)="saveActivity()" class="dialog-form">
             <div class="form-group">
-              <label>Subject *</label>
-              <input type="text" [(ngModel)]="activityForm.subject" name="subject" required />
+              <label for="activity-subject">Subject *</label>
+              <input id="activity-subject" type="text" [(ngModel)]="activityForm.subject" name="subject" required />
             </div>
 
             <div class="form-row">
               <div class="form-group">
-                <label>Type</label>
-                <select [(ngModel)]="activityForm.type" name="type">
-                  <option *ngFor="let type of activityTypes" [value]="type">
+                <label for="activity-type">Type</label>
+                <select id="activity-type" [(ngModel)]="activityForm.type" name="type">
+                  @for (type of activityTypes; track type) {
+                  <option [value]="type">
                     {{ formatType(type) }}
                   </option>
+                  }
                 </select>
               </div>
               <div class="form-group">
-                <label>Priority</label>
-                <select [(ngModel)]="activityForm.priority" name="priority">
+                <label for="activity-priority">Priority</label>
+                <select id="activity-priority" [(ngModel)]="activityForm.priority" name="priority">
                   <option value="LOW">Low</option>
                   <option value="MEDIUM">Medium</option>
                   <option value="HIGH">High</option>
@@ -204,24 +222,26 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
 
             <div class="form-row">
               <div class="form-group">
-                <label>Due Date</label>
-                <input type="datetime-local" [(ngModel)]="activityForm.dueDate" name="dueDate" />
+                <label for="activity-due-date">Due Date</label>
+                <input id="activity-due-date" type="datetime-local" [(ngModel)]="activityForm.dueDate" name="dueDate" />
               </div>
               <div class="form-group">
-                <label>Duration (minutes)</label>
-                <input type="number" [(ngModel)]="activityForm.duration" name="duration" min="0" />
+                <label for="activity-duration">Duration (minutes)</label>
+                <input id="activity-duration" type="number" [(ngModel)]="activityForm.duration" name="duration" min="0" />
               </div>
             </div>
 
             <div class="form-group">
-              <label>Description</label>
-              <textarea [(ngModel)]="activityForm.description" name="description" rows="3"></textarea>
+              <label for="activity-description">Description</label>
+              <textarea id="activity-description" [(ngModel)]="activityForm.description" name="description" rows="3"></textarea>
             </div>
 
-            <div class="form-group" *ngIf="activityForm.type === 'CALL' || activityForm.type === 'EMAIL' || activityForm.type === 'MEETING'">
-              <label>Outcome</label>
-              <textarea [(ngModel)]="activityForm.outcome" name="outcome" rows="2" placeholder="What was the result?"></textarea>
+            @if (activityForm.type === 'CALL' || activityForm.type === 'EMAIL' || activityForm.type === 'MEETING') {
+            <div class="form-group">
+              <label for="activity-outcome">Outcome</label>
+              <textarea id="activity-outcome" [(ngModel)]="activityForm.outcome" name="outcome" rows="2" placeholder="What was the result?"></textarea>
             </div>
+            }
 
             <div class="dialog-actions">
               <button type="button" class="btn btn-secondary" (click)="closeDialog()">Cancel</button>
@@ -230,10 +250,12 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
           </form>
         </div>
       </div>
+      }
 
       <!-- Activity Detail Panel -->
-      <div class="detail-panel" *ngIf="selectedActivity()" (click)="selectedActivity.set(null)">
-        <div class="detail-content" (click)="$event.stopPropagation()">
+      @if (selectedActivity()) {
+      <div class="detail-panel" (click)="selectedActivity.set(null)" (keydown.escape)="selectedActivity.set(null)" tabindex="0" role="dialog">
+        <div class="detail-content" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="detail-header">
             <div class="activity-type-icon" [class]="selectedActivity()!.type.toLowerCase()">
               {{ getTypeIcon(selectedActivity()!.type) }}
@@ -265,34 +287,42 @@ import { Activity, ActivityType, ActivityStatus, ActivityLogRequest } from '../.
                   {{ selectedActivity()!.dueDate | date:'medium' }}
                 </span>
               </div>
-              <div class="detail-row" *ngIf="selectedActivity()!.duration">
+              @if (selectedActivity()!.duration) {
+              <div class="detail-row">
                 <span class="label">Duration:</span>
                 <span>{{ selectedActivity()!.duration }} minutes</span>
               </div>
+              }
             </div>
 
-            <div class="detail-section" *ngIf="selectedActivity()!.description">
+            @if (selectedActivity()!.description) {
+            <div class="detail-section">
               <h4>Description</h4>
               <p>{{ selectedActivity()!.description }}</p>
             </div>
+            }
 
-            <div class="detail-section" *ngIf="selectedActivity()!.outcome">
+            @if (selectedActivity()!.outcome) {
+            <div class="detail-section">
               <h4>Outcome</h4>
               <p>{{ selectedActivity()!.outcome }}</p>
             </div>
+            }
           </div>
 
           <div class="detail-actions">
+            @if (selectedActivity()!.status !== 'COMPLETED') {
             <button
               class="btn btn-primary"
-              *ngIf="selectedActivity()!.status !== 'COMPLETED'"
               (click)="completeActivity(selectedActivity()!)"
             >
               Mark as Complete
             </button>
+            }
           </div>
         </div>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -882,10 +912,11 @@ export class SalesActivitiesComponent implements OnInit, OnDestroy {
       case 'overdue':
         result = this.overdueActivities();
         break;
-      case 'today':
+      case 'today': {
         const today = new Date().toISOString().split('T')[0];
         result = result.filter((a) => a.dueDate?.startsWith(today));
         break;
+      }
       case 'upcoming':
         result = this.upcomingActivities();
         break;
@@ -957,7 +988,7 @@ export class SalesActivitiesComponent implements OnInit, OnDestroy {
     return new Date(activity.dueDate) < new Date();
   }
 
-  getEmptyForm(): any {
+  getEmptyForm(): Record<string, unknown> {
     return {
       type: 'TASK' as ActivityType,
       subject: '',

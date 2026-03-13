@@ -20,7 +20,9 @@ interface NavItem {
         <div class="sidebar-header">
           <div class="logo">
             <span class="logo-icon">H</span>
-            <span class="logo-text" *ngIf="!sidebarCollapsed">HDIM Admin</span>
+            @if (!sidebarCollapsed) {
+              <span class="logo-text">HDIM Admin</span>
+            }
           </div>
           <button class="toggle-btn" (click)="toggleSidebar()">
             <span class="icon">{{ sidebarCollapsed ? '>' : '<' }}</span>
@@ -28,27 +30,34 @@ interface NavItem {
         </div>
 
         <nav class="sidebar-nav">
+          @for (item of navItems; track item.route) {
           <a
-            *ngFor="let item of navItems"
             [routerLink]="item.route"
             routerLinkActive="active"
             class="nav-item"
             [title]="item.label"
           >
             <span class="nav-icon">{{ item.icon }}</span>
-            <span class="nav-label" *ngIf="!sidebarCollapsed">{{ item.label }}</span>
-            <span class="nav-badge" *ngIf="item.badge && !sidebarCollapsed">{{ item.badge }}</span>
+            @if (!sidebarCollapsed) {
+              <span class="nav-label">{{ item.label }}</span>
+            }
+            @if (item.badge && !sidebarCollapsed) {
+              <span class="nav-badge">{{ item.badge }}</span>
+            }
           </a>
+          }
         </nav>
 
         <div class="sidebar-footer">
-          <div class="user-info" *ngIf="!sidebarCollapsed">
+          @if (!sidebarCollapsed) {
+          <div class="user-info">
             <span class="user-avatar">A</span>
             <div class="user-details">
               <span class="user-name">Admin User</span>
               <span class="user-role">Administrator</span>
             </div>
           </div>
+          }
         </div>
       </aside>
 

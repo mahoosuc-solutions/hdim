@@ -5,7 +5,9 @@
       <h1>Real-Time Metrics Dashboard</h1>
       <p class="subtitle">
         Live performance metrics from Prometheus
-        <span *ngIf="!prometheusAvailable" class="mock-data-badge">Mock Data</span>
+        @if (!prometheusAvailable) {
+          <span class="mock-data-badge">Mock Data</span>
+        }
       </p>
     </div>
 
@@ -18,9 +20,11 @@
           [(ngModel)]="selectedTimeRange"
           class="time-range-select"
           aria-label="Select time range for metrics">
-          <option *ngFor="let range of timeRanges" [value]="range.value">
-            {{ range.label }}
-          </option>
+          @for (range of timeRanges; track range.value) {
+            <option [value]="range.value">
+              {{ range.label }}
+            </option>
+          }
         </select>
       </div>
 
@@ -33,9 +37,11 @@
           class="category-select"
           aria-label="Filter services by category">
           <option value="all">All Services</option>
-          <option *ngFor="let category of getCategories()" [value]="category">
-            {{ category }}
-          </option>
+          @for (category of getCategories(); track category) {
+            <option [value]="category">
+              {{ category }}
+            </option>
+          }
         </select>
       </div>
 
@@ -62,26 +68,33 @@
   </div>
 
   <!-- Last Update Timestamp -->
-  <div *ngIf="lastUpdate" class="last-update">
-    Last updated: {{ lastUpdate | date: 'short' }}
-  </div>
+  @if (lastUpdate) {
+    <div class="last-update">
+      Last updated: {{ lastUpdate | date: 'short' }}
+    </div>
+  }
 
   <!-- Error Message -->
-  <div *ngIf="errorMessage" class="error-message" role="alert">
-    <span class="error-icon">⚠️</span>
-    {{ errorMessage }}
-  </div>
+  @if (errorMessage) {
+    <div class="error-message" role="alert">
+      <span class="error-icon">⚠️</span>
+      {{ errorMessage }}
+    </div>
+  }
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading metrics...</p>
-  </div>
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading metrics...</p>
+    </div>
+  }
 
   <!-- Metrics Grid -->
-  <div *ngIf="!loading" class="metrics-grid">
+  @if (!loading) {
+  <div class="metrics-grid">
+    @for (service of getFilteredServices(); track service.id) {
     <div
-      *ngFor="let service of getFilteredServices()"
       class="service-card"
       [class.no-data]="!serviceMetrics.has(service.id)">
       <!-- Service Header -->
@@ -91,13 +104,16 @@
       </div>
 
       <!-- No Data Available -->
-      <div *ngIf="!serviceMetrics.has(service.id)" class="no-data-message">
+      @if (!serviceMetrics.has(service.id)) {
+      <div class="no-data-message">
         <p>No metrics available</p>
         <small>Service may not be running or not exposing metrics</small>
       </div>
+      }
 
       <!-- Metrics Display -->
-      <div *ngIf="serviceMetrics.has(service.id)" class="metrics-display">
+      @if (serviceMetrics.has(service.id)) {
+      <div class="metrics-display">
         <div class="metric-row">
           <div
             class="metric-card cpu"
@@ -166,11 +182,12 @@
           </div>
         </div>
       </div>
+      }
 
       <!-- Quick Links -->
       <div class="quick-links">
+        @if (service.grafanaDashboard) {
         <a
-          *ngIf="service.grafanaDashboard"
           [href]="service.grafanaDashboard"
           target="_blank"
           rel="noopener"
@@ -178,8 +195,9 @@
           [attr.aria-label]="'View Grafana dashboard for ' + service.displayName">
           📊 Dashboard
         </a>
+        }
+        @if (service.metricsEndpoint) {
         <a
-          *ngIf="service.metricsEndpoint"
           [href]="service.metricsEndpoint"
           target="_blank"
           rel="noopener"
@@ -187,9 +205,12 @@
           [attr.aria-label]="'View raw metrics for ' + service.displayName">
           📈 Metrics
         </a>
+        }
       </div>
     </div>
+    }
   </div>
+  }
 
   <!-- Legend -->
   <div class="legend">

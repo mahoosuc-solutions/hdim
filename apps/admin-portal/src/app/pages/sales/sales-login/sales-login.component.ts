@@ -47,13 +47,19 @@ import { SalesAuthService } from '../../../services/sales-auth.service';
             />
           </div>
 
-          <div class="error-message" *ngIf="errorMessage()">
-            {{ errorMessage() }}
-          </div>
+          @if (errorMessage()) {
+            <div class="error-message">
+              {{ errorMessage() }}
+            </div>
+          }
 
           <button type="submit" class="btn-login" [disabled]="isLoading()">
-            <span *ngIf="!isLoading()">Sign In</span>
-            <span *ngIf="isLoading()" class="loading-spinner"></span>
+            @if (!isLoading()) {
+              <span>Sign In</span>
+            }
+            @if (isLoading()) {
+              <span class="loading-spinner"></span>
+            }
           </button>
         </form>
 

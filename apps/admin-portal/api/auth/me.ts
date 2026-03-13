@@ -26,7 +26,11 @@ async function handler(
   }
 
   // User is guaranteed to exist due to withAuth middleware
-  const userId = req.user!.userId;
+  if (!req.user) {
+    sendError(res, 'Authentication required', 401, 'UNAUTHORIZED');
+    return;
+  }
+  const userId = req.user.userId;
 
   // Get fresh user data from database
   const user = await prisma.user.findUnique({

@@ -180,7 +180,8 @@ export function calculateImpact(serviceId: string): Set<string> {
   const queue = [serviceId];
 
   while (queue.length > 0) {
-    const currentId = queue.shift()!;
+    const currentId = queue.shift();
+    if (!currentId) continue;
     const dependents = getDependentsOfService(currentId);
 
     dependents.forEach((link) => {

@@ -9,7 +9,6 @@ import { PrismaClient } from '@prisma/client';
 
 // Declare global type for Prisma client caching
 declare global {
-  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 

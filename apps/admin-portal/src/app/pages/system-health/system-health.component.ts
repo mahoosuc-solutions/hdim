@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminService } from '../../services/admin.service';
 import { SystemHealth } from '../../models/admin.model';
@@ -13,9 +13,11 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
       <div class="page-header">
         <div class="header-left">
           <h2>System Health</h2>
-          <span class="last-updated" *ngIf="health">
-            Last updated: {{ health.timestamp | date:'medium' }}
-          </span>
+          @if (health) {
+            <span class="last-updated">
+              Last updated: {{ health.timestamp | date:'medium' }}
+            </span>
+          }
         </div>
         <div class="header-right">
           <div
@@ -34,7 +36,8 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
       </div>
 
       <!-- System Metrics -->
-      <div class="metrics-section" *ngIf="health">
+      @if (health) {
+      <div class="metrics-section">
         <h3>Infrastructure Metrics</h3>
         <div class="metrics-grid">
           <div class="metric-card">
@@ -119,13 +122,15 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
           </div>
         </div>
       </div>
+      }
 
       <!-- Services Grid -->
-      <div class="services-section" *ngIf="health">
+      @if (health) {
+      <div class="services-section">
         <h3>Services ({{ health.services.length }})</h3>
         <div class="services-grid">
+          @for (service of health.services; track service.name) {
           <div
-            *ngFor="let service of health.services"
             class="service-card"
             [class.up]="service.status === 'UP'"
             [class.down]="service.status === 'DOWN'"
@@ -150,35 +155,52 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
                 <span class="label">Instances</span>
                 <span class="value">{{ service.instances || 1 }}</span>
               </div>
-              <div class="detail" *ngIf="service.version">
+              @if (service.version) {
+              <div class="detail">
                 <span class="label">Version</span>
                 <span class="value">{{ service.version }}</span>
               </div>
-              <div class="detail" *ngIf="service.lastDeploymentAt">
+              }
+              @if (service.lastDeploymentAt) {
+              <div class="detail">
                 <span class="label">Last Deploy</span>
                 <span class="value">{{ service.lastDeploymentAt | date:'short' }}</span>
               </div>
+              }
             </div>
 
-            <div class="service-endpoint" *ngIf="service.endpoint">
+            @if (service.endpoint) {
+            <div class="service-endpoint">
               <span class="endpoint">{{ service.endpoint }}</span>
             </div>
+            }
 
-            <div class="service-links" *ngIf="service.logsUrl || service.metricsUrl">
-              <a *ngIf="service.logsUrl" [href]="service.logsUrl" target="_blank" rel="noopener noreferrer">Logs</a>
-              <a *ngIf="service.metricsUrl" [href]="service.metricsUrl" target="_blank" rel="noopener noreferrer">Metrics</a>
+            @if (service.logsUrl || service.metricsUrl) {
+            <div class="service-links">
+              @if (service.logsUrl) {
+              <a [href]="service.logsUrl" target="_blank" rel="noopener noreferrer">Logs</a>
+              }
+              @if (service.metricsUrl) {
+              <a [href]="service.metricsUrl" target="_blank" rel="noopener noreferrer">Metrics</a>
+              }
             </div>
+            }
 
-            <div class="service-error" *ngIf="service.lastError">
+            @if (service.lastError) {
+            <div class="service-error">
               <span class="error-icon">⚠️</span>
               <span class="error-text">{{ service.lastError }}</span>
             </div>
+            }
           </div>
+          }
         </div>
       </div>
+      }
 
       <!-- Database Health -->
-      <div class="database-section" *ngIf="health">
+      @if (health) {
+      <div class="database-section">
         <h3>Database Connections</h3>
         <div class="db-grid">
           <div class="db-card">
@@ -248,12 +270,15 @@ import { Subject, takeUntil, interval, startWith, switchMap } from 'rxjs';
           </div>
         </div>
       </div>
+      }
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="loading">
+      @if (loading) {
+      <div class="loading">
         <div class="spinner"></div>
         <span>Loading system health...</span>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -637,7 +662,7 @@ export class SystemHealthComponent implements OnInit, OnDestroy {
   loading = true;
   private destroy$ = new Subject<void>();
 
-  constructor(private adminService: AdminService) {}
+  private readonly adminService = inject(AdminService);
 
   ngOnInit(): void {
     this.startPolling();

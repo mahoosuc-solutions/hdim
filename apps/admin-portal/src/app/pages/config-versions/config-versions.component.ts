@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
@@ -21,29 +21,36 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
         </div>
       </div>
 
-      <div class="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
-      <div class="alert success" *ngIf="successMessage">{{ successMessage }}</div>
+      @if (errorMessage) {
+        <div class="alert">{{ errorMessage }}</div>
+      }
+      @if (successMessage) {
+        <div class="alert success">{{ successMessage }}</div>
+      }
 
       <div class="selector-card">
         <div class="field">
-          <label>Tenant</label>
-          <input type="text" [(ngModel)]="tenantId" placeholder="demo-clinic" />
+          <label for="tenant-input">Tenant</label>
+          <input id="tenant-input" type="text" [(ngModel)]="tenantId" placeholder="demo-clinic" />
         </div>
         <div class="field">
-          <label>Service</label>
+          <label for="service-input">Service</label>
           <input
+            id="service-input"
             type="text"
             list="service-options"
             [(ngModel)]="serviceName"
             placeholder="quality-measure"
           />
           <datalist id="service-options">
-            <option *ngFor="let service of serviceOptions" [value]="service"></option>
+            @for (service of serviceOptions; track service) {
+              <option [value]="service"></option>
+            }
           </datalist>
         </div>
         <div class="field">
-          <label>Target Tenant</label>
-          <input type="text" [(ngModel)]="targetTenantId" placeholder="tenant-id" />
+          <label for="target-tenant-input">Target Tenant</label>
+          <input id="target-tenant-input" type="text" [(ngModel)]="targetTenantId" placeholder="tenant-id" />
         </div>
         <button class="btn-primary" (click)="loadVersions()">Load</button>
       </div>
@@ -56,31 +63,32 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
               {{ currentVersion?.status || 'None' }}
             </span>
           </div>
-          <div class="panel-body" *ngIf="currentVersion; else emptyCurrent">
-            <div class="meta-row">
-              <span class="label">Version</span>
-              <span class="value">v{{ currentVersion?.versionNumber }}</span>
+          @if (currentVersion) {
+            <div class="panel-body">
+              <div class="meta-row">
+                <span class="label">Version</span>
+                <span class="value">v{{ currentVersion?.versionNumber }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Change</span>
+                <span class="value">{{ currentVersion?.changeSummary || 'No summary' }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Hash</span>
+                <span class="value monospace">{{ currentVersion?.configHash }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Created By</span>
+                <span class="value">{{ currentVersion?.createdBy }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Created</span>
+                <span class="value">{{ currentVersion?.createdAt | date:'medium' }}</span>
+              </div>
             </div>
-            <div class="meta-row">
-              <span class="label">Change</span>
-              <span class="value">{{ currentVersion?.changeSummary || 'No summary' }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="label">Hash</span>
-              <span class="value monospace">{{ currentVersion?.configHash }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="label">Created By</span>
-              <span class="value">{{ currentVersion?.createdBy }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="label">Created</span>
-              <span class="value">{{ currentVersion?.createdAt | date:'medium' }}</span>
-            </div>
-          </div>
-          <ng-template #emptyCurrent>
+          } @else {
             <div class="empty-state">No active version for this tenant/service.</div>
-          </ng-template>
+          }
         </div>
 
         <div class="panel">
@@ -88,65 +96,75 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
             <h3>Versions</h3>
             <span class="meta">{{ versions.length }} total</span>
           </div>
-          <div class="panel-body" *ngIf="!loading">
-            <table class="versions-table" *ngIf="versions.length > 0">
-              <thead>
-                <tr>
-                  <th>Version</th>
-                  <th>Status</th>
-                  <th>Summary</th>
-                  <th>Source</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  *ngFor="let version of versions"
-                  (click)="selectVersion(version)"
-                  [class.selected]="selectedVersion?.id === version.id"
-                >
-                  <td>v{{ version.versionNumber }}</td>
-                  <td>
-                    <span class="status-badge" [class]="version.status.toLowerCase()">
-                      {{ version.status }}
-                    </span>
-                  </td>
-                  <td>{{ version.changeSummary || 'No summary' }}</td>
-                  <td>{{ version.sourceVersionId ? 'Demo' : 'Direct' }}</td>
-                  <td>
-                    <button
-                      class="btn-mini"
-                      (click)="requestApproval(version); $event.stopPropagation()"
-                    >
-                      Request
-                    </button>
-                    <button
-                      class="btn-mini"
-                      (click)="approveVersion(version); $event.stopPropagation()"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      class="btn-mini danger"
-                      (click)="rejectVersion(version); $event.stopPropagation()"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      class="btn-mini primary"
-                      (click)="activateVersion(version); $event.stopPropagation()"
-                    >
-                      Activate
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="empty-state" *ngIf="versions.length === 0">No versions found.</div>
-          </div>
-          <div class="panel-body" *ngIf="loading">
-            <div class="loading">Loading versions...</div>
-          </div>
+          @if (loading) {
+            <div class="panel-body">
+              <div class="loading">Loading versions...</div>
+            </div>
+          } @else {
+            <div class="panel-body">
+              @if (versions.length > 0) {
+                <table class="versions-table">
+                  <thead>
+                    <tr>
+                      <th>Version</th>
+                      <th>Status</th>
+                      <th>Summary</th>
+                      <th>Source</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (version of versions; track version.id) {
+                      <tr
+                        (click)="selectVersion(version)"
+                        (keydown.enter)="selectVersion(version)"
+                        tabindex="0"
+                        role="button"
+                        [class.selected]="selectedVersion?.id === version.id"
+                      >
+                        <td>v{{ version.versionNumber }}</td>
+                        <td>
+                          <span class="status-badge" [class]="version.status.toLowerCase()">
+                            {{ version.status }}
+                          </span>
+                        </td>
+                        <td>{{ version.changeSummary || 'No summary' }}</td>
+                        <td>{{ version.sourceVersionId ? 'Demo' : 'Direct' }}</td>
+                        <td>
+                          <button
+                            class="btn-mini"
+                            (click)="requestApproval(version); $event.stopPropagation()"
+                          >
+                            Request
+                          </button>
+                          <button
+                            class="btn-mini"
+                            (click)="approveVersion(version); $event.stopPropagation()"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            class="btn-mini danger"
+                            (click)="rejectVersion(version); $event.stopPropagation()"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            class="btn-mini primary"
+                            (click)="activateVersion(version); $event.stopPropagation()"
+                          >
+                            Activate
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              } @else {
+                <div class="empty-state">No versions found.</div>
+              }
+            </div>
+          }
         </div>
       </div>
 
@@ -154,33 +172,36 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
         <div class="panel">
           <div class="panel-header">
             <h3>Selected Version</h3>
-            <span class="meta" *ngIf="selectedVersion">v{{ selectedVersion.versionNumber }}</span>
+            @if (selectedVersion) {
+              <span class="meta">v{{ selectedVersion.versionNumber }}</span>
+            }
           </div>
-          <div class="panel-body" *ngIf="selectedVersion; else emptySelection">
-            <div class="meta-row">
-              <span class="label">Status</span>
-              <span class="value">{{ selectedVersion.status }}</span>
+          @if (selectedVersion) {
+            <div class="panel-body">
+              <div class="meta-row">
+                <span class="label">Status</span>
+                <span class="value">{{ selectedVersion.status }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Created By</span>
+                <span class="value">{{ selectedVersion.createdBy }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Change Summary</span>
+                <span class="value">{{ selectedVersion.changeSummary || 'No summary' }}</span>
+              </div>
+              <div class="meta-row">
+                <span class="label">Config Hash</span>
+                <span class="value monospace">{{ selectedVersion.configHash }}</span>
+              </div>
+              <div class="config-json">
+                <div class="config-header">Config Payload</div>
+                <pre>{{ formatConfig(selectedVersion.config) }}</pre>
+              </div>
             </div>
-            <div class="meta-row">
-              <span class="label">Created By</span>
-              <span class="value">{{ selectedVersion.createdBy }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="label">Change Summary</span>
-              <span class="value">{{ selectedVersion.changeSummary || 'No summary' }}</span>
-            </div>
-            <div class="meta-row">
-              <span class="label">Config Hash</span>
-              <span class="value monospace">{{ selectedVersion.configHash }}</span>
-            </div>
-            <div class="config-json">
-              <div class="config-header">Config Payload</div>
-              <pre>{{ formatConfig(selectedVersion.config) }}</pre>
-            </div>
-          </div>
-          <ng-template #emptySelection>
+          } @else {
             <div class="empty-state">Select a version to review details.</div>
-          </ng-template>
+          }
         </div>
 
         <div class="panel approvals">
@@ -190,7 +211,9 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
           </div>
           <div class="panel-body">
             <div class="approval-actions">
+              <label for="approval-comment" class="sr-only">Approval notes</label>
               <textarea
+                id="approval-comment"
                 [(ngModel)]="approvalComment"
                 placeholder="Add approval or rejection notes"
               ></textarea>
@@ -206,21 +229,26 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
                 </button>
               </div>
             </div>
-            <div class="approval-list" *ngIf="approvals.length > 0">
-              <div class="approval-item" *ngFor="let approval of approvals">
-                <div class="approval-main">
-                  <span class="badge" [class]="approval.action.toLowerCase()">{{ approval.action }}</span>
-                  <span class="actor">{{ approval.actor }}</span>
-                </div>
-                <div class="approval-meta">
-                  <span>{{ approval.comment || 'No comment' }}</span>
-                  <span>{{ approval.createdAt | date:'short' }}</span>
-                </div>
+            @if (approvals.length > 0) {
+              <div class="approval-list">
+                @for (approval of approvals; track approval.id) {
+                  <div class="approval-item">
+                    <div class="approval-main">
+                      <span class="badge" [class]="approval.action.toLowerCase()">{{ approval.action }}</span>
+                      <span class="actor">{{ approval.actor }}</span>
+                    </div>
+                    <div class="approval-meta">
+                      <span>{{ approval.comment || 'No comment' }}</span>
+                      <span>{{ approval.createdAt | date:'short' }}</span>
+                    </div>
+                  </div>
+                }
               </div>
-            </div>
-            <div class="empty-state" *ngIf="approvals.length === 0">
-              No approvals recorded yet.
-            </div>
+            } @else {
+              <div class="empty-state">
+                No approvals recorded yet.
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -232,10 +260,10 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
             <span class="meta">Demo tenant only</span>
           </div>
           <div class="panel-body">
-            <label class="inline-label">Change summary</label>
-            <input type="text" [(ngModel)]="changeSummary" placeholder="Describe what changed" />
-            <label class="inline-label">Config JSON</label>
-            <textarea [(ngModel)]="configPayload" rows="8"></textarea>
+            <label class="inline-label" for="change-summary-input">Change summary</label>
+            <input id="change-summary-input" type="text" [(ngModel)]="changeSummary" placeholder="Describe what changed" />
+            <label class="inline-label" for="config-payload-input">Config JSON</label>
+            <textarea id="config-payload-input" [(ngModel)]="configPayload" rows="8"></textarea>
             <div class="button-row">
               <label class="checkbox">
                 <input type="checkbox" [(ngModel)]="activateOnCreate" />
@@ -252,10 +280,10 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
             <span class="meta">Two-person approval required</span>
           </div>
           <div class="panel-body">
-            <label class="inline-label">Source Version ID</label>
-            <input type="text" [(ngModel)]="sourceVersionId" placeholder="Select from demo versions" />
-            <label class="inline-label">Promotion summary</label>
-            <input type="text" [(ngModel)]="promotionSummary" placeholder="Describe promotion intent" />
+            <label class="inline-label" for="source-version-input">Source Version ID</label>
+            <input id="source-version-input" type="text" [(ngModel)]="sourceVersionId" placeholder="Select from demo versions" />
+            <label class="inline-label" for="promotion-summary-input">Promotion summary</label>
+            <input id="promotion-summary-input" type="text" [(ngModel)]="promotionSummary" placeholder="Describe promotion intent" />
             <div class="button-row">
               <label class="checkbox">
                 <input type="checkbox" [(ngModel)]="activateOnPromote" />
@@ -626,6 +654,17 @@ import { Subject, forkJoin, takeUntil } from 'rxjs';
       font-family: 'Courier New', monospace;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
     @media (max-width: 900px) {
       .selector-card {
         grid-template-columns: 1fr;
@@ -660,9 +699,8 @@ export class ConfigVersionsComponent implements OnInit, OnDestroy {
   errorMessage = '';
   successMessage = '';
 
+  private readonly adminService = inject(AdminService);
   private destroy$ = new Subject<void>();
-
-  constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
     this.adminService.getServiceCatalog()
@@ -738,7 +776,7 @@ export class ConfigVersionsComponent implements OnInit, OnDestroy {
     let config: Record<string, unknown>;
     try {
       config = JSON.parse(this.configPayload);
-    } catch (error) {
+    } catch {
       this.errorMessage = 'Config JSON is invalid. Please fix the payload and try again.';
       return;
     }

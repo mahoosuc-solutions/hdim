@@ -39,7 +39,8 @@ import {
       </div>
 
       <!-- Analytics Summary -->
-      <div class="analytics-summary" *ngIf="analytics()">
+      @if (analytics()) {
+      <div class="analytics-summary">
         <div class="analytics-card">
           <div class="analytics-icon sent">📤</div>
           <div class="analytics-content">
@@ -76,6 +77,7 @@ import {
           </div>
         </div>
       </div>
+      }
 
       <!-- Filters -->
       <div class="filters-bar">
@@ -90,9 +92,11 @@ import {
         <div class="filter-group">
           <select [(ngModel)]="statusFilter" (change)="applyFilters()">
             <option value="">All Statuses</option>
-            <option *ngFor="let status of statuses" [value]="status">
+            @for (status of statuses; track status) {
+            <option [value]="status">
               {{ formatStatus(status) }}
             </option>
+            }
           </select>
           <button class="btn btn-secondary" (click)="refreshData()">
             Refresh
@@ -101,13 +105,16 @@ import {
       </div>
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading()">
+      @if (isLoading()) {
+      <div class="loading">
         <div class="spinner"></div>
         <span>Loading campaigns...</span>
       </div>
+      }
 
       <!-- Campaigns Table -->
-      <div class="table-container" *ngIf="!isLoading()">
+      @if (!isLoading()) {
+      <div class="table-container">
         <table class="campaigns-table">
           <thead>
             <tr>
@@ -121,12 +128,15 @@ import {
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let campaign of filteredCampaigns()" (click)="selectCampaign(campaign)">
+            @for (campaign of filteredCampaigns(); track campaign.id) {
+            <tr (click)="selectCampaign(campaign)" (keydown.enter)="selectCampaign(campaign)" tabindex="0" role="row">
               <td class="name-cell">
                 <div class="campaign-icon">🔗</div>
                 <div class="campaign-name">
                   <span class="name">{{ campaign.name }}</span>
-                  <span class="description" *ngIf="campaign.description">{{ campaign.description }}</span>
+                  @if (campaign.description) {
+                  <span class="description">{{ campaign.description }}</span>
+                  }
                 </div>
               </td>
               <td>
@@ -140,54 +150,62 @@ import {
               <td>
                 <span class="rate-value">{{ (campaign.acceptanceRate * 100) | number:'1.1-1' }}%</span>
               </td>
-              <td class="actions-cell" (click)="$event.stopPropagation()">
+              <td class="actions-cell" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+                @if (campaign.status !== 'COMPLETED') {
                 <button
                   class="action-btn"
                   [title]="campaign.status === 'ACTIVE' ? 'Pause' : 'Activate'"
                   (click)="toggleCampaignStatus(campaign)"
-                  *ngIf="campaign.status !== 'COMPLETED'"
                 >
                   {{ campaign.status === 'ACTIVE' ? '⏸️' : '▶️' }}
                 </button>
+                }
                 <button class="action-btn" title="Edit" (click)="editCampaign(campaign)">✏️</button>
                 <button class="action-btn delete" title="Delete" (click)="deleteCampaign(campaign)">🗑️</button>
               </td>
             </tr>
-            <tr *ngIf="!filteredCampaigns().length">
+            } @empty {
+            <tr>
               <td colspan="7" class="empty-state">
                 No campaigns found. Create your first LinkedIn campaign to get started.
               </td>
             </tr>
+            }
           </tbody>
         </table>
       </div>
+      }
 
       <!-- Pagination -->
-      <div class="pagination" *ngIf="totalPages > 1">
+      @if (totalPages > 1) {
+      <div class="pagination">
         <button [disabled]="currentPage === 0" (click)="changePage(currentPage - 1)">Previous</button>
         <span>Page {{ currentPage + 1 }} of {{ totalPages }}</span>
         <button [disabled]="currentPage >= totalPages - 1" (click)="changePage(currentPage + 1)">Next</button>
       </div>
+      }
 
       <!-- Campaign Create/Edit Dialog -->
-      <div class="dialog-overlay" *ngIf="showCampaignDialog" (click)="closeCampaignDialog()">
-        <div class="dialog" (click)="$event.stopPropagation()">
+      @if (showCampaignDialog) {
+      <div class="dialog-overlay" (click)="closeCampaignDialog()" (keydown.enter)="closeCampaignDialog()" tabindex="0" role="dialog">
+        <div class="dialog" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>{{ editingCampaign ? 'Edit Campaign' : 'Create New Campaign' }}</h3>
             <button class="close-btn" (click)="closeCampaignDialog()">×</button>
           </div>
           <form (ngSubmit)="saveCampaign()" class="dialog-form">
             <div class="form-group">
-              <label>Campaign Name *</label>
-              <input type="text" [(ngModel)]="campaignForm.name" name="name" required />
+              <label for="campaign-name">Campaign Name *</label>
+              <input id="campaign-name" type="text" [(ngModel)]="campaignForm.name" name="name" required />
             </div>
             <div class="form-group">
-              <label>Description</label>
-              <textarea [(ngModel)]="campaignForm.description" name="description" rows="2"></textarea>
+              <label for="campaign-desc">Description</label>
+              <textarea id="campaign-desc" [(ngModel)]="campaignForm.description" name="description" rows="2"></textarea>
             </div>
             <div class="form-group">
-              <label>Target Criteria</label>
+              <label for="campaign-target">Target Criteria</label>
               <textarea
+                id="campaign-target"
                 [(ngModel)]="campaignForm.targetCriteria"
                 name="targetCriteria"
                 rows="2"
@@ -195,8 +213,9 @@ import {
               ></textarea>
             </div>
             <div class="form-group">
-              <label>Daily Connection Limit</label>
+              <label for="campaign-daily-limit">Daily Connection Limit</label>
               <input
+                id="campaign-daily-limit"
                 type="number"
                 [(ngModel)]="campaignForm.dailyLimit"
                 name="dailyLimit"
@@ -212,27 +231,32 @@ import {
           </form>
         </div>
       </div>
+      }
 
       <!-- Send Connection Dialog -->
-      <div class="dialog-overlay" *ngIf="showConnectionDialog" (click)="closeConnectionDialog()">
-        <div class="dialog" (click)="$event.stopPropagation()">
+      @if (showConnectionDialog) {
+      <div class="dialog-overlay" (click)="closeConnectionDialog()" (keydown.enter)="closeConnectionDialog()" tabindex="0" role="dialog">
+        <div class="dialog" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>Send Connection Request</h3>
             <button class="close-btn" (click)="closeConnectionDialog()">×</button>
           </div>
           <form (ngSubmit)="sendConnection()" class="dialog-form">
             <div class="form-group">
-              <label>Select Lead</label>
-              <select [(ngModel)]="connectionForm.leadId" name="leadId">
+              <label for="conn-lead">Select Lead</label>
+              <select id="conn-lead" [(ngModel)]="connectionForm.leadId" name="leadId">
                 <option value="">-- Select a Lead --</option>
-                <option *ngFor="let lead of leads()" [value]="lead.id">
+                @for (lead of leads(); track lead.id) {
+                <option [value]="lead.id">
                   {{ lead.firstName }} {{ lead.lastName }} ({{ lead.company }})
                 </option>
+                }
               </select>
             </div>
             <div class="form-group">
-              <label>LinkedIn Profile URL *</label>
+              <label for="conn-profile-url">LinkedIn Profile URL *</label>
               <input
+                id="conn-profile-url"
                 type="url"
                 [(ngModel)]="connectionForm.linkedInProfileUrl"
                 name="linkedInProfileUrl"
@@ -241,8 +265,9 @@ import {
               />
             </div>
             <div class="form-group">
-              <label>Connection Message</label>
+              <label for="conn-message">Connection Message</label>
               <textarea
+                id="conn-message"
                 [(ngModel)]="connectionForm.message"
                 name="message"
                 rows="4"
@@ -252,12 +277,14 @@ import {
               <span class="hint">{{ (connectionForm.message?.length || 0) }}/300 characters</span>
             </div>
             <div class="form-group">
-              <label>Associate with Campaign (Optional)</label>
-              <select [(ngModel)]="connectionForm.campaignId" name="campaignId">
+              <label for="conn-campaign">Associate with Campaign (Optional)</label>
+              <select id="conn-campaign" [(ngModel)]="connectionForm.campaignId" name="campaignId">
                 <option value="">-- No Campaign --</option>
-                <option *ngFor="let campaign of campaigns()" [value]="campaign.id">
+                @for (campaign of campaigns(); track campaign.id) {
+                <option [value]="campaign.id">
                   {{ campaign.name }}
                 </option>
+                }
               </select>
             </div>
             <div class="dialog-actions">
@@ -269,27 +296,32 @@ import {
           </form>
         </div>
       </div>
+      }
 
       <!-- Send InMail Dialog -->
-      <div class="dialog-overlay" *ngIf="showInMailDialog" (click)="closeInMailDialog()">
-        <div class="dialog" (click)="$event.stopPropagation()">
+      @if (showInMailDialog) {
+      <div class="dialog-overlay" (click)="closeInMailDialog()" (keydown.enter)="closeInMailDialog()" tabindex="0" role="dialog">
+        <div class="dialog" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="dialog-header">
             <h3>Send InMail</h3>
             <button class="close-btn" (click)="closeInMailDialog()">×</button>
           </div>
           <form (ngSubmit)="sendInMail()" class="dialog-form">
             <div class="form-group">
-              <label>Select Lead</label>
-              <select [(ngModel)]="inMailForm.leadId" name="leadId">
+              <label for="inmail-lead">Select Lead</label>
+              <select id="inmail-lead" [(ngModel)]="inMailForm.leadId" name="leadId">
                 <option value="">-- Select a Lead --</option>
-                <option *ngFor="let lead of leads()" [value]="lead.id">
+                @for (lead of leads(); track lead.id) {
+                <option [value]="lead.id">
                   {{ lead.firstName }} {{ lead.lastName }} ({{ lead.company }})
                 </option>
+                }
               </select>
             </div>
             <div class="form-group">
-              <label>LinkedIn Profile URL *</label>
+              <label for="inmail-profile-url">LinkedIn Profile URL *</label>
               <input
+                id="inmail-profile-url"
                 type="url"
                 [(ngModel)]="inMailForm.linkedInProfileUrl"
                 name="linkedInProfileUrl"
@@ -298,8 +330,9 @@ import {
               />
             </div>
             <div class="form-group">
-              <label>Subject *</label>
+              <label for="inmail-subject">Subject *</label>
               <input
+                id="inmail-subject"
                 type="text"
                 [(ngModel)]="inMailForm.subject"
                 name="subject"
@@ -308,8 +341,9 @@ import {
               />
             </div>
             <div class="form-group">
-              <label>Message *</label>
+              <label for="inmail-message">Message *</label>
               <textarea
+                id="inmail-message"
                 [(ngModel)]="inMailForm.message"
                 name="message"
                 rows="6"
@@ -318,12 +352,14 @@ import {
               ></textarea>
             </div>
             <div class="form-group">
-              <label>Associate with Campaign (Optional)</label>
-              <select [(ngModel)]="inMailForm.campaignId" name="campaignId">
+              <label for="inmail-campaign">Associate with Campaign (Optional)</label>
+              <select id="inmail-campaign" [(ngModel)]="inMailForm.campaignId" name="campaignId">
                 <option value="">-- No Campaign --</option>
-                <option *ngFor="let campaign of campaigns()" [value]="campaign.id">
+                @for (campaign of campaigns(); track campaign.id) {
+                <option [value]="campaign.id">
                   {{ campaign.name }}
                 </option>
+                }
               </select>
             </div>
             <div class="dialog-actions">
@@ -339,16 +375,20 @@ import {
           </form>
         </div>
       </div>
+      }
 
       <!-- Campaign Detail Panel -->
-      <div class="detail-panel" *ngIf="selectedCampaign()" (click)="selectedCampaign.set(null)">
-        <div class="detail-content" (click)="$event.stopPropagation()">
+      @if (selectedCampaign()) {
+      <div class="detail-panel" (click)="selectedCampaign.set(null)" (keydown.enter)="selectedCampaign.set(null)" tabindex="0" role="dialog">
+        <div class="detail-content" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="detail-header">
             <div class="campaign-info">
               <div class="campaign-icon large">🔗</div>
               <div>
                 <h3>{{ selectedCampaign()!.name }}</h3>
-                <p *ngIf="selectedCampaign()!.description">{{ selectedCampaign()!.description }}</p>
+                @if (selectedCampaign()!.description) {
+                <p>{{ selectedCampaign()!.description }}</p>
+                }
               </div>
             </div>
             <button class="close-btn" (click)="selectedCampaign.set(null)">×</button>
@@ -361,13 +401,14 @@ import {
                 <span class="status-badge large" [class]="selectedCampaign()!.status.toLowerCase()">
                   {{ formatStatus(selectedCampaign()!.status) }}
                 </span>
+                @if (selectedCampaign()!.status !== 'COMPLETED') {
                 <button
                   class="btn btn-secondary btn-sm"
                   (click)="toggleCampaignStatus(selectedCampaign()!)"
-                  *ngIf="selectedCampaign()!.status !== 'COMPLETED'"
                 >
                   {{ selectedCampaign()!.status === 'ACTIVE' ? 'Pause' : 'Activate' }}
                 </button>
+                }
               </div>
             </div>
 
@@ -377,10 +418,12 @@ import {
                 <span class="label">Daily Limit:</span>
                 <span>{{ selectedCampaign()!.dailyLimit }} connections/day</span>
               </div>
-              <div class="detail-row" *ngIf="selectedCampaign()!.targetCriteria">
+              @if (selectedCampaign()!.targetCriteria) {
+              <div class="detail-row">
                 <span class="label">Target:</span>
                 <span>{{ selectedCampaign()!.targetCriteria }}</span>
               </div>
+              }
             </div>
 
             <div class="detail-section">
@@ -408,7 +451,8 @@ import {
             <div class="detail-section">
               <h4>Recent Outreach ({{ outreachList().length }})</h4>
               <div class="outreach-list">
-                <div class="outreach-item" *ngFor="let outreach of outreachList()">
+                @for (outreach of outreachList(); track $index) {
+                <div class="outreach-item">
                   <div class="outreach-icon" [class]="outreach.type.toLowerCase()">
                     {{ outreach.type === 'CONNECTION' ? '🔗' : '✉️' }}
                   </div>
@@ -420,9 +464,11 @@ import {
                     {{ formatOutreachStatus(outreach.status) }}
                   </span>
                 </div>
-                <div class="empty-outreach" *ngIf="!outreachList().length">
+                } @empty {
+                <div class="empty-outreach">
                   No outreach sent yet
                 </div>
+                }
               </div>
             </div>
           </div>
@@ -435,6 +481,7 @@ import {
           </div>
         </div>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -1185,8 +1232,8 @@ export class SalesLinkedInComponent implements OnInit, OnDestroy {
           next: () => {
             this.closeCampaignDialog();
             this.loadCampaigns();
-            if (this.selectedCampaign()?.id === this.editingCampaign?.id) {
-              this.linkedInService.getCampaign(this.editingCampaign!.id)
+            if (this.selectedCampaign()?.id === this.editingCampaign?.id && this.editingCampaign) {
+              this.linkedInService.getCampaign(this.editingCampaign.id)
                 .pipe(takeUntil(this.destroy$))
                 .subscribe((c) => this.selectedCampaign.set(c));
             }
@@ -1258,8 +1305,9 @@ export class SalesLinkedInComponent implements OnInit, OnDestroy {
         next: () => {
           this.closeConnectionDialog();
           this.loadAnalytics();
-          if (this.selectedCampaign() && this.connectionForm.campaignId === this.selectedCampaign()?.id) {
-            this.loadCampaignOutreach(this.selectedCampaign()!.id);
+          const selected = this.selectedCampaign();
+          if (selected && this.connectionForm.campaignId === selected.id) {
+            this.loadCampaignOutreach(selected.id);
           }
         },
       });

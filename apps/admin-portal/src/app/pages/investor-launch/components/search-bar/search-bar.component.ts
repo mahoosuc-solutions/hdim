@@ -56,14 +56,14 @@ import { debounceTime, Subject } from 'rxjs';
   `],
 })
 export class SearchBarComponent {
-  @Output() search = new EventEmitter<string>();
+  @Output() searchChange = new EventEmitter<string>();
 
   searchQuery = signal('');
   private searchSubject = new Subject<string>();
 
   constructor() {
     this.searchSubject.pipe(debounceTime(300)).subscribe((query) => {
-      this.search.emit(query);
+      this.searchChange.emit(query);
     });
   }
 
@@ -74,6 +74,6 @@ export class SearchBarComponent {
 
   clearSearch(): void {
     this.searchQuery.set('');
-    this.search.emit('');
+    this.searchChange.emit('');
   }
 }

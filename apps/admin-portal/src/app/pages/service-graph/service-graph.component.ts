@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -45,7 +45,7 @@ export class ServiceGraphComponent implements OnInit, OnDestroy {
   dependencies: ServiceLink[] = SERVICE_DEPENDENCIES;
   serviceHealth: Map<string, ServiceHealth> = new Map();
   selectedService: string | null = null;
-  selectedCategory: string = 'all';
+  selectedCategory = 'all';
   loading = true;
 
   // Computed
@@ -53,10 +53,10 @@ export class ServiceGraphComponent implements OnInit, OnDestroy {
   serviceDependents: ServiceLink[] = [];
   impactedServices: Set<string> = new Set();
 
-  constructor(
-    private loggerService: LoggerService,
-    private adminService: AdminService
-  ) {
+  private readonly loggerService = inject(LoggerService);
+  private readonly adminService = inject(AdminService);
+
+  constructor() {
     this.logger = this.loggerService.withContext('ServiceGraphComponent');
   }
 

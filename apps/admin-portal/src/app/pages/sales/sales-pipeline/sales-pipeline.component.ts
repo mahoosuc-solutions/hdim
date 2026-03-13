@@ -23,7 +23,8 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
       </div>
 
       <!-- Pipeline Metrics Summary -->
-      <div class="metrics-bar" *ngIf="metrics()">
+      @if (metrics()) {
+        <div class="metrics-bar">
         <div class="metric">
           <span class="metric-value">{{ metrics()!.totalPipeline | currency:'USD':'symbol':'1.0-0' }}</span>
           <span class="metric-label">Total Pipeline</span>
@@ -44,21 +45,25 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
           <span class="metric-value">{{ metrics()!.averageSalesCycle }}</span>
           <span class="metric-label">Avg Days to Close</span>
         </div>
-      </div>
+        </div>
+      }
 
       <!-- Loading State -->
-      <div class="loading" *ngIf="isLoading()">
-        <div class="spinner"></div>
-        <span>Loading pipeline...</span>
-      </div>
+      @if (isLoading()) {
+        <div class="loading">
+          <div class="spinner"></div>
+          <span>Loading pipeline...</span>
+        </div>
+      }
 
       <!-- Kanban Board -->
-      <div class="kanban-board" *ngIf="!isLoading() && kanban()">
-        <div
-          class="kanban-column"
-          *ngFor="let stage of stages"
-          [class]="stage.toLowerCase()"
-        >
+      @if (!isLoading() && kanban()) {
+        <div class="kanban-board">
+          @for (stage of stages; track stage) {
+            <div
+              class="kanban-column"
+              [class]="stage.toLowerCase()"
+            >
           <div class="column-header">
             <div class="column-title">
               <span class="stage-icon">{{ getStageIcon(stage) }}</span>
@@ -78,13 +83,16 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
             [cdkDropListConnectedTo]="stages"
             (cdkDropListDropped)="onDrop($event, stage)"
           >
-            <div
-              class="opportunity-card"
-              *ngFor="let opp of getStageOpportunities(stage)"
-              cdkDrag
-              [cdkDragData]="opp"
-              (click)="selectOpportunity(opp)"
-            >
+            @for (opp of getStageOpportunities(stage); track opp.id) {
+              <div
+                class="opportunity-card"
+                cdkDrag
+                [cdkDragData]="opp"
+                (click)="selectOpportunity(opp)"
+                (keydown.enter)="selectOpportunity(opp)"
+                tabindex="0"
+                role="button"
+              >
               <div class="card-header">
                 <span class="opp-name">{{ opp.name }}</span>
                 <span class="opp-amount">{{ opp.amount | currency:'USD':'symbol':'1.0-0' }}</span>
@@ -100,25 +108,35 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
                     {{ opp.closeDate | date:'shortDate' }}
                   </span>
                 </div>
-                <div class="card-row" *ngIf="opp.nextStep">
-                  <span class="next-step">{{ opp.nextStep }}</span>
+                @if (opp.nextStep) {
+                  <div class="card-row">
+                    <span class="next-step">{{ opp.nextStep }}</span>
+                  </div>
+                }
+              </div>
+              @if (opp.ownerId) {
+                <div class="card-footer">
+                  <div class="owner-avatar">{{ opp.ownerId.charAt(0).toUpperCase() }}</div>
                 </div>
-              </div>
-              <div class="card-footer" *ngIf="opp.ownerId">
-                <div class="owner-avatar">{{ opp.ownerId.charAt(0).toUpperCase() }}</div>
-              </div>
+              }
             </div>
+            }
 
-            <div class="empty-column" *ngIf="!getStageOpportunities(stage).length">
-              No opportunities
-            </div>
+            @if (!getStageOpportunities(stage).length) {
+              <div class="empty-column">
+                No opportunities
+              </div>
+            }
           </div>
         </div>
+        }
       </div>
+      }
 
       <!-- Opportunity Detail Panel -->
-      <div class="detail-panel" *ngIf="selectedOpp()" (click)="selectedOpp.set(null)">
-        <div class="detail-content" (click)="$event.stopPropagation()">
+      @if (selectedOpp()) {
+        <div class="detail-panel" (click)="selectedOpp.set(null)" (keydown.escape)="selectedOpp.set(null)" tabindex="0" role="dialog">
+          <div class="detail-content" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="-1" role="document">
           <div class="detail-header">
             <h3>{{ selectedOpp()!.name }}</h3>
             <button class="close-btn" (click)="selectedOpp.set(null)">×</button>
@@ -133,9 +151,11 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
               <div class="detail-row">
                 <span class="label">Stage:</span>
                 <select [(ngModel)]="selectedOpp()!.stage" (change)="updateStage(selectedOpp()!)">
-                  <option *ngFor="let stage of stages" [value]="stage">
-                    {{ formatStage(stage) }}
-                  </option>
+              @for (stage of stages; track stage) {
+                <option [value]="stage">
+                  {{ formatStage(stage) }}
+                </option>
+              }
                 </select>
               </div>
               <div class="detail-row">
@@ -150,15 +170,19 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
               </div>
             </div>
 
-            <div class="detail-section" *ngIf="selectedOpp()!.description">
-              <h4>Description</h4>
-              <p>{{ selectedOpp()!.description }}</p>
-            </div>
+            @if (selectedOpp()!.description) {
+              <div class="detail-section">
+                <h4>Description</h4>
+                <p>{{ selectedOpp()!.description }}</p>
+              </div>
+            }
 
-            <div class="detail-section" *ngIf="selectedOpp()!.nextStep">
-              <h4>Next Step</h4>
-              <p>{{ selectedOpp()!.nextStep }}</p>
-            </div>
+            @if (selectedOpp()!.nextStep) {
+              <div class="detail-section">
+                <h4>Next Step</h4>
+                <p>{{ selectedOpp()!.nextStep }}</p>
+              </div>
+            }
 
             <div class="detail-section">
               <h4>Timeline</h4>
@@ -167,10 +191,12 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
                   <span class="timeline-date">{{ selectedOpp()!.createdAt | date:'shortDate' }}</span>
                   <span class="timeline-event">Created</span>
                 </div>
-                <div class="timeline-item" *ngIf="selectedOpp()!.closedAt">
-                  <span class="timeline-date">{{ selectedOpp()!.closedAt | date:'shortDate' }}</span>
-                  <span class="timeline-event">Closed</span>
-                </div>
+                @if (selectedOpp()!.closedAt) {
+                  <div class="timeline-item">
+                    <span class="timeline-date">{{ selectedOpp()!.closedAt | date:'shortDate' }}</span>
+                    <span class="timeline-event">Closed</span>
+                  </div>
+                }
               </div>
             </div>
           </div>
@@ -184,7 +210,8 @@ import { Opportunity, OpportunityStage, PipelineKanban, KanbanStage, PipelineMet
             </button>
           </div>
         </div>
-      </div>
+        </div>
+      }
     </div>
   `,
   styles: [`

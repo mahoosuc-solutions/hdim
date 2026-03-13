@@ -74,6 +74,65 @@ class StarRatingCalculatorTest {
         assertThat(score.getStars()).isEqualTo(4); // >= 0.80 but < 0.90
     }
 
+    @Test
+    void calculateMeasureScore_invertedPCR_lowerPerformanceRateScoresHigher() {
+        // PCR cut points: {0.20, 0.18, 0.16, 0.14, 0.12} — lower is better
+        MeasureScore fiveStar = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 11, 100);
+        assertThat(fiveStar.getStars()).isEqualTo(5); // 0.11 <= 0.12
+
+        MeasureScore fourStar = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 13, 100);
+        assertThat(fourStar.getStars()).isEqualTo(4); // 0.13 <= 0.14
+
+        MeasureScore oneStar = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 21, 100);
+        assertThat(oneStar.getStars()).isEqualTo(1); // 0.21 > 0.20
+    }
+
+    @Test
+    void calculateMeasureScore_exactBoundaryValueGetsCorrectStars() {
+        // COL cut points: {0.50, 0.58, 0.64, 0.70, 0.75}
+        // At exactly 0.75 → should be 5 stars (>= cutPoints[4])
+        MeasureScore exact5 = calculator.calculateMeasureScore(
+            StarRatingMeasure.COLORECTAL_CANCER_SCREENING, 75, 100);
+        assertThat(exact5.getStars()).isEqualTo(5);
+
+        // At exactly 0.70 → should be 4 stars (>= cutPoints[3])
+        MeasureScore exact4 = calculator.calculateMeasureScore(
+            StarRatingMeasure.COLORECTAL_CANCER_SCREENING, 70, 100);
+        assertThat(exact4.getStars()).isEqualTo(4);
+
+        // Just below 0.58 → should be 1 star (< cutPoints[1])
+        MeasureScore below2 = calculator.calculateMeasureScore(
+            StarRatingMeasure.COLORECTAL_CANCER_SCREENING, 57, 100);
+        assertThat(below2.getStars()).isEqualTo(1);
+    }
+
+    @Test
+    void calculateMeasureScore_invertedExactBoundary() {
+        // PCR cut points: {0.20, 0.18, 0.16, 0.14, 0.12} — inverted
+        // At exactly 0.12 → should be 5 stars (<= cutPoints[4])
+        MeasureScore exact5 = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 12, 100);
+        assertThat(exact5.getStars()).isEqualTo(5);
+
+        // At exactly 0.14 → should be 4 stars (<= cutPoints[3])
+        MeasureScore exact4 = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 14, 100);
+        assertThat(exact4.getStars()).isEqualTo(4);
+
+        // At exactly 0.18 → should be 2 stars (<= cutPoints[1])
+        MeasureScore exact2 = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 18, 100);
+        assertThat(exact2.getStars()).isEqualTo(2);
+
+        // At 0.20 → 1 star (> cutPoints[1]=0.18; cutPoints[0] is not a checked boundary)
+        MeasureScore exact1 = calculator.calculateMeasureScore(
+            StarRatingMeasure.PLAN_ALL_CAUSE_READMISSIONS, 20, 100);
+        assertThat(exact1.getStars()).isEqualTo(1);
+    }
+
     // --- calculateDomainScore ---
 
     @Test

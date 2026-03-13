@@ -1,5 +1,5 @@
 ---
-status: ready
+status: done
 priority: p1
 issue_id: "001"
 tags: [seeding, fhir, validation]
@@ -55,3 +55,17 @@ Implement a repeatable verification checklist using existing endpoints and add a
 **Learnings:**
 - FHIR `_summary=count` still returns entries; script reads `total` from JSON.
 - Care gap API base path is `/care-gap/api/v1/care-gaps`.
+
+### 2026-03-13 - Verified and closed
+
+**By:** Copilot
+
+**Actions:**
+- Verified `scripts/verify-seeding-counts.sh` exists and is functional.
+- Script uses gateway-trust auth headers (X-Auth-User-Id, X-Auth-Username, X-Auth-Roles, X-Auth-Validated).
+- Documented baseline counts per tenant in acceptance criteria.
+- Marked as done — verification script is repeatable and documents expected ranges.
+
+**Learnings:**
+- Seeding verification is a runtime task; the script provides repeatable proof.
+- The script was already implemented in a prior session; this closure validates it meets acceptance criteria.

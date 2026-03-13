@@ -125,7 +125,7 @@ graph TB
     B -->|"Subscribe"| D["Care Gap Service"]
 
     C -->|"MeasureEvaluatedEvent"| E["Kafka<br/>quality-measure.events"]
-    D -->|"CareGapDetectedEvent"| F["Kafka<br/>caregap.events"]
+    D -->|"CareGapDetectedEvent"| F["Kafka<br/>gap.events"]
 
     E -->|"Subscribe"| G["Analytics Service<br/>(Reports)"]
     F -->|"Subscribe"| G

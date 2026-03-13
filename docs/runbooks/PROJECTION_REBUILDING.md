@@ -200,7 +200,7 @@ docker exec -it kafka-1 bash
 # Reset consumer group to earliest
 kafka-consumer-groups --bootstrap-server kafka-1:9092 \
   --group care-gap-projection-handler \
-  --topic care-gap.events \
+  --topic gap.events \
   --reset-offsets \
   --to-earliest \
   --execute
@@ -236,7 +236,7 @@ watch -n 5 "docker exec -it hdim-postgres psql -U healthdata -d caregap_db \
 watch -n 5 "docker exec -it kafka-1 kafka-consumer-groups \
   --bootstrap-server kafka-1:9092 \
   --group care-gap-projection-handler \
-  --describe | grep care-gap.events"
+  --describe | grep gap.events"
 
 # Terminal 3: Watch for errors
 docker compose logs -f care-gap-event-service | grep -i error
@@ -339,7 +339,7 @@ docker exec -it hdim-postgres psql -U healthdata -d "$DATABASE" \
   -c "DELETE FROM event_handler_state WHERE handler_name LIKE '$SERVICE%';"
 
 echo "Resetting Kafka offsets..."
-for TOPIC in "care-gap.events"; do
+for TOPIC in "gap.events"; do
   docker exec -it kafka-1 kafka-consumer-groups --bootstrap-server kafka-1:9092 \
     --group "care-gap-projection-handler" \
     --topic "$TOPIC" \
@@ -617,7 +617,7 @@ SERVICE="care-gap-event-service"
 DATABASE="caregap_db"
 PROJECTION="care_gaps_projection"
 HANDLER_GROUP="care-gap-projection-handler"
-TOPIC="care-gap.events"
+TOPIC="gap.events"
 
 echo "=== Projection Rebuild Monitoring ==="
 echo "Start time: $(date)"

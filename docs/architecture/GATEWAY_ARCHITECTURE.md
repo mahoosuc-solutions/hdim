@@ -1,14 +1,25 @@
 # Gateway Architecture Guide
 
 **Status**: Production ✅
-**Last Updated**: January 19, 2026
+**Last Updated**: March 12, 2026
 **Modularization Date**: January 10, 2026 (commit c60cb168)
 
 ---
 
 ## Overview
 
-HDIM uses a **modularized multi-gateway architecture** where a shared `gateway-core` module eliminates code duplication while specialized gateway services handle domain-specific routing, authentication, and request processing.
+HDIM currently uses a **three-gateway module layout** backed by the shared `gateway-core` module:
+
+- `gateway-admin-service`
+- `gateway-clinical-service`
+- `gateway-fhir-service`
+
+There is no `gateway-service` module in the current Gradle service inventory. Older references to a fourth legacy gateway are historical and should not be treated as current backend topology.
+
+Important port note:
+
+- the checked-in gateway applications default to `server.port: ${SERVER_PORT:8080}`
+- public-facing ports such as `8002`, `8003`, and `8004` are deployment/container mappings, not in-app Spring defaults
 
 ### Key Design Principles
 
@@ -32,7 +43,7 @@ HDIM uses a **modularized multi-gateway architecture** where a shared `gateway-c
       │  gateway-   │  │  gateway-    │  │  gateway-    │
       │  admin-     │  │  clinical-   │  │  fhir-       │
       │  service    │  │  service     │  │  service     │
-      │  (8002)     │  │  (8003)      │  │  (8004)      │
+      │  (app 8080) │  │  (app 8080)  │  │  (app 8080)  │
       └──────┬──────┘  └───────┬──────┘  └───────┬──────┘
              │                 │                  │
              └─────────────────┼──────────────────┘
@@ -73,15 +84,14 @@ External systems and user interfaces that initiate requests:
 - EHR systems, external integrations
 - Mobile applications
 
-#### 2. Specialized Gateway Services (8002-8004)
+#### 2. Specialized Gateway Services
 Domain-specific gateway implementations that use shared gateway-core:
 
 | Gateway | Port | Purpose | Specialization |
 |---------|------|---------|-----------------|
-| **gateway-admin-service** | 8002 | Administrative API gateway | Tenant configuration, service management, audit logging |
-| **gateway-clinical-service** | 8003 | Clinical API gateway | Patient data access, quality measures, clinical workflows |
-| **gateway-fhir-service** | 8004 | FHIR R4 API gateway | FHIR-compliant resource access, HL7 compatibility |
-| **gateway-service** | 8001 | Legacy/Core gateway | General-purpose routing, multi-tenant support |
+| **gateway-admin-service** | app default `8080`; externally mapped by deployment | Administrative API gateway | Tenant configuration, service management, audit logging |
+| **gateway-clinical-service** | app default `8080`; externally mapped by deployment | Clinical API gateway | Patient data access, quality measures, clinical workflows |
+| **gateway-fhir-service** | app default `8080`; externally mapped by deployment | FHIR R4 API gateway | FHIR-compliant resource access, HL7 compatibility |
 
 #### 3. Gateway-Core (Shared Module)
 Located at: `backend/modules/shared/infrastructure/gateway-core`
@@ -228,6 +238,12 @@ gateway-fhir-service:      # Strict FHIR compliance
 ---
 
 ## How Gateway-Core Eliminates Duplication
+
+### Current Operational Notes
+
+- `gateway-admin-service`, `gateway-clinical-service`, and `gateway-fhir-service` all default to internal port `8080`
+- deployment manifests or compose files are responsible for assigning distinct externally reachable ports
+- the shared `gateway-core` module is the architectural center of the gateway pattern
 
 ### Before (Pre-January 2026)
 
@@ -494,10 +510,6 @@ gateway:
 ### Local Development (docker-compose.yml)
 
 ```yaml
-gateway-service:
-  image: hdim/gateway-service:latest
-  ports: [8001:8080]
-
 gateway-admin-service:
   image: hdim/gateway-admin-service:latest
   ports: [8002:8080]
@@ -703,10 +715,10 @@ Optional<Patient> findById(@Param("id") String id);
 | Clinical Portal | gateway-clinical-service | 8003 | Patient data, measures, care gaps |
 | Admin Portal | gateway-admin-service | 8002 | Configuration, tenant management |
 | External EHR | gateway-fhir-service | 8004 | FHIR-compliant data exchange |
-| Internal Tools | gateway-service (legacy) | 8001 | General-purpose routing |
+| Internal Tools | gateway-admin-service or gateway-clinical-service | deployment-specific | Choose based on admin vs clinical surface |
 
 ---
 
-_Last Updated: January 19, 2026_
-_Version: 1.0 - Initial Documentation_
+_Last Updated: March 12, 2026_
+_Version: 1.1 - Validated against current gateway modules_
 _Modularization Commit: c60cb168_

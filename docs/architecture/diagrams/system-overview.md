@@ -97,7 +97,7 @@ graph TB
 
     A -->|"Patient lifecycle"| B1["patient.events"]
     A -->|"Measure evaluation"| B2["quality-measure.events"]
-    A -->|"Gap detection"| B3["caregap.events"]
+    A -->|"Gap detection"| B3["gap.events"]
     A -->|"Workflow updates"| B4["clinical-workflow.events"]
 
     B1 --> C1["patient-event-handler-service"]
@@ -142,7 +142,7 @@ graph TB
 
     I -->|"6. Async consume"| L["care-gap-service"]
     L -->|"7. Detect gaps"| M["caregap_db"]
-    L -->|"8. Publish"| N["caregap.events<br/>GapDetectedEvent"]
+    L -->|"8. Publish"| N["gap.events<br/>CareGapDetectedEvent"]
 
     N -->|"9. Async consume"| O["caregap-event-handler"]
     O -->|"10. Build projection"| P["gap_projection"]
@@ -245,7 +245,7 @@ graph TB
 
     B --> T1["patient.events<br/>Partitions: 3"]
     B --> T2["quality-measure.events<br/>Partitions: 3"]
-    B --> T3["caregap.events<br/>Partitions: 3"]
+    B --> T3["gap.events<br/>Partitions: 3"]
     B --> T4["clinical-workflow.events<br/>Partitions: 3"]
 
     T1 --> C1["Consumer: patient-event-handler"]

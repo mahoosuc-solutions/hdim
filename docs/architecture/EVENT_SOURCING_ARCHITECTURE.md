@@ -8,6 +8,15 @@
 
 HDIM implements **Event Sourcing** and **CQRS (Command Query Responsibility Segregation)** patterns as its primary architecture for state management across microservices. This represents a major architectural shift completed in **Phases 4-5 (October 2025 - January 2026)**.
 
+This document has been refreshed against the current repository layout. The current event-service modules are:
+
+- `patient-event-service`
+- `quality-measure-event-service`
+- `care-gap-event-service`
+- `clinical-workflow-event-service`
+
+The paired `*-event-handler-service` modules are build-time support libraries used by the event services. They should be documented as handler/projection libraries unless and until they are explicitly deployed as standalone runtime services.
+
 **What It Means:**
 Instead of storing only the current state of entities in the database, HDIM stores a complete **audit trail of all events** that happened. The current state is derived by replaying all events.
 
@@ -49,11 +58,11 @@ Current State = Replay all events in order
 
 **Definition:** Spring Boot microservices that expose REST APIs for domain operations
 
-**Examples:**
-- `patient-event-service` (port 8084)
-- `quality-measure-event-service` (port 8087)
-- `care-gap-event-service` (port 8086)
-- `clinical-workflow-event-service` (TBD)
+**Current checked-in application ports:**
+- `patient-event-service` (`8110`, context path `/patient-event`)
+- `quality-measure-event-service` (`8112`, context path `/quality-measure-event`)
+- `care-gap-event-service` (`8111`, context path `/care-gap-event`)
+- `clinical-workflow-event-service` (`8113`, context path `/clinical-workflow-event`)
 
 **Responsibilities:**
 - Receive REST API requests (POST, PUT, DELETE)
@@ -99,8 +108,8 @@ public class PatientEventController {
 
 **Definition:** Shared library modules that contain event processing logic
 
-**Examples:**
-- `patient-event-handler-service` (library, not deployed separately)
+**Current handler modules:**
+- `patient-event-handler-service` (library)
 - `quality-measure-event-handler-service` (library)
 - `care-gap-event-handler-service` (library)
 - `clinical-workflow-event-handler-service` (library)
@@ -641,7 +650,7 @@ public void handlePatientCreated(PatientCreatedEvent event) {
 
 - [CLAUDE.md - Event Sourcing](../../CLAUDE.md) - Quick reference
 - [GATEWAY_ARCHITECTURE.md](./GATEWAY_ARCHITECTURE.md) - How events are routed
-- [Testing Guide](../development/TESTING_GUIDE.md) - Testing event handlers
+- [Testing Guide](../TESTING_GUIDE.md) - Testing event handlers
 - [TDD Swarm Methodology](../development/TDD_SWARM.md) - How Phase 5 was built
 
 ---

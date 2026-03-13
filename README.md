@@ -68,6 +68,7 @@ Common endpoints (default local):
 
 - Main docs index: [docs/README.md](./docs/README.md)
 - Deployment and runbooks: [docs/deployment](./docs/deployment)
+- Clinical portal release path: [docs/release/CLINICAL_PORTAL_RELEASE_CANDIDATE.md](./docs/release/CLINICAL_PORTAL_RELEASE_CANDIDATE.md)
 - Troubleshooting: [docs/troubleshooting](./docs/troubleshooting)
 - Security policy: [SECURITY.md](./SECURITY.md)
 - Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md)

@@ -10,6 +10,8 @@ The MCP server entry lives in `.mcp.json` and runs:
 
 This wrapper keeps the invocation pinned and cross-platform.
 
+Codex uses the same wrapper via `.codex/config.toml` with `startup_timeout_sec = 180` so WSL and cold-start launches do not time out during release work.
+
 This repo also includes a lightweight platform management MCP server:
 
 - `node scripts/mcp/hdim-platform-mcp.mjs`

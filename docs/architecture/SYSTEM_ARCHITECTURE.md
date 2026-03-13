@@ -1,498 +1,282 @@
 # HDIM System Architecture
 
-**Version**: 1.0
-**Last Updated**: December 30, 2025
-**Status**: Production
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [High-Level Architecture](#high-level-architecture)
-3. [Service Catalog](#service-catalog)
-4. [Communication Patterns](#communication-patterns)
-5. [Data Flow Examples](#data-flow-examples)
-6. [Infrastructure](#infrastructure)
-7. [Security Architecture](#security-architecture)
-8. [Technology Decisions](#technology-decisions)
-
-## Flow Documentation
-
-For detailed round-trip flow diagrams showing complete workflows from button press through data processing:
-
-- **[Platform Flow Overview](./PLATFORM_FLOW_OVERVIEW.md)**: High-level flow architecture, patterns, and component interactions
-- **[Round-Trip Flows](./ROUND_TRIP_FLOWS.md)**: Complete sequence diagrams for:
-  - Evaluation Flow (CQL + FHIR)
-  - Patient Search Flow
-  - Care Gap Detection Flow
-  - Quality Measure Calculation Flow
-  - Batch Evaluation Flow
-  - Data Flow Visualization Flow
-  - Authentication & Authorization Flow
-  - Event Processing Flow (Kafka)
-  - FHIR Resource Retrieval Flow
-
----
+**Validated Against Code**: March 12, 2026  
+**Primary Sources**: `backend/settings.gradle.kts`, `backend/modules/services/*`, service `application.yml`, service `build.gradle.kts`
 
 ## Overview
 
-HealthData-in-Motion (HDIM) is a distributed healthcare interoperability platform consisting of **28 microservices** organized into 5 functional domains:
+HealthData-in-Motion (HDIM) is a multi-service healthcare platform organized as a Gradle monorepo with Spring Boot microservices, shared domain/infrastructure modules, and a smaller set of Python agent services.
 
-| Domain | Services | Purpose |
-|--------|----------|---------|
-| **Core Clinical** | 7 | HEDIS measures, CQL execution, care gaps, risk adjustment |
-| **Integration** | 8 | FHIR R4, patient data, EHR connectivity, event processing |
-| **Analytics** | 5 | Reporting, predictive models, QRDA export |
-| **Platform** | 5 | Gateway, notifications, approvals, documentation |
-| **Business** | 3 | Sales automation, AI agents |
+This document is intentionally code-validated rather than aspirational. It reflects what is currently present in the repository:
 
-### Key Architectural Principles
+- `59` Gradle-managed backend service modules in [`backend/settings.gradle.kts`](/mnt/wdblack/dev/projects/hdim-master/backend/settings.gradle.kts)
+- `61` service directories under [`backend/modules/services`](/mnt/wdblack/dev/projects/hdim-master/backend/modules/services) including the Python services `ai-sales-agent` and `live-call-sales-agent`
+- `61` service-level `README.md` files currently present
+- shared module coverage is tracked in [Shared Module Catalog](/mnt/wdblack/dev/projects/hdim-master/docs/architecture/SHARED_MODULE_CATALOG.md)
+- `5` shared domain modules, `15` shared infrastructure modules, and `4` shared API-contract modules
 
-1. **FHIR R4 Native**: No translation layers; FHIR resources used directly throughout
-2. **CQL-Native Execution**: Direct execution of NCQA CQL specifications
-3. **Gateway Trust Authentication**: Services trust gateway-validated headers
-4. **Multi-Tenant Isolation**: All data segregated by `tenantId`
-5. **HIPAA Compliance**: 5-minute PHI cache TTL, comprehensive audit logging
-6. **Event-Driven**: Asynchronous communication via Apache Kafka
+## Platform Shape
 
----
+### Runtime Layers
 
-## High-Level Architecture
+1. **Experience and edge**
+   - Kong sits at the external edge.
+   - The current backend gateway layer is split into `gateway-admin-service`, `gateway-clinical-service`, and `gateway-fhir-service`.
+   - Earlier docs that reference a single `gateway-service` are stale relative to the current codebase.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            CLIENT APPLICATIONS                               │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │  Clinical   │  │   Admin     │  │  External   │  │   Health Plan      │ │
-│  │   Portal    │  │   Portal    │  │    EHRs     │  │     Systems        │ │
-│  │  (Angular)  │  │  (Angular)  │  │ (Epic,etc)  │  │   (Payers)         │ │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────────┬───────────┘ │
-└─────────┼────────────────┼────────────────┼───────────────────┼─────────────┘
-          │                │                │                   │
-          └────────────────┴────────────────┴───────────────────┘
-                                    │
-                                    │ HTTPS (TLS 1.3)
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         KONG API GATEWAY (8000)                              │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │     JWT     │  │    Rate     │  │   Request   │  │      Header         │ │
-│  │ Validation  │  │  Limiting   │  │   Routing   │  │    Injection        │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘  │  (X-Auth-*)         │ │
-│                                                      └─────────────────────┘ │
-└─────────────────────────────────────┬───────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       GATEWAY SERVICE (8001)                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                          │
-│  │   Service   │  │   Circuit   │  │   Load      │                          │
-│  │  Discovery  │  │  Breaking   │  │  Balancing  │                          │
-│  └─────────────┘  └─────────────┘  └─────────────┘                          │
-└─────────────────────────────────────┬───────────────────────────────────────┘
-                                      │
-          ┌───────────────────────────┼───────────────────────────┐
-          │                           │                           │
-          ▼                           ▼                           ▼
-┌─────────────────────┐   ┌─────────────────────┐   ┌─────────────────────┐
-│   CORE CLINICAL     │   │    INTEGRATION      │   │     ANALYTICS       │
-│     SERVICES        │   │      SERVICES       │   │      SERVICES       │
-├─────────────────────┤   ├─────────────────────┤   ├─────────────────────┤
-│ • Quality Measure   │   │ • FHIR Service      │   │ • Analytics         │
-│   (8087)            │   │   (8085)            │   │   Service (8098)    │
-│ • CQL Engine        │   │ • Patient Service   │   │ • Predictive        │
-│   (8081)            │   │   (8084)            │   │   Analytics (8099)  │
-│ • Care Gap (8086)   │   │ • EHR Connector     │   │ • QRDA Export       │
-│ • HCC (8088)        │   │   (8092)            │   │   (8100)            │
-│ • Prior Auth (8089) │   │ • CDR Processor     │   │ • Payer Workflows   │
-│ • SDOH (8090)       │   │   (8093)            │   │   (8101)            │
-│ • Consent (8091)    │   │ • ECR (8094)        │   │ • Migration         │
-│                     │   │ • Data Enrichment   │   │   Workflow (8102)   │
-│                     │   │   (8095)            │   │                     │
-│                     │   │ • Event Processing  │   │                     │
-│                     │   │   (8096)            │   │                     │
-│                     │   │ • Event Router      │   │                     │
-│                     │   │   (8097)            │   │                     │
-└─────────────────────┘   └─────────────────────┘   └─────────────────────┘
-          │                           │                           │
-          └───────────────────────────┼───────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          PLATFORM SERVICES                                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
-│  │ Notification│  │  Approval   │  │Documentation│  │   AI Assistant      │ │
-│  │   (8103)    │  │   (8104)    │  │   (8105)    │  │     (8106)          │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────────┘ │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                          BUSINESS SERVICES                                   │
-│  ┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐  │
-│  │  Sales Automation   │  │   Agent Builder     │  │   Agent Runtime     │  │
-│  │       (8107)        │  │      (8108)         │  │      (8109)         │  │
-│  └─────────────────────┘  └─────────────────────┘  └─────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                      │
-                                      ▼
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                       DATA & MESSAGING LAYER                                 │
-├─────────────────────────┬─────────────────────────┬─────────────────────────┤
-│     PostgreSQL (5435)   │      Redis (6380)       │     Kafka (9094)        │
-│  ┌─────────────────┐    │  ┌─────────────────┐    │  ┌─────────────────┐    │
-│  │  Persistent     │    │  │  Cache Layer    │    │  │ Event Streaming │    │
-│  │  Data Store     │    │  │  (5-min TTL)    │    │  │ Async Messages  │    │
-│  │                 │    │  │                 │    │  │                 │    │
-│  │ Multi-tenant    │    │  │ Session Store   │    │  │ Service         │    │
-│  │ via tenantId    │    │  │                 │    │  │ Integration     │    │
-│  └─────────────────┘    │  └─────────────────┘    │  └─────────────────┘    │
-└─────────────────────────┴─────────────────────────┴─────────────────────────┘
-```
+2. **Domain services**
+   - Clinical, interoperability, analytics, platform, and business capabilities are implemented as separate service modules.
+   - Most services depend on shared domain/infrastructure modules rather than directly importing other service code.
 
----
+3. **Event-sourced read/write paths**
+   - Event-sourced services exist for patient, quality measure, care gap, and clinical workflow domains.
+   - Each event service is paired with a handler library that owns projection/update logic.
+   - `event-store-service`, `event-replay-service`, and `fhir-event-bridge-service` support the event pipeline.
 
-## Service Catalog
+4. **Shared modules**
+   - Shared libraries provide security, authentication, persistence, messaging, tracing, audit, feature flags, and domain models.
+   - The new shared `star-ratings` domain module now carries reusable Stars calculation logic.
 
-### Core Clinical Services (7)
+## Service Topology
 
-Services responsible for clinical quality measurement, care gap detection, and patient outcomes.
+### Clinical and care management
 
-| Service | Port | Purpose | Key Dependencies |
-|---------|------|---------|------------------|
-| **Quality Measure Service** | 8087 | HEDIS measure evaluation, 56 measures | CQL Engine, FHIR Service |
-| **CQL Engine Service** | 8081 | Clinical Quality Language execution | FHIR Service |
-| **Care Gap Service** | 8086 | Care gap detection and tracking | Quality Measure, Patient Service |
-| **HCC Service** | 8088 | Hierarchical Condition Category risk scoring | Patient Service, FHIR Service |
-| **Prior Authorization Service** | 8089 | Prior auth workflow management | FHIR Service, Patient Service |
-| **SDOH Service** | 8090 | Social determinants of health tracking | Patient Service, FHIR Service |
-| **Consent Service** | 8091 | Patient consent management (HIPAA) | Patient Service |
+- `patient-service`
+- `fhir-service`
+- `cql-engine-service`
+- `quality-measure-service`
+- `care-gap-service`
+- `consent-service`
+- `clinical-workflow-service`
+- `nurse-workflow-service`
+- `hcc-service`
+- `prior-auth-service`
+- `sdoh-service`
+- `ecr-service`
+- `qrda-export-service`
 
-### Integration Services (8)
+### Event-sourced services and handlers
 
-Services responsible for data ingestion, FHIR processing, and external system connectivity.
+- `patient-event-service`
+- `quality-measure-event-service`
+- `care-gap-event-service`
+- `clinical-workflow-event-service`
+- `patient-event-handler-service`
+- `quality-measure-event-handler-service`
+- `care-gap-event-handler-service`
+- `clinical-workflow-event-handler-service`
+- `event-store-service`
+- `event-replay-service`
+- `fhir-event-bridge-service`
 
-| Service | Port | Purpose | Key Dependencies |
-|---------|------|---------|------------------|
-| **FHIR Service** | 8085 | FHIR R4 resource management (HAPI FHIR 7.x) | PostgreSQL, Redis |
-| **Patient Service** | 8084 | Patient demographics and registry | FHIR Service |
-| **EHR Connector Service** | 8092 | EHR integration (Epic, Cerner, Athena) | FHIR Service |
-| **CDR Processor Service** | 8093 | Clinical data repository processing | FHIR Service |
-| **ECR Service** | 8094 | Electronic case reporting | FHIR Service, Patient Service |
-| **Data Enrichment Service** | 8095 | Clinical data enrichment | FHIR Service |
-| **Event Processing Service** | 8096 | Clinical event processing | Kafka |
-| **Event Router Service** | 8097 | Event routing and orchestration | Kafka |
+### Data, integration, and adapters
 
-### Analytics Services (5)
+- `event-processing-service`
+- `event-router-service`
+- `ehr-connector-service`
+- `cms-connector-service`
+- `cdr-processor-service`
+- `data-enrichment-service`
+- `data-ingestion-service`
+- `documentation-service`
+- `corehive-adapter-service`
+- `healthix-adapter-service`
+- `hedis-adapter-service`
+- `ihe-gateway-service`
 
-Services responsible for reporting, analytics, and data export.
+### Analytics, payer, and operational workflows
 
-| Service | Port | Purpose | Key Dependencies |
-|---------|------|---------|------------------|
-| **Analytics Service** | 8098 | Quality measure reporting and dashboards | Quality Measure, Care Gap |
-| **Predictive Analytics Service** | 8099 | Risk prediction and ML models | Patient Service, HCC Service |
-| **QRDA Export Service** | 8100 | QRDA I/III export generation | Quality Measure, Patient Service |
-| **Payer Workflows Service** | 8101 | Payer-specific workflow automation | Quality Measure, Analytics |
-| **Migration Workflow Service** | 8102 | Data migration orchestration | All services |
+- `analytics-service`
+- `predictive-analytics-service`
+- `cost-analysis-service`
+- `payer-workflows-service`
+- `migration-workflow-service`
+- `audit-query-service`
+- `query-api-service`
+- `cqrs-query-service`
 
-### Platform Services (5)
+### Platform, admin, and notifications
 
-Services providing cross-cutting platform capabilities.
+- `gateway-admin-service`
+- `gateway-clinical-service`
+- `gateway-fhir-service`
+- `admin-service`
+- `approval-service`
+- `notification-service`
+- `demo-orchestrator-service`
+- `demo-seeding-service`
 
-| Service | Port | Purpose | Key Dependencies |
-|---------|------|---------|------------------|
-| **Gateway Service** | 8001 | Internal routing and service discovery | Kong |
-| **Notification Service** | 8103 | Email/SMS notifications | Kafka |
-| **Approval Service** | 8104 | Workflow approvals | Kafka |
-| **Documentation Service** | 8105 | Documentation generation | FHIR Service |
-| **AI Assistant Service** | 8106 | AI-powered clinical assistance | Various |
+### AI and business-facing services
 
-### Business Services (3)
-
-Services supporting business operations and AI capabilities.
-
-| Service | Port | Purpose | Key Dependencies |
-|---------|------|---------|------------------|
-| **Sales Automation Service** | 8107 | CRM and sales pipeline | PostgreSQL |
-| **Agent Builder Service** | 8108 | AI agent configuration | PostgreSQL |
-| **Agent Runtime Service** | 8109 | AI agent execution | Agent Builder |
-
----
+- `ai-assistant-service`
+- `agent-builder-service`
+- `agent-runtime-service`
+- `agent-validation-service`
+- `devops-agent-service`
+- `sales-automation-service`
+- `investor-dashboard-service`
+- `ai-sales-agent`
+- `live-call-sales-agent`
 
 ## Communication Patterns
 
-### Synchronous (REST over HTTPS)
+### 1. Gateway-mediated synchronous requests
 
-**Use Case**: Direct request/response operations requiring immediate results.
+The intended synchronous path is:
 
-```
-Clinical Portal → Kong (8000) → Gateway (8001) → Quality Measure (8087) → CQL Engine (8081)
-```
+`Client -> Kong -> domain gateway -> service`
 
-**Protocol**: HTTPS with TLS 1.3
-**Authentication**: Gateway Trust (X-Auth-* headers)
-**Latency Target**: <200ms p95
+The repo currently has three explicit gateway services, which indicates domain-specific ingress rather than a single internal gateway.
 
-**Required Headers**:
-| Header | Source | Purpose |
-|--------|--------|---------|
-| `X-Tenant-ID` | Client | Multi-tenant isolation |
-| `X-Auth-User-Id` | Gateway | User identification |
-| `X-Auth-Roles` | Gateway | Authorization |
-| `X-Auth-Tenant-Ids` | Gateway | Authorized tenants |
-| `X-Auth-Validated` | Gateway | HMAC signature |
+### 2. Service-to-service HTTP
 
-### Asynchronous (Apache Kafka)
+OpenFeign is present in multiple services, including:
 
-**Use Case**: Event-driven updates, cross-service notifications, audit logging.
+- `agent-builder-service`
+- `agent-runtime-service`
+- `care-gap-service`
+- `care-gap-event-service`
+- `clinical-workflow-service`
+- `clinical-workflow-event-service`
+- `cms-connector-service`
+- `cql-engine-service`
+- `ehr-connector-service`
+- `payer-workflows-service`
+- `quality-measure-service`
+- `sales-automation-service`
 
-**Kafka Topics**:
+This means runtime dependency edges are broader than the build-time module graph alone suggests.
 
-| Topic | Producer(s) | Consumer(s) | Purpose |
-|-------|-------------|-------------|---------|
-| `patient.events` | Patient Service | Care Gap, Analytics, Notification | Patient CRUD events |
-| `measure.evaluation.complete` | Quality Measure | Care Gap, Analytics | Evaluation results |
-| `care-gap.detected` | Care Gap Service | Notification | New care gaps identified |
-| `care-gap.closed` | Care Gap Service | Analytics | Care gap closures |
-| `audit.events` | All services | Audit Service | HIPAA audit trail |
-| `notification.requests` | Various | Notification Service | Email/SMS requests |
+### 3. Kafka event streaming
 
-**Message Schema**:
-```json
-{
-  "eventId": "uuid",
-  "eventType": "PATIENT_CREATED",
-  "tenantId": "string",
-  "timestamp": "ISO-8601",
-  "source": "patient-service",
-  "payload": {}
-}
-```
+Kafka dependencies are present across the event services, event infrastructure, and several domain services, including:
 
-### Caching Strategy (Redis)
+- `event-processing-service`
+- `event-router-service`
+- `event-store-service`
+- `patient-event-service`
+- `quality-measure-event-service`
+- `care-gap-event-service`
+- `clinical-workflow-event-service`
+- `notification-service`
+- `sales-automation-service`
 
-**PHI Data**: 5-minute TTL maximum (HIPAA compliance)
-**Reference Data**: 1-hour TTL (measure definitions, code systems)
-**Session Data**: 15-minute TTL (user sessions)
+### 4. Event sourcing and projections
 
-**Key Pattern**: `{tenantId}:{resourceType}:{resourceId}`
+The current event-sourcing pattern is concrete, not theoretical:
 
-**Example**:
-```
-TENANT001:Patient:12345 → Patient FHIR resource (TTL 300s)
-TENANT001:MeasureDefinition:BCS → Breast Cancer Screening definition (TTL 3600s)
-```
+- event service modules consume/emit domain events
+- paired handler modules encapsulate projection logic
+- projection read models live in dedicated event-service schemas
+- replay capability exists through `event-replay-service`
 
----
+The newest example is `care-gap-event-service`, which now owns a Stars projection path:
 
-## Data Flow Examples
+- current Stars projection persistence
+- weekly and monthly snapshot capture
+- on-demand simulation API
+- shared Stars calculation logic in `shared:domain:star-ratings`
 
-### HEDIS Measure Evaluation
+## Build-Time Dependency Rules
 
-```
-1. Clinical Portal (Angular)
-   │
-   │ POST /api/v1/evaluations
-   │ Body: { "patientIds": [...], "measureId": "BCS" }
-   ▼
-2. Kong API Gateway (8000)
-   │ - Validates JWT token
-   │ - Injects X-Auth-* headers (User ID, Roles, Tenants)
-   │ - Adds X-Auth-Validated (HMAC signature)
-   ▼
-3. Gateway Service (8001)
-   │ - Routes to Quality Measure Service
-   │ - Circuit breaker check
-   ▼
-4. Quality Measure Service (8087)
-   │ - Fetches measure definition (BCS - Breast Cancer Screening)
-   │ - Fetches patient FHIR data via FHIR Service
-   │ - Calls CQL Engine for evaluation
-   │
-   ├──▶ FHIR Service (8085)
-   │    │ - Returns Patient, Observation, Condition resources
-   │    │ - Cache hit/miss (5-min TTL for PHI)
-   │    ▼
-   │    PostgreSQL (5435)
-   │
-   └──▶ CQL Engine Service (8081)
-        │ - Executes CQL against FHIR data
-        │ - Returns: { "numerator": true, "denominator": true }
-        ▼
-5. Quality Measure Service (8087)
-   │ - Stores results in PostgreSQL
-   │ - Publishes to Kafka: measure.evaluation.complete
-   │ - Returns results to portal
-   │
-   └──▶ Kafka (9094)
-        │ Topic: measure.evaluation.complete
-        ▼
-6. Care Gap Service (8086) [async]
-   │ - Consumes measure.evaluation.complete
-   │ - Identifies care gaps (numerator=false, denominator=true)
-   │ - Publishes to Kafka: care-gap.detected
-   │
-   └──▶ Kafka (9094)
-        │ Topic: care-gap.detected
-        ▼
-7. Notification Service (8103) [async]
-   │ - Consumes care-gap.detected
-   │ - Sends provider notification (email/SMS)
-   ▼
-   External Email/SMS Provider
-```
+A useful validated property of the codebase: direct build-time service-to-service dependencies are still relatively constrained.
 
-### Patient Data Ingestion (FHIR Bulk Import)
+Current direct Gradle service-module dependencies found in `build.gradle.kts` files:
 
-```
-1. EHR System (Epic/Cerner)
-   │
-   │ FHIR Bulk Data Export (NDJSON)
-   ▼
-2. EHR Connector Service (8092)
-   │ - Authenticates with EHR (OAuth2)
-   │ - Downloads NDJSON files
-   │ - Validates FHIR R4 compliance
-   ▼
-3. FHIR Service (8085)
-   │ - Stores Patient, Observation, Condition resources
-   │ - Multi-tenant isolation (tenantId)
-   │ - Publishes to Kafka: patient.events
-   │
-   └──▶ Kafka (9094)
-        │ Topic: patient.events
-        │
-        ├──▶ Care Gap Service (8086)
-        │    - Triggers care gap recalculation
-        │
-        └──▶ Analytics Service (8098)
-             - Updates population health metrics
-```
+- `care-gap-event-service -> care-gap-event-handler-service`
+- `clinical-workflow-event-service -> clinical-workflow-event-handler-service`
+- `patient-event-service -> patient-event-handler-service`
+- `quality-measure-event-service -> quality-measure-event-handler-service`
+- `data-ingestion-service -> demo-seeding-service`
+- `migration-workflow-service -> cdr-processor-service`
 
----
+That is a healthy sign. Most services still integrate via shared modules, Feign, and Kafka rather than by importing one another directly.
 
-## Infrastructure
+## Shared Module Backbone
 
-### Development Environment
+The most reused shared infrastructure modules are:
 
-**Deployment**: Docker Compose (`docker-compose.yml`)
+| Shared Module | Referenced By |
+|---|---:|
+| `database-config` | 54 services |
+| `persistence` | 53 services |
+| `security` | 44 services |
+| `audit` | 42 services |
+| `tracing` | 40 services |
+| `authentication` | 39 services |
+| `api-docs` | 23 services |
+| `messaging` | 16 services |
+| `event-sourcing` | 11 services |
+| `metrics` | 10 services |
+| `gateway-core` | 9 services |
 
-| Component | Configuration |
-|-----------|---------------|
-| Services | All 28 services in containers |
-| PostgreSQL | Single database, multi-tenant via tenantId |
-| Redis | Single instance, namespaced by tenant |
-| Kafka | Single broker, multiple topics |
-| Kong | API gateway with JWT plugin |
+This shows the platform is operationally standardized around:
 
-**Quick Start**:
-```bash
-# Start all services
-docker compose up -d
+- PostgreSQL + Liquibase persistence
+- shared auth/security posture
+- tracing and audit as first-class concerns
+- selective Kafka/event-sourcing adoption
 
-# Start core services only
-docker compose --profile core up -d
+## Operational Reality
 
-# View logs
-docker compose logs -f quality-measure-service
-```
+### Documentation coverage
 
-### Production Environment (Target)
+Current service documentation coverage has been brought to baseline completeness through generated README files:
 
-**Deployment**: Kubernetes
+- `61` service READMEs exist under `backend/modules/services`
+- shared-module README coverage is tracked separately in the shared module catalog
 
-| Component | Configuration |
-|-----------|---------------|
-| Services | Kubernetes Deployments with HPA |
-| PostgreSQL | Multi-tenant clusters with PgBouncer |
-| Redis | Redis Cluster with Sentinel |
-| Kafka | 3+ broker cluster with replication |
-| Kong | HA API gateway with database backend |
+### Port and context-path consistency
 
-**Scaling Targets**:
-- 10,000+ patients per tenant
-- 200+ concurrent evaluations
-- <200ms p95 latency for FHIR queries
-- 99.9% uptime SLA
+The codebase does not yet have a clean, uniform runtime metadata model:
 
----
+- some services define explicit ports and servlet context paths
+- some services rely entirely on environment placeholders
+- some services omit port or context-path metadata from `application.yml`
+- several services share the same default placeholder values, which is a deployment risk if not overridden by compose/k8s manifests
 
-## Security Architecture
+### Service metadata drift
 
-### Authentication Flow (Gateway Trust)
+There is visible drift between code and docs today:
 
-```
-Client → Kong (JWT validation) → Gateway (header injection) → Service (trusts headers)
-```
+- stale claims about “9 services”, “28 services”, and “60 services”
+- stale references to files that do not exist
+- stale gateway topology references
+- stale architecture diagrams that omit event services, handler libraries, adapters, and AI/business services
 
-**Why Gateway Trust?**
-- Traditional: Every service validates JWT + queries user database
-- Gateway Trust: Gateway validates once, injects signed headers
-- **Result**: 40% reduction in database load, 200ms faster latency
+## Recommended Improvements
 
-See: [Gateway Trust Architecture](../backend/docs/GATEWAY_TRUST_ARCHITECTURE.md)
+### Documentation improvements
 
-### Multi-Tenant Isolation
+1. Generate the service catalog from `settings.gradle.kts` plus each service's `application.yml` and `README.md` presence.
+2. Add a required `README.md` template for every service module and fail CI when new services ship undocumented.
+3. Treat `docs/services/PORT_REFERENCE.md` as generated reference data, not hand-maintained prose.
+4. Add a lightweight dependency map generator that scans Gradle project deps, Feign clients, and Kafka listeners/producers.
 
-**Database Level**: All queries filtered by `tenantId`
-```sql
-SELECT * FROM patients WHERE tenant_id = :tenantId AND id = :patientId
-```
+### Architecture improvements
 
-**Cache Level**: Keys namespaced by tenant
-```
-{tenantId}:{resourceType}:{resourceId}
-```
+1. Standardize event-service conventions so every event domain has the same naming, projection ownership, replay story, and README structure.
+2. Introduce a canonical `service-metadata.yml` per service with owner, domain, lifecycle, port, context path, database, Kafka topics, health endpoints, and runbook links.
+3. Make the gateway strategy explicit in one ADR: which traffic belongs on admin, clinical, and FHIR gateways, and whether any legacy gateway remains supported.
+4. Formalize which services are production-grade versus incubating or demo-only to reduce topology ambiguity.
 
-**Kafka Level**: Tenant ID in message payload
-```json
-{ "tenantId": "TENANT001", "payload": {} }
-```
+### Operational improvements
 
-### HIPAA Compliance Controls
+1. Add CI validation for duplicate default ports and missing servlet context paths.
+2. Require `health`, `info`, and `prometheus` actuator conventions across all deployable services.
+3. Add a platform-wide runtime inventory check that verifies each service has:
+   - explicit port policy
+   - database/schema owner
+   - audit posture
+   - tracing/metrics posture
+   - deployment/runbook link
+4. Expand entity-migration validation usage so every persistence-owning service has a schema sync test.
 
-| Control | Implementation |
-|---------|----------------|
-| PHI Cache TTL | 5 minutes maximum (Redis) |
-| Encryption at Rest | AES-256 (PostgreSQL) |
-| Encryption in Transit | TLS 1.3 (all services) |
-| Audit Logging | All PHI access logged (Kafka → Audit Service) |
-| Access Control | RBAC with tenant isolation |
-| Browser Caching | Prevented via Cache-Control headers |
+## Authoritative Companion Docs
 
----
-
-## Technology Decisions
-
-| Technology | Version | Rationale | ADR |
-|------------|---------|-----------|-----|
-| **Java** | 21 LTS | Long-term support, modern features | - |
-| **Spring Boot** | 3.x | Enterprise Java, security integrations | [ADR-0009](decisions/ADR-0009-spring-boot-framework.md) |
-| **HAPI FHIR** | 7.x | Industry-standard FHIR R4, battle-tested | [ADR-0005](decisions/ADR-0005-hapi-fhir-selection.md) |
-| **PostgreSQL** | 15 | ACID compliance, HIPAA-compliant, multi-tenant | [ADR-0007](decisions/ADR-0007-postgresql-database.md) |
-| **Redis** | 7 | Fast caching with TTL support for HIPAA | [ADR-0008](decisions/ADR-0008-redis-caching-strategy.md) |
-| **Apache Kafka** | 3.x | Event streaming for async communication | [ADR-0006](decisions/ADR-0006-kafka-event-streaming.md) |
-| **Kong** | Latest | API gateway with plugin ecosystem | [ADR-0010](decisions/ADR-0010-kong-api-gateway.md) |
-| **Angular** | 17+ | Enterprise frontend framework | - |
-
----
-
-## References
-
-- [Gateway Trust Architecture](../backend/docs/GATEWAY_TRUST_ARCHITECTURE.md) - Detailed authentication flow
-- [HIPAA Cache Compliance](../backend/HIPAA-CACHE-COMPLIANCE.md) - PHI cache requirements
-- [Backend API Specification](../BACKEND_API_SPECIFICATION.md) - API design patterns
-- [Terminology Glossary](TERMINOLOGY_GLOSSARY.md) - Official terminology
-
----
-
-## Version History
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-30 | Architecture Team | Initial creation |
-
----
-
-*This document is the authoritative source for HDIM system architecture. For questions, contact the Architecture Team.*
+- [Architecture Summary](/mnt/wdblack/dev/projects/hdim-master/docs/architecture/ARCHITECTURE.md)
+- [Service Catalog](/mnt/wdblack/dev/projects/hdim-master/docs/services/SERVICE_CATALOG.md)
+- [Port Reference](/mnt/wdblack/dev/projects/hdim-master/docs/services/PORT_REFERENCE.md)
+- [Dependency Map](/mnt/wdblack/dev/projects/hdim-master/docs/services/DEPENDENCY_MAP.md)
+- [Shared Module Catalog](/mnt/wdblack/dev/projects/hdim-master/docs/architecture/SHARED_MODULE_CATALOG.md)
+- [Event Sourcing Architecture](/mnt/wdblack/dev/projects/hdim-master/docs/architecture/EVENT_SOURCING_ARCHITECTURE.md)

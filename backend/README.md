@@ -30,23 +30,37 @@ This document describes critical security controls that **MUST NOT be disabled o
 
 ## Architecture
 
-```
+The backend is no longer a small 5-9 service layout. The current repo contains:
+
+- `59` Gradle-managed backend service modules in `backend/settings.gradle.kts`
+- `61` service directories under `backend/modules/services`
+- `5` shared domain modules
+- `15` shared infrastructure modules
+- `4` shared API-contract modules
+
+High-level structure:
+
+```text
 backend/
 ├── modules/
-│   ├── services/              # Microservices
-│   │   ├── patient-service/
-│   │   ├── fhir-service/
-│   │   ├── cql-engine-service/
-│   │   ├── quality-measure-service/
-│   │   ├── care-gap-service/
-│   │   └── consent-service/
-│   └── shared/                # Shared libraries
-│       ├── domain/
-│       ├── infrastructure/
+│   ├── services/              # Clinical, event, integration, analytics, platform, AI
+│   └── shared/
+│       ├── domain/            # common, cql-models, fhir-models, hedis-models, risk-models, star-ratings
+│       ├── infrastructure/    # auth, security, persistence, messaging, tracing, audit, etc.
 │       └── api-contracts/
-└── platform/                  # Platform services
-    └── auth/
+└── platform/
+    ├── auth/
+    ├── bom/
+    ├── build-logic/
+    └── test-fixtures/
 ```
+
+Authoritative architecture docs:
+
+- [`docs/architecture/SYSTEM_ARCHITECTURE.md`](/mnt/wdblack/dev/projects/hdim-master/docs/architecture/SYSTEM_ARCHITECTURE.md)
+- [`docs/services/SERVICE_CATALOG.md`](/mnt/wdblack/dev/projects/hdim-master/docs/services/SERVICE_CATALOG.md)
+- [`docs/services/PORT_REFERENCE.md`](/mnt/wdblack/dev/projects/hdim-master/docs/services/PORT_REFERENCE.md)
+- [`docs/services/DEPENDENCY_MAP.md`](/mnt/wdblack/dev/projects/hdim-master/docs/services/DEPENDENCY_MAP.md)
 
 ## Quick Start
 
@@ -96,13 +110,9 @@ docker compose up -d
 
 ## Service Ports
 
-| Service | Port | Context Path |
-|---------|------|--------------|
-| Patient Service | 8084 | /patient |
-| FHIR Service | 8085 | /fhir |
-| CQL Engine | 8081 | /cql-engine |
-| Quality Measure | 8087 | /quality-measure |
-| Care Gap | 8086 | /care-gap |
+Port declarations are no longer uniform across all services. Some are explicit, some are environment-driven, and some are omitted from `application.yml`.
+
+Use [`docs/services/PORT_REFERENCE.md`](/mnt/wdblack/dev/projects/hdim-master/docs/services/PORT_REFERENCE.md) as the current validated source of truth instead of this file.
 
 ## Configuration
 

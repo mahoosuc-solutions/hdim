@@ -15,6 +15,7 @@ Operational runbooks for the HealthData Intelligence Platform (HDIM).
 | [Memory/CPU Alerts](./resource-exhaustion.md) | Medium | Resource utilization alerts |
 | [Care Gap Processing](./care-gap-processing.md) | Medium | CQL evaluation issues |
 | [MCP Context-Aware Release Gate](./MCP_CONTEXT_AWARE_RELEASE_GATE.md) | High | Policy-aware release gating and tenant isolation decisions |
+| [Clinical Portal Release Operations](./CLINICAL_PORTAL_RELEASE_OPERATIONS.md) | High | Canonical staging, production, and rollback sequence for the clinical portal release path |
 | [MCP Implementation Reference Spec](./MCP_IMPLEMENTATION_REFERENCE_SPEC.md) | High | Central MCP architecture, tool contracts, guardrails, and testing requirements |
 | [CI Branch Protection Checklist](./CI_BRANCH_PROTECTION_CHECKLIST.md) | High | Required branch settings and status checks for merge gating |
 | [Session Flow PR Rehearsal Checklist](./SESSION_FLOW_PR_REHEARSAL_CHECKLIST.md) | High | Step-by-step validation for conditional session-flow CI gates |
@@ -96,4 +97,3 @@ Supporting assets:
 1. `templates/` for gate evidence, risk registers, weekly steering, and closeout.
 2. `sop/` for discovery, integration readiness, security readiness, kickoff, and weekly governance.
 3. `customer-types/operations/` for owner roster, gate snapshots, handoff matrix, action log, readiness memo, and account packs.
-

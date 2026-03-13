@@ -2,7 +2,7 @@
 
 Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central hub for finding information about the HDIM platform.
 
-**Last Updated**: March 5, 2026
+**Last Updated**: March 12, 2026
 **Total Documentation Files**: 1,411 markdown files organized across architecture, services, operations, and user guides
 
 ---
@@ -22,12 +22,13 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 - [Backend Technical Guides](../backend/docs/README.md) ✨ NEW - Build, Database, Code, Commands
 - [Architecture Decision Records](architecture/decisions/) - Why we chose specific technologies
 - [API Reference](api/) - OpenAPI specs for all services
-- [Service Catalog](services/SERVICE_CATALOG.md) - All 50+ microservices
+- [Service Catalog](services/SERVICE_CATALOG.md) - Code-validated service inventory
 
 **🏗️ Architects & Leads**
 - [System Architecture](architecture/SYSTEM_ARCHITECTURE.md) - Complete platform overview
 - [Event Sourcing Architecture](architecture/EVENT_SOURCING_ARCHITECTURE.md) ✨ NEW - CQRS pattern & event services
-- [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md) ✨ NEW - 4-gateway modularization
+- [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md) ✨ NEW - current gateway module topology and deployment notes
+- [Shared Module Catalog](architecture/SHARED_MODULE_CATALOG.md) - Shared domain and infrastructure module inventory
 - [Service Dependencies](services/DEPENDENCY_MAP.md) - How services interact
 - [Flow Diagrams](architecture/ROUND_TRIP_FLOWS.md) - Request flows through the system
 - [Technology Decisions](architecture/decisions/) - Architecture decision records (21 ADRs)
@@ -40,10 +41,11 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 - [Deployment Guide](deployment/) - Docker, Kubernetes, production setup
 - [Runbooks](runbooks/) - Step-by-step guides for operational tasks
 - [Operations Guide](operations/) - Monitoring, logging, backup, troubleshooting
+- [Clinical Portal Release Candidate](release/CLINICAL_PORTAL_RELEASE_CANDIDATE.md) - Canonical release gate order, required workflows, and release packet checklist
 
 **👥 End Users**
 - [System Architecture Overview](architecture/SYSTEM_ARCHITECTURE.md) - Understand what HDIM does
-- [FAQ](troubleshooting/FAQ.md) - Answers to common questions
+- [Troubleshooting Guide](troubleshooting/README.md) - Answers to common questions and resolution paths
 
 ---
 
@@ -60,14 +62,14 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 - **MCP Edge Design**: [Claude Desktop/Code integration sidecars](plans/2026-03-04-hdim-mcp-edge-design.md)
 
 ### Services
-- **Service Catalog**: [All 50+ microservices](services/SERVICE_CATALOG.md) ✨ NEW
+- **Service Catalog**: [Code-validated service inventory](services/SERVICE_CATALOG.md) ✨ NEW
 - **Service Ports**: [Port mappings and endpoints](services/PORT_REFERENCE.md)
 - **Service Dependencies**: [How services interact](services/DEPENDENCY_MAP.md)
 
 ### APIs & Integration
 - **API Catalog**: [OpenAPI specs for all services](api/)
 - **Authentication**: [Gateway Trust Architecture](../backend/docs/GATEWAY_TRUST_ARCHITECTURE.md)
-- **Integration Guide**: [External system integration](development/INTEGRATION_GUIDE.md)
+- **Integration Guide**: [External system integration](integration/PLATFORM-INTEGRATION-MATRIX.md)
 
 ### Database
 - **Database Architecture**: [Schema design and evolution](../backend/docs/DATABASE_ARCHITECTURE_GUIDE.md) ✨ NEW
@@ -84,22 +86,23 @@ Welcome to the HealthData-in-Motion (HDIM) documentation! This is your central h
 - **Quick Reference**: [Developer Quick Reference](../CLAUDE.md) - Start here!
 - **Coding Standards**: [Code patterns and conventions](../backend/docs/CODING_STANDARDS.md) ✨ NEW
 - **Command Reference**: [Gradle, Docker, PostgreSQL commands](../backend/docs/COMMAND_REFERENCE.md) ✨ NEW
-- **Testing Guide**: [Unit, integration, and E2E testing](development/TESTING_GUIDE.md)
-- **Debugging**: [Tools and techniques for debugging](development/DEBUGGING.md)
+- **Testing Guide**: [Unit, integration, and E2E testing](../docs/TESTING_GUIDE.md)
+- **Debugging**: [Tools and techniques for debugging](development/LOCAL_SETUP.md)
 - **Distributed Tracing**: [Understanding request flows with Jaeger](../backend/docs/DISTRIBUTED_TRACING_GUIDE.md)
 
 ### Deployment & Operations
 - **Build Management**: [Build commands, strategies, troubleshooting](../backend/docs/BUILD_MANAGEMENT_GUIDE.md) ✨ NEW
 - **Docker Compose**: [18 configs, profiles, usage guide](../docker/README.md) ✨ NEW
-- **Local Deployments**: [Local and staging setup](deployment/DOCKER_COMPOSE.md)
-- **Kubernetes**: [Production deployment](deployment/KUBERNETES.md)
-- **Production Checklist**: [Pre-production validation](deployment/PRODUCTION_CHECKLIST.md)
-- **Monitoring**: [Prometheus and Grafana setup](operations/MONITORING.md)
-- **Logging**: [Log aggregation and analysis](operations/LOGGING.md)
+- **Local Deployments**: [Local and staging setup](DOCKER_LOCAL_DEVELOPMENT_GUIDE.md)
+- **Kubernetes & Infrastructure**: [Production deployment guidance](deployment/INFRASTRUCTURE_DEPLOYMENT_GUIDE.md)
+- **Production Checklist**: [Pre-production validation](PRODUCTION-READINESS-CHECKLIST.md)
+- **Clinical Portal Release Path**: [Canonical local/staging/production release sequence](release/CLINICAL_PORTAL_RELEASE_CANDIDATE.md)
+- **Monitoring**: [Prometheus, Grafana, and observability setup](PHASE4_MONITORING_GUIDE.md)
+- **Logging**: [Operational logging and Docker diagnostics](DOCKER_OPERATIONS_GUIDE.md)
 
 ### Troubleshooting
 - **Troubleshooting Index**: [Decision tree for common issues](troubleshooting/) ✨ NEW
-- **FAQ**: [Frequently asked questions](troubleshooting/FAQ.md)
+- **FAQ & Troubleshooting**: [Frequently asked questions and issue decision trees](troubleshooting/README.md)
 - **Service Runbooks**: [19 operational runbooks](runbooks/)
 
 ---
@@ -132,7 +135,12 @@ In-depth technical guides for backend development:
 
 ## Service Documentation
 
-Each of the 50+ microservices has detailed documentation in its README:
+Service and shared-module documentation are now generated to baseline coverage from code. The current validated state is tracked in the generated references:
+
+- `59` Gradle-managed backend service modules
+- `61` service directories under `backend/modules/services`
+- `61` service READMEs currently present
+- shared module coverage is tracked in `architecture/SHARED_MODULE_CATALOG.md`
 
 ### Core Services
 - [quality-measure-service](../backend/modules/services/quality-measure-service/README.md) - HEDIS measures and CQL
@@ -148,7 +156,7 @@ Each of the 50+ microservices has detailed documentation in its README:
 
 ## Key Statistics
 
-- **Services**: 50+ microservices (all documented)
+- **Services**: see [Service Catalog](services/SERVICE_CATALOG.md) for the current validated count and README coverage
 - **Databases**: 29 separate PostgreSQL databases
 - **APIs**: 200+ REST endpoints
 - **Documentation Files**: 1,411 markdown files (organized and indexed)
@@ -162,7 +170,7 @@ Each of the 50+ microservices has detailed documentation in its README:
 - **March 5, 2026**: v2.9.0 release — MCP Edge Layer v0.1.0 (3 sidecars, 1,307 tests), test coverage improvements (66 new tests across 5 services)
 - **March 3, 2026**: v2.8.0 system remediation — security hardening, CI/CD normalization, docs reorganization
 - **January 19, 2026**: New modular documentation structure with centralized navigation
-- See [Archive](archive/) for historical documentation
+- See [Session Archives](session-archives/) for historical documentation
 
 ---
 
@@ -178,7 +186,7 @@ docs/
 │   ├── decisions/ - 21 Architecture Decision Records
 │   └── database/ - 29 database schemas
 ├── services/ - Microservice documentation
-│   ├── SERVICE_CATALOG.md - All 50+ services ✨ NEW
+│   ├── SERVICE_CATALOG.md - Validated service inventory ✨ NEW
 │   ├── PORT_REFERENCE.md - Service ports
 │   └── DEPENDENCY_MAP.md - Service interactions
 ├── api/ - API documentation
@@ -204,8 +212,8 @@ Use this table to understand which architectural pattern to use for your feature
 |---------|----------|-----------|------------------|-------|
 | **CRUD** | Simple create-read-update-delete operations with straightforward state | Complex state transitions, audit trails needed, or temporal queries required | patient-service, consent-service | [System Architecture](architecture/SYSTEM_ARCHITECTURE.md) |
 | **Event Sourcing + CQRS** | Need immutable event log, audit trail, replay capability, or temporal analysis | Simple CRUD operations without complex state history | patient-event-service, quality-measure-event-service, care-gap-event-service, clinical-workflow-event-service | [Event Sourcing Architecture](architecture/EVENT_SOURCING_ARCHITECTURE.md) ✨ |
-| **Gateway Pattern** | Need centralized authentication, routing, rate limiting, or API aggregation | Simple direct service-to-service communication only | gateway-service, gateway-admin-service, gateway-clinical-service, gateway-fhir-service | [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md) ✨ |
-| **Microservice Pattern** | Independent, loosely-coupled services with own databases | Tight coupling required or very simple monolithic application | All 51+ HDIM services | [System Architecture](architecture/SYSTEM_ARCHITECTURE.md) |
+| **Gateway Pattern** | Need centralized authentication, routing, rate limiting, or API aggregation | Simple direct service-to-service communication only | gateway-admin-service, gateway-clinical-service, gateway-fhir-service | [Gateway Architecture](architecture/GATEWAY_ARCHITECTURE.md) ✨ |
+| **Microservice Pattern** | Independent, loosely-coupled services with own databases | Tight coupling required or very simple monolithic application | See validated inventory in `SERVICE_CATALOG.md` | [System Architecture](architecture/SYSTEM_ARCHITECTURE.md) |
 | **Repository Pattern** | Data access abstraction, multiple data sources, or testing | Simple single-database access with no abstraction needs | All services' persistence layers | [Coding Standards](../backend/docs/CODING_STANDARDS.md) |
 
 ### Event Sourcing Deep Dive
@@ -237,13 +245,12 @@ Use this table to understand which architectural pattern to use for your feature
 ✅ Separate security policies (Admin stricter, Clinical optimized for UX)
 ✅ Code reuse (gateway-core eliminates duplication)
 
-**4 Gateway Services:**
+**Current gateway modules:**
 | Gateway | Port | Use Case | Specialization |
 |---------|------|----------|-----------------|
-| gateway-admin-service | 8002 | Configuration, user management, audit | Tenant config, approval workflows |
-| gateway-clinical-service | 8003 | Patient data, measures, care gaps | Clinical workflows, high throughput |
-| gateway-fhir-service | 8004 | FHIR-compliant data exchange | HL7 standards, external EHR integration |
-| gateway-service | 8001 | General-purpose routing | Legacy, fallback |
+| gateway-admin-service | deploy-time mapped; app default `8080` | Configuration, user management, audit | Tenant config, approval workflows |
+| gateway-clinical-service | deploy-time mapped; app default `8080` | Patient data, measures, care gaps | Clinical workflows, high throughput |
+| gateway-fhir-service | deploy-time mapped; app default `8080` | FHIR-compliant data exchange | HL7 standards, external EHR integration |
 
 ### Choosing Your Pattern
 

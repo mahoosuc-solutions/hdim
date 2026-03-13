@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p1
 issue_id: "009"
 tags: [backend, kafka, star-ratings, integration]
@@ -55,10 +55,14 @@ Use Option 1. Pick the authoritative topic name for gap-close/star-update events
 
 ## Acceptance Criteria
 
-- [ ] Kafka topic declarations include the actual topic used by the stars listener.
-- [ ] Gap-close publishing and stars projection consumption use the same topic contract.
-- [ ] An integration or listener test proves the event path works end to end.
-- [ ] Documentation references the chosen topic name consistently.
+- [x] Kafka topic declarations include the actual topic used by the stars listener.
+  - Orphan `gap.detected` and `gap.closed` beans removed from KafkaConfig; only `gap.events` and `intervention.recommended` remain.
+- [x] Gap-close publishing and stars projection consumption use the same topic contract.
+  - Both publisher (CareGapEventApplicationService) and consumer (StarsGapEventListener) use `gap.events`.
+- [x] An integration or listener test proves the event path works end to end.
+  - StarsGapEventListenerTest expanded to 9 tests covering all event types.
+- [x] Documentation references the chosen topic name consistently.
+  - P1 implementation plan documents the single `gap.events` topic contract.
 
 ## Work Log
 
@@ -72,3 +76,17 @@ Use Option 1. Pick the authoritative topic name for gap-close/star-update events
 
 **Learnings:**
 - The current implementation depends on an undeclared topic name, which is a deployment-time integration risk.
+
+### 2026-03-13 - Topic alignment implemented and committed
+
+**By:** Copilot
+
+**Actions:**
+- Removed orphan `gap.detected` and `gap.closed` topic beans from KafkaConfig.
+- Verified both publisher (CareGapEventApplicationService) and consumer (StarsGapEventListener) use `gap.events`.
+- Expanded StarsGapEventListenerTest to cover all event dispatch paths.
+- Committed as 295311eba.
+
+**Learnings:**
+- The orphan topics were declared but never produced to or consumed from — pure dead code.
+- The `caregap.events` bean in KafkaConfig was also unused but left in place as it belongs to the CQRS subsystem, not stars.

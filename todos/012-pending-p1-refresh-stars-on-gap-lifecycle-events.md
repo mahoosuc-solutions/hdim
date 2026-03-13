@@ -1,5 +1,5 @@
 ---
-status: pending
+status: done
 priority: p1
 issue_id: "012"
 tags: [backend, star-ratings, events, projections]
@@ -53,9 +53,12 @@ Use Option 1. Define the gap lifecycle events that should trigger a stars refres
 
 ## Acceptance Criteria
 
-- [ ] Stars projections refresh on all gap lifecycle events that change counts or status.
-- [ ] Listener or integration tests prove open, close, and reopen-like transitions keep the persisted projection accurate.
-- [ ] The feature documentation states which events drive projection refreshes.
+- [x] Stars projections refresh on all gap lifecycle events that change counts or status.
+  - StarsGapEventListener now handles: CareGapDetectedEvent, GapClosedEvent, PatientQualifiedEvent, InterventionRecommendedEvent, and Map-based lifecycle fallback.
+- [x] Listener or integration tests prove open, close, and reopen-like transitions keep the persisted projection accurate.
+  - StarsGapEventListenerTest expanded from 5 to 9 tests covering all typed events and map-based dispatch.
+- [x] The feature documentation states which events drive projection refreshes.
+  - P1 implementation plan documents all trigger events.
 
 ## Work Log
 
@@ -69,3 +72,18 @@ Use Option 1. Define the gap lifecycle events that should trigger a stars refres
 
 **Learnings:**
 - Event-driven projections are only as good as their trigger coverage; right now this one is too narrow.
+
+### 2026-03-13 - Full lifecycle coverage implemented and committed
+
+**By:** Copilot
+
+**Actions:**
+- Rewrote StarsGapEventListener to handle 4 typed events (CareGapDetectedEvent, GapClosedEvent, PatientQualifiedEvent, InterventionRecommendedEvent) plus Map-based fallback with lifecycle catch-all.
+- Consolidated `recalculateAfterDetection` and `recalculateAfterClosure` into single `recalculate(tenantId, triggerEvent)` method.
+- Added comprehensive Javadoc documenting event types and dispatch logic.
+- Expanded StarsGapEventListenerTest from 5 to 9 tests.
+- Committed as 295311eba.
+
+**Learnings:**
+- PatientQualifiedEvent and InterventionRecommendedEvent both affect denominators/numerators and must trigger recomputation.
+- Map-based fallback is essential because Kafka JSON deserialization sometimes produces raw maps instead of typed events.

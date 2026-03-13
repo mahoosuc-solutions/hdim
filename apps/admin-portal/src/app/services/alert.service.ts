@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
@@ -25,15 +25,10 @@ import {
   providedIn: 'root',
 })
 export class AlertService {
+  private readonly http = inject(HttpClient);
+  private readonly loggerService = inject(LoggerService);
   private apiUrl = '/api/v1/admin/alerts';
-  private logger: ReturnType<LoggerService['withContext']>;
-
-  constructor(
-    private http: HttpClient,
-    private loggerService: LoggerService
-  ) {
-    this.logger = this.loggerService.withContext('AlertService');
-  }
+  private logger = this.loggerService.withContext('AlertService');
 
   /**
    * Get all alert configurations
@@ -64,7 +59,7 @@ export class AlertService {
       catchError((error) => {
         this.logger.error('Failed to fetch alert configuration', error);
         const mockConfig = this.getMockAlertConfigs().find((c) => c.id === id);
-        return of(mockConfig!);
+        return of(mockConfig ?? this.getMockAlertConfigs()[0]);
       })
     );
   }
@@ -146,7 +141,7 @@ export class AlertService {
    * @param limit Maximum number of events to return
    * @returns Observable<AlertEvent[]>
    */
-  getRecentAlertEvents(limit: number = 50): Observable<AlertEvent[]> {
+  getRecentAlertEvents(limit = 50): Observable<AlertEvent[]> {
     this.logger.info('Fetching recent alert events', { limit });
 
     return this.http.get<AlertEvent[]>(`${this.apiUrl}/events?limit=${limit}`).pipe(

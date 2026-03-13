@@ -6,6 +6,10 @@
 
 import * as XLSX from 'xlsx';
 
+type ExportCellValue = string | number | boolean | null | undefined | Date;
+export type ExportRowValue = ExportCellValue | ExportRowValue[] | { [key: string]: ExportRowValue };
+export type ExportRow = Record<string, ExportRowValue>;
+
 export interface ExcelExportOptions {
   filename?: string;
   sheetName?: string;
@@ -20,7 +24,7 @@ export interface ExcelExportOptions {
 
 export interface MultiSheetData {
   sheetName: string;
-  data: any[];
+  data: ExportRow[];
   options?: ExcelExportOptions;
 }
 
@@ -42,13 +46,13 @@ function camelToTitleCase(str: string): string {
  * - Handles special data types (dates, booleans, nested objects, arrays)
  * - Converts null/undefined to empty strings
  */
-function preprocessData(data: any[], includeHeaders = true): any[] {
+function preprocessData(data: ExportRow[], includeHeaders = true): Record<string, ExportRowValue>[] {
   if (!data || data.length === 0) {
     return [];
   }
 
   return data.map((row) => {
-    const processedRow: any = {};
+    const processedRow: Record<string, ExportRowValue> = {};
 
     Object.keys(row).forEach((key) => {
       // Convert key to Title Case if headers are included
@@ -99,7 +103,7 @@ function applyColumnWidths(
  * @returns Blob containing Excel file data
  */
 export function createExcelBlob(
-  data: any[],
+  data: ExportRow[],
   options: ExcelExportOptions = {}
 ): Blob {
   const {
@@ -141,7 +145,7 @@ export function createExcelBlob(
  * @param options Export options including filename
  */
 export async function exportToExcel(
-  data: any[],
+  data: ExportRow[],
   options: ExcelExportOptions = {}
 ): Promise<void> {
   const { filename = 'export' } = options;

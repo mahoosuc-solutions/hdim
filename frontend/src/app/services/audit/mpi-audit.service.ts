@@ -30,14 +30,14 @@ export interface MPIMergeDetail {
   mergeStatus: string;
   validationStatus: string;
   confidenceScore: number;
-  sourcePatientSnapshot: any;
-  targetPatientSnapshot: any;
-  mergedPatientSnapshot: any;
-  matchingAlgorithmDetails: any;
-  attributeMatches: any[];
-  attributeConflicts: any[];
-  dataQualityIssues: any[];
-  validationHistory: any[];
+  sourcePatientSnapshot: Record<string, unknown>;
+  targetPatientSnapshot: Record<string, unknown>;
+  mergedPatientSnapshot: Record<string, unknown>;
+  matchingAlgorithmDetails: Record<string, unknown>;
+  attributeMatches: Record<string, unknown>[];
+  attributeConflicts: Record<string, unknown>[];
+  dataQualityIssues: Record<string, unknown>[];
+  validationHistory: Record<string, unknown>[];
 }
 
 export interface MPIValidationRequest {
@@ -103,12 +103,12 @@ export interface MPIMetrics {
   rollbackRate: number;
   averageConfidenceScore: number;
   averageValidationTimeMinutes: number;
-  mergeTypeDistribution: any;
-  dataQualityMetrics: any;
+  mergeTypeDistribution: Record<string, number>;
+  dataQualityMetrics: Record<string, unknown>;
 }
 
 export interface MPITrendData {
-  dailyTrends: any[];
+  dailyTrends: Record<string, unknown>[];
   averageValidationRate: number;
   averageRollbackRate: number;
 }

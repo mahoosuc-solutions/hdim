@@ -258,7 +258,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
         resolve(null);
       };
     });
-  } catch (error) {
+  } catch (_error) {
     // Return null on error (graceful degradation)
     return null;
   }
@@ -373,7 +373,7 @@ export async function isCacheExpired(key: string): Promise<boolean> {
         resolve(true); // Error is considered expired
       };
     });
-  } catch (error) {
+  } catch (_error) {
     return true; // Error is considered expired
   }
 }
@@ -387,7 +387,7 @@ export function resetCacheState(): void {
   for (const db of databases.values()) {
     try {
       db.close();
-    } catch (error) {
+    } catch (_error) {
       // Ignore errors
     }
   }

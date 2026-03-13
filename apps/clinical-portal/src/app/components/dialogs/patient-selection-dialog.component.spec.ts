@@ -59,6 +59,7 @@ describe('PatientSelectionDialogComponent (TDD)', () => {
       providers: [
         { provide: MatDialogRef, useValue: mockDialogRef },
         { provide: PatientService, useValue: mockPatientService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PatientSelectionDialogComponent);

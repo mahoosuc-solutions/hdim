@@ -20,9 +20,10 @@ import {
   Code as JsonIcon,
 } from '@mui/icons-material';
 import { exportToCSV, exportToJSON } from '../services/export.service';
+import type { ExportRow } from '../services/excelExport.service';
 
 export interface ExportButtonProps {
-  data: any[];
+  data: ExportRow[];
   filename?: string;
   disabled?: boolean;
 }
@@ -70,7 +71,7 @@ export const ExportButton: React.FC<ExportButtonProps> = ({
         message: 'Export successful',
         severity: 'success',
       });
-    } catch (error) {
+    } catch (_error) {
       setSnackbar({
         open: true,
         message: 'Export failed',

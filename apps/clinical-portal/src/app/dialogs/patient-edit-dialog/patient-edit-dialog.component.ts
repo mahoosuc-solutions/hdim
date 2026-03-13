@@ -129,7 +129,7 @@ export class PatientEditDialogComponent implements OnInit {
 
     // Contact Form
     this.contactForm = this.fb.group({
-      phoneNumber: ['', [Validators.pattern(/^\+?[\d\s\-\(\)]+$/)]],
+      phoneNumber: ['', [Validators.pattern(/^\+?[\d\s-()]+$/)]],
       phoneType: ['mobile'],
       email: ['', [Validators.email]],
       addressLine1: [''],

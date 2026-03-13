@@ -844,9 +844,12 @@ export class EvaluationsComponent implements OnInit, AfterViewInit {
    * Selects all rows if they are not all selected; otherwise clear selection
    */
   masterToggle(): void {
-    this.isAllSelected() ?
-      this.selection.clear() :
-      this.dataSource.data.forEach(row => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+      return;
+    }
+
+    this.dataSource.data.forEach(row => this.selection.select(row));
   }
 
   /**

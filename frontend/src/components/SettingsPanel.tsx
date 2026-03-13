@@ -54,13 +54,13 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) =
     }
   }, [open, settings]);
 
-  const handleThemeChange = (event: any) => {
+  const handleThemeChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newSettings = { ...localSettings, theme: event.target.value as UserSettings['theme'] };
     setLocalSettings(newSettings);
     updateSettings({ theme: event.target.value });
   };
 
-  const handleDebounceChange = (event: Event, value: number | number[]) => {
+  const handleDebounceChange = (_event: Event, value: number | number[]) => {
     const debounceValue = value as number;
     const newSettings = { ...localSettings, searchDebounceMs: debounceValue };
     setLocalSettings(newSettings);

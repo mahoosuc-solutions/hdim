@@ -29,10 +29,10 @@ export interface QAReviewDetail {
   aiDecisionType: string;
   reviewStatus: string;
   createdAt: string;
-  aiDecisionContext: any;
-  reviewerAssessment: any;
-  discrepancyAnalysis: any;
-  reviewHistory: any[];
+  aiDecisionContext: Record<string, unknown>;
+  reviewerAssessment: Record<string, unknown>;
+  discrepancyAnalysis: Record<string, unknown>;
+  reviewHistory: Record<string, unknown>[];
 }
 
 export interface QAReviewRequest {
@@ -62,12 +62,12 @@ export interface QAMetrics {
   discrepancyRate: number;
   averageConfidenceScore: number;
   averageReviewTimeHours: number;
-  decisionTypeDistribution: any;
-  priorityDistribution: any;
+  decisionTypeDistribution: Record<string, number>;
+  priorityDistribution: Record<string, number>;
 }
 
 export interface QATrendData {
-  dailyTrends: any[];
+  dailyTrends: Record<string, unknown>[];
   averageApprovalRate: number;
   averageDiscrepancyRate: number;
 }

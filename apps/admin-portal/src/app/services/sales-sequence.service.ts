@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
@@ -120,9 +120,9 @@ export class SalesSequenceService {
 
   activateSequence(id: string): Observable<EmailSequence> {
     return this.http.post<EmailSequence>(`${this.apiBaseUrl}/api/sales/sequences/${id}/activate`, {}).pipe(
-      tap((updated) => {
+      tap(() => {
         this._sequences.update((list) =>
-          list.map((s) => (s.id === id ? { ...s, status: 'ACTIVE' as const } : s))
+          list.map((sequence) => (sequence.id === id ? { ...sequence, status: 'ACTIVE' as const } : sequence))
         );
       }),
       catchError((error) => {
@@ -134,9 +134,9 @@ export class SalesSequenceService {
 
   deactivateSequence(id: string): Observable<EmailSequence> {
     return this.http.post<EmailSequence>(`${this.apiBaseUrl}/api/sales/sequences/${id}/deactivate`, {}).pipe(
-      tap((updated) => {
+      tap(() => {
         this._sequences.update((list) =>
-          list.map((s) => (s.id === id ? { ...s, status: 'INACTIVE' as const } : s))
+          list.map((sequence) => (sequence.id === id ? { ...sequence, status: 'INACTIVE' as const } : sequence))
         );
       }),
       catchError((error) => {

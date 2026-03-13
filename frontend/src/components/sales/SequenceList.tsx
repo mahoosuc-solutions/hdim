@@ -22,11 +22,8 @@ import {
 import {
   Add as AddIcon,
   Email as EmailIcon,
-  PlayArrow as PlayIcon,
-  Pause as PauseIcon,
   Edit as EditIcon,
   Analytics as AnalyticsIcon,
-  OpenInNew as OpenIcon,
 } from '@mui/icons-material';
 import { salesService } from '../../services/sales.service';
 import type { EmailSequence, SequenceAnalytics, SequenceType, PageResponse } from '../../types/sales';

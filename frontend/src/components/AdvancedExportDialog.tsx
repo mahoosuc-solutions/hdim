@@ -32,6 +32,7 @@ import {
 } from '@mui/material';
 import { exportToCSV, exportToJSON } from '../services/export.service';
 import type { AnyEvaluationEvent } from '../types/events';
+import type { ExportRow } from '../services/excelExport.service';
 
 interface AdvancedExportDialogProps {
   open: boolean;
@@ -155,10 +156,10 @@ const AdvancedExportDialog: React.FC<AdvancedExportDialogProps> = ({
 
   const getFilteredData = () => {
     return data.map(item => {
-      const filtered: any = {};
+      const filtered: ExportRow = {};
       selectedColumns.forEach(col => {
         if (col in item) {
-          filtered[col] = (item as any)[col];
+          filtered[col] = item[col as keyof AnyEvaluationEvent] as ExportRow[string];
         }
       });
       return filtered;

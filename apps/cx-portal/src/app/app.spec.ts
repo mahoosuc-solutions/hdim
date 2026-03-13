@@ -16,6 +16,6 @@ describe('App', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.logo-text')?.textContent).toContain('HDIM CX');
-    expect(compiled.querySelector('a[routerLink=\"/admin/access\"]')?.textContent).toContain('Access Admin');
+    expect(compiled.querySelector('a[routerLink="/admin/access"]')?.textContent).toContain('Access Admin');
   });
 });

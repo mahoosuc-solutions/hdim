@@ -192,7 +192,7 @@ export class WebSocketService {
   /**
    * Handle WebSocket error
    */
-  private handleError(error: Event): void {
+  private handleError(_error: Event): void {
     this.updateStatus(ConnectionStatus.ERROR);
     this.notifyErrorHandlers(new Error('WebSocket connection error'));
   }
@@ -200,7 +200,7 @@ export class WebSocketService {
   /**
    * Handle WebSocket close event
    */
-  private handleClose(event: CloseEvent): void {
+  private handleClose(_event: CloseEvent): void {
     this.clearPingInterval();
     this.updateStatus(ConnectionStatus.DISCONNECTED);
 
@@ -286,7 +286,7 @@ export class WebSocketService {
     this.statusHandlers.forEach(handler => {
       try {
         handler(status);
-      } catch (error) {
+      } catch (_error) {
         // Handler error - silently ignore
       }
     });
@@ -299,7 +299,7 @@ export class WebSocketService {
     this.eventHandlers.forEach(handler => {
       try {
         handler(event);
-      } catch (error) {
+      } catch (_error) {
         // Handler error - silently ignore
       }
     });
@@ -312,7 +312,7 @@ export class WebSocketService {
     this.errorHandlers.forEach(handler => {
       try {
         handler(error);
-      } catch (error) {
+      } catch (_error) {
         // Handler error - silently ignore
       }
     });

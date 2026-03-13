@@ -375,7 +375,14 @@ export class NotificationService {
   private playNotificationSound(critical = false): void {
     try {
       // Use Web Audio API for cross-browser support
-      const audioContext = new (window as any).AudioContext || (window as any).webkitAudioContext();
+      const AudioContextCtor = (window as typeof window & {
+        webkitAudioContext?: new () => AudioContext;
+      }).AudioContext ?? window.webkitAudioContext;
+      if (!AudioContextCtor) {
+        return;
+      }
+
+      const audioContext = new AudioContextCtor();
 
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();

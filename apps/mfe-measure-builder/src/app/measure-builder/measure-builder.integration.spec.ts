@@ -84,7 +84,7 @@ class MeasureBuilderIntegrationTestComponent {
     id: 'measure-test',
     blocks: [],
     connections: []
-  });
+  };
 
   rangeSliders: any[] = [];
   distributionSliders: any[] = [];
@@ -226,7 +226,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         id: 'measure-test',
         blocks: [],
         connections: []
-      });
+      }));
     });
 
     it('should load measure configuration with algorithm blocks', () => {
@@ -350,7 +350,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
       component.algorithm.connections.push({
         from: 'block-1',
         to: 'block-2'
-      };
+      });
       fixture.detectChanges();
 
       expect(component.algorithm.connections.length).toBe(1);
@@ -363,7 +363,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
           { ...component.algorithm.blocks[0], x: 200, y: 150 },
           component.algorithm.blocks[1]
         ]
-      };
+      });
       fixture.detectChanges();
 
       expect(component.algorithm.blocks[0].x).toBe(200);
@@ -387,7 +387,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
           { ...component.algorithm.blocks[0], x: originalX },
           component.algorithm.blocks[1]
         ]
-      };
+      });
 
       expect(component.algorithm.blocks[0].x).toBe(originalX);
     });
@@ -472,7 +472,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
         currentMax: 29.9,
         min: 0,
         max: 50
-      };
+      });
 
       component.rangeSliders[0].currentMin = 6;
       component.rangeSliders[1].currentMin = 20;
@@ -532,7 +532,7 @@ describe('TEAM 5: Measure Builder Integration & E2E Tests', () => {
           { id: 'roll', label: 'Rolling Year' },
           { id: 'q', label: 'Quarter' }
         ]
-      };
+      });
       fixture.detectChanges();
 
       expect(component.configurationSliderCount).toBe(2);

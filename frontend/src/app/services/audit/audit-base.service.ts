@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 
 /**
  * Base service with common functionality for audit services
@@ -10,7 +9,6 @@ import { catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuditBaseService {
-  
   /**
    * Handle HTTP errors with user-friendly messages
    */
@@ -52,11 +50,11 @@ export class AuditBaseService {
    */
   protected formatDate(date: Date | string | null | undefined): string | undefined {
     if (!date) return undefined;
-    
+
     if (typeof date === 'string') {
       return date;
     }
-    
+
     return date.toISOString().split('T')[0];
   }
 

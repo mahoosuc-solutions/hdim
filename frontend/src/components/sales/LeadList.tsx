@@ -42,10 +42,9 @@ import {
   MoreVert as MoreIcon,
   SwapHoriz as ConvertIcon,
   Email as EmailIcon,
-  FilterList as FilterIcon,
 } from '@mui/icons-material';
 import { salesService } from '../../services/sales.service';
-import type { Lead, LeadStatus, LeadSource, PageResponse } from '../../types/sales';
+import type { Lead, LeadStatus, PageResponse } from '../../types/sales';
 
 interface LeadListProps {
   tenantId: string;
@@ -73,9 +72,6 @@ export function LeadList({ tenantId }: LeadListProps) {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [filterMenuOpen, setFilterMenuOpen] = useState(false);
-  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(null);
-
   useEffect(() => {
     loadLeads();
   }, [tenantId, page, rowsPerPage, searchQuery, statusFilter, sourceFilter]);

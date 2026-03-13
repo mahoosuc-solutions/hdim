@@ -1,4 +1,4 @@
-import { Injectable, Inject, Optional } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 
@@ -56,6 +56,7 @@ export interface LogEntry {
   providedIn: 'root',
 })
 export class LoggerService {
+  private readonly http = inject(HttpClient, { optional: true });
   private minLevel: LogLevel;
   private isProduction: boolean;
   private sessionId: string;
@@ -74,9 +75,7 @@ export class LoggerService {
     /\b(?:dob|dateOfBirth|birthDate)["\s:]+[\d-]+/gi,      // DOB in JSON
   ];
 
-  constructor(
-    @Optional() private http: HttpClient
-  ) {
+  constructor() {
     this.isProduction = environment.production;
     this.minLevel = this.isProduction ? LogLevel.WARN : LogLevel.DEBUG;
     this.sessionId = this.generateSessionId();
@@ -270,6 +269,8 @@ export class LoggerService {
    * Send log to external service (implement based on your service)
    */
   private sendToExternalService(entry: LogEntry): void {
+    void entry;
+
     // Placeholder for external logging service integration
     // Options: Sentry, LogRocket, CloudWatch, Datadog, etc.
     //

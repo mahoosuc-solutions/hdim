@@ -9,7 +9,8 @@
  * - System notifications
  */
 
-type EventCallback = (data?: any) => void;
+type EventPayload = unknown;
+type EventCallback = (data?: EventPayload) => void;
 type EventName = string;
 
 interface EventSubscription {
@@ -21,7 +22,7 @@ interface EventSubscription {
 
 class EventBusClass {
   private subscriptions: Map<EventName, EventSubscription[]> = new Map();
-  private eventHistory: Array<{ name: EventName; timestamp: number; data?: any }> = [];
+  private eventHistory: Array<{ name: EventName; timestamp: number; data?: EventPayload }> = [];
   private maxHistorySize = 100;
 
   /**
@@ -79,7 +80,7 @@ class EventBusClass {
   /**
    * Emit an event
    */
-  emit(eventName: EventName, data?: any): void {
+  emit(eventName: EventName, data?: EventPayload): void {
     const subs = this.subscriptions.get(eventName);
 
     if (subs) {
@@ -191,11 +192,12 @@ export const EventNames = {
 // ============================================================================
 
 import { useEffect, useCallback } from 'react';
+import type { DependencyList } from 'react';
 
 /**
  * Hook for subscribing to event bus events
  */
-export function useEventBus(eventName: EventName, callback: EventCallback, deps: any[] = []) {
+export function useEventBus(eventName: EventName, callback: EventCallback, deps: DependencyList = []) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedCallback = useCallback(callback, deps);
 
@@ -209,7 +211,7 @@ export function useEventBus(eventName: EventName, callback: EventCallback, deps:
  * Hook for emitting events
  */
 export function useEventEmitter() {
-  return useCallback((eventName: EventName, data?: any) => {
+  return useCallback((eventName: EventName, data?: EventPayload) => {
     EventBus.emit(eventName, data);
   }, []);
 }

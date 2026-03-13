@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../services/admin.service';
@@ -89,7 +89,8 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
       <!-- Logs Table -->
       <div class="logs-section">
-        <table class="logs-table" *ngIf="!loading && filteredLogs.length > 0">
+        @if (!loading && filteredLogs.length > 0) {
+        <table class="logs-table">
           <thead>
             <tr>
               <th class="col-time">Timestamp</th>
@@ -102,8 +103,8 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
             </tr>
           </thead>
           <tbody>
+            @for (log of paginatedLogs; track log.id) {
             <tr
-              *ngFor="let log of paginatedLogs"
               class="log-row"
               [class.info]="log.severity === 'INFO'"
               [class.warning]="log.severity === 'WARNING'"
@@ -146,18 +147,23 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
                 <span class="ip-address">{{ log.ipAddress }}</span>
               </td>
             </tr>
+            }
           </tbody>
         </table>
+        }
 
         <!-- Empty State -->
-        <div class="empty-state" *ngIf="!loading && filteredLogs.length === 0">
+        @if (!loading && filteredLogs.length === 0) {
+        <div class="empty-state">
           <span class="empty-icon">📋</span>
           <h3>No Logs Found</h3>
           <p>No audit logs match your current filters.</p>
         </div>
+        }
 
         <!-- Pagination -->
-        <div class="pagination" *ngIf="filteredLogs.length > pageSize">
+        @if (filteredLogs.length > pageSize) {
+        <div class="pagination">
           <button
             class="page-btn"
             (click)="goToPage(currentPage - 1)"
@@ -166,14 +172,15 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
             Previous
           </button>
           <div class="page-numbers">
+            @for (page of getPageNumbers(); track page) {
             <button
-              *ngFor="let page of getPageNumbers()"
               class="page-num"
               [class.active]="page === currentPage"
               (click)="goToPage(page)"
             >
               {{ page }}
             </button>
+            }
           </div>
           <button
             class="page-btn"
@@ -183,20 +190,29 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
             Next
           </button>
         </div>
+        }
 
         <!-- Loading State -->
-        <div class="loading" *ngIf="loading">
+        @if (loading) {
+        <div class="loading">
           <div class="spinner"></div>
           <span>Loading audit logs...</span>
         </div>
+        }
       </div>
 
       <!-- Details Modal -->
-      <div class="modal-overlay" *ngIf="selectedLog" (click)="selectedLog = null">
-        <div class="modal" (click)="$event.stopPropagation()">
+      @if (selectedLog) {
+      <div
+        class="modal-overlay"
+        tabindex="0"
+        (click)="closeDetailsModal()"
+        (keydown.enter)="closeDetailsModal()"
+        (keydown.space)="closeDetailsModal()">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="audit-log-modal-title">
           <div class="modal-header">
-            <h3>Log Details</h3>
-            <button class="close-btn" (click)="selectedLog = null">×</button>
+            <h3 id="audit-log-modal-title">Log Details</h3>
+            <button class="close-btn" (click)="closeDetailsModal()" aria-label="Close modal">×</button>
           </div>
           <div class="modal-body">
             <div class="detail-row">
@@ -247,13 +263,16 @@ import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
               <span class="label">Details</span>
               <pre class="value code">{{ selectedLog.details }}</pre>
             </div>
-            <div class="detail-row full" *ngIf="selectedLog.metadata">
+            @if (selectedLog.metadata) {
+            <div class="detail-row full">
               <span class="label">Metadata</span>
               <pre class="value code">{{ selectedLog.metadata | json }}</pre>
             </div>
+            }
           </div>
         </div>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -729,8 +748,7 @@ export class AuditLogsComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
-
-  constructor(private adminService: AdminService) {}
+  private adminService = inject(AdminService);
 
   ngOnInit(): void {
     this.searchSubject
@@ -859,6 +877,10 @@ export class AuditLogsComponent implements OnInit, OnDestroy {
 
   viewDetails(log: AuditLog): void {
     this.selectedLog = log;
+  }
+
+  closeDetailsModal(): void {
+    this.selectedLog = null;
   }
 
   exportLogs(): void {

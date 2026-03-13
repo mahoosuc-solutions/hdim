@@ -31,6 +31,12 @@ interface ChartDataPoint {
   formattedDate: string;
 }
 
+interface TrendsTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload?: ChartDataPoint }>;
+  metric: TrendsChartProps['metric'];
+}
+
 /**
  * Calculate success rate from batch data
  */
@@ -143,7 +149,7 @@ const CustomTooltip = ({
   active,
   payload,
   metric,
-}: any) => {
+}: TrendsTooltipProps) => {
   const data = payload?.[0]?.payload;
   if (active && data) {
     const { label, unit } = getMetricLabel(metric);

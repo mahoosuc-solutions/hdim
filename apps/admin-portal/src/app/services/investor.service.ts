@@ -176,7 +176,7 @@ export class InvestorService {
     this.http.patch<InvestorTask>(`${this.apiBaseUrl}/api/tasks/${taskId}/status`, null, {
       params: { status }
     }).pipe(
-      tap((updated) => {
+      tap(() => {
         this._tasks.update((tasks) =>
           tasks.map((t) => (t.id === taskId ? { ...t, status, completedDate: status === 'completed' ? new Date().toISOString().split('T')[0] : t.completedDate } : t))
         );
@@ -195,7 +195,7 @@ export class InvestorService {
     }
 
     this.http.put<InvestorTask>(`${this.apiBaseUrl}/api/tasks/${taskId}`, updates).pipe(
-      tap((updated) => {
+      tap(() => {
         this._tasks.update((tasks) =>
           tasks.map((t) => (t.id === taskId ? { ...t, ...updates } : t))
         );

@@ -2,7 +2,7 @@
  * Error Boundary component for catching and logging React errors
  */
 
-import { Component, ReactNode } from 'react';
+import { Component, ReactNode, type ErrorInfo } from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 
 interface ErrorBoundaryProps {
@@ -12,7 +12,7 @@ interface ErrorBoundaryProps {
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;
-  errorInfo: any;
+  errorInfo: ErrorInfo | null;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('[ErrorBoundary] componentDidCatch - Error:', error);
     console.error('[ErrorBoundary] componentDidCatch - Error Info:', errorInfo);
     console.error('[ErrorBoundary] Stack trace:', error.stack);

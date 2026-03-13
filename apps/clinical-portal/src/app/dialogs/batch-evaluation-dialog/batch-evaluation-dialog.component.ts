@@ -485,9 +485,12 @@ export class BatchEvaluationDialogComponent implements OnInit, OnDestroy {
   }
 
   masterToggle(): void {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach(row => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+      return;
+    }
+
+    this.dataSource.data.forEach(row => this.selection.select(row));
   }
 
   selectAll(): void {

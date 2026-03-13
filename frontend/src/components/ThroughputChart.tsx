@@ -5,10 +5,8 @@
  */
 
 import {
-  LineChart,
   Line,
   Area,
-  AreaChart,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -27,6 +25,11 @@ interface ThroughputChartProps {
   data: ThroughputDataPoint[];
 }
 
+interface ThroughputTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload?: ThroughputDataPoint }>;
+}
+
 /**
  * Format timestamp as HH:mm:ss
  */
@@ -37,7 +40,7 @@ const formatTime = (timestamp: number): string => {
 /**
  * Custom tooltip component for the chart
  */
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: ThroughputTooltipProps) => {
   const data = payload?.[0]?.payload;
   if (active && data) {
     return (

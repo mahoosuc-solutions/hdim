@@ -1,6 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
@@ -123,9 +123,9 @@ export class SalesLinkedInService {
 
   activateCampaign(id: string): Observable<LinkedInCampaign> {
     return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}/activate`, {}).pipe(
-      tap((updated) => {
+      tap(() => {
         this._campaigns.update((list) =>
-          list.map((c) => (c.id === id ? { ...c, status: 'ACTIVE' as const } : c))
+          list.map((campaign) => (campaign.id === id ? { ...campaign, status: 'ACTIVE' as const } : campaign))
         );
       }),
       catchError((error) => {
@@ -137,9 +137,9 @@ export class SalesLinkedInService {
 
   pauseCampaign(id: string): Observable<LinkedInCampaign> {
     return this.http.post<LinkedInCampaign>(`${this.apiBaseUrl}/api/sales/linkedin/campaigns/${id}/pause`, {}).pipe(
-      tap((updated) => {
+      tap(() => {
         this._campaigns.update((list) =>
-          list.map((c) => (c.id === id ? { ...c, status: 'PAUSED' as const } : c))
+          list.map((campaign) => (campaign.id === id ? { ...campaign, status: 'PAUSED' as const } : campaign))
         );
       }),
       catchError((error) => {

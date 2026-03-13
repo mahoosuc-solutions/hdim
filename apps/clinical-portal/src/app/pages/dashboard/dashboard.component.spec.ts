@@ -136,6 +136,7 @@ describe('DashboardComponent (TDD)', () => {
         { provide: AIAssistantService, useValue: {} },
         { provide: UserRoleService, useValue: mockUserRoleService },
         { provide: MeasureFavoritesService, useValue: mockMeasureFavoritesService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DashboardComponent);

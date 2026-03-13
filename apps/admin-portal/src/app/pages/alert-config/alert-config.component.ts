@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
@@ -41,8 +41,10 @@ import { SERVICE_DEFINITIONS, ServiceDefinitionMetadata } from '../../models/ser
   styleUrls: ['./alert-config.component.scss'],
 })
 export class AlertConfigComponent implements OnInit, OnDestroy {
+  private readonly alertService = inject(AlertService);
+  private readonly loggerService = inject(LoggerService);
   private destroy$ = new Subject<void>();
-  private logger!: ReturnType<LoggerService['withContext']>;
+  private logger = this.loggerService.withContext('AlertConfigComponent');
 
   // State
   alertConfigs: AlertConfig[] = [];
@@ -70,13 +72,6 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
   severityLabels = SEVERITY_LABELS;
   channelLabels = NOTIFICATION_CHANNEL_LABELS;
   thresholdPresets = ALERT_THRESHOLD_PRESETS;
-
-  constructor(
-    private alertService: AlertService,
-    private loggerService: LoggerService
-  ) {
-    this.logger = this.loggerService.withContext('AlertConfigComponent');
-  }
 
   ngOnInit(): void {
     this.logger.info('Initializing Alert Configuration');
@@ -173,6 +168,23 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
     this.selectedAlertConfig = null;
   }
 
+  handleModalOverlayClick(event: MouseEvent, modal: 'create' | 'edit' | 'delete'): void {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
+    this.closeModal(modal);
+  }
+
+  handleModalOverlayKeydown(event: KeyboardEvent, modal: 'create' | 'edit' | 'delete'): void {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    event.preventDefault();
+    this.closeModal(modal);
+  }
+
   /**
    * Handle alert type selection
    * Auto-populate threshold with recommended value
@@ -187,7 +199,7 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
   /**
    * Toggle notification channel selection
    */
-  toggleChannel(channel: NotificationChannel, isCreate: boolean = true): void {
+  toggleChannel(channel: NotificationChannel, isCreate = true): void {
     const channels = isCreate
       ? (this.formData.notificationChannels || [])
       : (this.editFormData.notificationChannels || []);
@@ -209,7 +221,7 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
   /**
    * Check if channel is selected
    */
-  isChannelSelected(channel: NotificationChannel, isCreate: boolean = true): boolean {
+  isChannelSelected(channel: NotificationChannel, isCreate = true): boolean {
     const channels = isCreate
       ? (this.formData.notificationChannels || [])
       : (this.editFormData.notificationChannels || []);
@@ -318,17 +330,18 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
    * Delete alert configuration
    */
   deleteAlert(): void {
-    if (!this.selectedAlertConfig) return;
+    const selectedAlertConfig = this.selectedAlertConfig;
+    if (!selectedAlertConfig) return;
 
-    this.logger.info('Deleting alert configuration', { id: this.selectedAlertConfig.id });
+    this.logger.info('Deleting alert configuration', { id: selectedAlertConfig.id });
 
     this.alertService
-      .deleteAlertConfig(this.selectedAlertConfig.id)
+      .deleteAlertConfig(selectedAlertConfig.id)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {
-          this.logger.info('Alert configuration deleted', { id: this.selectedAlertConfig!.id });
-          this.alertConfigs = this.alertConfigs.filter((c) => c.id !== this.selectedAlertConfig!.id);
+          this.logger.info('Alert configuration deleted', { id: selectedAlertConfig.id });
+          this.alertConfigs = this.alertConfigs.filter((config) => config.id !== selectedAlertConfig.id);
           this.closeDeleteConfirmModal();
         },
         error: (error) => {
@@ -373,5 +386,19 @@ export class AlertConfigComponent implements OnInit, OnDestroy {
    */
   getThresholdUnit(alertType: AlertType): string {
     return this.thresholdPresets[alertType]?.unit || '';
+  }
+
+  private closeModal(modal: 'create' | 'edit' | 'delete'): void {
+    switch (modal) {
+      case 'create':
+        this.closeCreateModal();
+        break;
+      case 'edit':
+        this.closeEditModal();
+        break;
+      case 'delete':
+        this.closeDeleteConfirmModal();
+        break;
+    }
   }
 }

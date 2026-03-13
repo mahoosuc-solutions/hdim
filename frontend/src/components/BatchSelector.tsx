@@ -54,11 +54,6 @@ export function BatchSelector({
     onBatchSelect(event.target.value);
   };
 
-  // Get the measure name for the selected batch to display in the Select
-  const selectedBatchMeasureName = batches.find(
-    (batch) => batch.batchId === selectedBatchId
-  )?.measureName || '';
-
   return (
     <FormControl fullWidth>
       <InputLabel id="batch-selector-label">Select Batch</InputLabel>

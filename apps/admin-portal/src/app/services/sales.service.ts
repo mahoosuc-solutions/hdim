@@ -1,7 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { catchError, tap, map } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   SalesDashboard,
@@ -140,7 +140,7 @@ export class SalesService {
     );
   }
 
-  convertLead(id: string, createOpportunity: boolean = true): Observable<LeadConversionResult> {
+  convertLead(id: string, createOpportunity = true): Observable<LeadConversionResult> {
     return this.http.post<LeadConversionResult>(
       `${this.apiBaseUrl}/api/sales/leads/${id}/convert`,
       { createOpportunity }
@@ -152,7 +152,7 @@ export class SalesService {
     );
   }
 
-  getHighScoreLeads(minScore: number = 70): Observable<Lead[]> {
+  getHighScoreLeads(minScore = 70): Observable<Lead[]> {
     return this.http.get<Lead[]>(`${this.apiBaseUrl}/api/sales/leads/high-score`, {
       params: { minScore: minScore.toString() }
     }).pipe(
@@ -454,7 +454,7 @@ export class SalesService {
     );
   }
 
-  getClosingSoon(days: number = 30): Observable<Opportunity[]> {
+  getClosingSoon(days = 30): Observable<Opportunity[]> {
     return this.http.get<Opportunity[]>(`${this.apiBaseUrl}/api/sales/pipeline/closing-soon`, {
       params: { days: days.toString() }
     }).pipe(

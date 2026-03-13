@@ -67,7 +67,7 @@ describe('WebSocketVisualizationService', () => {
       service.status$.subscribe((status) => {
         expect(status).toBe(WebSocketStatus.DISCONNECTED);
         done();
-      };
+      });
     });
 
     it('should return DISCONNECTED from getStatus initially', () => {
@@ -928,7 +928,7 @@ describe('WebSocketVisualizationService', () => {
 
       const sub1 = service.status$.subscribe(() => {
         subscriptionCount++;
-      };
+      });
 
       const sub2 = service.status$.subscribe(() => {
         subscriptionCount++;

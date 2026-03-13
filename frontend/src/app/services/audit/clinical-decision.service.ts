@@ -37,13 +37,13 @@ export interface ClinicalDecisionDetail {
   decisionType: string;
   reviewStatus: string;
   decisionTimestamp: string;
-  patientContext: any;
-  recommendation: any;
-  evidence: any[];
-  drugInteractions: any[];
-  careGaps: any[];
-  riskAssessment: any;
-  reviewHistory: any[];
+  patientContext: Record<string, unknown>;
+  recommendation: Record<string, unknown>;
+  evidence: Record<string, unknown>[];
+  drugInteractions: Record<string, unknown>[];
+  careGaps: Record<string, unknown>[];
+  riskAssessment: Record<string, unknown>;
+  reviewHistory: Record<string, unknown>[];
 }
 
 export interface ClinicalReviewRequest {
@@ -52,7 +52,7 @@ export interface ClinicalReviewRequest {
   applyOverride?: boolean;
   overrideReason?: string;
   alternativeRecommendation?: string;
-  reviewerAssessment?: any;
+  reviewerAssessment?: Record<string, unknown>;
 }
 
 export interface ClinicalReviewResult {
@@ -97,7 +97,7 @@ export interface RiskStratificationDTO {
   riskCategory: string;
   overallRiskLevel: string;
   riskScore: number;
-  contributingFactors: any[];
+  contributingFactors: Record<string, unknown>[];
   assessmentModel: string;
   evidenceGrade: string;
   recommendedInterventions: string[];
@@ -112,13 +112,13 @@ export interface ClinicalMetrics {
   overrideRate: number;
   averageConfidenceScore: number;
   averageReviewTimeHours: number;
-  decisionTypeDistribution: any;
-  severityDistribution: any;
-  evidenceGradeDistribution: any;
+  decisionTypeDistribution: Record<string, number>;
+  severityDistribution: Record<string, number>;
+  evidenceGradeDistribution: Record<string, number>;
 }
 
 export interface ClinicalTrendData {
-  dailyTrends: any[];
+  dailyTrends: Record<string, unknown>[];
   averageApprovalRate: number;
   averageOverrideRate: number;
   averageConfidenceScore: number;

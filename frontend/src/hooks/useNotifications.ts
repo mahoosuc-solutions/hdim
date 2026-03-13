@@ -29,7 +29,7 @@ export function useNotifications(): UseNotificationsReturn {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       return stored === 'true';
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   });
@@ -57,8 +57,8 @@ export function useNotifications(): UseNotificationsReturn {
     setNotificationsEnabled(newValue);
     try {
       localStorage.setItem(STORAGE_KEY, String(newValue));
-    } catch (error) {
-      console.error('Error saving notification preference:', error);
+    } catch (_error) {
+      console.error('Error saving notification preference');
     }
   }, [notificationsEnabled]);
 
@@ -69,8 +69,8 @@ export function useNotifications(): UseNotificationsReturn {
         try {
           const newValue = event.newValue === 'true';
           setNotificationsEnabled(newValue);
-        } catch (error) {
-          console.error('Error handling storage change:', error);
+        } catch (_error) {
+          console.error('Error handling storage change');
         }
       }
     };

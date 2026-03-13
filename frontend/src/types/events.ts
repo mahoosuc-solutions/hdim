@@ -59,7 +59,7 @@ export interface EvaluationCompletedEvent extends EvaluationEvent {
   complianceRate: number; // 0.0 to 1.0
   score: number;
   durationMs: number;
-  evidence: Record<string, any>;
+  evidence: Record<string, unknown>;
   careGapCount: number;
 }
 

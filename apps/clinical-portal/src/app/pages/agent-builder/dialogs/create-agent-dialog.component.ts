@@ -203,7 +203,7 @@ export interface CreateAgentDialogData {
               formControlName="systemPrompt"
               label="System Prompt"
               icon="psychology"
-              [hint]="'Define the agent\\'s behavior, capabilities, and constraints. Use {{variable_name}} for dynamic content.'"
+              [hint]="'Define the agent behavior, capabilities, and constraints. Use {{variable_name}} for dynamic content.'"
               [required]="true"
               height="250px">
             </app-prompt-editor>

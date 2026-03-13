@@ -96,6 +96,7 @@ describe('MeasureBuilderComponent (TDD)', () => {
         { provide: AIAssistantService, useValue: mockAIAssistantService },
         { provide: Router, useValue: mockRouter },
         { provide: MatDialog, useValue: createMockMatDialog() },
+      ],
     })
       .overrideProvider(MatDialog, { useValue: mockDialog })
       .compileComponents();

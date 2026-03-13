@@ -13,7 +13,6 @@ import type {
   AnyEvaluationEvent,
   BatchProgressEvent,
   EvaluationCompletedEvent,
-  EvaluationFailedEvent
 } from '../types/events';
 import {
   EventType,

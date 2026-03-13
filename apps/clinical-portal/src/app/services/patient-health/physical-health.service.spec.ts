@@ -222,7 +222,7 @@ describe('PhysicalHealthService', () => {
           // Should not have made new API calls
           expect(mockFhirObservationService.getVitalSigns).not.toHaveBeenCalled();
           done();
-        };
+        });
       });
     });
 
@@ -350,7 +350,7 @@ describe('PhysicalHealthService', () => {
         service.getPhysicalHealthSummary('patient-invalidate').subscribe(() => {
           expect(mockFhirObservationService.getVitalSigns).toHaveBeenCalled();
           done();
-        };
+        });
       });
     });
   });

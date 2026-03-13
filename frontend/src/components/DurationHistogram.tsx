@@ -27,6 +27,16 @@ interface DurationHistogramProps {
   data: DurationData[];
 }
 
+interface TooltipPayload {
+  payload?: DurationData;
+  value?: number;
+}
+
+interface DurationTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+}
+
 /**
  * Get bar color based on duration range
  * Green for fast (0-50ms), Yellow for medium (50-150ms), Red for slow (150+ms)
@@ -60,7 +70,7 @@ const calculateAverage = (data: DurationData[]): number => {
 /**
  * Custom tooltip to display range and count
  */
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: DurationTooltipProps) => {
   const point = payload?.[0];
   const range = point?.payload?.range;
   const count = point?.value;

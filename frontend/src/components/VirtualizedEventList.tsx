@@ -4,7 +4,6 @@
  * Implements react-window v2 List for performance optimization
  */
 
-import { ComponentProps } from 'react';
 import { List } from 'react-window';
 import { Box, Typography, Paper } from '@mui/material';
 import { format } from 'date-fns';

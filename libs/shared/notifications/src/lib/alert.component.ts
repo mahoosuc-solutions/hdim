@@ -88,7 +88,6 @@ import { Subject } from 'rxjs';
           [data-testid]="'alert-confirm-button'"
           (click)="confirm()"
           tabindex="0"
-          [attr.autofocus]="!alert.cancelLabel"
         >
           {{ alert.confirmLabel || 'OK' }}
         </button>

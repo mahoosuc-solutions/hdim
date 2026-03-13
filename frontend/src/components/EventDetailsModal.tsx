@@ -30,7 +30,6 @@ import {
   isEvaluationCompletedEvent,
   isEvaluationFailedEvent,
   isBatchProgressEvent,
-  EventType,
 } from '../types/events';
 
 export interface EventDetailsModalProps {
@@ -130,7 +129,6 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({ event, open, onCl
   const renderPatientInfoSection = () => {
     const isCompleted = isEvaluationCompletedEvent(event);
     const isFailed = isEvaluationFailedEvent(event);
-    const isBatch = isBatchProgressEvent(event);
 
     // Only show for patient-level events
     if (!isCompleted && !isFailed && !('patientId' in event)) {

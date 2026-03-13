@@ -13,7 +13,6 @@ import {
   CircularProgress,
   Alert,
   Paper,
-  IconButton,
   Tooltip,
   Dialog,
   DialogTitle,
@@ -31,7 +30,6 @@ import {
   AttachMoney as MoneyIcon,
   CalendarToday as CalendarIcon,
   Business as BusinessIcon,
-  TrendingUp as TrendingUpIcon,
 } from '@mui/icons-material';
 import { salesService } from '../../services/sales.service';
 import type { PipelineKanbanDTO, KanbanColumn, KanbanCard, OpportunityStage, StageTransitionRequest } from '../../types/sales';

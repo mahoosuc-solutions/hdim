@@ -2,21 +2,25 @@
  * Export service for downloading data as CSV or JSON
  */
 
+type ExportPrimitive = string | number | boolean | null | undefined | Date;
+type ExportValue = ExportPrimitive | ExportValue[] | { [key: string]: ExportValue };
+type ExportRecord = Record<string, ExportValue>;
+
 /**
  * Flattens nested objects one level deep
  * { user: { name: 'John' } } becomes { 'user.name': 'John' }
  */
-function flattenObject(obj: any, prefix = ''): Record<string, any> {
-  const flattened: Record<string, any> = {};
+function flattenObject(obj: ExportRecord, prefix = ''): ExportRecord {
+  const flattened: ExportRecord = {};
 
   for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const value = obj[key];
       const newKey = prefix ? `${prefix}.${key}` : key;
 
       if (value !== null && typeof value === 'object' && !(value instanceof Date) && !Array.isArray(value)) {
         // Flatten one level only
-        Object.assign(flattened, flattenObject(value, newKey));
+        Object.assign(flattened, flattenObject(value as ExportRecord, newKey));
       } else {
         flattened[newKey] = value;
       }
@@ -30,7 +34,7 @@ function flattenObject(obj: any, prefix = ''): Record<string, any> {
  * Converts value to CSV-safe string
  * Handles Date objects, escapes quotes, wraps values with commas/quotes
  */
-function formatCSVValue(value: any): string {
+function formatCSVValue(value: ExportValue): string {
   if (value === null || value === undefined) {
     return '';
   }
@@ -65,7 +69,7 @@ function formatCSVValue(value: any): string {
 /**
  * Export data to CSV format and trigger download
  */
-export function exportToCSV(data: any[], filename: string): void {
+export function exportToCSV(data: ExportRecord[], filename: string): void {
   if (data.length === 0) {
     // Create empty blob with just BOM
     const blob = new Blob(['\uFEFF'], { type: 'text/csv;charset=utf-8;' });
@@ -109,7 +113,7 @@ export function exportToCSV(data: any[], filename: string): void {
  */
 function getCircularReplacer() {
   const seen = new WeakSet();
-  return (key: string, value: any) => {
+  return (_key: string, value: unknown) => {
     if (typeof value === 'object' && value !== null) {
       if (seen.has(value)) {
         return '[Circular]';
@@ -123,7 +127,7 @@ function getCircularReplacer() {
 /**
  * Export data to JSON format and trigger download
  */
-export function exportToJSON(data: any[], filename: string): void {
+export function exportToJSON(data: ExportRecord[], filename: string): void {
   // Convert to JSON with pretty printing and circular reference handling
   const jsonContent = JSON.stringify(data, getCircularReplacer(), 2);
 

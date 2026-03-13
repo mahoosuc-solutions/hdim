@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
@@ -17,15 +17,10 @@ import { LoggerService } from './logger.service';
   providedIn: 'root',
 })
 export class PrometheusService {
+  private readonly http = inject(HttpClient);
+  private readonly loggerService = inject(LoggerService);
   private prometheusUrl = 'http://localhost:9090';
-  private logger: ReturnType<LoggerService['withContext']>;
-
-  constructor(
-    private http: HttpClient,
-    private loggerService: LoggerService
-  ) {
-    this.logger = this.loggerService.withContext('PrometheusService');
-  }
+  private logger = this.loggerService.withContext('PrometheusService');
 
   /**
    * Execute an instant PromQL query

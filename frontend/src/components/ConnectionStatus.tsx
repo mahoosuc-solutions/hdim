@@ -6,6 +6,7 @@
 
 import { useMemo, useState } from 'react';
 import { Chip, Tooltip, Box } from '@mui/material';
+import type { ChipProps } from '@mui/material';
 import {
   WifiOff,
   Wifi,
@@ -67,23 +68,29 @@ export const ConnectionStatus = () => {
   };
 
   const indicator = useMemo(() => {
+    const buildIndicator = (
+      status: Status,
+      color: NonNullable<ChipProps['color']>,
+      text: string
+    ) => ({ status, color, text });
+
     if (sessionExpired) {
-      return { status: Status.ERROR, color: 'error', text: 'Session Expired' };
+      return buildIndicator(Status.ERROR, 'error', 'Session Expired');
     }
 
     switch (connectionStatus) {
       case Status.CONNECTED:
-        return { status: connectionStatus, color: 'success', text: 'Connected' };
+        return buildIndicator(connectionStatus, 'success', 'Connected');
       case Status.CONNECTING:
-        return { status: connectionStatus, color: 'info', text: 'Connecting...' };
+        return buildIndicator(connectionStatus, 'info', 'Connecting...');
       case Status.RECONNECTING:
-        return { status: connectionStatus, color: 'warning', text: 'Reconnecting...' };
+        return buildIndicator(connectionStatus, 'warning', 'Reconnecting...');
       case Status.DISCONNECTED:
-        return { status: connectionStatus, color: 'default', text: 'Disconnected' };
+        return buildIndicator(connectionStatus, 'default', 'Disconnected');
       case Status.ERROR:
-        return { status: connectionStatus, color: 'error', text: 'Connection Error' };
+        return buildIndicator(connectionStatus, 'error', 'Connection Error');
       default:
-        return { status: connectionStatus, color: 'default', text: 'Unknown' };
+        return buildIndicator(connectionStatus, 'default', 'Unknown');
     }
   }, [connectionStatus, sessionExpired]);
 
@@ -123,7 +130,7 @@ export const ConnectionStatus = () => {
         <Chip
           icon={getIcon()}
           label={indicator.text}
-          color={indicator.color as any}
+          color={indicator.color}
           size="small"
           variant={indicator.status === Status.CONNECTED ? 'filled' : 'outlined'}
         />

@@ -7,9 +7,7 @@ import { PrometheusQueryResult } from '../models/prometheus.model';
 describe('PrometheusService', () => {
   let service: PrometheusService;
   let httpMock: HttpTestingController;
-  let loggerService: jasmine.SpyObj<LoggerService>;
 
-  const mockPrometheusUrl = 'http://localhost:9090';
   const mockServiceName = 'patient-service';
 
   beforeEach(() => {
@@ -27,7 +25,6 @@ describe('PrometheusService', () => {
 
     service = TestBed.inject(PrometheusService);
     httpMock = TestBed.inject(HttpTestingController);
-    loggerService = TestBed.inject(LoggerService) as jasmine.SpyObj<LoggerService>;
   });
 
   afterEach(() => {

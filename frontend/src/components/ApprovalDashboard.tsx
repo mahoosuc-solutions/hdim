@@ -17,10 +17,6 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Alert,
   IconButton,
   Tooltip,
@@ -44,7 +40,6 @@ import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import EscalatorWarningIcon from '@mui/icons-material/EscalatorWarning';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
@@ -57,27 +52,11 @@ import type {
   ApprovalHistory,
   RiskLevel,
   ApprovalStatus,
-  RequestType,
 } from '../types/approval';
 
 interface ApprovalDashboardProps {
   tenantId: string;
   userId: string;
-}
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
-    </div>
-  );
 }
 
 function getRiskLevelColor(level: RiskLevel): 'error' | 'warning' | 'info' | 'success' {

@@ -62,5 +62,5 @@ When resolving a P1 feature cluster, follow this systematic process:
 | Cluster | Todos | Commit | Status |
 |---------|-------|--------|--------|
 | Star Ratings | 008, 009, 012 | 802640e9e | ✅ Done |
-| Auth/Tenant Controls | 004 | — | Pending |
-| Seeding Verification | 001 | — | Pending |
+| Auth/Tenant Controls | 004 | b886e15ca | ✅ Done |
+| Seeding Verification | 001 | — (runtime) | ✅ Done |

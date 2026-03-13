@@ -54,6 +54,10 @@ export const API_CONFIG = {
     ? `${API_GATEWAY_URL}/api/predictive-analytics`
     : '/predictive-analytics',  // Proxied to localhost:8110
 
+  CARE_GAP_EVENT_URL: USE_API_GATEWAY
+    ? `${API_GATEWAY_URL}/api/care-gap-event`
+    : '/care-gap-event',  // Proxied to localhost:8111
+
   // Base URL fallback for services without specific configuration
   BASE_URL: USE_API_GATEWAY ? API_GATEWAY_URL : '',
 
@@ -192,6 +196,31 @@ export const QUALITY_MEASURE_ENDPOINTS = {
   CDS_EVALUATE: '/cds/evaluate',
   CDS_ACKNOWLEDGE: '/cds/acknowledge',
 };
+
+/**
+ * Star Ratings (Care Gap Event Service) Endpoints
+ */
+export const STAR_RATING_ENDPOINTS = {
+  CURRENT: '/api/v1/star-ratings/current',
+  TREND: '/api/v1/star-ratings/trend',
+  SIMULATE: '/api/v1/star-ratings/simulate',
+};
+
+/**
+ * Build full URL for Star Rating endpoint
+ */
+export function buildStarRatingUrl(endpoint: string, params?: Record<string, string>): string {
+  let url = `${API_CONFIG.CARE_GAP_EVENT_URL}${endpoint}`;
+
+  if (params && Object.keys(params).length > 0) {
+    const queryString = Object.entries(params)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    url += `?${queryString}`;
+  }
+
+  return url;
+}
 
 /**
  * QRDA Export Service Endpoints

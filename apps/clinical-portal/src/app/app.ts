@@ -45,6 +45,10 @@ export class App implements OnInit, OnDestroy {
   protected practiceName = 'Main Street Clinic';
   protected sidenavOpened = true;
 
+  // Tenant selector
+  protected tenantOptions: string[] = ['acme-health'];
+  protected selectedTenantId = 'acme-health';
+
   // Session timeout configuration (15 minutes of inactivity)
   private readonly SESSION_TIMEOUT_MS = 15 * 60 * 1000;
   private readonly SESSION_WARNING_MS = 2 * 60 * 1000; // Warn 2 minutes before timeout
@@ -234,6 +238,10 @@ export class App implements OnInit, OnDestroy {
 
   get isDarkMode(): boolean {
     return false;
+  }
+
+  onTenantChange(tenantId: string): void {
+    this.selectedTenantId = tenantId;
   }
 
   logout(): void {

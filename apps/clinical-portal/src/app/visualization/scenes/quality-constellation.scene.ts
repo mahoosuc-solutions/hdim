@@ -109,11 +109,11 @@ export class QualityConstellationScene {
   private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
-    private logger: LoggerService,
+    loggerService: LoggerService,
     private scene: THREE.Scene,
     private transformService: DataTransformService
   ) {
-    this.logger = this.loggerService.withContext('QualityConstellationScene');
+    this.logger = loggerService.withContext('QualityConstellationScene');
   }
 
   /**

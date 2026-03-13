@@ -789,11 +789,11 @@ export class ProviderLeaderboardDialogComponent implements OnInit, OnDestroy {
   currentProviderId = 'provider-current'; // Would come from auth service
 
   constructor(
-    private logger: LoggerService,
+    loggerService: LoggerService,
     private dialogRef: MatDialogRef<ProviderLeaderboardDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: ProviderLeaderboardDialogData
   ) {
-    this.logger = this.loggerService.withContext('ProviderLeaderboardDialogComponent');
+    this.logger = loggerService.withContext('ProviderLeaderboardDialogComponent');
   }
 
   ngOnInit(): void {

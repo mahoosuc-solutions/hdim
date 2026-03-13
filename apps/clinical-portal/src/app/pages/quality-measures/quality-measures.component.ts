@@ -339,7 +339,8 @@ export class QualityMeasuresComponent implements OnInit, OnDestroy {
     this.evaluationResult.set(null);
   }
 
-  async runEvaluation(): Promise<void> {
+  /** @deprecated Use runEvaluation() (patient-level, line ~610) instead. Kept for demo mode. */
+  async runPopulationEvaluationDemo(): Promise<void> {
     const measure = this.selectedMeasure();
     if (!measure) return;
 
@@ -347,9 +348,8 @@ export class QualityMeasuresComponent implements OnInit, OnDestroy {
     this.evaluationProgress.set(0);
     this.evaluationStatus.set(`Initializing evaluation for ${measure.code}...`);
 
-    // Simulate evaluation progress
     const totalPatients = this.totalPatients();
-    const evaluationTime = 12000; // 12 seconds
+    const evaluationTime = 12000;
     const startTime = Date.now();
 
     const progressInterval = setInterval(() => {
@@ -365,18 +365,15 @@ export class QualityMeasuresComponent implements OnInit, OnDestroy {
       }
     }, 100);
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, evaluationTime));
 
     clearInterval(progressInterval);
     this.evaluationProgress.set(100);
     this.evaluationStatus.set('Evaluation complete!');
 
-    // Generate result based on measure
     const result = this.generateEvaluationResult(measure);
     this.evaluationResult.set(result);
 
-    // Update measure with result
     const updatedMeasures = this.measures().map(m => {
       if (m.id === measure.id) {
         return {
@@ -623,17 +620,24 @@ export class QualityMeasuresComponent implements OnInit, OnDestroy {
         });
       });
 
+      const denominator = result.denominatorMembership ? 1 : 0;
+      const numerator = (result.eligible && !result.denominatorExclusion)
+        ? (result.subMeasures && Object.keys(result.subMeasures).length > 0 ? 0 : 1)
+        : 0;
+      const rate = denominator > 0 ? (numerator / denominator) * 100 : 0;
+
       this.evaluationResult.set({
+        measureId: result.measureId || measure.id,
         measureCode: result.measureId || measure.code,
         measureName: result.measureName || measure.name,
-        totalPatients: 1,
+        evaluationTime: 0,
         patientsEvaluated: 1,
-        denominatorCount: result.denominatorMembership ? 1 : 0,
-        numeratorCount: (result.eligible && !result.denominatorExclusion) ? (result.subMeasures && Object.keys(result.subMeasures).length > 0 ? 0 : 1) : 0,
-        complianceRate: result.eligible ? 100 : 0,
+        denominator,
+        numerator,
+        rate: Math.round(rate * 10) / 10,
+        benchmark: measure.benchmark || 70,
+        gapToBenchmark: Math.round((rate - (measure.benchmark || 70)) * 10) / 10,
         careGapsCount: result.careGaps?.length || 0,
-        executionTimeMs: 0,
-        timestamp: result.calculatedAt || new Date().toISOString(),
       });
     } catch (error) {
       this.logger.error('Evaluation failed', error);

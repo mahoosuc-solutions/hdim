@@ -16,6 +16,10 @@ Audience: Prospective Medicare Advantage customer sponsor and clinical leadershi
 8. `08-stakeholder-messaging-map.md`
 9. `09-internal-talk-track-and-objections.md`
 
+## Addenda
+
+10. `10-star-ratings-addendum.md` — Star Ratings dashboard and what-if simulator (added March 2026)
+
 ## Public Share Pack
 
 Public-safe bundle for web sharing:

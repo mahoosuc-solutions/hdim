@@ -339,6 +339,15 @@ export const appRoutes: Route[] = [
     data: { permissions: ['VIEW_CARE_GAPS'] },
   },
   {
+    path: 'star-ratings',
+    loadComponent: () =>
+      import('./pages/star-ratings/star-ratings.component').then(
+        (m) => m.StarRatingsComponent
+      ),
+    canActivate: [AuthGuard],
+    data: { permissions: ['VIEW_EVALUATIONS'] },
+  },
+  {
     path: 'risk-stratification',
     loadComponent: () =>
       import('./pages/risk-stratification/risk-stratification.component').then(

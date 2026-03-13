@@ -1,0 +1,408 @@
+:host {
+  display: block;
+  padding: 0 24px 24px;
+}
+
+// ── Loading & Error ───────────────────────────────────────────
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  gap: 16px;
+  color: rgba(0, 0, 0, 0.6);
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #f44336;
+  }
+}
+
+// ── KPI Row ─────────────────────────────────────────────────
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 8px;
+
+  @media (max-width: 960px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calculated-at {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  margin-bottom: 16px;
+  padding-left: 4px;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .trigger-event {
+    font-style: italic;
+  }
+}
+
+// ── Two Column Layout ───────────────────────────────────────
+
+.two-column-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ── Trend Chart ─────────────────────────────────────────────
+
+.trend-card {
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .trend-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .weeks-select {
+    width: 120px;
+
+    ::ng-deep .mat-mdc-form-field-infix {
+      min-height: 36px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+  }
+
+  .chart-container {
+    height: 280px;
+    position: relative;
+  }
+}
+
+// ── Domain Breakdown ────────────────────────────────────────
+
+.domain-card {
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .domain-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .domain-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-left: 4px solid;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.02);
+    transition: background 0.2s;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .domain-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .domain-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .domain-meta {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .domain-rating {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .domain-stars {
+    font-weight: 700;
+    font-size: 18px;
+  }
+
+  .domain-rate {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+// ── No Data ─────────────────────────────────────────────────
+
+.no-data {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+
+  mat-icon {
+    color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+// ── Measures Table ──────────────────────────────────────────
+
+.measures-card {
+  margin-bottom: 16px;
+
+  mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .measure-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .domain-filter {
+    width: 200px;
+
+    ::ng-deep .mat-mdc-form-field-infix {
+      min-height: 36px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+  }
+}
+
+.measures-table {
+  width: 100%;
+
+  .measure-code {
+    font-family: monospace;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  .rate-value {
+    font-weight: 600;
+  }
+
+  .rate-fraction {
+    font-size: 12px;
+    color: rgba(0, 0, 0, 0.5);
+    margin-left: 4px;
+  }
+
+  .star-display {
+    display: flex;
+    align-items: center;
+  }
+
+  .star-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .gap-link-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    margin-left: 4px;
+  }
+
+  .domain-chip {
+    font-size: 11px;
+    min-height: 22px;
+    padding: 2px 8px;
+    color: white;
+  }
+}
+
+// ── Simulation ──────────────────────────────────────────────
+
+.simulation-card {
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .simulation-inputs {
+    .closure-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .gap-code-field {
+      width: 160px;
+    }
+
+    .closures-field {
+      width: 180px;
+    }
+
+    ::ng-deep .mat-mdc-form-field-infix {
+      min-height: 36px;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+  }
+
+  .simulation-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .simulation-results {
+    margin-top: 16px;
+    padding-top: 16px;
+
+    h3 {
+      margin: 12px 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .simulation-comparison {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      gap: 16px;
+    }
+  }
+
+  .sim-current,
+  .sim-projected,
+  .sim-delta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px 24px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .sim-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.5px;
+  }
+
+  .sim-value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .sim-bonus {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #fce4ec;
+    color: #c62828;
+
+    &.eligible {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+  }
+
+  .sim-arrow {
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .delta-value {
+    font-size: 24px;
+    font-weight: 700;
+
+    &.positive {
+      color: #388E3C;
+    }
+
+    &.negative {
+      color: #D32F2F;
+    }
+  }
+
+  .simulation-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}

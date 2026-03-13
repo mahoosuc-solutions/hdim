@@ -101,13 +101,13 @@ export class LiveBatchMonitorComponent implements OnInit, AfterViewInit, OnDestr
   ];
 
   constructor(
-    private logger: LoggerService,
+    loggerService: LoggerService,
     private sceneService: ThreeSceneService,
     private wsService: WebSocketVisualizationService,
     private transformService: DataTransformService,
     private batchMonitorService: BatchMonitorService
   ) {
-    this.logger = this.loggerService.withContext('LiveBatchMonitorComponent');
+    this.logger = loggerService.withContext('LiveBatchMonitorComponent');
   }
 
   ngOnInit(): void {

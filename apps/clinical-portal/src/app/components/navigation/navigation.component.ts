@@ -105,6 +105,12 @@ export class NavigationComponent {
       description: 'Prepare for upcoming patient visits',
     },
     {
+      label: 'Star Ratings',
+      icon: 'stars',
+      route: '/star-ratings',
+      description: 'CMS Star Rating projections and what-if analysis',
+    },
+    {
       label: 'Visualizations',
       icon: '3d_rotation',
       route: '/visualization',

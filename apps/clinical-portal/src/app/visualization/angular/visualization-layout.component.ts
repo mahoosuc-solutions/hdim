@@ -68,11 +68,11 @@ export class VisualizationLayoutComponent implements OnInit, AfterViewInit {
   private logger: ReturnType<LoggerService['withContext']>;
 
   constructor(
-    private logger: LoggerService,
+    loggerService: LoggerService,
     private sceneService: ThreeSceneService,
     private snackBar: MatSnackBar
   ) {
-    this.logger = this.loggerService.withContext('VisualizationLayoutComponent');
+    this.logger = loggerService.withContext('VisualizationLayoutComponent');
   }
 
   ngOnInit(): void {

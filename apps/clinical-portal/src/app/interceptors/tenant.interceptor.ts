@@ -14,10 +14,11 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
   const isQualityMeasure = req.url.includes(API_CONFIG.QUALITY_MEASURE_URL);
   const isFhir = req.url.includes(API_CONFIG.FHIR_SERVER_URL);
   const isCareGap = req.url.includes(API_CONFIG.CARE_GAP_URL);
+  const isCareGapEvent = req.url.includes(API_CONFIG.CARE_GAP_EVENT_URL);
   const isPatient = req.url.includes(API_CONFIG.PATIENT_URL);
 
   // Only add tenant header for backend API calls
-  if (isCqlEngine || isQualityMeasure || isFhir || isCareGap || isPatient) {
+  if (isCqlEngine || isQualityMeasure || isFhir || isCareGap || isCareGapEvent || isPatient) {
     const authService = inject(AuthService);
     const tenantId = authService.getTenantId() || API_CONFIG.DEFAULT_TENANT_ID;
 

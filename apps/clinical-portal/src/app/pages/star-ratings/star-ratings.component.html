@@ -1,0 +1,341 @@
+<!-- Star Ratings Dashboard -->
+<app-page-header
+  title="Star Ratings"
+  subtitle="CMS Medicare Advantage Star Rating projections and what-if analysis">
+</app-page-header>
+
+<!-- Loading -->
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner diameter="48"></mat-spinner>
+  <p>Loading star rating data...</p>
+</div>
+
+<!-- Error -->
+<div *ngIf="error && !loading" class="error-container">
+  <mat-icon>error_outline</mat-icon>
+  <p>{{ error }}</p>
+  <button mat-raised-button color="primary" (click)="loadData()">Retry</button>
+</div>
+
+<!-- Main Content -->
+<div *ngIf="currentRating && !loading" class="star-ratings-content">
+
+  <!-- ═══ KPI Row ═══ -->
+  <div class="kpi-row">
+    <app-stat-card
+      title="Overall Rating"
+      [value]="(currentRating.overallRating | number:'1.2-2') + ' ★'"
+      icon="stars"
+      [iconColor]="getStarColor(currentRating.overallRating)"
+      color="primary"
+      [targetValue]="4.0"
+      [higherIsBetter]="true"
+      [tooltip]="'Precise: ' + currentRating.overallRating + ' / Rounded: ' + currentRating.roundedRating">
+    </app-stat-card>
+
+    <app-stat-card
+      title="Quality Bonus"
+      [value]="currentRating.qualityBonusEligible ? 'YES' : 'NO'"
+      [icon]="currentRating.qualityBonusEligible ? 'verified' : 'warning'"
+      [color]="currentRating.qualityBonusEligible ? 'success' : 'warn'"
+      tooltip="Plans rated 4.0+ stars receive a 5% quality bonus on Part C/D revenue">
+    </app-stat-card>
+
+    <app-stat-card
+      title="Open Gaps"
+      [value]="'' + currentRating.openGapCount"
+      icon="report_problem"
+      color="warn"
+      tooltip="Total open care gaps across all measures">
+    </app-stat-card>
+
+    <app-stat-card
+      title="Closed Gaps"
+      [value]="'' + currentRating.closedGapCount"
+      icon="check_circle"
+      color="success"
+      tooltip="Total closed care gaps across all measures">
+    </app-stat-card>
+  </div>
+
+  <div class="calculated-at">
+    <mat-icon>schedule</mat-icon>
+    Last calculated: {{ currentRating.calculatedAt | date:'medium' }}
+    <span class="trigger-event">({{ currentRating.lastTriggerEvent }})</span>
+  </div>
+
+  <!-- ═══ Domain Breakdown + Trend Row ═══ -->
+  <div class="two-column-row">
+
+    <!-- Trend Chart -->
+    <mat-card class="trend-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>trending_up</mat-icon>
+          Rating Trend
+        </mat-card-title>
+        <div class="trend-controls">
+          <mat-button-toggle-group
+            [(ngModel)]="trendGranularity"
+            (change)="refreshTrend()"
+            aria-label="Trend granularity">
+            <mat-button-toggle value="WEEKLY">Weekly</mat-button-toggle>
+            <mat-button-toggle value="MONTHLY">Monthly</mat-button-toggle>
+          </mat-button-toggle-group>
+          <mat-form-field appearance="outline" class="weeks-select">
+            <mat-label>Weeks</mat-label>
+            <mat-select [(ngModel)]="trendWeeks" (selectionChange)="refreshTrend()">
+              <mat-option [value]="4">4 weeks</mat-option>
+              <mat-option [value]="8">8 weeks</mat-option>
+              <mat-option [value]="12">12 weeks</mat-option>
+              <mat-option [value]="26">26 weeks</mat-option>
+              <mat-option [value]="52">52 weeks</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container" *ngIf="trendData && trendData.points.length > 0">
+          <canvas baseChart
+            [datasets]="trendChartData.datasets"
+            [labels]="trendChartData.labels"
+            [options]="trendChartOptions"
+            type="line"
+            aria-label="Star rating trend chart">
+          </canvas>
+        </div>
+        <div *ngIf="!trendData || trendData.points.length === 0" class="no-data">
+          <mat-icon>info</mat-icon>
+          <p>No trend data available. Seed demo data or wait for weekly snapshots.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Domain Breakdown -->
+    <mat-card class="domain-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>category</mat-icon>
+          Domain Breakdown
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div *ngIf="currentRating.domains.length > 0" class="domain-list">
+          <div *ngFor="let domain of currentRating.domains"
+               class="domain-item"
+               [style.borderLeftColor]="getStarColor(domain.domainStars)">
+            <div class="domain-info">
+              <span class="domain-name">{{ domain.domain }}</span>
+              <span class="domain-meta">{{ domain.measureCount }} measures</span>
+            </div>
+            <div class="domain-rating">
+              <span class="domain-stars" [style.color]="getStarColor(domain.domainStars)">
+                {{ domain.domainStars | number:'1.1-2' }} ★
+              </span>
+              <span class="domain-rate">{{ domain.averagePerformanceRate | percent:'1.0-1' }}</span>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="currentRating.domains.length === 0" class="no-data">
+          <mat-icon>info</mat-icon>
+          <p>No domain data available.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- ═══ Measure Performance Table ═══ -->
+  <mat-card class="measures-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>analytics</mat-icon>
+        Measure Performance
+      </mat-card-title>
+      <div class="measure-controls">
+        <mat-form-field appearance="outline" class="domain-filter">
+          <mat-label>Domain</mat-label>
+          <mat-select [(ngModel)]="domainFilter">
+            <mat-option value="ALL">All Domains</mat-option>
+            <mat-option *ngFor="let d of uniqueDomains" [value]="d">{{ d }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <button mat-stroked-button
+                (click)="exportMeasureCsv()"
+                matTooltip="Export measures to CSV"
+                aria-label="Export measures to CSV">
+          <mat-icon>download</mat-icon>
+          Export
+        </button>
+      </div>
+    </mat-card-header>
+    <mat-card-content>
+      <table mat-table [dataSource]="filteredMeasures" matSort (matSortChange)="sortMeasures($event)" class="measures-table">
+
+        <!-- Measure Code -->
+        <ng-container matColumnDef="measureCode">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+          <td mat-cell *matCellDef="let m">
+            <span class="measure-code">{{ m.measureCode }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Measure Name -->
+        <ng-container matColumnDef="measureName">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Measure</th>
+          <td mat-cell *matCellDef="let m">{{ m.measureName }}</td>
+        </ng-container>
+
+        <!-- Domain -->
+        <ng-container matColumnDef="domain">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Domain</th>
+          <td mat-cell *matCellDef="let m">
+            <mat-chip [style.background]="getStarColor(m.stars)" class="domain-chip">
+              {{ m.domain }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <!-- Performance Rate -->
+        <ng-container matColumnDef="performanceRate">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Rate</th>
+          <td mat-cell *matCellDef="let m">
+            <span class="rate-value">{{ m.performanceRate | percent:'1.1-1' }}</span>
+            <span class="rate-fraction">({{ m.numerator }}/{{ m.denominator }})</span>
+          </td>
+        </ng-container>
+
+        <!-- Stars -->
+        <ng-container matColumnDef="stars">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Stars</th>
+          <td mat-cell *matCellDef="let m">
+            <span class="star-display" [style.color]="getStarColor(m.stars)">
+              <mat-icon *ngFor="let filled of getStarArray(m.stars)"
+                        [class.filled]="filled"
+                        class="star-icon">
+                {{ filled ? 'star' : 'star_border' }}
+              </mat-icon>
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Gap Count -->
+        <ng-container matColumnDef="gapCount">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Open Gaps</th>
+          <td mat-cell *matCellDef="let m">
+            <button mat-button
+                    color="primary"
+                    (click)="navigateToCareGaps(m.measureCode)"
+                    [attr.aria-label]="'View ' + getMeasureGapCount(m) + ' open gaps for ' + m.measureCode">
+              {{ getMeasureGapCount(m) }}
+              <mat-icon class="gap-link-icon">open_in_new</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- ═══ What-If Simulator ═══ -->
+  <mat-card class="simulation-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>science</mat-icon>
+        What-If Simulator
+      </mat-card-title>
+      <mat-card-subtitle>
+        Model the impact of closing additional care gaps on your star rating
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="simulation-inputs">
+        <div *ngFor="let closure of simulationClosures; let i = index" class="closure-row">
+          <mat-form-field appearance="outline" class="gap-code-field">
+            <mat-label>Measure</mat-label>
+            <mat-select [(ngModel)]="closure.gapCode">
+              <mat-option *ngFor="let code of availableMeasureCodes" [value]="code">
+                {{ code }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="closures-field">
+            <mat-label>Additional Closures</mat-label>
+            <input matInput type="number" [(ngModel)]="closure.closures" min="1" max="999">
+          </mat-form-field>
+
+          <button mat-icon-button
+                  color="warn"
+                  (click)="removeSimulationRow(i)"
+                  [disabled]="simulationClosures.length === 1"
+                  aria-label="Remove this closure entry">
+            <mat-icon>remove_circle</mat-icon>
+          </button>
+        </div>
+
+        <div class="simulation-actions">
+          <button mat-stroked-button (click)="addSimulationRow()" aria-label="Add another measure to simulate">
+            <mat-icon>add</mat-icon>
+            Add Measure
+          </button>
+          <button mat-raised-button
+                  color="primary"
+                  (click)="runSimulation()"
+                  [disabled]="simulating"
+                  aria-label="Run star rating simulation">
+            <mat-icon>play_arrow</mat-icon>
+            {{ simulating ? 'Simulating...' : 'Simulate' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Simulation Results -->
+      <div *ngIf="simulatedRating" class="simulation-results">
+        <mat-divider></mat-divider>
+        <h3>Simulation Results</h3>
+        <div class="simulation-comparison">
+          <div class="sim-current">
+            <span class="sim-label">Current</span>
+            <span class="sim-value" [style.color]="getStarColor(currentRating.overallRating)">
+              {{ currentRating.overallRating | number:'1.2-2' }} ★
+            </span>
+            <span class="sim-bonus" [class.eligible]="currentRating.qualityBonusEligible">
+              Bonus: {{ currentRating.qualityBonusEligible ? 'YES' : 'NO' }}
+            </span>
+          </div>
+
+          <div class="sim-arrow">
+            <mat-icon>arrow_forward</mat-icon>
+          </div>
+
+          <div class="sim-projected">
+            <span class="sim-label">Projected</span>
+            <span class="sim-value" [style.color]="getStarColor(simulatedRating.overallRating)">
+              {{ simulatedRating.overallRating | number:'1.2-2' }} ★
+            </span>
+            <span class="sim-bonus" [class.eligible]="simulatedRating.qualityBonusEligible">
+              Bonus: {{ simulatedRating.qualityBonusEligible ? 'YES' : 'NO' }}
+            </span>
+          </div>
+
+          <div class="sim-delta" *ngIf="simulationDelta !== null">
+            <span class="delta-label">Impact</span>
+            <span class="delta-value"
+                  [class.positive]="simulationDelta > 0"
+                  [class.negative]="simulationDelta < 0">
+              {{ simulationDelta > 0 ? '+' : '' }}{{ simulationDelta | number:'1.2-2' }} ★
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="simulating" class="simulation-loading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Running simulation...</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+</div>

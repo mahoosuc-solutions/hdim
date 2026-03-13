@@ -187,10 +187,45 @@ else
   check_fail "Quality Measure API failed (HTTP $qm_status)"
 fi
 
-# ── Phase 5: Observability ───────────────────────────────────────
+# ── Phase 5: Star Ratings ──────────────────────────────────────
 
 bold ""
-bold "Phase 5: Observability"
+bold "Phase 5: Star Ratings"
+bold "─────────────────────"
+
+STAR_TENANT="${STAR_TENANT:-demo-tenant}"
+CARE_GAP_EVENT_URL="${CARE_GAP_EVENT_URL:-http://localhost:8111}"
+
+star_status=$(curl -sS --max-time "$TIMEOUT" -o /dev/null -w '%{http_code}' \
+  -H "X-Tenant-ID: $STAR_TENANT" \
+  "$CARE_GAP_EVENT_URL/care-gap-event/api/v1/star-ratings/current" 2>/dev/null) || true
+if [[ "$star_status" == "200" ]]; then
+  star_body=$(curl -sS --max-time "$TIMEOUT" \
+    -H "X-Tenant-ID: $STAR_TENANT" \
+    "$CARE_GAP_EVENT_URL/care-gap-event/api/v1/star-ratings/current" 2>/dev/null)
+  rating=$(echo "$star_body" | grep -o '"overallRating":[0-9.]*' | cut -d: -f2)
+  if [[ -n "$rating" && "$rating" != "0" && "$rating" != "0.0" ]]; then
+    check_pass "Star Rating current: $rating ★ (tenant: $STAR_TENANT)"
+  else
+    check_warn "Star Rating API responds but rating is $rating (seed data may be missing)"
+  fi
+else
+  check_warn "Star Rating API returned HTTP $star_status (care-gap-event-service may not be running)"
+fi
+
+trend_status=$(curl -sS --max-time "$TIMEOUT" -o /dev/null -w '%{http_code}' \
+  -H "X-Tenant-ID: $STAR_TENANT" \
+  "$CARE_GAP_EVENT_URL/care-gap-event/api/v1/star-ratings/trend?weeks=12&granularity=WEEKLY" 2>/dev/null) || true
+if [[ "$trend_status" == "200" ]]; then
+  check_pass "Star Rating trend API responds ($trend_status)"
+else
+  check_warn "Star Rating trend returned HTTP $trend_status"
+fi
+
+# ── Phase 6: Observability ───────────────────────────────────────
+
+bold ""
+bold "Phase 6: Observability"
 bold "──────────────────────"
 
 # Prometheus

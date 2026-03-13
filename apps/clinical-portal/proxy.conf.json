@@ -71,6 +71,15 @@
       "^/cql-engine": "/cql-engine"
     }
   },
+  "/care-gap-event": {
+    "target": "http://localhost:8111",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/care-gap-event": "/care-gap-event"
+    }
+  },
   "/care-gap": {
     "target": "http://localhost:18080",
     "secure": false,
